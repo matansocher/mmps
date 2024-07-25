@@ -8,14 +8,14 @@ import { UtilsService } from '@services/utils/utils.service';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
+  private bot: any;
+
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
   ) {}
-
-  private bot: any;
 
   onModuleInit() {
     this.telegramBotsFactoryService.createBot(BOTS.WOLT.name);

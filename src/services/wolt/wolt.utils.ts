@@ -1,4 +1,4 @@
-const { WOLT_BOT_OPTIONS } = require('./wolt.config');
+import { WOLT_BOT_OPTIONS } from './wolt.config';
 
 export function getKeyboardOptions() {
   return {
