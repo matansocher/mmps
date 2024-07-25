@@ -3,5 +3,6 @@ import { Module } from '@nestjs/common';
 
 @Module({
   providers: [WoltMongoService],
+  exports: [WoltMongoService],
 })
 export class WoltMongoModule {}
