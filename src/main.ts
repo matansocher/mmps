@@ -1,3 +1,5 @@
+import { configDotenv } from 'dotenv';
+configDotenv();
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as bodyParser from 'body-parser';

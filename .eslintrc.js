@@ -21,5 +21,14 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    "prettier/prettier": [
+      "warn",
+      {
+        "printWidth": 130,  // Customize the print width (default 80)
+        "tabWidth": 2,     // Customize tab width
+        "semi": true,     // Add or remove semicolons
+        "singleQuote": true // Use single quotes or double quotes
+      }
+    ]
   },
 };
