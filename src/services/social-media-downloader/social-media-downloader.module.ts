@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { SocialMediaDownloaderService } from './social-media-downloader.service';
 
 @Module({
-  providers: [SocialMediaDownloaderService]
+  providers: [SocialMediaDownloaderService],
+  exports: [SocialMediaDownloaderService],
 })
 export class SocialMediaDownloaderModule {}
