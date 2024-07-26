@@ -14,9 +14,10 @@ import { promises as fs } from 'fs';
 import {
   ANALYTIC_EVENT_NAMES,
   ANALYTIC_EVENT_STATES,
-  LOCAL_FILES_PATH, NOT_FOUND_VIDEO_MESSAGES,
+  LOCAL_FILES_PATH,
+  NOT_FOUND_VIDEO_MESSAGES,
   SUMMARY_PROMPT,
-  VOICE_PAL_OPTIONS
+  VOICE_PAL_OPTIONS,
 } from './voice-pal.config';
 import * as voicePalUtils from './voice-pal.utils';
 
@@ -38,7 +39,7 @@ export class VoicePalService {
     private readonly openaiService: OpenaiService,
   ) {}
 
-  async handleActionSelection(selection, { telegramUserId, chatId, firstName, lastName, username }) {
+  async handleActionSelection(selection, { telegramUserId, chatId, firstName, lastName, username }): Promise<void> {
     const relevantAction = Object.keys(VOICE_PAL_OPTIONS).find(option => VOICE_PAL_OPTIONS[option].displayName === selection);
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
@@ -55,7 +56,7 @@ export class VoicePalService {
     await this.telegramGeneralService.sendMessage(this.bot, this.chatId, replyText, voicePalUtils.getKeyboardOptions());
   }
 
-  async handleAction(message, userAction) {
+  async handleAction(message, userAction): Promise<void> {
     const { text, audio, video, photo } = this.telegramGeneralService.getMessageData(message);
 
     if (!userAction) {
@@ -79,7 +80,6 @@ export class VoicePalService {
       }
 
       this.mongoService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId: this.chatId });
-      // userSelectionService.removeCurrentUserAction(this.chatId);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
@@ -88,7 +88,7 @@ export class VoicePalService {
     }
   }
 
-  async handleTranscribeAction({ video, audio }) {
+  async handleTranscribeAction({ video, audio }): Promise<void> {
     try {
       const audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio });
       const resText = await this.openaiService.getTranscriptFromAudio(audioFileLocalPath);
@@ -100,7 +100,7 @@ export class VoicePalService {
     }
   }
 
-  async handleTranslateAction({ text, video, audio }) {
+  async handleTranslateAction({ text, video, audio }): Promise<void> {
     try {
       let resText = '';
       let audioFileLocalPath = '';
@@ -120,7 +120,7 @@ export class VoicePalService {
     }
   }
 
-  async handleTextToSpeechAction({ text }) {
+  async handleTextToSpeechAction({ text }): Promise<void> {
     try {
       const result = await this.openaiService.getAudioFromText(text);
 
@@ -136,7 +136,7 @@ export class VoicePalService {
     }
   }
 
-  async handleSummarizeTextAction({ text }) {
+  async handleSummarizeTextAction({ text }): Promise<void> {
     try {
       const textSummary = await this.openaiService.getChatCompletion(SUMMARY_PROMPT, text);
       await this.telegramGeneralService.sendMessage(this.bot, this.chatId, textSummary, voicePalUtils.getKeyboardOptions());
@@ -146,7 +146,7 @@ export class VoicePalService {
     }
   }
 
-  async handleSummarizeYoutubeVideoAction({ text }) {
+  async handleSummarizeYoutubeVideoAction({ text }): Promise<void> {
     try {
       const videoId = this.youtubeTranscriptService.getYoutubeVideoIdFromUrl(text);
       if (!videoId) {
@@ -164,7 +164,7 @@ export class VoicePalService {
     }
   }
 
-  async handleSummarizeTiktokVideoAction({ text }) {
+  async handleSummarizeTiktokVideoAction({ text }): Promise<void> {
     try {
       const audioBuffer = await this.socialMediaDownloaderService.getTiktokAudio(text);
       if (!audioBuffer) {
@@ -184,7 +184,7 @@ export class VoicePalService {
     }
   }
 
-  async handleSummarizeMetaVideoAction({ text }) {
+  async handleSummarizeMetaVideoAction({ text }): Promise<void> {
     try {
       const videoBuffer = await this.socialMediaDownloaderService.getInstagramVideo(text);
       const videoFilePath = `${LOCAL_FILES_PATH}/meta-video-${new Date().getTime()}.mp4`;
@@ -202,7 +202,7 @@ export class VoicePalService {
     }
   }
 
-  async handleImageGenerationAction({ text }) {
+  async handleImageGenerationAction({ text }): Promise<void> {
     try {
       const imageUrl = await this.openaiService.createImage(text);
       await this.telegramGeneralService.sendPhoto(this.bot, this.chatId, imageUrl, voicePalUtils.getKeyboardOptions());
@@ -212,7 +212,7 @@ export class VoicePalService {
     }
   }
 
-  async handleImageAnalyzerAction({ photo }) {
+  async handleImageAnalyzerAction({ photo }): Promise<void> {
     try {
       const imageLocalPath = await this.telegramGeneralService.downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
       const imageUrl = await this.imgurService.uploadImage(imageLocalPath);

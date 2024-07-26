@@ -22,11 +22,12 @@ export class WoltSchedulerService {
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
   ) {
-    this.bot = this.telegramBotsFactoryService.getBot(BOTS.WOLT.name);
     this.startInterval();
   }
 
   async startInterval() {
+    this.bot = await this.telegramBotsFactoryService.getBot(BOTS.WOLT.name);
+
     await this.cleanExpiredSubscriptions();
     const subscriptions = await this.mongoService.getActiveSubscriptions();
     if (subscriptions && subscriptions.length) {

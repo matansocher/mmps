@@ -1,5 +1,5 @@
 import { UtilsService } from '@services/utils/utils.service';
-import axios from 'axios';
+import { HttpService } from '@nestjs/axios';
 import { LoggerService } from '@core/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { promises as fs } from 'fs';
@@ -11,6 +11,7 @@ export class ImgurService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    private readonly httpService: HttpService,
   ) {}
 
   async uploadImage(imageLocalPath) {
@@ -24,9 +25,9 @@ export class ImgurService {
         description: 'This is a simple image upload in Imgur',
       };
 
+      const url = 'https://api.imgur.com/3/image';
       const config = {
         method: 'post',
-        url: 'https://api.imgur.com/3/image',
         headers: {
           Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
           'Content-Type': 'application/json',
@@ -34,9 +35,9 @@ export class ImgurService {
         data: data,
       };
 
-      const result = await axios(config);
+      const result = await this.httpService.get(url, config);
       this.logger.info(this.uploadImage.name, `end`);
-      return result.data.data.link;
+      return result['data']?.data?.link;
     } catch (err) {
       this.logger.error(this.uploadImage.name, `err - ${this.utilsService.getErrorMessage(err)}`);
       throw err;

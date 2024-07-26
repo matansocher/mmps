@@ -10,35 +10,38 @@ import {
   TEXT_TO_SPEECH_MODEL,
   TEXT_TO_SPEECH_VOICE,
 } from '@services/openai/openai.config';
+import { APIPromise } from 'openai/core';
+import { Transcription, Translation } from 'openai/resources/audio';
 
 @Injectable()
 export class OpenaiService implements OnModuleInit {
   private openai: OpenAI;
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.openai = new OpenAI({
       apiKey: OPENAI_API_KEY,
     });
   }
 
-  async getTranscriptFromAudio(audioFilePath, language) {
+  async getTranscriptFromAudio(audioFilePath: string): Promise<Transcription> {
     const file = fs.createReadStream(audioFilePath);
     return this.openai.audio.transcriptions.create({
       file,
       model: SOUND_MODEL,
-      ...(!!language && { language }),
+      // ...(!!language && { language }),
     });
   }
 
-  async getTranslationFromAudio(audioFilePath) {
+  async getTranslationFromAudio(audioFilePath: string): Promise<string> {
     const file = fs.createReadStream(audioFilePath);
-    return this.openai.audio.translations.create({
+    const result = await this.openai.audio.translations.create({
       file,
       model: SOUND_MODEL,
     });
+    return result.text;
   }
 
-  async getAudioFromText(text) {
+  async getAudioFromText(text: string): Promise<APIPromise<Response>> {
     return this.openai.audio.speech.create({
       model: TEXT_TO_SPEECH_MODEL,
       voice: TEXT_TO_SPEECH_VOICE,
@@ -46,7 +49,7 @@ export class OpenaiService implements OnModuleInit {
     });
   }
 
-  async getChatCompletion(prompt, userText) {
+  async getChatCompletion(prompt: string, userText: string): Promise<string> {
     let userMessages;
     if (typeof userText === 'string') {
       userMessages = [userText];
@@ -69,7 +72,7 @@ export class OpenaiService implements OnModuleInit {
     return result.choices[0].message.content;
   }
 
-  async createImage(prompt) {
+  async createImage(prompt: string): Promise<string> {
     const response = await this.openai.images.generate({
       model: IMAGE_GENERATION_MODEL,
       prompt,
@@ -79,7 +82,7 @@ export class OpenaiService implements OnModuleInit {
     return response.data[0].url;
   }
 
-  async analyzeImage(imageUrl) {
+  async analyzeImage(imageUrl: string): Promise<string> {
     const response = await this.openai.chat.completions.create({
       model: CHAT_COMPLETIONS_MODEL,
       messages: [

@@ -1,3 +1,5 @@
+import { TelegramCallbackQueryDataInterface } from '@services/telegram/interface';
+import { TelegramMessageDataInterface } from '@services/telegram/interface';
 import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config/main.config';
@@ -12,7 +14,7 @@ export class TelegramGeneralService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  getMessageData(message) {
+  getMessageData(message): TelegramMessageDataInterface {
     return {
       chatId: _get(message, 'chat.id', ''),
       telegramUserId: _get(message, 'from.id', ''),
@@ -27,7 +29,7 @@ export class TelegramGeneralService {
     };
   }
 
-  getCallbackQueryData(callbackQuery) {
+  getCallbackQueryData(callbackQuery): TelegramCallbackQueryDataInterface {
     return {
       callbackQueryId: _get(callbackQuery, 'id', ''),
       chatId: _get(callbackQuery, 'from.id', ''),
@@ -41,7 +43,7 @@ export class TelegramGeneralService {
 
   getInlineKeyboardMarkup(inlineKeyboardButtons, numberOfColumnsPerRow = 1) {
     const inlineKeyboard = { inline_keyboard: [] };
-    inlineKeyboardButtons.forEach(button => inlineKeyboard.inline_keyboard.push(button));
+    inlineKeyboardButtons.forEach((button) => inlineKeyboard.inline_keyboard.push(button));
     inlineKeyboard.inline_keyboard = _chunk(inlineKeyboard.inline_keyboard, numberOfColumnsPerRow);
     return { reply_markup: JSON.stringify(inlineKeyboard) };
   }
@@ -55,7 +57,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async downloadAudioFromVideoOrAudio(bot, { video, audio }) {
+  async downloadAudioFromVideoOrAudio(bot, { video, audio }): Promise<string> {
     try {
       let audioFileLocalPath;
       if (video && video.file_id) {
@@ -106,9 +108,9 @@ export class TelegramGeneralService {
     }
   }
 
-  async sendVoice(bot, chatId, audioFilePath) {
+  async sendVoice(bot, chatId, audioFilePath, form = {}) {
     try {
-      await bot.sendVoice(chatId, audioFilePath);
+      await bot.sendVoice(chatId, audioFilePath, form);
     } catch (err) {
       this.logger.error(this.sendVoice.name, `err: ${this.utilsService.getErrorMessage(err)}`);
     }

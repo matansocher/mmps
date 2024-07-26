@@ -41,7 +41,7 @@ export class WoltMongoService implements OnModuleInit {
   async getActiveSubscriptions(chatId = null) {
     try {
       const filter = { isActive: true };
-      if (chatId) filter.chatId = chatId;
+      if (chatId) filter['chatId'] = chatId;
       const cursor = this.subscriptionCollection.find(filter);
       return this.getMultipleResults(cursor);
     } catch (err) {

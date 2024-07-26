@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
+import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
 import { VoicePalService } from '@services/voice-pal/voice-pal.service';
 
@@ -15,14 +16,14 @@ export class VoiceAplBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly voicePalService: VoicePalService,
   ) {}
 
-  onModuleInit() {
-    this.telegramBotsFactoryService.createBot(BOTS.VOICE_PAL.name);
-    this.bot = this.telegramBotsFactoryService.getBot(BOTS.VOICE_PAL.name);
+  async onModuleInit() {
+    this.bot = await this.telegramBotsFactoryService.getBot(BOTS.VOICE_PAL.name);
     this.logger.info('onModuleInit', 'VoiceAplBotService has been initialized.');
 
     this.createBotEventListeners();
@@ -48,14 +49,14 @@ export class VoiceAplBotService implements OnModuleInit {
     try {
       this.logger.info(functionName, `${logBody} - start`);
 
-      const voicePalService = new this.voicePalService(bot, chatId);
+      // const voicePalService = new this.voicePalService(bot, chatId);
       // const voicePalService = new VoicePalService(bot, chatId);
       const availableActions = Object.keys(VOICE_PAL_OPTIONS).map(option => VOICE_PAL_OPTIONS[option].displayName);
       if (availableActions.includes(text)) {
-        await voicePalService.handleActionSelection(text, { telegramUserId, chatId, firstName, lastName, username });
+        await this.voicePalService.handleActionSelection(text, { telegramUserId, chatId, firstName, lastName, username });
       } else {
-        const userAction = userSelectionService.getCurrentUserAction(chatId);
-        await voicePalService.handleAction(message, userAction);
+        const userAction = this.userSelectedActionsService.getCurrentUserAction(chatId);
+        await this.voicePalService.handleAction(message, userAction);
       }
 
       this.logger.info(functionName, `${logBody} - success`);

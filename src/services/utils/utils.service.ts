@@ -7,6 +7,10 @@ import { promises as fs } from 'fs';
 @Injectable()
 export class UtilsService {
   constructor(private readonly logger: LoggerService) {
+    this.setFfmpegPath();
+  }
+
+  setFfmpegPath() {
     exec('which ffmpeg', (error, stdout) => {
       if (error) {
         this.logger.error('which ffmpeg exec', `Error finding ffmpeg: ${this.getErrorMessage(error)}`);
@@ -17,7 +21,7 @@ export class UtilsService {
     });
   }
 
-  async deleteFile(audioFileLocalPath) {
+  async deleteFile(audioFileLocalPath: string) {
     try {
       await fs.unlink(audioFileLocalPath);
       this.logger.info(this.deleteFile.name, `Deleted file at ${audioFileLocalPath}`);
@@ -26,7 +30,7 @@ export class UtilsService {
     }
   }
 
-  async extractAudioFromVideo(videoFilePath) {
+  async extractAudioFromVideo(videoFilePath: string): Promise<string> {
     const audioFilePath = videoFilePath.replace(/\.[^/.]+$/, '') + '.mp3';
 
     return new Promise((resolve, reject) => {
@@ -38,7 +42,7 @@ export class UtilsService {
     });
   }
 
-  async saveVideoBytesArray(videoBytesArray, videoFilePath) {
+  async saveVideoBytesArray(videoBytesArray, videoFilePath: string) {
     try {
       const buffer = Buffer.from(videoBytesArray);
       await fs.writeFile(videoFilePath, buffer);
@@ -48,7 +52,7 @@ export class UtilsService {
     }
   }
 
-  getErrorMessage(error) {
+  getErrorMessage(error: Error): string {
     return error instanceof Error ? error.message : JSON.stringify(error);
   }
 
@@ -65,14 +69,14 @@ export class UtilsService {
 
   objectToQueryParams(obj) {
     return Object.keys(obj)
-      .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]))
+      .map((key: string) => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]))
       .join('&');
   }
 
   queryParamsToObject(queryString) {
     return queryString
       .split('&')
-      .map(param => param.split('='))
+      .map((param: string) => param.split('='))
       .reduce((acc, [key, value]) => {
         acc[decodeURIComponent(key)] = decodeURIComponent(value);
         return acc;

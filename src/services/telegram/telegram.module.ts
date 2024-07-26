@@ -8,7 +8,7 @@ import { UtilsModule } from '@services/utils/utils.module';
 
 @Global()
 @Module({
-  imports: [UtilsModule, LoggerModule],
+  imports: [LoggerModule, UtilsModule],
   providers: [TelegramGeneralService, TelegramBotsFactoryService, MessageLoaderService, MessagesAggregatorService],
   exports: [TelegramGeneralService, TelegramBotsFactoryService, MessageLoaderService, MessagesAggregatorService],
 })

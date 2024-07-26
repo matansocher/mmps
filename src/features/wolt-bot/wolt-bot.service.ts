@@ -1,9 +1,9 @@
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import {
-  ANALYTIC_EVENT_NAMES,
+  ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE,
   MAX_NUM_OF_RESTAURANTS_TO_SHOW,
-  SUBSCRIPTION_EXPIRATION_HOURS
+  SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_OPTIONS
 } from '@services/wolt/wolt.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import * as woltUtils from '@services/wolt/wolt.utils';
@@ -27,9 +27,8 @@ export class WoltBotService implements OnModuleInit {
     private readonly telegramGeneralService: TelegramGeneralService,
   ) {}
 
-  onModuleInit() {
-    this.telegramBotsFactoryService.createBot(BOTS.WOLT.name);
-    this.bot = this.telegramBotsFactoryService.getBot(BOTS.WOLT.name);
+  async onModuleInit() {
+    this.bot = await this.telegramBotsFactoryService.getBot(BOTS.WOLT.name);
     this.logger.info('onModuleInit', 'WoltBotService has been initialized.');
 
     this.createBotEventListeners();
@@ -57,10 +56,10 @@ export class WoltBotService implements OnModuleInit {
       this.mongoService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
-      this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, { chatId })
+      this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, { chatId });
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.startHandler.name, `${logBody} - error - ${utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
     }
   }
@@ -88,14 +87,14 @@ export class WoltBotService implements OnModuleInit {
       this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SHOW, { chatId })
       this.logger.info(this.showHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.showHandler.name, `error - ${utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.showHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
     }
   }
 
   async textHandler(message) {
-    let { chatId, firstName, lastName, text: restaurant } = this.telegramGeneralService.getMessageData(message);
-    restaurant = restaurant.toLowerCase();
+    const { chatId, firstName, lastName, text: rawRestaurant } = this.telegramGeneralService.getMessageData(message);
+    const restaurant = rawRestaurant.toLowerCase();
 
     // prevent built in options to be processed also here
     if (Object.keys(WOLT_BOT_OPTIONS).map(option => WOLT_BOT_OPTIONS[option]).includes(restaurant)) return;
@@ -106,16 +105,16 @@ export class WoltBotService implements OnModuleInit {
     try {
       this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SEARCH, { data: restaurant, chatId });
 
-      const isLastUpdatedTooOld = new Date().getTime() - woltService.getLastUpdated() > woltConfig.TOO_OLD_LIST_THRESHOLD_MS;
+      const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
       if (isLastUpdatedTooOld) { // lst updated is less than a minute
-        await woltService.refreshRestaurants();
+        await this.woltService.refreshRestaurants();
       }
-      const matchedRestaurants = getFilteredRestaurantsByName(restaurant);
+      const matchedRestaurants = this.getFilteredRestaurantsByName(restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn\'t find any restaurants matching your search - '${restaurant}'`;
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
       }
-      const restaurants = await woltService.enrichRestaurants(matchedRestaurants);
+      const restaurants = await this.woltService.enrichRestaurants(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map(restaurant => {
         const isAvailableComment = restaurant.isOnline ? 'Open' : restaurant.isOpen ? 'Busy' : 'Closed';
         return {
@@ -146,10 +145,10 @@ export class WoltBotService implements OnModuleInit {
         return await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
       }
 
-      await handleCallbackAddSubscription(chatId, restaurant, existingSubscription);
-      this.logger.info(callbackQueryHandler.name, `${logBody} - success`);
+      await this.handleCallbackAddSubscription(chatId, restaurant, existingSubscription);
+      this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(callbackQueryHandler.name, `error - ${utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.callbackQueryHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
     }
   }
@@ -162,12 +161,12 @@ export class WoltBotService implements OnModuleInit {
         `It seems you already have a subscription for ${restaurant} is open.\n\n` +
         `Let\'s wait a few minutes - it might open soon.`;
     } else {
-      const restaurantDetails = woltService.getRestaurants().find(r => r.name === restaurant) || null;
+      const restaurantDetails = this.woltService.getRestaurants().find(r => r.name === restaurant) || null;
       if (restaurantDetails && restaurantDetails.isOnline) {
         replyText = '' +
           `It looks like ${restaurant} is open now\n\n` +
           `Go ahead and order your food :)`;
-        const restaurantLinkUrl = woltService.getRestaurantLink(restaurantDetails);
+        const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurantDetails);
         const inlineKeyboardButtons = [
           { text: restaurantDetails.name, url: restaurantLinkUrl },
         ];

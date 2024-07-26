@@ -6,16 +6,13 @@ import { BOTS } from '@core/config/telegram.config';
 export class TelegramBotsFactoryService {
   telegramBots: any = {};
 
-  getBot(name: string) {
+  async getBot(name: string) {
     const existingBot = this.getExistingBot(name);
     if (!existingBot) {
-      throw new Error(`Bot with name ${name} not found`);
+      const newBot = await this.createBotAndSave(name);
+      return newBot;
     }
     return existingBot;
-  }
-
-  createBot(name: string) {
-    this.createBotAndSave(name);
   }
 
   getExistingBot(name: string) {
