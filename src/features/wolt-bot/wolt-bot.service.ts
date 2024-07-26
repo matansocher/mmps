@@ -115,7 +115,7 @@ export class WoltBotService implements OnModuleInit {
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
       }
       const restaurants = await this.woltService.enrichRestaurants(matchedRestaurants);
-      const inlineKeyboardButtons = restaurants.map(restaurant => {
+      const inlineKeyboardButtons = restaurants.map((restaurant) => {
         const isAvailableComment = restaurant.isOnline ? 'Open' : restaurant.isOpen ? 'Busy' : 'Closed';
         return {
           text: `${restaurant.name} - ${isAvailableComment}`,
@@ -123,7 +123,7 @@ export class WoltBotService implements OnModuleInit {
         };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const replyText = 'Choose one of the above restaurants so I can notify you when it\'s online';
+      const replyText = "Choose one of the above restaurants so I can notify you when it's online";
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, inlineKeyboardMarkup);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {

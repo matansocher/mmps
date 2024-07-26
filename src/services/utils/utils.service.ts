@@ -1,8 +1,8 @@
-import { LoggerService } from '@core/logger/logger.service';
+import { promises as fs } from 'fs';
 import { Injectable } from '@nestjs/common';
 import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
-import { promises as fs } from 'fs';
+import { LoggerService } from '@core/logger/logger.service';
 
 @Injectable()
 export class UtilsService {
@@ -11,7 +11,7 @@ export class UtilsService {
   }
 
   setFfmpegPath() {
-    exec('which ffmpeg', (error, stdout) => {
+    exec('which ffmpeg', (error, stdout: string) => {
       if (error) {
         this.logger.error('which ffmpeg exec', `Error finding ffmpeg: ${this.getErrorMessage(error)}`);
         return;
@@ -21,7 +21,7 @@ export class UtilsService {
     });
   }
 
-  async deleteFile(audioFileLocalPath: string) {
+  async deleteFile(audioFileLocalPath: string): Promise<void> {
     try {
       await fs.unlink(audioFileLocalPath);
       this.logger.info(this.deleteFile.name, `Deleted file at ${audioFileLocalPath}`);
@@ -42,7 +42,7 @@ export class UtilsService {
     });
   }
 
-  async saveVideoBytesArray(videoBytesArray, videoFilePath: string) {
+  async saveVideoBytesArray(videoBytesArray, videoFilePath: string): Promise<string> {
     try {
       const buffer = Buffer.from(videoBytesArray);
       await fs.writeFile(videoFilePath, buffer);
@@ -56,7 +56,7 @@ export class UtilsService {
     return error instanceof Error ? error.message : JSON.stringify(error);
   }
 
-  getQueryParams(urlString) {
+  getQueryParams(urlString: string) {
     const parsedUrl = new URL(urlString);
     const queryParams = {};
 
@@ -73,7 +73,7 @@ export class UtilsService {
       .join('&');
   }
 
-  queryParamsToObject(queryString) {
+  queryParamsToObject(queryString: string) {
     return queryString
       .split('&')
       .map((param: string) => param.split('='))

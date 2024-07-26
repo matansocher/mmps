@@ -1,3 +1,5 @@
+import { IVoicePalOption } from '@services/voice-pal/interface';
+
 export const MILLISECONDS_IN_HOUR = 1000 * 60 * 60;
 export const MILLISECONDS_IN_DAY = MILLISECONDS_IN_HOUR * 24;
 export const MILLISECONDS_IN_WEEK = MILLISECONDS_IN_DAY * 7;
@@ -5,7 +7,7 @@ export const MILLISECONDS_IN_WEEK = MILLISECONDS_IN_DAY * 7;
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 7;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
 
-export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS = {
+export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number> = {
   FAST: 60 / 2,
   MEDIUM: 60,
   SLOW: 60 * 2,

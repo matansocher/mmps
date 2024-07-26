@@ -39,7 +39,7 @@ export class YoutubeTranscriptService {
     return queryParams['v'];
   }
 
-  parseTranscriptResult(result: any[]) {
+  parseTranscriptResult(result: any[]): { text: string; start: string; end: string }[] {
     return result.map((item) => {
       const { text, duration, offset } = item;
       const start = this.getTimestampInMinutesFromSeconds(offset);

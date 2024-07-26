@@ -1,26 +1,33 @@
 import { BOT_BROADCAST_ACTIONS } from '@core/config/telegram.config';
+import { IVoicePalOption } from '@services/voice-pal/interface';
 
 export const LOCAL_FILES_PATH = './assets/downloads';
 
-export const POSSIBLE_INPUTS = {
-  TEXT: 'text',
-  AUDIO: 'audio',
-  VIDEO: 'video',
-  PHOTO: 'photo',
-};
+export enum POSSIBLE_INPUTS {
+  TEXT = 'text',
+  AUDIO = 'audio',
+  VIDEO = 'video',
+  PHOTO = 'photo',
+}
 
-export const VOICE_PAL_OPTIONS = {
+export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   START: {
     displayName: '/start',
     selectedActionResponse: `Hi {name}!\n\nI'm a bot that can help you with translations, transcriptions of text, audio and video files\n\nJust send me the data and I will do my thing`,
+    handler: '',
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
+    possibleInputs: [],
     analyticsEventName: 'START',
     hideFromKeyboard: true,
+    showLoader: false,
   },
   TRANSCRIBE: {
     displayName: 'Transcribe',
     selectedActionResponse: 'OK, send me an audio or video file you want me to transcribe',
     handler: 'handleTranscribeAction',
     analyticsEventName: 'TRANSCRIBE',
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
+    hideFromKeyboard: false,
     possibleInputs: [POSSIBLE_INPUTS.VIDEO, POSSIBLE_INPUTS.AUDIO],
     showLoader: true,
   },
@@ -30,7 +37,9 @@ export const VOICE_PAL_OPTIONS = {
     handler: 'handleTranslateAction',
     analyticsEventName: 'TRANSLATE',
     possibleInputs: [POSSIBLE_INPUTS.TEXT, POSSIBLE_INPUTS.VIDEO, POSSIBLE_INPUTS.AUDIO],
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: false,
+    hideFromKeyboard: false,
   },
   TEXT_TO_SPEECH: {
     displayName: 'Text to Speech',
@@ -40,6 +49,7 @@ export const VOICE_PAL_OPTIONS = {
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
     showLoader: true,
     loaderType: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE,
+    hideFromKeyboard: false,
   },
   SUMMARY_TEXT: {
     displayName: 'Summarize Text',
@@ -47,7 +57,9 @@ export const VOICE_PAL_OPTIONS = {
     handler: 'handleSummarizeTextAction',
     analyticsEventName: 'SUMMARY_TEXT',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
+    hideFromKeyboard: false,
   },
   SUMMARY_YOUTUBE_VIDEO: {
     displayName: 'Summary of a YouTube Video',
@@ -55,7 +67,9 @@ export const VOICE_PAL_OPTIONS = {
     handler: 'handleSummarizeYoutubeVideoAction',
     analyticsEventName: 'SUMMARY_YOUTUBE_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
+    hideFromKeyboard: false,
   },
   SUMMARY_TIKTOK_VIDEO: {
     displayName: 'Summary of a Tiktok Video',
@@ -63,7 +77,9 @@ export const VOICE_PAL_OPTIONS = {
     handler: 'handleSummarizeTiktokVideoAction',
     analyticsEventName: 'SUMMARY_TIKTOK_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
+    hideFromKeyboard: false,
   },
   SUMMARY_INSTAGRAM_VIDEO: {
     displayName: 'Summary of a Instagram Video',
@@ -71,7 +87,9 @@ export const VOICE_PAL_OPTIONS = {
     handler: 'handleSummarizeMetaVideoAction',
     analyticsEventName: 'SUMMARY_INSTAGRAM_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
+    hideFromKeyboard: false,
   },
   SUMMARY_FACEBOOK_VIDEO: {
     displayName: 'Summary of a Facebook Video',
@@ -79,15 +97,19 @@ export const VOICE_PAL_OPTIONS = {
     handler: 'handleSummarizeMetaVideoAction',
     analyticsEventName: 'SUMMARY_FACEBOOK_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
+    hideFromKeyboard: false,
   },
   // IMAGE_GENERATION: {
-  //     displayName: 'Image Generation',
-  //     selectedActionResponse: 'OK, Send me the description of the image and I will create it for you',
-  //     handler: 'handleImageGenerationAction',
-  //     analyticsEventName: 'IMAGE_GENERATION',
-  //     possibleInputs: [POSSIBLE_INPUTS.TEXT],
-  //     showLoader: true,
+  //   displayName: 'Image Generation',
+  //   selectedActionResponse: 'OK, Send me the description of the image and I will create it for you',
+  //   handler: 'handleImageGenerationAction',
+  //   analyticsEventName: 'IMAGE_GENERATION',
+  //   possibleInputs: [POSSIBLE_INPUTS.TEXT],
+  //   loaderType: BOT_BROADCAST_ACTIONS.NONE,
+  //   showLoader: true,
+  //   hideFromKeyboard: false,
   // },
   IMAGE_ANALYZER: {
     displayName: 'Image Analyzer',
@@ -95,13 +117,15 @@ export const VOICE_PAL_OPTIONS = {
     handler: 'handleImageAnalyzerAction',
     analyticsEventName: 'IMAGE_ANALYZER',
     possibleInputs: [POSSIBLE_INPUTS.PHOTO],
+    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
+    hideFromKeyboard: false,
   },
 };
 
 export const ANALYTIC_EVENT_NAMES = {
   ...Object.fromEntries(
-    Object.keys(VOICE_PAL_OPTIONS).map((option) => [
+    Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [
       VOICE_PAL_OPTIONS[option].displayName,
       VOICE_PAL_OPTIONS[option].analyticsEventName,
     ]),

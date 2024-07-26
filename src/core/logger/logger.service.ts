@@ -16,11 +16,11 @@ export class LoggerService {
       .join('/');
   }
 
-  info(method: string, text: string) {
+  info(method: string, text: string): void {
     console.log(`${this.filename} | ${method} | ${text}`);
   }
 
-  error(method: string, text: string) {
+  error(method: string, text: string): void {
     console.error(`${this.filename} | ${method} | ${text}`);
   }
 }

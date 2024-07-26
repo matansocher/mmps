@@ -12,7 +12,7 @@ export class SocialMediaDownloaderService {
     private readonly httpService: HttpService,
   ) {}
 
-  async getInstagramVideo(videoUrl) {
+  async getInstagramVideo(videoUrl: string): Promise<any> {
     try {
       this.logger.info(this.getInstagramVideo.name, `start`);
       const { data } = await ndown(videoUrl);
@@ -25,7 +25,7 @@ export class SocialMediaDownloaderService {
     }
   }
 
-  async getTiktokAudio(videoUrl) {
+  async getTiktokAudio(videoUrl: string): Promise<any> {
     try {
       this.logger.info(this.getTiktokAudio.name, `start`);
       const { data } = await tikdown(videoUrl);

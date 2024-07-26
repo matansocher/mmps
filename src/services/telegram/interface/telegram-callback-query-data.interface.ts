@@ -1,6 +1,6 @@
-export interface TelegramCallbackQueryDataInterface {
+export interface ITelegramCallbackQueryData {
   callbackQueryId: string;
-  chatId: string;
+  chatId: number;
   date: string;
   firstName: string;
   lastName: string;

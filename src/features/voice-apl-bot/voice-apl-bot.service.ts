@@ -22,7 +22,7 @@ export class VoiceAplBotService implements OnModuleInit {
     private readonly voicePalService: VoicePalService,
   ) {}
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     this.bot = await this.telegramBotsFactoryService.getBot(BOTS.VOICE_PAL.name);
     this.logger.info('onModuleInit', 'VoiceAplBotService has been initialized.');
 
@@ -30,18 +30,18 @@ export class VoiceAplBotService implements OnModuleInit {
     this.createErrorEventListeners();
   }
 
-  createErrorEventListeners() {
+  createErrorEventListeners(): void {
     this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.VOICE_PAL.name, 'polling_error', error));
     this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.VOICE_PAL.name, 'error', error));
   }
 
-  createBotEventListeners() {
+  createBotEventListeners(): void {
     // const messageAggregator = new MessageAggregator(handleMessage);
     // this.bot.on('message', (message) => messageAggregator.handleIncomingMessage(message));
     this.bot.on('message', this.handleMessage);
   }
 
-  async handleMessage(message) {
+  async handleMessage(message): Promise<void> {
     const functionName = 'message listener';
     const { chatId, telegramUserId, firstName, lastName, username, text } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
@@ -51,7 +51,7 @@ export class VoiceAplBotService implements OnModuleInit {
 
       // const voicePalService = new this.voicePalService(bot, chatId);
       // const voicePalService = new VoicePalService(bot, chatId);
-      const availableActions = Object.keys(VOICE_PAL_OPTIONS).map(option => VOICE_PAL_OPTIONS[option].displayName);
+      const availableActions = Object.keys(VOICE_PAL_OPTIONS).map((option: string) => VOICE_PAL_OPTIONS[option].displayName);
       if (availableActions.includes(text)) {
         await this.voicePalService.handleActionSelection(text, { telegramUserId, chatId, firstName, lastName, username });
       } else {

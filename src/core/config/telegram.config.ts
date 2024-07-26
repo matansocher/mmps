@@ -9,7 +9,8 @@ export const BOTS = {
   },
 };
 
-export const BOT_BROADCAST_ACTIONS = {
-  TYPING: 'typing',
-  UPLOADING_VOICE: 'upload_voice',
-};
+export enum BOT_BROADCAST_ACTIONS {
+  NONE = 'none',
+  TYPING = 'typing',
+  UPLOADING_VOICE = 'upload_voice',
+}

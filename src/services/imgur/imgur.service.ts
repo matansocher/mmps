@@ -14,7 +14,7 @@ export class ImgurService {
     private readonly httpService: HttpService,
   ) {}
 
-  async uploadImage(imageLocalPath) {
+  async uploadImage(imageLocalPath: string): Promise<any> {
     try {
       this.logger.info(this.uploadImage.name, `start`);
       const imageBuffer = await fs.readFile(imageLocalPath, { encoding: 'base64' });

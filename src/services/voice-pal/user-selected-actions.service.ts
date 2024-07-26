@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { IVoicePalOption } from '@services/voice-pal/interface';
 import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
 
 @Injectable()
 export class UserSelectedActionsService {
   private userActions: any = {};
 
-  getCurrentUserAction(chatId) {
+  getCurrentUserAction(chatId: number): IVoicePalOption {
     const userAction = this.userActions[chatId];
     if (!userAction) {
       return null;
     }
     const relevantActionKey = Object.keys(VOICE_PAL_OPTIONS).find(
-      (option) => VOICE_PAL_OPTIONS[option].displayName === userAction,
+      (option: string) => VOICE_PAL_OPTIONS[option].displayName === userAction,
     );
     if (!relevantActionKey) {
       return null;
@@ -19,7 +20,7 @@ export class UserSelectedActionsService {
     return VOICE_PAL_OPTIONS[relevantActionKey];
   }
 
-  setCurrentUserAction(chatId, action) {
+  setCurrentUserAction(chatId: number, action: string): void {
     this.userActions[chatId] = action;
   }
 }

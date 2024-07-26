@@ -1,5 +1,5 @@
-export interface TelegramMessageDataInterface {
-  chatId: string;
+export interface ITelegramMessageData {
+  chatId: number;
   telegramUserId: string;
   firstName: string;
   lastName: string;

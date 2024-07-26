@@ -1,8 +1,9 @@
-import { LoggerService } from '@core/logger/logger.service';
-import * as mongoConfig from '@core/mongo/voice-pal-mongo/voice-pal-mongo.config';
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { UtilsService } from '@services/utils/utils.service';
+import { ITelegramMessageData } from '@services/telegram/interface';
 import { MongoClient } from 'mongodb';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@services/utils/utils.service';
+import * as mongoConfig from '@core/mongo/voice-pal-mongo/voice-pal-mongo.config';
 import { isProd } from '@core/config/main.config';
 
 @Injectable()
@@ -17,11 +18,11 @@ export class VoicePalMongoService implements OnModuleInit {
     private readonly utilsService: UtilsService,
   ) {}
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.connectToMongo();
   }
 
-  async connectToMongo() {
+  async connectToMongo(): Promise<void> {
     try {
       await this.client.connect();
       this.logger.info(this.connectToMongo.name, 'Connected successfully to mongo server');
@@ -35,7 +36,7 @@ export class VoicePalMongoService implements OnModuleInit {
     }
   }
 
-  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }) {
+  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<any> {
     try {
       const existingUser = await this.userCollection.findOne({ telegramUserId });
       if (existingUser) {
@@ -48,7 +49,7 @@ export class VoicePalMongoService implements OnModuleInit {
     }
   }
 
-  sendAnalyticLog(eventName, { chatId, data = null, error = '' }) {
+  sendAnalyticLog(eventName: string, { chatId, data = null, error = '' }): Promise<any> {
     if (!isProd) {
       return;
     }

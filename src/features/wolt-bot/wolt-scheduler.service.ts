@@ -25,7 +25,7 @@ export class WoltSchedulerService {
     this.startInterval();
   }
 
-  async startInterval() {
+  async startInterval(): Promise<void> {
     this.bot = await this.telegramBotsFactoryService.getBot(BOTS.WOLT.name);
 
     await this.cleanExpiredSubscriptions();
@@ -41,13 +41,13 @@ export class WoltSchedulerService {
     }, secondsToNextRefresh * 1000);
   }
 
-  getSecondsToNextRefresh() {
+  getSecondsToNextRefresh(): number {
     const currentHour = new Date().getHours() + woltConfig.HOURS_DIFFERENCE_FROM_UTC;
     const israelHour = currentHour % 24;
     return woltConfig.HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }
 
-  alertSubscribers(subscriptions) {
+  alertSubscribers(subscriptions): Promise<any> {
     try {
       const restaurantsWithSubscriptionNames = subscriptions.map((subscription) => subscription.restaurant);
       const subscribedAndOnlineRestaurants = this.woltService
@@ -75,9 +75,9 @@ export class WoltSchedulerService {
     }
   }
 
-  async cleanExpiredSubscriptions() {
+  async cleanExpiredSubscriptions(): Promise<void> {
     try {
-      const expiredSubscriptions = await this.mongoService.getExpiredSubscriptions();
+      const expiredSubscriptions = await this.mongoService.getExpiredSubscriptions(woltConfig.SUBSCRIPTION_EXPIRATION_HOURS);
       const promisesArr = [];
       expiredSubscriptions.forEach((subscription) => {
         promisesArr.push(this.mongoService.archiveSubscription(subscription.chatId, subscription.restaurant));

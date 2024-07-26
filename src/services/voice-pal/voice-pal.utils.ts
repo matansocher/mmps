@@ -1,3 +1,5 @@
+import { ITelegramMessageData } from '@services/telegram/interface';
+import { IVoicePalOption } from '@services/voice-pal/interface';
 import { VOICE_PAL_OPTIONS, POSSIBLE_INPUTS } from './voice-pal.config';
 
 export function getKeyboardOptions() {
@@ -18,11 +20,11 @@ export function getKeyboardOptions() {
   };
 }
 
-export function validateActionWithMessage(userAction, messageParams) {
+export function validateActionWithMessage(userAction: IVoicePalOption, messageParams: Partial<ITelegramMessageData>): string | void {
   const { possibleInputs } = userAction;
 
   const messageParamsExistenceMap = {};
-  Object.keys(POSSIBLE_INPUTS).forEach((possibleInputKey) => {
+  Object.keys(POSSIBLE_INPUTS).forEach((possibleInputKey: string) => {
     messageParamsExistenceMap[possibleInputKey.toLowerCase()] = !!messageParams[POSSIBLE_INPUTS[possibleInputKey]];
   });
 

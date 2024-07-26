@@ -1,0 +1,1 @@
+export { IWoltRestaurant } from './wolt-restaurant.interface';

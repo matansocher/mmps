@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import fs from 'fs';
 import { chunk as _chunk } from 'lodash';
 import { OpenAI } from 'openai';
+import { APIPromise } from 'openai/core';
 import {
   OPENAI_API_KEY,
   CHAT_COMPLETIONS_MODEL,
@@ -10,8 +11,6 @@ import {
   TEXT_TO_SPEECH_MODEL,
   TEXT_TO_SPEECH_VOICE,
 } from '@services/openai/openai.config';
-import { APIPromise } from 'openai/core';
-import { Transcription, Translation } from 'openai/resources/audio';
 
 @Injectable()
 export class OpenaiService implements OnModuleInit {
@@ -23,13 +22,14 @@ export class OpenaiService implements OnModuleInit {
     });
   }
 
-  async getTranscriptFromAudio(audioFilePath: string): Promise<Transcription> {
+  async getTranscriptFromAudio(audioFilePath: string): Promise<string> {
     const file = fs.createReadStream(audioFilePath);
-    return this.openai.audio.transcriptions.create({
+    const result = await this.openai.audio.transcriptions.create({
       file,
       model: SOUND_MODEL,
       // ...(!!language && { language }),
     });
+    return result.text;
   }
 
   async getTranslationFromAudio(audioFilePath: string): Promise<string> {

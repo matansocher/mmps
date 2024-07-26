@@ -1,5 +1,4 @@
-import { TelegramCallbackQueryDataInterface } from '@services/telegram/interface';
-import { TelegramMessageDataInterface } from '@services/telegram/interface';
+import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
 import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config/main.config';
@@ -14,7 +13,7 @@ export class TelegramGeneralService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  getMessageData(message): TelegramMessageDataInterface {
+  getMessageData(message): ITelegramMessageData {
     return {
       chatId: _get(message, 'chat.id', ''),
       telegramUserId: _get(message, 'from.id', ''),
@@ -29,7 +28,7 @@ export class TelegramGeneralService {
     };
   }
 
-  getCallbackQueryData(callbackQuery): TelegramCallbackQueryDataInterface {
+  getCallbackQueryData(callbackQuery): ITelegramCallbackQueryData {
     return {
       callbackQueryId: _get(callbackQuery, 'id', ''),
       chatId: _get(callbackQuery, 'from.id', ''),

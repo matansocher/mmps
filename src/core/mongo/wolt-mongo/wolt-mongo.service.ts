@@ -1,10 +1,10 @@
-import { LoggerService } from '@core/logger/logger.service';
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { UtilsService } from '@services/utils/utils.service';
+import { ITelegramMessageData } from '@services/telegram/interface';
 import { MongoClient } from 'mongodb';
-import { isProd } from '@core/config/main.config';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@services/utils/utils.service';
 import * as mongoConfig from './wolt-mongo.config';
-import * as woltConfig from '@services/wolt/wolt.config';
+import { isProd } from '@core/config/main.config';
 
 @Injectable()
 export class WoltMongoService implements OnModuleInit {
@@ -19,11 +19,11 @@ export class WoltMongoService implements OnModuleInit {
     private readonly utilsService: UtilsService,
   ) {}
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.connectToMongo();
   }
 
-  async connectToMongo() {
+  async connectToMongo(): Promise<void> {
     try {
       await this.client.connect();
       this.logger.info(this.connectToMongo.name, 'Connected successfully to mongo server');
@@ -38,7 +38,7 @@ export class WoltMongoService implements OnModuleInit {
     }
   }
 
-  async getActiveSubscriptions(chatId = null) {
+  async getActiveSubscriptions(chatId: number = null): Promise<any> {
     try {
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
@@ -50,12 +50,12 @@ export class WoltMongoService implements OnModuleInit {
     }
   }
 
-  async getSubscription(chatId, restaurant) {
+  async getSubscription(chatId: number, restaurant: string): Promise<any> {
     const filter = { chatId, restaurant, isActive: true };
     return this.subscriptionCollection.findOne(filter);
   }
 
-  async addSubscription(chatId, restaurant, restaurantPhoto) {
+  async addSubscription(chatId: number, restaurant: string, restaurantPhoto: string): Promise<any> {
     const subscription = {
       chatId,
       restaurant,
@@ -66,20 +66,20 @@ export class WoltMongoService implements OnModuleInit {
     return this.subscriptionCollection.insertOne(subscription);
   }
 
-  archiveSubscription(chatId, restaurant) {
+  archiveSubscription(chatId: number, restaurant: string): Promise<any> {
     const filter = { chatId, restaurant, isActive: true };
     const updateObj = { $set: { isActive: false } };
     return this.subscriptionCollection.updateOne(filter, updateObj);
   }
 
-  async getExpiredSubscriptions() {
-    const validLimitTimestamp = new Date().getTime() - (woltConfig.SUBSCRIPTION_EXPIRATION_HOURS * 60 * 60 * 1000);
+  async getExpiredSubscriptions(subscriptionExpirationHours: number): Promise<any> {
+    const validLimitTimestamp = new Date().getTime() - subscriptionExpirationHours * 60 * 60 * 1000;
     const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
     const cursor = this.subscriptionCollection.find(filter);
     return this.getMultipleResults(cursor);
   }
 
-  async getMultipleResults(cursor) {
+  async getMultipleResults(cursor: any): Promise<any[]> {
     const results = [];
     for await (const doc of cursor) {
       results.push(doc);
@@ -87,7 +87,7 @@ export class WoltMongoService implements OnModuleInit {
     return results;
   }
 
-  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }) {
+  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<any> {
     try {
       const existingUser = await this.userCollection.findOne({ telegramUserId });
       if (existingUser) {
@@ -100,7 +100,7 @@ export class WoltMongoService implements OnModuleInit {
     }
   }
 
-  sendAnalyticLog(eventName, { chatId, data = null }) {
+  sendAnalyticLog(eventName: string, { chatId, data = null }): Promise<any> {
     if (!isProd) {
       return;
     }

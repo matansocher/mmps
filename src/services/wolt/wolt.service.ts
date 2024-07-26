@@ -2,11 +2,13 @@ import { HttpService } from '@nestjs/axios';
 import { LoggerService } from '@core/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { UtilsService } from '@services/utils/utils.service';
+import { IWoltRestaurant } from '@services/wolt/interface';
+import { IRestaurantsList } from '@services/wolt/interface/restaurants-list.interface';
 import * as woltConfig from './wolt.config';
 
 @Injectable()
 export class WoltService {
-  restaurantsList = {
+  restaurantsList: IRestaurantsList = {
     restaurants: [],
     lastUpdated: 0,
   };
@@ -17,15 +19,15 @@ export class WoltService {
     private readonly httpService: HttpService,
   ) {}
 
-  getRestaurants() {
+  getRestaurants(): IWoltRestaurant[] {
     return this.restaurantsList.restaurants;
   }
 
-  getLastUpdated() {
+  getLastUpdated(): number {
     return this.restaurantsList.lastUpdated;
   }
 
-  async refreshRestaurants() {
+  async refreshRestaurants(): Promise<void> {
     try {
       const restaurants = await this.getRestaurantsList();
       if (restaurants.length) {
@@ -37,7 +39,7 @@ export class WoltService {
     }
   }
 
-  async getRestaurantsList() {
+  async getRestaurantsList(): Promise<IWoltRestaurant[]> {
     try {
       const cities = await this.getCitiesList();
       const promises = cities.map((city) => {
@@ -65,7 +67,7 @@ export class WoltService {
     }
   }
 
-  async getCitiesList() {
+  async getCitiesList(): Promise<any> {
     try {
       const result = await this.httpService.get(woltConfig.CITIES_BASE_URL);
       const rawCities = result['data'].results;
@@ -114,7 +116,7 @@ export class WoltService {
     }
   }
 
-  getRestaurantLink(restaurant) {
+  getRestaurantLink(restaurant): string {
     const { area, slug } = restaurant;
     return woltConfig.RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
   }
