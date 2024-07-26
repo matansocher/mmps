@@ -21,7 +21,7 @@ import * as voicePalUtils from './voice-pal.utils';
 @Injectable()
 export class VoicePalService {
   bot: string;
-  chatId: string;
+  chatId: number;
 
   constructor(
     private readonly logger: LoggerService,

@@ -6,6 +6,7 @@ import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-fac
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
 import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
+import { VoicePalService } from '@services/voice-pal/voice-pal.service';
 
 @Injectable()
 export class VoiceAplBotService implements OnModuleInit {
@@ -16,6 +17,7 @@ export class VoiceAplBotService implements OnModuleInit {
     private readonly utilsService: UtilsService,
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
+    private readonly voicePalService: VoicePalService,
   ) {}
 
   onModuleInit() {
@@ -46,7 +48,8 @@ export class VoiceAplBotService implements OnModuleInit {
     try {
       this.logger.info(functionName, `${logBody} - start`);
 
-      const voicePalService = new VoicePalService(bot, chatId);
+      const voicePalService = new this.voicePalService(bot, chatId);
+      // const voicePalService = new VoicePalService(bot, chatId);
       const availableActions = Object.keys(VOICE_PAL_OPTIONS).map(option => VOICE_PAL_OPTIONS[option].displayName);
       if (availableActions.includes(text)) {
         await voicePalService.handleActionSelection(text, { telegramUserId, chatId, firstName, lastName, username });
