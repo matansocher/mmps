@@ -1,8 +1,10 @@
+import { AnalyticLogModel, SubscriptionModel, UserModel } from '@core/mongo/shared/models';
 import { ITelegramMessageData } from '@services/telegram/interface';
 import { MongoClient } from 'mongodb';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@services/utils/utils.service';
+import { Subscription } from 'rxjs';
 import * as mongoConfig from './wolt-mongo.config';
 import { isProd } from '@core/config/main.config';
 
@@ -38,7 +40,7 @@ export class WoltMongoService implements OnModuleInit {
     }
   }
 
-  async getActiveSubscriptions(chatId: number = null): Promise<any> {
+  async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {
     try {
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
@@ -50,12 +52,12 @@ export class WoltMongoService implements OnModuleInit {
     }
   }
 
-  async getSubscription(chatId: number, restaurant: string): Promise<any> {
+  async getSubscription(chatId: number, restaurant: string): Promise<SubscriptionModel> {
     const filter = { chatId, restaurant, isActive: true };
     return this.subscriptionCollection.findOne(filter);
   }
 
-  async addSubscription(chatId: number, restaurant: string, restaurantPhoto: string): Promise<any> {
+  async addSubscription(chatId: number, restaurant: string, restaurantPhoto: string): Promise<SubscriptionModel> {
     const subscription = {
       chatId,
       restaurant,
@@ -66,13 +68,13 @@ export class WoltMongoService implements OnModuleInit {
     return this.subscriptionCollection.insertOne(subscription);
   }
 
-  archiveSubscription(chatId: number, restaurant: string): Promise<any> {
+  archiveSubscription(chatId: number, restaurant: string): Promise<SubscriptionModel> {
     const filter = { chatId, restaurant, isActive: true };
     const updateObj = { $set: { isActive: false } };
     return this.subscriptionCollection.updateOne(filter, updateObj);
   }
 
-  async getExpiredSubscriptions(subscriptionExpirationHours: number): Promise<any> {
+  async getExpiredSubscriptions(subscriptionExpirationHours: number): Promise<SubscriptionModel[]> {
     const validLimitTimestamp = new Date().getTime() - subscriptionExpirationHours * 60 * 60 * 1000;
     const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
     const cursor = this.subscriptionCollection.find(filter);
@@ -87,7 +89,7 @@ export class WoltMongoService implements OnModuleInit {
     return results;
   }
 
-  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<any> {
+  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<UserModel> {
     try {
       const existingUser = await this.userCollection.findOne({ telegramUserId });
       if (existingUser) {
@@ -100,7 +102,7 @@ export class WoltMongoService implements OnModuleInit {
     }
   }
 
-  sendAnalyticLog(eventName: string, { chatId, data = null }): Promise<any> {
+  sendAnalyticLog(eventName: string, { chatId, data = null }): Promise<AnalyticLogModel> {
     if (!isProd) {
       return;
     }

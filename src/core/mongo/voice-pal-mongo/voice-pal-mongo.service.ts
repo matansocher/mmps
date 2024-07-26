@@ -1,3 +1,4 @@
+import { AnalyticLogModel, UserModel } from '@core/mongo/shared/models';
 import { ITelegramMessageData } from '@services/telegram/interface';
 import { MongoClient } from 'mongodb';
 import { Injectable, OnModuleInit } from '@nestjs/common';
@@ -36,7 +37,7 @@ export class VoicePalMongoService implements OnModuleInit {
     }
   }
 
-  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<any> {
+  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<UserModel> {
     try {
       const existingUser = await this.userCollection.findOne({ telegramUserId });
       if (existingUser) {
@@ -49,7 +50,7 @@ export class VoicePalMongoService implements OnModuleInit {
     }
   }
 
-  sendAnalyticLog(eventName: string, { chatId, data = null, error = '' }): Promise<any> {
+  sendAnalyticLog(eventName: string, { chatId, data = null, error = '' }): Promise<AnalyticLogModel> {
     if (!isProd) {
       return;
     }
