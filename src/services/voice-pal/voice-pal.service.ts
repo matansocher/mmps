@@ -1,5 +1,6 @@
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { VoicePalMongoService } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.service';
 import { Injectable } from '@nestjs/common';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
 import { ImgurService } from '@services/imgur/imgur.service';
@@ -7,6 +8,7 @@ import { OpenaiService } from '@services/openai/openai.service';
 import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
+import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
 import { promises as fs } from 'fs';
 import {
@@ -26,10 +28,12 @@ export class VoicePalService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    private readonly mongoService: VoicePalMongoService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly googleTranslateService: GoogleTranslateService,
     private readonly youtubeTranscriptService: YoutubeTranscriptService,
     private readonly socialMediaDownloaderService: SocialMediaDownloaderService,
+    private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly imgurService: ImgurService,
     private readonly openaiService: OpenaiService,
   ) {}
@@ -42,7 +46,7 @@ export class VoicePalService {
       this.mongoService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
       replyText = replyText.replace('{name}', firstName || username || '');
     } else {
-      userSelectionService.setCurrentUserAction(this.chatId, selection);
+      this.userSelectedActionsService.setCurrentUserAction(this.chatId, selection);
     }
 
     const analyticAction = ANALYTIC_EVENT_NAMES[selection];
@@ -66,9 +70,10 @@ export class VoicePalService {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction];
     try {
       if (userAction && userAction.showLoader) { // showLoader
-        await messageLoaderService.withMessageLoader(this.bot, this.chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType }, async () => {
-          await this[userAction.handler]({ text, audio, video, photo });
-        });
+        // await messageLoaderService.withMessageLoader(this.bot, this.chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType }, async () => {
+        //   await this[userAction.handler]({ text, audio, video, photo });
+        // });
+        await this[userAction.handler]({ text, audio, video, photo });
       } else {
         await this[userAction.handler]({ text, audio, video, photo });
       }

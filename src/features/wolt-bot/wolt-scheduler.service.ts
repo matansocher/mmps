@@ -1,5 +1,6 @@
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { WoltMongoService } from '@core/mongo/wolt-mongo/wolt-mongo.service';
 import { Injectable } from '@nestjs/common';
 import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
@@ -17,6 +18,7 @@ export class WoltSchedulerService {
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly woltService: WoltService,
+    private readonly mongoService: WoltMongoService,
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
   ) {

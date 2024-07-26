@@ -24,7 +24,7 @@ module.exports = {
     "prettier/prettier": [
       "warn",
       {
-        "printWidth": 130,  // Customize the print width (default 80)
+        "printWidth": 150,  // Customize the print width (default 80)
         "tabWidth": 2,     // Customize tab width
         "semi": true,     // Add or remove semicolons
         "singleQuote": true // Use single quotes or double quotes

@@ -1,5 +1,13 @@
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import {
+  ANALYTIC_EVENT_NAMES,
+  MAX_NUM_OF_RESTAURANTS_TO_SHOW,
+  SUBSCRIPTION_EXPIRATION_HOURS
+} from '@services/wolt/wolt.config';
+import { WoltService } from '@services/wolt/wolt.service';
+import * as woltUtils from '@services/wolt/wolt.utils';
+import { WoltMongoService } from '@core/mongo/wolt-mongo/wolt-mongo.service';
 import type { OnModuleInit } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
@@ -13,6 +21,8 @@ export class WoltBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    private readonly mongoService: WoltMongoService,
+    private readonly woltService: WoltService,
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
   ) {}
@@ -118,7 +128,7 @@ export class WoltBotService implements OnModuleInit {
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, inlineKeyboardMarkup);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.textHandler.name, `error - ${utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
     }
   }
@@ -164,7 +174,7 @@ export class WoltBotService implements OnModuleInit {
         form = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
       } else {
         replyText = `No Problem, you will be notified once ${restaurant} is open.\n\n` +
-          `FYI: If the venue won\'t open soon, registration will be removed after ${woltConfig.SUBSCRIPTION_EXPIRATION_HOURS} hours.\n\n` +
+          `FYI: If the venue won\'t open soon, registration will be removed after ${SUBSCRIPTION_EXPIRATION_HOURS} hours.\n\n` +
           `You can search and register for another restaurant if you like.`;
         await this.mongoService.addSubscription(chatId, restaurant, restaurantDetails.photo);
       }
@@ -189,9 +199,9 @@ export class WoltBotService implements OnModuleInit {
   }
 
   getFilteredRestaurantsByName(searchInput) {
-    const restaurants = [...woltService.getRestaurants()];
+    const restaurants = [...this.woltService.getRestaurants()];
     return restaurants.filter(restaurant => {
       return restaurant.name.toLowerCase().includes(searchInput.toLowerCase());
-    }).slice(0, woltConfig.MAX_NUM_OF_RESTAURANTS_TO_SHOW);
+    }).slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
   }
 }
