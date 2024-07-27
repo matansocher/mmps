@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { BOTS } from '@core/config/telegram.config';
+import { BOTS, TELEGRAM_BOT_VOICE_PAL_INJECTOR } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
@@ -16,7 +16,7 @@ export class VoiceAplBotService {
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly voicePalService: VoicePalService,
-    @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
+    @Inject(TELEGRAM_BOT_VOICE_PAL_INJECTOR) private readonly bot: TelegramBot,
   ) {
     this.createBotEventListeners();
     this.createErrorEventListeners();
