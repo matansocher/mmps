@@ -12,7 +12,7 @@ import { VoicePalService } from './voice-pal.service';
 
 @Module({
   imports: [
-    LoggerModule,
+    LoggerModule.forRoot(VoicePalModule.name),
     UtilsModule,
     GoogleTranslateModule,
     ImgurModule,

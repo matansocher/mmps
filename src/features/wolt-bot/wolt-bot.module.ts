@@ -11,7 +11,7 @@ import { WoltBotService } from './wolt-bot.service';
 
 @Module({
   imports: [
-    LoggerModule,
+    LoggerModule.forRoot(WoltBotModule.name),
     UtilsModule,
     TelegramModule,
     WoltModule,

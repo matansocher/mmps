@@ -4,7 +4,7 @@ import { UtilsModule } from '@services/utils/utils.module';
 import { YoutubeTranscriptService } from './youtube-transcript.service';
 
 @Module({
-  imports: [LoggerModule, UtilsModule],
+  imports: [LoggerModule.forRoot(YoutubeTranscriptModule.name), UtilsModule],
   providers: [YoutubeTranscriptService],
   exports: [YoutubeTranscriptService],
 })

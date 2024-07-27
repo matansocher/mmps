@@ -4,7 +4,7 @@ import { UtilsModule } from '@services/utils/utils.module';
 import { WoltService } from './wolt.service';
 
 @Module({
-  imports: [LoggerModule, UtilsModule],
+  imports: [LoggerModule.forRoot(WoltModule.name), UtilsModule],
   providers: [WoltService],
   exports: [WoltService],
 })

@@ -1,27 +1,21 @@
-// import { DynamicModule, Module, Provider, Scope } from '@nestjs/common';
-// import { LoggerService } from './logger.service';
-//
-// const createLoggerService = (moduleName: string): Provider => ({
-//   provide: LoggerService,
-//   useFactory: (moduleName) => new LoggerService(moduleName),
-// });
-//
-// @Module({})
-// export class LoggerModule {
-//   static forFeature(moduleName: string): DynamicModule {
-//     return {
-//       module: LoggerModule,
-//       providers: [createLoggerService(moduleName)],
-//       exports: [LoggerService],
-//     };
-//   }
-// }
-
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { LoggerService } from './logger.service';
 
 @Module({
   providers: [LoggerService],
   exports: [LoggerService],
 })
-export class LoggerModule {}
+export class LoggerModule {
+  static forRoot(moduleName: string = 'LoggerModule'): DynamicModule {
+    return {
+      module: LoggerModule,
+      providers: [
+        {
+          provide: LoggerService,
+          useValue: new LoggerService(moduleName),
+        },
+      ],
+      exports: [LoggerService],
+    };
+  }
+}

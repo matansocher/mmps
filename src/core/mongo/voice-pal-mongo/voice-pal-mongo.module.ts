@@ -7,7 +7,7 @@ import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './voice-pal-mongo.config
 
 @Module({
   imports: [
-    LoggerModule,
+    LoggerModule.forRoot(VoicePalMongoModule.name),
     UtilsModule,
     MongoDatabaseFactoryModule.forRoot({
       connectionName: CONNECTION_NAME,

@@ -4,7 +4,7 @@ import { UtilsModule } from '@services/utils/utils.module';
 import { SocialMediaDownloaderService } from './social-media-downloader.service';
 
 @Module({
-  imports: [LoggerModule, UtilsModule],
+  imports: [LoggerModule.forRoot(SocialMediaDownloaderModule.name), UtilsModule],
   providers: [SocialMediaDownloaderService],
   exports: [SocialMediaDownloaderService],
 })

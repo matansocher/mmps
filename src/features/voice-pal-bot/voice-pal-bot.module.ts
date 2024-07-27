@@ -9,7 +9,7 @@ import { VoicePalBotService } from './voice-pal-bot.service';
 
 @Module({
   imports: [
-    LoggerModule,
+    LoggerModule.forRoot(VoicePalBotModule.name),
     UtilsModule,
     VoicePalModule,
     TelegramModule,

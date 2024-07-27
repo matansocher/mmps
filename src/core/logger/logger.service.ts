@@ -1,15 +1,10 @@
-import { InternalServerErrorException, Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 
 @Injectable()
 export class LoggerService {
   private readonly filename: string;
-  private readonly moduleName = 'LoggerService';
 
-  constructor() {
-    if (!this.moduleName) {
-      throw new InternalServerErrorException('LoggerService must be provided with a moduleName');
-    }
-
+  constructor(@Optional() private readonly moduleName: string = 'LoggerModule') {
     this.filename = this.moduleName
       .split(/[\\\/]/)
       .splice(-2)

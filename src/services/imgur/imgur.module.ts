@@ -4,7 +4,7 @@ import { UtilsModule } from '@services/utils/utils.module';
 import { ImgurService } from './imgur.service';
 
 @Module({
-  imports: [LoggerModule, UtilsModule],
+  imports: [LoggerModule.forRoot(ImgurModule.name), UtilsModule],
   providers: [ImgurService],
   exports: [ImgurService],
 })
