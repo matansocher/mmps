@@ -1,4 +1,3 @@
-import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
@@ -15,7 +14,6 @@ export class MessageLoaderService {
   // constructor(
   //   private readonly logger: LoggerService,
   //   private readonly utilsService: UtilsService,
-  //   private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
   //   private readonly telegramGeneralService: TelegramGeneralService,
   // ) {}
   //

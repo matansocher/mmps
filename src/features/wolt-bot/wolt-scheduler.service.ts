@@ -1,8 +1,8 @@
+import TelegramBot from 'node-telegram-bot-api';
+import { Inject, Injectable } from '@nestjs/common';
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService } from '@core/mongo/wolt-mongo/services';
-import { Injectable } from '@nestjs/common';
-import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
 import { ANALYTIC_EVENT_NAMES } from '@services/wolt/wolt.config';
@@ -12,23 +12,19 @@ import * as woltUtils from '@services/wolt/wolt.utils';
 
 @Injectable()
 export class WoltSchedulerService {
-  private bot: any;
-
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly woltService: WoltService,
     private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
-    private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
+    @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
   ) {
     setTimeout(this.startInterval, 3000);
   }
 
   async startInterval(): Promise<void> {
-    this.bot = await this.telegramBotsFactoryService.getBot(BOTS.WOLT.name);
-
     await this.cleanExpiredSubscriptions();
     const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
     if (subscriptions && subscriptions.length) {

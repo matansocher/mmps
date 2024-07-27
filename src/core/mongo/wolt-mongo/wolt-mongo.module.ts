@@ -1,7 +1,9 @@
+import { BOTS } from '@core/config/telegram.config';
 import { LoggerModule } from '@core/logger/logger.module';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared/mongo-database-factory.module';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
 import { Module } from '@nestjs/common';
+import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { UtilsModule } from '@services/utils/utils.module';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './wolt-mongo.config';
 

@@ -1,23 +1,23 @@
-import { BOTS } from '@core/config/telegram.config';
+import TelegramBot from 'node-telegram-bot-api';
+import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
-import {
-  ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE,
-  MAX_NUM_OF_RESTAURANTS_TO_SHOW,
-  SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_OPTIONS
-} from '@services/wolt/wolt.config';
+import { BOTS } from '@core/config/telegram.config';
 import { WoltService } from '@services/wolt/wolt.service';
-import * as woltUtils from '@services/wolt/wolt.utils';
-import type { OnModuleInit } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
-import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
+import * as woltUtils from '@services/wolt/wolt.utils';
+import {
+  ANALYTIC_EVENT_NAMES,
+  INITIAL_BOT_RESPONSE,
+  MAX_NUM_OF_RESTAURANTS_TO_SHOW,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+  TOO_OLD_LIST_THRESHOLD_MS,
+  WOLT_BOT_OPTIONS,
+} from '@services/wolt/wolt.config';
 
 @Injectable()
-export class WoltBotService implements OnModuleInit {
-  private bot: any;
-
+export class WoltBotService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
@@ -25,14 +25,9 @@ export class WoltBotService implements OnModuleInit {
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
-    private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
-  ) {}
-
-  async onModuleInit() {
-    this.bot = await this.telegramBotsFactoryService.getBot(BOTS.WOLT.name);
-    this.logger.info('onModuleInit', 'WoltBotService has been initialized.');
-
+    @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
+  ) {
     this.createBotEventListeners();
     this.createErrorEventListeners();
   }

@@ -1,8 +1,7 @@
+import TelegramBot from 'node-telegram-bot-api';
+import { Inject, Injectable } from '@nestjs/common';
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
-import type { OnModuleInit } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
-import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
@@ -10,22 +9,15 @@ import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
 import { VoicePalService } from '@services/voice-pal/voice-pal.service';
 
 @Injectable()
-export class VoiceAplBotService implements OnModuleInit {
-  private bot: any;
-
+export class VoiceAplBotService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
-    private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly voicePalService: VoicePalService,
-  ) {}
-
-  async onModuleInit(): Promise<void> {
-    this.bot = await this.telegramBotsFactoryService.getBot(BOTS.VOICE_PAL.name);
-    this.logger.info('onModuleInit', 'VoiceAplBotService has been initialized.');
-
+    @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
+  ) {
     this.createBotEventListeners();
     this.createErrorEventListeners();
   }
