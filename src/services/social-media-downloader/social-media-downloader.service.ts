@@ -1,5 +1,5 @@
+import axios from 'axios';
 import { Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 import { ndown, tikdown } from 'nayan-media-downloader';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@services/utils/utils.service';
@@ -9,7 +9,6 @@ export class SocialMediaDownloaderService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
-    private readonly httpService: HttpService,
   ) {}
 
   async getInstagramVideo(videoUrl: string): Promise<any> {
@@ -17,7 +16,7 @@ export class SocialMediaDownloaderService {
       this.logger.info(this.getInstagramVideo.name, `start`);
       const { data } = await ndown(videoUrl);
       const videoDownloadLink = data[0].url;
-      const video = await this.httpService.get(videoDownloadLink, { responseType: 'arraybuffer' });
+      const video = await axios.get(videoDownloadLink, { responseType: 'arraybuffer' });
       return video['data'];
     } catch (err) {
       this.logger.error(this.getInstagramVideo.name, `err - ${this.utilsService.getErrorMessage(err)}`);
@@ -30,7 +29,7 @@ export class SocialMediaDownloaderService {
       this.logger.info(this.getTiktokAudio.name, `start`);
       const { data } = await tikdown(videoUrl);
       const videoDownloadLink = data.audio;
-      const audio = await this.httpService.get(videoDownloadLink, { responseType: 'arraybuffer' });
+      const audio = await axios.get(videoDownloadLink, { responseType: 'arraybuffer' });
       return audio['data'];
     } catch (err) {
       this.logger.error(this.getTiktokAudio.name, `err - ${this.utilsService.getErrorMessage(err)}`);

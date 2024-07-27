@@ -10,7 +10,6 @@ export const BOTS = {
 };
 
 export enum BOT_BROADCAST_ACTIONS {
-  NONE = 'none',
   TYPING = 'typing',
   UPLOADING_VOICE = 'upload_voice',
 }

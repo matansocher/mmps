@@ -1,8 +1,8 @@
-import { UtilsService } from '@services/utils/utils.service';
-import { HttpService } from '@nestjs/axios';
-import { LoggerService } from '@core/logger/logger.service';
-import { Injectable } from '@nestjs/common';
+import axios from 'axios';
 import { promises as fs } from 'fs';
+import { Injectable } from '@nestjs/common';
+import { UtilsService } from '@services/utils/utils.service';
+import { LoggerService } from '@core/logger/logger.service';
 
 const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID;
 
@@ -11,7 +11,6 @@ export class ImgurService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
-    private readonly httpService: HttpService,
   ) {}
 
   async uploadImage(imageLocalPath: string): Promise<any> {
@@ -35,7 +34,7 @@ export class ImgurService {
         data: data,
       };
 
-      const result = await this.httpService.get(url, config);
+      const result = await axios.get(url, config);
       this.logger.info(this.uploadImage.name, `end`);
       return result['data']?.data?.link;
     } catch (err) {

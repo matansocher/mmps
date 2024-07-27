@@ -22,7 +22,7 @@ export class WoltSchedulerService {
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
   ) {
-    this.startInterval();
+    setTimeout(this.startInterval, 3000);
   }
 
   async startInterval(): Promise<void> {

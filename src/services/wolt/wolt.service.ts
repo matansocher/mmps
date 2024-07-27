@@ -1,4 +1,4 @@
-import { HttpService } from '@nestjs/axios';
+import axios from 'axios';
 import { LoggerService } from '@core/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { UtilsService } from '@services/utils/utils.service';
@@ -16,7 +16,6 @@ export class WoltService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
-    private readonly httpService: HttpService,
   ) {}
 
   getRestaurants(): IWoltRestaurant[] {
@@ -45,7 +44,7 @@ export class WoltService {
       const promises = cities.map((city) => {
         const { LAT, LON } = city;
         const url = `${woltConfig.RESTAURANTS_BASE_URL}?lat=${LAT}&lon=${LON}`;
-        return this.httpService.get(url);
+        return axios.get(url);
       });
 
       const response = await Promise.all(promises);
@@ -69,7 +68,7 @@ export class WoltService {
 
   async getCitiesList(): Promise<any> {
     try {
-      const result = await this.httpService.get(woltConfig.CITIES_BASE_URL);
+      const result = await axios.get(woltConfig.CITIES_BASE_URL);
       const rawCities = result['data'].results;
       return rawCities
         .filter((city) => woltConfig.CITIES_SLUGS_SUPPORTED.includes(city.slug))
@@ -100,7 +99,7 @@ export class WoltService {
     try {
       const promises = parsedRestaurants.map((restaurant) => {
         const url = `${woltConfig.RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
-        return this.httpService.get(url);
+        return axios.get(url);
       });
       const response = await Promise.all(promises);
       const restaurantsRawData = response.map((res) => res.data);

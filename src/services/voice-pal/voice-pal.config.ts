@@ -14,20 +14,14 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   START: {
     displayName: '/start',
     selectedActionResponse: `Hi {name}!\n\nI'm a bot that can help you with translations, transcriptions of text, audio and video files\n\nJust send me the data and I will do my thing`,
-    handler: '',
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
-    possibleInputs: [],
     analyticsEventName: 'START',
     hideFromKeyboard: true,
-    showLoader: false,
   },
   TRANSCRIBE: {
     displayName: 'Transcribe',
     selectedActionResponse: 'OK, send me an audio or video file you want me to transcribe',
     handler: 'handleTranscribeAction',
     analyticsEventName: 'TRANSCRIBE',
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
-    hideFromKeyboard: false,
     possibleInputs: [POSSIBLE_INPUTS.VIDEO, POSSIBLE_INPUTS.AUDIO],
     showLoader: true,
   },
@@ -37,9 +31,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     handler: 'handleTranslateAction',
     analyticsEventName: 'TRANSLATE',
     possibleInputs: [POSSIBLE_INPUTS.TEXT, POSSIBLE_INPUTS.VIDEO, POSSIBLE_INPUTS.AUDIO],
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: false,
-    hideFromKeyboard: false,
   },
   TEXT_TO_SPEECH: {
     displayName: 'Text to Speech',
@@ -49,7 +41,6 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
     showLoader: true,
     loaderType: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE,
-    hideFromKeyboard: false,
   },
   SUMMARY_TEXT: {
     displayName: 'Summarize Text',
@@ -57,9 +48,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     handler: 'handleSummarizeTextAction',
     analyticsEventName: 'SUMMARY_TEXT',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
-    hideFromKeyboard: false,
   },
   SUMMARY_YOUTUBE_VIDEO: {
     displayName: 'Summary of a YouTube Video',
@@ -67,9 +56,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     handler: 'handleSummarizeYoutubeVideoAction',
     analyticsEventName: 'SUMMARY_YOUTUBE_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
-    hideFromKeyboard: false,
   },
   SUMMARY_TIKTOK_VIDEO: {
     displayName: 'Summary of a Tiktok Video',
@@ -77,9 +64,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     handler: 'handleSummarizeTiktokVideoAction',
     analyticsEventName: 'SUMMARY_TIKTOK_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
-    hideFromKeyboard: false,
   },
   SUMMARY_INSTAGRAM_VIDEO: {
     displayName: 'Summary of a Instagram Video',
@@ -87,9 +72,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     handler: 'handleSummarizeMetaVideoAction',
     analyticsEventName: 'SUMMARY_INSTAGRAM_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
-    hideFromKeyboard: false,
   },
   SUMMARY_FACEBOOK_VIDEO: {
     displayName: 'Summary of a Facebook Video',
@@ -97,9 +80,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     handler: 'handleSummarizeMetaVideoAction',
     analyticsEventName: 'SUMMARY_FACEBOOK_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
-    hideFromKeyboard: false,
   },
   // IMAGE_GENERATION: {
   //   displayName: 'Image Generation',
@@ -107,9 +88,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   //   handler: 'handleImageGenerationAction',
   //   analyticsEventName: 'IMAGE_GENERATION',
   //   possibleInputs: [POSSIBLE_INPUTS.TEXT],
-  //   loaderType: BOT_BROADCAST_ACTIONS.NONE,
   //   showLoader: true,
-  //   hideFromKeyboard: false,
   // },
   IMAGE_ANALYZER: {
     displayName: 'Image Analyzer',
@@ -117,9 +96,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     handler: 'handleImageAnalyzerAction',
     analyticsEventName: 'IMAGE_ANALYZER',
     possibleInputs: [POSSIBLE_INPUTS.PHOTO],
-    loaderType: BOT_BROADCAST_ACTIONS.NONE,
     showLoader: true,
-    hideFromKeyboard: false,
   },
 };
 

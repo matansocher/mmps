@@ -69,7 +69,7 @@ export class VoicePalService {
       return this.telegramGeneralService.sendMessage(this.bot, this.chatId, inputErrorMessage, voicePalUtils.getKeyboardOptions());
     }
 
-    const analyticAction = ANALYTIC_EVENT_NAMES[userAction];
+    const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction && userAction.showLoader) { // showLoader
         // await messageLoaderService.withMessageLoader(this.bot, this.chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType }, async () => {
