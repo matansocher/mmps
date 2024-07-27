@@ -2,7 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
-import { BOTS, TELEGRAM_BOT_WOLT_INJECTOR } from '@core/config/telegram.config';
+import { BOTS } from '@core/config/telegram.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
@@ -26,7 +26,7 @@ export class WoltBotService {
     private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
-    @Inject(TELEGRAM_BOT_WOLT_INJECTOR) private readonly bot: TelegramBot,
+    @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
   ) {
     this.createBotEventListeners();
     this.createErrorEventListeners();

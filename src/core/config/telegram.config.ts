@@ -9,9 +9,6 @@ export const BOTS = {
   },
 };
 
-export const TELEGRAM_BOT_WOLT_INJECTOR = 'TELEGRAM_BOT_WOLT_INJECTOR';
-export const TELEGRAM_BOT_VOICE_PAL_INJECTOR = 'TELEGRAM_BOT_VOICE_PAL_INJECTOR';
-
 export enum BOT_BROADCAST_ACTIONS {
   TYPING = 'typing',
   UPLOADING_VOICE = 'upload_voice',
