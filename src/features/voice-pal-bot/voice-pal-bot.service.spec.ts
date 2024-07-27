@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { VoiceAplBotService } from './voice-apl-bot.service';
+import { VoicePalBotService } from './voice-pal-bot.service';
 
-describe('WoltBotService', () => {
-  let service: VoiceAplBotService;
+describe('VoicePalBotService', () => {
+  let service: VoicePalBotService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [VoiceAplBotService],
+      providers: [VoicePalBotService],
     }).compile();
 
-    service = module.get<VoiceAplBotService>(VoiceAplBotService);
+    service = module.get<VoicePalBotService>(VoicePalBotService);
   });
 
   it('should be defined', () => {

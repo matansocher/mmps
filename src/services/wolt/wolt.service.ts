@@ -58,7 +58,7 @@ export class WoltService {
           slug: restaurant.venue.slug,
           area: restaurant.area,
           photo: restaurant.image.url,
-        };
+        } as IWoltRestaurant;
       });
     } catch (err) {
       this.logger.error(this.getRestaurantsList.name, `err - ${this.utilsService.getErrorMessage(err)}`);

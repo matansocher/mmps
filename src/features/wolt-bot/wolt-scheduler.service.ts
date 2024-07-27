@@ -21,7 +21,8 @@ export class WoltSchedulerService {
     private readonly telegramGeneralService: TelegramGeneralService,
     @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
   ) {
-    setTimeout(this.startInterval, 3000);
+    // this.startInterval = this.startInterval.bind(this);
+    setTimeout(() => this.startInterval(), 3000);
   }
 
   async startInterval(): Promise<void> {

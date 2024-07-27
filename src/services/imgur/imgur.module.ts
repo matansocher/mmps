@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
+import { LoggerModule } from '@core/logger/logger.module';
+import { UtilsModule } from '@services/utils/utils.module';
 import { ImgurService } from './imgur.service';
 
 @Module({
+  imports: [LoggerModule, UtilsModule],
   providers: [ImgurService],
   exports: [ImgurService],
 })

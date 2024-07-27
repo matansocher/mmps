@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
@@ -9,7 +9,7 @@ import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
 import { VoicePalService } from '@services/voice-pal/voice-pal.service';
 
 @Injectable()
-export class VoiceAplBotService {
+export class VoicePalBotService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
@@ -30,10 +30,10 @@ export class VoiceAplBotService {
   createBotEventListeners(): void {
     // const messageAggregator = new MessageAggregator(handleMessage);
     // this.bot.on('message', (message) => messageAggregator.handleIncomingMessage(message));
-    this.bot.on('message', this.handleMessage);
+    this.bot.on('message', (message: Message) => this.handleMessage(message));
   }
 
-  async handleMessage(message): Promise<void> {
+  async handleMessage(message: Message): Promise<void> {
     const functionName = 'message listener';
     const { chatId, telegramUserId, firstName, lastName, username, text } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;

@@ -67,13 +67,13 @@ export class UtilsService {
     return queryParams;
   }
 
-  objectToQueryParams(obj) {
+  objectToQueryParams(obj: Record<string, any>) {
     return Object.keys(obj)
       .map((key: string) => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]))
       .join('&');
   }
 
-  queryParamsToObject(queryString: string) {
+  queryParamsToObject(queryString: string): Record<string, any> {
     return queryString
       .split('&')
       .map((param: string) => param.split('='))

@@ -1,4 +1,6 @@
-import TelegramBot from 'node-telegram-bot-api';
+import { SubscriptionModel } from '@core/mongo/shared/models';
+import { IWoltRestaurant } from '@services/wolt/interface';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
@@ -38,13 +40,13 @@ export class WoltBotService {
   }
 
   createBotEventListeners() {
-    this.bot.onText(/\/start/, this.startHandler);
-    this.bot.onText(/\/show/, this.showHandler);
-    this.bot.on('text', this.textHandler);
-    this.bot.on('callback_query', this.callbackQueryHandler);
+    this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
+    this.bot.onText(/\/show/, (message: Message) => this.showHandler(message));
+    this.bot.on('text', (message: Message) => this.textHandler(message));
+    this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
-  async startHandler(message) {
+  async startHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName, telegramUserId, username } = this.telegramGeneralService.getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
@@ -61,7 +63,7 @@ export class WoltBotService {
     }
   }
 
-  async showHandler(message) {
+  async showHandler(message: Message) {
     const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
     const logBody = `/\show :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
     this.logger.info(this.showHandler.name, `${logBody} - start`);
@@ -69,11 +71,11 @@ export class WoltBotService {
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
-        const replyText = 'You don\'t have any active subscriptions yet';
+        const replyText = "You don't have any active subscriptions yet";
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
       }
 
-      const promisesArr = subscriptions.map(subscription => {
+      const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
         const inlineKeyboardButtons = [
           { text: 'Remove', callback_data: `remove - ${subscription.restaurant}` },
         ];
@@ -81,7 +83,7 @@ export class WoltBotService {
         return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.restaurant, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
-      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SHOW, { chatId })
+      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SHOW, { chatId });
       this.logger.info(this.showHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.showHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -89,12 +91,12 @@ export class WoltBotService {
     }
   }
 
-  async textHandler(message) {
+  async textHandler(message: Message) {
     const { chatId, firstName, lastName, text: rawRestaurant } = this.telegramGeneralService.getMessageData(message);
     const restaurant = rawRestaurant.toLowerCase();
 
     // prevent built in options to be processed also here
-    if (Object.keys(WOLT_BOT_OPTIONS).map(option => WOLT_BOT_OPTIONS[option]).includes(restaurant)) return;
+    if (Object.keys(WOLT_BOT_OPTIONS).map((option: string) => WOLT_BOT_OPTIONS[option]).includes(restaurant)) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.info(this.textHandler.name, `${logBody} - start`);
@@ -103,7 +105,7 @@ export class WoltBotService {
       this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SEARCH, { data: restaurant, chatId });
 
       const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
-      if (isLastUpdatedTooOld) { // lst updated is less than a minute
+      if (isLastUpdatedTooOld) {
         await this.woltService.refreshRestaurants();
       }
       const matchedRestaurants = this.getFilteredRestaurantsByName(restaurant);
@@ -129,14 +131,14 @@ export class WoltBotService {
     }
   }
 
-  async callbackQueryHandler(callbackQuery) {
+  async callbackQueryHandler(callbackQuery: CallbackQuery) {
     const { chatId, firstName, lastName, data: restaurant } = this.telegramGeneralService.getCallbackQueryData(callbackQuery);
     const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {
       const restaurantName = restaurant.replace('remove - ', '');
-      const existingSubscription = await this.mongoSubscriptionService.getSubscription(chatId, restaurantName);
+      const existingSubscription = await this.mongoSubscriptionService.getSubscription(chatId, restaurantName) as SubscriptionModel;
 
       if (restaurant.startsWith('remove - ')) {
         return await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
@@ -150,7 +152,7 @@ export class WoltBotService {
     }
   }
 
-  async handleCallbackAddSubscription(chatId, restaurant, existingSubscription) {
+  async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
     let replyText;
     let form = {};
     if (existingSubscription) {
@@ -158,7 +160,7 @@ export class WoltBotService {
         `It seems you already have a subscription for ${restaurant} is open.\n\n` +
         `Let\'s wait a few minutes - it might open soon.`;
     } else {
-      const restaurantDetails = this.woltService.getRestaurants().find(r => r.name === restaurant) || null;
+      const restaurantDetails = this.woltService.getRestaurants().find((r: IWoltRestaurant): boolean => r.name === restaurant) || null;
       if (restaurantDetails && restaurantDetails.isOnline) {
         replyText = '' +
           `It looks like ${restaurant} is open now\n\n` +
@@ -180,7 +182,7 @@ export class WoltBotService {
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, form);
   }
 
-  async handleCallbackRemoveSubscription(chatId, restaurant, existingSubscription) {
+  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
     let replyText;
     if (existingSubscription) {
       const restaurantToRemove = restaurant.replace('remove - ', '');
@@ -196,8 +198,10 @@ export class WoltBotService {
 
   getFilteredRestaurantsByName(searchInput) {
     const restaurants = [...this.woltService.getRestaurants()];
-    return restaurants.filter(restaurant => {
-      return restaurant.name.toLowerCase().includes(searchInput.toLowerCase());
-    }).slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
+    return restaurants
+      .filter((restaurant: IWoltRestaurant) => {
+        return restaurant.name.toLowerCase().includes(searchInput.toLowerCase());
+      })
+      .slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
   }
 }

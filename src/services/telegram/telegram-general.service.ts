@@ -1,8 +1,9 @@
-import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config/main.config';
 import { BOT_BROADCAST_ACTIONS } from '@core/config/telegram.config';
+import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
 import { UtilsService } from '@services/utils/utils.service';
 import { LoggerService } from '@core/logger/logger.service';
 
@@ -13,7 +14,7 @@ export class TelegramGeneralService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  getMessageData(message): ITelegramMessageData {
+  getMessageData(message: Message): ITelegramMessageData {
     return {
       chatId: _get(message, 'chat.id', ''),
       telegramUserId: _get(message, 'from.id', ''),
@@ -28,7 +29,7 @@ export class TelegramGeneralService {
     };
   }
 
-  getCallbackQueryData(callbackQuery): ITelegramCallbackQueryData {
+  getCallbackQueryData(callbackQuery: CallbackQuery): ITelegramCallbackQueryData {
     return {
       callbackQueryId: _get(callbackQuery, 'id', ''),
       chatId: _get(callbackQuery, 'from.id', ''),
@@ -40,14 +41,14 @@ export class TelegramGeneralService {
     };
   }
 
-  getInlineKeyboardMarkup(inlineKeyboardButtons, numberOfColumnsPerRow = 1) {
+  getInlineKeyboardMarkup(inlineKeyboardButtons: any[], numberOfColumnsPerRow: number = 1): { reply_markup: string } {
     const inlineKeyboard = { inline_keyboard: [] };
     inlineKeyboardButtons.forEach((button) => inlineKeyboard.inline_keyboard.push(button));
     inlineKeyboard.inline_keyboard = _chunk(inlineKeyboard.inline_keyboard, numberOfColumnsPerRow);
     return { reply_markup: JSON.stringify(inlineKeyboard) };
   }
 
-  async downloadFile(bot, fileId, path) {
+  async downloadFile(bot: TelegramBot, fileId: string, path: string): Promise<string> {
     try {
       return await bot.downloadFile(fileId, path);
     } catch (err) {
@@ -56,7 +57,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async downloadAudioFromVideoOrAudio(bot, { video, audio }): Promise<string> {
+  async downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }): Promise<string> {
     try {
       let audioFileLocalPath;
       if (video && video.file_id) {
@@ -73,7 +74,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async sendMessage(bot, chatId, messageText, form = {}) {
+  async sendMessage(bot: TelegramBot, chatId: number, messageText: string, form = {}) {
     try {
       return await bot.sendMessage(chatId, messageText, form);
     } catch (err) {
@@ -82,7 +83,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async editMessageText(bot, chatId, messageId, messageText) {
+  async editMessageText(bot: TelegramBot, chatId: number, messageId: number, messageText: string) {
     try {
       return await bot.editMessageText(messageText, { chat_id: chatId, message_id: messageId });
     } catch (err) {
@@ -91,7 +92,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async deleteMessage(bot, chatId, messageId) {
+  async deleteMessage(bot: TelegramBot, chatId: number, messageId: number): Promise<void> {
     try {
       await bot.deleteMessage(chatId, messageId);
     } catch (err) {
@@ -99,7 +100,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async sendAudio(bot, chatId, audioFilePath) {
+  async sendAudio(bot: TelegramBot, chatId: number, audioFilePath: string): Promise<void> {
     try {
       await bot.sendAudio(chatId, audioFilePath);
     } catch (err) {
@@ -107,7 +108,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async sendVoice(bot, chatId, audioFilePath, form = {}) {
+  async sendVoice(bot: TelegramBot, chatId: number, audioFilePath: string, form = {}): Promise<void> {
     try {
       await bot.sendVoice(chatId, audioFilePath, form);
     } catch (err) {
@@ -115,7 +116,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async sendVenue(bot, chatId, latitude, longitude, title, address) {
+  async sendVenue(bot: TelegramBot, chatId: number, latitude, longitude, title, address): Promise<void> {
     try {
       await bot.sendVenue(chatId, latitude, longitude, title, address);
     } catch (err) {
@@ -123,7 +124,7 @@ export class TelegramGeneralService {
     }
   }
 
-  async sendPhoto(bot, chatId, imageUrl, form = {}) {
+  async sendPhoto(bot: TelegramBot, chatId: number, imageUrl: string, form = {}): Promise<void> {
     try {
       await bot.sendPhoto(chatId, imageUrl, form);
     } catch (err) {
@@ -131,7 +132,7 @@ export class TelegramGeneralService {
     }
   }
 
-  setBotTyping(bot, chatId, action = BOT_BROADCAST_ACTIONS.TYPING) {
+  setBotTyping(bot: TelegramBot, chatId: number, action = BOT_BROADCAST_ACTIONS.TYPING): void {
     try {
       bot.sendChatAction(chatId, action);
     } catch (err) {
@@ -139,16 +140,16 @@ export class TelegramGeneralService {
     }
   }
 
-  botErrorHandler(botName, handlerName, error) {
+  botErrorHandler(botName: string, handlerName: string, error): void {
     const { code, message } = error;
     this.logger.info(`${botName} bot - ${handlerName}`, `code: ${code}, message: ${message}`);
   }
 
-  decodeCallbackData(data) {
+  decodeCallbackData(data: string) {
     return this.utilsService.queryParamsToObject(data);
   }
 
-  encodeCallbackData(data) {
+  encodeCallbackData(data: Record<string, any>) {
     return this.utilsService.objectToQueryParams(data);
   }
 }

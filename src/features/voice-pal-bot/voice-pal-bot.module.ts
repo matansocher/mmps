@@ -1,15 +1,20 @@
+import { LoggerModule } from '@core/logger/logger.module';
 import { Module } from '@nestjs/common';
 import { BOTS } from '@core/config/telegram.config';
-import { WoltSchedulerService } from '@features/wolt-bot/wolt-scheduler.service';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { TelegramModule } from '@services/telegram/telegram.module';
-import { VoiceAplBotService } from './voice-apl-bot.service';
+import { UtilsModule } from '@services/utils/utils.module';
+import { VoicePalModule } from '@services/voice-pal/voice-pal.module';
+import { VoicePalBotService } from './voice-pal-bot.service';
 
 @Module({
   imports: [
+    LoggerModule,
+    UtilsModule,
+    VoicePalModule,
     TelegramModule,
     TelegramBotsFactoryModule.forRoot({ botName: BOTS.VOICE_PAL.name }),
   ],
-  providers: [VoiceAplBotService, WoltSchedulerService],
+  providers: [VoicePalBotService],
 })
-export class VoiceAplBotModule {}
+export class VoicePalBotModule {}

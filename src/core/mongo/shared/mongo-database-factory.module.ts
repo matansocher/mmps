@@ -9,10 +9,7 @@ export class MongoDatabaseFactoryModule {
     const connectionProvider = {
       provide: options.connectionName,
       useFactory: async (): Promise<Db> => {
-        const client = new MongoClient(options.uri, {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        } as MongoClientOptions);
+        const client = new MongoClient(options.uri, {} as MongoClientOptions);
         await client.connect();
         return client.db(options.dbName);
       },

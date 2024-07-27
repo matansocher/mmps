@@ -1,6 +1,7 @@
+import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
 import { ImgurService } from '@services/imgur/imgur.service';
 import { OpenaiService } from '@services/openai/openai.service';
@@ -12,6 +13,7 @@ import { IVoicePalOption } from '@services/voice-pal/interface';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
 import { promises as fs } from 'fs';
+import TelegramBot from 'node-telegram-bot-api';
 import {
   ANALYTIC_EVENT_NAMES,
   ANALYTIC_EVENT_STATES,
@@ -24,9 +26,6 @@ import * as voicePalUtils from './voice-pal.utils';
 
 @Injectable()
 export class VoicePalService {
-  bot: string;
-  chatId: number;
-
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
@@ -39,9 +38,10 @@ export class VoicePalService {
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly imgurService: ImgurService,
     private readonly openaiService: OpenaiService,
+    @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
   ) {}
 
-  async handleActionSelection(selection, { telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleActionSelection(selection, { telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>) {
     const relevantAction = Object.keys(VOICE_PAL_OPTIONS).find((option: string) => VOICE_PAL_OPTIONS[option].displayName === selection);
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
@@ -49,52 +49,52 @@ export class VoicePalService {
       this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
       replyText = replyText.replace('{name}', firstName || username || '');
     } else {
-      this.userSelectedActionsService.setCurrentUserAction(this.chatId, selection);
+      this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
     }
 
     const analyticAction = ANALYTIC_EVENT_NAMES[selection];
-    this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId: this.chatId });
+    this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId });
 
-    await this.telegramGeneralService.sendMessage(this.bot, this.chatId, replyText, voicePalUtils.getKeyboardOptions());
+    await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, voicePalUtils.getKeyboardOptions());
   }
 
-  async handleAction(message, userAction: IVoicePalOption): Promise<void> {
-    const { text, audio, video, photo } = this.telegramGeneralService.getMessageData(message);
+  async handleAction(message, userAction: IVoicePalOption) {
+    const { chatId, text, audio, video, photo } = this.telegramGeneralService.getMessageData(message);
 
     if (!userAction) {
-      return this.telegramGeneralService.sendMessage(this.bot, this.chatId, `Please select an action first.`);
+      return this.telegramGeneralService.sendMessage(this.bot, chatId, `Please select an action first.`);
     }
 
     const inputErrorMessage = voicePalUtils.validateActionWithMessage(userAction, { text, audio, video, photo });
     if (inputErrorMessage) {
-      return this.telegramGeneralService.sendMessage(this.bot, this.chatId, inputErrorMessage, voicePalUtils.getKeyboardOptions());
+      return this.telegramGeneralService.sendMessage(this.bot, chatId, inputErrorMessage, voicePalUtils.getKeyboardOptions());
     }
 
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction && userAction.showLoader) { // showLoader
-        // await messageLoaderService.withMessageLoader(this.bot, this.chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType }, async () => {
+        // await messageLoaderService.withMessageLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType }, async () => {
         //   await this[userAction.handler]({ text, audio, video, photo });
         // });
-        await this[userAction.handler]({ text, audio, video, photo });
+        await this[userAction.handler]({ chatId, text, audio, video, photo });
       } else {
-        await this[userAction.handler]({ text, audio, video, photo });
+        await this[userAction.handler]({ chatId, text, audio, video, photo });
       }
 
-      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId: this.chatId });
+      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId });
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.ERROR}`, { chatId: this.chatId, error: errorMessage });
+      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.ERROR}`, { chatId, error: errorMessage });
       throw err;
     }
   }
 
-  async handleTranscribeAction({ video, audio }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleTranscribeAction({ chatId, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio });
       const resText = await this.openaiService.getTranscriptFromAudio(audioFileLocalPath);
-      await this.telegramGeneralService.sendMessage(this.bot, this.chatId, resText, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, voicePalUtils.getKeyboardOptions());
       await this.utilsService.deleteFile(audioFileLocalPath);
     } catch (err) {
       this.logger.error(this.handleTranscribeAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
@@ -102,7 +102,7 @@ export class VoicePalService {
     }
   }
 
-  async handleTranslateAction({ text, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleTranslateAction({ chatId, text, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       let resText = '';
       let audioFileLocalPath = '';
@@ -115,14 +115,14 @@ export class VoicePalService {
         this.utilsService.deleteFile(audioFileLocalPath);
       }
 
-      await this.telegramGeneralService.sendMessage(this.bot, this.chatId, resText, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, voicePalUtils.getKeyboardOptions());
     } catch (err) {
       this.logger.error(this.handleTranslateAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
 
-  async handleTextToSpeechAction({ text }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleTextToSpeechAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const result = await this.openaiService.getAudioFromText(text);
 
@@ -130,7 +130,7 @@ export class VoicePalService {
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
 
-      await this.telegramGeneralService.sendVoice(this.bot, this.chatId, audioFilePath, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendVoice(this.bot, chatId, audioFilePath, voicePalUtils.getKeyboardOptions());
       await this.utilsService.deleteFile(audioFilePath);
     } catch (err) {
       this.logger.error(this.handleTextToSpeechAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
@@ -138,39 +138,39 @@ export class VoicePalService {
     }
   }
 
-  async handleSummarizeTextAction({ text }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleSummarizeTextAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const textSummary = await this.openaiService.getChatCompletion(SUMMARY_PROMPT, text);
-      await this.telegramGeneralService.sendMessage(this.bot, this.chatId, textSummary, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, textSummary, voicePalUtils.getKeyboardOptions());
     } catch (err) {
       this.logger.error(this.handleSummarizeTextAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
 
-  async handleSummarizeYoutubeVideoAction({ text }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleSummarizeYoutubeVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const videoId = this.youtubeTranscriptService.getYoutubeVideoIdFromUrl(text);
       if (!videoId) {
-        await this.telegramGeneralService.sendMessage(this.bot, this.chatId, NOT_FOUND_VIDEO_MESSAGES.YOUTUBE, voicePalUtils.getKeyboardOptions());
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.YOUTUBE, voicePalUtils.getKeyboardOptions());
       }
       const { transcription, errorMessage } = await this.youtubeTranscriptService.getYoutubeVideoTranscription(videoId);
       if (errorMessage) {
-        await this.telegramGeneralService.sendMessage(this.bot, this.chatId, errorMessage, voicePalUtils.getKeyboardOptions());
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage, voicePalUtils.getKeyboardOptions());
       }
       const summaryTranscription = await this.openaiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-      await this.telegramGeneralService.sendMessage(this.bot, this.chatId, summaryTranscription, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, voicePalUtils.getKeyboardOptions());
     } catch (err) {
       this.logger.error(this.handleSummarizeYoutubeVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
 
-  async handleSummarizeTiktokVideoAction({ text }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleSummarizeTiktokVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const audioBuffer = await this.socialMediaDownloaderService.getTiktokAudio(text);
       if (!audioBuffer) {
-        await this.telegramGeneralService.sendMessage(this.bot, this.chatId, NOT_FOUND_VIDEO_MESSAGES.TIKTOK, voicePalUtils.getKeyboardOptions());
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.TIKTOK, voicePalUtils.getKeyboardOptions());
       }
       const audioFilePath = `${LOCAL_FILES_PATH}/tiktok-audio-${new Date().getTime()}.mp3`;
       await fs.writeFile(audioFilePath, audioBuffer);
@@ -178,7 +178,7 @@ export class VoicePalService {
       const transcription = await this.openaiService.getTranscriptFromAudio(audioFilePath);
 
       const summaryTranscription = await this.openaiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-      await this.telegramGeneralService.sendMessage(this.bot, this.chatId, summaryTranscription, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, voicePalUtils.getKeyboardOptions());
       await this.utilsService.deleteFile(audioFilePath);
     } catch (err) {
       this.logger.error(this.handleSummarizeTiktokVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
@@ -186,7 +186,7 @@ export class VoicePalService {
     }
   }
 
-  async handleSummarizeMetaVideoAction({ text }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleSummarizeMetaVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const videoBuffer = await this.socialMediaDownloaderService.getInstagramVideo(text);
       const videoFilePath = `${LOCAL_FILES_PATH}/meta-video-${new Date().getTime()}.mp4`;
@@ -195,7 +195,7 @@ export class VoicePalService {
       const transcription = await this.openaiService.getTranscriptFromAudio(audioFilePath);
 
       const summaryTranscription = await this.openaiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-      await this.telegramGeneralService.sendMessage(this.bot, this.chatId, summaryTranscription, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, voicePalUtils.getKeyboardOptions());
       await this.utilsService.deleteFile(videoFilePath);
       await this.utilsService.deleteFile(audioFilePath);
     } catch (err) {
@@ -204,22 +204,22 @@ export class VoicePalService {
     }
   }
 
-  async handleImageGenerationAction({ text }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleImageGenerationAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const imageUrl = await this.openaiService.createImage(text);
-      await this.telegramGeneralService.sendPhoto(this.bot, this.chatId, imageUrl, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendPhoto(this.bot, chatId, imageUrl, voicePalUtils.getKeyboardOptions());
     } catch (err) {
       this.logger.error(this.handleImageGenerationAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
 
-  async handleImageAnalyzerAction({ photo }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleImageAnalyzerAction({ chatId, photo }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const imageLocalPath = await this.telegramGeneralService.downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
       const imageUrl = await this.imgurService.uploadImage(imageLocalPath);
       const imageAnalysisText = await this.openaiService.analyzeImage(imageUrl);
-      await this.telegramGeneralService.sendMessage(this.bot, this.chatId, imageAnalysisText, voicePalUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, imageAnalysisText, voicePalUtils.getKeyboardOptions());
       this.utilsService.deleteFile(imageLocalPath);
     } catch (err) {
       this.logger.error(this.handleImageAnalyzerAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
