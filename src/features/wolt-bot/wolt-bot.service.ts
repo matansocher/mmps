@@ -1,5 +1,6 @@
 import { BOTS } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
 import {
   ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE,
   MAX_NUM_OF_RESTAURANTS_TO_SHOW,
@@ -7,7 +8,6 @@ import {
 } from '@services/wolt/wolt.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import * as woltUtils from '@services/wolt/wolt.utils';
-import { WoltMongoService } from '@core/mongo/wolt-mongo/wolt-mongo.service';
 import type { OnModuleInit } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { TelegramBotsFactoryService } from '@services/telegram/telegram-bots-factory.service';
@@ -21,8 +21,10 @@ export class WoltBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
-    private readonly mongoService: WoltMongoService,
     private readonly woltService: WoltService,
+    private readonly mongoUserService: WoltMongoUserService,
+    private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
+    private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly telegramBotsFactoryService: TelegramBotsFactoryService,
     private readonly telegramGeneralService: TelegramGeneralService,
   ) {}
@@ -53,10 +55,10 @@ export class WoltBotService implements OnModuleInit {
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      this.mongoService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
+      this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
-      this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, { chatId });
+      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, { chatId });
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
@@ -70,7 +72,7 @@ export class WoltBotService implements OnModuleInit {
     this.logger.info(this.showHandler.name, `${logBody} - start`);
 
     try {
-      const subscriptions = await this.mongoService.getActiveSubscriptions(chatId);
+      const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = 'You don\'t have any active subscriptions yet';
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
@@ -84,7 +86,7 @@ export class WoltBotService implements OnModuleInit {
         return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.restaurant, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
-      this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SHOW, { chatId })
+      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SHOW, { chatId })
       this.logger.info(this.showHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.showHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -103,7 +105,7 @@ export class WoltBotService implements OnModuleInit {
     this.logger.info(this.textHandler.name, `${logBody} - start`);
 
     try {
-      this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SEARCH, { data: restaurant, chatId });
+      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SEARCH, { data: restaurant, chatId });
 
       const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
       if (isLastUpdatedTooOld) { // lst updated is less than a minute
@@ -139,7 +141,7 @@ export class WoltBotService implements OnModuleInit {
 
     try {
       const restaurantName = restaurant.replace('remove - ', '');
-      const existingSubscription = await this.mongoService.getSubscription(chatId, restaurantName);
+      const existingSubscription = await this.mongoSubscriptionService.getSubscription(chatId, restaurantName);
 
       if (restaurant.startsWith('remove - ')) {
         return await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
@@ -175,11 +177,11 @@ export class WoltBotService implements OnModuleInit {
         replyText = `No Problem, you will be notified once ${restaurant} is open.\n\n` +
           `FYI: If the venue won\'t open soon, registration will be removed after ${SUBSCRIPTION_EXPIRATION_HOURS} hours.\n\n` +
           `You can search and register for another restaurant if you like.`;
-        await this.mongoService.addSubscription(chatId, restaurant, restaurantDetails.photo);
+        await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails.photo);
       }
     }
 
-    this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIBE, { data: restaurant, chatId });
+    this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIBE, { data: restaurant, chatId });
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, form);
   }
 
@@ -187,13 +189,13 @@ export class WoltBotService implements OnModuleInit {
     let replyText;
     if (existingSubscription) {
       const restaurantToRemove = restaurant.replace('remove - ', '');
-      await this.mongoService.archiveSubscription(chatId, restaurantToRemove);
+      await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
       replyText = `Subscription for ${restaurantToRemove} was removed`;
     } else {
       replyText = `It seems you don\'t have a subscription for ${restaurant}.\n\n` +
         `You can search and register for another restaurant if you like`;
     }
-    this.mongoService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, { data: restaurant, chatId });
+    this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, { data: restaurant, chatId });
     return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
   }
 

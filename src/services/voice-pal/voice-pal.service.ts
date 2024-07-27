@@ -1,5 +1,5 @@
 import { LoggerService } from '@core/logger/logger.service';
-import { VoicePalMongoService } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.service';
+import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
 import { Injectable } from '@nestjs/common';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
 import { ImgurService } from '@services/imgur/imgur.service';
@@ -30,7 +30,8 @@ export class VoicePalService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
-    private readonly mongoService: VoicePalMongoService,
+    private readonly mongoUserService: VoicePalMongoUserService,
+    private readonly mongoAnalyticLogService: VoicePalMongoAnalyticLogService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly googleTranslateService: GoogleTranslateService,
     private readonly youtubeTranscriptService: YoutubeTranscriptService,
@@ -45,14 +46,14 @@ export class VoicePalService {
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
-      this.mongoService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
+      this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
       replyText = replyText.replace('{name}', firstName || username || '');
     } else {
       this.userSelectedActionsService.setCurrentUserAction(this.chatId, selection);
     }
 
     const analyticAction = ANALYTIC_EVENT_NAMES[selection];
-    this.mongoService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId: this.chatId });
+    this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId: this.chatId });
 
     await this.telegramGeneralService.sendMessage(this.bot, this.chatId, replyText, voicePalUtils.getKeyboardOptions());
   }
@@ -80,11 +81,11 @@ export class VoicePalService {
         await this[userAction.handler]({ text, audio, video, photo });
       }
 
-      this.mongoService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId: this.chatId });
+      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId: this.chatId });
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.mongoService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.ERROR}`, { chatId: this.chatId, error: errorMessage });
+      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.ERROR}`, { chatId: this.chatId, error: errorMessage });
       throw err;
     }
   }

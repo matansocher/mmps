@@ -1,11 +1,21 @@
 import { LoggerModule } from '@core/logger/logger.module';
-import { WoltMongoService } from '@core/mongo/wolt-mongo/wolt-mongo.service';
+import { MongoDatabaseFactoryModule } from '@core/mongo/shared/mongo-database-factory.module';
+import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
 import { Module } from '@nestjs/common';
 import { UtilsModule } from '@services/utils/utils.module';
+import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './wolt-mongo.config';
 
 @Module({
-  imports: [LoggerModule, UtilsModule],
-  providers: [WoltMongoService],
-  exports: [WoltMongoService],
+  imports: [
+    LoggerModule,
+    UtilsModule,
+    MongoDatabaseFactoryModule.forRoot({
+      connectionName: CONNECTION_NAME,
+      uri: MONGO_DB_URL,
+      dbName: DB_NAME,
+    }),
+  ],
+  providers: [WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService],
+  exports: [WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService],
 })
 export class WoltMongoModule {}
