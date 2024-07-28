@@ -1,77 +1,79 @@
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { get as _get, chunk as _chunk } from 'lodash';
+import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
-import { LOCAL_FILES_PATH } from '@core/config/main.config';
-import { BOT_BROADCAST_ACTIONS } from '@core/config/telegram.config';
-import { UtilsService } from '@services/utils/utils.service';
+import { DEFAULT_CYCLE_DURATION, LOADER_MESSAGES, MessageLoaderOptions } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { UtilsService } from '@services/utils/utils.service';
+
+interface MessageLoaderData {
+  cycleIterationIndex: number;
+  timeoutId: NodeJS.Timeout | number;
+  loaderMessageId: number;
+}
 
 @Injectable()
 export class MessageLoaderService {
-  private bot: any;
-  private chatId: number;
+  private messages: Record<number, MessageLoaderData> = {};
 
-  // constructor(
-  //   private readonly logger: LoggerService,
-  //   private readonly utilsService: UtilsService,
-  //   private readonly telegramGeneralService: TelegramGeneralService,
-  // ) {}
-  //
-  // waitForMessage() {
-  //   try {
-  //     generalBotService.setBotTyping(this.bot, this.chatId, this.options.loadingAction);
-  //     this.cycleInitiator();
-  //   } catch (err) {
-  //     logger.error(this.waitForMessage.name, `error - ${utilsService.getErrorMessage(err)}`);
-  //     this.stopLoader();
-  //   }
-  // }
-  //
-  // cycleInitiator() {
-  //   this.timeoutId = setTimeout(async () => {
-  //     if (this.isMessageProcessed || this.cycleIterationIndex > LOADER_MESSAGES.length) {
-  //       return;
-  //     }
-  //     await this.handleProcessCycle()
-  //   }, this.options.cycleDuration || DEFAULT_CYCLE_DURATION);
-  // }
-  //
-  // async handleProcessCycle() {
-  //   let messagePromise;
-  //
-  //   const messageText = this.cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
-  //   if (this.cycleIterationIndex === 0) {
-  //     messagePromise = generalBotService.sendMessage(this.bot, this.chatId, messageText);
-  //   } else {
-  //     messagePromise = generalBotService.editMessageText(this.bot, this.chatId, this.loaderMessageId, messageText);
-  //   }
-  //   generalBotService.setBotTyping(this.bot, this.chatId, this.options.loadingAction);
-  //
-  //   const messageRes = await messagePromise;
-  //   this.loaderMessageId = (messageRes && messageRes.message_id) ? messageRes.message_id : this.loaderMessageId;
-  //   this.cycleIterationIndex = this.cycleIterationIndex + 1;
-  //   this.cycleInitiator();
-  // }
-  //
-  // stopLoader() {
-  //   this.isMessageProcessed = true;
-  //   clearTimeout(this.timeoutId);
-  //   this.timeoutId = null;
-  //   generalBotService.deleteMessage(this.bot, this.chatId, this.loaderMessageId);
-  // }
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly utilsService: UtilsService,
+    private readonly telegramGeneralService: TelegramGeneralService,
+  ) {}
+
+  async handleMessageWithLoader(bot: TelegramBot, chatId: number, options: MessageLoaderOptions, action: () => Promise<void>) {
+    try {
+      await this.waitForMessage(bot, chatId, options);
+      await action();
+    } catch (err) {
+      this.logger.error(MessageLoaderService.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.stopLoader(bot, chatId);
+      throw err;
+    } finally {
+      this.stopLoader(bot, chatId);
+    }
+  }
+
+  async waitForMessage(bot: TelegramBot, chatId: number, options: MessageLoaderOptions) {
+    try {
+      this.messages[chatId] = { cycleIterationIndex: 0, timeoutId: null, loaderMessageId: null };
+      await this.telegramGeneralService.setBotTyping(bot, chatId, options.loadingAction);
+      this.cycleInitiator(bot, chatId, options);
+    } catch (err) {
+      this.logger.error(MessageLoaderService.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      await this.stopLoader(bot, chatId);
+    }
+  }
+
+  cycleInitiator(bot: TelegramBot, chatId: number, options: MessageLoaderOptions): void {
+    this.messages[chatId].timeoutId = setTimeout(async () => {
+      if (this.messages[chatId].cycleIterationIndex > LOADER_MESSAGES.length) {
+        return;
+      }
+      await this.processCycle(bot, chatId, options);
+    }, options.cycleDuration || DEFAULT_CYCLE_DURATION);
+  }
+
+  async processCycle(bot: TelegramBot, chatId: number, options: MessageLoaderOptions): Promise<void> {
+    let messagePromise;
+
+    const messageText = this.messages[chatId].cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId].cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
+    if (this.messages[chatId].cycleIterationIndex === 0) {
+      messagePromise = this.telegramGeneralService.sendMessage(bot, chatId, messageText);
+    } else {
+      messagePromise = this.telegramGeneralService.editMessageText(bot, chatId, this.messages[chatId].loaderMessageId, messageText);
+    }
+    this.telegramGeneralService.setBotTyping(bot, chatId, options.loadingAction);
+
+    const messageRes = await messagePromise;
+    this.messages[chatId].loaderMessageId = (messageRes && messageRes.message_id) ? messageRes.message_id : this.messages[chatId].loaderMessageId;
+    this.messages[chatId].cycleIterationIndex = this.messages[chatId].cycleIterationIndex + 1;
+    this.cycleInitiator(bot, chatId, options);
+  }
+
+  async stopLoader(bot: TelegramBot, chatId: number): Promise<void> {
+    clearTimeout(this.messages[chatId].timeoutId);
+    await this.telegramGeneralService.deleteMessage(bot, chatId, this.messages[chatId].loaderMessageId);
+    delete this.messages[chatId];
+  }
 }
-
-// async function withMessageLoader(bot, chatId, options, action) {
-//   const messageLoader = new MessageLoader(bot, chatId, options);
-//
-//   try {
-//     messageLoader.waitForMessage();
-//     await action();
-//   } catch (err) {
-//     this.logger.error(withMessageLoader.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-//     messageLoader.stopLoader();
-//     throw err;
-//   } finally {
-//     messageLoader.stopLoader();
-//   }
-// }

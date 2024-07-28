@@ -1,4 +1,4 @@
-import { BOTS } from '@core/config/telegram.config';
+import { BOTS, MessageLoaderOptions } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
 import { Inject, Injectable } from '@nestjs/common';
@@ -7,6 +7,7 @@ import { ImgurService } from '@services/imgur/imgur.service';
 import { OpenaiService } from '@services/openai/openai.service';
 import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
 import { ITelegramMessageData } from '@services/telegram/interface';
+import { MessageLoaderService } from '@services/telegram/message-loader.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
 import { IVoicePalOption } from '@services/voice-pal/interface';
@@ -29,6 +30,7 @@ export class VoicePalService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    private readonly messageLoaderService: MessageLoaderService,
     private readonly mongoUserService: VoicePalMongoUserService,
     private readonly mongoAnalyticLogService: VoicePalMongoAnalyticLogService,
     private readonly telegramGeneralService: TelegramGeneralService,
@@ -55,6 +57,8 @@ export class VoicePalService {
     const analyticAction = ANALYTIC_EVENT_NAMES[selection];
     this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId });
 
+    this.logger.info(this.handleActionSelection.name, `chatId: ${chatId}, selection: ${selection}`);
+
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, voicePalUtils.getKeyboardOptions());
   }
 
@@ -72,11 +76,15 @@ export class VoicePalService {
 
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
-      if (userAction && userAction.showLoader) { // showLoader
-        // await messageLoaderService.withMessageLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType }, async () => {
-        //   await this[userAction.handler]({ text, audio, video, photo });
-        // });
-        await this[userAction.handler]({ chatId, text, audio, video, photo });
+      if (userAction && userAction.showLoader) {
+        await this.messageLoaderService.handleMessageWithLoader(
+          this.bot,
+          chatId,
+          { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions,
+          async (): Promise<void> => {
+            await this[userAction.handler]({ chatId, text, audio, video, photo });
+          },
+        );
       } else {
         await this[userAction.handler]({ chatId, text, audio, video, photo });
       }

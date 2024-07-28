@@ -28,8 +28,8 @@ export class VoicePalBotService {
   }
 
   createBotEventListeners(): void {
-    // const messageAggregator = new MessageAggregator(handleMessage);
-    // this.bot.on('message', (message) => messageAggregator.handleIncomingMessage(message));
+    // const messageAggregator = new MessagesAggregatorService(handleMessage);
+    // this.bot.on('message', (message: Message) => messageAggregator.handleIncomingMessage(message));
     this.bot.on('message', (message: Message) => this.handleMessage(message));
   }
 

@@ -11,9 +11,7 @@ export class UserSelectedActionsService {
     if (!userAction) {
       return null;
     }
-    const relevantActionKey = Object.keys(VOICE_PAL_OPTIONS).find(
-      (option: string) => VOICE_PAL_OPTIONS[option].displayName === userAction,
-    );
+    const relevantActionKey = Object.keys(VOICE_PAL_OPTIONS).find((option: string) => VOICE_PAL_OPTIONS[option].displayName === userAction);
     if (!relevantActionKey) {
       return null;
     }
