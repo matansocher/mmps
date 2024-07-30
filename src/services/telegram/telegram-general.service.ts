@@ -16,28 +16,28 @@ export class TelegramGeneralService {
 
   getMessageData(message: Message): ITelegramMessageData {
     return {
-      chatId: _get(message, 'chat.id', ''),
-      telegramUserId: _get(message, 'from.id', ''),
-      firstName: _get(message, 'from.first_name', ''),
-      lastName: _get(message, 'from.last_name', ''),
-      username: _get(message, 'from.username', ''),
+      chatId: _get(message, 'chat.id', null),
+      telegramUserId: _get(message, 'from.id', null),
+      firstName: _get(message, 'from.first_name', null),
+      lastName: _get(message, 'from.last_name', null),
+      username: _get(message, 'from.username', null),
       text: _get(message, 'text', '') || _get(message, 'caption', ''),
       audio: _get(message, 'audio', null) || _get(message, 'voice', null),
       video: _get(message, 'video', null),
       photo: _get(message, 'photo', null) || _get(message, 'sticker', null),
-      date: _get(message, 'date', ''),
+      date: _get(message, 'date', null),
     };
   }
 
   getCallbackQueryData(callbackQuery: CallbackQuery): ITelegramCallbackQueryData {
     return {
-      callbackQueryId: _get(callbackQuery, 'id', ''),
-      chatId: _get(callbackQuery, 'from.id', ''),
-      date: _get(callbackQuery, 'message.date', ''),
-      firstName: _get(callbackQuery, 'from.first_name', ''),
-      lastName: _get(callbackQuery, 'from.last_name', ''),
-      text: _get(callbackQuery, 'message.text', ''),
-      data: _get(callbackQuery, 'data', ''),
+      callbackQueryId: _get(callbackQuery, 'id', null),
+      chatId: _get(callbackQuery, 'from.id', null),
+      date: _get(callbackQuery, 'message.date', null),
+      firstName: _get(callbackQuery, 'from.first_name', null),
+      lastName: _get(callbackQuery, 'from.last_name', null),
+      text: _get(callbackQuery, 'message.text', null),
+      data: _get(callbackQuery, 'data', null),
     };
   }
 
@@ -143,13 +143,5 @@ export class TelegramGeneralService {
   botErrorHandler(botName: string, handlerName: string, error): void {
     const { code, message } = error;
     this.logger.info(`${botName} bot - ${handlerName}`, `code: ${code}, message: ${message}`);
-  }
-
-  decodeCallbackData(data: string) {
-    return this.utilsService.queryParamsToObject(data);
-  }
-
-  encodeCallbackData(data: Record<string, any>) {
-    return this.utilsService.objectToQueryParams(data);
   }
 }

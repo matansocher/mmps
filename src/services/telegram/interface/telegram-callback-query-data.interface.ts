@@ -1,7 +1,7 @@
 export interface ITelegramCallbackQueryData {
   callbackQueryId: string;
   chatId: number;
-  date: string;
+  date: number;
   firstName: string;
   lastName: string;
   text: string;

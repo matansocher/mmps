@@ -1,6 +1,6 @@
 export interface ITelegramMessageData {
   chatId: number;
-  telegramUserId: string;
+  telegramUserId: number;
   firstName: string;
   lastName: string;
   username: string;
@@ -8,5 +8,5 @@ export interface ITelegramMessageData {
   audio: any;
   video: any;
   photo: any;
-  date: string;
+  date: number;
 }

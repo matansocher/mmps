@@ -30,10 +30,9 @@ export class VoicePalBotService {
   }
 
   createBotEventListeners(): void {
-    // this.bot.on('message', (message: Message) =>
-    //   this.messagesAggregatorService.handleIncomingMessage(message, (message: Message) => this.handleMessage(message)),
-    // );
-    this.bot.on('message', (message: Message) => this.handleMessage(message));
+    this.bot.on('message', (message: Message) =>
+      this.messagesAggregatorService.handleIncomingMessage(message, (message: Message) => this.handleMessage(message)),
+    );
   }
 
   async handleMessage(message: Message): Promise<void> {
