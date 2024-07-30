@@ -14,8 +14,8 @@ export class YoutubeTranscriptService {
 
   async getYoutubeVideoTranscription(videoId: string): Promise<{ transcription: any; errorMessage: string }> {
     this.logger.info(this.getYoutubeVideoTranscription.name, `start`);
-    const resultArr = await Promise.allSettled(supportedLanguages.map((lang) => YoutubeTranscript.fetchTranscript(videoId, { lang })));
-    const bestResult = resultArr.find((result) => result.status === 'fulfilled');
+    const resultsArr = await Promise.allSettled(supportedLanguages.map((lang: string) => YoutubeTranscript.fetchTranscript(videoId, { lang })));
+    const bestResult = resultsArr.find((result) => result.status === 'fulfilled');
     if (!bestResult) {
       return {
         transcription: null,

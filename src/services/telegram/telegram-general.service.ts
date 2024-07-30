@@ -132,11 +132,11 @@ export class TelegramGeneralService {
     }
   }
 
-  setBotTyping(bot: TelegramBot, chatId: number, action = BOT_BROADCAST_ACTIONS.TYPING): void {
+  sendChatAction(bot: TelegramBot, chatId: number, action = BOT_BROADCAST_ACTIONS.TYPING): void {
     try {
       bot.sendChatAction(chatId, action);
     } catch (err) {
-      this.logger.error(this.setBotTyping.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.sendChatAction.name, `err: ${this.utilsService.getErrorMessage(err)}`);
     }
   }
 

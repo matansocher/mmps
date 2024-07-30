@@ -1,43 +1,41 @@
 import { Injectable } from '@nestjs/common';
+import { Message } from 'node-telegram-bot-api';
 
 const TIMEOUT_MS = 100;
 
+interface MessageAggregatorData {
+  message: Message;
+  timeoutId: NodeJS.Timeout | number;
+  processMessageCallback: (message: Message) => void;
+}
+
 @Injectable()
 export class MessagesAggregatorService {
-  private messagesCache: any = {};
+  private messagesCache: Record<number, MessageAggregatorData> = {};
 
-  // handleIncomingMessage(message) {
-  //   const { id: chatId } = message.chat;
-  //   if (!this.messagesCache[chatId]) {
-  //     this.handleIncomingMessageNotInCache(chatId, message);
-  //   } else {
-  //     this.handleIncomingMessageInCache(chatId, message);
-  //   }
-  // }
-  //
-  // handleIncomingMessageNotInCache(chatId, message) {
-  //   const timeoutId = this.startOrResetTimeout(chatId);
-  //   this.messagesCache[chatId] = { message, timeoutId };
-  // }
-  //
-  // handleIncomingMessageInCache(chatId, message) {
-  //   const timeoutId = this.startOrResetTimeout(chatId);
-  //   const combinedMessage = { ...this.messagesCache[chatId].message, ...message };
-  //   this.messagesCache[chatId] = { message: combinedMessage, timeoutId };
-  // }
-  //
-  // startOrResetTimeout(chatId) {
-  //   if (this.messagesCache[chatId] && this.messagesCache[chatId].timeoutId) {
-  //     clearTimeout(this.messagesCache[chatId].timeoutId);
-  //   }
-  //   return setTimeout(() => {
-  //     this.handleTimeoutEnd(chatId);
-  //   }, TIMEOUT_MS);
-  // }
-  //
-  // handleTimeoutEnd(chatId) {
-  //   const { message } = this.messagesCache[chatId];
-  //   delete this.messagesCache[chatId];
-  //   this.processMessageCallback(message);
-  // }
+  handleIncomingMessage(message: Message, processMessageCallback: (message: Message) => void): void {
+    const { id: chatId } = message.chat;
+
+    const timeoutId = this.startOrResetTimeout(chatId);
+    let combinedMessage = message;
+    if (this.messagesCache[chatId]) { // already has a pending message in cache
+      combinedMessage = { ...this.messagesCache[chatId].message, ...message };
+    }
+    this.messagesCache[chatId] = { message: combinedMessage, timeoutId, processMessageCallback };
+  }
+
+  startOrResetTimeout(chatId: number): NodeJS.Timeout | number {
+    if (this.messagesCache[chatId]?.timeoutId) {
+      clearTimeout(this.messagesCache[chatId].timeoutId);
+    }
+    return setTimeout(() => {
+      this.handleTimeoutEnd(chatId);
+    }, TIMEOUT_MS);
+  }
+
+  handleTimeoutEnd(chatId: number): void {
+    const { message } = this.messagesCache[chatId];
+    this.messagesCache[chatId].processMessageCallback(message);
+    delete this.messagesCache[chatId];
+  }
 }

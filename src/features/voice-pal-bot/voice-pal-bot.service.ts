@@ -1,3 +1,4 @@
+import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { BOTS } from '@core/config/telegram.config';
@@ -14,6 +15,7 @@ export class VoicePalBotService {
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
+    private readonly messagesAggregatorService: MessagesAggregatorService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly voicePalService: VoicePalService,
     @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
@@ -28,21 +30,19 @@ export class VoicePalBotService {
   }
 
   createBotEventListeners(): void {
-    // const messageAggregator = new MessagesAggregatorService(handleMessage);
-    // this.bot.on('message', (message: Message) => messageAggregator.handleIncomingMessage(message));
+    // this.bot.on('message', (message: Message) =>
+    //   this.messagesAggregatorService.handleIncomingMessage(message, (message: Message) => this.handleMessage(message)),
+    // );
     this.bot.on('message', (message: Message) => this.handleMessage(message));
   }
 
   async handleMessage(message: Message): Promise<void> {
-    const functionName = 'message listener';
     const { chatId, telegramUserId, firstName, lastName, username, text } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info(functionName, `${logBody} - start`);
+      this.logger.info('message listener', `${logBody} - start`);
 
-      // const voicePalService = new this.voicePalService(bot, chatId);
-      // const voicePalService = new VoicePalService(bot, chatId);
       const availableActions = Object.keys(VOICE_PAL_OPTIONS).map((option: string) => VOICE_PAL_OPTIONS[option].displayName);
       if (availableActions.includes(text)) {
         await this.voicePalService.handleActionSelection(text, { telegramUserId, chatId, firstName, lastName, username });
@@ -51,9 +51,9 @@ export class VoicePalBotService {
         await this.voicePalService.handleAction(message, userAction);
       }
 
-      this.logger.info(functionName, `${logBody} - success`);
+      this.logger.info('message listener', `${logBody} - success`);
     } catch (err) {
-      this.logger.error(functionName, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error('message listener', `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
     }
   }

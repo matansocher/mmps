@@ -27,17 +27,17 @@ export class MessageLoaderService {
       await action();
     } catch (err) {
       this.logger.error(MessageLoaderService.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-      this.stopLoader(bot, chatId);
+      await this.stopLoader(bot, chatId);
       throw err;
     } finally {
-      this.stopLoader(bot, chatId);
+      await this.stopLoader(bot, chatId);
     }
   }
 
   async waitForMessage(bot: TelegramBot, chatId: number, options: MessageLoaderOptions) {
     try {
       this.messages[chatId] = { cycleIterationIndex: 0, timeoutId: null, loaderMessageId: null };
-      await this.telegramGeneralService.setBotTyping(bot, chatId, options.loadingAction);
+      await this.telegramGeneralService.sendChatAction(bot, chatId, options.loadingAction);
       this.cycleInitiator(bot, chatId, options);
     } catch (err) {
       this.logger.error(MessageLoaderService.name, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -47,7 +47,7 @@ export class MessageLoaderService {
 
   cycleInitiator(bot: TelegramBot, chatId: number, options: MessageLoaderOptions): void {
     this.messages[chatId].timeoutId = setTimeout(async () => {
-      if (this.messages[chatId].cycleIterationIndex > LOADER_MESSAGES.length) {
+      if (this.messages[chatId]?.cycleIterationIndex > LOADER_MESSAGES.length) {
         return;
       }
       await this.processCycle(bot, chatId, options);
@@ -57,16 +57,16 @@ export class MessageLoaderService {
   async processCycle(bot: TelegramBot, chatId: number, options: MessageLoaderOptions): Promise<void> {
     let messagePromise;
 
-    const messageText = this.messages[chatId].cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId].cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
-    if (this.messages[chatId].cycleIterationIndex === 0) {
+    const messageText = this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId]?.cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
+    if (this.messages[chatId]?.cycleIterationIndex === 0) {
       messagePromise = this.telegramGeneralService.sendMessage(bot, chatId, messageText);
     } else {
-      messagePromise = this.telegramGeneralService.editMessageText(bot, chatId, this.messages[chatId].loaderMessageId, messageText);
+      messagePromise = this.telegramGeneralService.editMessageText(bot, chatId, this.messages[chatId]?.loaderMessageId, messageText);
     }
-    this.telegramGeneralService.setBotTyping(bot, chatId, options.loadingAction);
+    this.telegramGeneralService.sendChatAction(bot, chatId, options.loadingAction);
 
     const messageRes = await messagePromise;
-    this.messages[chatId].loaderMessageId = (messageRes && messageRes.message_id) ? messageRes.message_id : this.messages[chatId].loaderMessageId;
+    this.messages[chatId].loaderMessageId = (messageRes && messageRes.message_id) ? messageRes.message_id : this.messages[chatId]?.loaderMessageId;
     this.messages[chatId].cycleIterationIndex = this.messages[chatId].cycleIterationIndex + 1;
     this.cycleInitiator(bot, chatId, options);
   }
