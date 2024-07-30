@@ -4,8 +4,6 @@ import { Injectable } from '@nestjs/common';
 import { UtilsService } from '@services/utils/utils.service';
 import { LoggerService } from '@core/logger/logger.service';
 
-const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID;
-
 @Injectable()
 export class ImgurService {
   constructor(
@@ -24,17 +22,17 @@ export class ImgurService {
         description: 'This is a simple image upload in Imgur',
       };
 
-      const url = 'https://api.imgur.com/3/image';
       const config = {
+        url: 'https://api.imgur.com/3/image',
         method: 'post',
         headers: {
-          Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+          Authorization: `Client-ID ${process.env.IMGUR_CLIENT_ID}`,
           'Content-Type': 'application/json',
         },
         data: data,
       };
 
-      const result = await axios.get(url, config);
+      const result = await axios(config);
       this.logger.info(this.uploadImage.name, `end`);
       return result['data']?.data?.link;
     } catch (err) {

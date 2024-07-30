@@ -1,7 +1,9 @@
+import { promises as fs } from 'fs';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
+import { Inject, Injectable } from '@nestjs/common';
 import { BOTS, MessageLoaderOptions } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
-import { Inject, Injectable } from '@nestjs/common';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
 import { ImgurService } from '@services/imgur/imgur.service';
 import { OpenaiService } from '@services/openai/openai.service';
@@ -13,8 +15,6 @@ import { UtilsService } from '@services/utils/utils.service';
 import { IVoicePalOption } from '@services/voice-pal/interface';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
-import { promises as fs } from 'fs';
-import TelegramBot from 'node-telegram-bot-api';
 import {
   ANALYTIC_EVENT_NAMES,
   ANALYTIC_EVENT_STATES,
@@ -62,7 +62,7 @@ export class VoicePalService {
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, voicePalUtils.getKeyboardOptions());
   }
 
-  async handleAction(message, userAction: IVoicePalOption) {
+  async handleAction(message: Message, userAction: IVoicePalOption) {
     const { chatId, text, audio, video, photo } = this.telegramGeneralService.getMessageData(message);
 
     if (!userAction) {
