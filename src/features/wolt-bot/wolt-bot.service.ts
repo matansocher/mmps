@@ -1,7 +1,7 @@
 import { SubscriptionModel } from '@core/mongo/shared/models';
 import { IWoltRestaurant } from '@services/wolt/interface';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
 import { BOTS } from '@core/config/telegram.config';
@@ -19,7 +19,7 @@ import {
 } from '@services/wolt/wolt.config';
 
 @Injectable()
-export class WoltBotService {
+export class WoltBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
@@ -29,7 +29,9 @@ export class WoltBotService {
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
     @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
-  ) {
+  ) {}
+
+  onModuleInit(): void {
     this.createBotEventListeners();
     this.createErrorEventListeners();
   }

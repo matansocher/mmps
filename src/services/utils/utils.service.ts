@@ -1,12 +1,14 @@
 import { promises as fs } from 'fs';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { LoggerService } from '@core/logger/logger.service';
 
 @Injectable()
-export class UtilsService {
-  constructor(private readonly logger: LoggerService) {
+export class UtilsService implements OnModuleInit {
+  constructor(private readonly logger: LoggerService) {}
+
+  onModuleInit() {
     this.setFfmpegPath();
   }
 
