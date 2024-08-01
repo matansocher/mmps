@@ -26,8 +26,3 @@ export const LOADER_MESSAGES = [
   'Thanks for your patience...',
   'This is my last loading message, if there is no response, show it to Matan 😁',
 ];
-
-export interface MessageLoaderOptions {
-  cycleDuration?: number;
-  loadingAction: BOT_BROADCAST_ACTIONS;
-}

@@ -1,4 +1,4 @@
-import { BOT_BROADCAST_ACTIONS } from '@core/config/telegram.config';
+import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
 import { POSSIBLE_INPUTS } from '@services/voice-pal/voice-pal.config';
 
 export interface IVoicePalOption {

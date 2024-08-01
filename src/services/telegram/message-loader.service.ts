@@ -1,7 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
-import { DEFAULT_CYCLE_DURATION, LOADER_MESSAGES, MessageLoaderOptions } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { MessageLoaderOptions } from '@services/telegram/interface';
+import { DEFAULT_CYCLE_DURATION, LOADER_MESSAGES } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
 

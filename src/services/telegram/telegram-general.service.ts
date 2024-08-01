@@ -1,8 +1,7 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
-import { LOCAL_FILES_PATH } from '@core/config/main.config';
-import { BOT_BROADCAST_ACTIONS } from '@core/config/telegram.config';
+import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
 import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
 import { UtilsService } from '@services/utils/utils.service';
 import { LoggerService } from '@core/logger/logger.service';
@@ -57,15 +56,15 @@ export class TelegramGeneralService {
     }
   }
 
-  async downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }): Promise<string> {
+  async downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }, localFilePath: string): Promise<string> {
     try {
       let audioFileLocalPath;
       if (video && video.file_id) {
-        const videoFileLocalPath = await this.downloadFile(bot, video.file_id, LOCAL_FILES_PATH);
+        const videoFileLocalPath = await this.downloadFile(bot, video.file_id, localFilePath);
         audioFileLocalPath = await this.utilsService.extractAudioFromVideo(videoFileLocalPath);
         this.utilsService.deleteFile(videoFileLocalPath);
       } else if (audio && audio.file_id) {
-        audioFileLocalPath = await this.downloadFile(bot, audio.file_id, LOCAL_FILES_PATH);
+        audioFileLocalPath = await this.downloadFile(bot, audio.file_id, localFilePath);
       }
       return audioFileLocalPath;
     } catch (err) {

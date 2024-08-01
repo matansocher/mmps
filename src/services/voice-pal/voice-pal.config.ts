@@ -1,4 +1,4 @@
-import { BOT_BROADCAST_ACTIONS } from '@core/config/telegram.config';
+import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
 import { IVoicePalOption } from '@services/voice-pal/interface';
 
 export const LOCAL_FILES_PATH = './assets/downloads';

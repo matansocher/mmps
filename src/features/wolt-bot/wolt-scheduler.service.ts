@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BOTS } from '@core/config/telegram.config';
+import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService } from '@core/mongo/wolt-mongo/services';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';

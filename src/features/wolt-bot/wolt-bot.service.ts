@@ -3,7 +3,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { SubscriptionModel } from '@core/mongo/shared/models';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
-import { BOTS } from '@core/config/telegram.config';
+import { BOTS } from '@services/telegram/telegram.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';

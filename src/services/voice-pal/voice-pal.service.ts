@@ -1,14 +1,14 @@
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { BOTS, MessageLoaderOptions } from '@core/config/telegram.config';
+import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
 import { ImgurService } from '@services/imgur/imgur.service';
 import { OpenaiService } from '@services/openai/openai.service';
 import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
-import { ITelegramMessageData } from '@services/telegram/interface';
+import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
 import { MessageLoaderService } from '@services/telegram/message-loader.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
@@ -101,7 +101,7 @@ export class VoicePalService {
 
   async handleTranscribeAction({ chatId, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
     try {
-      const audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio });
+      const audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
       const resText = await this.openaiService.getTranscriptFromAudio(audioFileLocalPath);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, this.voicePalUtilsService.getKeyboardOptions());
       await this.utilsService.deleteFile(audioFileLocalPath);
@@ -119,7 +119,7 @@ export class VoicePalService {
       if (text) {
         resText = await this.googleTranslateService.getTranslationToEnglish(text);
       } else {
-        audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio });
+        audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
         resText = await this.openaiService.getTranslationFromAudio(audioFileLocalPath);
         this.utilsService.deleteFile(audioFileLocalPath);
       }
