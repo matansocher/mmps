@@ -3,8 +3,7 @@ export function Timer(): MethodDecorator {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      const logger = this.logger;
-      if (!logger) {
+      if (!this.logger) {
         throw new Error('LoggerService is not injected');
       }
 
@@ -14,7 +13,7 @@ export function Timer(): MethodDecorator {
 
       const end = Date.now();
       const executionTime = end - start;
-      logger.info(String(propertyKey), `Execution time: ${executionTime}ms`);
+      this.logger.info(String(propertyKey), `Execution time: ${executionTime}ms`);
 
       return result;
     };

@@ -1,0 +1,16 @@
+export const MockTelegramGeneralService = {
+  getMessageData: jest.fn(() => ({ chatId: 1, telegramUserId: 1, firstName: 'John', lastName: 'Doe', username: 'johndoe', text: 'text' })),
+  getCallbackQueryData: jest.fn(),
+  getInlineKeyboardMarkup: jest.fn(),
+  downloadFile: jest.fn(),
+  downloadAudioFromVideoOrAudio: jest.fn(),
+  sendMessage: jest.fn(),
+  editMessageText: jest.fn(),
+  deleteMessage: jest.fn(),
+  sendAudio: jest.fn(),
+  sendVoice: jest.fn(),
+  sendVenue: jest.fn(),
+  sendPhoto: jest.fn(),
+  sendChatAction: jest.fn(),
+  botErrorHandler: jest.fn(),
+};

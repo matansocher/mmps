@@ -1,7 +1,6 @@
-// import { AnalyticLogModel, UserModel } from '@core/mongo/shared/models';
-import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.config';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
+import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.config';
 
 @Injectable()
 export class VoicePalMongoAnalyticLogService {

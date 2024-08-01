@@ -24,6 +24,7 @@
       "@decorators": ["src/decorators"],
       "@features/*": ["src/features/*"],
       "@config/*": ["src/config/*"],
+      "@mocks": ["src/core/mocks"],
       "@services/*": ["src/services/*"],
       "@test/*": ["test/*"]
     }

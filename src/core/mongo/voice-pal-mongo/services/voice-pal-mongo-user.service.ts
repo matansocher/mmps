@@ -1,4 +1,3 @@
-// import { AnalyticLogModel, UserModel } from '@core/mongo/shared/models';
 import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.config';
 import { ITelegramMessageData } from '@services/telegram/interface';
 import { Db } from 'mongodb';
@@ -16,7 +15,6 @@ export class VoicePalMongoUserService {
 
   async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<any> {
     try {
-      // const userCollection = this.db.collection<UserModel>('user');
       const userCollection = this.db.collection(COLLECTIONS.USER);
       const user = { telegramUserId, chatId, firstName, lastName, username };
       await userCollection.insertOne(user);

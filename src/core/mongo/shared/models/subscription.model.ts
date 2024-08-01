@@ -4,6 +4,7 @@ export interface SubscriptionModel {
   _id: ObjectId;
   chatId: number;
   restaurant: string;
+  restaurantPhoto: string;
   isActive: boolean;
-  createdAt: number;
+  createdAt: Date;
 }
