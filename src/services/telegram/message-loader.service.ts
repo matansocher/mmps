@@ -2,9 +2,21 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { MessageLoaderOptions } from '@services/telegram/interface';
-import { DEFAULT_CYCLE_DURATION, LOADER_MESSAGES } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
+
+const LOADER_MESSAGES = [
+  'Just a moment...',
+  'Hold on, working on it...',
+  'Still on it...',
+  'Just a little bit longer...',
+  'Hang tight, almost there...',
+  'Any second now...',
+  'Thanks for your patience...',
+  'This is my last loading message, if there is no response, show it to Matan 😁',
+];
+
+const DEFAULT_CYCLE_DURATION = 5000;
 
 interface MessageLoaderData {
   cycleIterationIndex: number;

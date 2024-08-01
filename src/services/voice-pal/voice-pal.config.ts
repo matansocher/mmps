@@ -1,14 +1,7 @@
-import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
+import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram/telegram.config';
 import { IVoicePalOption } from '@services/voice-pal/interface';
 
 export const LOCAL_FILES_PATH = './assets/downloads';
-
-export enum POSSIBLE_INPUTS {
-  TEXT = 'text',
-  AUDIO = 'audio',
-  VIDEO = 'video',
-  PHOTO = 'photo',
-}
 
 export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   START: {

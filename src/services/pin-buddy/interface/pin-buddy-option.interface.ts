@@ -1,6 +1,6 @@
 import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram/telegram.config';
 
-export interface IVoicePalOption {
+export interface IPinBuddyOption {
   analyticsEventName: string;
   displayName: string;
   handler?: string;

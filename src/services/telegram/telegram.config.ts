@@ -7,6 +7,10 @@ export const BOTS = {
     name: 'Voice Pal Bot',
     token: process.env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
   },
+  PIN_BUDDY: {
+    name: 'Pin Buddy Bot',
+    token: process.env.PIN_BUDDY_BOT_TOKEN,
+  },
 };
 
 export enum BOT_BROADCAST_ACTIONS {
@@ -14,15 +18,9 @@ export enum BOT_BROADCAST_ACTIONS {
   UPLOADING_VOICE = 'upload_voice',
 }
 
-export const DEFAULT_CYCLE_DURATION = 5000;
-
-export const LOADER_MESSAGES = [
-  'Just a moment...',
-  'Hold on, working on it...',
-  'Still on it...',
-  'Just a little bit longer...',
-  'Hang tight, almost there...',
-  'Any second now...',
-  'Thanks for your patience...',
-  'This is my last loading message, if there is no response, show it to Matan 😁',
-];
+export enum POSSIBLE_INPUTS {
+  TEXT = 'text',
+  AUDIO = 'audio',
+  VIDEO = 'video',
+  PHOTO = 'photo',
+}
