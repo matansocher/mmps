@@ -1,4 +1,5 @@
 import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
+import { Timer } from '@decorators';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { BOTS } from '@core/config/telegram.config';
@@ -35,6 +36,7 @@ export class VoicePalBotService {
     );
   }
 
+  @Timer()
   async handleMessage(message: Message): Promise<void> {
     const { chatId, telegramUserId, firstName, lastName, username, text } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
