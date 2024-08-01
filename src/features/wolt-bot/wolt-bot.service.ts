@@ -1,14 +1,12 @@
-import { SubscriptionModel } from '@core/mongo/shared/models';
-import { IWoltRestaurant } from '@services/wolt/interface';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
+import { SubscriptionModel } from '@core/mongo/shared/models';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
 import { BOTS } from '@core/config/telegram.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
-import * as woltUtils from '@services/wolt/wolt.utils';
 import {
   ANALYTIC_EVENT_NAMES,
   INITIAL_BOT_RESPONSE,
@@ -17,12 +15,15 @@ import {
   TOO_OLD_LIST_THRESHOLD_MS,
   WOLT_BOT_OPTIONS,
 } from '@services/wolt/wolt.config';
+import { IWoltRestaurant } from '@services/wolt/interface';
+import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    private readonly woltUtilsService: WoltUtilsService,
     private readonly woltService: WoltService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
@@ -56,12 +57,12 @@ export class WoltBotService implements OnModuleInit {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
       this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
       this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, { chatId });
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
 
@@ -74,7 +75,7 @@ export class WoltBotService implements OnModuleInit {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = "You don't have any active subscriptions yet";
-        return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
+        return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
@@ -89,7 +90,7 @@ export class WoltBotService implements OnModuleInit {
       this.logger.info(this.showHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.showHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
 
@@ -113,7 +114,7 @@ export class WoltBotService implements OnModuleInit {
       const matchedRestaurants = this.getFilteredRestaurantsByName(restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn\'t find any restaurants matching your search - '${restaurant}'`;
-        return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
+        return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
       }
       const restaurants = await this.woltService.enrichRestaurants(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map((restaurant) => {
@@ -129,7 +130,7 @@ export class WoltBotService implements OnModuleInit {
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
 
@@ -150,7 +151,7 @@ export class WoltBotService implements OnModuleInit {
       this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.callbackQueryHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, woltUtils.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
 
@@ -195,7 +196,7 @@ export class WoltBotService implements OnModuleInit {
         `You can search and register for another restaurant if you like`;
     }
     this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, { data: restaurant, chatId });
-    return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, woltUtils.getKeyboardOptions());
+    return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
   }
 
   getFilteredRestaurantsByName(searchInput) {
