@@ -1,5 +1,4 @@
 import { PinBuddyMongoAnalyticLogService, PinBuddyMongoUserService } from '@core/mongo/pin-buddy/services';
-import { Timer } from '@decorators';
 import { PinBuddyUtilsService } from '@services/pin-buddy/pin-buddy-utils.service';
 import { PinBuddyService } from '@services/pin-buddy/pin-buddy.service';
 import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE } from '@services/pin-buddy/pin-buddy.config';
@@ -38,6 +37,8 @@ export class PinBuddyBotService implements OnModuleInit {
   createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.on('message', (message: Message) => this.handleMessage(message));
+    // $$$$$$$$$$$$$$$$$$ add event listener to delete messages
+    // $$$$$$$$$$$$$$$$$$ add event listener for clearing chat history
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -48,17 +49,17 @@ export class PinBuddyBotService implements OnModuleInit {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
       this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{name}', firstName || username || '');
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, await this.pinBuddyUtilsService.getKeyboardOptions(chatId));
       this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, { chatId });
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, await this.pinBuddyUtilsService.getKeyboardOptions(chatId));
     }
   }
 
   async handleMessage(message: Message): Promise<void> {
-    const { chatId, telegramUserId, firstName, lastName, username, text, messageId, replyToMessageId } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, username, text, messageId, replyToMessageId } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     if (text === '/start') return;
@@ -77,7 +78,7 @@ export class PinBuddyBotService implements OnModuleInit {
         // if a user sends a message with a number, the bot will try to find the message id and unstar it
         await this.pinBuddyService.handleUnstarMessage({ chatId, messageId, text });
       } else if (isClickedOnStarredMessage) {
-        await this.pinBuddyService.handleClickOnStarredMessage({ chatId, username, messageId: parseInt(userMessageId), text: userText });
+        await this.pinBuddyService.handleClickOnStarredMessage({ chatId, messageId: parseInt(userMessageId) });
       }
       this.logger.info(this.handleMessage.name, `${logBody} - success`);
     } catch (err) {

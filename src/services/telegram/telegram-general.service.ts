@@ -102,6 +102,14 @@ export class TelegramGeneralService {
     }
   }
 
+  // async setMessageReaction(bot: TelegramBot, chatId: number, messageId: number, reaction: any): Promise<void> {
+  //   try {
+  //     await bot.setMessageReaction(chatId, messageId, reaction);
+  //   } catch (err) {
+  //     this.logger.error(this.setMessageReaction.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+  //   }
+  // }
+
   async sendAudio(bot: TelegramBot, chatId: number, audioFilePath: string): Promise<void> {
     try {
       await bot.sendAudio(chatId, audioFilePath);

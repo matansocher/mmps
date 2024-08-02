@@ -33,10 +33,6 @@ export class PinBuddyMongoPinService {
   }
 
   async addPin(chatId: number, messageId: number, title: string) {
-    const existingPin = await this.getPin(chatId, messageId);
-    if (existingPin) {
-      return;
-    }
     const pinCollection = this.db.collection(COLLECTIONS.PIN);
     const pinToSave = {
       chatId,
