@@ -1,18 +1,13 @@
-import { LoggerModule } from '@core/logger/logger.module';
-// import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.module';
 import { Module } from '@nestjs/common';
-import { PinBuddyUtilsService } from '@services/pin-buddy/pin-buddy-utils.service';
+import { LoggerModule } from '@core/logger/logger.module';
+import { PinBuddyMongoModule } from '@core/mongo/pin-buddy/pin-buddy-mongo.module';
 import { PinBuddyService } from '@services/pin-buddy/pin-buddy.service';
+import { PinBuddyUtilsService } from '@services/pin-buddy/pin-buddy-utils.service';
 import { UtilsModule } from '@services/utils/utils.module';
-import { UserSelectedActionsService } from '@services/pin-buddy/user-selected-actions.service';
 
 @Module({
-  imports: [
-    LoggerModule.forRoot(PinBuddyModule.name),
-    UtilsModule,
-    // VoicePalMongoModule,
-  ],
-  providers: [PinBuddyService, PinBuddyUtilsService, UserSelectedActionsService],
-  exports: [PinBuddyService, UserSelectedActionsService],
+  imports: [LoggerModule.forRoot(PinBuddyModule.name), UtilsModule, PinBuddyMongoModule],
+  providers: [PinBuddyService, PinBuddyUtilsService],
+  exports: [PinBuddyService, PinBuddyUtilsService],
 })
 export class PinBuddyModule {}

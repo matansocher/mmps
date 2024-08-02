@@ -16,6 +16,9 @@ export class TelegramGeneralService {
   getMessageData(message: Message): ITelegramMessageData {
     return {
       chatId: _get(message, 'chat.id', null),
+      messageId: _get(message, 'message_id', null),
+      replyToMessageId: _get(message, 'reply_to_message.message_id', null),
+      replyToMessageText: _get(message, 'reply_to_message.text', null),
       telegramUserId: _get(message, 'from.id', null),
       firstName: _get(message, 'from.first_name', null),
       lastName: _get(message, 'from.last_name', null),
@@ -82,9 +85,9 @@ export class TelegramGeneralService {
     }
   }
 
-  async editMessageText(bot: TelegramBot, chatId: number, messageId: number, messageText: string) {
+  async editMessageText(bot: TelegramBot, chatId: number, messageId: number, messageText: string, form = {}) {
     try {
-      return await bot.editMessageText(messageText, { chat_id: chatId, message_id: messageId });
+      return await bot.editMessageText(messageText, { chat_id: chatId, message_id: messageId, ...form });
     } catch (err) {
       this.logger.error(this.editMessageText.name, `err: ${this.utilsService.getErrorMessage(err)}`);
       throw err;

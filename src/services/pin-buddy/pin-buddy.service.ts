@@ -1,17 +1,13 @@
 import { PinBuddyUtilsService } from '@services/pin-buddy/pin-buddy-utils.service';
-import { PIN_BUDDY_OPTIONS } from '@services/pin-buddy/pin-buddy.config';
-import TelegramBot, { Message } from 'node-telegram-bot-api';
+import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
-import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
-import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
+import { PinBuddyMongoAnalyticLogService, PinBuddyMongoPinService, PinBuddyMongoUserService } from '@core/mongo/pin-buddy/services';
+import { ITelegramMessageData } from '@services/telegram/interface';
 import { MessageLoaderService } from '@services/telegram/message-loader.service';
+import { BOT_BROADCAST_ACTIONS, BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
-import { IVoicePalOption } from '@services/voice-pal/interface';
-import { UserSelectedActionsService } from '@services/pin-buddy/user-selected-actions.service';
-import { ANALYTIC_EVENT_NAMES, ANALYTIC_EVENT_STATES } from './pin-buddy.config';
 
 @Injectable()
 export class PinBuddyService {
@@ -20,73 +16,75 @@ export class PinBuddyService {
     private readonly utilsService: UtilsService,
     private readonly messageLoaderService: MessageLoaderService,
     private readonly pinBuddyUtilsService: PinBuddyUtilsService,
-    private readonly mongoUserService: VoicePalMongoUserService,
-    private readonly mongoAnalyticLogService: VoicePalMongoAnalyticLogService,
+    private readonly mongoUserService: PinBuddyMongoUserService,
+    private readonly mongoAnalyticLogService: PinBuddyMongoAnalyticLogService,
+    private readonly mongoPinService: PinBuddyMongoPinService,
     private readonly telegramGeneralService: TelegramGeneralService,
-    private readonly userSelectedActionsService: UserSelectedActionsService,
-    @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.PIN_BUDDY.name) private readonly bot: TelegramBot,
   ) {}
 
-  async handleActionSelection(selection, { telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>) {
-    const relevantAction = Object.keys(PIN_BUDDY_OPTIONS).find((option: string) => PIN_BUDDY_OPTIONS[option].displayName === selection);
-
-    let replyText = PIN_BUDDY_OPTIONS[relevantAction].selectedActionResponse;
-    if (selection === PIN_BUDDY_OPTIONS.START.displayName) {
-      this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
-      replyText = replyText.replace('{name}', firstName || username || '');
-    } else {
-      this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
-    }
-
-    const analyticAction = ANALYTIC_EVENT_NAMES[selection];
-    this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId });
-
-    this.logger.info(this.handleActionSelection.name, `chatId: ${chatId}, selection: ${selection}`);
-
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.pinBuddyUtilsService.getKeyboardOptions());
-  }
-
-  async handleAction(message: Message, userAction: IVoicePalOption) {
-    const { chatId, text, audio, video, photo } = this.telegramGeneralService.getMessageData(message);
-
-    if (!userAction) {
-      return this.telegramGeneralService.sendMessage(this.bot, chatId, `Please select an action first.`);
-    }
-
-    const inputErrorMessage = this.pinBuddyUtilsService.validateActionWithMessage(userAction, { text, audio, video, photo });
-    if (inputErrorMessage) {
-      return this.telegramGeneralService.sendMessage(this.bot, chatId, inputErrorMessage, this.pinBuddyUtilsService.getKeyboardOptions());
-    }
-
-    const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
+  async handleReplyToMessage({ chatId, messageId, replyToMessageId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
-      if (userAction && userAction.showLoader) {
-        await this.messageLoaderService.handleMessageWithLoader(
-          this.bot,
-          chatId,
-          { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions,
-          async (): Promise<void> => {
-            await this[userAction.handler]({ chatId, text, audio, video, photo });
-          },
-        );
-      } else {
-        await this[userAction.handler]({ chatId, text, audio, video, photo });
-      }
+      //   1. send a temporary message to tell the user some thing like = 'OK, I will save this image for you'
+      await this.telegramGeneralService.sendChatAction(this.bot, chatId, BOT_BROADCAST_ACTIONS.TYPING);
+      const temporaryMessage = await this.telegramGeneralService.sendMessage(this.bot, chatId, 'OK, I will save this message for you, just a sec...', this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+      const temporaryMessageId = temporaryMessage.message_id;
+      //   2. save the message with the message id in mongo
+      await this.mongoPinService.addPin(chatId, messageId, text);
+      await this.pinBuddyUtilsService.sleep(3000);
+      //   3. after mongo finishes + after 3 seconds - update the temporary message to tell the user that - 'OK, I have saved the image for you'
+      //     a. also update the options of the bot to contain new saved message - `${messageId} - ${text}`
+      // await this.telegramGeneralService.editMessageText(this.bot, chatId, temporaryMessageId, `OK, I have saved this message for you - ${text}`, await this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+      await this.telegramGeneralService.editMessageText(this.bot, chatId, temporaryMessageId, `OK, I have saved this message for you - ${text}`);
+      //   4. after another 3 seconds - delete the reply message of the user and also the temporary message of the bot
+      await this.pinBuddyUtilsService.sleep(3000);
+      await this.telegramGeneralService.deleteMessage(this.bot, chatId, replyToMessageId);
+      await this.telegramGeneralService.deleteMessage(this.bot, chatId, temporaryMessageId);
 
-      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId });
+      // $$$$$$$$$$$$$$$$$$$$ maybe update the users original starred message and add an emoji of a star?
+      // const originalText = await get original message by chatId and messageId
+      // await this.telegramGeneralService.editMessageText(this.bot, chatId, messageId, `${text} ⭐️`, await this.pinBuddyUtilsService.getKeyboardOptions(chatId));
     } catch (err) {
-      const errorMessage = this.utilsService.getErrorMessage(err);
-      this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.ERROR}`, { chatId, error: errorMessage });
+      this.logger.error(this.handleReplyToMessage.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
 
-  async handleTranscribeAction({ chatId, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleUnstarMessage({ chatId, messageId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, 'resText', this.pinBuddyUtilsService.getKeyboardOptions());
+      const messageIdToUnstar = parseInt(text);
+      const pin = await this.mongoPinService.getPin(chatId, messageIdToUnstar);
+      if (!pin) {
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, 'Sorry, but I could not find the message you are looking for', this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+        return;
+      }
+      //  1. user will send a message to the bot with the message id
+      //  2. send a temporary message to tell the user some thing like = 'OK, I will delete the message from your saved messages'
+      const temporaryMessage = await this.telegramGeneralService.sendMessage(this.bot, chatId, 'OK, I will delete the message from your saved messages, just a sec...', this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+      const temporaryMessageId = temporaryMessage.message_id;
+      //  3. delete the message mongo
+      await this.mongoPinService.archivePin(chatId, messageIdToUnstar);
+      await this.pinBuddyUtilsService.sleep(3000);
+      //  4. after mongo finishes + after 3 seconds - update the temporary message to tell the user that - 'OK, I have deleted the message for you'
+      await this.telegramGeneralService.editMessageText(this.bot, chatId, temporaryMessageId, `'OK, I have deleted the message for you - ${text}`, await this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+      //    a. also update the options of the bot to NOT contain new saved message
+      //  5. after another 3 seconds - delete the message of the user with the message idand also the temporary message of the bot
+      await this.pinBuddyUtilsService.sleep(3000);
+      await this.telegramGeneralService.deleteMessage(this.bot, chatId, messageId);
+      await this.telegramGeneralService.deleteMessage(this.bot, chatId, temporaryMessageId);
     } catch (err) {
-      this.logger.error(this.handleTranscribeAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.handleUnstarMessage.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
+    }
+  }
+
+  async handleClickOnStarredMessage({ chatId, username, messageId, text }: Partial<ITelegramMessageData>): Promise<void> {
+    try {
+      // $$$$$$$$$$$$$$$$$$$ navigate to here, but maybe since it is a button in options, it might not be possible
+      `https://t.me/${username}/${messageId}`;
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, 'resText', this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+    } catch (err) {
+      this.logger.error(this.handleUnstarMessage.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
