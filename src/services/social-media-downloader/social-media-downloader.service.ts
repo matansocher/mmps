@@ -11,15 +11,15 @@ export class SocialMediaDownloaderService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  async getInstagramVideo(videoUrl: string): Promise<any> {
+  async getMetaVideo(videoUrl: string): Promise<any> {
     try {
-      this.logger.info(this.getInstagramVideo.name, `start`);
+      this.logger.info(this.getMetaVideo.name, `start`);
       const { data } = await ndown(videoUrl);
       const videoDownloadLink = data[0].url;
       const video = await axios.get(videoDownloadLink, { responseType: 'arraybuffer' });
       return video['data'];
     } catch (err) {
-      this.logger.error(this.getInstagramVideo.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getMetaVideo.name, `err - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }

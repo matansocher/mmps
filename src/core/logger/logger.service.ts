@@ -2,7 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 
 @Injectable()
 export class LoggerService {
-  private readonly filename: string;
+  readonly filename: string;
 
   constructor(@Optional() private readonly moduleName: string = 'LoggerModule') {
     this.filename = this.moduleName

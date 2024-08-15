@@ -1,5 +1,8 @@
 export interface ITelegramMessageData {
   chatId: number;
+  messageId: number;
+  replyToMessageId: number;
+  replyToMessageText: string;
   telegramUserId: number;
   firstName: string;
   lastName: string;
@@ -8,5 +11,6 @@ export interface ITelegramMessageData {
   audio: any;
   video: any;
   photo: any;
+  file: any;
   date: number;
 }

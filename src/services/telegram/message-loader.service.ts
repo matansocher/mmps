@@ -1,9 +1,22 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
-import { DEFAULT_CYCLE_DURATION, LOADER_MESSAGES, MessageLoaderOptions } from '@core/config/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { MessageLoaderOptions } from '@services/telegram/interface';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@services/utils/utils.service';
+
+const LOADER_MESSAGES = [
+  'Just a moment...',
+  'Hold on, working on it...',
+  'Still on it...',
+  'Just a little bit longer...',
+  'Hang tight, almost there...',
+  'Any second now...',
+  'Thanks for your patience...',
+  'This is my last loading message, if there is no response, show it to Matan 😁',
+];
+
+const DEFAULT_CYCLE_DURATION = 5000;
 
 interface MessageLoaderData {
   cycleIterationIndex: number;
@@ -60,7 +73,7 @@ export class MessageLoaderService {
     const messageText = this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId]?.cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
     if (this.messages[chatId]?.cycleIterationIndex === 0) {
       messagePromise = this.telegramGeneralService.sendMessage(bot, chatId, messageText);
-    } else {
+    } else if (this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length) {
       messagePromise = this.telegramGeneralService.editMessageText(bot, chatId, this.messages[chatId]?.loaderMessageId, messageText);
     }
     this.telegramGeneralService.sendChatAction(bot, chatId, options.loadingAction);
@@ -72,8 +85,11 @@ export class MessageLoaderService {
   }
 
   async stopLoader(bot: TelegramBot, chatId: number): Promise<void> {
-    clearTimeout(this.messages[chatId].timeoutId);
-    await this.telegramGeneralService.deleteMessage(bot, chatId, this.messages[chatId].loaderMessageId);
+    const { timeoutId, loaderMessageId } = this.messages[chatId];
+    clearTimeout(timeoutId as number);
+    if (loaderMessageId) {
+      await this.telegramGeneralService.deleteMessage(bot, chatId, loaderMessageId);
+    }
     delete this.messages[chatId];
   }
 }

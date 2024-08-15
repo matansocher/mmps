@@ -1,4 +1,3 @@
-// import { AnalyticLogModel, UserModel } from '@core/mongo/shared/models';
 import { SubscriptionModel } from '@core/mongo/shared/models';
 import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { Db } from 'mongodb';
