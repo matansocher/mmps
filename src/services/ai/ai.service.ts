@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { GeminiService } from '@services/gemini/gemini.service';
 import { ImgurService } from '@services/imgur/imgur.service';
 import { OpenaiService } from '@services/openai/openai.service';
-import { IMAGE_ANALYSIS_PROMPT } from '@services/voice-pal/voice-pal.config';
 import { AiProvider } from '@services/ai/ai.config';
 
 @Injectable()
@@ -54,9 +53,9 @@ export class AiService {
     switch (this.aiProvider) {
       case AiProvider.OPENAI:
         const imageUrl = await this.imgurService.uploadImage(imageLocalPath);
-        return this.openaiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageUrl);
+        return this.openaiService.analyzeImage(prompt, imageUrl);
       case AiProvider.GEMINI:
-        return this.geminiService.generateContentFromFile(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
+        return this.geminiService.generateContentFromFile(prompt, imageLocalPath);
     }
   }
 
