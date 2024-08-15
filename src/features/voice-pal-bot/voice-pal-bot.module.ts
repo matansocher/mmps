@@ -1,10 +1,10 @@
 import { LoggerModule } from '@core/logger/logger.module';
 import { Module } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
-import { TelegramModule } from '@services/telegram/telegram.module';
-import { UtilsModule } from '@services/utils/utils.module';
-import { VoicePalModule } from '@services/voice-pal/voice-pal.module';
+import { BOTS } from '@services/telegram';
+import { TelegramBotsFactoryModule } from '@services/telegram';
+import { TelegramModule } from '@services/telegram';
+import { UtilsModule } from '@services/utils';
+import { VoicePalModule } from '@services/voice-pal';
 import { VoicePalBotService } from './voice-pal-bot.service';
 
 @Module({

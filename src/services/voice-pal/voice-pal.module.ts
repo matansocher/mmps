@@ -1,13 +1,13 @@
 import { LoggerModule } from '@core/logger/logger.module';
 import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.module';
 import { Module } from '@nestjs/common';
-import { GoogleTranslateModule } from '@services/google-translate/google-translate.module';
-import { ImgurModule } from '@services/imgur/imgur.module';
-import { SocialMediaDownloaderModule } from '@services/social-media-downloader/social-media-downloader.module';
-import { UtilsModule } from '@services/utils/utils.module';
-import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
-import { VoicePalUtilsService } from '@services/voice-pal/voice-pal-utils.service';
-import { YoutubeTranscriptModule } from '@services/youtube-transcript/youtube-transcript.module';
+import { GoogleTranslateModule } from '@services/google-translate';
+import { ImgurModule } from '@services/imgur';
+import { SocialMediaDownloaderModule } from '@services/social-media-downloader';
+import { UtilsModule } from '@services/utils';
+import { UserSelectedActionsService } from '@services/voice-pal';
+import { VoicePalUtilsService } from '@services/voice-pal';
+import { YoutubeTranscriptModule } from '@services/youtube-transcript';
 import { AiModule } from '@services/ai/ai.module';
 import { VoicePalService } from './voice-pal.service';
 

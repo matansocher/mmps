@@ -1,13 +1,20 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { LoggerService } from '@core/logger/logger.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService } from '@core/mongo/wolt-mongo/services';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
-import * as woltConfig from '@services/wolt/wolt.config';
-import { WoltService } from '@services/wolt/wolt.service';
-import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
+import { TelegramGeneralService } from '@services/telegram';
+import { UtilsService } from '@services/utils';
+import {
+  ANALYTIC_EVENT_NAMES,
+  HOURS_DIFFERENCE_FROM_UTC,
+  HOUR_OF_DAY_TO_REFRESH_MAP,
+  MAX_HOUR_TO_ALERT_USER,
+  MIN_HOUR_TO_ALERT_USER,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+} from '@services/wolt';
+import { WoltService } from '@services/wolt';
+import { WoltUtilsService } from '@services/wolt';
 
 @Injectable()
 export class WoltSchedulerService implements OnModuleInit {
@@ -41,9 +48,9 @@ export class WoltSchedulerService implements OnModuleInit {
   }
 
   getSecondsToNextRefresh(): number {
-    const currentHour = new Date().getHours() + woltConfig.HOURS_DIFFERENCE_FROM_UTC;
+    const currentHour = new Date().getHours() + HOURS_DIFFERENCE_FROM_UTC;
     const israelHour = currentHour % 24;
-    return woltConfig.HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
+    return HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }
 
   alertSubscribers(subscriptions): Promise<any> {
@@ -65,7 +72,7 @@ export class WoltSchedulerService implements OnModuleInit {
           // promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, replyText, inlineKeyboardMarkup), this.woltUtilsService.getKeyboardOptions());
           promisesArr.push(this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText }));
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
-          promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED, { chatId: subscription.chatId, data: restaurant.name }));
+          promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED, { chatId: subscription.chatId, data: restaurant.name }));
         });
       });
       return Promise.all(promisesArr);
@@ -76,15 +83,15 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async cleanExpiredSubscriptions(): Promise<void> {
     try {
-      const expiredSubscriptions = await this.mongoSubscriptionService.getExpiredSubscriptions(woltConfig.SUBSCRIPTION_EXPIRATION_HOURS);
+      const expiredSubscriptions = await this.mongoSubscriptionService.getExpiredSubscriptions(SUBSCRIPTION_EXPIRATION_HOURS);
       const promisesArr = [];
       expiredSubscriptions.forEach((subscription) => {
         promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
         const currentHour = new Date().getHours();
-        if (currentHour >= woltConfig.MIN_HOUR_TO_ALERT_USER && currentHour <= woltConfig.MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
-          promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${woltConfig.SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
+        if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
+          promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
         }
-        promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED, { chatId: subscription.chatId, data: subscription.restaurant }));
+        promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED, { chatId: subscription.chatId, data: subscription.restaurant }));
       });
       await Promise.all(promisesArr);
     } catch (err) {

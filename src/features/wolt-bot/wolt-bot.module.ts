@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerModule } from '@core/logger/logger.module';
 import { WoltMongoModule } from '@core/mongo/wolt-mongo/wolt-mongo.module';
 import { WoltSchedulerService } from '@features/wolt-bot/wolt-scheduler.service';
-import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
-import { TelegramModule } from '@services/telegram/telegram.module';
-import { UtilsModule } from '@services/utils/utils.module';
-import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
-import { WoltModule } from '@services/wolt/wolt.module';
+import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
+import { UtilsModule } from '@services/utils';
+import { WoltUtilsService } from '@services/wolt';
+import { WoltModule } from '@services/wolt';
 import { WoltBotService } from './wolt-bot.service';
 
 @Module({

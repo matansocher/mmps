@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger/logger.module';
 import { PinBuddyMongoModule } from '@core/mongo/pin-buddy/pin-buddy-mongo.module';
-import { PinBuddyModule } from '@services/pin-buddy/pin-buddy.module';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
-import { TelegramModule } from '@services/telegram/telegram.module';
-import { UtilsModule } from '@services/utils/utils.module';
+import { PinBuddyModule } from '@services/pin-buddy';
+import { BOTS } from '@services/telegram';
+import { TelegramBotsFactoryModule } from '@services/telegram';
+import { TelegramModule } from '@services/telegram';
+import { UtilsModule } from '@services/utils';
 import { PinBuddyBotService } from './pin-buddy-bot.service';
 
 @Module({

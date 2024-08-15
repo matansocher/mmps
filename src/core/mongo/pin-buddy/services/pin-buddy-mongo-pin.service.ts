@@ -3,7 +3,7 @@ import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/pin-buddy/pin-buddy-mo
 import { Db, Document, ObjectId, WithId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@services/utils';
 
 @Injectable()
 export class PinBuddyMongoPinService {

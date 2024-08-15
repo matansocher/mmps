@@ -1,9 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
-import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
-import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
-import { UtilsService } from '@services/utils/utils.service';
+import { BOT_BROADCAST_ACTIONS } from '@services/telegram';
+import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram';
+import { UtilsService } from '@services/utils';
 import { LoggerService } from '@core/logger/logger.service';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockMessagesAggregatorService, MockTelegramGeneralService } from '@mocks';
-import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { MessagesAggregatorService } from '@services/telegram';
+import { TelegramGeneralService } from '@services/telegram';
 import { PinBuddyBotService } from './pin-buddy-bot.service';
 
 describe('PinBuddyBotService', () => {

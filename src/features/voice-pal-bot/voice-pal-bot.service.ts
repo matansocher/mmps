@@ -1,14 +1,14 @@
 import { Timer } from '@decorators';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { LoggerService } from '@core/logger/logger.service';
-import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
-import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
-import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
-import { VoicePalService } from '@services/voice-pal/voice-pal.service';
+import { MessagesAggregatorService } from '@services/telegram';
+import { TelegramGeneralService } from '@services/telegram';
+import { UtilsService } from '@services/utils';
+import { UserSelectedActionsService } from '@services/voice-pal';
+import { VOICE_PAL_OPTIONS } from '@services/voice-pal';
+import { VoicePalService } from '@services/voice-pal';
 
 @Injectable()
 export class VoicePalBotService implements OnModuleInit {

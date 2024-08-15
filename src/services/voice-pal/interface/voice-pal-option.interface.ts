@@ -1,4 +1,4 @@
-import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram/telegram.config';
+import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
 
 export interface IVoicePalOption {
   analyticsEventName: string;

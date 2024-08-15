@@ -2,19 +2,19 @@ import { AiService } from '@services/ai/ai.service';
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { LoggerService } from '@core/logger/logger.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
-import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
-import { ImgurService } from '@services/imgur/imgur.service';
-import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
-import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
-import { MessageLoaderService } from '@services/telegram/message-loader.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
-import { IVoicePalOption } from '@services/voice-pal/interface';
-import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
-import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
+import { GoogleTranslateService } from '@services/google-translate';
+import { ImgurService } from '@services/imgur';
+import { SocialMediaDownloaderService } from '@services/social-media-downloader';
+import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram';
+import { MessageLoaderService } from '@services/telegram';
+import { TelegramGeneralService } from '@services/telegram';
+import { UtilsService } from '@services/utils';
+import { IVoicePalOption } from '@services/voice-pal';
+import { UserSelectedActionsService } from '@services/voice-pal';
+import { YoutubeTranscriptService } from '@services/youtube-transcript';
 import {
   ANALYTIC_EVENT_NAMES,
   ANALYTIC_EVENT_STATES,

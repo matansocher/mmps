@@ -1,9 +1,9 @@
-import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@services/ai/ai.config';
+import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@services/ai';
 import fs from 'fs';
 import path from 'path';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
-import { GEMINI_API_KEY, GEMINI_FLASH_MODEL } from '@services/gemini/gemini.config';
+import { GEMINI_API_KEY, GEMINI_FLASH_MODEL } from '@services/gemini';
 
 @Injectable()
 export class GeminiService implements OnModuleInit {

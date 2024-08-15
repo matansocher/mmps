@@ -1,14 +1,14 @@
 import { PinBuddyMongoAnalyticLogService, PinBuddyMongoUserService } from '@core/mongo/pin-buddy/services';
-import { PinBuddyUtilsService } from '@services/pin-buddy/pin-buddy-utils.service';
-import { PinBuddyService } from '@services/pin-buddy/pin-buddy.service';
-import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE } from '@services/pin-buddy/pin-buddy.config';
+import { PinBuddyUtilsService } from '@services/pin-buddy';
+import { PinBuddyService } from '@services/pin-buddy';
+import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE } from '@services/pin-buddy';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { LoggerService } from '@core/logger/logger.service';
-import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { MessagesAggregatorService } from '@services/telegram';
+import { TelegramGeneralService } from '@services/telegram';
+import { UtilsService } from '@services/utils';
 
 @Injectable()
 export class PinBuddyBotService implements OnModuleInit {

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { ndown, tikdown } from 'nayan-media-downloader';
 import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@services/utils';
 
 @Injectable()
 export class SocialMediaDownloaderService {
