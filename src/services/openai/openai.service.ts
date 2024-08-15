@@ -82,14 +82,14 @@ export class OpenaiService implements OnModuleInit {
     return response.data[0].url;
   }
 
-  async analyzeImage(imageUrl: string): Promise<string> {
+  async analyzeImage(prompt: string, imageUrl: string): Promise<string> {
     const response = await this.openai.chat.completions.create({
       model: CHAT_COMPLETIONS_MODEL,
       messages: [
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'What’s in this image? What text do you see in the image?' },
+            { type: 'text', text: prompt },
             {
               type: 'image_url',
               image_url: {

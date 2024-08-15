@@ -23,4 +23,5 @@ export enum POSSIBLE_INPUTS {
   AUDIO = 'audio',
   VIDEO = 'video',
   PHOTO = 'photo',
+  FILE = 'file',
 }

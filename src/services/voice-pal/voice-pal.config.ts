@@ -91,6 +91,14 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     possibleInputs: [POSSIBLE_INPUTS.PHOTO],
     showLoader: true,
   },
+  FILE_ANALYZER: {
+    displayName: 'File Analyzer',
+    selectedActionResponse: 'OK, Send me a pdf file and I will analyze it for you',
+    handler: 'handleAnalyzerFile',
+    analyticsEventName: 'FILE_ANALYZER',
+    possibleInputs: [POSSIBLE_INPUTS.FILE],
+    showLoader: true,
+  },
 };
 
 export const ANALYTIC_EVENT_NAMES = {
@@ -108,8 +116,13 @@ export const ANALYTIC_EVENT_STATES = {
   ERROR: 'ERROR',
 };
 
-export const SUMMARY_PROMPT = 'You are a helpful assistant. You will be provided with a text from the user.' +
+export const SUMMARY_PROMPT =
+  'You are a helpful assistant. You will be provided with a text from the user. ' +
   'Please summarize the transcript. You can also split the summary into section, and add to each section its header.';
+
+export const IMAGE_ANALYSIS_PROMPT = 'What’s in this image? What text do you see in the image? please provide as much data as you can.';
+
+export const FILE_ANALYSIS_PROMPT = 'Can you summarize this document?';
 
 export const NOT_FOUND_VIDEO_MESSAGES = {
   YOUTUBE: 'I am having trouble finding the youtube video you shared. please send me a link in this format - https://www.youtube.com/watch?v=xxxxxxxxxxxx',

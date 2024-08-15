@@ -27,6 +27,7 @@ export class TelegramGeneralService {
       audio: _get(message, 'audio', null) || _get(message, 'voice', null),
       video: _get(message, 'video', null),
       photo: _get(message, 'photo', null) || _get(message, 'sticker', null),
+      file: _get(message, 'document', null),
       date: _get(message, 'date', null),
     };
   }

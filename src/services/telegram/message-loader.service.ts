@@ -73,7 +73,7 @@ export class MessageLoaderService {
     const messageText = this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId]?.cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
     if (this.messages[chatId]?.cycleIterationIndex === 0) {
       messagePromise = this.telegramGeneralService.sendMessage(bot, chatId, messageText);
-    } else {
+    } else if (this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length) {
       messagePromise = this.telegramGeneralService.editMessageText(bot, chatId, this.messages[chatId]?.loaderMessageId, messageText);
     }
     this.telegramGeneralService.sendChatAction(bot, chatId, options.loadingAction);
@@ -85,8 +85,11 @@ export class MessageLoaderService {
   }
 
   async stopLoader(bot: TelegramBot, chatId: number): Promise<void> {
-    clearTimeout(this.messages[chatId].timeoutId);
-    await this.telegramGeneralService.deleteMessage(bot, chatId, this.messages[chatId].loaderMessageId);
+    const { timeoutId, loaderMessageId } = this.messages[chatId];
+    clearTimeout(timeoutId as number);
+    if (loaderMessageId) {
+      await this.telegramGeneralService.deleteMessage(bot, chatId, loaderMessageId);
+    }
     delete this.messages[chatId];
   }
 }

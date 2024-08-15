@@ -11,5 +11,6 @@ export interface ITelegramMessageData {
   audio: any;
   video: any;
   photo: any;
+  file: any;
   date: number;
 }
