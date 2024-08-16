@@ -6,7 +6,11 @@ import { PinBuddyUtilsService } from '@services/pin-buddy';
 import { UtilsModule } from '@services/utils';
 
 @Module({
-  imports: [LoggerModule.forRoot(PinBuddyModule.name), UtilsModule, PinBuddyMongoModule],
+  imports: [
+    LoggerModule.forRoot(PinBuddyModule.name),
+    UtilsModule,
+    PinBuddyMongoModule,
+  ],
   providers: [PinBuddyService, PinBuddyUtilsService],
   exports: [PinBuddyService, PinBuddyUtilsService],
 })

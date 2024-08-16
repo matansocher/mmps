@@ -25,7 +25,9 @@ describe('LoggerService', () => {
 
       logger.info(method, text);
 
-      expect(spy).toHaveBeenCalledWith(`${logger.filename} | ${method} | ${text}`);
+      expect(spy).toHaveBeenCalledWith(
+        `${logger.filename} | ${method} | ${text}`,
+      );
     });
   });
 
@@ -35,7 +37,9 @@ describe('LoggerService', () => {
 
       logger.error(method, text);
 
-      expect(spy).toHaveBeenCalledWith(`${logger.filename} | ${method} | ${text}`);
+      expect(spy).toHaveBeenCalledWith(
+        `${logger.filename} | ${method} | ${text}`,
+      );
     });
   });
 });

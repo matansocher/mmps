@@ -16,10 +16,15 @@ export class SocialMediaDownloaderService {
       this.logger.info(this.getMetaVideo.name, `start`);
       const { data } = await ndown(videoUrl);
       const videoDownloadLink = data[0].url;
-      const video = await axios.get(videoDownloadLink, { responseType: 'arraybuffer' });
+      const video = await axios.get(videoDownloadLink, {
+        responseType: 'arraybuffer',
+      });
       return video['data'];
     } catch (err) {
-      this.logger.error(this.getMetaVideo.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.getMetaVideo.name,
+        `err - ${this.utilsService.getErrorMessage(err)}`,
+      );
       throw err;
     }
   }
@@ -29,10 +34,15 @@ export class SocialMediaDownloaderService {
       this.logger.info(this.getTiktokAudio.name, `start`);
       const { data } = await tikdown(videoUrl);
       const videoDownloadLink = data.audio;
-      const audio = await axios.get(videoDownloadLink, { responseType: 'arraybuffer' });
+      const audio = await axios.get(videoDownloadLink, {
+        responseType: 'arraybuffer',
+      });
       return audio['data'];
     } catch (err) {
-      this.logger.error(this.getTiktokAudio.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.getTiktokAudio.name,
+        `err - ${this.utilsService.getErrorMessage(err)}`,
+      );
       throw err;
     }
   }

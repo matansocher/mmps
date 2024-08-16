@@ -20,7 +20,8 @@ export const FILE_SUFFIX_TO_MIME_TYPE_MAP = {
   '.css': 'text/css',
   '.csv': 'text/csv',
   '.doc': 'application/msword',
-  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.docx':
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   '.eot': 'application/vnd.ms-fontobject',
   '.epub': 'application/epub+zip',
   '.gz': 'application/gzip',
@@ -54,7 +55,8 @@ export const FILE_SUFFIX_TO_MIME_TYPE_MAP = {
   '.pdf': 'application/pdf',
   '.php': 'application/x-httpd-php',
   '.ppt': 'application/vnd.ms-powerpoint',
-  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.pptx':
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   '.rar': 'application/vnd.rar',
   '.rtf': 'application/rtf',
   '.sh': 'application/x-sh',

@@ -1,9 +1,17 @@
 import { LoggerModule } from '@core/logger/logger.module';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared/mongo-database-factory.module';
-import { PinBuddyMongoAnalyticLogService, PinBuddyMongoUserService, PinBuddyMongoPinService } from '@core/mongo/pin-buddy/services';
+import {
+  PinBuddyMongoAnalyticLogService,
+  PinBuddyMongoUserService,
+  PinBuddyMongoPinService,
+} from '@core/mongo/pin-buddy/services';
 import { Module } from '@nestjs/common';
 import { UtilsModule } from '@services/utils';
-import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './pin-buddy-mongo.config';
+import {
+  CONNECTION_NAME,
+  DB_NAME,
+  MONGO_DB_URL,
+} from './pin-buddy-mongo.config';
 
 @Module({
   imports: [
@@ -15,7 +23,15 @@ import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './pin-buddy-mongo.config
       dbName: DB_NAME,
     }),
   ],
-  providers: [PinBuddyMongoAnalyticLogService, PinBuddyMongoUserService, PinBuddyMongoPinService],
-  exports: [PinBuddyMongoAnalyticLogService, PinBuddyMongoUserService, PinBuddyMongoPinService],
+  providers: [
+    PinBuddyMongoAnalyticLogService,
+    PinBuddyMongoUserService,
+    PinBuddyMongoPinService,
+  ],
+  exports: [
+    PinBuddyMongoAnalyticLogService,
+    PinBuddyMongoUserService,
+    PinBuddyMongoPinService,
+  ],
 })
 export class PinBuddyMongoModule {}

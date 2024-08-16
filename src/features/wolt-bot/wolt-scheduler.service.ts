@@ -2,7 +2,10 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { BOTS } from '@services/telegram';
 import { LoggerService } from '@core/logger/logger.service';
-import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService } from '@core/mongo/wolt-mongo/services';
+import {
+  WoltMongoAnalyticLogService,
+  WoltMongoSubscriptionService,
+} from '@core/mongo/wolt-mongo/services';
 import { TelegramGeneralService } from '@services/telegram';
 import { UtilsService } from '@services/utils';
 import {
@@ -35,7 +38,8 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async startInterval(): Promise<void> {
     await this.cleanExpiredSubscriptions();
-    const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
+    const subscriptions =
+      await this.mongoSubscriptionService.getActiveSubscriptions();
     if (subscriptions && subscriptions.length) {
       await this.woltService.refreshRestaurants();
       await this.alertSubscribers(subscriptions);
@@ -55,47 +59,106 @@ export class WoltSchedulerService implements OnModuleInit {
 
   alertSubscribers(subscriptions): Promise<any> {
     try {
-      const restaurantsWithSubscriptionNames = subscriptions.map((subscription) => subscription.restaurant);
+      const restaurantsWithSubscriptionNames = subscriptions.map(
+        (subscription) => subscription.restaurant,
+      );
       const subscribedAndOnlineRestaurants = this.woltService
         .getRestaurants()
-        .filter((restaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline);
+        .filter(
+          (restaurant) =>
+            restaurantsWithSubscriptionNames.includes(restaurant.name) &&
+            restaurant.isOnline,
+        );
       const promisesArr = [];
       subscribedAndOnlineRestaurants.forEach((restaurant) => {
-        const relevantSubscriptions = subscriptions.filter((subscription) => subscription.restaurant === restaurant.name);
+        const relevantSubscriptions = subscriptions.filter(
+          (subscription) => subscription.restaurant === restaurant.name,
+        );
         relevantSubscriptions.forEach((subscription) => {
-          const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurant);
+          const restaurantLinkUrl =
+            this.woltService.getRestaurantLink(restaurant);
           const inlineKeyboardButtons = [
             { text: restaurant.name, url: restaurantLinkUrl },
           ];
-          const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+          const inlineKeyboardMarkup =
+            this.telegramGeneralService.getInlineKeyboardMarkup(
+              inlineKeyboardButtons,
+            );
           const replyText = `${restaurant.name} is now open!, go ahead and order!`;
           // promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, replyText, inlineKeyboardMarkup), this.woltUtilsService.getKeyboardOptions());
-          promisesArr.push(this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText }));
-          promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
-          promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED, { chatId: subscription.chatId, data: restaurant.name }));
+          promisesArr.push(
+            this.telegramGeneralService.sendPhoto(
+              this.bot,
+              subscription.chatId,
+              subscription.restaurantPhoto,
+              { ...inlineKeyboardMarkup, caption: replyText },
+            ),
+          );
+          promisesArr.push(
+            this.mongoSubscriptionService.archiveSubscription(
+              subscription.chatId,
+              subscription.restaurant,
+            ),
+          );
+          promisesArr.push(
+            this.mongoAnalyticLogService.sendAnalyticLog(
+              ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED,
+              { chatId: subscription.chatId, data: restaurant.name },
+            ),
+          );
         });
       });
       return Promise.all(promisesArr);
     } catch (err) {
-      this.logger.error(this.alertSubscribers.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.alertSubscribers.name,
+        `error - ${this.utilsService.getErrorMessage(err)}`,
+      );
     }
   }
 
   async cleanExpiredSubscriptions(): Promise<void> {
     try {
-      const expiredSubscriptions = await this.mongoSubscriptionService.getExpiredSubscriptions(SUBSCRIPTION_EXPIRATION_HOURS);
+      const expiredSubscriptions =
+        await this.mongoSubscriptionService.getExpiredSubscriptions(
+          SUBSCRIPTION_EXPIRATION_HOURS,
+        );
       const promisesArr = [];
       expiredSubscriptions.forEach((subscription) => {
-        promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
+        promisesArr.push(
+          this.mongoSubscriptionService.archiveSubscription(
+            subscription.chatId,
+            subscription.restaurant,
+          ),
+        );
         const currentHour = new Date().getHours();
-        if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
-          promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
+        if (
+          currentHour >= MIN_HOUR_TO_ALERT_USER &&
+          currentHour <= MAX_HOUR_TO_ALERT_USER
+        ) {
+          // let user know that subscription was removed only between 8am to 11pm
+          promisesArr.push(
+            this.telegramGeneralService.sendMessage(
+              this.bot,
+              subscription.chatId,
+              `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`,
+            ),
+            this.woltUtilsService.getKeyboardOptions(),
+          );
         }
-        promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED, { chatId: subscription.chatId, data: subscription.restaurant }));
+        promisesArr.push(
+          this.mongoAnalyticLogService.sendAnalyticLog(
+            ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED,
+            { chatId: subscription.chatId, data: subscription.restaurant },
+          ),
+        );
       });
       await Promise.all(promisesArr);
     } catch (err) {
-      this.logger.error(this.cleanExpiredSubscriptions.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.cleanExpiredSubscriptions.name,
+        `error - ${this.utilsService.getErrorMessage(err)}`,
+      );
     }
   }
 }

@@ -1,5 +1,9 @@
 export function Timer(): MethodDecorator {
-  return (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
+  return (
+    target: any,
+    propertyKey: string | symbol,
+    descriptor: PropertyDescriptor,
+  ) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
@@ -13,7 +17,10 @@ export function Timer(): MethodDecorator {
 
       const end = Date.now();
       const executionTime = end - start;
-      this.logger.info(String(propertyKey), `Execution time: ${executionTime}ms`);
+      this.logger.info(
+        String(propertyKey),
+        `Execution time: ${executionTime}ms`,
+      );
 
       return result;
     };

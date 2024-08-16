@@ -1,7 +1,10 @@
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 7;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
 
-export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number> = {
+export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<
+  string,
+  number
+> = {
   FAST: 60 / 2,
   MEDIUM: 60,
   SLOW: 60 * 2,
@@ -17,9 +20,12 @@ export const HOURS_DIFFERENCE_FROM_UTC = 2;
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 23;
 
-export const RESTAURANTS_BASE_URL = 'https://consumer-api.wolt.com/v1/pages/restaurants';
-export const RESTAURANT_BASE_URL = 'https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/{slug}/dynamic/';
-export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
+export const RESTAURANTS_BASE_URL =
+  'https://consumer-api.wolt.com/v1/pages/restaurants';
+export const RESTAURANT_BASE_URL =
+  'https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/{slug}/dynamic/';
+export const RESTAURANT_LINK_BASE_URL =
+  'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 
 export const CITIES_SLUGS_SUPPORTED = ['hasharon', 'tel-aviv'];

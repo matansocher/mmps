@@ -9,7 +9,9 @@ describe('VoicePalMongoAnalyticLogService', () => {
       providers: [VoicePalMongoAnalyticLogService],
     }).compile();
 
-    service = module.get<VoicePalMongoAnalyticLogService>(VoicePalMongoAnalyticLogService);
+    service = module.get<VoicePalMongoAnalyticLogService>(
+      VoicePalMongoAnalyticLogService,
+    );
   });
 
   it('should be defined', () => {

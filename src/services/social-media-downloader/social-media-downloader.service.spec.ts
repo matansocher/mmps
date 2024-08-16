@@ -9,7 +9,9 @@ describe('SocialMediaDownloaderService', () => {
       providers: [SocialMediaDownloaderService],
     }).compile();
 
-    service = module.get<SocialMediaDownloaderService>(SocialMediaDownloaderService);
+    service = module.get<SocialMediaDownloaderService>(
+      SocialMediaDownloaderService,
+    );
   });
 
   it('should be defined', () => {

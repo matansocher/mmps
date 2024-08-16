@@ -1,5 +1,8 @@
 import { SubscriptionModel } from '@core/mongo/shared/models';
-import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
+import {
+  COLLECTIONS,
+  CONNECTION_NAME,
+} from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
@@ -13,15 +16,22 @@ export class WoltMongoSubscriptionService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {
+  async getActiveSubscriptions(
+    chatId: number = null,
+  ): Promise<SubscriptionModel[]> {
     try {
-      const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
+      const subscriptionCollection = this.db.collection(
+        COLLECTIONS.SUBSCRIPTION,
+      );
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
       const cursor = subscriptionCollection.find(filter);
       return this.getMultipleResults(cursor);
     } catch (err) {
-      this.logger.error(this.getActiveSubscriptions.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.getActiveSubscriptions.name,
+        `err: ${this.utilsService.getErrorMessage(err)}`,
+      );
       return [];
     }
   }
@@ -32,7 +42,11 @@ export class WoltMongoSubscriptionService {
     return subscriptionCollection.findOne(filter);
   }
 
-  async addSubscription(chatId: number, restaurant: string, restaurantPhoto: string) {
+  async addSubscription(
+    chatId: number,
+    restaurant: string,
+    restaurantPhoto: string,
+  ) {
     const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
     const subscription = {
       chatId,
@@ -53,7 +67,8 @@ export class WoltMongoSubscriptionService {
 
   async getExpiredSubscriptions(subscriptionExpirationHours: number) {
     const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
-    const validLimitTimestamp = new Date().getTime() - subscriptionExpirationHours * 60 * 60 * 1000;
+    const validLimitTimestamp =
+      new Date().getTime() - subscriptionExpirationHours * 60 * 60 * 1000;
     const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
     const cursor = subscriptionCollection.find(filter);
     return this.getMultipleResults(cursor);

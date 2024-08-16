@@ -19,7 +19,10 @@ export class AiService {
       case AiProvider.OPENAI:
         return this.openaiService.getTranscriptFromAudio(audioFilePath);
       case AiProvider.GEMINI:
-        return this.geminiService.generateContentFromFile('Generate a transcript of the speech.', audioFilePath);
+        return this.geminiService.generateContentFromFile(
+          'Generate a transcript of the speech.',
+          audioFilePath,
+        );
     }
   }
 
@@ -28,7 +31,10 @@ export class AiService {
       case AiProvider.OPENAI:
         return this.openaiService.getTranslationFromAudio(audioFilePath);
       case AiProvider.GEMINI:
-        return this.geminiService.generateContentFromFile('Translate this audio file to English.', audioFilePath);
+        return this.geminiService.generateContentFromFile(
+          'Translate this audio file to English.',
+          audioFilePath,
+        );
     }
   }
 
@@ -55,7 +61,10 @@ export class AiService {
         const imageUrl = await this.imgurService.uploadImage(imageLocalPath);
         return this.openaiService.analyzeImage(prompt, imageUrl);
       case AiProvider.GEMINI:
-        return this.geminiService.generateContentFromFile(prompt, imageLocalPath);
+        return this.geminiService.generateContentFromFile(
+          prompt,
+          imageLocalPath,
+        );
     }
   }
 

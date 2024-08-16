@@ -12,7 +12,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   TRANSCRIBE: {
     displayName: 'Transcribe',
-    selectedActionResponse: 'OK, send me an audio or video file you want me to transcribe',
+    selectedActionResponse:
+      'OK, send me an audio or video file you want me to transcribe',
     handler: 'handleTranscribeAction',
     analyticsEventName: 'TRANSCRIBE',
     possibleInputs: [POSSIBLE_INPUTS.VIDEO, POSSIBLE_INPUTS.AUDIO],
@@ -20,15 +21,21 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   TRANSLATE: {
     displayName: 'Translate',
-    selectedActionResponse: 'OK, send me a text, audio or a video file you want me to translate',
+    selectedActionResponse:
+      'OK, send me a text, audio or a video file you want me to translate',
     handler: 'handleTranslateAction',
     analyticsEventName: 'TRANSLATE',
-    possibleInputs: [POSSIBLE_INPUTS.TEXT, POSSIBLE_INPUTS.VIDEO, POSSIBLE_INPUTS.AUDIO],
+    possibleInputs: [
+      POSSIBLE_INPUTS.TEXT,
+      POSSIBLE_INPUTS.VIDEO,
+      POSSIBLE_INPUTS.AUDIO,
+    ],
     showLoader: false,
   },
   TEXT_TO_SPEECH: {
     displayName: 'Text to Speech',
-    selectedActionResponse: 'OK, Send me the text you want me to convert to speech',
+    selectedActionResponse:
+      'OK, Send me the text you want me to convert to speech',
     handler: 'handleTextToSpeechAction',
     analyticsEventName: 'TEXT_TO_SPEECH',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
@@ -37,7 +44,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   SUMMARY_TEXT: {
     displayName: 'Summarize Text',
-    selectedActionResponse: 'OK, Send me the text, and I will summarize it for you',
+    selectedActionResponse:
+      'OK, Send me the text, and I will summarize it for you',
     handler: 'handleSummarizeTextAction',
     analyticsEventName: 'SUMMARY_TEXT',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
@@ -45,7 +53,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   SUMMARY_YOUTUBE_VIDEO: {
     displayName: 'Summary of a YouTube Video',
-    selectedActionResponse: 'OK, Send me a link to a youtube video and I will summarize it for you',
+    selectedActionResponse:
+      'OK, Send me a link to a youtube video and I will summarize it for you',
     handler: 'handleSummarizeYoutubeVideoAction',
     analyticsEventName: 'SUMMARY_YOUTUBE_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
@@ -53,7 +62,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   SUMMARY_TIKTOK_VIDEO: {
     displayName: 'Summary of a Tiktok Video',
-    selectedActionResponse: 'OK, Send me a link to a tiktok video and I will summarize it for you',
+    selectedActionResponse:
+      'OK, Send me a link to a tiktok video and I will summarize it for you',
     handler: 'handleSummarizeTiktokVideoAction',
     analyticsEventName: 'SUMMARY_TIKTOK_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
@@ -61,7 +71,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   SUMMARY_INSTAGRAM_VIDEO: {
     displayName: 'Summary of a Instagram Video',
-    selectedActionResponse: 'OK, Send me a link to an instagram video and I will summarize it for you',
+    selectedActionResponse:
+      'OK, Send me a link to an instagram video and I will summarize it for you',
     handler: 'handleSummarizeMetaVideoAction',
     analyticsEventName: 'SUMMARY_INSTAGRAM_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
@@ -69,7 +80,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   SUMMARY_FACEBOOK_VIDEO: {
     displayName: 'Summary of a Facebook Video',
-    selectedActionResponse: 'OK, Send me a link to an facebook video and I will summarize it for you',
+    selectedActionResponse:
+      'OK, Send me a link to an facebook video and I will summarize it for you',
     handler: 'handleSummarizeMetaVideoAction',
     analyticsEventName: 'SUMMARY_FACEBOOK_VIDEO',
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
@@ -85,7 +97,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   // },
   IMAGE_ANALYZER: {
     displayName: 'Image Analyzer',
-    selectedActionResponse: 'OK, Send me an image and I will analyze it for you',
+    selectedActionResponse:
+      'OK, Send me an image and I will analyze it for you',
     handler: 'handleImageAnalyzerAction',
     analyticsEventName: 'IMAGE_ANALYZER',
     possibleInputs: [POSSIBLE_INPUTS.PHOTO],
@@ -93,7 +106,8 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   },
   FILE_ANALYZER: {
     displayName: 'File Analyzer',
-    selectedActionResponse: 'OK, Send me a pdf file and I will analyze it for you',
+    selectedActionResponse:
+      'OK, Send me a pdf file and I will analyze it for you',
     handler: 'handleAnalyzerFile',
     analyticsEventName: 'FILE_ANALYZER',
     possibleInputs: [POSSIBLE_INPUTS.FILE],
@@ -120,12 +134,15 @@ export const SUMMARY_PROMPT =
   'You are a helpful assistant. You will be provided with a text from the user. ' +
   'Please summarize the transcript. You can also split the summary into section, and add to each section its header.';
 
-export const IMAGE_ANALYSIS_PROMPT = 'What’s in this image? What text do you see in the image? please provide as much data as you can.';
+export const IMAGE_ANALYSIS_PROMPT =
+  'What’s in this image? What text do you see in the image? please provide as much data as you can.';
 
 export const FILE_ANALYSIS_PROMPT = 'Can you summarize this document?';
 
 export const NOT_FOUND_VIDEO_MESSAGES = {
-  YOUTUBE: 'I am having trouble finding the youtube video you shared. please send me a link in this format - https://www.youtube.com/watch?v=xxxxxxxxxxxx',
-  TIKTOK: 'I am having trouble finding the tiktok video you shared. please send me a link in this format - https://www.tiktok.com/@{username}/video/xxxxxxxxxxxx',
+  YOUTUBE:
+    'I am having trouble finding the youtube video you shared. please send me a link in this format - https://www.youtube.com/watch?v=xxxxxxxxxxxx',
+  TIKTOK:
+    'I am having trouble finding the tiktok video you shared. please send me a link in this format - https://www.tiktok.com/@{username}/video/xxxxxxxxxxxx',
   META: 'I am having trouble finding the instagram video you shared',
 };

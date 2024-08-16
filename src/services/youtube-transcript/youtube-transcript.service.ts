@@ -12,10 +12,18 @@ export class YoutubeTranscriptService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  async getYoutubeVideoTranscription(videoId: string): Promise<{ transcription: any; errorMessage: string }> {
+  async getYoutubeVideoTranscription(
+    videoId: string,
+  ): Promise<{ transcription: any; errorMessage: string }> {
     this.logger.info(this.getYoutubeVideoTranscription.name, `start`);
-    const resultsArr = await Promise.allSettled(supportedLanguages.map((lang: string) => YoutubeTranscript.fetchTranscript(videoId, { lang })));
-    const bestResult = resultsArr.find((result) => result.status === 'fulfilled');
+    const resultsArr = await Promise.allSettled(
+      supportedLanguages.map((lang: string) =>
+        YoutubeTranscript.fetchTranscript(videoId, { lang }),
+      ),
+    );
+    const bestResult = resultsArr.find(
+      (result) => result.status === 'fulfilled',
+    );
     if (!bestResult) {
       return {
         transcription: null,
@@ -39,7 +47,9 @@ export class YoutubeTranscriptService {
     return queryParams['v'];
   }
 
-  parseTranscriptResult(result: any[]): { text: string; start: string; end: string }[] {
+  parseTranscriptResult(
+    result: any[],
+  ): { text: string; start: string; end: string }[] {
     return result.map((item) => {
       const { text, duration, offset } = item;
       const start = this.getTimestampInMinutesFromSeconds(offset);

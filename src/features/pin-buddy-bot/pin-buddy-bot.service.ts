@@ -1,7 +1,13 @@
-import { PinBuddyMongoAnalyticLogService, PinBuddyMongoUserService } from '@core/mongo/pin-buddy/services';
+import {
+  PinBuddyMongoAnalyticLogService,
+  PinBuddyMongoUserService,
+} from '@core/mongo/pin-buddy/services';
 import { PinBuddyUtilsService } from '@services/pin-buddy';
 import { PinBuddyService } from '@services/pin-buddy';
-import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE } from '@services/pin-buddy';
+import {
+  ANALYTIC_EVENT_NAMES,
+  INITIAL_BOT_RESPONSE,
+} from '@services/pin-buddy';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { BOTS } from '@services/telegram';
@@ -30,36 +36,83 @@ export class PinBuddyBotService implements OnModuleInit {
   }
 
   createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.PIN_BUDDY.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.PIN_BUDDY.name, 'error', error));
+    this.bot.on('polling_error', async (error) =>
+      this.telegramGeneralService.botErrorHandler(
+        BOTS.PIN_BUDDY.name,
+        'polling_error',
+        error,
+      ),
+    );
+    this.bot.on('error', async (error) =>
+      this.telegramGeneralService.botErrorHandler(
+        BOTS.PIN_BUDDY.name,
+        'error',
+        error,
+      ),
+    );
   }
 
   createBotEventListeners(): void {
-    this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
+    this.bot.onText(/\/start/, (message: Message) =>
+      this.startHandler(message),
+    );
     this.bot.on('message', (message: Message) => this.handleMessage(message));
     // $$$$$$$$$$$$$$$$$$ add event listener to delete messages
     // $$$$$$$$$$$$$$$$$$ add event listener for clearing chat history
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, telegramUserId, username } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, telegramUserId, username } =
+      this.telegramGeneralService.getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
-      const replyText = INITIAL_BOT_RESPONSE.replace('{name}', firstName || username || '');
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, await this.pinBuddyUtilsService.getKeyboardOptions(chatId));
-      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, { chatId });
+      this.mongoUserService.saveUserDetails({
+        chatId,
+        telegramUserId,
+        firstName,
+        lastName,
+        username,
+      });
+      const replyText = INITIAL_BOT_RESPONSE.replace(
+        '{name}',
+        firstName || username || '',
+      );
+      await this.telegramGeneralService.sendMessage(
+        this.bot,
+        chatId,
+        replyText,
+        await this.pinBuddyUtilsService.getKeyboardOptions(chatId),
+      );
+      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.START, {
+        chatId,
+      });
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, await this.pinBuddyUtilsService.getKeyboardOptions(chatId));
+      this.logger.error(
+        this.startHandler.name,
+        `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`,
+      );
+      await this.telegramGeneralService.sendMessage(
+        this.bot,
+        chatId,
+        `Sorry, but something went wrong`,
+        await this.pinBuddyUtilsService.getKeyboardOptions(chatId),
+      );
     }
   }
 
   async handleMessage(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, username, text, messageId, replyToMessageId } = this.telegramGeneralService.getMessageData(message);
+    const {
+      chatId,
+      firstName,
+      lastName,
+      username,
+      text,
+      messageId,
+      replyToMessageId,
+    } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     if (text === '/start') return;
@@ -68,22 +121,44 @@ export class PinBuddyBotService implements OnModuleInit {
       this.logger.info(this.handleMessage.name, `${logBody} - start`);
 
       const isReplyToMessage = !!replyToMessageId;
-      const isStringParsableToInt = this.pinBuddyUtilsService.isStringParsableToInt(text);
+      const isStringParsableToInt =
+        this.pinBuddyUtilsService.isStringParsableToInt(text);
       const [userMessageId, userText] = text.split(' - ');
-      const isClickedOnStarredMessage = this.pinBuddyUtilsService.isStringParsableToInt(userMessageId) && !!userText;
+      const isClickedOnStarredMessage =
+        this.pinBuddyUtilsService.isStringParsableToInt(userMessageId) &&
+        !!userText;
       if (isReplyToMessage) {
         // if a user replies to a message, assuming the reply text is the string he wants to title the saved message, the bot will:
-        await this.pinBuddyService.handleReplyToMessage({ chatId, messageId, replyToMessageId, text });
+        await this.pinBuddyService.handleReplyToMessage({
+          chatId,
+          messageId,
+          replyToMessageId,
+          text,
+        });
       } else if (isStringParsableToInt) {
         // if a user sends a message with a number, the bot will try to find the message id and unstar it
-        await this.pinBuddyService.handleUnstarMessage({ chatId, messageId, text });
+        await this.pinBuddyService.handleUnstarMessage({
+          chatId,
+          messageId,
+          text,
+        });
       } else if (isClickedOnStarredMessage) {
-        await this.pinBuddyService.handleClickOnStarredMessage({ chatId, messageId: parseInt(userMessageId) });
+        await this.pinBuddyService.handleClickOnStarredMessage({
+          chatId,
+          messageId: parseInt(userMessageId),
+        });
       }
       this.logger.info(this.handleMessage.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.handleMessage.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      this.logger.error(
+        this.handleMessage.name,
+        `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`,
+      );
+      await this.telegramGeneralService.sendMessage(
+        this.bot,
+        chatId,
+        `Sorry, but something went wrong`,
+      );
     }
   }
 }

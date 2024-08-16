@@ -30,11 +30,20 @@ export class WoltService {
     try {
       const restaurants = await this.getRestaurantsList();
       if (restaurants.length) {
-        this.restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
-        this.logger.info(this.refreshRestaurants.name, 'Restaurants list was refreshed successfully');
+        this.restaurantsList = {
+          restaurants,
+          lastUpdated: new Date().getTime(),
+        };
+        this.logger.info(
+          this.refreshRestaurants.name,
+          'Restaurants list was refreshed successfully',
+        );
       }
     } catch (err) {
-      this.logger.error(this.refreshRestaurants.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.refreshRestaurants.name,
+        `error - ${this.utilsService.getErrorMessage(err)}`,
+      );
     }
   }
 
@@ -48,7 +57,10 @@ export class WoltService {
       });
 
       const response = await Promise.all(promises);
-      const restaurantsWithArea = this.addAreaToRestaurantsFromResponse(response, cities);
+      const restaurantsWithArea = this.addAreaToRestaurantsFromResponse(
+        response,
+        cities,
+      );
 
       return restaurantsWithArea.map((restaurant) => {
         return {
@@ -61,7 +73,10 @@ export class WoltService {
         } as IWoltRestaurant;
       });
     } catch (err) {
-      this.logger.error(this.getRestaurantsList.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.getRestaurantsList.name,
+        `err - ${this.utilsService.getErrorMessage(err)}`,
+      );
       return [];
     }
   }
@@ -80,7 +95,10 @@ export class WoltService {
           };
         });
     } catch (err) {
-      this.logger.error(this.getCitiesList.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.getCitiesList.name,
+        `err - ${this.utilsService.getErrorMessage(err)}`,
+      );
       return [];
     }
   }
@@ -89,7 +107,9 @@ export class WoltService {
     return response
       .map((res, index) => {
         const restaurants = res.data.sections[1].items;
-        restaurants.map((restaurant) => (restaurant.area = cities[index].WOLT_NAME));
+        restaurants.map(
+          (restaurant) => (restaurant.area = cities[index].WOLT_NAME),
+        );
         return restaurants;
       })
       .flat();
@@ -98,25 +118,38 @@ export class WoltService {
   async enrichRestaurants(parsedRestaurants) {
     try {
       const promises = parsedRestaurants.map((restaurant) => {
-        const url = `${woltConfig.RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
+        const url = `${woltConfig.RESTAURANT_BASE_URL}`.replace(
+          '{slug}',
+          restaurant.slug,
+        );
         return axios.get(url);
       });
       const response = await Promise.all(promises);
       const restaurantsRawData = response.map((res) => res.data);
       return restaurantsRawData.map((rawRestaurant) => {
-        const relevantParsedRestaurant = parsedRestaurants.find((restaurant) => restaurant.id === rawRestaurant.venue.id);
-        const restaurantLinkUrl = this.getRestaurantLink(relevantParsedRestaurant);
+        const relevantParsedRestaurant = parsedRestaurants.find(
+          (restaurant) => restaurant.id === rawRestaurant.venue.id,
+        );
+        const restaurantLinkUrl = this.getRestaurantLink(
+          relevantParsedRestaurant,
+        );
         const isOpen = rawRestaurant.venue.open_status.is_open;
         return { ...relevantParsedRestaurant, restaurantLinkUrl, isOpen };
       });
     } catch (err) {
-      this.logger.error(this.enrichRestaurants.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.enrichRestaurants.name,
+        `err - ${this.utilsService.getErrorMessage(err)}`,
+      );
       return parsedRestaurants;
     }
   }
 
   getRestaurantLink(restaurant): string {
     const { area, slug } = restaurant;
-    return woltConfig.RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
+    return woltConfig.RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace(
+      '{slug}',
+      slug,
+    );
   }
 }

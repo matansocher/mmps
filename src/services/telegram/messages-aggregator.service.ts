@@ -13,15 +13,23 @@ interface MessageAggregatorData {
 export class MessagesAggregatorService {
   private messagesCache: Record<number, MessageAggregatorData> = {};
 
-  handleIncomingMessage(message: Message, processMessageCallback: (message: Message) => void): void {
+  handleIncomingMessage(
+    message: Message,
+    processMessageCallback: (message: Message) => void,
+  ): void {
     const { id: chatId } = message.chat;
 
     const timeoutId = this.startOrResetTimeout(chatId);
     let combinedMessage = message;
-    if (this.messagesCache[chatId]) { // already has a pending message in cache
+    if (this.messagesCache[chatId]) {
+      // already has a pending message in cache
       combinedMessage = { ...this.messagesCache[chatId].message, ...message };
     }
-    this.messagesCache[chatId] = { message: combinedMessage, timeoutId, processMessageCallback };
+    this.messagesCache[chatId] = {
+      message: combinedMessage,
+      timeoutId,
+      processMessageCallback,
+    };
   }
 
   startOrResetTimeout(chatId: number): NodeJS.Timeout | number {

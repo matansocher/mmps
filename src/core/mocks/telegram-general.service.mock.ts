@@ -1,5 +1,12 @@
 export const MockTelegramGeneralService = {
-  getMessageData: jest.fn(() => ({ chatId: 1, telegramUserId: 1, firstName: 'John', lastName: 'Doe', username: 'johndoe', text: 'text' })),
+  getMessageData: jest.fn(() => ({
+    chatId: 1,
+    telegramUserId: 1,
+    firstName: 'John',
+    lastName: 'Doe',
+    username: 'johndoe',
+    text: 'text',
+  })),
   getCallbackQueryData: jest.fn(),
   getInlineKeyboardMarkup: jest.fn(),
   downloadFile: jest.fn(),

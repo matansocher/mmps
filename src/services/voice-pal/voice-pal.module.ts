@@ -22,7 +22,11 @@ import { VoicePalService } from './voice-pal.service';
     VoicePalMongoModule,
     YoutubeTranscriptModule,
   ],
-  providers: [VoicePalService, VoicePalUtilsService, UserSelectedActionsService],
+  providers: [
+    VoicePalService,
+    VoicePalUtilsService,
+    UserSelectedActionsService,
+  ],
   exports: [VoicePalService, UserSelectedActionsService],
 })
 export class VoicePalModule {}

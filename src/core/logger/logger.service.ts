@@ -4,7 +4,9 @@ import { Injectable, Optional } from '@nestjs/common';
 export class LoggerService {
   readonly filename: string;
 
-  constructor(@Optional() private readonly moduleName: string = 'LoggerModule') {
+  constructor(
+    @Optional() private readonly moduleName: string = 'LoggerModule',
+  ) {
     this.filename = this.moduleName
       .split(/[\\\/]/)
       .splice(-2)

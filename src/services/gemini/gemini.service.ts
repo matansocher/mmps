@@ -14,12 +14,16 @@ export class GeminiService implements OnModuleInit {
     this.flashModel = genAI.getGenerativeModel({ model: GEMINI_FLASH_MODEL });
   }
 
-  async getChatCompletion(prompt: string, userText: string | unknown[]): Promise<string> {
+  async getChatCompletion(
+    prompt: string,
+    userText: string | unknown[],
+  ): Promise<string> {
     let finalPrompt = `${prompt}.\n\n`;
 
     if (typeof userText === 'string') {
       finalPrompt += userText;
-    } else { // array
+    } else {
+      // array
       finalPrompt += userText.join('');
     }
 
@@ -27,7 +31,10 @@ export class GeminiService implements OnModuleInit {
     return result.response.text();
   }
 
-  async generateContentFromFile(prompt: string, filePath: string): Promise<string> {
+  async generateContentFromFile(
+    prompt: string,
+    filePath: string,
+  ): Promise<string> {
     const buffer = Buffer.from(fs.readFileSync(filePath)).toString('base64');
     const fileSuffix = path.extname(filePath).toLowerCase();
     const result = await this.flashModel.generateContent([

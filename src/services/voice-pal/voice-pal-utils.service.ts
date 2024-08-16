@@ -24,12 +24,16 @@ export class VoicePalUtilsService {
     };
   }
 
-  validateActionWithMessage(userAction: IVoicePalOption, messageParams: Partial<ITelegramMessageData>): string | void {
+  validateActionWithMessage(
+    userAction: IVoicePalOption,
+    messageParams: Partial<ITelegramMessageData>,
+  ): string | void {
     const { possibleInputs } = userAction;
 
     const messageParamsExistenceMap = {};
     Object.keys(POSSIBLE_INPUTS).forEach((possibleInputKey: string) => {
-      messageParamsExistenceMap[possibleInputKey.toLowerCase()] = !!messageParams[POSSIBLE_INPUTS[possibleInputKey]];
+      messageParamsExistenceMap[possibleInputKey.toLowerCase()] =
+        !!messageParams[POSSIBLE_INPUTS[possibleInputKey]];
     });
 
     let isValid = false;

@@ -53,7 +53,8 @@ export class OpenaiService implements OnModuleInit {
     let userMessages;
     if (typeof userText === 'string') {
       userMessages = [userText];
-    } else { // array
+    } else {
+      // array
       userMessages = _chunk(userText, 100);
     }
     const result = await this.openai.chat.completions.create({
@@ -64,7 +65,8 @@ export class OpenaiService implements OnModuleInit {
         },
         ...userMessages.map((message) => ({
           role: 'user',
-          content: typeof message === 'string' ? message : JSON.stringify(message),
+          content:
+            typeof message === 'string' ? message : JSON.stringify(message),
         })),
       ],
       model: CHAT_COMPLETIONS_MODEL,

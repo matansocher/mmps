@@ -10,7 +10,9 @@ export class TelegramBotsFactoryModule {
     const botProvider = {
       provide: options.botName,
       useFactory: async (): Promise<TelegramBot> => {
-        const botKey = Object.keys(BOTS).find((botKey: string) => BOTS[botKey].name === options.botName);
+        const botKey = Object.keys(BOTS).find(
+          (botKey: string) => BOTS[botKey].name === options.botName,
+        );
         const token = BOTS[botKey].token;
         return new TelegramBot(token, { polling: true });
       },

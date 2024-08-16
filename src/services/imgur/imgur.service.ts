@@ -14,7 +14,9 @@ export class ImgurService {
   async uploadImage(imageLocalPath: string): Promise<any> {
     try {
       this.logger.info(this.uploadImage.name, `start`);
-      const imageBuffer = await fs.readFile(imageLocalPath, { encoding: 'base64' });
+      const imageBuffer = await fs.readFile(imageLocalPath, {
+        encoding: 'base64',
+      });
       const data = {
         image: imageBuffer,
         type: 'base64',
@@ -36,7 +38,10 @@ export class ImgurService {
       this.logger.info(this.uploadImage.name, `end`);
       return result['data']?.data?.link;
     } catch (err) {
-      this.logger.error(this.uploadImage.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(
+        this.uploadImage.name,
+        `err - ${this.utilsService.getErrorMessage(err)}`,
+      );
       throw err;
     }
   }
