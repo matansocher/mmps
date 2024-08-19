@@ -3,7 +3,7 @@ import { LoggerModule } from '@core/logger/logger.module';
 import { PinBuddyMongoModule } from '@core/mongo/pin-buddy/pin-buddy-mongo.module';
 import { PinBuddyService } from '@services/pin-buddy/pin-buddy.service';
 import { PinBuddyUtilsService } from '@services/pin-buddy/pin-buddy-utils.service';
-import { UtilsModule } from '@services/utils/utils.module';
+import { UtilsModule } from '@core/utils/utils.module';
 
 @Module({
   imports: [LoggerModule.forRoot(PinBuddyModule.name), UtilsModule, PinBuddyMongoModule],

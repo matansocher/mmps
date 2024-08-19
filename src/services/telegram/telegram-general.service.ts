@@ -3,7 +3,7 @@ import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
 import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 import { LoggerService } from '@core/logger/logger.service';
 
 @Injectable()

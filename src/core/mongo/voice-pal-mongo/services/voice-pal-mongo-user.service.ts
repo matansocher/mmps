@@ -3,7 +3,7 @@ import { ITelegramMessageData } from '@services/telegram/interface';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 
 @Injectable()
 export class VoicePalMongoUserService {

@@ -11,7 +11,7 @@ import { SocialMediaDownloaderService } from '@services/social-media-downloader/
 import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
 import { MessageLoaderService } from '@services/telegram/message-loader.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 import { IVoicePalOption } from '@services/voice-pal/interface';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';

@@ -4,7 +4,7 @@ import { Module } from '@nestjs/common';
 import { GoogleTranslateModule } from '@services/google-translate/google-translate.module';
 import { ImgurModule } from '@services/imgur/imgur.module';
 import { SocialMediaDownloaderModule } from '@services/social-media-downloader/social-media-downloader.module';
-import { UtilsModule } from '@services/utils/utils.module';
+import { UtilsModule } from '@core/utils/utils.module';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { VoicePalUtilsService } from '@services/voice-pal/voice-pal-utils.service';
 import { YoutubeTranscriptModule } from '@services/youtube-transcript/youtube-transcript.module';

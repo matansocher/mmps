@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { YoutubeTranscript } from 'youtube-transcript';
 import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 
 const supportedLanguages = ['en', 'iw'];
 

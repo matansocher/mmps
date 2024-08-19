@@ -5,7 +5,7 @@ import { PinBuddyModule } from '@services/pin-buddy/pin-buddy.module';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { TelegramModule } from '@services/telegram/telegram.module';
-import { UtilsModule } from '@services/utils/utils.module';
+import { UtilsModule } from '@core/utils/utils.module';
 import { PinBuddyBotService } from './pin-buddy-bot.service';
 
 @Module({

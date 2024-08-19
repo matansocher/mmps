@@ -8,7 +8,7 @@ import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 
 @Injectable()
 export class PinBuddyBotService implements OnModuleInit {

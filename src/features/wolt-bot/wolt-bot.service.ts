@@ -6,7 +6,7 @@ import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUse
 import { BOTS } from '@services/telegram/telegram.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 import {
   ANALYTIC_EVENT_NAMES,
   INITIAL_BOT_RESPONSE,

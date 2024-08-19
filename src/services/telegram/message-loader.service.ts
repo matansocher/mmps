@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { MessageLoaderOptions } from '@services/telegram/interface';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 
 const LOADER_MESSAGES = [
   'Just a moment...',

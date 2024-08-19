@@ -2,7 +2,7 @@ import { LoggerModule } from '@core/logger/logger.module';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared/mongo-database-factory.module';
 import { PinBuddyMongoAnalyticLogService, PinBuddyMongoUserService, PinBuddyMongoPinService } from '@core/mongo/pin-buddy/services';
 import { Module } from '@nestjs/common';
-import { UtilsModule } from '@services/utils/utils.module';
+import { UtilsModule } from '@core/utils/utils.module';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './pin-buddy-mongo.config';
 
 @Module({

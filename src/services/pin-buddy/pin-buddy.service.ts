@@ -7,7 +7,7 @@ import { ITelegramMessageData } from '@services/telegram/interface';
 import { MessageLoaderService } from '@services/telegram/message-loader.service';
 import { BOT_BROADCAST_ACTIONS, BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 
 @Injectable()
 export class PinBuddyService {

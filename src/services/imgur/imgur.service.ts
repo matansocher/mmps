@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { promises as fs } from 'fs';
 import { Injectable } from '@nestjs/common';
-import { UtilsService } from '@services/utils/utils.service';
+import { UtilsService } from '@core/utils/utils.service';
 import { LoggerService } from '@core/logger/logger.service';
 
 @Injectable()

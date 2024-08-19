@@ -5,7 +5,7 @@ import { WoltMongoModule } from '@core/mongo/wolt-mongo/wolt-mongo.module';
 import { WoltSchedulerService } from '@features/wolt-bot/wolt-scheduler.service';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { TelegramModule } from '@services/telegram/telegram.module';
-import { UtilsModule } from '@services/utils/utils.module';
+import { UtilsModule } from '@core/utils/utils.module';
 import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
 import { WoltModule } from '@services/wolt/wolt.module';
 import { WoltBotService } from './wolt-bot.service';
