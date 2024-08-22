@@ -6,7 +6,7 @@ import { TelegramBotFactory } from '@services/telegram/interface';
 @Global()
 @Module({})
 export class TelegramBotsFactoryModule {
-  static forRoot(options: TelegramBotFactory): DynamicModule {
+  static forChild(options: TelegramBotFactory): DynamicModule {
     const botProvider = {
       provide: options.botName,
       useFactory: async (): Promise<TelegramBot> => {

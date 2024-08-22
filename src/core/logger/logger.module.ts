@@ -6,7 +6,7 @@ import { LoggerService } from './logger.service';
   exports: [LoggerService],
 })
 export class LoggerModule {
-  static forRoot(moduleName: string = 'LoggerModule'): DynamicModule {
+  static forChild(moduleName: string = 'LoggerModule'): DynamicModule {
     return {
       module: LoggerModule,
       providers: [

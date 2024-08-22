@@ -10,12 +10,12 @@ import { PinBuddyBotService } from './pin-buddy-bot.service';
 
 @Module({
   imports: [
-    LoggerModule.forRoot(PinBuddyBotModule.name),
+    LoggerModule.forChild(PinBuddyBotModule.name),
     UtilsModule,
     PinBuddyModule,
     PinBuddyMongoModule,
     TelegramModule,
-    TelegramBotsFactoryModule.forRoot({ botName: BOTS.PIN_BUDDY.name }),
+    TelegramBotsFactoryModule.forChild({ botName: BOTS.PIN_BUDDY.name }),
   ],
   providers: [PinBuddyBotService],
 })

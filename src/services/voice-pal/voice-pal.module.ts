@@ -16,7 +16,7 @@ import { VoicePalService } from './voice-pal.service';
     AiModule,
     GoogleTranslateModule,
     ImgurModule,
-    LoggerModule.forRoot(VoicePalModule.name),
+    LoggerModule.forChild(VoicePalModule.name),
     SocialMediaDownloaderModule,
     UtilsModule,
     VoicePalMongoModule,

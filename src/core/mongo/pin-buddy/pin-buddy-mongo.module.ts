@@ -7,9 +7,9 @@ import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './pin-buddy-mongo.config
 
 @Module({
   imports: [
-    LoggerModule.forRoot(PinBuddyMongoModule.name),
+    LoggerModule.forChild(PinBuddyMongoModule.name),
     UtilsModule,
-    MongoDatabaseFactoryModule.forRoot({
+    MongoDatabaseFactoryModule.forChild({
       connectionName: CONNECTION_NAME,
       uri: MONGO_DB_URL,
       dbName: DB_NAME,

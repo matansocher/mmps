@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { UtilsService } from './utils.service';
 
 @Module({
-  imports: [LoggerModule.forRoot(UtilsModule.name)],
+  imports: [LoggerModule.forChild(UtilsModule.name)],
   providers: [UtilsService],
   exports: [UtilsService],
 })

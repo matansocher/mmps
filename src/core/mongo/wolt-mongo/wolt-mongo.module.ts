@@ -7,9 +7,9 @@ import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './wolt-mongo.config';
 
 @Module({
   imports: [
-    LoggerModule.forRoot(WoltMongoModule.name),
+    LoggerModule.forChild(WoltMongoModule.name),
     UtilsModule,
-    MongoDatabaseFactoryModule.forRoot({
+    MongoDatabaseFactoryModule.forChild({
       connectionName: CONNECTION_NAME,
       uri: MONGO_DB_URL,
       dbName: DB_NAME,

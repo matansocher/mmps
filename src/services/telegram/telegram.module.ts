@@ -7,7 +7,7 @@ import { UtilsModule } from '@core/utils/utils.module';
 
 @Global()
 @Module({
-  imports: [LoggerModule.forRoot(TelegramModule.name), UtilsModule],
+  imports: [LoggerModule.forChild(TelegramModule.name), UtilsModule],
   providers: [TelegramGeneralService, MessageLoaderService, MessagesAggregatorService],
   exports: [TelegramGeneralService, MessageLoaderService, MessagesAggregatorService],
 })

@@ -4,7 +4,7 @@ import { UtilsModule } from '@core/utils/utils.module';
 import { SocialMediaDownloaderService } from './social-media-downloader.service';
 
 @Module({
-  imports: [LoggerModule.forRoot(SocialMediaDownloaderModule.name), UtilsModule],
+  imports: [LoggerModule.forChild(SocialMediaDownloaderModule.name), UtilsModule],
   providers: [SocialMediaDownloaderService],
   exports: [SocialMediaDownloaderService],
 })

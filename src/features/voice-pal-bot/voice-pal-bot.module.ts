@@ -9,11 +9,11 @@ import { VoicePalBotService } from './voice-pal-bot.service';
 
 @Module({
   imports: [
-    LoggerModule.forRoot(VoicePalBotModule.name),
+    LoggerModule.forChild(VoicePalBotModule.name),
     UtilsModule,
     VoicePalModule,
     TelegramModule,
-    TelegramBotsFactoryModule.forRoot({ botName: BOTS.VOICE_PAL.name }),
+    TelegramBotsFactoryModule.forChild({ botName: BOTS.VOICE_PAL.name }),
   ],
   providers: [VoicePalBotService],
 })

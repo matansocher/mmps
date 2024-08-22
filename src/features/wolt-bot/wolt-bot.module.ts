@@ -12,12 +12,12 @@ import { WoltBotService } from './wolt-bot.service';
 
 @Module({
   imports: [
-    LoggerModule.forRoot(WoltBotModule.name),
+    LoggerModule.forChild(WoltBotModule.name),
     UtilsModule,
     TelegramModule,
     WoltModule,
     WoltMongoModule,
-    TelegramBotsFactoryModule.forRoot({ botName: BOTS.WOLT.name }),
+    TelegramBotsFactoryModule.forChild({ botName: BOTS.WOLT.name }),
   ],
   providers: [WoltBotService, WoltSchedulerService, WoltUtilsService],
 })

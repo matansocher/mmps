@@ -5,7 +5,7 @@ import { MongoClient, Db, MongoClientOptions } from 'mongodb';
 @Global()
 @Module({})
 export class MongoDatabaseFactoryModule {
-  static forRoot(options: DatabaseModuleOptions): DynamicModule {
+  static forChild(options: DatabaseModuleOptions): DynamicModule {
     const connectionProvider = {
       provide: options.connectionName,
       useFactory: async (): Promise<Db> => {

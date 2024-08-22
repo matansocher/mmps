@@ -1,7 +1,1 @@
 having this file making sure downloads directory will exist
-
-for the following 3, create the entity in the module and not in service
-gemini
-openai
-
-
