@@ -37,6 +37,7 @@
     "openai": "^4.53.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "valid-url": "^1.0.9",
     "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {
@@ -50,6 +51,7 @@
     "@types/node": "^20.3.1",
     "@types/node-telegram-bot-api": "^0.64.7",
     "@types/supertest": "^6.0.0",
+    "@types/valid-url": "^1.0.7",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.42.0",

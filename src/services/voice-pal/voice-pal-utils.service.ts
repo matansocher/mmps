@@ -41,4 +41,8 @@ export class VoicePalUtilsService {
       return `For this action you must pass one of these types of input: [${possibleInputs.join(', ')}]`;
     }
   }
+
+  sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 }

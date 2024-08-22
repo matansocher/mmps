@@ -1,5 +1,5 @@
-import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram/telegram.config';
 import { IVoicePalOption } from '@services/voice-pal/interface';
+import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram/telegram.config';
 
 export const LOCAL_FILES_PATH = './assets/downloads';
 
@@ -99,14 +99,19 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     possibleInputs: [POSSIBLE_INPUTS.FILE],
     showLoader: true,
   },
+  WEB_PAGE_SUMMARY: {
+    displayName: 'Web Page Summary',
+    selectedActionResponse: 'OK, Send me a url to a page and I will summarize it for you',
+    handler: 'webPageSummary',
+    analyticsEventName: 'WEB_PAGE_SUMMARY',
+    possibleInputs: [POSSIBLE_INPUTS.TEXT],
+    showLoader: true,
+  },
 };
 
 export const ANALYTIC_EVENT_NAMES = {
   ...Object.fromEntries(
-    Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [
-      VOICE_PAL_OPTIONS[option].displayName,
-      VOICE_PAL_OPTIONS[option].analyticsEventName,
-    ]),
+    Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [VOICE_PAL_OPTIONS[option].displayName, VOICE_PAL_OPTIONS[option].analyticsEventName]),
   ),
 };
 
@@ -129,3 +134,7 @@ export const NOT_FOUND_VIDEO_MESSAGES = {
   TIKTOK: 'I am having trouble finding the tiktok video you shared. please send me a link in this format - https://www.tiktok.com/@{username}/video/xxxxxxxxxxxx',
   META: 'I am having trouble finding the instagram video you shared',
 };
+
+export const WEB_PAGE_URL_INVALID = 'This url you provided is invalid. Please provide a valid url';
+
+export const DEFAULT_NUM_OF_NEWS_ARTICLE = 3;

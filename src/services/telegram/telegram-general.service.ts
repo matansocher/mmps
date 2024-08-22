@@ -1,10 +1,10 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { get as _get, chunk as _chunk } from 'lodash';
 import { Injectable } from '@nestjs/common';
-import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
-import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
-import { UtilsService } from '@core/utils/utils.service';
 import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@core/utils/utils.service';
+import { ITelegramCallbackQueryData, ITelegramMessageData } from '@services/telegram/interface';
+import { BOT_BROADCAST_ACTIONS } from '@services/telegram/telegram.config';
 
 @Injectable()
 export class TelegramGeneralService {
@@ -100,6 +100,7 @@ export class TelegramGeneralService {
       await bot.deleteMessage(chatId, messageId);
     } catch (err) {
       this.logger.error(this.deleteMessage.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
     }
   }
 
@@ -108,6 +109,7 @@ export class TelegramGeneralService {
   //     await bot.setMessageReaction(chatId, messageId, reaction);
   //   } catch (err) {
   //     this.logger.error(this.setMessageReaction.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+  //     throw err;
   //   }
   // }
 
@@ -116,6 +118,7 @@ export class TelegramGeneralService {
       await bot.sendAudio(chatId, audioFilePath);
     } catch (err) {
       this.logger.error(this.sendAudio.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
     }
   }
 
@@ -124,6 +127,7 @@ export class TelegramGeneralService {
       await bot.sendVoice(chatId, audioFilePath, form);
     } catch (err) {
       this.logger.error(this.sendVoice.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
     }
   }
 
@@ -132,6 +136,7 @@ export class TelegramGeneralService {
       await bot.sendVenue(chatId, latitude, longitude, title, address);
     } catch (err) {
       this.logger.error(this.sendVenue.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
     }
   }
 
@@ -140,6 +145,7 @@ export class TelegramGeneralService {
       await bot.sendPhoto(chatId, imageUrl, form);
     } catch (err) {
       this.logger.error(this.sendPhoto.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
     }
   }
 
@@ -149,6 +155,39 @@ export class TelegramGeneralService {
     } catch (err) {
       this.logger.error(this.sendChatAction.name, `err: ${this.utilsService.getErrorMessage(err)}`);
     }
+  }
+
+  getMarkupExample(): string {
+    return `
+      *bold \\*text*
+      _italic \\*text_
+      __underline__
+      ~strikethrough~
+      ||spoiler||
+      *bold _italic bold ~italic bold strikethrough ||italic bold strikethrough spoiler||~ __underline italic bold___ bold*
+      [inline URL](http://www.example.com/)
+      [inline mention of a user](tg://user?id=123456789)
+      ![👍](tg://emoji?id=5368324170671202286)
+      \`inline fixed-width code\`
+      \`\`\`
+      pre-formatted fixed-width code block
+      \`\`\`
+      \`\`\`python
+      pre-formatted fixed-width code block written in the Python programming language
+      \`\`\`
+    `;
+
+    // >Block quotation started
+    // >Block quotation continued
+    // >Block quotation continued
+    // >Block quotation continued
+    // >The last line of the block quotation
+    // **>The expandable block quotation started right after the previous block quotation
+    // >It is separated from the previous block quotation by an empty bold entity
+    // >Expandable block quotation continued
+    // >Hidden by default part of the expandable block quotation started
+    // >Expandable block quotation continued
+    // >The last line of the expandable block quotation with the expandability mark||
   }
 
   botErrorHandler(botName: string, handlerName: string, error): void {

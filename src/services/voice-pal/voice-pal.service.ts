@@ -1,17 +1,19 @@
-import { AiService } from '@services/ai/ai.service';
+import axios from 'axios';
+import validUrl from 'valid-url';
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@core/utils/utils.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
+import { AiService } from '@services/ai/ai.service';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
 import { ImgurService } from '@services/imgur/imgur.service';
 import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
 import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
 import { MessageLoaderService } from '@services/telegram/message-loader.service';
+import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@core/utils/utils.service';
 import { IVoicePalOption } from '@services/voice-pal/interface';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
@@ -24,6 +26,7 @@ import {
   NOT_FOUND_VIDEO_MESSAGES,
   SUMMARY_PROMPT,
   VOICE_PAL_OPTIONS,
+  WEB_PAGE_URL_INVALID,
 } from './voice-pal.config';
 import { VoicePalUtilsService } from './voice-pal-utils.service';
 
@@ -245,6 +248,24 @@ export class VoicePalService {
       this.utilsService.deleteFile(fileLocalPath);
     } catch (err) {
       this.logger.error(this.handleAnalyzerFile.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
+    }
+  }
+
+  async webPageSummary({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+    try {
+      if (!validUrl.isUri(text)) {
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, WEB_PAGE_URL_INVALID, this.voicePalUtilsService.getKeyboardOptions());
+      }
+      const { data: webPageContent } = await axios.get(text);
+      const SUMMARY_PROMPT =
+        'You are a helpful assistant. You will be provided with a url to a web page from the user. ' +
+        'Please summarize the page content. You can also split the summary into section, and add to each section its header.';
+
+      const webPageSummary = await this.aiService.getChatCompletion(SUMMARY_PROMPT, webPageContent);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, webPageSummary, this.voicePalUtilsService.getKeyboardOptions());
+    } catch (err) {
+      this.logger.error(this.webPageSummary.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
