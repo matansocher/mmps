@@ -1,8 +1,8 @@
-import { SubscriptionModel } from '@core/mongo/shared/models';
-import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
+import { SubscriptionModel } from '@core/mongo/shared/models';
+import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { UtilsService } from '@core/utils/utils.service';
 
 @Injectable()

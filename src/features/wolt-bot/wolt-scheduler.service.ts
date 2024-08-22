@@ -1,13 +1,18 @@
+import { SchedulerRegistry } from '@nestjs/schedule';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { SubscriptionModel } from '@core/mongo/shared/models';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService } from '@core/mongo/wolt-mongo/services';
+import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@core/utils/utils.service';
+import { IWoltRestaurant } from '@services/wolt/interface';
 import * as woltConfig from '@services/wolt/wolt.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
+
+const JOB_NAME = 'wolt-scheduler-job-interval';
 
 @Injectable()
 export class WoltSchedulerService implements OnModuleInit {
@@ -19,25 +24,39 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
+    private readonly schedulerRegistry: SchedulerRegistry,
     @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
-    setTimeout(() => this.startInterval(), 3000);
+    setTimeout(() => this.scheduleNextInterval(), 3000);
   }
 
-  async startInterval(): Promise<void> {
+  async scheduleNextInterval(): Promise<void> {
+    this.logger.info(this.scheduleNextInterval.name, 'Scheduling next interval');
+    const secondsToNextRefresh = this.getSecondsToNextRefresh();
+
+    // Clear existing timeout if it exists
+    try {
+      this.schedulerRegistry.deleteTimeout(JOB_NAME);
+    } catch (error) {}
+
+    await this.handleIntervalFlow();
+
+    const timeout = setTimeout(() => {
+      this.scheduleNextInterval();
+    }, secondsToNextRefresh * 1000);
+
+    this.schedulerRegistry.addTimeout(JOB_NAME, timeout);
+  }
+
+  async handleIntervalFlow(): Promise<void> {
     await this.cleanExpiredSubscriptions();
     const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
     if (subscriptions && subscriptions.length) {
       await this.woltService.refreshRestaurants();
       await this.alertSubscribers(subscriptions);
     }
-
-    const secondsToNextRefresh = this.getSecondsToNextRefresh();
-    setTimeout(async () => {
-      await this.startInterval();
-    }, secondsToNextRefresh * 1000);
   }
 
   getSecondsToNextRefresh(): number {
@@ -46,16 +65,16 @@ export class WoltSchedulerService implements OnModuleInit {
     return woltConfig.HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }
 
-  alertSubscribers(subscriptions): Promise<any> {
+  alertSubscribers(subscriptions: SubscriptionModel[]): Promise<any> {
     try {
-      const restaurantsWithSubscriptionNames = subscriptions.map((subscription) => subscription.restaurant);
+      const restaurantsWithSubscriptionNames = subscriptions.map((subscription: SubscriptionModel) => subscription.restaurant);
       const subscribedAndOnlineRestaurants = this.woltService
         .getRestaurants()
-        .filter((restaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline);
+        .filter((restaurant: IWoltRestaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline);
       const promisesArr = [];
-      subscribedAndOnlineRestaurants.forEach((restaurant) => {
-        const relevantSubscriptions = subscriptions.filter((subscription) => subscription.restaurant === restaurant.name);
-        relevantSubscriptions.forEach((subscription) => {
+      subscribedAndOnlineRestaurants.forEach((restaurant: IWoltRestaurant) => {
+        const relevantSubscriptions = subscriptions.filter((subscription: SubscriptionModel) => subscription.restaurant === restaurant.name);
+        relevantSubscriptions.forEach((subscription: SubscriptionModel) => {
           const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurant);
           const inlineKeyboardButtons = [
             { text: restaurant.name, url: restaurantLinkUrl },
@@ -78,7 +97,7 @@ export class WoltSchedulerService implements OnModuleInit {
     try {
       const expiredSubscriptions = await this.mongoSubscriptionService.getExpiredSubscriptions(woltConfig.SUBSCRIPTION_EXPIRATION_HOURS);
       const promisesArr = [];
-      expiredSubscriptions.forEach((subscription) => {
+      expiredSubscriptions.forEach((subscription: SubscriptionModel) => {
         promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
         const currentHour = new Date().getHours();
         if (currentHour >= woltConfig.MIN_HOUR_TO_ALERT_USER && currentHour <= woltConfig.MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm

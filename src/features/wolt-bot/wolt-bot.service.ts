@@ -3,10 +3,9 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { SubscriptionModel } from '@core/mongo/shared/models';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
-import { BOTS } from '@services/telegram/telegram.config';
-import { WoltService } from '@services/wolt/wolt.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@core/utils/utils.service';
+import { BOTS } from '@services/telegram/telegram.config';
+import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import {
   ANALYTIC_EVENT_NAMES,
   INITIAL_BOT_RESPONSE,
@@ -16,6 +15,7 @@ import {
   WOLT_BOT_OPTIONS,
 } from '@services/wolt/wolt.config';
 import { IWoltRestaurant } from '@services/wolt/interface';
+import { WoltService } from '@services/wolt/wolt.service';
 import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
 
 @Injectable()

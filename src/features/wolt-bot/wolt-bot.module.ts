@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerModule } from '@core/logger/logger.module';
 import { WoltMongoModule } from '@core/mongo/wolt-mongo/wolt-mongo.module';
@@ -18,6 +19,7 @@ import { WoltBotService } from './wolt-bot.service';
     WoltModule,
     WoltMongoModule,
     TelegramBotsFactoryModule.forChild({ botName: BOTS.WOLT.name }),
+    ScheduleModule.forRoot(),
   ],
   providers: [WoltBotService, WoltSchedulerService, WoltUtilsService],
 })
