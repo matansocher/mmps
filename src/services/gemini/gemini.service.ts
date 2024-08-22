@@ -1,18 +1,13 @@
-import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@services/ai/ai.config';
 import fs from 'fs';
 import path from 'path';
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
-import { GEMINI_API_KEY, GEMINI_FLASH_MODEL } from '@services/gemini/gemini.config';
+import { Inject, Injectable } from '@nestjs/common';
+import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@services/ai/ai.config';
+import { IGeminiClientProvider } from '@services/gemini/interface';
+import { GENERATIVE_MODEL_CLIENT_TOKEN } from '@services/gemini/gemini.config';
 
 @Injectable()
-export class GeminiService implements OnModuleInit {
-  private flashModel: GenerativeModel;
-
-  onModuleInit(): void {
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    this.flashModel = genAI.getGenerativeModel({ model: GEMINI_FLASH_MODEL });
-  }
+export class GeminiService {
+  constructor(@Inject(GENERATIVE_MODEL_CLIENT_TOKEN) private readonly genAI: IGeminiClientProvider) {}
 
   async getChatCompletion(prompt: string, userText: string | unknown[]): Promise<string> {
     let finalPrompt = `${prompt}.\n\n`;
@@ -23,14 +18,14 @@ export class GeminiService implements OnModuleInit {
       finalPrompt += userText.join('');
     }
 
-    const result = await this.flashModel.generateContent(finalPrompt);
+    const result = await this.genAI.flashModel.generateContent(finalPrompt);
     return result.response.text();
   }
 
   async generateContentFromFile(prompt: string, filePath: string): Promise<string> {
     const buffer = Buffer.from(fs.readFileSync(filePath)).toString('base64');
     const fileSuffix = path.extname(filePath).toLowerCase();
-    const result = await this.flashModel.generateContent([
+    const result = await this.genAI.flashModel.generateContent([
       {
         inlineData: {
           data: buffer,

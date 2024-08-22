@@ -1,26 +1,20 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import fs from 'fs';
 import { chunk as _chunk } from 'lodash';
 import { OpenAI } from 'openai';
 import { APIPromise } from 'openai/core';
 import {
-  OPENAI_API_KEY,
   CHAT_COMPLETIONS_MODEL,
   IMAGE_GENERATION_MODEL,
+  OPENAI_CLIENT_TOKEN,
   SOUND_MODEL,
   TEXT_TO_SPEECH_MODEL,
   TEXT_TO_SPEECH_VOICE,
 } from '@services/openai/openai.config';
 
 @Injectable()
-export class OpenaiService implements OnModuleInit {
-  private openai: OpenAI;
-
-  onModuleInit(): void {
-    this.openai = new OpenAI({
-      apiKey: OPENAI_API_KEY,
-    });
-  }
+export class OpenaiService {
+  constructor(@Inject(OPENAI_CLIENT_TOKEN) private readonly openai: OpenAI) {}
 
   async getTranscriptFromAudio(audioFilePath: string): Promise<string> {
     const file = fs.createReadStream(audioFilePath);
