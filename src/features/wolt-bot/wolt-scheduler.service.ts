@@ -2,7 +2,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
-import { SubscriptionModel } from '@core/mongo/shared/models';
+import { SubscriptionModel } from '@core/mongo/wolt-mongo/models';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService } from '@core/mongo/wolt-mongo/services';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
@@ -33,7 +33,6 @@ export class WoltSchedulerService implements OnModuleInit {
   }
 
   async scheduleNextInterval(): Promise<void> {
-    this.logger.info(this.scheduleNextInterval.name, 'Scheduling next interval');
     const secondsToNextRefresh = this.getSecondsToNextRefresh();
 
     // Clear existing timeout if it exists

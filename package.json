@@ -39,6 +39,7 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "valid-url": "^1.0.9",
+    "yahoo-finance2": "^2.11.3",
     "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {

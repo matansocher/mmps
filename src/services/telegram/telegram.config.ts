@@ -7,6 +7,10 @@ export const BOTS = {
     name: 'Voice Pal Bot',
     token: process.env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
   },
+  STOCK_BUDDY: {
+    name: 'Voice Pal Bot',
+    token: process.env.STOCK_BUDDY_TELEGRAM_BOT_TOKEN,
+  },
 };
 
 export enum BOT_BROADCAST_ACTIONS {

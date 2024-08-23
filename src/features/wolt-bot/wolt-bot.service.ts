@@ -1,7 +1,7 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
-import { SubscriptionModel } from '@core/mongo/shared/models';
+import { SubscriptionModel } from '@core/mongo/wolt-mongo/models';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
 import { UtilsService } from '@core/utils/utils.service';
 import { BOTS } from '@services/telegram/telegram.config';
