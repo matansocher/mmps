@@ -16,7 +16,7 @@ export const STOCK_BUDDY_BOT_OPTIONS = {
   SHOW: '/show',
 };
 
-export const BOT_BUTTONS_ACTIONS = {
-  SUBSCRIBE: 'subscribe',
-  UNSUBSCRIBE: 'unsubscribe',
-};
+export enum BOT_BUTTONS_ACTIONS {
+  SUBSCRIBE = 'subscribe',
+  UNSUBSCRIBE = 'unsubscribe',
+}

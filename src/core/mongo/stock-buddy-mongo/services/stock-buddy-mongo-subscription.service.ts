@@ -32,12 +32,11 @@ export class StockBuddyMongoSubscriptionService {
     return subscriptionCollection.findOne(filter);
   }
 
-  async addSubscription(chatId: number, restaurant: string, restaurantPhoto: string) {
+  async addSubscription(chatId: number, symbol: string) {
     const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
     const subscription = {
       chatId,
-      restaurant,
-      restaurantPhoto,
+      symbol,
       isActive: true,
       createdAt: new Date(),
     };
@@ -49,14 +48,6 @@ export class StockBuddyMongoSubscriptionService {
     const filter = { chatId, restaurant, isActive: true };
     const updateObj = { $set: { isActive: false } };
     return subscriptionCollection.updateOne(filter, updateObj);
-  }
-
-  async getExpiredSubscriptions(subscriptionExpirationHours: number) {
-    const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
-    const validLimitTimestamp = new Date().getTime() - subscriptionExpirationHours * 60 * 60 * 1000;
-    const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
-    const cursor = subscriptionCollection.find(filter);
-    return this.getMultipleResults(cursor);
   }
 
   async getMultipleResults(cursor: any) {

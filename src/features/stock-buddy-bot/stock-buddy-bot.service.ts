@@ -1,23 +1,19 @@
-import { SubscriptionModel } from '@core/mongo/stock-buddy-mongo/models';
-import { StockDataSummary } from '@services/stock-buddy/interface';
-import { StockBuddyService } from '@services/stock-buddy/stock-buddy.service';
-import {
-  ANALYTIC_EVENT_NAMES,
-  BOT_BUTTONS_ACTIONS,
-  INITIAL_BOT_RESPONSE,
-  STOCK_BUDDY_BOT_OPTIONS
-} from './stock-buddy-bot.config';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
+import { SubscriptionModel } from '@core/mongo/stock-buddy-mongo/models';
 import {
   StockBuddyMongoAnalyticLogService,
   StockBuddyMongoSubscriptionService,
   StockBuddyMongoUserService,
 } from '@core/mongo/stock-buddy-mongo/services';
 import { UtilsService } from '@core/utils/utils.service';
+import { StockDataSummary } from '@services/stock-buddy/interface';
+import { StockBuddyService } from '@services/stock-buddy/stock-buddy.service';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { IInlineButtonData } from './interface';
+import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, STOCK_BUDDY_BOT_OPTIONS } from './stock-buddy-bot.config';
 import { StockBuddyBotUtilsService } from './stock-buddy-bot-utils.service';
 
 @Injectable()
@@ -82,10 +78,13 @@ export class StockBuddyBotService implements OnModuleInit {
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
         const inlineKeyboardButtons = [
-          { text: 'Remove', callback_data: `${BOT_BUTTONS_ACTIONS.UNSUBSCRIBE} - ${subscription.restaurant}` }, // $$$$$$$$$$$$ unsubscribe to a config
+          {
+            text: 'Unsubscribe',
+            callback_data: JSON.stringify({ action: BOT_BUTTONS_ACTIONS.UNSUBSCRIBE, symbol: subscription.symbol } as IInlineButtonData),
+          },
         ];
         const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-        return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.restaurant, inlineKeyboardMarkup);
+        return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.symbol, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
       this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SHOW, { chatId });
@@ -119,7 +118,7 @@ export class StockBuddyBotService implements OnModuleInit {
           const inlineKeyboardButtons = [
             {
               text: `Subscribe to ${stockDetails.symbol}`,
-              callback_data: `${BOT_BUTTONS_ACTIONS.SUBSCRIBE} - ${stockDetails.symbol}`, // $$$$$$$$$$$$ subscribe to a config
+              callback_data: JSON.stringify({ action: BOT_BUTTONS_ACTIONS.SUBSCRIBE, symbol: stockDetails.symbol } as IInlineButtonData),
             },
           ];
           const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -135,6 +134,55 @@ export class StockBuddyBotService implements OnModuleInit {
   }
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
-    return callbackQuery;
+    const { chatId, firstName, lastName, data } = this.telegramGeneralService.getCallbackQueryData(callbackQuery);
+    const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+    this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
+
+    try {
+      const { symbol, action } = JSON.parse(data) as IInlineButtonData;
+      const existingSubscription = (await this.mongoSubscriptionService.getSubscription(chatId, symbol)) as SubscriptionModel;
+
+      switch (action) {
+        case BOT_BUTTONS_ACTIONS.SUBSCRIBE: {
+          await this.handleCallbackAddSubscription(chatId, symbol, existingSubscription);
+          break;
+        }
+        case BOT_BUTTONS_ACTIONS.UNSUBSCRIBE: {
+          await this.handleCallbackRemoveSubscription(chatId, symbol, existingSubscription);
+          break;
+        }
+      }
+      this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
+    } catch (err) {
+      this.logger.error(this.callbackQueryHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.stockBuddyBotUtilsService.getKeyboardOptions());
+    }
+  }
+
+  async handleCallbackAddSubscription(chatId: number, symbol: string, existingSubscription: SubscriptionModel) {
+    let replyText;
+    if (existingSubscription) {
+      // send a message telling that there is already a subscription for that symbol
+      replyText = `You are already subscribed to ${symbol}`;
+    } else {
+      replyText = `No Problem, you will be notified every day to check ${symbol} status`;
+      await this.mongoSubscriptionService.addSubscription(chatId, symbol);
+    }
+
+    this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIBE, { data: symbol, chatId });
+    await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
+  }
+
+  async handleCallbackRemoveSubscription(chatId: number, symbol: string, existingSubscription: SubscriptionModel) {
+    let replyText;
+    if (existingSubscription) {
+      const restaurantToRemove = symbol.replace('remove - ', '');
+      await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
+      replyText = `Subscription for ${symbol} was removed`;
+    } else {
+      replyText = `It seems you don\'t have a subscription for ${symbol}.\n\nYou can search and register for another stock if you like`;
+    }
+    this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, { data: symbol, chatId });
+    return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.stockBuddyBotUtilsService.getKeyboardOptions());
   }
 }
