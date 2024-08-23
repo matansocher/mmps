@@ -15,7 +15,7 @@ import { StockBuddyBotUtilsService } from './stock-buddy-bot-utils.service';
     LoggerModule.forChild(StockBuddyBotModule.name),
     UtilsModule,
     TelegramModule,
-    TelegramBotsFactoryModule.forChild({ botName: BOTS.WOLT.name }),
+    TelegramBotsFactoryModule.forChild({ botName: BOTS.STOCK_BUDDY.name }),
     StockBuddyModule,
     StockBuddyMongoModule,
     ScheduleModule.forRoot(),

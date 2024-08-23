@@ -1,6 +1,6 @@
-import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
+import { COLLECTIONS, CONNECTION_NAME } from '../stock-buddy-mongo.config';
 
 @Injectable()
 export class StockBuddyMongoAnalyticLogService {

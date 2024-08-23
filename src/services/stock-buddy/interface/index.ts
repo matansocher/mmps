@@ -250,3 +250,35 @@ export interface StockDataSummary {
   regularMarketOpen: number;
   tradeable: boolean;
 }
+
+export interface StockDataSearchResults {
+  explains: any[];
+  count: number;
+  quotes: Quote[];
+  nav: any[];
+  lists: any[];
+  researchReports: any[];
+  screenerFieldResults: any[];
+  totalTime: number;
+  timeTakenForQuotes: number;
+  timeTakenForNews: number;
+  timeTakenForAlgowatchlist: number;
+  timeTakenForPredefinedScreener: number;
+  timeTakenForCrunchbase: number;
+  timeTakenForNav: number;
+  timeTakenForResearchReports: number;
+  timeTakenForScreenerField: number;
+  timeTakenForCulturalAssets: number;
+  timeTakenForSearchLists: number;
+}
+
+export interface StockSearchResult {
+  symbol: string;
+  shortName: string;
+  longName: string;
+  exchange: string;
+  quoteType: string;
+  exchangeDisplayName: string;
+  typeDisplayName: string;
+  score: number;
+}

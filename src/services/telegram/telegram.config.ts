@@ -8,7 +8,7 @@ export const BOTS = {
     token: process.env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
   },
   STOCK_BUDDY: {
-    name: 'Voice Pal Bot',
+    name: 'Stock Buddy Bot',
     token: process.env.STOCK_BUDDY_TELEGRAM_BOT_TOKEN,
   },
 };

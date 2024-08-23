@@ -1,6 +1,12 @@
 import { SubscriptionModel } from '@core/mongo/stock-buddy-mongo/models';
+import { StockDataSummary } from '@services/stock-buddy/interface';
 import { StockBuddyService } from '@services/stock-buddy/stock-buddy.service';
-import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE } from './stock-buddy-bot.config';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_BUTTONS_ACTIONS,
+  INITIAL_BOT_RESPONSE,
+  STOCK_BUDDY_BOT_OPTIONS
+} from './stock-buddy-bot.config';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
@@ -25,7 +31,7 @@ export class StockBuddyBotService implements OnModuleInit {
     private readonly mongoAnalyticLogService: StockBuddyMongoAnalyticLogService,
     private readonly mongoSubscriptionService: StockBuddyMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
-    @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.STOCK_BUDDY.name) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -33,12 +39,12 @@ export class StockBuddyBotService implements OnModuleInit {
     this.createErrorEventListeners();
   }
 
-  createErrorEventListeners() {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.WOLT.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.WOLT.name, 'error', error));
+  createErrorEventListeners(): void {
+    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.STOCK_BUDDY.name, 'polling_error', error));
+    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.STOCK_BUDDY.name, 'error', error));
   }
 
-  createBotEventListeners() {
+  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/show/, (message: Message) => this.showHandler(message));
     this.bot.on('text', (message: Message) => this.textHandler(message));
@@ -76,7 +82,7 @@ export class StockBuddyBotService implements OnModuleInit {
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
         const inlineKeyboardButtons = [
-          { text: 'Remove', callback_data: `remove - ${subscription.restaurant}` },
+          { text: 'Remove', callback_data: `${BOT_BUTTONS_ACTIONS.UNSUBSCRIBE} - ${subscription.restaurant}` }, // $$$$$$$$$$$$ unsubscribe to a config
         ];
         const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
         return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.restaurant, inlineKeyboardMarkup);
@@ -91,7 +97,41 @@ export class StockBuddyBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message) {
-    return message;
+    const { chatId, firstName, lastName, text: rawRestaurant } = this.telegramGeneralService.getMessageData(message);
+    const stockSymbol = rawRestaurant.toLowerCase();
+
+    // prevent built in options to be processed also here
+    if (Object.keys(STOCK_BUDDY_BOT_OPTIONS).map((option: string) => STOCK_BUDDY_BOT_OPTIONS[option]).includes(stockSymbol)) return;
+
+    const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, stockSymbol: ${stockSymbol}`;
+    this.logger.info(this.textHandler.name, `${logBody} - start`);
+
+    try {
+      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SEARCH, { data: stockSymbol, chatId });
+
+      const stocksDetails = await this.stockBuddyService.getStockDetails(stockSymbol);
+      if (!stocksDetails?.length) {
+        const replyText = `I am sorry, I didn\'t find any restaurants matching your symbol - '${stockSymbol}'`;
+        return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.stockBuddyBotUtilsService.getKeyboardOptions());
+      }
+      await Promise.all(
+        stocksDetails.map((stockDetails: StockDataSummary) => {
+          const inlineKeyboardButtons = [
+            {
+              text: `Subscribe to ${stockDetails.symbol}`,
+              callback_data: `${BOT_BUTTONS_ACTIONS.SUBSCRIBE} - ${stockDetails.symbol}`, // $$$$$$$$$$$$ subscribe to a config
+            },
+          ];
+          const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+          const messageText = this.stockBuddyBotUtilsService.getStockSummaryMessage(stockDetails);
+          return this.telegramGeneralService.sendMessage(this.bot, chatId, messageText, { ...inlineKeyboardMarkup, parse_mode: 'MarkdownV2' });
+        }),
+      );
+      this.logger.info(this.textHandler.name, `${logBody} - success`);
+    } catch (err) {
+      this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.stockBuddyBotUtilsService.getKeyboardOptions());
+    }
   }
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {

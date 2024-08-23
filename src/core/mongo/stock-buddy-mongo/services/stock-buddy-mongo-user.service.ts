@@ -1,9 +1,9 @@
-import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
-import { ITelegramMessageData } from '@services/telegram/interface';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
+import { ITelegramMessageData } from '@services/telegram/interface';
+import { COLLECTIONS, CONNECTION_NAME } from '../stock-buddy-mongo.config';
 
 @Injectable()
 export class StockBuddyMongoUserService {

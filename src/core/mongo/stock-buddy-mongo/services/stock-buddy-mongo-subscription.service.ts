@@ -1,9 +1,9 @@
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@core/utils/utils.service';
 import { SubscriptionModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../stock-buddy-mongo.config';
-import { UtilsService } from '@core/utils/utils.service';
 
 @Injectable()
 export class StockBuddyMongoSubscriptionService {

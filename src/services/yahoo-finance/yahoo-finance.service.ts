@@ -1,6 +1,6 @@
 import { LoggerService } from '@core/logger/logger.service';
 import { Inject, Injectable } from '@nestjs/common';
-import { DataInterface, StockDataSummary } from '@services/stock-buddy/interface';
+import { DataInterface, Quote, StockDataSearchResults, StockDataSummary, StockSearchResult } from '@services/stock-buddy/interface';
 import { YAHOO_FINANCE_CLIENT_TOKEN } from '@services/yahoo-finance/yahoo-finance.config';
 
 @Injectable()
@@ -10,9 +10,23 @@ export class YahooFinanceService {
     @Inject(YAHOO_FINANCE_CLIENT_TOKEN) private readonly yahooFinance: any,
   ) {}
 
-  async getStockDetails(symbol: string) {
+  async getStockDetailsBySymbol(symbol: string): Promise<StockDataSummary> {
     const quote = await this.yahooFinance.quote(symbol);
+    if (!quote) {
+      return null;
+    }
     return this.parseStockDetails(quote);
+  }
+
+  async getStockDetailsByName(name: string, numOfResults: number): Promise<StockSearchResult[]> {
+    const searchResults = await this.yahooFinance.search(name);
+    if (!searchResults) {
+      return null;
+    }
+    return searchResults.quotes
+      ?.filter((searchResult: Quote) => !!searchResult.symbol)
+      .slice(0, numOfResults)
+      .map((quote: Quote) => this.parseStockSearchResults(quote));
   }
 
   parseStockDetails(quote: DataInterface): StockDataSummary {
@@ -44,6 +58,19 @@ export class YahooFinanceService {
       regularMarketPreviousClose: quote.regularMarketPreviousClose || 0,
       regularMarketOpen: quote.regularMarketOpen || 0,
       tradeable: quote.tradeable !== undefined ? quote.tradeable : false,
+    };
+  }
+
+  parseStockSearchResults(quote: Quote): StockSearchResult {
+    return {
+      symbol: quote.symbol,
+      shortName: quote.shortname,
+      longName: quote.longname,
+      exchange: quote.exchange,
+      quoteType: quote.quoteType,
+      exchangeDisplayName: quote.exchDisp,
+      typeDisplayName: quote.typeDisp,
+      score: quote.score,
     };
   }
 }
