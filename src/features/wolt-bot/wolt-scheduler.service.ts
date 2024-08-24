@@ -2,12 +2,17 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
+import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { SubscriptionModel } from '@core/mongo/wolt-mongo/models';
-import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService } from '@core/mongo/wolt-mongo/services';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UtilsService } from '@core/utils/utils.service';
+import {
+  WoltMongoAnalyticLogService,
+  WoltMongoSubscriptionService,
+  WoltMongoUserService
+} from '@core/mongo/wolt-mongo/services';
+import { BOTS } from '@services/telegram/telegram.config';
 import { IWoltRestaurant } from '@services/wolt/interface';
+import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import * as woltConfig from '@services/wolt/wolt.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
@@ -22,9 +27,11 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly woltService: WoltService,
     private readonly woltUtilsService: WoltUtilsService,
     private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
+    private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
   ) {}
 
@@ -84,6 +91,7 @@ export class WoltSchedulerService implements OnModuleInit {
           promisesArr.push(this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText }));
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
           promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED, { chatId: subscription.chatId, data: restaurant.name }));
+          promisesArr.push(this.notifierBotService.notify(BOTS.WOLT.name, { data: { restaurant: subscription.restaurant }, action: woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService));
         });
       });
       return Promise.all(promisesArr);
@@ -103,6 +111,7 @@ export class WoltSchedulerService implements OnModuleInit {
           promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${woltConfig.SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
         }
         promisesArr.push(this.mongoAnalyticLogService.sendAnalyticLog(woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED, { chatId: subscription.chatId, data: subscription.restaurant }));
+        this.notifierBotService.notify(BOTS.WOLT.name, { data: { restaurant: subscription.restaurant }, action: woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService);
       });
       await Promise.all(promisesArr);
     } catch (err) {

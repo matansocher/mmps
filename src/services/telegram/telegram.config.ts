@@ -3,11 +3,7 @@ export interface IBotOptions {
   token: string;
 }
 
-export interface IBotsOptions {
-  [key: string]: IBotOptions;
-}
-
-export const BOTS: IBotsOptions = {
+export const BOTS = {
   WOLT: {
     name: 'Wolt Bot',
     token: process.env.WOLT_TELEGRAM_BOT_TOKEN,

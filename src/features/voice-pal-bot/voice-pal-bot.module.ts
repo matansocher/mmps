@@ -10,10 +10,10 @@ import { VoicePalBotService } from './voice-pal-bot.service';
 @Module({
   imports: [
     LoggerModule.forChild(VoicePalBotModule.name),
+    TelegramBotsFactoryModule.forChild(BOTS.VOICE_PAL),
+    TelegramModule,
     UtilsModule,
     VoicePalModule,
-    TelegramModule,
-    TelegramBotsFactoryModule.forChild(BOTS.VOICE_PAL),
   ],
   providers: [VoicePalBotService],
 })

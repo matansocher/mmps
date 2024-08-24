@@ -1,5 +1,7 @@
-import { notifyOptions } from '@core/notifier-bot/interface';
-import { notifierChatId } from '@core/notifier-bot/notifier-bot.config';
+import { UserModel } from '@core/mongo/shared/models';
+import { MongoUserService } from '@core/mongo/shared/services';
+import { INotifyOptions } from '@core/notifier-bot/interface';
+import { myUserId, notifierChatId } from '@core/notifier-bot/notifier-bot.config';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { BOTS } from '@services/telegram/telegram.config';
@@ -35,16 +37,22 @@ export class NotifierBotService implements OnModuleInit {
     }
   }
 
-  notify(options: notifyOptions): void {
-    const notyMessageText = this.getNotyMessageText(options);
+  async notify(botName: string, options: INotifyOptions, chatId, mongoUserService: MongoUserService): Promise<void> {
+    if (chatId === myUserId) {
+      return;
+    }
+    const userDetails = await mongoUserService.getUserDetails({ chatId });
+    const notyMessageText = this.getNotyMessageText(botName, userDetails, options);
     this.telegramGeneralService.sendMessage(this.bot, notifierChatId, notyMessageText);
   }
 
-  getNotyMessageText(options: notifyOptions): string {
-    // const { message, error, data } = options;
-    // const messageText = message ? `Message: ${message}` : '';
-    // const errorText = error ? `Error: ${error}` : '';
-    // const dataText = data ? `Data: ${JSON.stringify(data)}` : '';
-    return ``;
+  getNotyMessageText(botName: string, userDetails: UserModel, options: INotifyOptions): string {
+    const { firstName, lastName, username } = userDetails;
+    const sentences = [];
+    sentences.push(`bot: ${botName}`);
+    sentences.push(`name: ${firstName} ${lastName} - ${username}`);
+    sentences.push(`action: ${options.action}`);
+    options.data && Object.keys(options.data).length && sentences.push(`data: ${JSON.stringify(options.data, null, 2)}`);
+    return sentences.join('\n');
   }
 }

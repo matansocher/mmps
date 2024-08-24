@@ -4,17 +4,18 @@ import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
+import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
 import { AiService } from '@services/ai/ai.service';
-import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
-import { ImgurService } from '@services/imgur/imgur.service';
-import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
-import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
-import { MessageLoaderService } from '@services/telegram/message-loader.service';
 import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
+import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
 import { IVoicePalOption } from '@services/voice-pal/interface';
+import { ImgurService } from '@services/imgur/imgur.service';
+import { MessageLoaderService } from '@services/telegram/message-loader.service';
+import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
+import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
 import {
@@ -46,38 +47,44 @@ export class VoicePalService {
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly imgurService: ImgurService,
     private readonly aiService: AiService,
+    private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
   ) {}
 
-  async handleActionSelection(selection, { telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>) {
+  async handleActionSelection(message: Message, selection: string): Promise<void> {
+    const { telegramUserId, chatId, firstName, lastName, username } = this.telegramGeneralService.getMessageData(message);
     const relevantAction = Object.keys(VOICE_PAL_OPTIONS).find((option: string) => VOICE_PAL_OPTIONS[option].displayName === selection);
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
-      this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
+      await this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
+      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       replyText = replyText.replace('{name}', firstName || username || '');
     } else {
       this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
     }
 
-    const analyticAction = ANALYTIC_EVENT_NAMES[selection];
-    this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId });
+    const analyticAction = `${ANALYTIC_EVENT_NAMES[selection]} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`;
+    // this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId });
+    this.notifierBotService.notify(BOTS.VOICE_PAL.name, { action: analyticAction }, chatId, this.mongoUserService);
 
     this.logger.info(this.handleActionSelection.name, `chatId: ${chatId}, selection: ${selection}`);
 
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.voicePalUtilsService.getKeyboardOptions());
   }
 
-  async handleAction(message: Message, userAction: IVoicePalOption) {
+  async handleAction(message: Message, userAction: IVoicePalOption): Promise<void> {
     const { chatId, text, audio, video, photo, file } = this.telegramGeneralService.getMessageData(message);
 
     if (!userAction) {
-      return this.telegramGeneralService.sendMessage(this.bot, chatId, `Please select an action first.`);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Please select an action first.`);
+      return;
     }
 
     const inputErrorMessage = this.voicePalUtilsService.validateActionWithMessage(userAction, { text, audio, video, photo, file });
     if (inputErrorMessage) {
-      return this.telegramGeneralService.sendMessage(this.bot, chatId, inputErrorMessage, this.voicePalUtilsService.getKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, inputErrorMessage, this.voicePalUtilsService.getKeyboardOptions());
+      return;
     }
 
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
@@ -96,10 +103,12 @@ export class VoicePalService {
       }
 
       this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId });
+      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { data: { analyticAction }, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
       this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.ERROR}`, { chatId, error: errorMessage });
+      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { data: { analyticAction }, action: ANALYTIC_EVENT_STATES.ERROR }, chatId, this.mongoUserService);
       throw err;
     }
   }

@@ -1,7 +1,4 @@
-export interface notifyOptions {
-  firstName: string;
-  lastName: string;
-  username: string;
-  status: string;
+export interface INotifyOptions {
+  data?: any;
   action: string;
 }

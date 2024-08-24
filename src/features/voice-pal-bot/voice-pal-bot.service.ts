@@ -1,11 +1,11 @@
 import { Timer } from '@decorators';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
 import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@core/utils/utils.service';
+import { BOTS } from '@services/telegram/telegram.config';
 import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UtilsService } from '@core/utils/utils.service';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
 import { VoicePalService } from '@services/voice-pal/voice-pal.service';
@@ -40,7 +40,7 @@ export class VoicePalBotService implements OnModuleInit {
 
   @Timer()
   async handleMessage(message: Message): Promise<void> {
-    const { chatId, telegramUserId, firstName, lastName, username, text } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -48,7 +48,7 @@ export class VoicePalBotService implements OnModuleInit {
 
       const availableActions = Object.keys(VOICE_PAL_OPTIONS).map((option: string) => VOICE_PAL_OPTIONS[option].displayName);
       if (availableActions.includes(text)) {
-        await this.voicePalService.handleActionSelection(text, { telegramUserId, chatId, firstName, lastName, username });
+        await this.voicePalService.handleActionSelection(message, text);
       } else {
         const userAction = this.userSelectedActionsService.getCurrentUserAction(chatId);
         await this.voicePalService.handleAction(message, userAction);
