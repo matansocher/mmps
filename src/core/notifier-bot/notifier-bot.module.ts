@@ -4,17 +4,16 @@ import { UtilsModule } from '@core/utils/utils.module';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramModule } from '@services/telegram/telegram.module';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
-import { VoicePalModule } from '@services/voice-pal/voice-pal.module';
-import { VoicePalBotService } from './voice-pal-bot.service';
+import { NotifierBotService } from './notifier-bot.service';
 
 @Module({
   imports: [
-    LoggerModule.forChild(VoicePalBotModule.name),
+    LoggerModule.forChild(NotifierBotModule.name),
     UtilsModule,
-    VoicePalModule,
     TelegramModule,
-    TelegramBotsFactoryModule.forChild(BOTS.VOICE_PAL),
+    TelegramBotsFactoryModule.forChild(BOTS.NOTIFIER),
   ],
-  providers: [VoicePalBotService],
+  providers: [NotifierBotService],
+  exports: [NotifierBotService],
 })
-export class VoicePalBotModule {}
+export class NotifierBotModule {}

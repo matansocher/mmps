@@ -1,3 +1,3 @@
-export interface TelegramBotFactory {
-  botName: string;
-}
+import type { IBotOptions } from '@services/telegram/telegram.config';
+
+export type TelegramBotFactoryOptions = IBotOptions;

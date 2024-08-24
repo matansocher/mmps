@@ -1,4 +1,13 @@
-export const BOTS = {
+export interface IBotOptions {
+  name: string;
+  token: string;
+}
+
+export interface IBotsOptions {
+  [key: string]: IBotOptions;
+}
+
+export const BOTS: IBotsOptions = {
   WOLT: {
     name: 'Wolt Bot',
     token: process.env.WOLT_TELEGRAM_BOT_TOKEN,
@@ -10,6 +19,10 @@ export const BOTS = {
   STOCK_BUDDY: {
     name: 'Stock Buddy Bot',
     token: process.env.STOCK_BUDDY_TELEGRAM_BOT_TOKEN,
+  },
+  NOTIFIER: {
+    name: 'Notifier Bot',
+    token: process.env.NOTIFIER_TELEGRAM_BOT_TOKEN,
   },
 };
 

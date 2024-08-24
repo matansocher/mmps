@@ -1,17 +1,15 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Module, DynamicModule, Global } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramBotFactory } from '@services/telegram/interface';
+import { TelegramBotFactoryOptions } from '@services/telegram/interface';
 
 @Global()
 @Module({})
 export class TelegramBotsFactoryModule {
-  static forChild(options: TelegramBotFactory): DynamicModule {
+  static forChild(options: TelegramBotFactoryOptions): DynamicModule {
     const botProvider = {
-      provide: options.botName,
+      provide: options.name,
       useFactory: async (): Promise<TelegramBot> => {
-        const botKey = Object.keys(BOTS).find((botKey: string) => BOTS[botKey].name === options.botName);
-        const token = BOTS[botKey].token;
+        const token = options.token;
         return new TelegramBot(token, { polling: true });
       },
     };
