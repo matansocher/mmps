@@ -1,3 +1,4 @@
+import { IInlineButtonCompanyDetails } from '@features/stock-buddy-bot/interface';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
@@ -26,26 +27,27 @@ export class StockBuddyMongoSubscriptionService {
     }
   }
 
-  async getSubscription(chatId: number, restaurant: string) {
+  async getSubscription(chatId: number, symbol: string) {
     const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
-    const filter = { chatId, restaurant, isActive: true };
+    const filter = { chatId, symbol, isActive: true };
     return subscriptionCollection.findOne(filter);
   }
 
-  async addSubscription(chatId: number, symbol: string) {
+  async addSubscription(chatId: number, symbol: string, companyName: string) {
     const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
     const subscription = {
       chatId,
       symbol,
+      companyName,
       isActive: true,
       createdAt: new Date(),
     };
     return subscriptionCollection.insertOne(subscription);
   }
 
-  archiveSubscription(chatId: number, restaurant: string) {
+  archiveSubscription(chatId: number, symbol: string) {
     const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
-    const filter = { chatId, restaurant, isActive: true };
+    const filter = { chatId, symbol, isActive: true };
     const updateObj = { $set: { isActive: false } };
     return subscriptionCollection.updateOne(filter, updateObj);
   }

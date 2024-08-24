@@ -12,7 +12,7 @@ import { StockDataSummary } from '@services/stock-buddy/interface';
 import { StockBuddyService } from '@services/stock-buddy/stock-buddy.service';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { IInlineButtonData } from './interface';
+import { IInlineButtonCompanyDetails } from './interface';
 import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, STOCK_BUDDY_BOT_OPTIONS } from './stock-buddy-bot.config';
 import { StockBuddyBotUtilsService } from './stock-buddy-bot-utils.service';
 
@@ -77,10 +77,11 @@ export class StockBuddyBotService implements OnModuleInit {
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
+        const callbackData = { action: BOT_BUTTONS_ACTIONS.UNSUBSCRIBE, symbol: subscription.symbol } as IInlineButtonCompanyDetails;
         const inlineKeyboardButtons = [
           {
             text: 'Unsubscribe',
-            callback_data: JSON.stringify({ action: BOT_BUTTONS_ACTIONS.UNSUBSCRIBE, symbol: subscription.symbol } as IInlineButtonData),
+            callback_data: JSON.stringify(callbackData),
           },
         ];
         const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -96,29 +97,31 @@ export class StockBuddyBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message) {
-    const { chatId, firstName, lastName, text: rawRestaurant } = this.telegramGeneralService.getMessageData(message);
-    const stockSymbol = rawRestaurant.toLowerCase();
+    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
+    const searchTerm = text.toLowerCase();
 
     // prevent built in options to be processed also here
-    if (Object.keys(STOCK_BUDDY_BOT_OPTIONS).map((option: string) => STOCK_BUDDY_BOT_OPTIONS[option]).includes(stockSymbol)) return;
+    if (Object.keys(STOCK_BUDDY_BOT_OPTIONS).map((option: string) => STOCK_BUDDY_BOT_OPTIONS[option]).includes(searchTerm)) return;
 
-    const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, stockSymbol: ${stockSymbol}`;
+    const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, searchTerm: ${searchTerm}`;
     this.logger.info(this.textHandler.name, `${logBody} - start`);
 
     try {
-      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SEARCH, { data: stockSymbol, chatId });
+      this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SEARCH, { data: searchTerm, chatId });
 
-      const stocksDetails = await this.stockBuddyService.getStockDetails(stockSymbol);
+      const stocksDetails = await this.stockBuddyService.getStockDetails(searchTerm);
       if (!stocksDetails?.length) {
-        const replyText = `I am sorry, I didn\'t find any restaurants matching your symbol - '${stockSymbol}'`;
+        const replyText = `I am sorry, I didn\'t find any restaurants matching your symbol - '${searchTerm}'`;
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.stockBuddyBotUtilsService.getKeyboardOptions());
       }
       await Promise.all(
         stocksDetails.map((stockDetails: StockDataSummary) => {
+          // const callbackData = { action: BOT_BUTTONS_ACTIONS.SUBSCRIBE } as IInlineButtonCompanyDetails;
+          const callbackData = { action: BOT_BUTTONS_ACTIONS.SUBSCRIBE, symbol: stockDetails.symbol } as IInlineButtonCompanyDetails;
           const inlineKeyboardButtons = [
             {
               text: `Subscribe to ${stockDetails.symbol}`,
-              callback_data: JSON.stringify({ action: BOT_BUTTONS_ACTIONS.SUBSCRIBE, symbol: stockDetails.symbol } as IInlineButtonData),
+              callback_data: JSON.stringify(callbackData),
             },
           ];
           const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -139,7 +142,7 @@ export class StockBuddyBotService implements OnModuleInit {
     this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {
-      const { symbol, action } = JSON.parse(data) as IInlineButtonData;
+      const { action, symbol } = JSON.parse(data) as IInlineButtonCompanyDetails;
       const existingSubscription = (await this.mongoSubscriptionService.getSubscription(chatId, symbol)) as SubscriptionModel;
 
       switch (action) {
@@ -148,7 +151,7 @@ export class StockBuddyBotService implements OnModuleInit {
           break;
         }
         case BOT_BUTTONS_ACTIONS.UNSUBSCRIBE: {
-          await this.handleCallbackRemoveSubscription(chatId, symbol, existingSubscription);
+          await this.handleCallbackRemoveSubscription(chatId, { symbol }, existingSubscription);
           break;
         }
       }
@@ -166,18 +169,18 @@ export class StockBuddyBotService implements OnModuleInit {
       replyText = `You are already subscribed to ${symbol}`;
     } else {
       replyText = `No Problem, you will be notified every day to check ${symbol} status`;
-      await this.mongoSubscriptionService.addSubscription(chatId, symbol);
+      const stockDetails = await this.stockBuddyService.getStockDetails(symbol);
+      await this.mongoSubscriptionService.addSubscription(chatId, symbol, stockDetails[0].longName);
     }
 
     this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.SUBSCRIBE, { data: symbol, chatId });
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
   }
 
-  async handleCallbackRemoveSubscription(chatId: number, symbol: string, existingSubscription: SubscriptionModel) {
+  async handleCallbackRemoveSubscription(chatId: number, { symbol }, existingSubscription: SubscriptionModel) {
     let replyText;
     if (existingSubscription) {
-      const restaurantToRemove = symbol.replace('remove - ', '');
-      await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
+      await this.mongoSubscriptionService.archiveSubscription(chatId, symbol);
       replyText = `Subscription for ${symbol} was removed`;
     } else {
       replyText = `It seems you don\'t have a subscription for ${symbol}.\n\nYou can search and register for another stock if you like`;
