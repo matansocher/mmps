@@ -65,7 +65,6 @@ export class VoicePalService {
     }
 
     const analyticAction = `${ANALYTIC_EVENT_NAMES[selection]} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`;
-    // this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`, { chatId });
     this.notifierBotService.notify(BOTS.VOICE_PAL.name, { action: analyticAction }, chatId, this.mongoUserService);
 
     this.logger.info(this.handleActionSelection.name, `chatId: ${chatId}, selection: ${selection}`);
@@ -102,12 +101,10 @@ export class VoicePalService {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.FULFILLED}`, { chatId });
       this.notifierBotService.notify(BOTS.VOICE_PAL.name, { data: { analyticAction }, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.mongoAnalyticLogService.sendAnalyticLog(`${analyticAction} - ${ANALYTIC_EVENT_STATES.ERROR}`, { chatId, error: errorMessage });
       this.notifierBotService.notify(BOTS.VOICE_PAL.name, { data: { analyticAction }, action: ANALYTIC_EVENT_STATES.ERROR }, chatId, this.mongoUserService);
       throw err;
     }

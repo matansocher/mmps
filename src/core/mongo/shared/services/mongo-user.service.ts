@@ -16,7 +16,7 @@ export class MongoUserService {
   async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<any> {
     try {
       const userCollection = this.database.collection(COLLECTIONS.USER);
-      const user = { telegramUserId, chatId, firstName, lastName, username };
+      const user = { telegramUserId, chatId, firstName, lastName, username, createdAt: new Date() };
       await userCollection.insertOne(user);
     } catch (err) {
       this.logger.error(this.saveUserDetails.name, `err: ${this.utils.getErrorMessage(err)}`);
