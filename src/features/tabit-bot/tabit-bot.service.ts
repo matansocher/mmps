@@ -126,10 +126,6 @@ export class TabitBotService implements OnModuleInit {
     }
   }
 
-  async processFlowStep(bot: TelegramBot, chatId: number, currentStepUserInput: string): Promise<void> {
-    await this.flowStepsHandlerService.handleStep(bot, chatId, currentStepUserInput);
-  }
-
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
     const { chatId, firstName, lastName, data: buttonData } = this.telegramGeneralService.getCallbackQueryData(callbackQuery);
     const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
@@ -156,6 +152,10 @@ export class TabitBotService implements OnModuleInit {
       this.logger.error(this.callbackQueryHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
     }
+  }
+
+  async processFlowStep(bot: TelegramBot, chatId: number, currentStepUserInput: string): Promise<void> {
+    await this.flowStepsHandlerService.handleStep(bot, chatId, currentStepUserInput);
   }
 
   async handleCallbackRemoveSubscription(chatId: number, { subscriptionId }) {

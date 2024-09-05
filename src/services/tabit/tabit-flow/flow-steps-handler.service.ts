@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { TabitMongoSubscriptionService } from '@core/mongo/tabit-mongo/services';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStepType } from '@services/tabit/interface';
+import { IFlowStepType, IUserFlowDetails } from '@services/tabit/interface';
 import { TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
@@ -21,13 +21,8 @@ export class FlowStepsHandlerService {
     private readonly mongoSubscriptionService: TabitMongoSubscriptionService,
   ) {}
 
-  async handleStep(bot: TelegramBot, chatId: number, currentStepUserInput: string) {
-    let currentStepDetails = this.flowStepsManagerService.getCurrentUserStepDetails(chatId);
-    // if no current step - first step, then get the restaurant details, and save the restaurant details in the flow steps manager with index 0
-    if (!currentStepDetails) {
-      this.flowStepsManagerService.setInitialUserStep(chatId);
-      currentStepDetails = this.flowStepsManagerService.getCurrentUserStepDetails(chatId);
-    }
+  async handleStep(bot: TelegramBot, chatId: number, currentStepUserInput: string): Promise<void> {
+    const currentStepDetails = this.flowStepsManagerService.getCurrentUserStepDetails(chatId);
 
     const flowCurrentStep = TABIT_FLOW_STEPS[currentStepDetails.currentStepIndex];
     const flowNextStep = TABIT_FLOW_STEPS[currentStepDetails.currentStepIndex + 1];
@@ -43,23 +38,16 @@ export class FlowStepsHandlerService {
 
     const isLastStep = currentStepDetails.currentStepIndex + 1 === TABIT_FLOW_STEPS.length;
     if (isLastStep) {
-      const isAvailable = await this.tabitApiService.getRestaurantAvailability(currentStepDetails);
-      if (isAvailable) {
-        await this.telegramGeneralService.sendMessage(bot, chatId, 'It looks like the restaurant is available now, go ahead and save your place');
-      } else {
-        await this.mongoSubscriptionService.addSubscription(chatId, currentStepDetails);
-        // this.notifierBotService.notify(BOTS.TABIT.name, { data: { currentStepDetails }, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, }, chatId, this.mongoUserService);
-        await this.telegramGeneralService.sendMessage(bot, chatId, 'OK, I will let you know once I see it is open'); // $$$$$$$$$$$$$$$$$$$$$$ more meaningful data on what is the subscription is about
-      }
-      this.flowStepsManagerService.resetCurrentUserStep(chatId);
+      await this.handleLastStep(bot, chatId, currentStepDetails);
     } else {
       this.flowStepsManagerService.incrementCurrentUserStep(chatId);
     }
   }
 
   getHandlerClass(bot: TelegramBot, flowStepType: IFlowStepType): StepHandler {
-    const baseDependencies: [TelegramBot, LoggerService, UtilsService, TelegramGeneralService, FlowStepsManagerService] =
-      [bot, this.logger, this.utilsService, this.telegramGeneralService, this.flowStepsManagerService];
+    const baseDependencies: [TelegramBot, LoggerService, UtilsService, TelegramGeneralService, FlowStepsManagerService] = [
+      bot, this.logger, this.utilsService, this.telegramGeneralService, this.flowStepsManagerService
+    ];
 
     switch (flowStepType) {
       case IFlowStepType.DETAILS:
@@ -75,5 +63,17 @@ export class FlowStepsHandlerService {
       default:
         return null;
     }
+  }
+
+  async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
+    const isAvailable = await this.tabitApiService.getRestaurantAvailability(currentStepDetails);
+    if (isAvailable) {
+      await this.telegramGeneralService.sendMessage(bot, chatId, 'It looks like the restaurant is available now, go ahead and save your place');
+    } else {
+      await this.mongoSubscriptionService.addSubscription(chatId, currentStepDetails);
+      // this.notifierBotService.notify(BOTS.TABIT.name, { data: { currentStepDetails }, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, }, chatId, this.mongoUserService);
+      await this.telegramGeneralService.sendMessage(bot, chatId, 'OK, I will let you know once I see it is open'); // $$$$$$$$$$$$$$$$$$$$$$ more meaningful data on what is the subscription is about
+    }
+    this.flowStepsManagerService.resetCurrentUserStep(chatId);
   }
 }
