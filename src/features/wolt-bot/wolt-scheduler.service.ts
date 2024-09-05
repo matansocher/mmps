@@ -62,7 +62,7 @@ export class WoltSchedulerService implements OnModuleInit {
   }
 
   getSecondsToNextRefresh(): number {
-    const currentHour = new Date().getHours() + woltConfig.HOURS_DIFFERENCE_FROM_UTC;
+    const currentHour = new Date().getHours() + woltConfig.HOURS_DIFFERENCE_FROM_UTC; // $$$$$$$$$$$$$$$$$$$$$$$$$$$$
     const israelHour = currentHour % 24;
     return woltConfig.HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }

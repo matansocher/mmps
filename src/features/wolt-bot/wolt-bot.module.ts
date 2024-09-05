@@ -9,7 +9,6 @@ import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { TelegramModule } from '@services/telegram/telegram.module';
 import { WoltModule } from '@services/wolt/wolt.module';
-import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
 import { WoltBotService } from './wolt-bot.service';
 
 @Module({
@@ -23,6 +22,6 @@ import { WoltBotService } from './wolt-bot.service';
     WoltModule,
     WoltMongoModule,
   ],
-  providers: [WoltBotService, WoltSchedulerService, WoltUtilsService],
+  providers: [WoltBotService, WoltSchedulerService],
 })
 export class WoltBotModule {}

@@ -2,8 +2,7 @@ import axios from 'axios';
 import { LoggerService } from '@core/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { UtilsService } from '@core/utils/utils.service';
-import { IWoltRestaurant } from '@services/wolt/interface';
-import { IRestaurantsList } from '@services/wolt/interface/restaurants-list.interface';
+import { IRestaurantsList, IWoltRestaurant } from '@services/wolt/interface';
 import * as woltConfig from './wolt.config';
 
 @Injectable()

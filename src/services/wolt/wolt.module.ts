@@ -7,6 +7,6 @@ import { WoltService } from './wolt.service';
 @Module({
   imports: [LoggerModule.forChild(WoltModule.name), UtilsModule],
   providers: [WoltService, WoltUtilsService],
-  exports: [WoltService],
+  exports: [WoltService, WoltUtilsService],
 })
 export class WoltModule {}

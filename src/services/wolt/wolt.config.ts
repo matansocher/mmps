@@ -12,7 +12,7 @@ export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
 
 export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a wolt restaurant opens\n\nYou can enter the restaurant name you want to check\n\nTo show current notification registrations please write: /show\n\n`;
 
-export const HOURS_DIFFERENCE_FROM_UTC = 2;
+export const HOURS_DIFFERENCE_FROM_UTC = 2; // $$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 23;

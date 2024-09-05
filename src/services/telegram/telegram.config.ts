@@ -8,6 +8,10 @@ export const BOTS = {
     name: 'Wolt Bot',
     token: process.env.WOLT_TELEGRAM_BOT_TOKEN,
   },
+  TABIT: {
+    name: 'Tabit Bot',
+    token: process.env.TABIT_TELEGRAM_BOT_TOKEN,
+  },
   VOICE_PAL: {
     name: 'Voice Pal Bot',
     token: process.env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
