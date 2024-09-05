@@ -50,15 +50,14 @@ export class TabitMongoSubscriptionService {
     return this.subscriptionCollection.insertOne(subscription);
   }
 
-  archiveSubscription(chatId: number, subscriptionId: string) {
-    const filter = { chatId, _id: new ObjectId(subscriptionId), isActive: true };
+  archiveSubscription(chatId: number, subscriptionId: ObjectId) {
+    const filter = { chatId, _id: new ObjectId(subscriptionId.toString()), isActive: true };
     const updateObj = { $set: { isActive: false } };
     return this.subscriptionCollection.updateOne(filter, updateObj);
   }
 
-  async getExpiredSubscriptions(subscriptionExpirationHours: number) {
-    const validLimitTimestamp = new Date().getTime() - subscriptionExpirationHours * 60 * 60 * 1000;
-    const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
+  async getExpiredSubscriptions() {
+    const filter = { isActive: true, createdAt: { $gt: new Date() } };
     const cursor = this.subscriptionCollection.find(filter);
     return this.getMultipleResults(cursor);
   }

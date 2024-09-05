@@ -22,7 +22,8 @@ export class DetailsHandler extends StepHandler {
 
   async handlePostUserAction(chatId: number, flowStepsOptions: IUserFlowDetails, flowStep: IFlowStep, userInput: string): Promise<void> {
     try {
-      const restaurantDetails: ITabitRestaurant = await this.tabitApiService.getRestaurantDetails(userInput);
+      const restaurantId = this.tabitApiService.getRestaurantId(userInput);
+      const restaurantDetails: ITabitRestaurant = await this.tabitApiService.getRestaurantDetails(restaurantId);
       if (!restaurantDetails) {
         const replyText = `I am sorry, I didn\'t find any restaurants matching your search - '${userInput}'`;
         await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);

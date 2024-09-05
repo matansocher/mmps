@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { TabitMongoSubscriptionService } from '@core/mongo/tabit-mongo/services';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStepType, IUserFlowDetails } from '@services/tabit/interface';
+import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
 import { TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
@@ -66,7 +66,9 @@ export class FlowStepsHandlerService {
   }
 
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
-    const isAvailable = await this.tabitApiService.getRestaurantAvailability(currentStepDetails);
+    const { restaurantDetails, numOfSeats, date, time, area } = currentStepDetails;
+    const userSelections: IUserSelections = { numOfSeats, date, time, area };
+    const isAvailable = await this.tabitApiService.getRestaurantAvailability(restaurantDetails.id, userSelections);
     if (isAvailable) {
       await this.telegramGeneralService.sendMessage(bot, chatId, 'It looks like the restaurant is available now, go ahead and save your place');
     } else {

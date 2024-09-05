@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { ITabitRestaurant, ITabitRestaurantArea, IUserFlowDetails } from '@services/tabit/interface';
+import { ITabitRestaurant, ITabitRestaurantArea, IUserSelections } from '@services/tabit/interface';
 import {
   RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
   RESTAURANT_CHECK_AVAILABILITY_URL,
@@ -22,9 +22,8 @@ export class TabitApiService {
     return queryParams.get('orgId');
   }
 
-  async getRestaurantDetails(restaurantUrl: string): Promise<ITabitRestaurant> {
+  async getRestaurantDetails(restaurantId: string): Promise<ITabitRestaurant> {
     try {
-      const restaurantId = this.getRestaurantId(restaurantUrl);
       if (!restaurantId) {
         return null;
       }
@@ -95,27 +94,27 @@ export class TabitApiService {
     return openingHours;
   }
 
-  async getRestaurantAvailability(checkAvailabilityOptions: IUserFlowDetails): Promise<any> {
+  async getRestaurantAvailability(restaurantId: string, checkAvailabilityOptions: IUserSelections): Promise<any> {
     try {
-      const { restaurantDetails, date, time, numOfSeats, area } = checkAvailabilityOptions;
+      const { date, time, numOfSeats, area } = checkAvailabilityOptions;
       const url = `${RESTAURANT_CHECK_AVAILABILITY_URL}`;
       const reservedFrom = date + time;
       const reqBody = {
         ...RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
-        organization: restaurantDetails.id,
+        organization: restaurantId,
         seats_count: numOfSeats,
         preference: area,
         reserved_from: reservedFrom, // '2024-09-02T1:0:00.000Z'
       };
       const result = await axios.post(url, reqBody);
-      return this.parseRestaurantAvailabilityResult(restaurantDetails, result.data);
+      return this.parseRestaurantAvailabilityResult(result.data);
     } catch (err) {
-      this.logger.error(this.getRestaurantDetails.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getRestaurantAvailability.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       return null;
     }
   }
 
-  parseRestaurantAvailabilityResult(restaurantDetails: ITabitRestaurant, result): ITabitRestaurant {
+  parseRestaurantAvailabilityResult(result): ITabitRestaurant {
     // $$$$$$$$$$$$$$$$$$$$$ if the restaurant is available the result will have a key - 'reservation'
     // $$$$$$$$$$$$$$$$$$$$$ if the restaurant is not available the result will have a key - 'alternative_results'
     // $$$$$$$$$$$$$$$$$$$$$ so if you have the key 'reservation' or 'alternative_results' with the right selections (checkAvailabilityOptions)
@@ -224,6 +223,6 @@ export class TabitApiService {
       ],
       "standby_reservation_allowed": true
     }
-    return restaurantDetails;
+    return result;
   }
 }

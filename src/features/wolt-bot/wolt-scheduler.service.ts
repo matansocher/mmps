@@ -1,6 +1,6 @@
 import { SchedulerRegistry } from '@nestjs/schedule';
 import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { SubscriptionModel } from '@core/mongo/wolt-mongo/models';
@@ -16,7 +16,7 @@ import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
 @Injectable()
-export class WoltSchedulerService implements OnModuleInit {
+export class WoltSchedulerService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
@@ -30,10 +30,6 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
   ) {}
-
-  onModuleInit(): void {
-    setTimeout(() => this.scheduleNextInterval(), 3000);
-  }
 
   async scheduleNextInterval(): Promise<void> {
     const secondsToNextRefresh = this.getSecondsToNextRefresh();
@@ -57,7 +53,7 @@ export class WoltSchedulerService implements OnModuleInit {
     const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
     if (subscriptions && subscriptions.length) {
       await this.woltService.refreshRestaurants();
-      await this.alertSubscribers(subscriptions);
+      await this.alertSubscriptions(subscriptions);
     }
   }
 
@@ -67,7 +63,7 @@ export class WoltSchedulerService implements OnModuleInit {
     return woltConfig.HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }
 
-  alertSubscribers(subscriptions: SubscriptionModel[]): Promise<any> {
+  alertSubscriptions(subscriptions: SubscriptionModel[]): Promise<any> {
     try {
       const restaurantsWithSubscriptionNames = subscriptions.map((subscription: SubscriptionModel) => subscription.restaurant);
       const subscribedAndOnlineRestaurants = this.woltService
@@ -91,7 +87,7 @@ export class WoltSchedulerService implements OnModuleInit {
       });
       return Promise.all(promisesArr);
     } catch (err) {
-      this.logger.error(this.alertSubscribers.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.alertSubscriptions.name, `error - ${this.utilsService.getErrorMessage(err)}`);
     }
   }
 

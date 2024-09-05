@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger/logger.module';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
@@ -24,4 +24,10 @@ import { WoltBotService } from './wolt-bot.service';
   ],
   providers: [WoltBotService, WoltSchedulerService],
 })
-export class WoltBotModule {}
+export class WoltBotModule implements OnModuleInit {
+  constructor(private readonly woltSchedulerService: WoltSchedulerService) {}
+
+  onModuleInit(): void {
+    this.woltSchedulerService.scheduleNextInterval();
+  }
+}
