@@ -22,8 +22,7 @@ export class TabitMongoSubscriptionService {
     try {
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
-      const cursor = this.subscriptionCollection.find(filter);
-      return this.getMultipleResults(cursor);
+      return this.subscriptionCollection.find(filter).toArray();
     } catch (err) {
       this.logger.error(this.getActiveSubscriptions.name, `err: ${this.utilsService.getErrorMessage(err)}`);
       return [];
@@ -57,16 +56,7 @@ export class TabitMongoSubscriptionService {
   }
 
   async getExpiredSubscriptions() {
-    const filter = { isActive: true, createdAt: { $gt: new Date() } };
-    const cursor = this.subscriptionCollection.find(filter);
-    return this.getMultipleResults(cursor);
-  }
-
-  async getMultipleResults(cursor: any) {
-    const results = [];
-    for await (const doc of cursor) {
-      results.push(doc);
-    }
-    return results;
+    const filter = { isActive: true, createdAt: { $lt: new Date() } };
+    return this.subscriptionCollection.find(filter).toArray();
   }
 }

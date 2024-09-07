@@ -1,9 +1,7 @@
-import { IInlineButtonCompanyDetails } from '@features/stock-buddy-bot/interface';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { SubscriptionModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../stock-buddy-mongo.config';
 
 @Injectable()
@@ -14,13 +12,12 @@ export class StockBuddyMongoSubscriptionService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {
+  async getActiveSubscriptions(chatId: number = null) {
     try {
       const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
-      const cursor = subscriptionCollection.find(filter);
-      return this.getMultipleResults(cursor);
+      return  subscriptionCollection.find(filter).toArray();
     } catch (err) {
       this.logger.error(this.getActiveSubscriptions.name, `err: ${this.utilsService.getErrorMessage(err)}`);
       return [];

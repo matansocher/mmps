@@ -19,6 +19,7 @@ export const RESTAURANT_CHECK_AVAILABILITY_BASE_BODY = {
   type: 'future_reservation',
   standby_reservation: false,
   arriving_within: null,
+  online_booking_source: 'tabit',
   online_booking_source_client: {
     name: 'tabit-web',
     environment: 'il-prod',
@@ -29,6 +30,7 @@ export const RESTAURANT_CHECK_AVAILABILITY_BASE_BODY = {
 export const TABIT_BOT_OPTIONS = {
   START: '/start',
   SHOW: '/show',
+  RESET: '/reset',
 };
 
 export const TABIT_FLOW_STEPS: IFlowStep[] = [

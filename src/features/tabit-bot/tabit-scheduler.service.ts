@@ -67,7 +67,7 @@ export class TabitSchedulerService {
     try {
       const { chatId, userSelections, restaurantDetails } = subscription;
       const { id: restaurantId, title: restaurantTitle } = restaurantDetails;
-      const isAvailable = this.tabitApiService.getRestaurantAvailability(restaurantId, subscription.userSelections);
+      const { isAvailable, availableUntil } = await this.tabitApiService.getRestaurantAvailability(restaurantId, subscription.userSelections);
       if (!isAvailable) {
         return;
       }
@@ -75,10 +75,10 @@ export class TabitSchedulerService {
       const restaurantLinkUrl = getRestaurantLinkForUser(restaurantId);
       const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const replyText = `${restaurantTitle} is now available at ${userSelections.date} - ${userSelections.time}!, go ahead and order!`;
+      const replyText = `${restaurantTitle} is now available at ${userSelections.date} - ${userSelections.time}!\nI took the place until ${availableUntil}, so after this time you should be able to order!`;
       await Promise.all([
         this.telegramGeneralService.sendPhoto(this.bot, chatId, restaurantDetails.image, { ...inlineKeyboardMarkup, caption: replyText }),
-        this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id),
+        // this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id), // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         // this.notifierBotService.notify(BOTS.TABIT.name, { data: { restaurant: restaurantTitle }, action: tabitConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
       ]);
     } catch (err) {

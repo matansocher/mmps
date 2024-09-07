@@ -30,8 +30,6 @@ export class TimeHandler extends StepHandler {
       // const openingHours = restaurantOpeningHours[dayOfWeek] || restaurantOpeningHours['default'];
       const times = ['20:00', '21:00']; // this should be changed to hours with 30 minutes margin from the openingHours arrays
 
-
-
       const inlineKeyboardButtons = times.map((time: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.TIME, data: time } as IInlineKeyboardButton;
         return { text: time, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
@@ -52,6 +50,8 @@ export class TimeHandler extends StepHandler {
       // const openingHours = restaurantOpeningHours[dayOfWeek] || restaurantOpeningHours['default'];
       // validate
       // transform
+
+      // $$$$$$$$$$$$$$$$$$$$ dont forget to transform to utc from the user timezone
       const time = userInput;
       this.flowStepsManagerService.addUserStepDetail(chatId, { time });
     } catch (err) {

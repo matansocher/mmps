@@ -66,7 +66,7 @@ export class StockBuddyBotService implements OnModuleInit {
 
   async showHandler(message: Message) {
     const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
-    const logBody = `/\show :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+    const logBody = `show :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
     this.logger.info(this.showHandler.name, `${logBody} - start`);
 
     try {

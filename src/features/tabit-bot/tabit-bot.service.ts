@@ -45,6 +45,7 @@ export class TabitBotService implements OnModuleInit {
   createBotEventListeners() {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/show/, (message: Message) => this.showHandler(message));
+    this.bot.onText(/\/reset/, (message: Message) => this.resetHandler(message));
     this.bot.on('text', (message: Message) => this.textHandler(message));
     this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
@@ -68,7 +69,7 @@ export class TabitBotService implements OnModuleInit {
 
   async showHandler(message: Message) {
     const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
-    const logBody = `/\show :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+    const logBody = `show :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
     this.logger.info(this.showHandler.name, `${logBody} - start`);
 
     try {
@@ -104,6 +105,22 @@ export class TabitBotService implements OnModuleInit {
       this.logger.info(this.showHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.showHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+    }
+  }
+
+  async resetHandler(message: Message) {
+    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const logBody = `reset :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+    this.logger.info(this.resetHandler.name, `${logBody} - start`);
+
+    try {
+      this.flowStepsManagerService.resetCurrentUserStep(chatId);
+      const replyText = `OK, let's start over`;
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
+      this.logger.info(this.resetHandler.name, `${logBody} - success`);
+    } catch (err) {
+      this.logger.error(this.resetHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
     }
   }

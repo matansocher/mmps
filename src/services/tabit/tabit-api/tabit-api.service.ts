@@ -1,8 +1,14 @@
+import { ITabitRestaurantOpeningHours } from '@services/tabit/interface/tabit-restaurant.interface';
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { ITabitRestaurant, ITabitRestaurantArea, IUserSelections } from '@services/tabit/interface';
+import {
+  ITabitRestaurant,
+  ITabitRestaurantArea,
+  ITabitRestaurantAvailability,
+  IUserSelections
+} from '@services/tabit/interface';
 import {
   RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
   RESTAURANT_CHECK_AVAILABILITY_URL,
@@ -41,7 +47,6 @@ export class TabitApiService {
   }
 
   parseRestaurantResult(restaurantId: string, restaurantDetails, restaurantConfiguration): ITabitRestaurant {
-    // $$$$$$$$$$$$$$$$$$$$$ need to get opening hours and possible num of seats to show the options
     const strings = restaurantDetails.strings.rsv['he-IL'];
     const areas = this.getRestaurantAreas(restaurantDetails, strings);
     const openingHours = this.getRestaurantOpeningHours(restaurantDetails);
@@ -71,8 +76,8 @@ export class TabitApiService {
       });
   }
 
-  getRestaurantOpeningHours(result): any {
-  // getRestaurantOpeningHours(result): ITabitRestaurantOpeningHours[] {
+  // getRestaurantOpeningHours(result): any {
+  getRestaurantOpeningHours(result): ITabitRestaurantOpeningHours[] {
     const openingHours: Record<string, { from: string; to: string }[]> = {};
 
     result.shifts.forEach(([day, shifts]) => {
@@ -91,14 +96,17 @@ export class TabitApiService {
       }, []);
     });
 
-    return openingHours;
+    // return openingHours;
+    return null;
   }
 
   async getRestaurantAvailability(restaurantId: string, checkAvailabilityOptions: IUserSelections): Promise<any> {
     try {
       const { date, time, numOfSeats, area } = checkAvailabilityOptions;
       const url = `${RESTAURANT_CHECK_AVAILABILITY_URL}`;
-      const reservedFrom = date + time;
+
+      const reservedFrom = new Date(`${date}T${time}:00.000Z`).toISOString();
+
       const reqBody = {
         ...RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
         organization: restaurantId,
@@ -107,122 +115,81 @@ export class TabitApiService {
         reserved_from: reservedFrom, // '2024-09-02T1:0:00.000Z'
       };
       const result = await axios.post(url, reqBody);
-      return this.parseRestaurantAvailabilityResult(result.data);
+      return this.parseRestaurantAvailabilityResult(result.data, checkAvailabilityOptions);
     } catch (err) {
       this.logger.error(this.getRestaurantAvailability.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       return null;
     }
   }
 
-  parseRestaurantAvailabilityResult(result): ITabitRestaurant {
-    // $$$$$$$$$$$$$$$$$$$$$ if the restaurant is available the result will have a key - 'reservation'
-    // $$$$$$$$$$$$$$$$$$$$$ if the restaurant is not available the result will have a key - 'alternative_results'
-    // $$$$$$$$$$$$$$$$$$$$$ so if you have the key 'reservation' or 'alternative_results' with the right selections (checkAvailabilityOptions)
+  parseRestaurantAvailabilityResult(result, checkAvailabilityOptions: IUserSelections): ITabitRestaurantAvailability {
+    const notAvailableResponse = { isAvailable: false, availableUntil: null };
+    if (result?.reservation?.state === 'created') {
+      const { temp_reservation_expires } = result.reservation;
+      const isAvailable = true;
+      const availableUntil = new Date(temp_reservation_expires);
+      return { isAvailable, availableUntil };
+    }
 
-    // reservation
-    const objWithReservation = {
-      "reservation": {
-        "online_booking_source_client": {
-          "name": "tabit-web",
-            "version": null,
-            "environment": "il-prod"
-        },
-        "reservation_details": {
-          "reserved_tables_ids": [
-            "5de8c99be3a58b8fdd20c4e4"
-          ],
-          "reserved_tables_locked": false,
-          "reserved_until_is_estimated": true,
-          "preference": "outside",
-          "preferences": [
-            "outside"
-          ],
-          "tags": [{ "value": "reservation_tags_temp" }],
-          "notify_almost_done": false,
-          "seats_count": 2,
-          "reserved_from": "2024-09-02T14:00:00.000Z",
-          "reserved_until": "2024-09-02T16:00:00.000Z",
-          "additional_customers": []
-        },
-        "state": "created",
-        "organization": "5dd5306729d41d77e03894ff",
-        "last_modified": null,
-        "last_modified_by": null,
-        "last_modified_by_name": null,
-        "last_modified_by_organization": null,
-        "online_booking": true,
-        "temp_reservation": true,
-        "standby_reservation": false,
-        "pending_approval": false,
-        "block_review": false,
-        "exclude_from_remind_all": false,
-        "deposit_removed": false,
-        "order_life_cycle_log": [],
-        "order_fired": null,
-        "hotel_guests_ids": [],
-        "_id": "66cf50ed6314453d7ff2e435",
-        "type": "future_reservation",
-        "online_booking_source": "tabit",
-        "temp_reservation_expires": "2024-08-28T16:36:41.767Z",
-        "created_by": "online_booking",
-        "created_by_client": {
-          "ip": "94.188.131.109",
-            "device_name": null,
-            "useragent": {
-            "os": "iOS",
-              "platform": "unknown",
-              "browser": "axios",
-              "version": "1.7.2",
-              "isMobile": true,
-              "isDesktop": false,
-              "isBot": false
-          }
-        },
-        "created": "2024-08-28T16:31:41.803Z"
+    // if the restaurant is not available but has other options suggested
+    if (result?.alternative_results?.length) {
+      const { time_slots: restaurantTimeSlots = [] } = result.alternative_results[0];
+      const relevantTimeSlotsByArea = restaurantTimeSlots.find((area) => area.name.toLowerCase() === checkAvailabilityOptions.area.toLowerCase());
+      if (!relevantTimeSlotsByArea) {
+        return notAvailableResponse;
+      }
+      const { time_slots: areaTimeSlots = [] } = restaurantTimeSlots;
+      for (const timeSlot of areaTimeSlots) {
+        const userDateAndTimeRequested = new Date(`${checkAvailabilityOptions.date}T${checkAvailabilityOptions.time}:00.000Z`);
+        if (new Date(timeSlot) > userDateAndTimeRequested) {
+          const availableUntil = new Date(timeSlot);
+          return { isAvailable: true, availableUntil };
+        }
       }
     }
-
-    const objWithAlternativeResults = {
-      "description_string": "booking.search.results_info",
-      "alternative_results": [
-        {
-          "requested_day_result": true,
-          "title_timestamp": "2024-08-29T17:00:00.000Z",
-          "time_slots_by_area": true,
-          "time_slots": [
-            {
-              "name": "outside",
-              "time_slots": [
-                "2024-08-29T18:45:00.000Z",
-                "2024-08-29T15:45:00.000Z",
-                "2024-08-29T19:00:00.000Z",
-                "2024-08-29T15:15:00.000Z",
-                "2024-08-29T19:15:00.000Z",
-                "2024-08-29T15:00:00.000Z"
-              ]
-            },
-            {
-              "name": "inside",
-              "time_slots": [
-                "2024-08-29T19:30:00.000Z",
-                "2024-08-29T15:00:00.000Z",
-                "2024-08-29T14:45:00.000Z",
-                "2024-08-29T14:30:00.000Z"
-              ]
-            },
-            {
-              "name": "bar_corona",
-              "time_slots": [
-                "2024-08-29T15:00:00.000Z",
-                "2024-08-29T14:45:00.000Z",
-                "2024-08-29T14:30:00.000Z"
-              ]
-            }
-          ]
-        }
-      ],
-      "standby_reservation_allowed": true
-    }
-    return result;
+    return notAvailableResponse;
   }
 }
+
+const objWithReservation = {
+  reservation: {
+    reservation_details: {
+      preference: 'outside',
+      seats_count: 3,
+      reserved_from: '2024-09-09T17:00:00.000Z',
+      reserved_until: '2024-09-09T19:00:00.000Z',
+    },
+    state: 'created',
+    organization: '5dd5306729d41d77e03894ff',
+    temp_reservation: true,
+    standby_reservation: false,
+    pending_approval: false,
+    temp_reservation_expires: '2024-09-06T22:34:57.919Z',
+    created_by: 'online_booking',
+    created: '2024-09-06T22:29:57.954Z',
+  },
+};
+
+const objWithAlternativeResults = {
+  alternative_results: [
+    {
+      requested_day_result: true,
+      title_timestamp: '2024-08-29T17:00:00.000Z',
+      time_slots_by_area: true,
+      time_slots: [
+        {
+          name: 'outside',
+          time_slots: ['2024-08-29T18:45:00.000Z', '2024-08-29T15:45:00.000Z', '2024-08-29T19:00:00.000Z', '2024-08-29T15:15:00.000Z'],
+        },
+        {
+          name: 'inside',
+          time_slots: ['2024-08-29T19:30:00.000Z', '2024-08-29T15:00:00.000Z', '2024-08-29T14:45:00.000Z', '2024-08-29T14:30:00.000Z'],
+        },
+        {
+          name: 'bar_corona',
+          time_slots: ['2024-08-29T15:00:00.000Z', '2024-08-29T14:45:00.000Z', '2024-08-29T14:30:00.000Z'],
+        },
+      ],
+    },
+  ],
+};
