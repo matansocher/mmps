@@ -1,21 +1,10 @@
 import { IInlineKeyboardButton } from '@services/tabit/interface';
-import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL, TABIT_BOT_OPTIONS } from './tabit.config';
+import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from './tabit.config';
 
 const CALLBACK_DATA_SEPARATOR = ',';
 
-export const getGeneralKeyboardOptions = () => {
-  return {
-    reply_markup: {
-      keyboard: Object.keys(TABIT_BOT_OPTIONS).map((option: string) => {
-        return [{ text: TABIT_BOT_OPTIONS[option] }];
-      }),
-      resize_keyboard: true,
-    },
-  };
-};
-
 export const convertInlineKeyboardButtonToCallbackData = (inlineKeyboardButton: IInlineKeyboardButton): string => {
-  const args: any[] = [inlineKeyboardButton.action, inlineKeyboardButton.data];
+  const args = [inlineKeyboardButton.action, inlineKeyboardButton.data];
   return args.join(CALLBACK_DATA_SEPARATOR);
 };
 

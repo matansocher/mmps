@@ -19,9 +19,20 @@ export class NumOfSeatsHandler extends StepHandler {
     super();
   }
 
+  validateInput(userInput: string): boolean {
+    try {
+      return !isNaN(parseInt(userInput));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  transformInput(userInput: string) {
+    return parseInt(userInput);
+  }
+
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
-      // get possible num of seats for the restaurant and show to the user
       const { restaurantDetails } = currentStepDetails;
       const options = [];
       for (let i = 1; i < restaurantDetails.maxNumOfSeats; i++) {
@@ -31,9 +42,8 @@ export class NumOfSeatsHandler extends StepHandler {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.NUM_OF_SEATS, data: option } as IInlineKeyboardButton;
         return { text: option, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
-      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const resText = flowStep.preUserActionResponseMessage;
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
+      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 4);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
     } catch (err) {
       this.logger.error(`${NumOfSeatsHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -42,11 +52,12 @@ export class NumOfSeatsHandler extends StepHandler {
 
   async handlePostUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep, userInput: string): Promise<void> {
     try {
-      const numOfSeats = parseInt(userInput);
-      if (isNaN(numOfSeats)) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, 'Please enter a valid number of seats');
+      const isInputValid = this.validateInput(userInput);
+      if (!isInputValid) {
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, 'Please enter a valid number of seats', {});
         return;
       }
+      const numOfSeats = this.transformInput(userInput);
       this.flowStepsManagerService.addUserStepDetail(chatId, { numOfSeats });
     } catch (err) {
       this.logger.error(`${NumOfSeatsHandler.name} - ${this.handlePostUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);

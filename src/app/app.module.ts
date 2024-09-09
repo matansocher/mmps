@@ -9,8 +9,8 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
-    WoltBotModule,
-    VoicePalBotModule,
+    // WoltBotModule,
+    // VoicePalBotModule,
     // StockBuddyBotModule,
     TabitBotModule,
     // DeadTerroristsModule,

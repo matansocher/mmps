@@ -1,14 +1,15 @@
 import TelegramBot from 'node-telegram-bot-api';
+import { DAYS_OF_WEEK } from '@core/config/main.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IInlineKeyboardButton, IUserFlowDetails } from '@services/tabit/interface';
+import { IFlowStep, IInlineKeyboardButton, ITabitRestaurantOpeningHour, IUserFlowDetails } from '@services/tabit/interface';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
 import { convertInlineKeyboardButtonToCallbackData } from '@services/tabit/tabit.utils';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
-const DAYS_OF_WEEK = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const POPULAR_HOURS = ['12:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
 
 export class TimeHandler extends StepHandler {
   constructor(
@@ -21,22 +22,36 @@ export class TimeHandler extends StepHandler {
     super();
   }
 
+  validateInput(userInput: string): boolean {
+    const regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    return regex.test(userInput);
+  }
+
+  transformInput(userInput: string) {
+    return userInput;
+  }
+
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
-      // get the available opening hours for the restaurant and show to the user
       const { restaurantDetails, date } = currentStepDetails;
-      // const dayOfWeek = DAYS_OF_WEEK[new Date(date).getDay()];
-      // const restaurantOpeningHours = restaurantDetails.openingHours;
-      // const openingHours = restaurantOpeningHours[dayOfWeek] || restaurantOpeningHours['default'];
-      const times = ['20:00', '21:00']; // this should be changed to hours with 30 minutes margin from the openingHours arrays
+      const dayOfWeek = DAYS_OF_WEEK[new Date(date).getDay()].toLowerCase().slice(0, 3);
+      const relevantOpeningHoursDay = restaurantDetails.openingHours[dayOfWeek] || restaurantDetails.openingHours['default'];
+      const availableTimes = this.getAvailableTimes(relevantOpeningHoursDay, 15);
+      availableTimes.forEach((time: string) => {
+        if (POPULAR_HOURS.includes(time)) {
+          const index = availableTimes.indexOf(time);
+          availableTimes.splice(index, 1);
+          availableTimes.unshift(time);
+        }
+      });
+      const times = availableTimes.slice(0, 9).sort();
 
       const inlineKeyboardButtons = times.map((time: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.TIME, data: time } as IInlineKeyboardButton;
         return { text: time, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
-      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const resText = flowStep.preUserActionResponseMessage;
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
+      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 3);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
     } catch (err) {
       this.logger.error(`${TimeHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -45,18 +60,51 @@ export class TimeHandler extends StepHandler {
 
   async handlePostUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep, userInput: string): Promise<void> {
     try {
-      const dayOfWeek = DAYS_OF_WEEK[new Date(currentStepDetails.date).getDay()];
-      // const restaurantOpeningHours = currentStepDetails.restaurantDetails.openingHours;
-      // const openingHours = restaurantOpeningHours[dayOfWeek] || restaurantOpeningHours['default'];
-      // validate
-      // transform
-
-      // $$$$$$$$$$$$$$$$$$$$ dont forget to transform to utc from the user timezone
-      const time = userInput;
+      const isInputValid = this.validateInput(userInput);
+      if (!isInputValid) {
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, 'I think this is not the right time format, I am looking for something like hh:mm');
+        return;
+      }
+      const time = this.transformInput(userInput);
       this.flowStepsManagerService.addUserStepDetail(chatId, { time });
     } catch (err) {
       this.logger.error(`${TimeHandler.name} - ${this.handlePostUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
+  }
+
+  private getAvailableTimes(timeRanges: ITabitRestaurantOpeningHour[], minutesGap: number): string[] {
+    const times: string[] = [];
+    timeRanges.forEach((timeRange: ITabitRestaurantOpeningHour) => {
+      times.push(...this.getAvailableTimesForRange(timeRange, minutesGap));
+    });
+    return Array.from(new Set(times)).sort();
+  }
+
+  private getAvailableTimesForRange(timeRange: ITabitRestaurantOpeningHour, minutesGap: number): string[] {
+    const times: string[] = [];
+
+    // Parse the input times into Date objects
+    const startTime = new Date();
+    const endTime = new Date();
+
+    const [startHours, startMinutes] = timeRange.from.split(':').map(Number);
+    const [endHours, endMinutes] = timeRange.to.split(':').map(Number);
+
+    startTime.setHours(startHours, startMinutes, 0, 0);
+    endTime.setHours(endHours, endMinutes, 0, 0);
+
+    const currentTime = new Date(startTime);
+
+    // Loop to add times in 15-minute increments
+    while (currentTime <= endTime) {
+      const formattedTime = currentTime.toTimeString().slice(0, 5); // Format as HH:mm
+      times.push(formattedTime);
+
+      // Increment time by 15 minutes
+      currentTime.setMinutes(currentTime.getMinutes() + minutesGap);
+    }
+
+    return times;
   }
 }

@@ -10,9 +10,8 @@ import { FlowStepsHandlerService } from '@services/tabit/tabit-flow/flow-steps-h
 import {
   convertCallbackDataToInlineKeyboardButton,
   convertInlineKeyboardButtonToCallbackData,
-  getGeneralKeyboardOptions,
 } from '@services/tabit/tabit.utils';
-import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, TABIT_BOT_OPTIONS } from '@services/tabit/tabit.config';
+import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, TABIT_BOT_COMMANDS } from '@services/tabit/tabit.config';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
@@ -58,7 +57,7 @@ export class TabitBotService implements OnModuleInit {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
       await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, getGeneralKeyboardOptions());
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
       this.notifierBotService.notify(BOTS.TABIT.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
@@ -129,7 +128,7 @@ export class TabitBotService implements OnModuleInit {
     const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
 
     // prevent built in options to be processed also here
-    if (Object.keys(TABIT_BOT_OPTIONS).map((option: string) => TABIT_BOT_OPTIONS[option]).includes(text)) return;
+    if (Object.keys(TABIT_BOT_COMMANDS).map((option: string) => TABIT_BOT_COMMANDS[option]).includes(text)) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
     this.logger.info(this.textHandler.name, `${logBody} - start`);
@@ -145,7 +144,7 @@ export class TabitBotService implements OnModuleInit {
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
     const { chatId, firstName, lastName, data: buttonData } = this.telegramGeneralService.getCallbackQueryData(callbackQuery);
-    const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+    const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, buttonData: ${buttonData}`;
     this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {

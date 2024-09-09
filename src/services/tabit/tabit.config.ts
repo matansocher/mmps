@@ -7,7 +7,9 @@ import {
   TimeHandler
 } from '@services/tabit/tabit-flow/step-handlers';
 
-export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a tabit restaurant reservation in a specific time is available.\n\nYou can enter the restaurant name you want to check\n\nTo show current notification registrations you can write: /show\n\n`;
+export const MAX_SUBSCRIPTIONS_NUMBER = 10;
+
+export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a tabit restaurant reservation in a specific time is available.\n\nYou can enter the restaurant name you want to check\n\nTo show current notification registrations you can write: /show\nIf by any reason you want to restart the reservation process you can write: /reset\n`;
 
 export const HOURS_DIFFERENCE_FROM_UTC = 2; // $$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -27,7 +29,7 @@ export const RESTAURANT_CHECK_AVAILABILITY_BASE_BODY = {
   modified_reservation_id: '',
 };
 
-export const TABIT_BOT_OPTIONS = {
+export const TABIT_BOT_COMMANDS = {
   START: '/start',
   SHOW: '/show',
   RESET: '/reset',
@@ -41,12 +43,12 @@ export const TABIT_FLOW_STEPS: IFlowStep[] = [
   {
     id: IFlowStepType.DATE,
     handler: DateHandler,
-    preUserActionResponseMessage: 'What date do ou want me to search for?',
+    preUserActionResponseMessage: 'What date do you want me to search for?',
   },
   {
     id: IFlowStepType.TIME,
     handler: TimeHandler,
-    preUserActionResponseMessage: 'What time do ou want me to search for?',
+    preUserActionResponseMessage: 'What time do ou want me to search for?\nYou can also send a custom time in the format: HH:MM, example: 19:45',
   },
   {
     id: IFlowStepType.NUM_OF_SEATS,
@@ -75,6 +77,8 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
   FAST: 60 * 5,
   IDLE: 60 * 60,
 };
+
+export const TIME_GAP_FROM_USER_SELECTION_IN_MINUTES = 60;
 
 export const HOUR_OF_DAY_TO_REFRESH_MAP = {
   0: SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS.IDLE,

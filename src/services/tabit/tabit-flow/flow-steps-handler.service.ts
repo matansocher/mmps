@@ -1,10 +1,12 @@
+import { MONTHS_OF_YEAR } from '@core/config/main.config';
+import { getRestaurantLinkForUser } from '@services/tabit/tabit.utils';
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { TabitMongoSubscriptionService } from '@core/mongo/tabit-mongo/services';
 import { UtilsService } from '@core/utils/utils.service';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
-import { TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
+import { MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { AreaHandler, DateHandler, DetailsHandler, NumOfSeatsHandler, StepHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
@@ -22,7 +24,7 @@ export class FlowStepsHandlerService {
   ) {}
 
   async handleStep(bot: TelegramBot, chatId: number, currentStepUserInput: string): Promise<void> {
-    const currentStepDetails = this.flowStepsManagerService.getCurrentUserStepDetails(chatId);
+    let currentStepDetails = this.flowStepsManagerService.getCurrentUserStepDetails(chatId);
 
     const flowCurrentStep = TABIT_FLOW_STEPS[currentStepDetails.currentStepIndex];
     const flowNextStep = TABIT_FLOW_STEPS[currentStepDetails.currentStepIndex + 1];
@@ -33,11 +35,13 @@ export class FlowStepsHandlerService {
     await handlerCurrentStepClass.handlePostUserAction(chatId, currentStepDetails, flowCurrentStep, currentStepUserInput);
 
     if (handlerNextStepClass) {
+      currentStepDetails = this.flowStepsManagerService.getCurrentUserStepDetails(chatId);
       await handlerNextStepClass.handlePreUserAction(chatId, currentStepDetails, flowNextStep);
     }
 
     const isLastStep = currentStepDetails.currentStepIndex + 1 === TABIT_FLOW_STEPS.length;
     if (isLastStep) {
+      currentStepDetails = this.flowStepsManagerService.getCurrentUserStepDetails(chatId);
       await this.handleLastStep(bot, chatId, currentStepDetails);
     } else {
       this.flowStepsManagerService.incrementCurrentUserStep(chatId);
@@ -68,10 +72,24 @@ export class FlowStepsHandlerService {
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
     const { restaurantDetails, numOfSeats, date, time, area } = currentStepDetails;
     const userSelections: IUserSelections = { numOfSeats, date, time, area };
-    const isAvailable = await this.tabitApiService.getRestaurantAvailability(restaurantDetails.id, userSelections);
+    const { isAvailable } = await this.tabitApiService.getRestaurantAvailability(restaurantDetails, userSelections);
     if (isAvailable) {
-      await this.telegramGeneralService.sendMessage(bot, chatId, 'It looks like the restaurant is available now, go ahead and save your place');
+      const restaurantLinkUrl = getRestaurantLinkForUser(restaurantDetails.id);
+      const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];
+      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+      const date = `${MONTHS_OF_YEAR[new Date(userSelections.date).getMonth()]} ${new Date(userSelections.date).getDate()}`;
+      const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
+      await Promise.all([
+        this.telegramGeneralService.sendMessage(bot, chatId, replyText, { ...inlineKeyboardMarkup }),
+        // this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id), // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        // this.notifierBotService.notify(BOTS.TABIT.name, { data: { restaurant: restaurantTitle }, action: tabitConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
+      ]);
     } else {
+      const numOfSubscriptions = await this.mongoSubscriptionService.getSubscriptionsCount(chatId);
+      if (numOfSubscriptions >= MAX_SUBSCRIPTIONS_NUMBER) {
+        await this.telegramGeneralService.sendMessage(bot, chatId, `You have reached the maximum number of subscriptions - ${MAX_SUBSCRIPTIONS_NUMBER}. Please unsubscribe from one of them before adding a new one`);
+        return;
+      }
       await this.mongoSubscriptionService.addSubscription(chatId, currentStepDetails);
       // this.notifierBotService.notify(BOTS.TABIT.name, { data: { currentStepDetails }, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(bot, chatId, 'OK, I will let you know once I see it is open'); // $$$$$$$$$$$$$$$$$$$$$$ more meaningful data on what is the subscription is about

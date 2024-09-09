@@ -19,18 +19,27 @@ export class AreaHandler extends StepHandler {
     super();
   }
 
+  validateInput(userInput: string, { currentStepDetails }): boolean {
+    const { restaurantDetails } = currentStepDetails;
+    const relevantArea = restaurantDetails.areas.find((area: ITabitRestaurantArea) => area.displayName === userInput);
+    return !!relevantArea;
+  }
+
+  transformInput(userInput: string, { restaurantDetails }) {
+    const relevantArea = restaurantDetails.areas.find((area: ITabitRestaurantArea) => area.displayName === userInput);
+    return relevantArea.name;
+  }
+
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
-      // get the available areas for the restaurant and show to the user
       const { restaurantDetails } = currentStepDetails;
       const areas = restaurantDetails.areas.map((area: ITabitRestaurantArea) => area.displayName);
       const inlineKeyboardButtons = areas.map((area: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.AREA, data: area } as IInlineKeyboardButton;
         return { text: area, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
-      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const resText = flowStep.preUserActionResponseMessage;
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
+      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 2);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
     } catch (err) {
       this.logger.error(`${AreaHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -39,11 +48,13 @@ export class AreaHandler extends StepHandler {
 
   async handlePostUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep, userInput: string): Promise<void> {
     try {
-      // validate in front of restaurantDetails
-      const { restaurantDetails } = currentStepDetails;
-      // transform
-      const time = userInput;
-      this.flowStepsManagerService.addUserStepDetail(chatId, { time });
+      const isInputValid = this.validateInput(userInput, { currentStepDetails });
+      if (!isInputValid) {
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I dont think there is an area called ${userInput} in the restaurant, please choose something that exists`);
+        return;
+      }
+      const area = this.transformInput(userInput, { restaurantDetails: currentStepDetails.restaurantDetails });
+      this.flowStepsManagerService.addUserStepDetail(chatId, { area });
     } catch (err) {
       this.logger.error(`${AreaHandler.name} - ${this.handlePostUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;

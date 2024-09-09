@@ -28,7 +28,7 @@ export interface ITabitRestaurant {
   isOnlineBookingAvailable: boolean;
   timezone: string;
   areas: ITabitRestaurantArea[];
-  // openingHours: ITabitRestaurantOpeningHours;
+  openingHours: ITabitRestaurantOpeningHours;
   maxMonthsAhead: number;
   maxNumOfSeats: number;
 }

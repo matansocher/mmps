@@ -20,8 +20,18 @@ export class DetailsHandler extends StepHandler {
     super();
   }
 
+  validateInput(userInput: string): boolean {
+    const restaurantId = this.tabitApiService.getRestaurantId(userInput);
+    return !!restaurantId;
+  }
+
   async handlePostUserAction(chatId: number, flowStepsOptions: IUserFlowDetails, flowStep: IFlowStep, userInput: string): Promise<void> {
     try {
+      const isInputValid = this.validateInput(userInput);
+      if (!isInputValid) {
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I am sorry, I didn\'t find any restaurants matching your search - '${userInput}'`);
+        return;
+      }
       const restaurantId = this.tabitApiService.getRestaurantId(userInput);
       const restaurantDetails: ITabitRestaurant = await this.tabitApiService.getRestaurantDetails(restaurantId);
       if (!restaurantDetails) {

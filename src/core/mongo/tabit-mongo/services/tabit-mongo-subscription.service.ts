@@ -29,6 +29,15 @@ export class TabitMongoSubscriptionService {
     }
   }
 
+  async getSubscriptionsCount(chatId: number): Promise<number> {
+    try {
+      return this.subscriptionCollection.count({ chatId });
+    } catch (err) {
+      this.logger.error(this.getSubscriptionsCount.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      return 0;
+    }
+  }
+
   async getSubscription(chatId: number, subscriptionId: string) {
     const filter = { chatId, _id: new ObjectId(subscriptionId), isActive: true };
     return this.subscriptionCollection.findOne(filter);
@@ -56,7 +65,11 @@ export class TabitMongoSubscriptionService {
   }
 
   async getExpiredSubscriptions() {
-    const filter = { isActive: true, createdAt: { $lt: new Date() } };
+    const tomorrow = new Date();
+    tomorrow.setUTCHours(0, 0, 0, 0);
+    tomorrow.setDate(new Date().getDate() + 1);
+
+    const filter = { isActive: true, 'userSelections.date': { $lt: tomorrow } };
     return this.subscriptionCollection.find(filter).toArray();
   }
 }

@@ -28,6 +28,6 @@ export class WoltBotModule implements OnModuleInit {
   constructor(private readonly woltSchedulerService: WoltSchedulerService) {}
 
   onModuleInit(): void {
-    this.woltSchedulerService.scheduleNextInterval();
+    this.woltSchedulerService.scheduleInterval();
   }
 }

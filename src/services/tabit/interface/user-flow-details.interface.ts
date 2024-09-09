@@ -4,7 +4,7 @@ export interface IUserFlowDetails {
   currentStepIndex: number;
   restaurantDetails?: ITabitRestaurant;
   numOfSeats?: number;
-  date?: string;
+  date?: Date;
   time?: string;
   area?: string;
 }

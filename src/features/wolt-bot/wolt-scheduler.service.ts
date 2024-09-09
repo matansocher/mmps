@@ -31,7 +31,7 @@ export class WoltSchedulerService {
     @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
   ) {}
 
-  async scheduleNextInterval(): Promise<void> {
+  async scheduleInterval(): Promise<void> {
     const secondsToNextRefresh = this.getSecondsToNextRefresh();
 
     // Clear existing timeout if it exists
@@ -42,7 +42,7 @@ export class WoltSchedulerService {
     await this.handleIntervalFlow();
 
     const timeout = setTimeout(() => {
-      this.scheduleNextInterval();
+      this.scheduleInterval();
     }, secondsToNextRefresh * 1000);
 
     this.schedulerRegistry.addTimeout(JOB_NAME, timeout);

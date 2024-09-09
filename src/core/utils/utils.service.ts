@@ -84,4 +84,24 @@ export class UtilsService implements OnModuleInit {
         return acc;
       }, {});
   }
+
+  getTimezoneOffset(time: string, timezone: string): number {
+    const formatter = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'short' });
+    const parts = formatter.formatToParts(new Date());
+    const timeZoneName = parts.find((part) => part.type === 'timeZoneName')?.value || '';
+    const match = timeZoneName.match(/GMT([+-]\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  getTimeWithOffset(date: Date, time: string, timezone: string): string {
+    const [hours, minutes] = time.split(':').map(Number);
+    const localDateTime = new Date(Number(date.getFullYear()), Number(date.getMonth()), Number(date.getDate()), hours, minutes);
+    const offsetInMilliseconds = this.getTimezoneOffset(time, timezone) * 60 * 60 * 1000;
+    const utcDateTime = new Date(localDateTime.getTime() - offsetInMilliseconds);
+    return utcDateTime.toISOString();
+  }
+
+  getDateNumber(num: number): string {
+    return num < 10 ? `0${num}` : `${num}`;
+  }
 }

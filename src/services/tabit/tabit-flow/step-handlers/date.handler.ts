@@ -19,18 +19,25 @@ export class DateHandler extends StepHandler {
     super();
   }
 
+  validateInput(userInput: string): boolean {
+    const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    return regex.test(userInput);
+  }
+
+  transformInput(userInput: string) {
+    return new Date(new Date(userInput).setHours(0, 0, 0, 0));
+  }
+
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
-      // get first 10 of the available dates for the restaurant and show to the user
       const { restaurantDetails } = currentStepDetails;
-      const dates = ['2024-11-01', '2024-11-02'];
+      const dates = this.getDatesForNextXMonths(restaurantDetails.maxMonthsAhead).slice(0, 10);
       const inlineKeyboardButtons = dates.map((date: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.DATE, data: date } as IInlineKeyboardButton;
         return { text: date, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
-      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const resText = flowStep.preUserActionResponseMessage;
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
+      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 2);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
     } catch (err) {
       this.logger.error(`${DateHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -39,13 +46,38 @@ export class DateHandler extends StepHandler {
 
   async handlePostUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep, userInput: string): Promise<void> {
     try {
-      // validate
-      // transform
-      const date = userInput;
+      const isInputValid = this.validateInput(userInput);
+      if (!isInputValid) {
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, 'I think this is not the right date format, I am looking for something like yyyy-mm-dd');
+        return;
+      }
+      const date = this.transformInput(userInput);
       this.flowStepsManagerService.addUserStepDetail(chatId, { date });
     } catch (err) {
       this.logger.error(`${DateHandler.name} - ${this.handlePostUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
+  }
+
+  private getDatesForNextXMonths(numOfMonths): string[] {
+    const dates: string[] = [];
+    const today = new Date();
+
+    // Get the date two months from now
+    const twoMonthsFromNow = new Date(today);
+    twoMonthsFromNow.setMonth(today.getMonth() + numOfMonths);
+
+    const currentDate = new Date(today);
+
+    while (currentDate <= twoMonthsFromNow) {
+      // Format the date to yyyy-mm-dd
+      const formattedDate = currentDate.toISOString().split('T')[0];
+      dates.push(formattedDate);
+
+      // Move to the next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return dates;
   }
 }
