@@ -43,7 +43,7 @@ export class TabitMongoSubscriptionService {
     return this.subscriptionCollection.findOne(filter);
   }
 
-  async addSubscription(chatId: number, userFlowDetails: IUserFlowDetails) {
+  async addSubscription(chatId: number, userFlowDetails: IUserFlowDetails): Promise<SubscriptionModel> {
     const { restaurantDetails } = userFlowDetails;
     const { numOfSeats, date, time, area } = userFlowDetails;
     const userSelections: IUserSelections = { numOfSeats, date, time, area };
@@ -55,7 +55,11 @@ export class TabitMongoSubscriptionService {
       isActive: true,
       createdAt: new Date(),
     };
-    return this.subscriptionCollection.insertOne(subscription);
+    const { insertedId } = this.subscriptionCollection.insertOne(subscription);
+    return {
+      _id: insertedId,
+      ...subscription,
+    };
   }
 
   archiveSubscription(chatId: number, subscriptionId: ObjectId) {

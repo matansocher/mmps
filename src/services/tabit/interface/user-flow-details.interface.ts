@@ -1,4 +1,4 @@
-import { ITabitRestaurant } from '.';
+import { IFlowStepType, ITabitRestaurant } from '.';
 
 export interface IUserFlowDetails {
   currentStepIndex: number;
@@ -7,6 +7,9 @@ export interface IUserFlowDetails {
   date?: Date;
   time?: string;
   area?: string;
+  botQuestionsMessageIds?: {
+    [key in IFlowStepType]: number;
+  };
 }
 
 export type IUserSelections = Pick<IUserFlowDetails, 'numOfSeats' | 'date' | 'time' | 'area'>;

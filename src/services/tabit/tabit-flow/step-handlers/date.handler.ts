@@ -1,11 +1,11 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { IUserFlowDetails, IInlineKeyboardButton, IFlowStep } from '@services/tabit/interface';
+import { IUserFlowDetails, IInlineKeyboardButton, IFlowStep, IFlowStepType } from '@services/tabit/interface';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
+import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
-import { convertInlineKeyboardButtonToCallbackData } from '@services/tabit/tabit.utils';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 export class DateHandler extends StepHandler {
@@ -15,6 +15,7 @@ export class DateHandler extends StepHandler {
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly flowStepsManagerService: FlowStepsManagerService,
+    private readonly tabitUtilsService: TabitUtilsService,
   ) {
     super();
   }
@@ -34,10 +35,11 @@ export class DateHandler extends StepHandler {
       const dates = this.getDatesForNextXMonths(restaurantDetails.maxMonthsAhead).slice(0, 10);
       const inlineKeyboardButtons = dates.map((date: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.DATE, data: date } as IInlineKeyboardButton;
-        return { text: date, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
+        return { text: date, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 2);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      this.flowStepsManagerService.updateUserStepMessageId(chatId, IFlowStepType.DATE, message_id);
     } catch (err) {
       this.logger.error(`${DateHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -53,6 +55,11 @@ export class DateHandler extends StepHandler {
       }
       const date = this.transformInput(userInput);
       this.flowStepsManagerService.addUserStepDetail(chatId, { date });
+      const { botQuestionsMessageIds } = currentStepDetails;
+      if (botQuestionsMessageIds[IFlowStepType.DATE]) {
+        await this.telegramGeneralService.deleteMessage(this.bot, chatId, botQuestionsMessageIds[IFlowStepType.DATE]);
+      }
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Date: ${this.tabitUtilsService.getDateStringFormat(date)}`);
     } catch (err) {
       this.logger.error(`${DateHandler.name} - ${this.handlePostUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;

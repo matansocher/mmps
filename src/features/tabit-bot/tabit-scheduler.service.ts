@@ -1,16 +1,16 @@
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { LoggerService } from '@core/logger/logger.service';
 // import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { SubscriptionModel } from '@core/mongo/tabit-mongo/models';
-import { UtilsService } from '@core/utils/utils.service';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo/services';
+import { UtilsService } from '@core/utils/utils.service';
 import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
+import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import * as tabitConfig from '@services/tabit/tabit.config';
-import { getRestaurantLinkForUser } from '@services/tabit/tabit.utils';
+import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 const JOB_NAME = 'tabit-scheduler-job-interval';
 
@@ -23,6 +23,7 @@ export class TabitSchedulerService {
     private readonly mongoAnalyticLogService: TabitMongoAnalyticLogService,
     private readonly mongoUserService: TabitMongoUserService,
     private readonly mongoSubscriptionService: TabitMongoSubscriptionService,
+    private readonly tabitUtilsService: TabitUtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly schedulerRegistry: SchedulerRegistry,
     // private readonly notifierBotService: NotifierBotService,
@@ -74,13 +75,13 @@ export class TabitSchedulerService {
         // this.notifierBotService.notify(BOTS.TABIT.name, { data: { restaurant: restaurantTitle }, action: tabitConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService);
       }
 
-      const restaurantLinkUrl = getRestaurantLinkForUser(restaurantId);
+      const restaurantLinkUrl = this.tabitUtilsService.getRestaurantLinkForUser(restaurantId);
       const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `${restaurantTitle} is now available at ${userSelections.date} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
       await Promise.all([
         this.telegramGeneralService.sendPhoto(this.bot, chatId, restaurantDetails.image, { ...inlineKeyboardMarkup, caption: replyText }),
-        // this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id), // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        // this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id), // $$$$$$$$$$$$$$$in case user wants to re-subscribe to the same subscription, add a button in addition besides the order now button saying somthing like -re-subscribe to same details$$$$$$$$$$$$$$$
         // this.notifierBotService.notify(BOTS.TABIT.name, { data: { restaurant: restaurantTitle }, action: tabitConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
       ]);
     } catch (err) {

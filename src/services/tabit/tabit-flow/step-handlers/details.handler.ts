@@ -1,12 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IUserFlowDetails } from '@services/tabit/interface';
+import { IFlowStep, ITabitRestaurant, IUserFlowDetails } from '@services/tabit/interface';
+import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
+import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { ITabitRestaurant } from '@services/tabit/interface';
 
 export class DetailsHandler extends StepHandler {
   constructor(
@@ -15,6 +15,7 @@ export class DetailsHandler extends StepHandler {
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly flowStepsManagerService: FlowStepsManagerService,
+    private readonly tabitUtilsService: TabitUtilsService,
     private readonly tabitApiService: TabitApiService,
   ) {
     super();
@@ -29,7 +30,7 @@ export class DetailsHandler extends StepHandler {
     try {
       const isInputValid = this.validateInput(userInput);
       if (!isInputValid) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I am sorry, I didn\'t find any restaurants matching your search - '${userInput}'`);
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I am sorry, I didn't find any restaurants matching your search - '${userInput}'`);
         return;
       }
       const restaurantId = this.tabitApiService.getRestaurantId(userInput);

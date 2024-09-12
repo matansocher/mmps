@@ -1,11 +1,11 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IInlineKeyboardButton, IUserFlowDetails } from '@services/tabit/interface';
+import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IUserFlowDetails } from '@services/tabit/interface';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { convertInlineKeyboardButtonToCallbackData } from '@services/tabit/tabit.utils';
+import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 export class NumOfSeatsHandler extends StepHandler {
@@ -15,6 +15,7 @@ export class NumOfSeatsHandler extends StepHandler {
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly flowStepsManagerService: FlowStepsManagerService,
+    private readonly tabitUtilsService: TabitUtilsService,
   ) {
     super();
   }
@@ -40,10 +41,11 @@ export class NumOfSeatsHandler extends StepHandler {
       }
       const inlineKeyboardButtons = options.map((option: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.NUM_OF_SEATS, data: option } as IInlineKeyboardButton;
-        return { text: option, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
+        return { text: option, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 4);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      this.flowStepsManagerService.updateUserStepMessageId(chatId, IFlowStepType.NUM_OF_SEATS, message_id);
     } catch (err) {
       this.logger.error(`${NumOfSeatsHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -59,6 +61,11 @@ export class NumOfSeatsHandler extends StepHandler {
       }
       const numOfSeats = this.transformInput(userInput);
       this.flowStepsManagerService.addUserStepDetail(chatId, { numOfSeats });
+      const { botQuestionsMessageIds } = currentStepDetails;
+      if (botQuestionsMessageIds[IFlowStepType.NUM_OF_SEATS]) {
+        await this.telegramGeneralService.deleteMessage(this.bot, chatId, botQuestionsMessageIds[IFlowStepType.NUM_OF_SEATS]);
+      }
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `How many: ${numOfSeats}`);
     } catch (err) {
       this.logger.error(`${NumOfSeatsHandler.name} - ${this.handlePostUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;

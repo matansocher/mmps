@@ -3,6 +3,7 @@ import { LoggerModule } from '@core/logger/logger.module';
 import { TabitMongoModule } from '@core/mongo/tabit-mongo/tabit-mongo.module';
 import { UtilsModule } from '@core/utils/utils.module';
 import { TabitApiModule } from '@services/tabit/tabit-api/tabit-api.module';
+import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { FlowStepsHandlerService } from './flow-steps-handler.service';
 import { FlowStepsManagerService } from './flow-steps-manager.service';
 
@@ -13,7 +14,7 @@ import { FlowStepsManagerService } from './flow-steps-manager.service';
     TabitApiModule,
     TabitMongoModule,
   ],
-  providers: [FlowStepsHandlerService, FlowStepsManagerService],
-  exports: [FlowStepsManagerService, FlowStepsHandlerService],
+  providers: [FlowStepsHandlerService, FlowStepsManagerService, TabitUtilsService],
+  exports: [FlowStepsManagerService, FlowStepsHandlerService, TabitUtilsService],
 })
 export class TabitFlowModule {}

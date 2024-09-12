@@ -2,11 +2,11 @@ import TelegramBot from 'node-telegram-bot-api';
 import { DAYS_OF_WEEK } from '@core/config/main.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IInlineKeyboardButton, ITabitRestaurantOpeningHour, IUserFlowDetails } from '@services/tabit/interface';
+import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantOpeningHour, IUserFlowDetails } from '@services/tabit/interface';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { convertInlineKeyboardButtonToCallbackData } from '@services/tabit/tabit.utils';
+import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 const POPULAR_HOURS = ['12:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
@@ -18,6 +18,7 @@ export class TimeHandler extends StepHandler {
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly flowStepsManagerService: FlowStepsManagerService,
+    private readonly tabitUtilsService: TabitUtilsService,
   ) {
     super();
   }
@@ -48,10 +49,11 @@ export class TimeHandler extends StepHandler {
 
       const inlineKeyboardButtons = times.map((time: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.TIME, data: time } as IInlineKeyboardButton;
-        return { text: time, callback_data: convertInlineKeyboardButtonToCallbackData(callbackData) };
+        return { text: time, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 3);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      this.flowStepsManagerService.updateUserStepMessageId(chatId, IFlowStepType.TIME, message_id);
     } catch (err) {
       this.logger.error(`${TimeHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -67,6 +69,11 @@ export class TimeHandler extends StepHandler {
       }
       const time = this.transformInput(userInput);
       this.flowStepsManagerService.addUserStepDetail(chatId, { time });
+      const { botQuestionsMessageIds } = currentStepDetails;
+      if (botQuestionsMessageIds[IFlowStepType.TIME]) {
+        await this.telegramGeneralService.deleteMessage(this.bot, chatId, botQuestionsMessageIds[IFlowStepType.TIME]);
+      }
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Time: ${time}`);
     } catch (err) {
       this.logger.error(`${TimeHandler.name} - ${this.handlePostUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
       throw err;

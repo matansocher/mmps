@@ -48,10 +48,10 @@ export class TabitApiService {
   }
 
   parseRestaurantResult(restaurantId: string, restaurantDetails, restaurantConfiguration): ITabitRestaurant {
-    const strings = restaurantDetails.strings.rsv['he-IL'];
+    const strings = restaurantDetails.strings.rsv['en-US'];
     const areas = this.getRestaurantAreas(restaurantDetails, strings);
     const openingHours = this.getRestaurantOpeningHours(restaurantDetails);
-    const { title, phone, address, image } = restaurantDetails.organization['he-IL'];
+    const { title, phone, address, image } = restaurantDetails.organization['en-US'];
     return {
       id: restaurantId,
       title,

@@ -1,3 +1,4 @@
+import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
@@ -7,10 +8,6 @@ import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { IInlineKeyboardButton } from '@services/tabit/interface';
 import { FlowStepsHandlerService } from '@services/tabit/tabit-flow/flow-steps-handler.service';
-import {
-  convertCallbackDataToInlineKeyboardButton,
-  convertInlineKeyboardButtonToCallbackData,
-} from '@services/tabit/tabit.utils';
 import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, TABIT_BOT_COMMANDS } from '@services/tabit/tabit.config';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { BOTS } from '@services/telegram/telegram.config';
@@ -26,6 +23,7 @@ export class TabitBotService implements OnModuleInit {
     private readonly mongoSubscriptionService: TabitMongoSubscriptionService,
     private readonly flowStepsManagerService: FlowStepsManagerService,
     private readonly flowStepsHandlerService: FlowStepsHandlerService,
+    private readonly tabitUtilsService: TabitUtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.TABIT.name) private readonly bot: TelegramBot,
@@ -79,26 +77,9 @@ export class TabitBotService implements OnModuleInit {
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
-        const callbackData = { action: BOT_BUTTONS_ACTIONS.UNSUBSCRIBE, data: subscription._id.toString() } as IInlineKeyboardButton;
-        const { restaurantDetails, userSelections } = subscription;
-        const inlineKeyboardButtons = [
-          {
-            text: `Unsubscribe`,
-            callback_data: convertInlineKeyboardButtonToCallbackData(callbackData),
-          },
-        ];
-        const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-        const resTextDetails = [
-          `🧑‍🍳 ${restaurantDetails.title}`,
-          `⏰ ${userSelections.date} - ${userSelections.time}`,
-          `🪑 ${userSelections.numOfSeats}`,
-          `⛺️ ${userSelections.area}`,
-        ];
-        const resText = resTextDetails.join('\n');
-        // return this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
-        // return this.telegramGeneralService.sendPhoto(this.bot, chatId, resText, inlineKeyboardMarkup);
-
-        return this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantDetails.image, { ...inlineKeyboardMarkup, caption: resText });
+        const { text, inlineKeyboardMarkup } = this.tabitUtilsService.getSubscriptionDetails(subscription);
+        // return this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantDetails.image, { ...inlineKeyboardMarkup, caption: resText });
+        return this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, text, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
       this.logger.info(this.showHandler.name, `${logBody} - success`);
@@ -148,7 +129,7 @@ export class TabitBotService implements OnModuleInit {
     this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {
-      const { action, data } = convertCallbackDataToInlineKeyboardButton(buttonData);
+      const { action, data } = this.tabitUtilsService.convertCallbackDataToInlineKeyboardButton(buttonData);
 
       switch (action) {
         case BOT_BUTTONS_ACTIONS.UNSUBSCRIBE: {
@@ -179,7 +160,7 @@ export class TabitBotService implements OnModuleInit {
     const existingSubscription = (await this.mongoSubscriptionService.getSubscription(chatId, subscriptionId)) as SubscriptionModel;
     if (existingSubscription) {
       await this.mongoSubscriptionService.archiveSubscription(chatId, subscriptionId);
-      replyText = `Subscription for ${existingSubscription.restaurantDetails.title} at ${existingSubscription.userSelections.date} was removed`;
+      replyText = `Subscription for ${existingSubscription.restaurantDetails.title} at ${this.tabitUtilsService.getDateStringFormat(existingSubscription.userSelections.date)} was removed`;
     } else {
       replyText = `It seems you don\'t have a subscription for this restaurant.\n\nYou can search and register for another restaurant if you like`;
     }

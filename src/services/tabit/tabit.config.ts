@@ -1,11 +1,5 @@
 import { IFlowStepType, IFlowStep } from '@services/tabit/interface';
-import {
-  DateHandler,
-  DetailsHandler,
-  NumOfSeatsHandler,
-  AreaHandler,
-  TimeHandler
-} from '@services/tabit/tabit-flow/step-handlers';
+import { DateHandler, DetailsHandler, NumOfSeatsHandler, AreaHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
 
 export const MAX_SUBSCRIPTIONS_NUMBER = 10;
 
@@ -43,7 +37,7 @@ export const TABIT_FLOW_STEPS: IFlowStep[] = [
   {
     id: IFlowStepType.DATE,
     handler: DateHandler,
-    preUserActionResponseMessage: 'What date do you want me to search for?',
+    preUserActionResponseMessage: 'What date do you want me to search for?\nYou can also send a custom date in the format: YYYY-MM-DD, example: 2024-12-28',
   },
   {
     id: IFlowStepType.TIME,
