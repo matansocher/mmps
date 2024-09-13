@@ -5,9 +5,10 @@ import { UtilsService } from '@core/utils/utils.service';
 import {
   ITabitRestaurant,
   ITabitRestaurantArea,
-  ITabitRestaurantAvailability, ITabitRestaurantReservationHour,
+  ITabitRestaurantAvailability,
+  ITabitRestaurantReservationHour,
   ITabitRestaurantReservationHours,
-  IUserSelections
+  IUserSelections,
 } from '@services/tabit/interface';
 import {
   RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,

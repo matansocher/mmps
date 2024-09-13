@@ -1,4 +1,3 @@
-import { env } from 'node:process';
 import { isProd } from '@core/config/main.config';
 import { UserModel } from '@core/mongo/shared/models';
 import { MongoUserService } from '@core/mongo/shared/services';
