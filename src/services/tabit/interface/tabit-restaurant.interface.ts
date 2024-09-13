@@ -3,20 +3,20 @@ export interface ITabitRestaurantArea {
   displayName: string;
 }
 
-export interface ITabitRestaurantOpeningHour {
+export interface ITabitRestaurantReservationHour {
   from: string;
   to: string;
 }
 
-export interface ITabitRestaurantOpeningHours {
-  default: ITabitRestaurantOpeningHour[];
-  sun?: ITabitRestaurantOpeningHour[];
-  mon?: ITabitRestaurantOpeningHour[];
-  tue?: ITabitRestaurantOpeningHour[];
-  wed?: ITabitRestaurantOpeningHour[];
-  thu?: ITabitRestaurantOpeningHour[];
-  fri?: ITabitRestaurantOpeningHour[];
-  sat?: ITabitRestaurantOpeningHour[];
+export interface ITabitRestaurantReservationHours {
+  default: ITabitRestaurantReservationHour[];
+  sun?: ITabitRestaurantReservationHour[];
+  mon?: ITabitRestaurantReservationHour[];
+  tue?: ITabitRestaurantReservationHour[];
+  wed?: ITabitRestaurantReservationHour[];
+  thu?: ITabitRestaurantReservationHour[];
+  fri?: ITabitRestaurantReservationHour[];
+  sat?: ITabitRestaurantReservationHour[];
 }
 
 export interface ITabitRestaurant {
@@ -28,7 +28,7 @@ export interface ITabitRestaurant {
   isOnlineBookingAvailable: boolean;
   timezone: string;
   areas: ITabitRestaurantArea[];
-  openingHours: ITabitRestaurantOpeningHours;
+  reservationHours: ITabitRestaurantReservationHours;
   maxMonthsAhead: number;
   maxNumOfSeats: number;
 }

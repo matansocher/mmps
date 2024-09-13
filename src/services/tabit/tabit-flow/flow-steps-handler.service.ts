@@ -1,11 +1,13 @@
-import { MONTHS_OF_YEAR } from '@core/config/main.config';
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
+import { MONTHS_OF_YEAR } from '@core/config/main.config';
 import { LoggerService } from '@core/logger/logger.service';
-import { TabitMongoSubscriptionService } from '@core/mongo/tabit-mongo/services';
+import { TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo/services';
+import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
+import { BOTS } from '@services/telegram/telegram.config';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
-import { MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
+import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { AreaHandler, DateHandler, DetailsHandler, NumOfSeatsHandler, StepHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
@@ -22,6 +24,8 @@ export class FlowStepsHandlerService {
     private readonly tabitApiService: TabitApiService,
     private readonly tabitUtilsService: TabitUtilsService,
     private readonly mongoSubscriptionService: TabitMongoSubscriptionService,
+    private readonly mongoUserService: TabitMongoUserService,
+    private readonly notifierBotService: NotifierBotService,
   ) {}
 
   async handleStep(bot: TelegramBot, chatId: number, currentStepUserInput: string): Promise<void> {
@@ -82,7 +86,7 @@ export class FlowStepsHandlerService {
       const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
       await Promise.all([
         this.telegramGeneralService.sendMessage(bot, chatId, replyText, { ...inlineKeyboardMarkup }),
-        // this.notifierBotService.notify(BOTS.TABIT.name, { data: { restaurant: restaurantTitle }, action: tabitConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
+        this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
       ]);
     } else {
       const numOfSubscriptions = await this.mongoSubscriptionService.getSubscriptionsCount(chatId);
@@ -92,10 +96,10 @@ export class FlowStepsHandlerService {
         return;
       }
       const subscription = await this.mongoSubscriptionService.addSubscription(chatId, currentStepDetails);
-      // this.notifierBotService.notify(BOTS.TABIT.name, { data: { currentStepDetails }, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, }, chatId, this.mongoUserService);
       const { text, inlineKeyboardMarkup } = this.tabitUtilsService.getSubscriptionDetails(subscription);
-      const resText = `Yay! You have successfully subscribed to the restaurant:\n\n${text}\n\nI will let you know when a table is available for you!`;
-      return this.telegramGeneralService.sendPhoto(bot, subscription.chatId, subscription.restaurantDetails.image, { ...inlineKeyboardMarkup, caption: resText });
+      const resText = `Yay! You have successfully subscribed to the restaurant:\n\n${text}\n\nI will do my best to find you the a table and let you know once I do!`;
+      await this.telegramGeneralService.sendPhoto(bot, subscription.chatId, subscription.restaurantDetails.image, { ...inlineKeyboardMarkup, caption: resText });
+      this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, }, chatId, this.mongoUserService);
     }
     this.flowStepsManagerService.resetCurrentUserStep(chatId);
   }

@@ -1,8 +1,10 @@
+import { env } from 'node:process';
+
 export const TELEGRAM_CLIENT_TOKEN = 'TELEGRAM_CLIENT_TOKEN';
 
-export const TELEGRAM_API_ID = process.env.TELEGRAM_API_ID;
-export const TELEGRAM_API_HASH = process.env.TELEGRAM_API_HASH;
-export const TELEGRAM_STRING_SESSION = process.env.TELEGRAM_STRING_SESSION;
+export const TELEGRAM_API_ID = env.TELEGRAM_API_ID;
+export const TELEGRAM_API_HASH = env.TELEGRAM_API_HASH;
+export const TELEGRAM_STRING_SESSION = env.TELEGRAM_STRING_SESSION;
 
 export const CHANNELS = [
   { id: '1338974728', name: 'ללא צנזורה 👁️ הערוץ הרשמי' },

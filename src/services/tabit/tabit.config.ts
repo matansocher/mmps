@@ -5,7 +5,7 @@ export const MAX_SUBSCRIPTIONS_NUMBER = 10;
 
 export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a tabit restaurant reservation in a specific time is available.\n\nYou can enter the restaurant name you want to check\n\nTo show current notification registrations you can write: /show\nIf by any reason you want to restart the reservation process you can write: /reset\n`;
 
-export const HOURS_DIFFERENCE_FROM_UTC = 2; // $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+export const DEFAULT_TIMEZONE = 'Asia/Jerusalem';
 
 export const RESTAURANT_FOR_USER_BASE_URL = `https://tabitisrael.co.il/%D7%94%D7%96%D7%9E%D7%A0%D7%AA-%D7%9E%D7%A7%D7%95%D7%9D/create-reservation?step=search&orgId={restaurantId}`;
 export const RESTAURANT_DETAILS_BASE_URL = `https://tgm-api.tabit.cloud/rsv/management/organization-configuration`;
@@ -57,14 +57,14 @@ export const TABIT_FLOW_STEPS: IFlowStep[] = [
 ];
 
 export const ANALYTIC_EVENT_NAMES = {
-  START: 'START',
-  SHOW: 'SHOW',
-  SEARCH: 'SEARCH',
-  SUBSCRIBE: 'SUBSCRIBE',
-  UNSUBSCRIBE: 'UNSUBSCRIBE',
-  SUBSCRIPTION_FULFILLED: 'SUBSCRIPTION_FULFILLED',
-  SUBSCRIPTION_FAILED: 'SUBSCRIPTION_FAILED',
-  ERROR: 'ERROR',
+  START: 'start',
+  SHOW: 'show',
+  SEARCH: 'search',
+  SUBSCRIBE: 'subscribe',
+  UNSUBSCRIBE: 'unsubscribe',
+  SUBSCRIPTION_FULFILLED: 'subscription_fulfilled',
+  SUBSCRIPTION_FAILED: 'subscription_failed',
+  ERROR: 'error',
 };
 
 export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number> = {

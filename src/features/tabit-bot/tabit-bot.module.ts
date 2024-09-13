@@ -30,6 +30,6 @@ export class TabitBotModule implements OnModuleInit {
   constructor(private readonly tabitSchedulerService: TabitSchedulerService) {}
 
   onModuleInit(): void {
-    // this.tabitSchedulerService.scheduleInterval(); // $$$$$$$$$$$$$$$$$$$$$$$
+    this.tabitSchedulerService.scheduleInterval();
   }
 }

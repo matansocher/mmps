@@ -2,7 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { DAYS_OF_WEEK } from '@core/config/main.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantOpeningHour, IUserFlowDetails } from '@services/tabit/interface';
+import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantReservationHour, IUserFlowDetails } from '@services/tabit/interface';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
@@ -36,8 +36,8 @@ export class TimeHandler extends StepHandler {
     try {
       const { restaurantDetails, date } = currentStepDetails;
       const dayOfWeek = DAYS_OF_WEEK[new Date(date).getDay()].toLowerCase().slice(0, 3);
-      const relevantOpeningHoursDay = restaurantDetails.openingHours[dayOfWeek] || restaurantDetails.openingHours['default'];
-      const availableTimes = this.getAvailableTimes(relevantOpeningHoursDay, 15);
+      const relevantReservationHoursDay = restaurantDetails.reservationHours[dayOfWeek] || restaurantDetails.reservationHours['default'];
+      const availableTimes = this.getAvailableTimes(relevantReservationHoursDay, 15);
       availableTimes.forEach((time: string) => {
         if (POPULAR_HOURS.includes(time)) {
           const index = availableTimes.indexOf(time);
@@ -68,7 +68,10 @@ export class TimeHandler extends StepHandler {
         return;
       }
       const time = this.transformInput(userInput);
-      this.flowStepsManagerService.addUserStepDetail(chatId, { time });
+      const [hours, minutes] = time.split(':').map(Number);
+      // currentStepDetails.date.setHours(hours + this.utilsService.getTimezoneOffset(currentStepDetails.restaurantDetails.timezone), minutes, 0, 0);
+      currentStepDetails.date.setHours(hours, minutes, 0, 0);
+      this.flowStepsManagerService.addUserStepDetail(chatId, { time, date: currentStepDetails.date });
       const { botQuestionsMessageIds } = currentStepDetails;
       if (botQuestionsMessageIds[IFlowStepType.TIME]) {
         await this.telegramGeneralService.deleteMessage(this.bot, chatId, botQuestionsMessageIds[IFlowStepType.TIME]);
@@ -80,15 +83,15 @@ export class TimeHandler extends StepHandler {
     }
   }
 
-  private getAvailableTimes(timeRanges: ITabitRestaurantOpeningHour[], minutesGap: number): string[] {
+  private getAvailableTimes(timeRanges: ITabitRestaurantReservationHour[], minutesGap: number): string[] {
     const times: string[] = [];
-    timeRanges.forEach((timeRange: ITabitRestaurantOpeningHour) => {
+    timeRanges.forEach((timeRange: ITabitRestaurantReservationHour) => {
       times.push(...this.getAvailableTimesForRange(timeRange, minutesGap));
     });
     return Array.from(new Set(times)).sort();
   }
 
-  private getAvailableTimesForRange(timeRange: ITabitRestaurantOpeningHour, minutesGap: number): string[] {
+  private getAvailableTimesForRange(timeRange: ITabitRestaurantReservationHour, minutesGap: number): string[] {
     const times: string[] = [];
 
     // Parse the input times into Date objects

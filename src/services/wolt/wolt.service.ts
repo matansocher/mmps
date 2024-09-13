@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { LoggerService } from '@core/logger/logger.service';
 import { Injectable } from '@nestjs/common';
+import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { IRestaurantsList, IWoltRestaurant } from '@services/wolt/interface';
-import * as woltConfig from './wolt.config';
+import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL, RESTAURANT_BASE_URL, RESTAURANT_LINK_BASE_URL } from './wolt.config';
 
 @Injectable()
 export class WoltService {
@@ -42,7 +42,7 @@ export class WoltService {
       const cities = await this.getCitiesList();
       const promises = cities.map((city) => {
         const { LAT, LON } = city;
-        const url = `${woltConfig.RESTAURANTS_BASE_URL}?lat=${LAT}&lon=${LON}`;
+        const url = `${RESTAURANTS_BASE_URL}?lat=${LAT}&lon=${LON}`;
         return axios.get(url);
       });
 
@@ -67,10 +67,10 @@ export class WoltService {
 
   async getCitiesList(): Promise<any> {
     try {
-      const result = await axios.get(woltConfig.CITIES_BASE_URL);
+      const result = await axios.get(CITIES_BASE_URL);
       const rawCities = result['data'].results;
       return rawCities
-        .filter((city) => woltConfig.CITIES_SLUGS_SUPPORTED.includes(city.slug))
+        .filter((city) => CITIES_SLUGS_SUPPORTED.includes(city.slug))
         .map((city) => {
           return {
             WOLT_NAME: city.slug,
@@ -97,7 +97,7 @@ export class WoltService {
   async enrichRestaurants(parsedRestaurants) {
     try {
       const promises = parsedRestaurants.map((restaurant) => {
-        const url = `${woltConfig.RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
+        const url = `${RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
         return axios.get(url);
       });
       const response = await Promise.all(promises);
@@ -116,6 +116,6 @@ export class WoltService {
 
   getRestaurantLink(restaurant): string {
     const { area, slug } = restaurant;
-    return woltConfig.RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
+    return RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
   }
 }

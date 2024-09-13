@@ -1,4 +1,4 @@
 export interface INotifyOptions {
-  data?: any;
+  [key: string]: any;
   action: string;
 }

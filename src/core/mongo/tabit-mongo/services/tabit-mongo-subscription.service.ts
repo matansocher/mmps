@@ -1,10 +1,10 @@
-import { IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
 import { Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@core/utils/utils.service';
+import { IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
 import { SubscriptionModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../tabit-mongo.config';
-import { UtilsService } from '@core/utils/utils.service';
 
 @Injectable()
 export class TabitMongoSubscriptionService {
@@ -69,11 +69,7 @@ export class TabitMongoSubscriptionService {
   }
 
   async getExpiredSubscriptions() {
-    const tomorrow = new Date();
-    tomorrow.setUTCHours(0, 0, 0, 0);
-    tomorrow.setDate(new Date().getDate() + 1);
-
-    const filter = { isActive: true, 'userSelections.date': { $lt: tomorrow } };
+    const filter = { isActive: true, 'userSelections.date': { $lt: new Date() } };
     return this.subscriptionCollection.find(filter).toArray();
   }
 }

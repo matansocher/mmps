@@ -8,7 +8,7 @@ import { TelegramClient } from 'telegram';
 @Injectable()
 export class TelegramClientService {
   listenToMessages(telegramClient: TelegramClient, listenerOptions: IListenerOptions, callback) {
-    telegramClient.addEventHandler(async (event) => { // $$$$$$$$$$$$$$$$$ filter events out to see what events are interesting
+    telegramClient.addEventHandler(async (event) => { // TODO: filter events out to see what events are interesting
       if (!listenerOptions.eventTypes.includes(event.className)) {
         return;
       }

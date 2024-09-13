@@ -9,7 +9,14 @@ import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUse
 import { BOTS } from '@services/telegram/telegram.config';
 import { IWoltRestaurant } from '@services/wolt/interface';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import * as woltConfig from '@services/wolt/wolt.config';
+import {
+  ANALYTIC_EVENT_NAMES,
+  DEFAULT_TIMEZONE,
+  HOUR_OF_DAY_TO_REFRESH_MAP,
+  MAX_HOUR_TO_ALERT_USER,
+  MIN_HOUR_TO_ALERT_USER,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+} from '@services/wolt/wolt.config';
 import { WoltService } from '@services/wolt/wolt.service';
 import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
 
@@ -58,9 +65,9 @@ export class WoltSchedulerService {
   }
 
   getSecondsToNextRefresh(): number {
-    const currentHour = new Date().getHours() + woltConfig.HOURS_DIFFERENCE_FROM_UTC; // $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    const currentHour = new Date().getHours() + this.utilsService.getTimezoneOffset(DEFAULT_TIMEZONE);
     const israelHour = currentHour % 24;
-    return woltConfig.HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
+    return HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }
 
   alertSubscriptions(subscriptions: SubscriptionModel[]): Promise<any> {
@@ -82,7 +89,7 @@ export class WoltSchedulerService {
           // promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, replyText, inlineKeyboardMarkup), this.woltUtilsService.getKeyboardOptions());
           promisesArr.push(this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText }));
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
-          promisesArr.push(this.notifierBotService.notify(BOTS.WOLT.name, { data: { restaurant: subscription.restaurant }, action: woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService));
+          promisesArr.push(this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService));
         });
       });
       return Promise.all(promisesArr);
@@ -93,15 +100,15 @@ export class WoltSchedulerService {
 
   async cleanExpiredSubscriptions(): Promise<void> {
     try {
-      const expiredSubscriptions = await this.mongoSubscriptionService.getExpiredSubscriptions(woltConfig.SUBSCRIPTION_EXPIRATION_HOURS);
+      const expiredSubscriptions = await this.mongoSubscriptionService.getExpiredSubscriptions(SUBSCRIPTION_EXPIRATION_HOURS);
       const promisesArr = [];
       expiredSubscriptions.forEach((subscription: SubscriptionModel) => {
         promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
         const currentHour = new Date().getHours();
-        if (currentHour >= woltConfig.MIN_HOUR_TO_ALERT_USER && currentHour <= woltConfig.MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
-          promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${woltConfig.SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
+        if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
+          promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
         }
-        this.notifierBotService.notify(BOTS.WOLT.name, { data: { restaurant: subscription.restaurant }, action: woltConfig.ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService);
+        this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService);
       });
       await Promise.all(promisesArr);
     } catch (err) {

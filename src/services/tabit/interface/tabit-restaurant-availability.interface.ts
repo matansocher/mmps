@@ -1,4 +1,4 @@
 export interface ITabitRestaurantAvailability {
   isAvailable: boolean;
-  alternativeResults?: any[]; // $$$$$$$$$$$$$$$$$$$$$$
+  alternativeResults?: any[]; // TODO: deal with alternative results to show the user close suggestions
 }

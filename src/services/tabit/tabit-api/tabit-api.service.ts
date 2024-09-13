@@ -5,9 +5,9 @@ import { UtilsService } from '@core/utils/utils.service';
 import {
   ITabitRestaurant,
   ITabitRestaurantArea,
-  ITabitRestaurantAvailability,
-  ITabitRestaurantOpeningHours,
-  IUserSelections,
+  ITabitRestaurantAvailability, ITabitRestaurantReservationHour,
+  ITabitRestaurantReservationHours,
+  IUserSelections
 } from '@services/tabit/interface';
 import {
   RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
@@ -51,6 +51,8 @@ export class TabitApiService {
     const strings = restaurantDetails.strings.rsv['en-US'];
     const areas = this.getRestaurantAreas(restaurantDetails, strings);
     const openingHours = this.getRestaurantOpeningHours(restaurantDetails);
+    const noReservationsMinutesFromEndOfDay = this.getNoReservationsMinutesFromEndOfDay(restaurantDetails);
+    const reservationHours = this.getRestaurantReservationHours(openingHours, noReservationsMinutesFromEndOfDay);
     const { title, phone, address, image } = restaurantDetails.organization['en-US'];
     return {
       id: restaurantId,
@@ -61,7 +63,7 @@ export class TabitApiService {
       isOnlineBookingAvailable: !!restaurantDetails.online_booking?.enabled,
       timezone: restaurantDetails.timezone,
       areas,
-      openingHours,
+      reservationHours,
       maxMonthsAhead: +restaurantConfiguration.date_picker_end_month_count,
       maxNumOfSeats: +restaurantConfiguration.max_group_size,
     };
@@ -77,10 +79,10 @@ export class TabitApiService {
       });
   }
 
-  getRestaurantOpeningHours(result): ITabitRestaurantOpeningHours {
-    const openingHours: ITabitRestaurantOpeningHours = { default: [] };
+  getRestaurantOpeningHours(result): ITabitRestaurantReservationHours {
+    const openingHours: ITabitRestaurantReservationHours = { default: [] };
 
-    result.shifts.forEach(([day, shifts]) => {
+    result.shifts?.forEach(([day, shifts]) => {
       openingHours[day] = shifts.reduce((acc, [_, shiftDetails]) => {
         const lastShift = acc[acc.length - 1];
         const lastShiftTo = lastShift ? new Date(`1970-01-01T${lastShift.to}:00Z`).getTime() : null;
@@ -97,6 +99,37 @@ export class TabitApiService {
     });
 
     return openingHours;
+  }
+
+  getRestaurantReservationHours(openingHours: ITabitRestaurantReservationHours, noReservationsMinutesFromEndOfDay: number): ITabitRestaurantReservationHours {
+    const adjustTime = (time: string): string => {
+      const [hours, minutes] = time.split(':').map(Number);
+      const date = new Date(1970, 0, 1, hours, minutes);
+
+      date.setMinutes(date.getMinutes() - noReservationsMinutesFromEndOfDay);
+
+      if (date.getMinutes() === 59) {
+        date.setMinutes(0);
+        date.setHours(date.getHours() + 1);
+      }
+
+      date.setMinutes(Math.ceil(date.getMinutes() / 5) * 5); // Round minutes to the nearest multiple of 5 (22:29 becomes 22:30)
+
+      // return date.toISOString().slice(11, 16);
+      return `${date.getHours()}:${date.getMinutes()}`;
+    };
+
+    Object.keys(openingHours).forEach((day: string) => {
+      openingHours[day] = openingHours[day].map((shift: ITabitRestaurantReservationHour) => ({ ...shift, to: adjustTime(shift.to) }));
+    });
+
+    return openingHours;
+  }
+
+  getNoReservationsMinutesFromEndOfDay(result): number {
+    const { date_time_until_format } = result;
+    const { minutes = 0, min_group_size = 0 } = date_time_until_format?.reduction?.[0];
+    return minutes * min_group_size;
   }
 
   async getRestaurantAvailability(restaurantDetails: ITabitRestaurant, checkAvailabilityOptions: IUserSelections): Promise<ITabitRestaurantAvailability> {

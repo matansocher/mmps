@@ -101,11 +101,11 @@ export class VoicePalService {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { data: { analyticAction }, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { data: { analyticAction }, action: ANALYTIC_EVENT_STATES.ERROR }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR }, chatId, this.mongoUserService);
       throw err;
     }
   }

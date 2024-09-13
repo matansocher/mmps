@@ -1,3 +1,5 @@
+import { env } from 'node:process';
+
 export interface IBotOptions {
   name: string;
   token: string;
@@ -6,23 +8,23 @@ export interface IBotOptions {
 export const BOTS = {
   WOLT: {
     name: 'Wolt Bot',
-    token: process.env.WOLT_TELEGRAM_BOT_TOKEN,
+    token: env.WOLT_TELEGRAM_BOT_TOKEN,
   },
   TABIT: {
     name: 'Tabit Bot',
-    token: process.env.TABIT_TELEGRAM_BOT_TOKEN,
+    token: env.TABIT_TELEGRAM_BOT_TOKEN,
   },
   VOICE_PAL: {
     name: 'Voice Pal Bot',
-    token: process.env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
+    token: env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
   },
   STOCK_BUDDY: {
     name: 'Stock Buddy Bot',
-    token: process.env.STOCK_BUDDY_TELEGRAM_BOT_TOKEN,
+    token: env.STOCK_BUDDY_TELEGRAM_BOT_TOKEN,
   },
   NOTIFIER: {
     name: 'Notifier Bot',
-    token: process.env.NOTIFIER_TELEGRAM_BOT_TOKEN,
+    token: env.NOTIFIER_TELEGRAM_BOT_TOKEN,
   },
 };
 
