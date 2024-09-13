@@ -1,1 +1,4 @@
 having this file making sure downloads directory will exist
+
+hebrew
+deal with alternative results to show the user close suggestions

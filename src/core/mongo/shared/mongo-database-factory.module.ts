@@ -1,6 +1,6 @@
-import { DatabaseModuleOptions } from '@core/mongo/shared/interface/database-module-options.interface';
-import { Module, DynamicModule, Global } from '@nestjs/common';
 import { MongoClient, Db, MongoClientOptions } from 'mongodb';
+import { Module, DynamicModule, Global } from '@nestjs/common';
+import { DatabaseModuleOptions } from './interface';
 
 @Global()
 @Module({})

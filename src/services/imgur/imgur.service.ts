@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { promises as fs } from 'fs';
+import { env } from 'node:process';
 import { Injectable } from '@nestjs/common';
 import { UtilsService } from '@core/utils/utils.service';
 import { LoggerService } from '@core/logger/logger.service';
@@ -26,7 +27,7 @@ export class ImgurService {
         url: 'https://api.imgur.com/3/image',
         method: 'post',
         headers: {
-          Authorization: `Client-ID ${process.env.IMGUR_CLIENT_ID}`,
+          Authorization: `Client-ID ${env.IMGUR_CLIENT_ID}`,
           'Content-Type': 'application/json',
         },
         data: data,

@@ -125,7 +125,7 @@ export const SUMMARY_PROMPT =
   'You are a helpful assistant. You will be provided with a text from the user. ' +
   'Please summarize the transcript. You can also split the summary into section, and add to each section its header.';
 
-export const IMAGE_ANALYSIS_PROMPT = 'What’s in this image? What text do you see in the image? please provide as much data as you can.';
+export const IMAGE_ANALYSIS_PROMPT = 'What’s in this image? What text do you see in the image? if you see a riddle solve it. if you see something complicated, explain it. Add any additional value you can in addition to explaining what you see and adding the text to your answer. please provide as much data as you can.';
 
 export const FILE_ANALYSIS_PROMPT = 'Can you summarize this document?';
 

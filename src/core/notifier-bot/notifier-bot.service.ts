@@ -1,7 +1,8 @@
+import { isProd } from '@core/config/main.config';
 import { UserModel } from '@core/mongo/shared/models';
 import { MongoUserService } from '@core/mongo/shared/services';
 import { INotifyOptions } from '@core/notifier-bot/interface';
-import { myUserId, notifierChatId } from '@core/notifier-bot/notifier-bot.config';
+import { notifierChatId } from '@core/notifier-bot/notifier-bot.config';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { BOTS } from '@services/telegram/telegram.config';
@@ -38,7 +39,7 @@ export class NotifierBotService implements OnModuleInit {
   }
 
   async notify(botName: string, options: INotifyOptions, chatId, mongoUserService: MongoUserService): Promise<void> {
-    if (chatId === myUserId) {
+    if (!isProd) {
       return;
     }
     const userDetails = await mongoUserService.getUserDetails({ chatId });
@@ -53,6 +54,6 @@ export class NotifierBotService implements OnModuleInit {
     sentences.push(`name: ${firstName} ${lastName} - ${username}`);
     sentences.push(`action: ${options.action}`);
     options.data && Object.keys(options.data).length && sentences.push(`data: ${JSON.stringify(options.data, null, 2)}`);
-    return sentences.join('\n');
+    return sentences.join('\n\n');
   }
 }
