@@ -2,11 +2,11 @@ import TelegramBot from 'node-telegram-bot-api';
 import { DAYS_OF_WEEK } from '@core/config/main.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantReservationHour, IUserFlowDetails } from '@services/tabit/interface';
-import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
+import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IOntopoRestaurantReservationHour, IUserFlowDetails } from '@services/ontopo/interface';
+import { BOT_BUTTONS_ACTIONS } from '@services/ontopo/ontopo.config';
+import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
+import { StepHandler } from '@services/ontopo/ontopo-flow/step-handlers/step.handler';
+import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 const POPULAR_HOURS = ['12:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
@@ -18,7 +18,7 @@ export class TimeHandler extends StepHandler {
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly flowStepsManagerService: FlowStepsManagerService,
-    private readonly tabitUtilsService: TabitUtilsService,
+    private readonly ontopoUtilsService: OntopoUtilsService,
   ) {
     super();
   }
@@ -49,7 +49,7 @@ export class TimeHandler extends StepHandler {
 
       const inlineKeyboardButtons = times.map((time: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.TIME, data: time } as IInlineKeyboardButton;
-        return { text: time, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
+        return { text: time, callback_data: this.ontopoUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 3);
       const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
@@ -82,15 +82,15 @@ export class TimeHandler extends StepHandler {
     }
   }
 
-  private getAvailableTimes(timeRanges: ITabitRestaurantReservationHour[], minutesGap: number): string[] {
+  private getAvailableTimes(timeRanges: IOntopoRestaurantReservationHour[], minutesGap: number): string[] {
     const times: string[] = [];
-    timeRanges.forEach((timeRange: ITabitRestaurantReservationHour) => {
+    timeRanges.forEach((timeRange: IOntopoRestaurantReservationHour) => {
       times.push(...this.getAvailableTimesForRange(timeRange, minutesGap));
     });
     return Array.from(new Set(times)).sort();
   }
 
-  private getAvailableTimesForRange(timeRange: ITabitRestaurantReservationHour, minutesGap: number): string[] {
+  private getAvailableTimesForRange(timeRange: IOntopoRestaurantReservationHour, minutesGap: number): string[] {
     const times: string[] = [];
 
     // Parse the input times into Date objects

@@ -85,7 +85,7 @@ export class UtilsService implements OnModuleInit {
       }, {});
   }
 
-  getTimezoneOffset(timezone: string): number {
+  getTimezoneOffset(timezone: string = 'Asia/Jerusalem'): number {
     const formatter = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'short' });
     const parts = formatter.formatToParts(new Date());
     const timeZoneName = parts.find((part) => part.type === 'timeZoneName')?.value || '';
