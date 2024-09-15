@@ -1,0 +1,83 @@
+{
+  "page": {
+    "title": "There's a few seats available for you",
+    "showLess": "Show me less",
+    "showMore": "Show me more",
+    "subtitle": "on %date% around %time% for %size%",
+    "generalError": "Sorry, it seems that we have a general error."
+  },
+  "areas": [
+    {
+      "id": "קפה ברנר",
+      "icon": "restaurant",
+      "name": "Cafe Brener",
+      "text": "",
+      "options": [
+        {
+          "time": "2030",
+          "method": "disabled",
+          "score": 5
+        },
+        {
+          "time": "2045",
+          "method": "disabled",
+          "score": 4
+        },
+        {
+          "time": "2100",
+          "method": "seat",
+          "text": "Book now",
+          "score": 1
+        },
+        {
+          "time": "2115",
+          "method": "seat",
+          "text": "Book now",
+          "score": 2
+        },
+        {
+          "time": "2130",
+          "method": "seat",
+          "text": "Book now",
+          "score": 3
+        }
+      ],
+      "score": 1
+    }
+  ],
+  "recommended": [
+    {
+      "id": "קפה ברנר",
+      "time": "2100",
+      "method": "seat",
+      "text": "Cafe Brener"
+    },
+    {
+      "id": "קפה ברנר",
+      "time": "2115",
+      "method": "seat",
+      "text": "Cafe Brener"
+    }
+  ],
+  "method": "seat",
+  "formattedRequest": {
+    "date": "Saturday, September 14",
+    "mediumDate": "Saturday, Sep 14",
+    "shortDate": "Sat, Sep 14",
+    "time": "09:00 pm",
+    "size": "2 people",
+    "service": "2 people"
+  },
+  "venue": {
+    "slug": "52812267",
+    "campaign": {
+      "budget": "1000",
+      "posts": [
+        {
+          "slug": "97382023"
+        }
+      ]
+    }
+  },
+  "availability_id": "66e4c6f561bde300141aad78"
+}
