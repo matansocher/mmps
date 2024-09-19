@@ -6,9 +6,8 @@ import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { SubscriptionModel } from '@core/mongo/wolt-mongo/models';
 import { UtilsService } from '@core/utils/utils.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { IWoltRestaurant } from '@services/wolt/interface';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import {
   ANALYTIC_EVENT_NAMES,
   DEFAULT_TIMEZONE,

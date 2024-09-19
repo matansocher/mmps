@@ -10,8 +10,7 @@ import {
 import { UtilsService } from '@core/utils/utils.service';
 import { StockDataSummary } from '@services/stock-buddy/interface';
 import { StockBuddyService } from '@services/stock-buddy/stock-buddy.service';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { IInlineButtonCompanyDetails } from './interface';
 import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, STOCK_BUDDY_BOT_OPTIONS } from './stock-buddy-bot.config';
 import { StockBuddyBotUtilsService } from './stock-buddy-bot-utils.service';

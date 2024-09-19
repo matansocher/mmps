@@ -1,8 +1,8 @@
 import { SubscriptionModel } from '@core/mongo/tabit-mongo/models';
 import { Injectable } from '@nestjs/common';
-import { IInlineKeyboardButton, IUserFlowDetails } from '@services/tabit/interface';
+import { IInlineKeyboardButton } from '@services/tabit/interface';
 import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from '@services/tabit/tabit.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { TelegramGeneralService } from '@services/telegram';
 
 const CALLBACK_DATA_SEPARATOR = ',';
 

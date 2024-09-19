@@ -8,14 +8,11 @@ import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
 import { AiService } from '@services/ai/ai.service';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS, ITelegramMessageData, MessageLoaderOptions, MessageLoaderService, TelegramGeneralService } from '@services/telegram';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
-import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
 import { IVoicePalOption } from '@services/voice-pal/interface';
 import { ImgurService } from '@services/imgur/imgur.service';
-import { MessageLoaderService } from '@services/telegram/message-loader.service';
 import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
 import {

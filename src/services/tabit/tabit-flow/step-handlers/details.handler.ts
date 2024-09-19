@@ -6,7 +6,7 @@ import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { TelegramGeneralService } from '@services/telegram';
 
 export class DetailsHandler extends StepHandler {
   constructor(

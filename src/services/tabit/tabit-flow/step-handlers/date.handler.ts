@@ -6,7 +6,7 @@ import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-m
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { TelegramGeneralService } from '@services/telegram';
 
 export class DateHandler extends StepHandler {
   constructor(

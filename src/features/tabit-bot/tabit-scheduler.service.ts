@@ -6,11 +6,10 @@ import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { SubscriptionModel } from '@core/mongo/tabit-mongo/models';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo/services';
 import { UtilsService } from '@core/utils/utils.service';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, DEFAULT_TIMEZONE } from '@services/tabit/tabit.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 const JOB_NAME = 'tabit-scheduler-job-interval';
 

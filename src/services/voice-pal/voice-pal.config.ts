@@ -1,5 +1,5 @@
 import { IVoicePalOption } from '@services/voice-pal/interface';
-import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram/telegram.config';
+import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
 
 export const LOCAL_FILES_PATH = './assets/downloads';
 

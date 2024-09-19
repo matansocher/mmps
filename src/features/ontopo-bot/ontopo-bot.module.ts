@@ -6,9 +6,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OntopoApiModule } from '@services/ontopo/ontopo-api/ontopo-api.module';
 import { OntopoFlowModule } from '@services/ontopo/ontopo-flow/ontopo-flow.module';
-import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramModule } from '@services/telegram/telegram.module';
+import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
 import { OntopoBotService } from './ontopo-bot.service';
 
 @Module({

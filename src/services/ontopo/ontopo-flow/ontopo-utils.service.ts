@@ -2,7 +2,7 @@ import { SubscriptionModel } from '@core/mongo/ontopo-mongo/models';
 import { Injectable } from '@nestjs/common';
 import { IInlineKeyboardButton, IUserFlowDetails } from '@services/ontopo/interface';
 import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from '@services/ontopo/ontopo.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { TelegramGeneralService } from '@services/telegram';
 
 const CALLBACK_DATA_SEPARATOR = ',';
 

@@ -5,14 +5,13 @@ import { LoggerService } from '@core/logger/logger.service';
 import { TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo/services';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 @Injectable()
 export class FlowStepsHandlerService {

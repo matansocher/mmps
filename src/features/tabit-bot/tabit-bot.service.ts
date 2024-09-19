@@ -10,8 +10,7 @@ import { IInlineKeyboardButton } from '@services/tabit/interface';
 import { FlowStepsHandlerService } from '@services/tabit/tabit-flow/flow-steps-handler.service';
 import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, TABIT_BOT_COMMANDS } from '@services/tabit/tabit.config';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
 export class TabitBotService implements OnModuleInit {

@@ -7,9 +7,7 @@ import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils/utils.module';
 import { TabitApiModule } from '@services/tabit/tabit-api/tabit-api.module';
 import { TabitFlowModule } from '@services/tabit/tabit-flow/tabit-flow.module';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramModule } from '@services/telegram/telegram.module';
-import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
+import { BOTS, TelegramModule, TelegramBotsFactoryModule } from '@services/telegram';
 import { TabitBotService } from './tabit-bot.service';
 
 @Module({

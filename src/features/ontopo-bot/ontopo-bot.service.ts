@@ -9,8 +9,7 @@ import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, ONTOPO
 import { FlowStepsHandlerService } from '@services/ontopo/ontopo-flow/flow-steps-handler.service';
 import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
 import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
 export class OntopoBotService implements OnModuleInit {
