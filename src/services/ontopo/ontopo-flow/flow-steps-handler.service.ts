@@ -10,7 +10,7 @@ import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/onto
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS } from '@services/ontopo/ontopo.config';
 import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
 import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { AreaHandler, DateHandler, DetailsHandler, NumOfSeatsHandler, StepHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
+import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
 import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
@@ -65,8 +65,8 @@ export class FlowStepsHandlerService {
         return new DateHandler(...baseDependencies);
       case IFlowStepType.TIME:
         return new TimeHandler(...baseDependencies);
-      case IFlowStepType.NUM_OF_SEATS:
-        return new NumOfSeatsHandler(...baseDependencies);
+      case IFlowStepType.SIZE:
+        return new SizeHandler(...baseDependencies);
       case IFlowStepType.AREA:
         return new AreaHandler(...baseDependencies);
       default:
@@ -75,8 +75,8 @@ export class FlowStepsHandlerService {
   }
 
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
-    const { restaurantDetails, numOfSeats, date, time, area } = currentStepDetails;
-    const userSelections: IUserSelections = { numOfSeats, date, time, area };
+    const { restaurantDetails, size, date, time, area } = currentStepDetails;
+    const userSelections: IUserSelections = { size, date, time, area };
     const { isAvailable } = await this.ontopoApiService.getRestaurantAvailability(restaurantDetails.restaurantSlug, userSelections);
     if (isAvailable) {
       const restaurantLinkUrl = this.ontopoUtilsService.getRestaurantLinkForUser(restaurantDetails.title);

@@ -3,7 +3,7 @@ import { IFlowStepType, ITabitRestaurant } from '.';
 export interface IUserFlowDetails {
   currentStepIndex: number;
   restaurantDetails?: ITabitRestaurant;
-  numOfSeats?: number;
+  size?: number;
   date?: Date;
   time?: string;
   area?: string;
@@ -12,4 +12,4 @@ export interface IUserFlowDetails {
   };
 }
 
-export type IUserSelections = Pick<IUserFlowDetails, 'numOfSeats' | 'date' | 'time' | 'area'>;
+export type IUserSelections = Pick<IUserFlowDetails, 'size' | 'date' | 'time' | 'area'>;

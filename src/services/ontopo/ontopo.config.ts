@@ -1,5 +1,5 @@
 import { IFlowStepType, IFlowStep } from '@services/ontopo/interface';
-import { DateHandler, DetailsHandler, NumOfSeatsHandler, AreaHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
+import { DateHandler, DetailsHandler, SizeHandler, AreaHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
 
 export const MAX_SUBSCRIPTIONS_NUMBER = 10;
 
@@ -40,9 +40,9 @@ export const ONTOPO_FLOW_STEPS: IFlowStep[] = [
     preUserActionResponseMessage: 'What time do ou want me to search for?\nYou can also send a custom time in the format: HH:MM, example: 19:45',
   },
   {
-    id: IFlowStepType.NUM_OF_SEATS,
-    handler: NumOfSeatsHandler,
-    preUserActionResponseMessage: 'How many seats do you want me to search for?',
+    id: IFlowStepType.SIZE,
+    handler: SizeHandler,
+    preUserActionResponseMessage: 'How many people do you want me to search for?',
   },
   {
     id: IFlowStepType.AREA,
@@ -100,6 +100,6 @@ export enum BOT_BUTTONS_ACTIONS {
   UNSUBSCRIBE = 'unsubscribe',
   DATE = 'date',
   TIME = 'time',
-  NUM_OF_SEATS = 'numOfSeats',
+  SIZE = 'size',
   AREA = 'area',
 }

@@ -19,7 +19,7 @@ export class OntopoApiService {
   async init() {
     const restaurantDetails = await this.getRestaurantDetails('https://ontopo.co.il/ocd');
     const userSelections = {
-      numOfSeats: 2,
+      size: 2,
       date: new Date(),
       time: '2100',
       // area: 'inside',
@@ -58,8 +58,8 @@ export class OntopoApiService {
       reservationHours: {}, // $$$$$$$$$$$$$$$$$$$$
       // maxMonthsAhead: +restaurantConfiguration.date_picker_end_month_count,
       maxMonthsAhead: 0, // $$$$$$$$$$$$$$$$$$$$
-      // maxNumOfSeats: +restaurantConfiguration.max_group_size,
-      maxNumOfSeats: 0, // $$$$$$$$$$$$$$$$$$$$
+      // maxSize: +restaurantConfiguration.max_group_size,
+      maxSize: 0, // $$$$$$$$$$$$$$$$$$$$
     };
   }
 
@@ -68,7 +68,7 @@ export class OntopoApiService {
       slug: restaurantSlug,
       locale: 'en',
       criteria: {
-        size: userSelections.numOfSeats,
+        size: userSelections.size,
         date: `${userSelections.date.getFullYear()}${userSelections.date.getMonth() + 1}${userSelections.date.getDay()}`,
         time: userSelections.time,
       },

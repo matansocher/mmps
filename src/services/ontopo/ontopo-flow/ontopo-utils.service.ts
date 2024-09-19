@@ -42,7 +42,7 @@ export class OntopoUtilsService {
     const resTextDetails = [
       `🧑‍🍳 ${restaurantDetails.title}`,
       `⏰ ${this.getDateStringFormat(userSelections.date)} ${userSelections.time}`,
-      `🪑 ${userSelections.numOfSeats}`,
+      `🪑 ${userSelections.size}`,
       `⛺️ ${userSelections.area}`,
     ];
     const text = resTextDetails.join('\n');

@@ -48,8 +48,8 @@ export class TabitMongoSubscriptionService {
 
   async addSubscription(chatId: number, userFlowDetails: IUserFlowDetails): Promise<SubscriptionModel> {
     const { restaurantDetails } = userFlowDetails;
-    const { numOfSeats, date, time, area } = userFlowDetails;
-    const userSelections: IUserSelections = { numOfSeats, date, time, area };
+    const { size, date, time, area } = userFlowDetails;
+    const userSelections: IUserSelections = { size, date, time, area };
 
     const subscription = {
       chatId,

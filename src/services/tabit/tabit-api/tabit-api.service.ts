@@ -66,7 +66,7 @@ export class TabitApiService {
       areas,
       reservationHours,
       maxMonthsAhead: +restaurantConfiguration.date_picker_end_month_count,
-      maxNumOfSeats: +restaurantConfiguration.max_group_size,
+      maxSize: +restaurantConfiguration.max_group_size,
     };
   }
 
@@ -135,7 +135,7 @@ export class TabitApiService {
 
   async getRestaurantAvailability(restaurantDetails: ITabitRestaurant, checkAvailabilityOptions: IUserSelections): Promise<ITabitRestaurantAvailability> {
     try {
-      const { date, time, numOfSeats, area } = checkAvailabilityOptions;
+      const { date, time, size, area } = checkAvailabilityOptions;
       const url = `${RESTAURANT_CHECK_AVAILABILITY_URL}`;
 
       const reservedFrom = this.utilsService.getTimeWithOffset(date, time, restaurantDetails.timezone) || time;
@@ -143,7 +143,7 @@ export class TabitApiService {
       const reqBody = {
         ...RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
         organization: restaurantDetails.id,
-        seats_count: numOfSeats,
+        seats_count: size,
         preference: area,
         reserved_from: reservedFrom,
       };
