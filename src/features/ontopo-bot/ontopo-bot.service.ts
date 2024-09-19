@@ -6,9 +6,7 @@ import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMo
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, ONTOPO_BOT_COMMANDS } from '@services/ontopo/ontopo.config';
-import { FlowStepsHandlerService } from '@services/ontopo/ontopo-flow/flow-steps-handler.service';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
+import { FlowStepsHandlerService, FlowStepsManagerService, OntopoUtilsService } from '@services/ontopo/ontopo-flow';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()

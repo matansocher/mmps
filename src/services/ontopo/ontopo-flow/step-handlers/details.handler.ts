@@ -2,10 +2,8 @@ import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { IFlowStep, IOntopoRestaurant, IUserFlowDetails } from '@services/ontopo/interface';
-import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/ontopo/ontopo-flow/step-handlers/step.handler';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
+import { OntopoApiService } from '@services/ontopo/ontopo-api';
+import { FlowStepsManagerService, StepHandler, OntopoUtilsService } from '@services/ontopo/ontopo-flow';
 import { TelegramGeneralService } from '@services/telegram';
 
 export class DetailsHandler extends StepHandler {

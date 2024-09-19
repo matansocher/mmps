@@ -1,5 +1,5 @@
 import { IFlowStepType, IFlowStep } from '@services/ontopo/interface';
-import { DateHandler, DetailsHandler, SizeHandler, AreaHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
+import { DateHandler, DetailsHandler, SizeHandler, AreaHandler, TimeHandler } from '@services/ontopo/ontopo-flow';
 
 export const MAX_SUBSCRIPTIONS_NUMBER = 10;
 

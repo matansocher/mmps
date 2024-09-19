@@ -4,8 +4,8 @@ import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils/utils.module';
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { OntopoApiModule } from '@services/ontopo/ontopo-api/ontopo-api.module';
-import { OntopoFlowModule } from '@services/ontopo/ontopo-flow/ontopo-flow.module';
+import { OntopoApiModule } from '@services/ontopo/ontopo-api';
+import { OntopoFlowModule } from '@services/ontopo/ontopo-flow';
 import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
 import { OntopoBotService } from './ontopo-bot.service';
 

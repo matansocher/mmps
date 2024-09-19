@@ -8,10 +8,17 @@ import { UtilsService } from '@core/utils/utils.service';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/ontopo/interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS } from '@services/ontopo/ontopo.config';
-import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
+import { OntopoApiService } from '@services/ontopo/ontopo-api';
+import {
+  AreaHandler,
+  DateHandler,
+  DetailsHandler,
+  FlowStepsManagerService,
+  OntopoUtilsService,
+  SizeHandler,
+  StepHandler,
+  TimeHandler,
+} from '@services/ontopo/ontopo-flow';
 
 @Injectable()
 export class FlowStepsHandlerService {

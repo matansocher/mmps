@@ -2,9 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IOntopoRestaurantArea, IUserFlowDetails } from '@services/ontopo/interface';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/ontopo/ontopo-flow/step-handlers/step.handler';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
+import { FlowStepsManagerService, StepHandler, OntopoUtilsService } from '@services/ontopo/ontopo-flow';
 import { BOT_BUTTONS_ACTIONS } from '@services/ontopo/ontopo.config';
 import { TelegramGeneralService } from '@services/telegram';
 
