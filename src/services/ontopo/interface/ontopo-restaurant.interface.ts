@@ -30,5 +30,5 @@ export interface IOntopoRestaurant {
   // reservationHours: IOntopoRestaurantReservationHours;
   reservationHours: any;
   maxMonthsAhead: number;
-  maxNumOfSeats: number;
+  maxSize: number;
 }

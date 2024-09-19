@@ -5,5 +5,4 @@ deal with alternative results to show the user close suggestions
 
 finish handling data collection in ontopo api service
 add index.ts to this folder /src/services/telegram
-numOfSeats => size
 combine the duplicated code of flow module

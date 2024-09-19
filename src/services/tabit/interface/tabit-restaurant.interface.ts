@@ -30,5 +30,5 @@ export interface ITabitRestaurant {
   areas: ITabitRestaurantArea[];
   reservationHours: ITabitRestaurantReservationHours;
   maxMonthsAhead: number;
-  maxNumOfSeats: number;
+  maxSize: number;
 }

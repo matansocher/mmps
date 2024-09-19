@@ -138,7 +138,7 @@ export class TabitBotService implements OnModuleInit {
         }
         case BOT_BUTTONS_ACTIONS.DATE:
         case BOT_BUTTONS_ACTIONS.TIME:
-        case BOT_BUTTONS_ACTIONS.NUM_OF_SEATS:
+        case BOT_BUTTONS_ACTIONS.SIZE:
         case BOT_BUTTONS_ACTIONS.AREA: {
           await this.processFlowStep(this.bot, chatId, data);
           break;
