@@ -3,9 +3,7 @@ import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IUserFlowDetails } from '@services/tabit/interface';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
+import { FlowStepsManagerService, StepHandler, TabitUtilsService } from '@services/tabit/tabit-flow';
 import { TelegramGeneralService } from '@services/telegram';
 
 export class SizeHandler extends StepHandler {

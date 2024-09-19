@@ -8,10 +8,10 @@ import { UtilsService } from '@core/utils/utils.service';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
-import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
+import { TabitApiService } from '@services/tabit/tabit-api';
+import { FlowStepsManagerService } from './flow-steps-manager.service';
+import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from './step-handlers';
+import { TabitUtilsService } from './tabit-utils.service';
 
 @Injectable()
 export class FlowStepsHandlerService {

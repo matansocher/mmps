@@ -7,8 +7,8 @@ import { SubscriptionModel } from '@core/mongo/tabit-mongo/models';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo/services';
 import { UtilsService } from '@core/utils/utils.service';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
+import { TabitApiService } from '@services/tabit/tabit-api';
+import { TabitUtilsService } from '@services/tabit/tabit-flow';
 import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, DEFAULT_TIMEZONE } from '@services/tabit/tabit.config';
 
 const JOB_NAME = 'tabit-scheduler-job-interval';

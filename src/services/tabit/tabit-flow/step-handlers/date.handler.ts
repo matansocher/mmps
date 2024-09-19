@@ -2,9 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { IUserFlowDetails, IInlineKeyboardButton, IFlowStep, IFlowStepType } from '@services/tabit/interface';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
+import { FlowStepsManagerService, StepHandler, TabitUtilsService } from '@services/tabit/tabit-flow';
 import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
 import { TelegramGeneralService } from '@services/telegram';
 
