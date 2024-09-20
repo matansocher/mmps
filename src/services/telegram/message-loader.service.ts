@@ -1,8 +1,9 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
-import { MessageLoaderOptions, TelegramGeneralService } from '@services/telegram';
 import { UtilsService } from '@core/utils/utils.service';
+import { MessageLoaderOptions } from './interface';
+import { TelegramGeneralService } from './telegram-general.service';
 
 const LOADER_MESSAGES = [
   'Just a moment...',

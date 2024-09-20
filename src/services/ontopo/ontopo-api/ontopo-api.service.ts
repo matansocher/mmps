@@ -4,10 +4,7 @@ import { JSDOM } from 'jsdom';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
-import {
-  RESTAURANT_CHECK_AVAILABILITY_BASE_HEADERS,
-  RESTAURANT_CHECK_AVAILABILITY_URL
-} from '@services/ontopo/ontopo.config';
+import { RESTAURANT_CHECK_AVAILABILITY_BASE_HEADERS, RESTAURANT_CHECK_AVAILABILITY_URL } from '@services/ontopo/ontopo.config';
 
 @Injectable()
 export class OntopoApiService {
@@ -17,14 +14,17 @@ export class OntopoApiService {
   ) {}
 
   async init() {
-    const restaurantDetails = await this.getRestaurantDetails('https://ontopo.co.il/ocd');
+    // const restaurantDetails = await this.getRestaurantDetails('https://ontopo.co.il/ocd'); // ocd
+    const restaurantDetails = await this.getRestaurantDetails('https://ontopo.com/he/il/page/45869402'); // kazan
     const userSelections = {
       size: 2,
       date: new Date(),
-      time: '2100',
+      time: '1800',
       // area: 'inside',
     };
-    const restaurantAvailability = await this.getRestaurantAvailability('88542392', userSelections);
+    // const restaurantAvailability = await this.getRestaurantAvailability('88542392', userSelections); // ocd
+    // const restaurantAvailability = await this.getRestaurantAvailability('26700368', userSelections); // brener
+    const restaurantAvailability = await this.getRestaurantAvailability('45869402', userSelections); // kazan
     return { restaurantDetails, restaurantAvailability };
   }
 
@@ -54,7 +54,7 @@ export class OntopoApiService {
       address,
       image: cover,
       isOnlineBookingAvailable: true, // $$$$$$$$$$$$$$$$$$$$
-      areas: [], // $$$$$$$$$$$$$$$$$$$$
+      areas: [], // $$$$$$$$$$$$$$$$$$$$ - not asking on the first step pf order
       reservationHours: {}, // $$$$$$$$$$$$$$$$$$$$
       // maxMonthsAhead: +restaurantConfiguration.date_picker_end_month_count,
       maxMonthsAhead: 0, // $$$$$$$$$$$$$$$$$$$$
