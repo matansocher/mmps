@@ -13,7 +13,9 @@ export class OntopoApiService {
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly ontopoApiUtils: OntopoApiUtils,
-  ) {}
+  ) {
+    this.init(); // $$$$$$$$$$$$$$$$
+  }
 
   async init() {
     const restaurantDetails = await this.getRestaurantDetails(`45869402`); // kazan
@@ -80,8 +82,6 @@ export class OntopoApiService {
       };
       const response = await axios.post(RESTAURANT_CHECK_AVAILABILITY_URL, body);
       return response.data;
-      // $$$$$$$$$$$$$$$$$$$$ userSelections is also getting area, so need to add it to the body $$$$$$$$$$$$$$$$$$$$
-      // const areas = response.data.areas;
     } catch (err) {
       this.logger.error(this.getRestaurantAvailability.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       return null;

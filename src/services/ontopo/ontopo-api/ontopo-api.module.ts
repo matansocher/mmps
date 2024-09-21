@@ -9,11 +9,4 @@ import { OntopoApiService } from './ontopo-api.service';
   providers: [OntopoApiService, OntopoApiUtils],
   exports: [OntopoApiService],
 })
-export class OntopoApiModule {
-  constructor(private readonly ontopoApiService: OntopoApiService) {}
-
-  onModuleInit(): void {
-    this.ontopoApiService.init(); // $$$$$$$$$$$$$$$$$ to delete after api testing ends
-  }
-}
-// export class OntopoApiModule {}
+export class OntopoApiModule {}
