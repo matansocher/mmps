@@ -26,9 +26,6 @@ export interface ITabitRestaurant {
   address: string;
   image: string;
   isOnlineBookingAvailable: boolean;
-  timezone: string;
   areas: ITabitRestaurantArea[];
   reservationHours: ITabitRestaurantReservationHours;
-  maxMonthsAhead: number;
-  maxNumOfSeats: number;
 }

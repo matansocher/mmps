@@ -28,7 +28,7 @@ export class TimeHandler extends StepHandler {
     return regex.test(userInput);
   }
 
-  transformInput(userInput: string) {
+  transformInput(userInput: string): string {
     return userInput;
   }
 
@@ -69,7 +69,6 @@ export class TimeHandler extends StepHandler {
       }
       const time = this.transformInput(userInput);
       const [hours, minutes] = time.split(':').map(Number);
-      // currentStepDetails.date.setHours(hours + this.utilsService.getTimezoneOffset(currentStepDetails.restaurantDetails.timezone), minutes, 0, 0);
       currentStepDetails.date.setHours(hours, minutes, 0, 0);
       this.flowStepsManagerService.addUserStepDetail(chatId, { time, date: currentStepDetails.date });
       const { botQuestionsMessageIds } = currentStepDetails;

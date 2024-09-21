@@ -1,0 +1,71 @@
+{
+  "websiteContentStore": {
+    "pageData": {
+      "phone": "09-779-7300",
+      "title": "קזן בראסרי",
+      "address": "אחוזה 71, רעננה",
+      "website": "kazan.co.il",
+      "cover": "https://res.cloudinary.com/ontopo/image/upload/q_auto:eco,c_crop,x_0,y_0,w_960,h_356/v1660483409/assets/62f8f65e7de24b0014475105/62f8f65e7de24b0014475105/2.jpg",
+      "shifts": {
+        "shifts": {
+          "time": {
+            "step": 30
+          },
+          "opening": [
+            {
+              "last": "2300",
+              "hours": {
+                "a": {
+                  "time": "1800-2300",
+                  "last_opening_hours": "0030"
+                }
+              },
+              "default": "1800",
+              "__criteria": {
+                "weekday": "0-3"
+              },
+              "hoursAhead": 1
+            },
+            {
+              "last": "2330",
+              "hours": {
+                "a": {
+                  "time": "1800-2330",
+                  "last_opening_hours": "0045"
+                }
+              },
+              "default": "1800",
+              "__criteria": {
+                "weekday": "4"
+              },
+              "hoursAhead": 1
+            },
+            {
+              "last": "2330",
+              "hours": {
+                "a": {
+                  "time": "2030-2345",
+                  "last_opening_hours": "0030"
+                },
+                "b": {
+                  "tag": "shabatt"
+                }
+              },
+              "default": "2030",
+              "__criteria": {
+                "weekday": "6"
+              },
+              "hoursAhead": 1
+            },
+            {
+              "tag": "close",
+              "__criteria": {
+                "weekday": "5"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

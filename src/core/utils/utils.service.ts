@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import { LoggerService } from '@core/logger/logger.service';
 
 @Injectable()
@@ -85,18 +86,18 @@ export class UtilsService implements OnModuleInit {
       }, {});
   }
 
-  getTimezoneOffset(timezone: string): number {
-    const formatter = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'short' });
+  getTimezoneOffset(): number {
+    const formatter = new Intl.DateTimeFormat('en-US', { timeZone: DEFAULT_TIMEZONE, timeZoneName: 'short' });
     const parts = formatter.formatToParts(new Date());
     const timeZoneName = parts.find((part) => part.type === 'timeZoneName')?.value || '';
     const match = timeZoneName.match(/GMT([+-]\d+)/);
     return match ? parseInt(match[1], 10) : 0;
   }
 
-  getTimeWithOffset(date: Date, time: string, timezone: string): string {
+  getTimeWithOffset(date: Date, time: string): string {
     const [hours, minutes] = time.split(':').map(Number);
     const localDateTime = new Date(Number(date.getFullYear()), Number(date.getMonth()), Number(date.getDate()), hours, minutes);
-    const offsetInMilliseconds = this.getTimezoneOffset(timezone) * 60 * 60 * 1000;
+    const offsetInMilliseconds = this.getTimezoneOffset() * 60 * 60 * 1000;
     const utcDateTime = new Date(localDateTime.getTime() - offsetInMilliseconds);
     return utcDateTime.toISOString();
   }

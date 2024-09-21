@@ -10,7 +10,7 @@ import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabi
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { AreaHandler, DateHandler, DetailsHandler, NumOfSeatsHandler, StepHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
+import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
@@ -65,8 +65,8 @@ export class FlowStepsHandlerService {
         return new DateHandler(...baseDependencies);
       case IFlowStepType.TIME:
         return new TimeHandler(...baseDependencies);
-      case IFlowStepType.NUM_OF_SEATS:
-        return new NumOfSeatsHandler(...baseDependencies);
+      case IFlowStepType.SIZE:
+        return new SizeHandler(...baseDependencies);
       case IFlowStepType.AREA:
         return new AreaHandler(...baseDependencies);
       default:
@@ -75,8 +75,8 @@ export class FlowStepsHandlerService {
   }
 
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
-    const { restaurantDetails, numOfSeats, date, time, area } = currentStepDetails;
-    const userSelections: IUserSelections = { numOfSeats, date, time, area };
+    const { restaurantDetails, size, date, time, area } = currentStepDetails;
+    const userSelections: IUserSelections = { size, date, time, area };
     const { isAvailable } = await this.tabitApiService.getRestaurantAvailability(restaurantDetails, userSelections);
     if (isAvailable) {
       const restaurantLinkUrl = this.tabitUtilsService.getRestaurantLinkForUser(restaurantDetails.id);
