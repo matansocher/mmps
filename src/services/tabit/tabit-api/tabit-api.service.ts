@@ -62,11 +62,8 @@ export class TabitApiService {
       address,
       image,
       isOnlineBookingAvailable: !!restaurantDetails.online_booking?.enabled,
-      timezone: restaurantDetails.timezone,
       areas,
       reservationHours,
-      maxMonthsAhead: +restaurantConfiguration.date_picker_end_month_count,
-      maxSize: +restaurantConfiguration.max_group_size,
     };
   }
 
@@ -138,7 +135,7 @@ export class TabitApiService {
       const { date, time, size, area } = checkAvailabilityOptions;
       const url = `${RESTAURANT_CHECK_AVAILABILITY_URL}`;
 
-      const reservedFrom = this.utilsService.getTimeWithOffset(date, time, restaurantDetails.timezone) || time;
+      const reservedFrom = this.utilsService.getTimeWithOffset(date, time) || time;
 
       const reqBody = {
         ...RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,

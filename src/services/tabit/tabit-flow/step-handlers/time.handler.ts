@@ -28,7 +28,7 @@ export class TimeHandler extends StepHandler {
     return regex.test(userInput);
   }
 
-  transformInput(userInput: string) {
+  transformInput(userInput: string): string {
     return userInput;
   }
 

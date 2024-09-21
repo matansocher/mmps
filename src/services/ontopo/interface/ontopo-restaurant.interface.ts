@@ -6,10 +6,10 @@ export interface IOntopoRestaurantArea {
 export interface IOntopoRestaurantReservationHour {
   from: string;
   to: string;
+  step: number;
 }
 
 export interface IOntopoRestaurantReservationHours {
-  default: IOntopoRestaurantReservationHour[];
   sun?: IOntopoRestaurantReservationHour[];
   mon?: IOntopoRestaurantReservationHour[];
   tue?: IOntopoRestaurantReservationHour[];
@@ -27,8 +27,5 @@ export interface IOntopoRestaurant {
   image: string;
   isOnlineBookingAvailable: boolean;
   areas: IOntopoRestaurantArea[];
-  // reservationHours: IOntopoRestaurantReservationHours;
-  reservationHours: any;
-  maxMonthsAhead: number;
-  maxSize: number;
+  reservationHours: IOntopoRestaurantReservationHours;
 }

@@ -26,7 +26,7 @@ export class AreaHandler extends StepHandler {
     return !!relevantArea;
   }
 
-  transformInput(userInput: string, { restaurantDetails }) {
+  transformInput(userInput: string, { restaurantDetails }): string {
     const relevantArea = restaurantDetails.areas.find((area: ITabitRestaurantArea) => area.displayName === userInput);
     return relevantArea.name;
   }

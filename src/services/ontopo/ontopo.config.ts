@@ -5,18 +5,9 @@ export const MAX_SUBSCRIPTIONS_NUMBER = 10;
 
 export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when an ontopo restaurant reservation in a specific time is available.\n\nYou can enter the restaurant name you want to check\n\nTo show current notification registrations you can write: /show\nIf by any reason you want to restart the reservation process you can write: /reset\n`;
 
-export const DEFAULT_TIMEZONE = 'Asia/Jerusalem';
-
-export const RESTAURANT_FOR_USER_BASE_URL = `https://ontopo.co.il/{name}`;
-export const RESTAURANT_CHECK_AVAILABILITY_URL = `https://ontopo.co.il/api/availability/searchAvailability`;
-export const RESTAURANT_CHECK_AVAILABILITY_BASE_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-  'Accept-Language': 'en-US,en;q=0.5',
-  'Accept-Encoding': 'gzip, deflate, br',
-  'Connection': 'keep-alive',
-  'Upgrade-Insecure-Requests': '1',
-};
+export const RESTAURANT_FOR_USER_BASE_URL = `https://ontopo.com/he/il/page`;
+// export const RESTAURANT_CHECK_AVAILABILITY_URL = `https://ontopo.co.il/api/availability/searchAvailability`;
+export const RESTAURANT_CHECK_AVAILABILITY_URL = `https://ontopo.com/api/availability_search`;
 
 export const ONTOPO_BOT_COMMANDS = {
   START: '/start',

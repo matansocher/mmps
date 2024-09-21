@@ -28,7 +28,7 @@ export class TimeHandler extends StepHandler {
     return regex.test(userInput);
   }
 
-  transformInput(userInput: string) {
+  transformInput(userInput: string): string {
     return userInput;
   }
 
@@ -36,7 +36,7 @@ export class TimeHandler extends StepHandler {
     try {
       const { restaurantDetails, date } = currentStepDetails;
       const dayOfWeek = DAYS_OF_WEEK[new Date(date).getDay()].toLowerCase().slice(0, 3);
-      const relevantReservationHoursDay = restaurantDetails.reservationHours[dayOfWeek] || restaurantDetails.reservationHours['default'];
+      const relevantReservationHoursDay = restaurantDetails.reservationHours[dayOfWeek] || restaurantDetails.reservationHours['sun'];
       const availableTimes = this.getAvailableTimes(relevantReservationHoursDay, 15);
       availableTimes.forEach((time: string) => {
         if (POPULAR_HOURS.includes(time)) {

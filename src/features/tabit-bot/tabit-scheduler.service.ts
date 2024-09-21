@@ -9,7 +9,7 @@ import { UtilsService } from '@core/utils/utils.service';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
-import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, DEFAULT_TIMEZONE } from '@services/tabit/tabit.config';
+import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP } from '@services/tabit/tabit.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 const JOB_NAME = 'tabit-scheduler-job-interval';
@@ -55,7 +55,7 @@ export class TabitSchedulerService {
   }
 
   getSecondsToNextRefresh(): number {
-    const currentHour = new Date().getHours() + this.utilsService.getTimezoneOffset(DEFAULT_TIMEZONE);
+    const currentHour = new Date().getHours() + this.utilsService.getTimezoneOffset();
     const israelHour = currentHour % 24;
     return HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }

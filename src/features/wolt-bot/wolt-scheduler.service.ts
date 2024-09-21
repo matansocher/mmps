@@ -11,7 +11,6 @@ import { IWoltRestaurant } from '@services/wolt/interface';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import {
   ANALYTIC_EVENT_NAMES,
-  DEFAULT_TIMEZONE,
   HOUR_OF_DAY_TO_REFRESH_MAP,
   MAX_HOUR_TO_ALERT_USER,
   MIN_HOUR_TO_ALERT_USER,
@@ -65,7 +64,7 @@ export class WoltSchedulerService {
   }
 
   getSecondsToNextRefresh(): number {
-    const currentHour = new Date().getHours() + this.utilsService.getTimezoneOffset(DEFAULT_TIMEZONE);
+    const currentHour = new Date().getHours() + this.utilsService.getTimezoneOffset();
     const israelHour = currentHour % 24;
     return HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }

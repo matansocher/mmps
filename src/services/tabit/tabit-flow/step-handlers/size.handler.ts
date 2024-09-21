@@ -8,6 +8,8 @@ import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handl
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
+const RESERVATION_MAX_SIZE = 8;
+
 export class SizeHandler extends StepHandler {
   constructor(
     private readonly bot: TelegramBot,
@@ -28,15 +30,14 @@ export class SizeHandler extends StepHandler {
     }
   }
 
-  transformInput(userInput: string) {
+  transformInput(userInput: string): number {
     return parseInt(userInput);
   }
 
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
-      const { restaurantDetails } = currentStepDetails;
       const options = [];
-      for (let i = 1; i < restaurantDetails.maxSize; i++) {
+      for (let i = 1; i <= RESERVATION_MAX_SIZE; i++) {
         options.push(i.toString());
       }
       const inlineKeyboardButtons = options.map((option: string) => {

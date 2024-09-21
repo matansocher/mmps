@@ -77,7 +77,7 @@ export class FlowStepsHandlerService {
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
     const { restaurantDetails, size, date, time, area } = currentStepDetails;
     const userSelections: IUserSelections = { size, date, time, area };
-    const { isAvailable } = await this.ontopoApiService.getRestaurantAvailability(restaurantDetails.restaurantSlug, userSelections);
+    const { isAvailable } = await this.ontopoApiService.getRestaurantAvailability(restaurantDetails.slug, userSelections);
     if (isAvailable) {
       const restaurantLinkUrl = this.ontopoUtilsService.getRestaurantLinkForUser(restaurantDetails.title);
       const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];

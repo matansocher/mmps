@@ -22,7 +22,7 @@ export class DetailsHandler extends StepHandler {
   }
 
   validateInput(userInput: string): boolean {
-    // $$$$$$$$$$$$$$$$$$$$$$$$$
+    // $$$$$$$$$$$$$$$$$$$$$$$$$ how do I validate the user input - currently if no result of restaurant details - case is handled here below
     return true;
   }
 

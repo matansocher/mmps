@@ -25,14 +25,14 @@ export class DateHandler extends StepHandler {
     return regex.test(userInput);
   }
 
-  transformInput(userInput: string) {
+  transformInput(userInput: string): Date {
     return new Date(new Date(userInput).setHours(0, 0, 0, 0));
   }
 
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
       const { restaurantDetails } = currentStepDetails;
-      const dates = this.getDatesForNextXMonths(restaurantDetails.maxMonthsAhead).slice(0, 10);
+      const dates = this.getDatesForNextXMonths().slice(0, 10);
       const inlineKeyboardButtons = dates.map((date: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.DATE, data: date } as IInlineKeyboardButton;
         return { text: date, callback_data: this.ontopoUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
@@ -66,13 +66,13 @@ export class DateHandler extends StepHandler {
     }
   }
 
-  private getDatesForNextXMonths(numOfMonths): string[] {
+  private getDatesForNextXMonths(): string[] {
     const dates: string[] = [];
     const today = new Date();
 
     // Get the date two months from now
     const twoMonthsFromNow = new Date(today);
-    twoMonthsFromNow.setMonth(today.getMonth() + numOfMonths);
+    twoMonthsFromNow.setMonth(today.getMonth() + 2);
 
     const currentDate = new Date(today);
 

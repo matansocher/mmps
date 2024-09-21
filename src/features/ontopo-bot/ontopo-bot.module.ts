@@ -19,7 +19,7 @@ import { OntopoBotService } from './ontopo-bot.service';
     OntopoApiModule,
     OntopoFlowModule,
     OntopoMongoModule,
-    // TelegramBotsFactoryModule.forChild(BOTS.ONTOPO),
+    TelegramBotsFactoryModule.forChild(BOTS.ONTOPO),
     TelegramModule,
     UtilsModule,
   ],
