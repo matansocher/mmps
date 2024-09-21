@@ -28,7 +28,7 @@ export class AreaHandler extends StepHandler {
 
   transformInput(userInput: string, { restaurantDetails }): string {
     const relevantArea = restaurantDetails.areas.find((area: IOntopoRestaurantArea) => area.displayName === userInput);
-    return relevantArea.name;
+    return relevantArea.displayName;
   }
 
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {

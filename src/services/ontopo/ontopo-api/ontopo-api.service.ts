@@ -14,24 +14,28 @@ export class OntopoApiService {
     private readonly utilsService: UtilsService,
     private readonly ontopoApiUtils: OntopoApiUtils,
   ) {
-    this.init(); // $$$$$$$$$$$$$$$$
+    // this.init(); // $$$$$$$$$$$$$$$$
   }
 
   async init() {
-    const restaurantDetails = await this.getRestaurantDetails(`45869402`); // kazan
+    // const restaurantDetails = await this.getRestaurantDetails(`https://ontopo.com/he/il/page/45869402`); // kazan
+    const restaurantDetails = await this.getRestaurantDetails(`https://ontopo.com/he/il/page/88542392`); // ocd
     const userSelections = { size: 2, date: this.ontopoApiUtils.getNextMondayDate(), time: '18:00', area: 'Inside' };
     const { isAvailable } = await this.isRestaurantAvailable(restaurantDetails.slug, userSelections);
     return { restaurantDetails, isAvailable };
   }
 
-  async getRestaurantDetails(restaurantSlug: string): Promise<IOntopoRestaurant> {
+  async getRestaurantDetails(restaurantUrl: string): Promise<IOntopoRestaurant> {
     try {
-      const [restaurantDetailsRes, restaurantAreasRes] = await Promise.all([
-        axios.get(`${RESTAURANT_FOR_USER_BASE_URL}/${restaurantSlug}`),
-        this.getRestaurantAreas(restaurantSlug),
-      ]);
+      const restaurantDetailsRes = await axios.get(restaurantUrl);
       const dom = new JSDOM(restaurantDetailsRes.data, { runScripts: 'dangerously' });
       const restaurantDetails = dom.window['__INITIAL_STATE__'];
+      if (!restaurantDetails) {
+        throw new Error('restaurant details not found');
+      }
+
+      const restaurantSlug = restaurantDetails?.websiteContentStore?.pageData?.slug;
+      const restaurantAreasRes = await this.getRestaurantAreas(restaurantSlug);
       return this.parseRestaurantResult(restaurantDetails, restaurantAreasRes);
     } catch (err) {
       this.logger.error(this.getRestaurantDetails.name, `error - ${this.utilsService.getErrorMessage(err)}`);

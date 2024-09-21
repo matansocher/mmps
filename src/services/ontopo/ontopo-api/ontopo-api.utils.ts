@@ -15,37 +15,43 @@ export class OntopoApiUtils {
     const { shifts: restaurantShifts } = shifts || {};
     const { time, opening = [] } = restaurantShifts;
     const step = time?.step || 30;
-    const openingHours = {};
+    const reservationHours = {};
 
-    opening.forEach((shift) => {
-      const { hours, __criteria } = shift;
-      if (!hours) return;
+    opening
+      .filter((shift) => shift.tag !== 'close')
+      .forEach((shift) => {
+        const { weekday } = shift.__criteria;
+        const timeRanges = shift.hours ? Object.values(shift.hours).map((h: any) => h.time).filter(Boolean) : [];
 
-      const [from, to] = hours.a?.time?.split('-');
-      if (!from || !to) return;
+        // If no valid time ranges, skip
+        if (timeRanges.length === 0) return;
 
-      const abbreviatedDays = this.getAbbreviatedDays(__criteria.weekday);
-      abbreviatedDays.forEach((day) => (openingHours[day] = { from: this.getHourString(from), to: this.getHourString(to), step }));
-    });
+        const parsedHours = timeRanges.map((time: string) => {
+          const [from, to] = time.split('-');
+          return { from: this.formatTime(from), to: this.formatTime(to), step };
+        });
 
-    return openingHours;
+        const weekdays = weekday.split(',').flatMap((range: string) => {
+          if (range.includes('-')) {
+            const [start, end] = range.split('-').map(Number);
+            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+          }
+          return [Number(range)];
+        });
+
+        weekdays.forEach((day: number) => {
+          const dayKey = DAYS_OF_WEEK[day]?.slice(0, 3).toLowerCase();
+          if (dayKey) {
+            reservationHours[dayKey] = reservationHours[dayKey] ? [...reservationHours[dayKey]!, ...parsedHours] : parsedHours;
+          }
+        });
+      });
+
+    return reservationHours;
   }
 
-  getHourString(hour: string): string {
-    const hourArr = hour.split('');
-    hourArr.splice(2, 0, ':');
-    return hourArr.join('');
-  }
-
-  getAbbreviatedDays(weekdays) {
-    let abbreviatedDays = [];
-    if (weekdays.includes('-')) {
-      const [start, end] = weekdays.split('-').map(Number);
-      abbreviatedDays = DAYS_OF_WEEK.slice(start, end + 1);
-    } else {
-      abbreviatedDays = [DAYS_OF_WEEK[weekdays]];
-    }
-    return abbreviatedDays.map((day) => day.slice(0, 3).toLowerCase());
+  formatTime(time: string): string {
+    return time.slice(0, 2) + ':' + time.slice(2);
   }
 
   getNextMondayDate(): Date {

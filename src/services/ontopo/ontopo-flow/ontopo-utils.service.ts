@@ -20,8 +20,8 @@ export class OntopoUtilsService {
     return { action: action as BOT_BUTTONS_ACTIONS, data };
   }
 
-  getRestaurantLinkForUser(restaurantName: string): string {
-    return RESTAURANT_FOR_USER_BASE_URL.replace('{name}', restaurantName);
+  getRestaurantLinkForUser(restaurantSlug: string): string {
+    return RESTAURANT_FOR_USER_BASE_URL.replace('{slug}', restaurantSlug);
   }
 
   getDateStringFormat(date: Date): string {
@@ -40,10 +40,10 @@ export class OntopoUtilsService {
     ];
     const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
     const resTextDetails = [
-      `🧑‍🍳 ${restaurantDetails.title}`,
-      `⏰ ${this.getDateStringFormat(userSelections.date)} ${userSelections.time}`,
-      `🪑 ${userSelections.size}`,
-      `⛺️ ${userSelections.area}`,
+      restaurantDetails.title ? `🧑‍🍳 ${restaurantDetails.title}` : '',
+      userSelections.date && userSelections.time ? `⏰ ${this.getDateStringFormat(userSelections.date)} ${userSelections.time}` : '',
+      userSelections.size ? `🪑 ${userSelections.size}` : '',
+      userSelections.area ? `⛺️ ${userSelections.area}` : '',
     ];
     const text = resTextDetails.join('\n');
     return { text, inlineKeyboardMarkup };
