@@ -72,7 +72,7 @@ export class TabitBotService implements OnModuleInit {
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
-        const replyText = "You don't have any active subscriptions yet";
+        const replyText = `You don't have any active subscriptions yet`;
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
       }
 

@@ -76,7 +76,7 @@ export class WoltBotService implements OnModuleInit {
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
-        const replyText = "You don't have any active subscriptions yet";
+        const replyText = `You don't have any active subscriptions yet`;
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
       }
 
@@ -126,7 +126,7 @@ export class WoltBotService implements OnModuleInit {
         };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const replyText = "Choose one of the above restaurants so I can notify you when it's online";
+      const replyText = `Choose one of the above restaurants so I can notify you when it's online`;
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, inlineKeyboardMarkup);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
