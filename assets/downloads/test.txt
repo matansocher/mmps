@@ -5,4 +5,4 @@ deal with alternative results to show the user close suggestions
 
 finish handling data collection in ontopo api service
 add index.ts to this folder /src/services/telegram
-combine the duplicated code of flow module
+add anywhere concept to tabit as well - you dont pass preference key in availability request, and then in results, you loop the alternative_results and see if one hour matches

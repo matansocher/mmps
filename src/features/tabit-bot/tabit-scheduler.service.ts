@@ -76,7 +76,7 @@ export class TabitSchedulerService {
       const restaurantLinkUrl = this.tabitUtilsService.getRestaurantLinkForUser(restaurantId);
       const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const replyText = `${restaurantTitle} is now available at ${userSelections.date} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
+      const replyText = `${restaurantTitle} is now available at ${this.tabitUtilsService.getDateStringFormat(userSelections.date)} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
       await Promise.all([
         this.telegramGeneralService.sendPhoto(this.bot, chatId, restaurantDetails.image, { ...inlineKeyboardMarkup, caption: replyText }),
         this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id),

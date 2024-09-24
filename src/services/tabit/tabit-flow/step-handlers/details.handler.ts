@@ -23,7 +23,7 @@ export class DetailsHandler extends StepHandler {
 
   validateInput(userInput: string): boolean {
     const restaurantId = this.tabitApiService.getRestaurantId(userInput);
-    return !!restaurantId;
+    return !!restaurantId && userInput.toLowerCase().includes('tabit');
   }
 
   async handlePostUserAction(chatId: number, flowStepsOptions: IUserFlowDetails, flowStep: IFlowStep, userInput: string): Promise<void> {

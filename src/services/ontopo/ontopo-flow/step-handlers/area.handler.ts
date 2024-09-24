@@ -22,12 +22,12 @@ export class AreaHandler extends StepHandler {
 
   validateInput(userInput: string, { currentStepDetails }): boolean {
     const { restaurantDetails } = currentStepDetails;
-    const relevantArea = restaurantDetails.areas.find((area: IOntopoRestaurantArea) => area.displayName === userInput);
+    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find((area: IOntopoRestaurantArea) => area.displayName === userInput);
     return !!relevantArea;
   }
 
   transformInput(userInput: string, { restaurantDetails }): string {
-    const relevantArea = restaurantDetails.areas.find((area: IOntopoRestaurantArea) => area.displayName === userInput);
+    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find((area: IOntopoRestaurantArea) => area.displayName === userInput);
     return relevantArea.displayName;
   }
 

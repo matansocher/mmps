@@ -14,7 +14,7 @@ export class OntopoApiService {
     private readonly utilsService: UtilsService,
     private readonly ontopoApiUtils: OntopoApiUtils,
   ) {
-    // this.init(); // $$$$$$$$$$$$$$$$
+    // this.init(); // to test the 2 endpoints
   }
 
   async init() {
@@ -111,15 +111,11 @@ export class OntopoApiService {
     }
 
     // $$$$$$$$$$$$$$$$$$$$ test this area
-    // ANY_AREA - handle Anywhere case $$$$$$$$$$$$$$$$$$$$ u let the user choose `anywhere` when no areas available - u want to check any area
-    // there are areas but the user chose an area that is not available - let suggest the available areas
     if (userSelections.area === ANY_AREA) {
       return areas.some((area) => {
         const relevantTime = area.options?.find((option) => option.time === userSelections.time.replace(':', ''));
         return relevantTime?.method === 'seat';
       });
     }
-
-    return false;
   }
 }
