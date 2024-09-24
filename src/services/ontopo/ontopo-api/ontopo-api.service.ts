@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger/logger.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { IOntopoRestaurant, IOntopoRestaurantArea, IOntopoRestaurantAvailability, IUserSelections } from '@services/ontopo/interface';
-import { RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_FOR_USER_BASE_URL } from '@services/ontopo/ontopo.config';
+import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_URL } from '@services/ontopo/ontopo.config';
 import { OntopoApiUtils } from './ontopo-api.utils';
 
 @Injectable()
@@ -14,24 +14,28 @@ export class OntopoApiService {
     private readonly utilsService: UtilsService,
     private readonly ontopoApiUtils: OntopoApiUtils,
   ) {
-    this.init(); // $$$$$$$$$$$$$$$$
+    // this.init(); // $$$$$$$$$$$$$$$$
   }
 
   async init() {
-    const restaurantDetails = await this.getRestaurantDetails(`45869402`); // kazan
+    // const restaurantDetails = await this.getRestaurantDetails(`https://ontopo.com/he/il/page/45869402`); // kazan
+    const restaurantDetails = await this.getRestaurantDetails(`https://ontopo.com/he/il/page/88542392`); // ocd
     const userSelections = { size: 2, date: this.ontopoApiUtils.getNextMondayDate(), time: '18:00', area: 'Inside' };
     const { isAvailable } = await this.isRestaurantAvailable(restaurantDetails.slug, userSelections);
     return { restaurantDetails, isAvailable };
   }
 
-  async getRestaurantDetails(restaurantSlug: string): Promise<IOntopoRestaurant> {
+  async getRestaurantDetails(restaurantUrl: string): Promise<IOntopoRestaurant> {
     try {
-      const [restaurantDetailsRes, restaurantAreasRes] = await Promise.all([
-        axios.get(`${RESTAURANT_FOR_USER_BASE_URL}/${restaurantSlug}`),
-        this.getRestaurantAreas(restaurantSlug),
-      ]);
+      const restaurantDetailsRes = await axios.get(restaurantUrl);
       const dom = new JSDOM(restaurantDetailsRes.data, { runScripts: 'dangerously' });
       const restaurantDetails = dom.window['__INITIAL_STATE__'];
+      if (!restaurantDetails) {
+        throw new Error('restaurant details not found');
+      }
+
+      const restaurantSlug = restaurantDetails?.websiteContentStore?.pageData?.slug;
+      const restaurantAreasRes = await this.getRestaurantAreas(restaurantSlug);
       return this.parseRestaurantResult(restaurantDetails, restaurantAreasRes);
     } catch (err) {
       this.logger.error(this.getRestaurantDetails.name, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -44,10 +48,10 @@ export class OntopoApiService {
       const generalUserSelections = { size: 2, date: this.ontopoApiUtils.getNextMondayDate(), time: '20:00' };
       const restaurantAreasRes = await this.getRestaurantAvailability(restaurantSlug, generalUserSelections);
       const { areas } = restaurantAreasRes || {};
-      return areas.map((area) => ({
+      return areas?.map((area) => ({
         name: area.id,
         displayName: area.name,
-      }));
+      })) || [];
     } catch (err) {
       this.logger.error(this.getRestaurantAreas.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       return null;
@@ -96,12 +100,26 @@ export class OntopoApiService {
 
   getIsRestaurantAvailable(restaurantAvailabilityRes, userSelections: IUserSelections): boolean {
     const { areas } = restaurantAvailabilityRes || [];
-    const relevantArea = areas.find((area) => area.name === userSelections.area);
-    if (!relevantArea) {
+    if (!areas?.length) {
       return false;
     }
 
-    const relevantTime = relevantArea.options.find((option) => option.time === userSelections.time.replace(':', ''));
-    return relevantTime?.method === 'seat';
+    const relevantArea = areas?.find((area) => area.name === userSelections.area);
+    if (relevantArea) {
+      const relevantTime = relevantArea.options?.find((option) => option.time === userSelections.time.replace(':', ''));
+      return relevantTime?.method === 'seat';
+    }
+
+    // $$$$$$$$$$$$$$$$$$$$ test this area
+    // ANY_AREA - handle Anywhere case $$$$$$$$$$$$$$$$$$$$ u let the user choose `anywhere` when no areas available - u want to check any area
+    // there are areas but the user chose an area that is not available - let suggest the available areas
+    if (userSelections.area === ANY_AREA) {
+      return areas.some((area) => {
+        const relevantTime = area.options?.find((option) => option.time === userSelections.time.replace(':', ''));
+        return relevantTime?.method === 'seat';
+      });
+    }
+
+    return false;
   }
 }

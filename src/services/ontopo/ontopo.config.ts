@@ -9,6 +9,8 @@ export const RESTAURANT_FOR_USER_BASE_URL = `https://ontopo.com/he/il/page`;
 // export const RESTAURANT_CHECK_AVAILABILITY_URL = `https://ontopo.co.il/api/availability/searchAvailability`;
 export const RESTAURANT_CHECK_AVAILABILITY_URL = `https://ontopo.com/api/availability_search`;
 
+export const ANY_AREA = 'Anywhere';
+
 export const ONTOPO_BOT_COMMANDS = {
   START: '/start',
   SHOW: '/show',

@@ -5,7 +5,7 @@ import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IOntopoRestaurantArea,
 import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/ontopo/ontopo-flow/step-handlers/step.handler';
 import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
-import { BOT_BUTTONS_ACTIONS } from '@services/ontopo/ontopo.config';
+import { ANY_AREA, BOT_BUTTONS_ACTIONS } from '@services/ontopo/ontopo.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 export class AreaHandler extends StepHandler {
@@ -28,13 +28,16 @@ export class AreaHandler extends StepHandler {
 
   transformInput(userInput: string, { restaurantDetails }): string {
     const relevantArea = restaurantDetails.areas.find((area: IOntopoRestaurantArea) => area.displayName === userInput);
-    return relevantArea.name;
+    return relevantArea.displayName;
   }
 
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
       const { restaurantDetails } = currentStepDetails;
-      const areas = restaurantDetails.areas.map((area: IOntopoRestaurantArea) => area.displayName);
+      let areas = restaurantDetails.areas.map((area: IOntopoRestaurantArea) => area.displayName);
+      if (!areas.length) {
+        areas = [ANY_AREA];
+      }
       const inlineKeyboardButtons = areas.map((area: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.AREA, data: area } as IInlineKeyboardButton;
         return { text: area, callback_data: this.ontopoUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };

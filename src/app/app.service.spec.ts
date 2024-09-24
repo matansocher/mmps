@@ -13,7 +13,7 @@ describe('AppService', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
+    it(`should return "Hello World!`, () => {
       expect(appService.getHello()).toBe('Hello World!');
     });
   });

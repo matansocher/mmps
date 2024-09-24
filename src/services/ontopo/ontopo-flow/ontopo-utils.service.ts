@@ -1,6 +1,6 @@
 import { SubscriptionModel } from '@core/mongo/ontopo-mongo/models';
 import { Injectable } from '@nestjs/common';
-import { IInlineKeyboardButton, IUserFlowDetails } from '@services/ontopo/interface';
+import { IInlineKeyboardButton } from '@services/ontopo/interface';
 import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from '@services/ontopo/ontopo.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
@@ -20,8 +20,8 @@ export class OntopoUtilsService {
     return { action: action as BOT_BUTTONS_ACTIONS, data };
   }
 
-  getRestaurantLinkForUser(restaurantName: string): string {
-    return RESTAURANT_FOR_USER_BASE_URL.replace('{name}', restaurantName);
+  getRestaurantLinkForUser(restaurantSlug: string): string {
+    return `${RESTAURANT_FOR_USER_BASE_URL}/${restaurantSlug}`;
   }
 
   getDateStringFormat(date: Date): string {
@@ -40,10 +40,10 @@ export class OntopoUtilsService {
     ];
     const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
     const resTextDetails = [
-      `🧑‍🍳 ${restaurantDetails.title}`,
-      `⏰ ${this.getDateStringFormat(userSelections.date)} ${userSelections.time}`,
-      `🪑 ${userSelections.size}`,
-      `⛺️ ${userSelections.area}`,
+      restaurantDetails.title ? `🧑‍🍳 ${restaurantDetails.title}` : '',
+      userSelections.date && userSelections.time ? `⏰ ${this.getDateStringFormat(userSelections.date)} ${userSelections.time}` : '',
+      userSelections.size ? `🪑 ${userSelections.size}` : '',
+      userSelections.area ? `⛺️ ${userSelections.area}` : '',
     ];
     const text = resTextDetails.join('\n');
     return { text, inlineKeyboardMarkup };

@@ -7,7 +7,7 @@ import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { BOTS } from '@services/telegram/telegram.config';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/ontopo/interface';
-import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS } from '@services/ontopo/ontopo.config';
+import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS, RESTAURANT_FOR_USER_BASE_URL } from '@services/ontopo/ontopo.config';
 import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
 import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
 import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
@@ -77,10 +77,9 @@ export class FlowStepsHandlerService {
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
     const { restaurantDetails, size, date, time, area } = currentStepDetails;
     const userSelections: IUserSelections = { size, date, time, area };
-    const { isAvailable } = await this.ontopoApiService.getRestaurantAvailability(restaurantDetails.slug, userSelections);
+    const { isAvailable } = await this.ontopoApiService.isRestaurantAvailable(restaurantDetails.slug, userSelections);
     if (isAvailable) {
-      const restaurantLinkUrl = this.ontopoUtilsService.getRestaurantLinkForUser(restaurantDetails.title);
-      const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];
+      const inlineKeyboardButtons = [{ text: 'Order Now!', url: this.ontopoUtilsService.getRestaurantLinkForUser(restaurantDetails.slug) }];
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
       const date = `${MONTHS_OF_YEAR[new Date(userSelections.date).getMonth()]} ${new Date(userSelections.date).getDate()}`;
       const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;

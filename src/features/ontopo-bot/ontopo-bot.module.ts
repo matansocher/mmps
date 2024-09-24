@@ -1,15 +1,16 @@
+import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger/logger.module';
 import { OntopoMongoModule } from '@core/mongo/ontopo-mongo/ontopo-mongo.module';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils/utils.module';
-import { Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { OntopoApiModule } from '@services/ontopo/ontopo-api/ontopo-api.module';
 import { OntopoFlowModule } from '@services/ontopo/ontopo-flow/ontopo-flow.module';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramModule } from '@services/telegram/telegram.module';
 import { OntopoBotService } from './ontopo-bot.service';
+import { OntopoSchedulerService } from './ontopo-scheduler.service';
 
 @Module({
   imports: [
@@ -23,12 +24,12 @@ import { OntopoBotService } from './ontopo-bot.service';
     TelegramModule,
     UtilsModule,
   ],
-  providers: [OntopoBotService],
+  providers: [OntopoBotService, OntopoSchedulerService],
 })
 export class OntopoBotModule {
-  // constructor(private readonly ontopoSchedulerService: OntopoSchedulerService) {}
-  //
-  // onModuleInit(): void {
-  //   this.ontopoSchedulerService.scheduleInterval();
-  // }
+  constructor(private readonly ontopoSchedulerService: OntopoSchedulerService) {}
+
+  onModuleInit(): void {
+    this.ontopoSchedulerService.scheduleInterval();
+  }
 }
