@@ -10,13 +10,7 @@ import {
   ITabitRestaurantReservationHours,
   IUserSelections,
 } from '@services/tabit/interface';
-import {
-  RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
-  RESTAURANT_CHECK_AVAILABILITY_URL,
-  RESTAURANT_CONFIGURATION_BASE_URL,
-  RESTAURANT_DETAILS_BASE_URL,
-  TIME_GAP_FROM_USER_SELECTION_IN_MINUTES,
-} from '../tabit.config';
+import { RESTAURANT_CHECK_AVAILABILITY_BASE_BODY, RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_DETAILS_BASE_URL } from '../tabit.config';
 
 @Injectable()
 export class TabitApiService {
@@ -36,19 +30,19 @@ export class TabitApiService {
         return null;
       }
       const restaurantDetailsUrl = `${RESTAURANT_DETAILS_BASE_URL}/${restaurantId}`;
-      const restaurantConfigurationUrl = `${RESTAURANT_CONFIGURATION_BASE_URL}?organization=${restaurantId}`;
-      const [restaurantDetails, restaurantConfiguration] = await Promise.all([
+      // const restaurantConfigurationUrl = `${RESTAURANT_CONFIGURATION_BASE_URL}?organization=${restaurantId}`;
+      const [restaurantDetails] = await Promise.all([
         axios.get(restaurantDetailsUrl),
-        axios.get(restaurantConfigurationUrl),
+        // axios.get(restaurantConfigurationUrl),
       ]);
-      return this.parseRestaurantResult(restaurantId, restaurantDetails.data, restaurantConfiguration.data);
+      return this.parseRestaurantResult(restaurantId, restaurantDetails.data);
     } catch (err) {
       this.logger.error(this.getRestaurantDetails.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       return null;
     }
   }
 
-  parseRestaurantResult(restaurantId: string, restaurantDetails, restaurantConfiguration): ITabitRestaurant {
+  parseRestaurantResult(restaurantId: string, restaurantDetails): ITabitRestaurant {
     const strings = restaurantDetails.strings.rsv['en-US'];
     const areas = this.getRestaurantAreas(restaurantDetails, strings);
     const openingHours = this.getRestaurantOpeningHours(restaurantDetails);
@@ -81,7 +75,7 @@ export class TabitApiService {
     const openingHours: ITabitRestaurantReservationHours = { default: [] };
 
     result.shifts?.forEach(([day, shifts]) => {
-      openingHours[day] = shifts.reduce((acc, [_, shiftDetails]) => {
+      openingHours[day] = shifts.reduce((acc, [, shiftDetails]) => {
         const lastShift = acc[acc.length - 1];
         const lastShiftTo = lastShift ? new Date(`1970-01-01T${lastShift.to}:00Z`).getTime() : null;
         const currentShiftFrom = new Date(`1970-01-01T${shiftDetails.from}:00Z`).getTime();
@@ -172,23 +166,23 @@ export class TabitApiService {
     if (!relevantTimeSlotsByArea) {
       return null;
     }
-    const { time_slots: areaTimeSlots = [] } = relevantTimeSlotsByArea;
-    const [hour, minute] = checkAvailabilityOptions.time.split(':');
-    const userDateAndTimeRequested = new Date(checkAvailabilityOptions.date);
-    userDateAndTimeRequested.setHours(parseInt(hour), parseInt(minute), 0, 0);
+    // const { time_slots: areaTimeSlots = [] } = relevantTimeSlotsByArea;
+    // const [hour, minute] = checkAvailabilityOptions.time.split(':');
+    // const userDateAndTimeRequested = new Date(checkAvailabilityOptions.date);
+    // userDateAndTimeRequested.setHours(parseInt(hour), parseInt(minute), 0, 0);
 
     // https://chatgpt.com/c/66da05d7-3540-8001-884f-4e1149b6e599
 
-    for (const timeSlot of areaTimeSlots) { // available times are coming back in utc (restaurant local time)
-      // const areaTimeSlotsExample = ['2024-09-13T15:15:00.000Z', '2024-09-13T14:45:00.000Z', '2024-09-13T15:30:00.000Z', '2024-09-13T14:30:00.000Z', '2024-09-13T15:45:00.000Z', '2024-09-13T14:15:00.000Z'];
-      // // move the user time slot to utc and compare with the available time slots
-      // const userTimeSlot = new Date(userDateAndTimeRequested).toISOString();
-      // // if the user time slot is less than a const (TIME_GAP_FROM_USER_SELECTION_IN_MINUTES) the available time slot, return the available time slot
-      // if (userTimeSlot < timeSlot && new Date(timeSlot) - new Date(userTimeSlot) <= TIME_GAP_FROM_USER_SELECTION_IN_MINUTES * 60 * 1000) {
-      //   const alternativeResults = areaTimeSlotsExample
-      //     .filter((time) => new Date(time) > new Date())
-      //     .sort((a, b) => new Date(a) - new Date(b));
-      //   return { isAvailable: false, alternativeResults };
-    }
+    // for (const timeSlot of areaTimeSlots) { // available times are coming back in utc (restaurant local time)
+    // const areaTimeSlotsExample = ['2024-09-13T15:15:00.000Z', '2024-09-13T14:45:00.000Z', '2024-09-13T15:30:00.000Z', '2024-09-13T14:30:00.000Z', '2024-09-13T15:45:00.000Z', '2024-09-13T14:15:00.000Z'];
+    // // move the user time slot to utc and compare with the available time slots
+    // const userTimeSlot = new Date(userDateAndTimeRequested).toISOString();
+    // // if the user time slot is less than a const (TIME_GAP_FROM_USER_SELECTION_IN_MINUTES) the available time slot, return the available time slot
+    // if (userTimeSlot < timeSlot && new Date(timeSlot) - new Date(userTimeSlot) <= TIME_GAP_FROM_USER_SELECTION_IN_MINUTES * 60 * 1000) {
+    //   const alternativeResults = areaTimeSlotsExample
+    //     .filter((time) => new Date(time) > new Date())
+    //     .sort((a, b) => new Date(a) - new Date(b));
+    //   return { isAvailable: false, alternativeResults };
+    // }
   }
 }

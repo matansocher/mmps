@@ -1,6 +1,6 @@
 import { SubscriptionModel } from '@core/mongo/tabit-mongo/models';
 import { Injectable } from '@nestjs/common';
-import { IInlineKeyboardButton, IUserFlowDetails } from '@services/tabit/interface';
+import { IInlineKeyboardButton } from '@services/tabit/interface';
 import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from '@services/tabit/tabit.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
@@ -29,7 +29,7 @@ export class TabitUtilsService {
     return `${date.getFullYear()}-${getTwoDigits(date.getMonth() + 1)}-${getTwoDigits(date.getDate())}`;
   }
 
-  getSubscriptionDetails(subscription: SubscriptionModel): { text: string; inlineKeyboardMarkup: { reply_markup: string }; } {
+  getSubscriptionDetails(subscription: SubscriptionModel): { text: string; inlineKeyboardMarkup: { reply_markup: string } } {
     const callbackData = { action: BOT_BUTTONS_ACTIONS.UNSUBSCRIBE, data: subscription._id.toString() } as IInlineKeyboardButton;
     const { restaurantDetails, userSelections } = subscription;
     const inlineKeyboardButtons = [
