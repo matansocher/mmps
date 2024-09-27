@@ -10,7 +10,7 @@ import {
   ITabitRestaurantReservationHours,
   IUserSelections,
 } from '@services/tabit/interface';
-import { RESTAURANT_CHECK_AVAILABILITY_BASE_BODY, RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_DETAILS_BASE_URL } from '../tabit.config';
+import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_BASE_BODY, RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_DETAILS_BASE_URL } from '../tabit.config';
 
 @Injectable()
 export class TabitApiService {
@@ -29,12 +29,7 @@ export class TabitApiService {
       if (!restaurantId) {
         return null;
       }
-      const restaurantDetailsUrl = `${RESTAURANT_DETAILS_BASE_URL}/${restaurantId}`;
-      // const restaurantConfigurationUrl = `${RESTAURANT_CONFIGURATION_BASE_URL}?organization=${restaurantId}`;
-      const [restaurantDetails] = await Promise.all([
-        axios.get(restaurantDetailsUrl),
-        // axios.get(restaurantConfigurationUrl),
-      ]);
+      const restaurantDetails = await axios.get(`${RESTAURANT_DETAILS_BASE_URL}/${restaurantId}`);
       return this.parseRestaurantResult(restaurantId, restaurantDetails.data);
     } catch (err) {
       this.logger.error(this.getRestaurantDetails.name, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -124,22 +119,44 @@ export class TabitApiService {
     return minutes * min_group_size;
   }
 
+  restaurantAvailabilityApiRequest(restaurantId: string, userSelections: Partial<IUserSelections>) {
+    const { date, time, size, area } = userSelections;
+    const reservedFrom = this.utilsService.getTimeWithOffset(date, time) || time;
+
+    const reqBody = {
+      ...RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
+      organization: restaurantId,
+      seats_count: size,
+      preference: area,
+      reserved_from: reservedFrom,
+    };
+    return axios.post(RESTAURANT_CHECK_AVAILABILITY_URL, reqBody);
+  }
+
   async getRestaurantAvailability(restaurantDetails: ITabitRestaurant, checkAvailabilityOptions: IUserSelections): Promise<ITabitRestaurantAvailability> {
     try {
-      const { date, time, size, area } = checkAvailabilityOptions;
-      const url = `${RESTAURANT_CHECK_AVAILABILITY_URL}`;
+      if (checkAvailabilityOptions.area && checkAvailabilityOptions.area !== ANY_AREA) {
+        const result = await this.restaurantAvailabilityApiRequest(restaurantDetails.id, checkAvailabilityOptions);
+        return this.parseRestaurantAvailabilityResult(result.data, checkAvailabilityOptions);
+      }
 
-      const reservedFrom = this.utilsService.getTimeWithOffset(date, time) || time;
+      if (checkAvailabilityOptions.area === ANY_AREA) {
+        const areasResults = await Promise.all(
+          restaurantDetails.areas.map((area) => this.restaurantAvailabilityApiRequest(restaurantDetails.id, { ...checkAvailabilityOptions, area: area.name }))
+        );
 
-      const reqBody = {
-        ...RESTAURANT_CHECK_AVAILABILITY_BASE_BODY,
-        organization: restaurantDetails.id,
-        seats_count: size,
-        preference: area,
-        reserved_from: reservedFrom,
-      };
-      const result = await axios.post(url, reqBody);
-      return this.parseRestaurantAvailabilityResult(result.data, checkAvailabilityOptions);
+        const availableArea = areasResults
+          .map((areaResult) => this.parseRestaurantAvailabilityResult(areaResult.data, checkAvailabilityOptions))
+          .find((areaResult) => areaResult.isAvailable);
+
+        if (!availableArea) {
+          return { isAvailable: false };
+        }
+
+        return { isAvailable: availableArea.isAvailable, reservationDetails: availableArea.reservationDetails };
+      }
+
+      return { isAvailable: false };
     } catch (err) {
       this.logger.error(this.getRestaurantAvailability.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       return null;
@@ -147,42 +164,12 @@ export class TabitApiService {
   }
 
   parseRestaurantAvailabilityResult(result, checkAvailabilityOptions: IUserSelections): ITabitRestaurantAvailability {
-    const notAvailableResponse = { isAvailable: false };
-    if (result?.reservation?.state === 'created') {
-      return { isAvailable: true };
+    const isAvailable = result?.reservation?.state === 'created';
+    if (!isAvailable) {
+      return { isAvailable };
     }
-
-    // if the restaurant is not available but has other options suggested
-    if (result?.alternative_results?.length) {
-      const alternativeResults = this.getAlternativeResults(result?.alternative_results, checkAvailabilityOptions);
-      return { isAvailable: false, alternativeResults };
-    }
-    return notAvailableResponse;
-  }
-
-  getAlternativeResults = (alternativeResults, checkAvailabilityOptions: IUserSelections): string[] => {
-    const { time_slots: restaurantTimeSlots = [] } = alternativeResults[0];
-    const relevantTimeSlotsByArea = restaurantTimeSlots.find((area) => area.name.toLowerCase() === checkAvailabilityOptions.area.toLowerCase());
-    if (!relevantTimeSlotsByArea) {
-      return null;
-    }
-    // const { time_slots: areaTimeSlots = [] } = relevantTimeSlotsByArea;
-    // const [hour, minute] = checkAvailabilityOptions.time.split(':');
-    // const userDateAndTimeRequested = new Date(checkAvailabilityOptions.date);
-    // userDateAndTimeRequested.setHours(parseInt(hour), parseInt(minute), 0, 0);
-
-    // https://chatgpt.com/c/66da05d7-3540-8001-884f-4e1149b6e599
-
-    // for (const timeSlot of areaTimeSlots) { // available times are coming back in utc (restaurant local time)
-    // const areaTimeSlotsExample = ['2024-09-13T15:15:00.000Z', '2024-09-13T14:45:00.000Z', '2024-09-13T15:30:00.000Z', '2024-09-13T14:30:00.000Z', '2024-09-13T15:45:00.000Z', '2024-09-13T14:15:00.000Z'];
-    // // move the user time slot to utc and compare with the available time slots
-    // const userTimeSlot = new Date(userDateAndTimeRequested).toISOString();
-    // // if the user time slot is less than a const (TIME_GAP_FROM_USER_SELECTION_IN_MINUTES) the available time slot, return the available time slot
-    // if (userTimeSlot < timeSlot && new Date(timeSlot) - new Date(userTimeSlot) <= TIME_GAP_FROM_USER_SELECTION_IN_MINUTES * 60 * 1000) {
-    //   const alternativeResults = areaTimeSlotsExample
-    //     .filter((time) => new Date(time) > new Date())
-    //     .sort((a, b) => new Date(a) - new Date(b));
-    //   return { isAvailable: false, alternativeResults };
-    // }
+    const reservedArea = result.reservation.reservation_details?.preference;
+    const reservationDetails = { date: checkAvailabilityOptions.date, time: checkAvailabilityOptions.time, size: checkAvailabilityOptions.size, area: reservedArea };
+    return { isAvailable, reservationDetails }; // test to see if result.area
   }
 }

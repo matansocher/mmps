@@ -77,13 +77,13 @@ export class FlowStepsHandlerService {
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
     const { restaurantDetails, size, date, time, area } = currentStepDetails;
     const userSelections: IUserSelections = { size, date, time, area };
-    const { isAvailable } = await this.tabitApiService.getRestaurantAvailability(restaurantDetails, userSelections);
+    const { isAvailable, reservationDetails } = await this.tabitApiService.getRestaurantAvailability(restaurantDetails, userSelections);
     if (isAvailable) {
       const restaurantLinkUrl = this.tabitUtilsService.getRestaurantLinkForUser(restaurantDetails.id);
       const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const date = `${MONTHS_OF_YEAR[new Date(userSelections.date).getMonth()]} ${new Date(userSelections.date).getDate()}`;
-      const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
+      const date = `${MONTHS_OF_YEAR[new Date(reservationDetails.date).getMonth()]} ${new Date(reservationDetails.date).getDate()}`;
+      const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${reservationDetails.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
       await Promise.all([
         this.telegramGeneralService.sendMessage(bot, chatId, replyText, { ...inlineKeyboardMarkup }),
         this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),

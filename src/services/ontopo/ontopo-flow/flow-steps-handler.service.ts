@@ -77,12 +77,12 @@ export class FlowStepsHandlerService {
   async handleLastStep(bot: TelegramBot, chatId: number, currentStepDetails: IUserFlowDetails): Promise<void> {
     const { restaurantDetails, size, date, time, area } = currentStepDetails;
     const userSelections: IUserSelections = { size, date, time, area };
-    const { isAvailable } = await this.ontopoApiService.isRestaurantAvailable(restaurantDetails.slug, userSelections);
+    const { isAvailable, reservationDetails } = await this.ontopoApiService.getRestaurantAvailability(restaurantDetails.slug, userSelections);
     if (isAvailable) {
       const inlineKeyboardButtons = [{ text: 'Order Now!', url: this.ontopoUtilsService.getRestaurantLinkForUser(restaurantDetails.slug) }];
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const date = `${MONTHS_OF_YEAR[new Date(userSelections.date).getMonth()]} ${new Date(userSelections.date).getDate()}`;
-      const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${userSelections.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
+      const date = `${MONTHS_OF_YEAR[new Date(reservationDetails.date).getMonth()]} ${new Date(reservationDetails.date).getDate()}`;
+      const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${reservationDetails.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
       await Promise.all([
         this.telegramGeneralService.sendMessage(bot, chatId, replyText, { ...inlineKeyboardMarkup }),
         this.notifierBotService.notify(BOTS.ONTOPO.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),

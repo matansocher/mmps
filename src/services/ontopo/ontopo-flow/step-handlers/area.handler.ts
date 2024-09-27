@@ -34,10 +34,9 @@ export class AreaHandler extends StepHandler {
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
       const { restaurantDetails } = currentStepDetails;
-      let areas = restaurantDetails.areas.map((area: IOntopoRestaurantArea) => area.displayName);
-      if (!areas.length) {
-        areas = [ANY_AREA];
-      }
+      const areas = restaurantDetails.areas?.map((area: IOntopoRestaurantArea) => area.displayName) || [];
+      areas.push(ANY_AREA);
+
       const inlineKeyboardButtons = areas.map((area: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.AREA, data: area } as IInlineKeyboardButton;
         return { text: area, callback_data: this.ontopoUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
