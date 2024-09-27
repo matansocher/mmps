@@ -68,7 +68,7 @@ export class OntopoSchedulerService {
     try {
       const { chatId, userSelections, restaurantDetails } = subscription;
       const { slug, title: restaurantTitle } = restaurantDetails;
-      const { isAvailable } = await this.ontopoApiService.isRestaurantAvailable(restaurantDetails.slug, subscription.userSelections);
+      const { isAvailable, reservationDetails } = await this.ontopoApiService.getRestaurantAvailability(restaurantDetails.slug, userSelections);
       if (!isAvailable) {
         return;
       }
@@ -76,7 +76,7 @@ export class OntopoSchedulerService {
       const restaurantLinkUrl = this.ontopoUtilsService.getRestaurantLinkForUser(slug);
       const inlineKeyboardButtons = [{ text: 'Order Now!', url: restaurantLinkUrl }];
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const replyText = `${restaurantTitle} is now available at ${this.ontopoUtilsService.getDateStringFormat(userSelections.date)} - ${userSelections.time}!\nYou should hurry up and try to order now!`;
+      const replyText = `${restaurantTitle} is now available at ${this.ontopoUtilsService.getDateStringFormat(reservationDetails.date)} - ${reservationDetails.time}!\nYou should hurry up and try to order now!`;
       await Promise.all([
         this.telegramGeneralService.sendPhoto(this.bot, chatId, restaurantDetails.image, { ...inlineKeyboardMarkup, caption: replyText }),
         this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id),

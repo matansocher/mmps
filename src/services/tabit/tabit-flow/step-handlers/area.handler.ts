@@ -5,7 +5,7 @@ import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantArea, 
 import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
 import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
-import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
+import { ANY_AREA, BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 export class AreaHandler extends StepHandler {
@@ -22,19 +22,21 @@ export class AreaHandler extends StepHandler {
 
   validateInput(userInput: string, { currentStepDetails }): boolean {
     const { restaurantDetails } = currentStepDetails;
-    const relevantArea = restaurantDetails.areas.find((area: ITabitRestaurantArea) => area.displayName === userInput);
+    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find((area: ITabitRestaurantArea) => area.displayName === userInput);
     return !!relevantArea;
   }
 
   transformInput(userInput: string, { restaurantDetails }): string {
-    const relevantArea = restaurantDetails.areas.find((area: ITabitRestaurantArea) => area.displayName === userInput);
+    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find((area: ITabitRestaurantArea) => area.displayName === userInput);
     return relevantArea.name;
   }
 
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
       const { restaurantDetails } = currentStepDetails;
-      const areas = restaurantDetails.areas.map((area: ITabitRestaurantArea) => area.displayName);
+      const areas = restaurantDetails.areas?.map((area: ITabitRestaurantArea) => area.displayName) || [];
+      areas.push(ANY_AREA);
+
       const inlineKeyboardButtons = areas.map((area: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.AREA, data: area } as IInlineKeyboardButton;
         return { text: area, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };

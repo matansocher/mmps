@@ -11,7 +11,7 @@ import { AppService } from './app.service';
   imports: [
     // WoltBotModule,
     // VoicePalBotModule,
-    // TabitBotModule,
+    TabitBotModule,
     // DeadTerroristsModule,
     OntopoBotModule,
   ],

@@ -13,17 +13,7 @@ export class OntopoApiService {
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly ontopoApiUtils: OntopoApiUtils,
-  ) {
-    // this.init(); // to test the 2 endpoints
-  }
-
-  async init() {
-    // const restaurantDetails = await this.getRestaurantDetails(`https://ontopo.com/he/il/page/45869402`); // kazan
-    const restaurantDetails = await this.getRestaurantDetails(`https://ontopo.com/he/il/page/88542392`); // ocd
-    const userSelections = { size: 2, date: this.ontopoApiUtils.getNextMondayDate(), time: '18:00', area: 'Inside' };
-    const { isAvailable } = await this.isRestaurantAvailable(restaurantDetails.slug, userSelections);
-    return { restaurantDetails, isAvailable };
-  }
+  ) {}
 
   async getRestaurantDetails(restaurantUrl: string): Promise<IOntopoRestaurant> {
     try {
@@ -46,7 +36,7 @@ export class OntopoApiService {
   async getRestaurantAreas(restaurantSlug): Promise<IOntopoRestaurantArea[]> {
     try {
       const generalUserSelections = { size: 2, date: this.ontopoApiUtils.getNextMondayDate(), time: '20:00' };
-      const restaurantAreasRes = await this.getRestaurantAvailability(restaurantSlug, generalUserSelections);
+      const restaurantAreasRes = await this.restaurantAvailabilityApiRequest(restaurantSlug, generalUserSelections);
       const { areas } = restaurantAreasRes || {};
       return areas?.map((area) => ({
         name: area.id,
@@ -73,7 +63,7 @@ export class OntopoApiService {
     };
   }
 
-  async getRestaurantAvailability(restaurantSlug: string, userSelections: IUserSelections) {
+  async restaurantAvailabilityApiRequest(restaurantSlug: string, userSelections: IUserSelections) {
     try {
       const body = {
         slug: restaurantSlug,
@@ -92,30 +82,31 @@ export class OntopoApiService {
     }
   }
 
-  async isRestaurantAvailable(restaurantSlug: string, userSelections: IUserSelections): Promise<IOntopoRestaurantAvailability> {
-    const restaurantAvailabilityRes = await this.getRestaurantAvailability(restaurantSlug, userSelections);
-    const isAvailable = this.getIsRestaurantAvailable(restaurantAvailabilityRes, userSelections);
-    return { isAvailable };
-  }
-
-  getIsRestaurantAvailable(restaurantAvailabilityRes, userSelections: IUserSelections): boolean {
+  async getRestaurantAvailability(restaurantSlug: string, userSelections: IUserSelections): Promise<IOntopoRestaurantAvailability> {
+    const restaurantAvailabilityRes = await this.restaurantAvailabilityApiRequest(restaurantSlug, userSelections);
     const { areas } = restaurantAvailabilityRes || [];
     if (!areas?.length) {
-      return false;
+      return { isAvailable: false };
     }
 
     const relevantArea = areas?.find((area) => area.name === userSelections.area);
     if (relevantArea) {
       const relevantTime = relevantArea.options?.find((option) => option.time === userSelections.time.replace(':', ''));
-      return relevantTime?.method === 'seat';
+      const reservationDetails = { date: userSelections.date, time: userSelections.time, size: userSelections.size, area: relevantArea.name };
+      return { isAvailable: relevantTime?.method === 'seat', reservationDetails };
     }
 
-    // $$$$$$$$$$$$$$$$$$$$ test this area
     if (userSelections.area === ANY_AREA) {
-      return areas.some((area) => {
-        const relevantTime = area.options?.find((option) => option.time === userSelections.time.replace(':', ''));
-        return relevantTime?.method === 'seat';
-      });
+      for (let i = 0; i < areas.length; i++) {
+        const currentArea = areas[i];
+        const relevantTime = currentArea.options.find((option) => option.time === userSelections.time.replace(':', ''));
+        if (relevantTime) {
+          const reservationDetails = { date: userSelections.date, time: userSelections.time, size: userSelections.size, area: currentArea.name };
+          return { isAvailable: relevantTime.method === 'seat', reservationDetails };
+        }
+      }
     }
+
+    return { isAvailable: false };
   }
 }
