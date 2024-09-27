@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-// import { DeadTerroristsModule } from '@features/dead-terrorists/dead-terrorists.module';
+import { DeadTerroristsModule } from '@features/dead-terrorists/dead-terrorists.module';
 import { OntopoBotModule } from '@features/ontopo-bot/ontopo-bot.module';
 import { TabitBotModule } from '@features/tabit-bot/tabit-bot.module';
 import { VoicePalBotModule } from '@features/voice-pal-bot/voice-pal-bot.module';
@@ -9,11 +9,11 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // WoltBotModule,
-    // VoicePalBotModule,
-    TabitBotModule,
-    // DeadTerroristsModule,
+    DeadTerroristsModule,
     OntopoBotModule,
+    TabitBotModule,
+    VoicePalBotModule,
+    WoltBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

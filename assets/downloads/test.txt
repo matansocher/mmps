@@ -5,6 +5,4 @@ deal with alternative results to show the user close suggestions
 
 testing infra
 
-finish handling data collection in ontopo api service
-
 add index.ts to this folder /src/services/telegram
