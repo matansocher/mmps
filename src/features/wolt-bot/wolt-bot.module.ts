@@ -7,7 +7,7 @@ import { WoltMongoModule } from '@core/mongo/wolt-mongo';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { TelegramModule } from '@services/telegram/telegram.module';
-import { WoltModule } from '@services/wolt/wolt.module';
+import { WoltModule } from '@services/wolt';
 import { WoltBotService } from './wolt-bot.service';
 import { WoltSchedulerService } from './wolt-scheduler.service';
 

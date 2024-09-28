@@ -13,10 +13,10 @@ import {
   SUBSCRIPTION_EXPIRATION_HOURS,
   TOO_OLD_LIST_THRESHOLD_MS,
   WOLT_BOT_OPTIONS,
-} from '@services/wolt/wolt.config';
-import { IWoltRestaurant } from '@services/wolt/interface';
-import { WoltService } from '@services/wolt/wolt.service';
-import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
+  IWoltRestaurant,
+  WoltService,
+  WoltUtilsService,
+} from '@services/wolt';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {

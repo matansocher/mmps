@@ -6,17 +6,17 @@ import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
-import { IWoltRestaurant } from '@services/wolt/interface';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import {
+  IWoltRestaurant,
   ANALYTIC_EVENT_NAMES,
   HOUR_OF_DAY_TO_REFRESH_MAP,
   MAX_HOUR_TO_ALERT_USER,
   MIN_HOUR_TO_ALERT_USER,
   SUBSCRIPTION_EXPIRATION_HOURS,
-} from '@services/wolt/wolt.config';
-import { WoltService } from '@services/wolt/wolt.service';
-import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
+  WoltService,
+  WoltUtilsService,
+} from '@services/wolt';
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
