@@ -6,13 +6,13 @@ import { TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mong
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
-import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
-import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';
-import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/tabit/tabit-flow/step-handlers';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { IFlowStepType, IUserFlowDetails, IUserSelections } from '../interface';
+import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '../tabit.config';
+import { TabitApiService } from '../tabit-api/tabit-api.service';
+import { FlowStepsManagerService } from '../tabit-flow/flow-steps-manager.service';
+import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '../tabit-flow/step-handlers';
+import { TabitUtilsService } from '../tabit-flow/tabit-utils.service';
 
 @Injectable()
 export class FlowStepsHandlerService {

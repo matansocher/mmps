@@ -1,13 +1,18 @@
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService, SubscriptionModel } from '@core/mongo/tabit-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import { FlowStepsHandlerService } from '@services/tabit/tabit-flow/flow-steps-handler.service';
-import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, TABIT_BOT_COMMANDS } from '@services/tabit/tabit.config';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_BUTTONS_ACTIONS,
+  FlowStepsHandlerService,
+  FlowStepsManagerService,
+  INITIAL_BOT_RESPONSE,
+  TABIT_BOT_COMMANDS,
+  TabitUtilsService,
+} from '@services/tabit';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 

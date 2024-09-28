@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IFlowStepType, IUserFlowDetails } from '@services/tabit/interface';
+import { IFlowStepType, IUserFlowDetails } from '../interface';
 
 const ENTITY_INITIAL_STATE = { currentStepIndex: 0 };
 @Injectable()

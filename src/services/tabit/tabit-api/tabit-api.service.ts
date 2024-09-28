@@ -9,7 +9,7 @@ import {
   ITabitRestaurantReservationHour,
   ITabitRestaurantReservationHours,
   IUserSelections,
-} from '@services/tabit/interface';
+} from '../interface';
 import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_BASE_BODY, RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_DETAILS_BASE_URL } from '../tabit.config';
 
 @Injectable()

@@ -1,12 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { IUserFlowDetails, IInlineKeyboardButton, IFlowStep, IFlowStepType } from '@services/tabit/interface';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
-import { BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { IUserFlowDetails, IInlineKeyboardButton, IFlowStep, IFlowStepType } from '../../interface';
+import { FlowStepsManagerService } from '../../tabit-flow/flow-steps-manager.service';
+import { StepHandler } from '../../tabit-flow/step-handlers/step.handler';
+import { TabitUtilsService } from '../../tabit-flow/tabit-utils.service';
+import { BOT_BUTTONS_ACTIONS } from '../../tabit.config';
 
 export class DateHandler extends StepHandler {
   constructor(
