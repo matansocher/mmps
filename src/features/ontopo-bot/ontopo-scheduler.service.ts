@@ -5,9 +5,8 @@ import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
 import { UtilsService } from '@core/utils';
-import { BOTS } from '@services/telegram';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { OntopoApiService, OntopoUtilsService, ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP } from '@services/ontopo';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 const JOB_NAME = 'ontopo-scheduler-job-interval';
 

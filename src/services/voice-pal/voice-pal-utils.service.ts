@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ITelegramMessageData } from '@services/telegram';
-import { POSSIBLE_INPUTS } from '@services/telegram';
+import { ITelegramMessageData, POSSIBLE_INPUTS } from '@services/telegram';
 import { IVoicePalOption } from './interface';
 import { VOICE_PAL_OPTIONS } from './voice-pal.config';
 

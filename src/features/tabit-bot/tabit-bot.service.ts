@@ -13,8 +13,7 @@ import {
   TABIT_BOT_COMMANDS,
   TabitUtilsService,
 } from '@services/tabit';
-import { BOTS } from '@services/telegram';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
 export class TabitBotService implements OnModuleInit {

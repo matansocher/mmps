@@ -2,7 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { DAYS_OF_WEEK } from '@core/config/main.config';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { TelegramGeneralService } from '@services/telegram';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IOntopoRestaurantReservationHour, IUserFlowDetails } from '../../interface';
 import { BOT_BUTTONS_ACTIONS } from '../../ontopo.config';
 import { FlowStepsManagerService } from '../../ontopo-flow/flow-steps-manager.service';

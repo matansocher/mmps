@@ -13,8 +13,7 @@ import {
   FlowStepsManagerService,
   OntopoUtilsService,
 } from '@services/ontopo';
-import { BOTS } from '@services/telegram';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
 export class OntopoBotService implements OnModuleInit {

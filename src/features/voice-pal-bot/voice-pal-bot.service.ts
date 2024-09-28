@@ -3,8 +3,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { BOTS, MessagesAggregatorService } from '@services/telegram';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { BOTS, MessagesAggregatorService, TelegramGeneralService } from '@services/telegram';
 import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '@services/voice-pal';
 
 @Injectable()

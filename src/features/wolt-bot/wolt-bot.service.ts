@@ -4,8 +4,7 @@ import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { UtilsService } from '@core/utils';
-import { BOTS } from '@services/telegram';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
   INITIAL_BOT_RESPONSE,

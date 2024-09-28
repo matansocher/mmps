@@ -1,10 +1,5 @@
 import { env } from 'node:process';
 
-export interface IBotOptions {
-  name: string;
-  token: string;
-}
-
 export const BOTS = {
   WOLT: {
     name: 'Wolt Bot',
