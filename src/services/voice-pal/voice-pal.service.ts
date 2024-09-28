@@ -6,7 +6,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
+import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
 import { AiService } from '@services/ai';
 import { BOTS } from '@services/telegram/telegram.config';
 import { GoogleTranslateService } from '@services/google-translate';

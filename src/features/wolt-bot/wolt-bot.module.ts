@@ -3,7 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils';
-import { WoltMongoModule } from '@core/mongo/wolt-mongo/wolt-mongo.module';
+import { WoltMongoModule } from '@core/mongo/wolt-mongo';
 import { WoltSchedulerService } from '@features/wolt-bot/wolt-scheduler.service';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';

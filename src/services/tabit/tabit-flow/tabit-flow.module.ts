@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
-import { TabitMongoModule } from '@core/mongo/tabit-mongo/tabit-mongo.module';
+import { TabitMongoModule } from '@core/mongo/tabit-mongo';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils';
 import { TabitApiModule } from '@services/tabit/tabit-api/tabit-api.module';

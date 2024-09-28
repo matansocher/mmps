@@ -1,6 +1,5 @@
 import { isProd } from '@core/config/main.config';
-import { UserModel } from '@core/mongo/shared/models';
-import { MongoUserService } from '@core/mongo/shared/services';
+import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { INotifyOptions } from '@core/notifier-bot/interface';
 import { notifierChatId } from '@core/notifier-bot/notifier-bot.config';
 import TelegramBot, { Message } from 'node-telegram-bot-api';

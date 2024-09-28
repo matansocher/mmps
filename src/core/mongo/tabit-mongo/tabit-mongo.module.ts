@@ -1,5 +1,5 @@
 import { LoggerModule } from '@core/logger';
-import { MongoDatabaseFactoryModule } from '@core/mongo/shared/mongo-database-factory.module';
+import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService } from './services';
 import { Module } from '@nestjs/common';
 import { UtilsModule } from '@core/utils';

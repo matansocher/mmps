@@ -1,7 +1,7 @@
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { COLLECTIONS, CONNECTION_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
+import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
 import { UtilsService } from '@core/utils';
 
 @Injectable()

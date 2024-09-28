@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
-import { OntopoMongoModule } from '@core/mongo/ontopo-mongo/ontopo-mongo.module';
+import { OntopoMongoModule } from '@core/mongo/ontopo-mongo';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils';
 import { OntopoApiModule } from '@services/ontopo/ontopo-api/ontopo-api.module';
