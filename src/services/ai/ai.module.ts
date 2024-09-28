@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { GeminiModule } from '@services/gemini/gemini.module';
-import { ImgurModule } from '@services/imgur/imgur.module';
+import { GeminiModule } from '@services/gemini';
+import { ImgurModule } from '@services/imgur';
 import { OpenaiModule } from '@services/openai/openai.module';
 import { AiService } from './ai.service';
 

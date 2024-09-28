@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { GeminiService } from '@services/gemini/gemini.service';
-import { ImgurService } from '@services/imgur/imgur.service';
+import { GeminiService } from '@services/gemini';
+import { ImgurService } from '@services/imgur';
 import { OpenaiService } from '@services/openai/openai.service';
 import { AiProvider } from './ai.config';
 
