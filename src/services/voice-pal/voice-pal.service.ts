@@ -7,7 +7,7 @@ import { LoggerService } from '@core/logger/logger.service';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils/utils.service';
 import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
-import { AiService } from '@services/ai/ai.service';
+import { AiService } from '@services/ai';
 import { BOTS } from '@services/telegram/telegram.config';
 import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
 import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
