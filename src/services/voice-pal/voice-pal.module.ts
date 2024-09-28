@@ -9,7 +9,7 @@ import { ImgurModule } from '@services/imgur';
 import { SocialMediaDownloaderModule } from '@services/social-media-downloader';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { VoicePalUtilsService } from '@services/voice-pal/voice-pal-utils.service';
-import { YoutubeTranscriptModule } from '@services/youtube-transcript/youtube-transcript.module';
+import { YoutubeTranscriptModule } from '@services/youtube-transcript';
 import { VoicePalService } from './voice-pal.service';
 
 @Module({
