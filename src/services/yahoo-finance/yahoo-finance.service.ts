@@ -1,6 +1,6 @@
 import { LoggerService } from '@core/logger/logger.service';
 import { Inject, Injectable } from '@nestjs/common';
-import { DataInterface, Quote, StockDataSearchResults, StockDataSummary, StockSearchResult } from '@services/stock-buddy/interface';
+import { DataInterface, Quote, StockDataSummary, StockSearchResult } from './interface';
 import { YAHOO_FINANCE_CLIENT_TOKEN } from '@services/yahoo-finance/yahoo-finance.config';
 
 @Injectable()
