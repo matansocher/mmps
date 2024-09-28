@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
 import { OntopoMongoModule } from '@core/mongo/ontopo-mongo';
@@ -26,7 +26,7 @@ import { OntopoSchedulerService } from './ontopo-scheduler.service';
   ],
   providers: [OntopoBotService, OntopoSchedulerService],
 })
-export class OntopoBotModule {
+export class OntopoBotModule implements OnModuleInit {
   constructor(private readonly ontopoSchedulerService: OntopoSchedulerService) {}
 
   onModuleInit(): void {

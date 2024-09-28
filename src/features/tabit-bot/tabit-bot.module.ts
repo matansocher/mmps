@@ -1,4 +1,3 @@
-import { TabitSchedulerService } from '@features/tabit-bot/tabit-scheduler.service';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
@@ -11,6 +10,7 @@ import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramModule } from '@services/telegram/telegram.module';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
 import { TabitBotService } from './tabit-bot.service';
+import { TabitSchedulerService } from './tabit-scheduler.service';
 
 @Module({
   imports: [
