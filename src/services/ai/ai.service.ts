@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GeminiService } from '@services/gemini';
 import { ImgurService } from '@services/imgur';
-import { OpenaiService } from '@services/openai/openai.service';
+import { OpenaiService } from '@services/openai';
 import { AiProvider } from './ai.config';
 
 @Injectable()

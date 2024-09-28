@@ -10,7 +10,7 @@ import {
   SOUND_MODEL,
   TEXT_TO_SPEECH_MODEL,
   TEXT_TO_SPEECH_VOICE,
-} from '@services/openai/openai.config';
+} from './openai.config';
 
 @Injectable()
 export class OpenaiService {
