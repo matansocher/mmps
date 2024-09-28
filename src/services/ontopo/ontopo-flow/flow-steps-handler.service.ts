@@ -6,13 +6,13 @@ import { OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mo
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
-import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/ontopo/interface';
-import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS } from '@services/ontopo/ontopo.config';
-import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '@services/ontopo/ontopo-flow/step-handlers';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { IFlowStepType, IUserFlowDetails, IUserSelections } from '../interface';
+import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS } from '../ontopo.config';
+import { OntopoApiService } from '../ontopo-api/ontopo-api.service';
+import { FlowStepsManagerService } from '../ontopo-flow/flow-steps-manager.service';
+import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '../ontopo-flow/step-handlers';
+import { OntopoUtilsService } from '../ontopo-flow/ontopo-utils.service';
 
 @Injectable()
 export class FlowStepsHandlerService {

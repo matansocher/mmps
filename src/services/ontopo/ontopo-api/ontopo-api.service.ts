@@ -3,8 +3,8 @@ import { JSDOM } from 'jsdom';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { IOntopoRestaurant, IOntopoRestaurantArea, IOntopoRestaurantAvailability, IUserSelections } from '@services/ontopo/interface';
-import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_URL } from '@services/ontopo/ontopo.config';
+import { IOntopoRestaurant, IOntopoRestaurantArea, IOntopoRestaurantAvailability, IUserSelections } from '../interface';
+import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_URL } from '../ontopo.config';
 import { OntopoApiUtils } from './ontopo-api.utils';
 
 @Injectable()

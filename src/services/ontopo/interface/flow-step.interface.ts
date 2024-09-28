@@ -1,4 +1,4 @@
-import { StepHandler } from '@services/ontopo/ontopo-flow/step-handlers';
+import { StepHandler } from '../ontopo-flow/step-handlers';
 import { IFlowStepType } from './flow-step.enum';
 
 export interface IFlowStep {

@@ -4,7 +4,7 @@ import { isProd } from '@core/config/main.config';
 import { LoggerService } from '@core/logger';
 import { myUserId } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
-import { IUserFlowDetails, IUserSelections } from '@services/ontopo/interface';
+import { IUserFlowDetails, IUserSelections } from '@services/ontopo';
 import { SubscriptionModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../ontopo-mongo.config';
 

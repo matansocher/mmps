@@ -2,12 +2,12 @@ import TelegramBot from 'node-telegram-bot-api';
 import { DAYS_OF_WEEK } from '@core/config/main.config';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IOntopoRestaurantReservationHour, IUserFlowDetails } from '@services/ontopo/interface';
-import { BOT_BUTTONS_ACTIONS } from '@services/ontopo/ontopo.config';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/ontopo/ontopo-flow/step-handlers/step.handler';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IOntopoRestaurantReservationHour, IUserFlowDetails } from '../../interface';
+import { BOT_BUTTONS_ACTIONS } from '../../ontopo.config';
+import { FlowStepsManagerService } from '../../ontopo-flow/flow-steps-manager.service';
+import { StepHandler } from '../../ontopo-flow/step-handlers/step.handler';
+import { OntopoUtilsService } from '../../ontopo-flow/ontopo-utils.service';
 
 const POPULAR_HOURS = ['12:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
 
