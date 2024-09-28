@@ -1,12 +1,10 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { SubscriptionModel } from '@core/mongo/wolt-mongo/models';
-import { UtilsService } from '@core/utils/utils.service';
-import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo/services';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
+import { UtilsService } from '@core/utils';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
   INITIAL_BOT_RESPONSE,
@@ -14,10 +12,10 @@ import {
   SUBSCRIPTION_EXPIRATION_HOURS,
   TOO_OLD_LIST_THRESHOLD_MS,
   WOLT_BOT_OPTIONS,
-} from '@services/wolt/wolt.config';
-import { IWoltRestaurant } from '@services/wolt/interface';
-import { WoltService } from '@services/wolt/wolt.service';
-import { WoltUtilsService } from '@services/wolt/wolt-utils.service';
+  IWoltRestaurant,
+  WoltService,
+  WoltUtilsService,
+} from '@services/wolt';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {

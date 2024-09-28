@@ -1,4 +1,4 @@
-import { IWoltRestaurant } from '@services/wolt/interface';
+import { IWoltRestaurant } from './wolt-restaurant.interface';
 
 export interface IRestaurantsList {
   restaurants: IWoltRestaurant[];

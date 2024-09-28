@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { IVoicePalOption } from '@services/voice-pal/interface';
-import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
+import { IVoicePalOption } from './interface';
+import { VOICE_PAL_OPTIONS } from './voice-pal.config';
 
 @Injectable()
 export class UserSelectedActionsService {

@@ -1,10 +1,5 @@
 import { env } from 'node:process';
 
-export interface IBotOptions {
-  name: string;
-  token: string;
-}
-
 export const BOTS = {
   WOLT: {
     name: 'Wolt Bot',
@@ -21,10 +16,6 @@ export const BOTS = {
   VOICE_PAL: {
     name: 'Voice Pal Bot',
     token: env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
-  },
-  STOCK_BUDDY: {
-    name: 'Stock Buddy Bot',
-    token: env.STOCK_BUDDY_TELEGRAM_BOT_TOKEN,
   },
   NOTIFIER: {
     name: 'Notifier Bot',

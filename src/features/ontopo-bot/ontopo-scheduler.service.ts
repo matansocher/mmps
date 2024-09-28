@@ -1,16 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { SubscriptionModel } from '@core/mongo/ontopo-mongo/models';
-import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mongo/ontopo-mongo/services';
-import { UtilsService } from '@core/utils/utils.service';
-import { BOTS } from '@services/telegram/telegram.config';
-import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
-import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP } from '@services/ontopo/ontopo.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
+import { UtilsService } from '@core/utils';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { OntopoApiService, OntopoUtilsService, ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP } from '@services/ontopo';
 
 const JOB_NAME = 'ontopo-scheduler-job-interval';
 

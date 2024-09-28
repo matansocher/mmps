@@ -3,7 +3,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config/main.config';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 
 @Injectable()
 export class UtilsService implements OnModuleInit {

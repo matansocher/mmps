@@ -1,4 +1,4 @@
-import { IUserSelections } from '@services/tabit/interface';
+import { IUserSelections } from './user-flow-details.interface';
 
 export interface ITabitRestaurantAvailability {
   isAvailable: boolean;

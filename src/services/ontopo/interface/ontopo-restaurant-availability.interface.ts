@@ -1,4 +1,4 @@
-import { IUserSelections } from '@services/ontopo/interface/user-flow-details.interface';
+import { IUserSelections } from './user-flow-details.interface';
 
 export interface IOntopoRestaurantAvailability {
   isAvailable: boolean;

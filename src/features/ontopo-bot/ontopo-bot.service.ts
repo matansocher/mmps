@@ -1,16 +1,19 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger/logger.service';
-import { SubscriptionModel } from '@core/mongo/ontopo-mongo/models';
-import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mongo/ontopo-mongo/services';
+import { LoggerService } from '@core/logger';
+import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { UtilsService } from '@core/utils/utils.service';
-import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, ONTOPO_BOT_COMMANDS } from '@services/ontopo/ontopo.config';
-import { FlowStepsHandlerService } from '@services/ontopo/ontopo-flow/flow-steps-handler.service';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { UtilsService } from '@core/utils';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_BUTTONS_ACTIONS,
+  INITIAL_BOT_RESPONSE,
+  ONTOPO_BOT_COMMANDS,
+  FlowStepsHandlerService,
+  FlowStepsManagerService,
+  OntopoUtilsService,
+} from '@services/ontopo';
+import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
 export class OntopoBotService implements OnModuleInit {

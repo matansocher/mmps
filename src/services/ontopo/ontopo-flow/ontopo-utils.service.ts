@@ -1,8 +1,8 @@
-import { SubscriptionModel } from '@core/mongo/ontopo-mongo/models';
 import { Injectable } from '@nestjs/common';
-import { IInlineKeyboardButton } from '@services/ontopo/interface';
-import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from '@services/ontopo/ontopo.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { SubscriptionModel } from '@core/mongo/ontopo-mongo';
+import { IInlineKeyboardButton } from '../interface';
+import { BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from '../ontopo.config';
+import { TelegramGeneralService } from '@services/telegram';
 
 const CALLBACK_DATA_SEPARATOR = ',';
 

@@ -1,12 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantArea, IUserFlowDetails } from '@services/tabit/interface';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
-import { ANY_AREA, BOT_BUTTONS_ACTIONS } from '@services/tabit/tabit.config';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
+import { TelegramGeneralService } from '@services/telegram';
+import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantArea, IUserFlowDetails } from '../../interface';
+import { FlowStepsManagerService } from '../../tabit-flow/flow-steps-manager.service';
+import { StepHandler } from '../../tabit-flow/step-handlers/step.handler';
+import { TabitUtilsService } from '../../tabit-flow/tabit-utils.service';
+import { ANY_AREA, BOT_BUTTONS_ACTIONS } from '../../tabit.config';
 
 export class AreaHandler extends StepHandler {
   constructor(

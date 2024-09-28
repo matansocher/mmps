@@ -1,8 +1,8 @@
-import { MongoUserService } from '@core/mongo/shared/services';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
+import { LoggerService } from '@core/logger';
+import { MongoUserService } from '@core/mongo/shared';
+import { UtilsService } from '@core/utils';
 import { CONNECTION_NAME } from '../ontopo-mongo.config';
 
 @Injectable()

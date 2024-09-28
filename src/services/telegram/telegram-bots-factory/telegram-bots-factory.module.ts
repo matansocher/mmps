@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Module, DynamicModule, Global } from '@nestjs/common';
-import { TelegramBotFactoryOptions } from '@services/telegram/interface';
+import { TelegramBotFactoryOptions } from '@services/telegram';
 
 @Global()
 @Module({})

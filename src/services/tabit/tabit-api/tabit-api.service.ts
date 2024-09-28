@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
+import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
 import {
   ITabitRestaurant,
   ITabitRestaurantArea,
@@ -9,7 +9,7 @@ import {
   ITabitRestaurantReservationHour,
   ITabitRestaurantReservationHours,
   IUserSelections,
-} from '@services/tabit/interface';
+} from '../interface';
 import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_BASE_BODY, RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_DETAILS_BASE_URL } from '../tabit.config';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type FactoryProvider, Module } from '@nestjs/common';
-import { GEMINI_API_KEY, GEMINI_FLASH_MODEL, GENERATIVE_MODEL_CLIENT_TOKEN } from '@services/gemini/gemini.config';
-import { IGeminiClientProvider } from '@services/gemini/interface';
+import { IGeminiClientProvider } from './interface';
+import { GEMINI_API_KEY, GEMINI_FLASH_MODEL, GENERATIVE_MODEL_CLIENT_TOKEN } from './gemini.config';
 import { GeminiService } from './gemini.service';
 
 export const GenerativeModelClientProvider: FactoryProvider = {

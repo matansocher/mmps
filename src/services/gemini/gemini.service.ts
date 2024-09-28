@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { Inject, Injectable } from '@nestjs/common';
-import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@services/ai/ai.config';
-import { IGeminiClientProvider } from '@services/gemini/interface';
-import { GENERATIVE_MODEL_CLIENT_TOKEN } from '@services/gemini/gemini.config';
+import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@core/config/main.config';
+import { GENERATIVE_MODEL_CLIENT_TOKEN } from './gemini.config';
+import { IGeminiClientProvider } from './interface';
 
 @Injectable()
 export class GeminiService {

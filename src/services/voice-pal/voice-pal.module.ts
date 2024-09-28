@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@core/logger/logger.module';
-import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.module';
+import { LoggerModule } from '@core/logger';
+import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
-import { UtilsModule } from '@core/utils/utils.module';
-import { AiModule } from '@services/ai/ai.module';
-import { GoogleTranslateModule } from '@services/google-translate/google-translate.module';
-import { ImgurModule } from '@services/imgur/imgur.module';
-import { SocialMediaDownloaderModule } from '@services/social-media-downloader/social-media-downloader.module';
-import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
-import { VoicePalUtilsService } from '@services/voice-pal/voice-pal-utils.service';
-import { YoutubeTranscriptModule } from '@services/youtube-transcript/youtube-transcript.module';
+import { UtilsModule } from '@core/utils';
+import { AiModule } from '@services/ai';
+import { GoogleTranslateModule } from '@services/google-translate';
+import { ImgurModule } from '@services/imgur';
+import { SocialMediaDownloaderModule } from '@services/social-media-downloader';
+import { YoutubeTranscriptModule } from '@services/youtube-transcript';
+import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VoicePalService } from './voice-pal.service';
+import { VoicePalUtilsService } from './voice-pal-utils.service';
 
 @Module({
   imports: [

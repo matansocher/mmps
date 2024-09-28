@@ -1,4 +1,4 @@
-import { IFlowStep, IUserFlowDetails } from '@services/ontopo/interface';
+import { IFlowStep, IUserFlowDetails } from '../../interface';
 
 export abstract class StepHandler {
   abstract validateInput(userInput: string, args?): boolean;

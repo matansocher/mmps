@@ -1,12 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IUserFlowDetails } from '@services/ontopo/interface';
-import { BOT_BUTTONS_ACTIONS } from '@services/ontopo/ontopo.config';
-import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/ontopo/ontopo-flow/step-handlers/step.handler';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
+import { TelegramGeneralService } from '@services/telegram';
+import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IUserFlowDetails } from '../../interface';
+import { BOT_BUTTONS_ACTIONS } from '../../ontopo.config';
+import { FlowStepsManagerService } from '../../ontopo-flow/flow-steps-manager.service';
+import { StepHandler } from '../../ontopo-flow/step-handlers/step.handler';
+import { OntopoUtilsService } from '../../ontopo-flow/ontopo-utils.service';
 
 const RESERVATION_MAX_SIZE = 8;
 

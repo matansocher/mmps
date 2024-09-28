@@ -1,12 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
-import { IFlowStep, ITabitRestaurant, IUserFlowDetails } from '@services/tabit/interface';
-import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
-import { FlowStepsManagerService } from '@services/tabit/tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '@services/tabit/tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
+import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
+import { TelegramGeneralService } from '@services/telegram';
+import { IFlowStep, ITabitRestaurant, IUserFlowDetails } from '../../interface';
+import { TabitApiService } from '../../tabit-api/tabit-api.service';
+import { FlowStepsManagerService } from '../../tabit-flow/flow-steps-manager.service';
+import { StepHandler } from '../../tabit-flow/step-handlers/step.handler';
+import { TabitUtilsService } from '../../tabit-flow/tabit-utils.service';
 
 export class DetailsHandler extends StepHandler {
   constructor(

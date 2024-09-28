@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@core/logger/logger.module';
-import { OntopoMongoModule } from '@core/mongo/ontopo-mongo/ontopo-mongo.module';
+import { LoggerModule } from '@core/logger';
+import { OntopoMongoModule } from '@core/mongo/ontopo-mongo';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
-import { UtilsModule } from '@core/utils/utils.module';
-import { OntopoApiModule } from '@services/ontopo/ontopo-api/ontopo-api.module';
-import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';
+import { UtilsModule } from '@core/utils';
+import { OntopoUtilsService } from './ontopo-utils.service';
 import { FlowStepsHandlerService } from './flow-steps-handler.service';
 import { FlowStepsManagerService } from './flow-steps-manager.service';
+import { OntopoApiModule } from '../ontopo-api/ontopo-api.module';
 
 @Module({
   imports: [LoggerModule.forChild(OntopoFlowModule.name), UtilsModule, OntopoApiModule, OntopoMongoModule, NotifierBotModule],

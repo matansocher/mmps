@@ -2,8 +2,8 @@ import axios from 'axios';
 import { promises as fs } from 'fs';
 import { env } from 'node:process';
 import { Injectable } from '@nestjs/common';
-import { UtilsService } from '@core/utils/utils.service';
-import { LoggerService } from '@core/logger/logger.service';
+import { UtilsService } from '@core/utils';
+import { LoggerService } from '@core/logger';
 
 @Injectable()
 export class ImgurService {

@@ -3,21 +3,18 @@ import validUrl from 'valid-url';
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { UtilsService } from '@core/utils/utils.service';
-import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo/services';
-import { AiService } from '@services/ai/ai.service';
-import { BOTS } from '@services/telegram/telegram.config';
-import { GoogleTranslateService } from '@services/google-translate/google-translate.service';
-import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
-import { IVoicePalOption } from '@services/voice-pal/interface';
-import { ImgurService } from '@services/imgur/imgur.service';
-import { MessageLoaderService } from '@services/telegram/message-loader.service';
-import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
-import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
-import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
+import { UtilsService } from '@core/utils';
+import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
+import { AiService } from '@services/ai';
+import { GoogleTranslateService } from '@services/google-translate';
+import { ImgurService } from '@services/imgur';
+import { SocialMediaDownloaderService } from '@services/social-media-downloader';
+import { BOTS, ITelegramMessageData, MessageLoaderOptions, MessageLoaderService, TelegramGeneralService } from '@services/telegram';
+import { YoutubeTranscriptService } from '@services/youtube-transcript';
+import { IVoicePalOption } from './interface';
+import { UserSelectedActionsService } from './user-selected-actions.service';
 import {
   ANALYTIC_EVENT_NAMES,
   ANALYTIC_EVENT_STATES,

@@ -1,10 +1,10 @@
 import { Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { isProd } from '@core/config/main.config';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { myUserId } from '@core/notifier-bot/notifier-bot.config';
-import { UtilsService } from '@core/utils/utils.service';
-import { IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
+import { UtilsService } from '@core/utils';
+import { IUserFlowDetails, IUserSelections } from '@services/tabit';
 import { SubscriptionModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../tabit-mongo.config';
 
