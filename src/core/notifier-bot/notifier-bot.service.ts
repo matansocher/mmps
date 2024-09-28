@@ -3,7 +3,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { isProd } from '@core/config/main.config';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { INotifyOptions } from '@core/notifier-bot/interface';
-import { notifierChatId } from '@core/notifier-bot/notifier-bot.config';
+import { NOTIFIER_CHAT_ID } from '@core/notifier-bot/notifier-bot.config';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
@@ -42,7 +42,7 @@ export class NotifierBotService implements OnModuleInit {
     }
     const userDetails = await mongoUserService.getUserDetails({ chatId });
     const notyMessageText = this.getNotyMessageText(botName, userDetails, options);
-    this.telegramGeneralService.sendMessage(this.bot, notifierChatId, notyMessageText);
+    this.telegramGeneralService.sendMessage(this.bot, NOTIFIER_CHAT_ID, notyMessageText);
   }
 
   getNotyMessageText(botName: string, userDetails: UserModel, options: INotifyOptions): string {

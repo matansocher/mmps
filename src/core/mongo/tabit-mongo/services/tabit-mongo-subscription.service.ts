@@ -2,7 +2,7 @@ import { Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { isProd } from '@core/config/main.config';
 import { LoggerService } from '@core/logger';
-import { myUserId } from '@core/notifier-bot/notifier-bot.config';
+import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
 import { IUserFlowDetails, IUserSelections } from '@services/tabit';
 import { SubscriptionModel } from '../models';
@@ -24,7 +24,7 @@ export class TabitMongoSubscriptionService {
     try {
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
-      if (isProd) filter['chatId'] = myUserId;
+      if (!isProd) filter['chatId'] = MY_USER_ID;
       return this.subscriptionCollection.find(filter).toArray();
     } catch (err) {
       this.logger.error(this.getActiveSubscriptions.name, `err: ${this.utilsService.getErrorMessage(err)}`);
@@ -73,6 +73,7 @@ export class TabitMongoSubscriptionService {
 
   getExpiredSubscriptions() {
     const filter = { isActive: true, 'userSelections.date': { $lt: new Date() } };
+    if (!isProd) filter['chatId'] = MY_USER_ID;
     return this.subscriptionCollection.find(filter).toArray();
   }
 }
