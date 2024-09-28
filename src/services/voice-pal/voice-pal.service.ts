@@ -11,13 +11,13 @@ import { AiService } from '@services/ai';
 import { BOTS } from '@services/telegram/telegram.config';
 import { GoogleTranslateService } from '@services/google-translate';
 import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/interface';
-import { IVoicePalOption } from '@services/voice-pal/interface';
 import { ImgurService } from '@services/imgur';
 import { MessageLoaderService } from '@services/telegram/message-loader.service';
 import { SocialMediaDownloaderService } from '@services/social-media-downloader';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript';
+import { IVoicePalOption } from './interface';
+import { UserSelectedActionsService } from './user-selected-actions.service';
 import {
   ANALYTIC_EVENT_NAMES,
   ANALYTIC_EVENT_STATES,

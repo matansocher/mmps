@@ -6,9 +6,7 @@ import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
 import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
-import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
-import { VOICE_PAL_OPTIONS } from '@services/voice-pal/voice-pal.config';
-import { VoicePalService } from '@services/voice-pal/voice-pal.service';
+import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '@services/voice-pal';
 
 @Injectable()
 export class VoicePalBotService implements OnModuleInit {
