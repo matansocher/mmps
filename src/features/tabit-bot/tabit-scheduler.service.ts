@@ -1,11 +1,11 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { SubscriptionModel } from '@core/mongo/tabit-mongo/models';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo/services';
-import { UtilsService } from '@core/utils/utils.service';
+import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TabitApiService } from '@services/tabit/tabit-api/tabit-api.service';
 import { TabitUtilsService } from '@services/tabit/tabit-flow/tabit-utils.service';

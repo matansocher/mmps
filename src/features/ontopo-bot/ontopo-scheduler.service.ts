@@ -1,11 +1,11 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { SubscriptionModel } from '@core/mongo/ontopo-mongo/models';
 import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mongo/ontopo-mongo/services';
-import { UtilsService } from '@core/utils/utils.service';
+import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
 import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
 import { OntopoUtilsService } from '@services/ontopo/ontopo-flow/ontopo-utils.service';

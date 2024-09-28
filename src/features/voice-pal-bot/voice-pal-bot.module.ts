@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@core/logger/logger.module';
-import { UtilsModule } from '@core/utils/utils.module';
+import { LoggerModule } from '@core/logger';
+import { UtilsModule } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
 import { TelegramModule } from '@services/telegram/telegram.module';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';

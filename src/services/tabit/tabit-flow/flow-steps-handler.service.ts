@@ -1,10 +1,10 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
 import { MONTHS_OF_YEAR } from '@core/config/main.config';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo/services';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { UtilsService } from '@core/utils/utils.service';
+import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/tabit/interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '@services/tabit/tabit.config';

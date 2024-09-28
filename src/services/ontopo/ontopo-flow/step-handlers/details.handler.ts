@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
+import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
 import { IFlowStep, IOntopoRestaurant, IUserFlowDetails } from '@services/ontopo/interface';
 import { OntopoApiService } from '@services/ontopo/ontopo-api/ontopo-api.service';
 import { FlowStepsManagerService } from '@services/ontopo/ontopo-flow/flow-steps-manager.service';

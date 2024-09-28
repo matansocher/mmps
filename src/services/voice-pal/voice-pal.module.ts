@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@core/logger/logger.module';
+import { LoggerModule } from '@core/logger';
 import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo/voice-pal-mongo.module';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
-import { UtilsModule } from '@core/utils/utils.module';
+import { UtilsModule } from '@core/utils';
 import { AiModule } from '@services/ai';
 import { GoogleTranslateModule } from '@services/google-translate';
 import { ImgurModule } from '@services/imgur';

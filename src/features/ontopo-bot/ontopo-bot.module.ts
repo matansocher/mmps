@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { LoggerModule } from '@core/logger/logger.module';
+import { LoggerModule } from '@core/logger';
 import { OntopoMongoModule } from '@core/mongo/ontopo-mongo/ontopo-mongo.module';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
-import { UtilsModule } from '@core/utils/utils.module';
+import { UtilsModule } from '@core/utils';
 import { OntopoApiModule } from '@services/ontopo/ontopo-api/ontopo-api.module';
 import { OntopoFlowModule } from '@services/ontopo/ontopo-flow/ontopo-flow.module';
 import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';

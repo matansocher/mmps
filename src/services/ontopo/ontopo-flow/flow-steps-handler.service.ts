@@ -1,10 +1,10 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
 import { MONTHS_OF_YEAR } from '@core/config/main.config';
-import { LoggerService } from '@core/logger/logger.service';
+import { LoggerService } from '@core/logger';
 import { OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mongo/ontopo-mongo/services';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { UtilsService } from '@core/utils/utils.service';
+import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '@services/ontopo/interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS, RESTAURANT_FOR_USER_BASE_URL } from '@services/ontopo/ontopo.config';

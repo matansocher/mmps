@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
+import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
 import { IOntopoRestaurant, IOntopoRestaurantArea, IOntopoRestaurantAvailability, IUserSelections } from '@services/ontopo/interface';
 import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_URL } from '@services/ontopo/ontopo.config';
 import { OntopoApiUtils } from './ontopo-api.utils';

@@ -1,8 +1,8 @@
 import { Timer } from '@decorators';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger/logger.service';
-import { UtilsService } from '@core/utils/utils.service';
+import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
 import { BOTS } from '@services/telegram/telegram.config';
 import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';

@@ -1,8 +1,8 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { LoggerModule } from '@core/logger/logger.module';
+import { LoggerModule } from '@core/logger';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
-import { UtilsModule } from '@core/utils/utils.module';
+import { UtilsModule } from '@core/utils';
 import { WoltMongoModule } from '@core/mongo/wolt-mongo/wolt-mongo.module';
 import { WoltSchedulerService } from '@features/wolt-bot/wolt-scheduler.service';
 import { BOTS } from '@services/telegram/telegram.config';
