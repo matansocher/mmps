@@ -14,7 +14,7 @@ import { ITelegramMessageData, MessageLoaderOptions } from '@services/telegram/i
 import { IVoicePalOption } from '@services/voice-pal/interface';
 import { ImgurService } from '@services/imgur';
 import { MessageLoaderService } from '@services/telegram/message-loader.service';
-import { SocialMediaDownloaderService } from '@services/social-media-downloader/social-media-downloader.service';
+import { SocialMediaDownloaderService } from '@services/social-media-downloader';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { UserSelectedActionsService } from '@services/voice-pal/user-selected-actions.service';
 import { YoutubeTranscriptService } from '@services/youtube-transcript/youtube-transcript.service';
