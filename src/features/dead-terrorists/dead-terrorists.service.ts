@@ -1,7 +1,6 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { CHANNELS, TELEGRAM_CLIENT_TOKEN } from '@services/telegram-client/telegram-client.config';
-import { TelegramClientService } from '@services/telegram-client/telegram-client.service';
 import { TelegramClient } from 'telegram';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { CHANNELS, TELEGRAM_CLIENT_TOKEN, TelegramClientService } from '@services/telegram-client';
 
 @Injectable()
 export class DeadTerroristsService implements OnModuleInit {

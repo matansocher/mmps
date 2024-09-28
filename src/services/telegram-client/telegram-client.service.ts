@@ -1,9 +1,8 @@
-import { IListenerOptions } from '@services/telegram-client/interface';
 import { Buffer } from 'buffer';
 import { get as _get } from 'lodash';
-import { Injectable } from '@nestjs/common';
-import { IChannelDetails, ITelegramEvent, ITelegramMessage } from '@services/telegram-client/interface';
 import { TelegramClient } from 'telegram';
+import { Injectable } from '@nestjs/common';
+import { IChannelDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from '@services/telegram-client/interface';
 
 @Injectable()
 export class TelegramClientService {
