@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockMessagesAggregatorService, MockTelegramGeneralService } from '@mocks';
-import { MessagesAggregatorService } from '@services/telegram/messages-aggregator.service';
+import { MessagesAggregatorService } from '@services/telegram';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { VoicePalBotService } from './voice-pal-bot.service';
 

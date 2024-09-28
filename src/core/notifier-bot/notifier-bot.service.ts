@@ -4,7 +4,7 @@ import { INotifyOptions } from '@core/notifier-bot/interface';
 import { notifierChatId } from '@core/notifier-bot/notifier-bot.config';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 
 @Injectable()

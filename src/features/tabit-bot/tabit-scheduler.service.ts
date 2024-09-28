@@ -5,7 +5,7 @@ import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService, SubscriptionModel } from '@core/mongo/tabit-mongo';
 import { UtilsService } from '@core/utils';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { TabitApiService, TabitUtilsService, ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP } from '@services/tabit';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 

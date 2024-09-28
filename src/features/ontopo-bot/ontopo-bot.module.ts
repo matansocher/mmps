@@ -5,9 +5,7 @@ import { OntopoMongoModule } from '@core/mongo/ontopo-mongo';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils';
 import { OntopoApiModule, OntopoFlowModule } from '@services/ontopo';
-import { TelegramBotsFactoryModule } from '@services/telegram/telegram-bots-factory/telegram-bots-factory.module';
-import { BOTS } from '@services/telegram/telegram.config';
-import { TelegramModule } from '@services/telegram/telegram.module';
+import { BOTS, TelegramModule, TelegramBotsFactoryModule } from '@services/telegram';
 import { OntopoBotService } from './ontopo-bot.service';
 import { OntopoSchedulerService } from './ontopo-scheduler.service';
 

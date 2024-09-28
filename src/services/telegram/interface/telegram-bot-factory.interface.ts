@@ -1,3 +1,3 @@
-import type { IBotOptions } from '@services/telegram/telegram.config';
+import type { IBotOptions } from '@services/telegram';
 
 export type TelegramBotFactoryOptions = IBotOptions;

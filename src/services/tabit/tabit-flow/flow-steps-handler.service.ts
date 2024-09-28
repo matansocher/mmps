@@ -5,7 +5,7 @@ import { LoggerService } from '@core/logger';
 import { TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '../interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '../tabit.config';

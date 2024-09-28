@@ -5,7 +5,7 @@ import { LoggerService } from '@core/logger';
 import { OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mongo/ontopo-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import { BOTS } from '@services/telegram/telegram.config';
+import { BOTS } from '@services/telegram';
 import { TelegramGeneralService } from '@services/telegram/telegram-general.service';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '../interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS } from '../ontopo.config';
