@@ -43,6 +43,14 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     possibleInputs: [POSSIBLE_INPUTS.TEXT],
     showLoader: true,
   },
+  SUMMARY_SOCIAL_MEDIA_VIDEO: {
+    displayName: 'Summary of a Social Media Video',
+    selectedActionResponse: 'OK, Send me a link to a video and I will summarize it for you.\nI currently support these: youtube, facebook, instagram and tiktok',
+    handler: 'handleSummarizeSocialMediaVideoAction',
+    analyticsEventName: 'SUMMARY_SOCIAL_MEDIA_VIDEO',
+    possibleInputs: [POSSIBLE_INPUTS.TEXT],
+    showLoader: true,
+  },
   SUMMARY_YOUTUBE_VIDEO: {
     displayName: 'Summary of a YouTube Video',
     selectedActionResponse: 'OK, Send me a link to a youtube video and I will summarize it for you',

@@ -13,7 +13,7 @@ import { AppService } from './app.service';
     OntopoBotModule,
     TabitBotModule,
     VoicePalBotModule,
-    WoltBotModule,
+    // WoltBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

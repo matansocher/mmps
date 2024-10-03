@@ -12,7 +12,6 @@ import { GoogleTranslateService } from '@services/google-translate';
 import { ImgurService } from '@services/imgur';
 import { SocialMediaDownloaderService } from '@services/social-media-downloader';
 import { BOTS, ITelegramMessageData, MessageLoaderOptions, MessageLoaderService, TelegramGeneralService } from '@services/telegram';
-import { YoutubeTranscriptService } from '@services/youtube-transcript';
 import { IVoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import {
@@ -39,7 +38,6 @@ export class VoicePalService {
     private readonly mongoAnalyticLogService: VoicePalMongoAnalyticLogService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly googleTranslateService: GoogleTranslateService,
-    private readonly youtubeTranscriptService: YoutubeTranscriptService,
     private readonly socialMediaDownloaderService: SocialMediaDownloaderService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly imgurService: ImgurService,
@@ -165,27 +163,9 @@ export class VoicePalService {
     }
   }
 
-  async handleSummarizeYoutubeVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleSummarizeSocialMediaVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
-      const videoId = this.youtubeTranscriptService.getYoutubeVideoIdFromUrl(text);
-      if (!videoId) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.YOUTUBE, this.voicePalUtilsService.getKeyboardOptions());
-      }
-      const { transcription, errorMessage } = await this.youtubeTranscriptService.getYoutubeVideoTranscription(videoId);
-      if (errorMessage) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage, this.voicePalUtilsService.getKeyboardOptions());
-      }
-      const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
-    } catch (err) {
-      this.logger.error(this.handleSummarizeYoutubeVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
-      throw err;
-    }
-  }
-
-  async handleSummarizeTiktokVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
-    try {
-      const audioBuffer = await this.socialMediaDownloaderService.getTiktokAudio(text);
+      const audioBuffer = await this.socialMediaDownloaderService.getSocialMediaVideoTranscription(text);
       if (!audioBuffer) {
         await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.TIKTOK, this.voicePalUtilsService.getKeyboardOptions());
       }
@@ -198,28 +178,66 @@ export class VoicePalService {
       await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
       await this.utilsService.deleteFile(audioFilePath);
     } catch (err) {
-      this.logger.error(this.handleSummarizeTiktokVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.handleSummarizeSocialMediaVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }
 
-  async handleSummarizeMetaVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
-    try {
-      const videoBuffer = await this.socialMediaDownloaderService.getMetaVideo(text);
-      const videoFilePath = `${LOCAL_FILES_PATH}/meta-video-${new Date().getTime()}.mp4`;
-      await this.utilsService.saveVideoBytesArray(videoBuffer, videoFilePath);
-      const audioFilePath = await this.utilsService.extractAudioFromVideo(videoFilePath);
-      const transcription = await this.aiService.getTranscriptFromAudio(audioFilePath);
-
-      const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
-      await this.utilsService.deleteFile(videoFilePath);
-      await this.utilsService.deleteFile(audioFilePath);
-    } catch (err) {
-      this.logger.error(this.handleSummarizeMetaVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
-      throw err;
-    }
-  }
+  // async handleSummarizeYoutubeVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+  //   try {
+  //     const videoId = this.socialMediaDownloaderService.getYoutubeVideoIdFromUrl(text);
+  //     if (!videoId) {
+  //       await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.YOUTUBE, this.voicePalUtilsService.getKeyboardOptions());
+  //     }
+  //     const { transcription, errorMessage } = await this.socialMediaDownloaderService.getYoutubeVideoTranscription(videoId);
+  //     if (errorMessage) {
+  //       await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage, this.voicePalUtilsService.getKeyboardOptions());
+  //     }
+  //     const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
+  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
+  //   } catch (err) {
+  //     this.logger.error(this.handleSummarizeYoutubeVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+  //     throw err;
+  //   }
+  // }
+  //
+  // async handleSummarizeTiktokVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+  //   try {
+  //     const audioBuffer = await this.socialMediaDownloaderService.getTiktokAudio(text);
+  //     if (!audioBuffer) {
+  //       await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.TIKTOK, this.voicePalUtilsService.getKeyboardOptions());
+  //     }
+  //     const audioFilePath = `${LOCAL_FILES_PATH}/tiktok-audio-${new Date().getTime()}.mp3`;
+  //     await fs.writeFile(audioFilePath, audioBuffer);
+  //
+  //     const transcription = await this.aiService.getTranscriptFromAudio(audioFilePath);
+  //
+  //     const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
+  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
+  //     await this.utilsService.deleteFile(audioFilePath);
+  //   } catch (err) {
+  //     this.logger.error(this.handleSummarizeTiktokVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+  //     throw err;
+  //   }
+  // }
+  //
+  // async handleSummarizeMetaVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+  //   try {
+  //     const videoBuffer = await this.socialMediaDownloaderService.getMetaVideo(text);
+  //     const videoFilePath = `${LOCAL_FILES_PATH}/meta-video-${new Date().getTime()}.mp4`;
+  //     await this.utilsService.saveVideoBytesArray(videoBuffer, videoFilePath);
+  //     const audioFilePath = await this.utilsService.extractAudioFromVideo(videoFilePath);
+  //     const transcription = await this.aiService.getTranscriptFromAudio(audioFilePath);
+  //
+  //     const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
+  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
+  //     await this.utilsService.deleteFile(videoFilePath);
+  //     await this.utilsService.deleteFile(audioFilePath);
+  //   } catch (err) {
+  //     this.logger.error(this.handleSummarizeMetaVideoAction.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+  //     throw err;
+  //   }
+  // }
 
   async handleImageGenerationAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {

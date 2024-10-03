@@ -6,3 +6,5 @@ deal with alternative results to show the user close suggestions
 rest testing infra
 
 voice pal summary of web page - if content too long openai throws error
+
+unite all social media options to one place

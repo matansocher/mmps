@@ -7,7 +7,6 @@ import { AiModule } from '@services/ai';
 import { GoogleTranslateModule } from '@services/google-translate';
 import { ImgurModule } from '@services/imgur';
 import { SocialMediaDownloaderModule } from '@services/social-media-downloader';
-import { YoutubeTranscriptModule } from '@services/youtube-transcript';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VoicePalService } from './voice-pal.service';
 import { VoicePalUtilsService } from './voice-pal-utils.service';
@@ -22,7 +21,6 @@ import { VoicePalUtilsService } from './voice-pal-utils.service';
     SocialMediaDownloaderModule,
     UtilsModule,
     VoicePalMongoModule,
-    YoutubeTranscriptModule,
   ],
   providers: [VoicePalService, VoicePalUtilsService, UserSelectedActionsService],
   exports: [VoicePalService, UserSelectedActionsService],
