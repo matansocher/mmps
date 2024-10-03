@@ -165,6 +165,18 @@ export class VoicePalService {
     }
   }
 
+  async handleSummarizeSocialMediaVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+    if (text.includes('youtube') || text.includes('youtu.be')) {
+      return this.handleSummarizeYoutubeVideoAction({ chatId, text });
+    } else if (text.includes('facebook') || text.includes('instagram')) {
+      return this.handleSummarizeMetaVideoAction({ chatId, text });
+    } else if (text.includes('tiktok')) {
+      return this.handleSummarizeTiktokVideoAction({ chatId, text });
+    } else {
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.SOCIAL_MEDIA, this.voicePalUtilsService.getKeyboardOptions());
+    }
+  }
+
   async handleSummarizeYoutubeVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const videoId = this.youtubeTranscriptService.getYoutubeVideoIdFromUrl(text);
