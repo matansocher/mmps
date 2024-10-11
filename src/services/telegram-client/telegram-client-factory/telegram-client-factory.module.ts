@@ -1,7 +1,7 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Module, DynamicModule, Global } from '@nestjs/common';
-import { ITelegramClientFactoryOptions } from '@services/telegram-client';
+import { ITelegramClientFactoryOptions } from '../interface';
 
 @Global()
 @Module({})

@@ -5,4 +5,6 @@ deal with alternative results to show the user close suggestions
 
 rest testing infra
 
-voice pal summary of web page - if content too long openai throws error
+voice pal many actions - if content too long openai throws error
+
+voice pal prod bug - too many response messages
