@@ -182,10 +182,12 @@ export class VoicePalService {
       const videoId = this.youtubeTranscriptService.getYoutubeVideoIdFromUrl(text);
       if (!videoId) {
         await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.YOUTUBE, this.voicePalUtilsService.getKeyboardOptions());
+        return;
       }
       const { transcription, errorMessage } = await this.youtubeTranscriptService.getYoutubeVideoTranscription(videoId);
       if (errorMessage) {
         await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage, this.voicePalUtilsService.getKeyboardOptions());
+        return;
       }
       const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
@@ -200,6 +202,7 @@ export class VoicePalService {
       const audioBuffer = await this.socialMediaDownloaderService.getTiktokAudio(text);
       if (!audioBuffer) {
         await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.TIKTOK, this.voicePalUtilsService.getKeyboardOptions());
+        return;
       }
       const audioFilePath = `${LOCAL_FILES_PATH}/tiktok-audio-${new Date().getTime()}.mp3`;
       await fs.writeFile(audioFilePath, audioBuffer);
@@ -271,6 +274,7 @@ export class VoicePalService {
     try {
       if (!validUrl.isUri(text)) {
         await this.telegramGeneralService.sendMessage(this.bot, chatId, WEB_PAGE_URL_INVALID, this.voicePalUtilsService.getKeyboardOptions());
+        return;
       }
       const { data: webPageContent } = await axios.get(text);
       const SUMMARY_PROMPT =

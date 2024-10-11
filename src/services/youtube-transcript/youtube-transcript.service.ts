@@ -34,6 +34,13 @@ export class YoutubeTranscriptService {
       const parts = cleanedUrl.split('/');
       return parts[parts.length - 1];
     }
+    // shortener link
+    if (url.includes('youtu.be')) {
+      const regex = /^https:\/\/youtu\.be\/([^?]+)/;
+
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
     // web
     const queryParams = this.utilsService.getQueryParams(url);
     return queryParams['v'];

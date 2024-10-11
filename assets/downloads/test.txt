@@ -6,5 +6,3 @@ deal with alternative results to show the user close suggestions
 rest testing infra
 
 voice pal many actions - if content too long openai throws error
-
-voice pal prod bug - too many response messages
