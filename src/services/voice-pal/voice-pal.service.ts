@@ -258,14 +258,14 @@ export class VoicePalService {
     }
   }
 
-  async handleAnalyzerFile({ chatId, file }: Partial<ITelegramMessageData>): Promise<void> {
+  async handleAnalyzeFile({ chatId, file }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const fileLocalPath = await this.telegramGeneralService.downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
       const fileAnalysisText = await this.aiService.analyzeFile(FILE_ANALYSIS_PROMPT, fileLocalPath);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, fileAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
       this.utilsService.deleteFile(fileLocalPath);
     } catch (err) {
-      this.logger.error(this.handleAnalyzerFile.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.handleAnalyzeFile.name, `error: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }

@@ -6,7 +6,7 @@ export const LOCAL_FILES_PATH = './assets/downloads';
 export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   START: {
     displayName: '/start',
-    selectedActionResponse: `Hi {name}!\n\nI'm a bot that can help you with translations, transcriptions of text, audio and video files\n\nJust send me the data and I will do my thing`,
+    selectedActionResponse: `Hi {name}!\n\nI'm a bot that can help you with translations, transcriptions of text, audio and video files, and summarizing stuff\n\nJust send me the data and I will do my thing`,
     analyticsEventName: 'START',
     hideFromKeyboard: true,
   },
@@ -102,7 +102,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
   FILE_ANALYZER: {
     displayName: 'File Analyzer',
     selectedActionResponse: 'OK, Send me a pdf file and I will analyze it for you',
-    handler: 'handleAnalyzerFile',
+    handler: 'handleAnalyzeFile',
     analyticsEventName: 'FILE_ANALYZER',
     possibleInputs: [POSSIBLE_INPUTS.FILE],
     showLoader: true,

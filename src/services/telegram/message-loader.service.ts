@@ -68,17 +68,16 @@ export class MessageLoaderService {
   }
 
   async processCycle(bot: TelegramBot, chatId: number, options: MessageLoaderOptions): Promise<void> {
-    let messagePromise;
+    let messageRes;
 
     const messageText = this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId]?.cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
     if (this.messages[chatId]?.cycleIterationIndex === 0) {
-      messagePromise = this.telegramGeneralService.sendMessage(bot, chatId, messageText);
+      messageRes = await this.telegramGeneralService.sendMessage(bot, chatId, messageText);
     } else if (this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length) {
-      messagePromise = this.telegramGeneralService.editMessageText(bot, chatId, this.messages[chatId]?.loaderMessageId, messageText);
+      messageRes = await this.telegramGeneralService.editMessageText(bot, chatId, this.messages[chatId]?.loaderMessageId, messageText);
     }
     this.telegramGeneralService.sendChatAction(bot, chatId, options.loadingAction);
 
-    const messageRes = await messagePromise;
     this.messages[chatId].loaderMessageId = (messageRes && messageRes.message_id) ? messageRes.message_id : this.messages[chatId]?.loaderMessageId;
     this.messages[chatId].cycleIterationIndex = this.messages[chatId].cycleIterationIndex + 1;
     this.cycleInitiator(bot, chatId, options);
@@ -88,7 +87,9 @@ export class MessageLoaderService {
     const { timeoutId, loaderMessageId } = this.messages[chatId];
     clearTimeout(timeoutId as number);
     if (loaderMessageId) {
-      await this.telegramGeneralService.deleteMessage(bot, chatId, loaderMessageId);
+      setTimeout(() => {
+        this.telegramGeneralService.deleteMessage(bot, chatId, loaderMessageId);
+      }, 1000);
     }
     delete this.messages[chatId];
   }

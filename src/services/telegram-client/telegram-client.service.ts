@@ -4,7 +4,7 @@ import { TelegramClient } from 'telegram';
 import { Injectable } from '@nestjs/common';
 import { UtilsService } from '@core/utils';
 import { IChannelDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
-import { FILTER_OUT_EVENT } from './telegram-client.config';
+import { LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()
 export class TelegramClientService {
@@ -15,7 +15,7 @@ export class TelegramClientService {
 
   listenToMessages(telegramClient: TelegramClient, listenerOptions: IListenerOptions, callback) {
     telegramClient.addEventHandler(async (event) => { // TODO: filter events out to see what events are interesting
-      if (FILTER_OUT_EVENT.includes(event.className)) {
+      if (!LISTEN_TO_EVENTS.includes(event.className)) {
         return;
       }
       const messageData = this.getMessageData(event);

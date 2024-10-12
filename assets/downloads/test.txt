@@ -6,3 +6,5 @@ deal with alternative results to show the user close suggestions
 rest testing infra
 
 voice pal many actions - if content too long openai throws error
+
+messages loader - consider adding periodic cleanup logic to remove stale entries from the messages object.
