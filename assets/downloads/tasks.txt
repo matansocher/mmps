@@ -1,0 +1,31 @@
+hebrew
+deal with alternative results to show the user close suggestions
+
+rest testing infra
+
+voice pal many actions - if content too long openai throws error
+
+messages loader - consider adding periodic cleanup logic to remove stale entries from the messages object.
+
++------------------+------------------+------------------+
+|      Column 1    |      Column 2    |      Column 3    |
++------------------+------------------+------------------+
+|      Row 1       |      Data 1      |      Data 2      |
++------------------+------------------+------------------+
+|      Row 2       |      Data 3      |      Data 4      |
++------------------+------------------+------------------+
+|      Row 3       |      Data 5      |      Data 6      |
++------------------+------------------+------------------+
+
+AI:
+1. Use JSON mode to ‘instruct the model to always return a JSON object’.
+2. Use ’ Few Shot Prompting’: providing the model with a few examples of the result you expect in the system message.
+3. Describe the expected output JSON schema in the system message.
+4. Fine-tune a model with expected input and output results. (a bit more work)
+
+if (output == 'json'){
+    let start = text.indexOf('{');
+    let end = text.lastIndexOf('}')+1;
+    let json = text.substring(start,end);
+    myresult = JSON.parse(json);
+}

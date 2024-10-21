@@ -1,7 +1,7 @@
-import { LoggerService } from '@core/logger';
 import { get as _get } from 'lodash';
 import { TelegramClient } from 'telegram';
 import { Injectable } from '@nestjs/common';
+import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { IChannelDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
 import { LISTEN_TO_EVENTS } from './telegram-client.config';
@@ -14,7 +14,7 @@ export class TelegramClientService {
   ) {}
 
   listenToMessages(telegramClient: TelegramClient, listenerOptions: IListenerOptions, callback) {
-    telegramClient.addEventHandler(async (event) => { // TODO: filter events out to see what events are interesting
+    telegramClient.addEventHandler(async (event) => {
       if (!LISTEN_TO_EVENTS.includes(event.className)) {
         return;
       }
