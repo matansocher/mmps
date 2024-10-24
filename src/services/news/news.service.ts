@@ -33,7 +33,7 @@ export class NewsService implements OnModuleInit {
 
   async handleMessage(messageData: ITelegramMessage, channelDetails: IChannelDetails) {
     try {
-      this.logger.info(this.handleMessage.name, `handleMessage: ${channelDetails.title} - ${messageData.text}`);
+      this.logger.info(this.handleMessage.name, `${channelDetails.title} - ${messageData.text}`);
       const thread = await this.getCurrentThread();
       await this.openaiAssistantService.addMessageToThread(thread.threadId, messageData.text);
     } catch (err) {
