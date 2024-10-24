@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { DeadTerroristsModule } from '@features/dead-terrorists';
+import { NewsBotModule } from '@features/news';
 import { OntopoBotModule } from '@features/ontopo-bot';
 import { TabitBotModule } from '@features/tabit-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
@@ -9,7 +9,7 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
-    DeadTerroristsModule,
+    NewsBotModule,
     OntopoBotModule,
     TabitBotModule,
     VoicePalBotModule,

@@ -17,6 +17,10 @@ export const BOTS = {
     name: 'Voice Pal Bot',
     token: env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
   },
+  NEWS: {
+    name: 'News',
+    token: env.NEWS_TELEGRAM_BOT_TOKEN,
+  },
   NOTIFIER: {
     name: 'Notifier Bot',
     token: env.NOTIFIER_TELEGRAM_BOT_TOKEN,

@@ -29,3 +29,7 @@ if (output == 'json'){
     let json = text.substring(start,end);
     myresult = JSON.parse(json);
 }
+
+
+news:
+

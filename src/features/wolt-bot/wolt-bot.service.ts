@@ -55,7 +55,7 @@ export class WoltBotService implements OnModuleInit {
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
+      this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
@@ -140,13 +140,14 @@ export class WoltBotService implements OnModuleInit {
 
     try {
       const restaurantName = restaurant.replace('remove - ', '');
-      const existingSubscription = await this.mongoSubscriptionService.getSubscription(chatId, restaurantName) as SubscriptionModel;
+      const existingSubscription = (await this.mongoSubscriptionService.getSubscription(chatId, restaurantName)) as SubscriptionModel;
 
       if (restaurant.startsWith('remove - ')) {
-        return await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
+        await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
+      } else {
+        await this.handleCallbackAddSubscription(chatId, restaurant, existingSubscription);
       }
 
-      await this.handleCallbackAddSubscription(chatId, restaurant, existingSubscription);
       this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.callbackQueryHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);

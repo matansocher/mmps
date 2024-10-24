@@ -23,7 +23,6 @@ export const LISTEN_TO_EVENTS = [
 export const CHANNELS = {
   ISRAEL_TECH_FORUM: { id: '1083698033', name: `🇮🇱 Israel Tech & Innovation Forum` },
   TROLL_FOOTBALL: { id: '1120307181', name: `Troll Football` },
-  UNCENSORED_ISRAEL_NEWS: { id: '1147703577', name: 'ללא צנזורה 👁️ הערוץ הרשמי☠️ חדשות אנונימוס ללא צנזורה🚨 חדשות ישראל ללא צנזורה 🚨' },
   OVADIA_TUBUL: { id: '1199892726', name: 'עובדיה טובול בטלגרם 🔞' },
   GADGETY: { id: '1215197825', name: `Gadgety | גאדג'טי` },
   MACCABI_HAIFA_FANS: { id: '1253041188', name: 'מכבי חיפה או למות' },
