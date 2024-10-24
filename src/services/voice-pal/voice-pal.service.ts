@@ -54,7 +54,7 @@ export class VoicePalService {
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
-      await this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
+      this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
       this.notifierBotService.notify(BOTS.VOICE_PAL.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       replyText = replyText.replace('{name}', firstName || username || '');
     } else {

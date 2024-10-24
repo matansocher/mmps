@@ -55,7 +55,7 @@ export class OntopoBotService implements OnModuleInit {
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
+      this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
       this.notifierBotService.notify(BOTS.ONTOPO.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);

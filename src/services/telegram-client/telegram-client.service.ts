@@ -19,6 +19,9 @@ export class TelegramClientService {
         return;
       }
       const messageData = this.getMessageData(event);
+      if (!messageData?.text) {
+        return;
+      }
       if (!listenerOptions.channelIds.includes(messageData?.channelId?.toString())) {
         return;
       }
@@ -26,7 +29,6 @@ export class TelegramClientService {
       if (!channelDetails?.id) {
         return;
       }
-      console.log(event.className);
       return callback(messageData, channelDetails);
     });
   }
@@ -35,18 +37,18 @@ export class TelegramClientService {
     return {
       id: _get(event, 'message.id', null),
       userId: _get(event, 'message.fromId.userId', null),
-      channelId: _get(event, 'message.peerId.channelId', null),
+      channelId: _get(event, 'message.peerId.channelId', '').toString(),
       date: _get(event, 'message.date', null),
       text: _get(event, 'message.message', null),
     };
   }
 
   async getChannelDetails(telegramClient: TelegramClient, channelId: string): Promise<IChannelDetails> {
-    const bigIntChannelId = BigInt(-1000000000000 - parseInt(channelId));
-    const channelDetails = (await telegramClient.getEntity(bigIntChannelId.toString())) as any;
+    const channel = `-100${channelId}`;
+    const channelDetails = (await telegramClient.getEntity(channel)) as any;
     // const photo = await this.getChannelPhoto(telegramClient, channelDetails);
     return {
-      id: _get(channelDetails, 'id', null),
+      id: _get(channelDetails, 'id', null).toString(),
       createdDate: _get(channelDetails, 'date', null),
       title: _get(channelDetails, 'title', null),
       userName: _get(channelDetails, 'username', null),
