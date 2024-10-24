@@ -1,15 +1,9 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Cron, SchedulerRegistry } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import { LoggerService } from '@core/logger';
-import {
-  NewsMongoAnalyticLogService,
-  NewsMongoSubscriptionService,
-  NewsMongoThreadService,
-  NewsMongoUserService,
-  SubscriptionModel,
-} from '@core/mongo/news-mongo';
+import { NewsMongoSubscriptionService, NewsMongoThreadService, SubscriptionModel } from '@core/mongo/news-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
 import { NewsService } from '@services/news';
@@ -23,12 +17,9 @@ export class NewsSchedulerService implements OnModuleInit {
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly newsService: NewsService,
-    private readonly mongoAnalyticLogService: NewsMongoAnalyticLogService,
-    private readonly mongoUserService: NewsMongoUserService,
     private readonly mongoThreadService: NewsMongoThreadService,
     private readonly mongoSubscriptionService: NewsMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
-    private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifierBotService: NotifierBotService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     @Inject(BOTS.NEWS.name) private readonly bot: TelegramBot,
@@ -41,18 +32,19 @@ export class NewsSchedulerService implements OnModuleInit {
   @Cron('0 20 * * *', { name: 'news-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow() {
     const subscriptions = (await this.mongoSubscriptionService.getActiveSubscriptions()) as SubscriptionModel[];
-    if (subscriptions?.length) {
-      const chatIds = subscriptions.map((subscription: SubscriptionModel) => subscription.chatId);
-      const summaryContent = await this.newsService.getDailySummary();
-      const summaryPhoto = summaryContent ? await this.newsService.getDailyPhoto(summaryContent) : null;
-      if (!summaryContent) {
-        this.logger.error(this.handleIntervalFlow.name, 'error - could not get daily summary or photo');
-        return;
-      }
-      await this.alertSubscriptions(chatIds, summaryContent, summaryPhoto);
-      await this.handleAssistantThreadRefresh();
-      await this.newsService.refreshChannelsDetails();
+    if (!subscriptions?.length) {
+      return;
     }
+    const chatIds = subscriptions.map((subscription: SubscriptionModel) => subscription.chatId);
+    const summaryContent = await this.newsService.getDailySummary();
+    if (!summaryContent) {
+      this.logger.error(this.handleIntervalFlow.name, 'error - could not get daily summary or photo');
+      return;
+    }
+    const summaryPhoto = await this.newsService.getDailyPhoto(summaryContent);
+    await this.alertSubscriptions(chatIds, summaryContent, summaryPhoto);
+    await this.handleAssistantThreadRefresh();
+    await this.newsService.refreshChannelsDetails();
   }
 
   async alertSubscriptions(chatIds: number[], summaryContent: string, summaryPhoto: string): Promise<any> {

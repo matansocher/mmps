@@ -29,7 +29,6 @@ export class TelegramClientService {
       if (!channelDetails?.id) {
         return;
       }
-      console.log(event.className);
       return callback(messageData, channelDetails);
     });
   }

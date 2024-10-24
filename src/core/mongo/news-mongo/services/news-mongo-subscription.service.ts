@@ -1,3 +1,5 @@
+import { isProd } from '@core/config/main.config';
+import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../news-mongo.config';
@@ -11,7 +13,9 @@ export class NewsMongoSubscriptionService {
   }
 
   getActiveSubscriptions() {
-    return this.subscriptionCollection.find({ isActive: true }).toArray();
+    const filter = { isActive: true };
+    if (!isProd) filter['chatId'] = MY_USER_ID;
+    return this.subscriptionCollection.find(filter).toArray();
   }
 
   async subscribeChat(chatId: number) {

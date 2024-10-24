@@ -1,3 +1,4 @@
+import { LoggerService } from '@core/logger';
 import { TelegramClient } from 'telegram';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { NewsMongoThreadService, ThreadModel } from '@core/mongo/news-mongo';
@@ -15,6 +16,7 @@ export class NewsService implements OnModuleInit {
   channelDetails: IChannelDetails[];
 
   constructor(
+    private readonly logger: LoggerService,
     private readonly telegramClientService: TelegramClientService,
     private readonly openaiService: OpenaiService,
     private readonly openaiAssistantService: OpenaiAssistantService,
@@ -28,8 +30,8 @@ export class NewsService implements OnModuleInit {
   }
 
   async handleMessage(messageData: ITelegramMessage, channelDetails: IChannelDetails) {
-    console.log(`channelDetails: ${channelDetails.title}`);
-    console.log(`messageData: ${messageData.text}`);
+    this.logger.info(this.handleMessage.name, `channelDetails: ${channelDetails.title}`);
+    this.logger.info(this.handleMessage.name, `messageData: ${messageData.text}`);
     const thread = await this.getCurrentThread();
     this.openaiAssistantService.addMessageToThread(thread.threadId, messageData.text);
   }
