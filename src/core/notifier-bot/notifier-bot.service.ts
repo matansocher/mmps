@@ -51,11 +51,12 @@ export class NotifierBotService implements OnModuleInit {
 
   getNotyMessageText(botName: string, userDetails: UserModel, options: INotifyOptions): string {
     const { firstName = '', lastName = '', username = '' } = userDetails;
+    const { action, ...otherOptions } = options;
     const sentences = [];
     sentences.push(`bot: ${botName}`);
     userDetails && sentences.push(`name: ${firstName} ${lastName} - ${username}`);
-    sentences.push(`action: ${options.action}`);
-    options.data && Object.keys(options.data).length && sentences.push(`data: ${JSON.stringify(options.data, null, 2)}`);
+    sentences.push(`action: ${action}`);
+    otherOptions && Object.keys(otherOptions).length && sentences.push(`data: ${JSON.stringify(otherOptions, null, 2)}`);
     return sentences.join('\n\n');
   }
 }

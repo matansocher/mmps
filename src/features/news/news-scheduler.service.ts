@@ -31,20 +31,24 @@ export class NewsSchedulerService implements OnModuleInit {
 
   @Cron('0 20 * * *', { name: 'news-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow() {
-    const subscriptions = (await this.mongoSubscriptionService.getActiveSubscriptions()) as SubscriptionModel[];
-    if (!subscriptions?.length) {
-      return;
+    try {
+      const subscriptions = (await this.mongoSubscriptionService.getActiveSubscriptions()) as SubscriptionModel[];
+      if (!subscriptions?.length) {
+        return;
+      }
+      const chatIds = subscriptions.map((subscription: SubscriptionModel) => subscription.chatId);
+      const summaryContent = await this.newsService.getDailySummary();
+      if (!summaryContent) {
+        this.logger.error(this.handleIntervalFlow.name, 'error - could not get daily summary or photo');
+        return;
+      }
+      const summaryPhoto = await this.newsService.getDailyPhoto(summaryContent);
+      await this.alertSubscriptions(chatIds, summaryContent, summaryPhoto);
+      await this.handleAssistantThreadRefresh();
+      await this.newsService.refreshChannelsDetails();
+    } catch (err) {
+      this.logger.error(this.handleIntervalFlow.name, `error - ${this.utilsService.getErrorMessage(err)}`);
     }
-    const chatIds = subscriptions.map((subscription: SubscriptionModel) => subscription.chatId);
-    const summaryContent = await this.newsService.getDailySummary();
-    if (!summaryContent) {
-      this.logger.error(this.handleIntervalFlow.name, 'error - could not get daily summary or photo');
-      return;
-    }
-    const summaryPhoto = await this.newsService.getDailyPhoto(summaryContent);
-    await this.alertSubscriptions(chatIds, summaryContent, summaryPhoto);
-    await this.handleAssistantThreadRefresh();
-    await this.newsService.refreshChannelsDetails();
   }
 
   async alertSubscriptions(chatIds: number[], summaryContent: string, summaryPhoto: string): Promise<any> {

@@ -1,4 +1,5 @@
 import { LoggerService } from '@core/logger';
+import { UtilsService } from '@core/utils';
 import { TelegramClient } from 'telegram';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { NewsMongoThreadService, ThreadModel } from '@core/mongo/news-mongo';
@@ -17,6 +18,7 @@ export class NewsService implements OnModuleInit {
 
   constructor(
     private readonly logger: LoggerService,
+    private readonly utilsService: UtilsService,
     private readonly telegramClientService: TelegramClientService,
     private readonly openaiService: OpenaiService,
     private readonly openaiAssistantService: OpenaiAssistantService,
@@ -30,10 +32,13 @@ export class NewsService implements OnModuleInit {
   }
 
   async handleMessage(messageData: ITelegramMessage, channelDetails: IChannelDetails) {
-    this.logger.info(this.handleMessage.name, `channelDetails: ${channelDetails.title}`);
-    this.logger.info(this.handleMessage.name, `messageData: ${messageData.text}`);
-    const thread = await this.getCurrentThread();
-    this.openaiAssistantService.addMessageToThread(thread.threadId, messageData.text);
+    try {
+      this.logger.info(this.handleMessage.name, `handleMessage: ${channelDetails.title} - ${messageData.text}`);
+      const thread = await this.getCurrentThread();
+      await this.openaiAssistantService.addMessageToThread(thread.threadId, messageData.text);
+    } catch (err) {
+      this.logger.error(this.refreshChannelsDetails.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+    }
   }
 
   // for testing purposes
@@ -43,11 +48,15 @@ export class NewsService implements OnModuleInit {
   // }
 
   async refreshChannelsDetails(): Promise<void> {
-    const promises = TELEGRAM_CHANNEL_IDS_TO_LISTEN.map(async (channelId) => {
-      return this.telegramClientService.getChannelDetails(this.telegramClient, channelId);
-    });
-    const results = await Promise.all(promises);
-    this.channelDetails = results;
+    try {
+      const promises = TELEGRAM_CHANNEL_IDS_TO_LISTEN.map(async (channelId) => {
+        return this.telegramClientService.getChannelDetails(this.telegramClient, channelId);
+      });
+      const results = await Promise.all(promises);
+      this.channelDetails = results;
+    } catch (err) {
+      this.logger.error(this.refreshChannelsDetails.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+    }
   }
 
   getChannelsDetails(): IChannelDetails[] {
@@ -68,12 +77,22 @@ export class NewsService implements OnModuleInit {
   }
 
   async getDailySummary(): Promise<string> {
-    const thread = await this.getCurrentThread();
-    const threadRun = await this.openaiAssistantService.runThread(NEWS_ASSISTANT_ID, thread.threadId);
-    return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
+    try {
+      const thread = await this.getCurrentThread();
+      const threadRun = await this.openaiAssistantService.runThread(NEWS_ASSISTANT_ID, thread.threadId);
+      return await this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
+    } catch (err) {
+      this.logger.error(this.getDailySummary.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      return null;
+    }
   }
 
-  getDailyPhoto(summaryContent: string): Promise<string> {
-    return this.openaiService.createImage(`${DAILY_PHOTO_PROMPT}\n\n${summaryContent}`);
+  async getDailyPhoto(summaryContent: string): Promise<string> {
+    try {
+      return await this.openaiService.createImage(`${DAILY_PHOTO_PROMPT}\n\n${summaryContent}`);
+    } catch (err) {
+      this.logger.error(this.getDailyPhoto.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      return null;
+    }
   }
 }

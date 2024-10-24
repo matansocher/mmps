@@ -192,6 +192,6 @@ export class TelegramGeneralService {
 
   botErrorHandler(botName: string, handlerName: string, error): void {
     const { code, message } = error;
-    this.logger.info(`${botName} bot - ${handlerName}`, `code: ${code}, message: ${message}`);
+    this.logger.info(`${botName} - ${handlerName}`, `code: ${code}, message: ${message}`);
   }
 }
