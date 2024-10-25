@@ -12,7 +12,7 @@ export class TwitterClientService implements OnModuleInit {
     @Inject(TWITTER_CLIENT_TOKEN) private readonly twitterClient: TwitterApi,
   ) {}
 
-  // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ currently not working - twitter demands you to pay 100$ so you can read users tweets
+  // currently not working - twitter demands you to pay 100$ so you can read users tweets
   onModuleInit(): any {
     const username = 'BrandonButch';
     this.getUserTweets(username, 10);
