@@ -4,6 +4,7 @@ import { OntopoBotModule } from '@features/ontopo-bot';
 import { TabitBotModule } from '@features/tabit-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
 import { WoltBotModule } from '@features/wolt-bot';
+import { TwitterClientModule } from '@services/twitter-client';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -14,6 +15,7 @@ import { AppService } from './app.service';
     TabitBotModule,
     VoicePalBotModule,
     WoltBotModule,
+    TwitterClientModule,
   ],
   controllers: [AppController],
   providers: [AppService],
