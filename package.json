@@ -44,6 +44,7 @@
     "rxjs": "^7.8.1",
     "telegram": "^2.24.11",
     "ts-node": "^10.9.1",
+    "twitter-api-v2": "^1.18.1",
     "valid-url": "^1.0.9",
     "yahoo-finance2": "^2.11.3",
     "youtube-transcript": "^1.2.1"
