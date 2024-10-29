@@ -61,9 +61,6 @@ export class VoicePalService {
       this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
     }
 
-    const analyticAction = `${ANALYTIC_EVENT_NAMES[selection]} - ${ANALYTIC_EVENT_STATES.SET_ACTION}`;
-    this.notifierBotService.notify(BOTS.VOICE_PAL.name, { action: analyticAction }, chatId, this.mongoUserService);
-
     this.logger.info(this.handleActionSelection.name, `chatId: ${chatId}, selection: ${selection}`);
 
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.voicePalUtilsService.getKeyboardOptions());
@@ -102,7 +99,7 @@ export class VoicePalService {
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
       throw err;
     }
   }

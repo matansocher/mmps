@@ -36,7 +36,7 @@ export class NotifierBotService implements OnModuleInit {
     }
   }
 
-  async notify(botName: string, options: INotifyOptions, chatId, mongoUserService: MongoUserService): Promise<void> {
+  async notify(botName: string, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
     if (!isProd) {
       return;
     }
@@ -55,8 +55,8 @@ export class NotifierBotService implements OnModuleInit {
     const sentences = [];
     sentences.push(`bot: ${botName}`);
     userDetails && sentences.push(`name: ${firstName} ${lastName} - ${username}`);
-    sentences.push(`action: ${action}`);
+    sentences.push(`action: ${action.toLowerCase().replaceAll('_', ' ')}`);
     otherOptions && Object.keys(otherOptions).length && sentences.push(`data: ${JSON.stringify(otherOptions, null, 2)}`);
-    return sentences.join('\n\n');
+    return sentences.join('\n');
   }
 }

@@ -61,7 +61,9 @@ export class WoltBotService implements OnModuleInit {
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
+      this.logger.error(this.startHandler.name, errorMessage);
+      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -88,7 +90,9 @@ export class WoltBotService implements OnModuleInit {
       await Promise.all(promisesArr);
       this.logger.info(this.showHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.showHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
+      this.logger.error(this.showHandler.name, errorMessage);
+      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.showHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -104,8 +108,6 @@ export class WoltBotService implements OnModuleInit {
     this.logger.info(this.textHandler.name, `${logBody} - start`);
 
     try {
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.SEARCH }, chatId, this.mongoUserService);
-
       const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
       if (isLastUpdatedTooOld) {
         await this.woltService.refreshRestaurants();
@@ -128,7 +130,9 @@ export class WoltBotService implements OnModuleInit {
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, inlineKeyboardMarkup);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
+      this.logger.error(this.textHandler.name, errorMessage);
+      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -150,7 +154,9 @@ export class WoltBotService implements OnModuleInit {
 
       this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.callbackQueryHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
+      this.logger.error(this.callbackQueryHandler.name, errorMessage);
+      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -181,7 +187,6 @@ export class WoltBotService implements OnModuleInit {
       }
     }
 
-    this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, chatId, this.mongoUserService);
     await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, form);
   }
 
@@ -195,7 +200,6 @@ export class WoltBotService implements OnModuleInit {
       replyText = `It seems like you don't have a subscription for ${restaurant}.\n\n` +
         `You can search and register for another restaurant if you like`;
     }
-    this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE }, chatId, this.mongoUserService);
     return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
   }
 
