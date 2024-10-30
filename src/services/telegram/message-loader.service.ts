@@ -84,6 +84,9 @@ export class MessageLoaderService {
   }
 
   async stopLoader(bot: TelegramBot, chatId: number): Promise<void> {
+    if (!this.messages[chatId]) {
+      return;
+    }
     const { timeoutId, loaderMessageId } = this.messages[chatId];
     clearTimeout(timeoutId as number);
     if (loaderMessageId) {
