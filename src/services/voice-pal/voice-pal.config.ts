@@ -99,22 +99,22 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     possibleInputs: [POSSIBLE_INPUTS.PHOTO],
     showLoader: true,
   },
-  FILE_ANALYZER: {
-    displayName: 'File Analyzer',
-    selectedActionResponse: 'OK, Send me a pdf file and I will analyze it for you',
-    handler: 'handleAnalyzeFile',
-    analyticsEventName: 'FILE_ANALYZER',
-    possibleInputs: [POSSIBLE_INPUTS.FILE],
-    showLoader: true,
-  },
-  WEB_PAGE_SUMMARY: {
-    displayName: 'Web Page Summary',
-    selectedActionResponse: 'OK, Send me a url to a page and I will summarize it for you',
-    handler: 'webPageSummary',
-    analyticsEventName: 'WEB_PAGE_SUMMARY',
-    possibleInputs: [POSSIBLE_INPUTS.TEXT],
-    showLoader: true,
-  },
+  // FILE_ANALYZER: {
+  //   displayName: 'File Analyzer',
+  //   selectedActionResponse: 'OK, Send me a pdf file and I will analyze it for you',
+  //   handler: 'handleAnalyzeFile',
+  //   analyticsEventName: 'FILE_ANALYZER',
+  //   possibleInputs: [POSSIBLE_INPUTS.FILE],
+  //   showLoader: true,
+  // },
+  // WEB_PAGE_SUMMARY: {
+  //   displayName: 'Web Page Summary',
+  //   selectedActionResponse: 'OK, Send me a url to a page and I will summarize it for you',
+  //   handler: 'webPageSummary',
+  //   analyticsEventName: 'WEB_PAGE_SUMMARY',
+  //   possibleInputs: [POSSIBLE_INPUTS.TEXT],
+  //   showLoader: true,
+  // },
 };
 
 export const ANALYTIC_EVENT_NAMES = {

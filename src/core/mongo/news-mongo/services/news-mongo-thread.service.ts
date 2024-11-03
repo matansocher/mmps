@@ -11,8 +11,8 @@ export class NewsMongoThreadService {
     this.threadCollection = this.db.collection(COLLECTIONS.THREAD);
   }
 
-  getCurrentThread(): ThreadModel {
-    return this.threadCollection.findOne({ isActive: true });
+  async getCurrentThread(): Promise<ThreadModel> {
+    return await this.threadCollection.findOne({ isActive: true });
   }
 
   stopThread(threadId) {
