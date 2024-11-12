@@ -9,10 +9,15 @@ import { Cron } from '@nestjs/schedule';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import TelegramBot from 'node-telegram-bot-api';
 
+const INTERVAL_MINUTES = 5;
+const COUNT_TO_NOTIFY = (60 / INTERVAL_MINUTES) * 6; // represents - (hour) * notify every 6 hours
+
 @Injectable()
 export class RollinsparkSchedulerService {
+  readonly chatIds = [AVIV_USER_ID, MY_USER_ID];
   latestResult = [];
   currentCount = 0;
+  isFirstTime = true;
 
   constructor(
     private readonly logger: LoggerService,
@@ -21,34 +26,24 @@ export class RollinsparkSchedulerService {
     @Inject(BOTS.ROLLINSPARK.name) private readonly bot: TelegramBot,
   ) {}
 
-  @Cron('*/5 * * * *', { name: 'rollinspark-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`*/${INTERVAL_MINUTES} * * * *`, { name: 'rollinspark-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow() {
     try {
-      const chatIds = [AVIV_USER_ID, MY_USER_ID];
       const aptsDetails = await this.getAptsDetails();
       if (!aptsDetails) {
         this.logger.error(this.handleIntervalFlow.name, 'error - could not get daily summary or photo');
         return;
       }
       const isResSimilarToLatest = await this.isResSimilarToLatest(aptsDetails);
-      if (!isResSimilarToLatest) {
-        await this.alertSubscriptions(chatIds);
+      if (!this.isFirstTime && !isResSimilarToLatest) {
+        await this.alertSubscriptions(this.chatIds);
       }
       this.latestResult = aptsDetails;
       this.currentCount++;
+      this.isFirstTime = false;
     } catch (err) {
-      this.bot.sendMessage(MY_USER_ID, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `error - ${this.utilsService.getErrorMessage(err)}`);
       this.logger.error(this.handleIntervalFlow.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-    }
-  }
-
-  async alertSubscriptions(chatIds: number[]): Promise<any> {
-    try {
-      for (const chatId of chatIds) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I found a change in the rollins park apartment availability`);
-      }
-    } catch (err) {
-      this.logger.error(this.alertSubscriptions.name, `error - ${this.utilsService.getErrorMessage(err)}`);
     }
   }
 
@@ -68,18 +63,33 @@ export class RollinsparkSchedulerService {
   }
 
   async isResSimilarToLatest(newResult): Promise<boolean> {
-    if (!this.latestResult) {
+    if (!this.latestResult?.length) {
       return false;
     }
     const existingKeys = this.latestResult.map((res) => res.ApartmentId).sort();
     const newKeys = newResult.map((res) => res.ApartmentId).sort();
 
-    if (this.currentCount === 12) {
-      const messageText = `Just letting you know that I am on it, lets result: ${newKeys}`;
-      await Promise.all([this.bot.sendMessage(MY_USER_ID, messageText), this.bot.sendMessage(AVIV_USER_ID, messageText)]);
+    if (this.currentCount === COUNT_TO_NOTIFY) {
+      const messageText = [
+        `אביב! תהיה רגוע אני נותן עדכון כשיש דירה חדשה ברולינס פארק`,
+        `מה מצאתי כל הזמן הזה: ${newKeys}`,
+      ].join('\n');
+      await Promise.all(this.chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, messageText)));
       this.currentCount = 0;
     }
 
     return _isEqual(existingKeys, newKeys);
+  }
+
+  async alertSubscriptions(chatIds: number[]): Promise<any> {
+    try {
+      const messageText = [
+        `אביב! נראה לי יש דירה חדשה ברולינס פארק לך לבדוק`,
+        `https://www.rollinspark.net/floor-plans`,
+      ].join('\n');
+      await Promise.all(chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, messageText)));
+    } catch (err) {
+      this.logger.error(this.alertSubscriptions.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+    }
   }
 }
