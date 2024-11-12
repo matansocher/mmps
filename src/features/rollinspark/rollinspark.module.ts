@@ -20,6 +20,6 @@ export class RollinsparkModule {
   constructor(private readonly rollinsparkSchedulerService: RollinsparkSchedulerService) {}
 
   onModuleInit(): void {
-    // this.rollinsparkSchedulerService.handleIntervalFlow(); // for testing purposes
+    this.rollinsparkSchedulerService.handleIntervalFlow(); // for testing purposes
   }
 }

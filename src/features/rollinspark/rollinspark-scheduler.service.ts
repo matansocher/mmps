@@ -49,14 +49,29 @@ export class RollinsparkSchedulerService {
 
   async getAptsDetails() {
     try {
+      const ajaxNonce = await this.getAjaxNonce();
+      if (!ajaxNonce) {
+        throw new Error('could not get nonce');
+      }
       const url = 'https://www.rollinspark.net/wp-admin/admin-ajax.php';
       const body = {
         action: 'pcyfp_fetch_apt_availability',
-        _ajax_nonce: '611d11be01',
+        _ajax_nonce: ajaxNonce,
         planid: 2405134,
       };
       const result = await axios.post(url, body, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
       return result.data;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async getAjaxNonce() {
+    try {
+      const url = 'https://www.rollinspark.net/floor-plans/';
+      const result = await axios.get(url);
+      const [, nonce] = result.data.match(/"nonce":"(.*?)"/);
+      return nonce || null;
     } catch (err) {
       throw err;
     }
