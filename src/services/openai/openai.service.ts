@@ -5,6 +5,7 @@ import { OpenAI } from 'openai';
 import { APIPromise } from 'openai/core';
 import {
   CHAT_COMPLETIONS_MODEL,
+  IMAGE_ANALYZER_MODEL,
   IMAGE_GENERATION_MODEL,
   OPENAI_CLIENT_TOKEN,
   SOUND_MODEL,
@@ -78,7 +79,7 @@ export class OpenaiService {
 
   async analyzeImage(prompt: string, imageUrl: string): Promise<string> {
     const response = await this.openai.chat.completions.create({
-      model: CHAT_COMPLETIONS_MODEL,
+      model: IMAGE_ANALYZER_MODEL,
       messages: [
         {
           role: 'user',
