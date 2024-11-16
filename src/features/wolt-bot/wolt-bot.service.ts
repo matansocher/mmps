@@ -14,7 +14,7 @@ import {
   WOLT_BOT_OPTIONS,
   IWoltRestaurant,
   WoltService,
-  WoltUtilsService,
+  WoltUtilsService, CITIES_SLUGS_SUPPORTED
 } from '@services/wolt';
 
 @Injectable()
@@ -44,7 +44,7 @@ export class WoltBotService implements OnModuleInit {
 
   createBotEventListeners() {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
-    this.bot.onText(/\/show/, (message: Message) => this.showHandler(message));
+    this.bot.onText(/\/list/, (message: Message) => this.listHandler(message));
     this.bot.on('text', (message: Message) => this.textHandler(message));
     this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
@@ -68,10 +68,10 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async showHandler(message: Message) {
+  async listHandler(message: Message) {
     const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
-    const logBody = `show :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-    this.logger.info(this.showHandler.name, `${logBody} - start`);
+    const logBody = `list :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+    this.logger.info(this.listHandler.name, `${logBody} - start`);
 
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
@@ -88,11 +88,11 @@ export class WoltBotService implements OnModuleInit {
         return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.restaurant, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
-      this.logger.info(this.showHandler.name, `${logBody} - success`);
+      this.logger.info(this.listHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
-      this.logger.error(this.showHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.showHandler.name }, chatId, this.mongoUserService);
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
+      this.logger.error(this.listHandler.name, errorMessage);
+      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -208,6 +208,10 @@ export class WoltBotService implements OnModuleInit {
     return restaurants
       .filter((restaurant: IWoltRestaurant) => {
         return restaurant.name.toLowerCase().includes(searchInput.toLowerCase());
+      })
+      .sort((a: IWoltRestaurant, b: IWoltRestaurant) => {
+        // sort by the order of areas in CITIES_SLUGS_SUPPORTED
+        return CITIES_SLUGS_SUPPORTED.indexOf(a.area) - CITIES_SLUGS_SUPPORTED.indexOf(b.area);
       })
       .slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
   }
