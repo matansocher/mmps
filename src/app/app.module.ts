@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DefineModule } from '@features/define/define.module';
 // import { NewsBotModule } from '@features/news';
 // import { OntopoBotModule } from '@features/ontopo-bot';
 import { RollinsparkModule } from '@features/rollinspark/rollinspark.module';
@@ -16,6 +17,7 @@ import { AppService } from './app.service';
     // VoicePalBotModule,
     WoltBotModule,
     RollinsparkModule,
+    DefineModule,
   ],
   controllers: [AppController],
   providers: [AppService],
