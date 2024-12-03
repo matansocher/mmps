@@ -93,7 +93,8 @@ export class RollinsparkSchedulerService {
       this.currentCount = 0;
     }
 
-    return _isEqual(existingKeys, newKeys);
+    // return _isEqual(existingKeys, newKeys);
+    return newKeys.length > existingKeys.length;
   }
 
   async alertSubscriptions(chatIds: number[]): Promise<any> {
