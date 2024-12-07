@@ -39,7 +39,6 @@ export class MessageLoaderService {
       await this.waitForMessage(bot, chatId, options);
       await action();
     } catch (err) {
-      this.logger.error(MessageLoaderService.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       await this.stopLoader(bot, chatId);
       throw err;
     } finally {

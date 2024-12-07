@@ -34,7 +34,7 @@ export class VoicePalBotService implements OnModuleInit {
     );
   }
 
-  @Timer()
+  // @Timer()
   async handleMessage(message: Message): Promise<void> {
     const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
@@ -52,7 +52,6 @@ export class VoicePalBotService implements OnModuleInit {
 
       this.logger.info('message listener', `${logBody} - success`);
     } catch (err) {
-      this.logger.error('message listener', `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
     }
   }
