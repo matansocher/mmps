@@ -44,7 +44,7 @@ export class OpenaiService {
     });
   }
 
-  async getChatCompletion(prompt: string, userText: string): Promise<string> {
+  async getChatCompletion(prompt: string, userText: string = ''): Promise<string> {
     let userMessages;
     if (typeof userText === 'string') {
       userMessages = [userText];
