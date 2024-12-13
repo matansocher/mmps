@@ -1,7 +1,7 @@
 import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { isProd } from '@core/config/main.config';
+import { isProd } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';

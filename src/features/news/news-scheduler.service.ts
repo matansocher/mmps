@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Cron } from '@nestjs/schedule';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DEFAULT_TIMEZONE } from '@core/config/main.config';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { NewsMongoSubscriptionService, NewsMongoThreadService, SubscriptionModel } from '@core/mongo/news-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';

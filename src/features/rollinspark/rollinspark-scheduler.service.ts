@@ -3,14 +3,15 @@ import { isEqual as _isEqual } from 'lodash';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { DEFAULT_TIMEZONE } from '@core/config/main.config';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { AVIV_USER_ID, MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 
+const INTERVAL_HOURS = 6;
 const INTERVAL_MINUTES = 5;
-const COUNT_TO_NOTIFY = (60 / INTERVAL_MINUTES) * 6; // represents - (hour) * notify every 6 hours
+const COUNT_TO_NOTIFY = (60 / INTERVAL_MINUTES) * INTERVAL_HOURS; // represents - (hour) * notify every INTERVAL_HOURS hours
 
 @Injectable()
 export class RollinsparkSchedulerService {
@@ -106,5 +107,10 @@ export class RollinsparkSchedulerService {
     } catch (err) {
       this.logger.error(this.alertSubscriptions.name, `error - ${this.utilsService.getErrorMessage(err)}`);
     }
+  }
+
+  async notifyOnStart() {
+    const serverStartMessage = `אביב נראה לי שמתן עשה דיפלוי לשרת, אז אל תדאג אם אין פינג שאני עובד, עוד ${INTERVAL_HOURS} שעות אמור להיות עוד אחד 😁`;
+    await Promise.all(this.chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, serverStartMessage)));
   }
 }

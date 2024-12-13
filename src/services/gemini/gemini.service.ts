@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Inject, Injectable } from '@nestjs/common';
-import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@core/config/main.config';
+import { FILE_SUFFIX_TO_MIME_TYPE_MAP } from '@core/config';
 import { GENERATIVE_MODEL_CLIENT_TOKEN } from './gemini.config';
 import { IGeminiClientProvider } from './interface';
 

@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DEFAULT_TIMEZONE } from '@core/config/main.config';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 
 @Injectable()

@@ -1,3 +1,4 @@
+import { isProd } from '@core/config';
 import { LoggerModule } from '@core/logger';
 import { UtilsModule } from '@core/utils';
 import { RollinsparkSchedulerService } from '@features/rollinspark/rollinspark-scheduler.service';
@@ -21,5 +22,8 @@ export class RollinsparkModule {
 
   onModuleInit(): void {
     // this.rollinsparkSchedulerService.handleIntervalFlow(); // for testing purposes
+    if (isProd) {
+      this.rollinsparkSchedulerService.notifyOnStart();
+    }
   }
 }

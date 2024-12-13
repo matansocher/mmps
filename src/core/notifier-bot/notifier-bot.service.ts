@@ -1,6 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { isProd } from '@core/config/main.config';
+import { isProd } from '@core/config';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { INotifyOptions } from '@core/notifier-bot/interface';
 import { NOTIFIER_CHAT_ID } from '@core/notifier-bot/notifier-bot.config';

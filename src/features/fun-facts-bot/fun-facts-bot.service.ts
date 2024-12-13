@@ -29,13 +29,12 @@ export class FunFactsBotService {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, username } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);

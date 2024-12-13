@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
-import { MONTHS_OF_YEAR } from '@core/config/main.config';
+import { MONTHS_OF_YEAR } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mongo/ontopo-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
