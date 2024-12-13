@@ -1,13 +1,13 @@
-import { AVIV_USER_ID, MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import axios from 'axios';
 import { isEqual as _isEqual } from 'lodash';
-import { DEFAULT_TIMEZONE } from '@core/config/main.config';
-import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
+import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { DEFAULT_TIMEZONE } from '@core/config/main.config';
+import { LoggerService } from '@core/logger';
+import { AVIV_USER_ID, MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
+import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import TelegramBot from 'node-telegram-bot-api';
 
 const INTERVAL_MINUTES = 5;
 const COUNT_TO_NOTIFY = (60 / INTERVAL_MINUTES) * 6; // represents - (hour) * notify every 6 hours
@@ -96,7 +96,7 @@ export class RollinsparkSchedulerService {
     return _isEqual(existingKeys, newKeys);
   }
 
-  async alertSubscriptions(chatIds: number[]): Promise<any> {
+  async alertSubscriptions(chatIds: number[]): Promise<void> {
     try {
       const messageText = [
         `אביב! נראה לי יש דירה חדשה ברולינס פארק לך לבדוק`,
