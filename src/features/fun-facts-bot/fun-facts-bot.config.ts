@@ -6,7 +6,7 @@ export const INITIAL_BOT_RESPONSE = [
 export const GENERAL_ERROR_MESSAGE = 'Sorry, I am unable to process your request at the moment. Please try again later.';
 
 export const FUN_FACT_PROMPT = [
-  'Give me a fascinating and mind-blowing fact from the worlds of math, science, astronomy, psychology, sports, tech, AI, or any other field of knowledge that sparks curiosity and amazement.',
+  'Give me a fascinating and mind-blowing fact from the worlds of math, science, astronomy, psychology, sports, tech, AI, food, innovation, or any other field of knowledge that sparks curiosity and amazement.',
   "If there's a significant event, discovery, or milestone related to today's date, feel free to include it — but only if it's truly important or interesting.",
   'Prioritize fresh, surprising facts that I probably don’t know yet.',
   'The goal is to make me smarter, broaden my perspective, and give me interesting material to use in conversations.',
