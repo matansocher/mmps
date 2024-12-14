@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DefineModule } from '@features/define/define.module';
 import { FunFactsBotModule } from '@features/fun-facts-bot/fun-facts-bot.module';
+import { FinanceTeacherBotModule } from '@features/finance-teacher-bot';
 // import { NewsBotModule } from '@features/news';
 // import { OntopoBotModule } from '@features/ontopo-bot';
 import { RollinsparkModule } from '@features/rollinspark';
@@ -21,6 +22,7 @@ import { AppService } from './app.service';
     RollinsparkModule,
     DefineModule,
     FunFactsBotModule,
+    FinanceTeacherBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

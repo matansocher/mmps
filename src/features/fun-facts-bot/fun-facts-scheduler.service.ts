@@ -21,7 +21,7 @@ export class FunFactsSchedulerService {
     @Inject(BOTS.FUN_FACTS.name) private readonly bot: TelegramBot,
   ) {}
 
-  @Cron(`0 ${HOURS_OF_DAY.join(',')} * * *`, { name: 'news-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 ${HOURS_OF_DAY.join(',')} * * *`, { name: 'fun-facts-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
       const result = await this.openaiService.getChatCompletion(FUN_FACT_PROMPT);

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { get as _get } from 'lodash';
 import { OpenAI } from 'openai';
 import { Inject, Injectable } from '@nestjs/common';
@@ -13,10 +14,11 @@ export class OpenaiAssistantService {
     return thread.id;
   }
 
-  addMessageToThread(threadId, messageText, role = 'user') {
+  addMessageToThread(threadId, messageText, role = 'user', fileId?: string) {
     return this.openai.beta.threads.messages.create(threadId, <MessageCreateParams>{
       role,
       content: messageText,
+      ...(fileId ? { attachments: [{ file_id: fileId, tools: [{ type: 'file_search' }] }] } : {}),
     });
   }
 
@@ -37,5 +39,18 @@ export class OpenaiAssistantService {
     const result = await this.openai.beta.threads.messages.list(threadId);
     // return result?.data[0]?.content[0]?.text?.value || null;
     return _get(result, 'data[0].content[0].text.value', null);
+  }
+
+  async uploadFile(filePath: string): Promise<string> {
+    const fileContent = fs.createReadStream(filePath);
+    const response = await this.openai.files.create({
+      file: fileContent,
+      purpose: 'assistants',
+    });
+    return response.id;
+  }
+
+  async deleteFile(fileId: string): Promise<void> {
+    await this.openai.files.del(fileId);
   }
 }
