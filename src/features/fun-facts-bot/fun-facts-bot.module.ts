@@ -22,6 +22,6 @@ export class FunFactsBotModule implements OnModuleInit {
   constructor(private readonly funFactsSchedulerService: FunFactsSchedulerService) {}
 
   onModuleInit(): void {
-    this.funFactsSchedulerService.handleIntervalFlow(); // for testing purposes
+    // this.funFactsSchedulerService.handleIntervalFlow(); // for testing purposes
   }
 }
