@@ -114,4 +114,8 @@ export class UtilsService implements OnModuleInit {
   getDateNumber(num: number): string {
     return num < 10 ? `0${num}` : `${num}`;
   }
+
+  getTodayDateString(date: Date): string {
+    return `${date.getFullYear()}-${this.getDateNumber(date.getMonth() + 1)}-${this.getDateNumber(date.getDate())}`;
+  }
 }

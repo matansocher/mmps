@@ -29,6 +29,10 @@ export const BOTS = {
     name: 'Fun Facts Bot',
     token: env.FUN_FACTS_TELEGRAM_BOT_TOKEN,
   },
+  COACH: {
+    name: 'Coach Bot',
+    token: env.COACH_TELEGRAM_BOT_TOKEN,
+  },
   TEACHER: {
     name: 'Teacher Bot',
     token: env.TEACHER_TELEGRAM_BOT_TOKEN,

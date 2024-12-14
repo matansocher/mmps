@@ -1,0 +1,14 @@
+export const SCORES_365_API_URL = 'https://webws.365scores.com/web';
+
+export const COMPETITION_IDS_MAP = {
+  WORLD_CUP: 5930,
+  EURO: 6316,
+  CHAMPIONS_LEAGUE: 572,
+  EUROPA_LEAGUE: 573,
+  PREMIER_LEAGUE: 7,
+  LA_LIGA: 11,
+  SERIE_A: 17,
+  BUNDESLIGA: 25,
+  LIGAT_HAAL: 42,
+};
+export const COMPETITION_IDS = Object.values(COMPETITION_IDS_MAP);
