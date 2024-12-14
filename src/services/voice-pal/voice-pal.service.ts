@@ -134,10 +134,10 @@ export class VoicePalService {
     await this.utilsService.deleteFile(audioFilePath);
   }
 
-  async handleSummarizeTextAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
-    const textSummary = await this.aiService.getChatCompletion(SUMMARY_PROMPT, text);
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, textSummary, this.voicePalUtilsService.getKeyboardOptions());
-  }
+  // async handleSummarizeTextAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+  //   const textSummary = await this.aiService.getChatCompletion(SUMMARY_PROMPT, text);
+  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, textSummary, this.voicePalUtilsService.getKeyboardOptions());
+  // }
 
   // async handleSummarizeSocialMediaVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
   //   if (text.includes('youtube') || text.includes('youtu.be')) {
@@ -195,10 +195,10 @@ export class VoicePalService {
   //   await this.utilsService.deleteFile(audioFilePath);
   // }
 
-  async handleImageGenerationAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
-    const imageUrl = await this.aiService.createImage(text);
-    await this.telegramGeneralService.sendPhoto(this.bot, chatId, imageUrl, this.voicePalUtilsService.getKeyboardOptions());
-  }
+  // async handleImageGenerationAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+  //   const imageUrl = await this.aiService.createImage(text);
+  //   await this.telegramGeneralService.sendPhoto(this.bot, chatId, imageUrl, this.voicePalUtilsService.getKeyboardOptions());
+  // }
 
   async handleImageAnalyzerAction({ chatId, photo }: Partial<ITelegramMessageData>): Promise<void> {
     const imageLocalPath = await this.telegramGeneralService.downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
@@ -207,24 +207,24 @@ export class VoicePalService {
     this.utilsService.deleteFile(imageLocalPath);
   }
 
-  async handleAnalyzeFile({ chatId, file }: Partial<ITelegramMessageData>): Promise<void> {
-    const fileLocalPath = await this.telegramGeneralService.downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
-    const fileAnalysisText = await this.aiService.analyzeFile(FILE_ANALYSIS_PROMPT, fileLocalPath);
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, fileAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
-    this.utilsService.deleteFile(fileLocalPath);
-  }
+  // async handleAnalyzeFile({ chatId, file }: Partial<ITelegramMessageData>): Promise<void> {
+  //   const fileLocalPath = await this.telegramGeneralService.downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
+  //   const fileAnalysisText = await this.aiService.analyzeFile(FILE_ANALYSIS_PROMPT, fileLocalPath);
+  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, fileAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
+  //   this.utilsService.deleteFile(fileLocalPath);
+  // }
 
-  async webPageSummary({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
-    if (!validUrl.isUri(text)) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, WEB_PAGE_URL_INVALID, this.voicePalUtilsService.getKeyboardOptions());
-      return;
-    }
-    const { data: webPageContent } = await axios.get(text);
-    const SUMMARY_PROMPT =
-      'You are a helpful assistant. You will be provided with a url to a web page from the user. ' +
-      'Please summarize the page content. You can also split the summary into section, and add to each section its header.';
-
-    const webPageSummary = await this.aiService.getChatCompletion(SUMMARY_PROMPT, webPageContent);
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, webPageSummary, this.voicePalUtilsService.getKeyboardOptions());
-  }
+  // async webPageSummary({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+  //   if (!validUrl.isUri(text)) {
+  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, WEB_PAGE_URL_INVALID, this.voicePalUtilsService.getKeyboardOptions());
+  //     return;
+  //   }
+  //   const { data: webPageContent } = await axios.get(text);
+  //   const SUMMARY_PROMPT =
+  //     'You are a helpful assistant. You will be provided with a url to a web page from the user. ' +
+  //     'Please summarize the page content. You can also split the summary into section, and add to each section its header.';
+  //
+  //   const webPageSummary = await this.aiService.getChatCompletion(SUMMARY_PROMPT, webPageContent);
+  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, webPageSummary, this.voicePalUtilsService.getKeyboardOptions());
+  // }
 }

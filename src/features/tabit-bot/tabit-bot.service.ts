@@ -36,12 +36,12 @@ export class TabitBotService implements OnModuleInit {
     this.createErrorEventListeners();
   }
 
-  createErrorEventListeners() {
+  createErrorEventListeners(): void {
     this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'polling_error', error));
     this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'error', error));
   }
 
-  createBotEventListeners() {
+  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/show/, (message: Message) => this.showHandler(message));
     this.bot.onText(/\/reset/, (message: Message) => this.resetHandler(message));

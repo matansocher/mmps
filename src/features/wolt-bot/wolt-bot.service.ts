@@ -37,12 +37,12 @@ export class WoltBotService implements OnModuleInit {
     this.createErrorEventListeners();
   }
 
-  createErrorEventListeners() {
+  createErrorEventListeners(): void {
     this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.WOLT.name, 'polling_error', error));
     this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.WOLT.name, 'error', error));
   }
 
-  createBotEventListeners() {
+  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/list/, (message: Message) => this.listHandler(message));
     this.bot.on('text', (message: Message) => this.textHandler(message));

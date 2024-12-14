@@ -15,7 +15,7 @@ export class GeminiService {
     if (typeof userText === 'string') {
       finalPrompt += userText;
     } else { // array
-      finalPrompt += userText.join('');
+      finalPrompt += userText.join('.');
     }
 
     const result = await this.genAI.flashModel.generateContent(finalPrompt);

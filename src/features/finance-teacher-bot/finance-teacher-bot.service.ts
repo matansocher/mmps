@@ -1,17 +1,17 @@
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
+import { GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './finance-teacher-bot.config';
 import { Inject, Injectable } from '@nestjs/common';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 
 @Injectable()
-export class RollinsparkService {
-
+export class FinanceTeacherBotService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
-    @Inject(BOTS.ROLLINSPARK.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.FINANCE_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -34,12 +34,11 @@ export class RollinsparkService {
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      const replyText = `Hello, I will let you know when I find a new appartment in rollins park for you.`;
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, GENERAL_ERROR_MESSAGE);
     }
   }
 }

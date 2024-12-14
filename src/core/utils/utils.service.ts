@@ -24,6 +24,15 @@ export class UtilsService implements OnModuleInit {
     });
   }
 
+  async writeFile(filePath: string, fileContent: string): Promise<void> {
+    try {
+      await fs.writeFile(filePath, fileContent);
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+
   async deleteFile(audioFileLocalPath: string): Promise<void> {
     try {
       await fs.unlink(audioFileLocalPath);

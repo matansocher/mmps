@@ -35,14 +35,14 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
     showLoader: true,
     loaderType: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE,
   },
-  SUMMARY_TEXT: {
-    displayName: 'Summarize Text',
-    selectedActionResponse: 'OK, Send me the text, and I will summarize it for you',
-    handler: 'handleSummarizeTextAction',
-    analyticsEventName: 'SUMMARY_TEXT',
-    possibleInputs: [POSSIBLE_INPUTS.TEXT],
-    showLoader: true,
-  },
+  // SUMMARY_TEXT: {
+  //   displayName: 'Summarize Text',
+  //   selectedActionResponse: 'OK, Send me the text, and I will summarize it for you',
+  //   handler: 'handleSummarizeTextAction',
+  //   analyticsEventName: 'SUMMARY_TEXT',
+  //   possibleInputs: [POSSIBLE_INPUTS.TEXT],
+  //   showLoader: true,
+  // },
   // SUMMARY_SOCIAL_MEDIA_VIDEO: {
   //   displayName: 'Summary of a Social Media Video',
   //   selectedActionResponse: 'OK, Send me a link to a video and I will summarize it for you.\nI currently support these: youtube, facebook, instagram and tiktok',

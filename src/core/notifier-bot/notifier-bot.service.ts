@@ -18,12 +18,12 @@ export class NotifierBotService implements OnModuleInit {
     this.createErrorEventListeners();
   }
 
-  createErrorEventListeners() {
+  createErrorEventListeners(): void {
     this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NOTIFIER.name, 'polling_error', error));
     this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NOTIFIER.name, 'error', error));
   }
 
-  createBotEventListeners() {
+  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
   }
 
