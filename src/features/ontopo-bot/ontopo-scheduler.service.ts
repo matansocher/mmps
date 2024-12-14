@@ -30,7 +30,7 @@ export class OntopoSchedulerService {
     // Clear existing timeout if it exists
     try {
       this.schedulerRegistry.deleteTimeout(JOB_NAME);
-    } catch (error) {}
+    } catch {}
 
     await this.handleIntervalFlow();
 

@@ -1,17 +1,17 @@
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './finance-teacher-bot.config';
+import { GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './teacher-bot.config';
 import { Inject, Injectable } from '@nestjs/common';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 
 @Injectable()
-export class FinanceTeacherBotService {
+export class TeacherBotService {
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
-    @Inject(BOTS.FINANCE_TEACHER.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
