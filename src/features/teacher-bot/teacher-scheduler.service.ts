@@ -8,7 +8,7 @@ import { UtilsService } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
 import { type GoogleArticle, GoogleSearchService } from '@services/google-search';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { OPENAI_ASSISTANT_ID, LOCAL_FILES_PATH, HOURS_OF_DAY, THREAD_MESSAGE_INSTRUCTIONS } from './teacher-bot.config';
+import { TEACHER_ASSISTANT_ID, LOCAL_FILES_PATH, HOURS_OF_DAY, THREAD_MESSAGE_INSTRUCTIONS } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherSchedulerService {
@@ -51,7 +51,7 @@ export class TeacherSchedulerService {
   async getSummary(openAIFileID: string): Promise<string> {
     const threadId = await this.openaiAssistantService.createThread();
     await this.openaiAssistantService.addMessageToThread(threadId, THREAD_MESSAGE_INSTRUCTIONS, 'user', openAIFileID);
-    const threadRun = await this.openaiAssistantService.runThread(OPENAI_ASSISTANT_ID, threadId);
+    const threadRun = await this.openaiAssistantService.runThread(TEACHER_ASSISTANT_ID, threadId);
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 }

@@ -19,3 +19,6 @@ export const FUN_FACT_PHOTO_PROMPT = [
 ].join(' ');
 
 export const HOURS_OF_DAY = [11, 13, 17, 20, 23];
+
+export const FUN_FACTS_ASSISTANT_ID = 'asst_5n2Q9JnlWs6AllO9hiHQhtcD';
+export const FUN_FACTS_ASSISTANT_THREAD_ID = 'thread_XEOfhcwjdXdompgnS9IES4U2';

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CoachBotModule } from '@features/coach-bot/coach-bot.module';
+// import { CoachBotModule } from '@features/coach-bot/coach-bot.module';
 // import { DefineModule } from '@features/define/define.module';
-// import { FunFactsBotModule } from '@features/fun-facts-bot/fun-facts-bot.module';
+import { FunFactsBotModule } from '@features/fun-facts-bot/fun-facts-bot.module';
 // import { TeacherBotModule } from 'src/features/teacher-bot';
 // import { NewsBotModule } from '@features/news';
 // import { OntopoBotModule } from '@features/ontopo-bot';
@@ -22,9 +22,9 @@ import { AppService } from './app.service';
     // WoltBotModule,
     // RollinsparkModule,
     // DefineModule,
-    // FunFactsBotModule,
+    FunFactsBotModule,
     // TeacherBotModule,
-    CoachBotModule,
+    // CoachBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

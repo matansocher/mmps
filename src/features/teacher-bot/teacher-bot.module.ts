@@ -25,6 +25,6 @@ export class TeacherBotModule implements OnModuleInit {
 
   onModuleInit(): void {
     // this.teacherSchedulerService.handleIntervalFlow('איך ליצור תקציב אישי'); // for testing purposes
-    this.teacherSchedulerService.handleIntervalFlow('angular signals'); // for testing purposes
+    // this.teacherSchedulerService.handleIntervalFlow('angular signals'); // for testing purposes
   }
 }
