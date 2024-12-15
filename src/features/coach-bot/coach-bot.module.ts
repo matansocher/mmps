@@ -1,8 +1,8 @@
-import { LoggerModule } from '@core/logger';
-import { UtilsModule } from '@core/utils';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { Scores365Module } from 'src/services/scores-365';
+import { LoggerModule } from '@core/logger';
+import { UtilsModule } from '@core/utils';
+import { Scores365Module } from '@services/scores-365';
 import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
 import { CoachBotService } from './coach-bot.service';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
