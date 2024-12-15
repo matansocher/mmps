@@ -1,4 +1,3 @@
-import { Scores365Service } from 'src/services/scores-365';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
@@ -6,6 +5,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
+import { Scores365Service } from '@services/scores-365';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
 
