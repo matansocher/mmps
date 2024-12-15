@@ -118,4 +118,8 @@ export class UtilsService implements OnModuleInit {
   getTodayDateString(date: Date): string {
     return `${date.getFullYear()}-${this.getDateNumber(date.getMonth() + 1)}-${this.getDateNumber(date.getDate())}`;
   }
+
+  isHebrew(text: string): boolean {
+    return /[\u0590-\u05FF]/.test(text);
+  }
 }

@@ -21,7 +21,7 @@ export class CoachBotSchedulerService {
     @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
   ) {}
 
-  @Cron(`59 12,23 * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`59 12,19,23 * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
       const competitions = await this.scores365Service.getCompetitions();
