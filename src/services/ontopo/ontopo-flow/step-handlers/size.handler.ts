@@ -4,9 +4,9 @@ import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IUserFlowDetails } from '../../interface';
 import { BOT_BUTTONS_ACTIONS } from '../../ontopo.config';
-import { FlowStepsManagerService } from '../../ontopo-flow/flow-steps-manager.service';
-import { StepHandler } from '../../ontopo-flow/step-handlers/step.handler';
-import { OntopoUtilsService } from '../../ontopo-flow/ontopo-utils.service';
+import { FlowStepsManagerService } from '../flow-steps-manager.service';
+import { StepHandler } from '../step-handlers/step.handler';
+import { OntopoUtilsService } from '../ontopo-utils.service';
 
 const RESERVATION_MAX_SIZE = 8;
 

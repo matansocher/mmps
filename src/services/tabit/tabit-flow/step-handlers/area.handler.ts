@@ -3,9 +3,9 @@ import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantArea, IUserFlowDetails } from '../../interface';
-import { FlowStepsManagerService } from '../../tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '../../tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '../../tabit-flow/tabit-utils.service';
+import { FlowStepsManagerService } from '../flow-steps-manager.service';
+import { StepHandler } from '../step-handlers/step.handler';
+import { TabitUtilsService } from '../tabit-utils.service';
 import { ANY_AREA, BOT_BUTTONS_ACTIONS } from '../../tabit.config';
 
 export class AreaHandler extends StepHandler {

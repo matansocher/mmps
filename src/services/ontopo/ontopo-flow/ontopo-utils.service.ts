@@ -29,7 +29,7 @@ export class OntopoUtilsService {
     return `${date.getFullYear()}-${getTwoDigits(date.getMonth() + 1)}-${getTwoDigits(date.getDate())}`;
   }
 
-  getSubscriptionDetails(subscription: SubscriptionModel): { text: string; inlineKeyboardMarkup: { reply_markup: string }; } {
+  getSubscriptionDetails(subscription: SubscriptionModel): { text: string; inlineKeyboardMarkup: { reply_markup: string } } {
     const callbackData = { action: BOT_BUTTONS_ACTIONS.UNSUBSCRIBE, data: subscription._id.toString() } as IInlineKeyboardButton;
     const { restaurantDetails, userSelections } = subscription;
     const inlineKeyboardButtons = [

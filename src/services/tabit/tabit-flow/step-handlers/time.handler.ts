@@ -5,9 +5,9 @@ import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantReservationHour, IUserFlowDetails } from '../../interface';
 import { BOT_BUTTONS_ACTIONS } from '../../tabit.config';
-import { FlowStepsManagerService } from '../../tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '../../tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '../../tabit-flow/tabit-utils.service';
+import { FlowStepsManagerService } from '../flow-steps-manager.service';
+import { StepHandler } from '../step-handlers/step.handler';
+import { TabitUtilsService } from '../tabit-utils.service';
 
 const POPULAR_HOURS = ['12:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
 

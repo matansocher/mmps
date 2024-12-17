@@ -13,17 +13,7 @@ import { VoicePalService } from './voice-pal.service';
 import { VoicePalUtilsService } from './voice-pal-utils.service';
 
 @Module({
-  imports: [
-    AiModule,
-    GoogleTranslateModule,
-    ImgurModule,
-    LoggerModule.forChild(VoicePalModule.name),
-    NotifierBotModule,
-    SocialMediaDownloaderModule,
-    UtilsModule,
-    VoicePalMongoModule,
-    YoutubeTranscriptModule,
-  ],
+  imports: [AiModule, GoogleTranslateModule, ImgurModule, LoggerModule.forChild(VoicePalModule.name), NotifierBotModule, SocialMediaDownloaderModule, UtilsModule, VoicePalMongoModule, YoutubeTranscriptModule],
   providers: [VoicePalService, VoicePalUtilsService, UserSelectedActionsService],
   exports: [VoicePalService, UserSelectedActionsService],
 })

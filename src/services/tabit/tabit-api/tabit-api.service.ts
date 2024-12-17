@@ -2,14 +2,7 @@ import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import {
-  ITabitRestaurant,
-  ITabitRestaurantArea,
-  ITabitRestaurantAvailability,
-  ITabitRestaurantReservationHour,
-  ITabitRestaurantReservationHours,
-  IUserSelections,
-} from '../interface';
+import { ITabitRestaurant, ITabitRestaurantArea, ITabitRestaurantAvailability, ITabitRestaurantReservationHour, ITabitRestaurantReservationHours, IUserSelections } from '../interface';
 import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_BASE_BODY, RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_DETAILS_BASE_URL } from '../tabit.config';
 
 @Injectable()
@@ -141,13 +134,9 @@ export class TabitApiService {
       }
 
       if (checkAvailabilityOptions.area === ANY_AREA) {
-        const areasResults = await Promise.all(
-          restaurantDetails.areas.map((area) => this.restaurantAvailabilityApiRequest(restaurantDetails.id, { ...checkAvailabilityOptions, area: area.name }))
-        );
+        const areasResults = await Promise.all(restaurantDetails.areas.map((area) => this.restaurantAvailabilityApiRequest(restaurantDetails.id, { ...checkAvailabilityOptions, area: area.name })));
 
-        const availableArea = areasResults
-          .map((areaResult) => this.parseRestaurantAvailabilityResult(areaResult.data, checkAvailabilityOptions))
-          .find((areaResult) => areaResult.isAvailable);
+        const availableArea = areasResults.map((areaResult) => this.parseRestaurantAvailabilityResult(areaResult.data, checkAvailabilityOptions)).find((areaResult) => areaResult.isAvailable);
 
         if (!availableArea) {
           return { isAvailable: false };

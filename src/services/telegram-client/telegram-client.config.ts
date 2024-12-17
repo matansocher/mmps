@@ -6,19 +6,9 @@ export const TELEGRAM_API_ID = env.TELEGRAM_API_ID;
 export const TELEGRAM_API_HASH = env.TELEGRAM_API_HASH;
 export const TELEGRAM_STRING_SESSION = env.TELEGRAM_STRING_SESSION;
 
-export const FILTER_OUT_EVENTS = [
-  'UpdateUserStatus',
-  'UpdateMessagePoll',
-  'UpdateReadChannelInbox',
-  'UpdateChannelWebPage',
-  'UpdateEditChannelMessage',
-  'UpdateDeleteChannelMessages',
-];
+export const FILTER_OUT_EVENTS = ['UpdateUserStatus', 'UpdateMessagePoll', 'UpdateReadChannelInbox', 'UpdateChannelWebPage', 'UpdateEditChannelMessage', 'UpdateDeleteChannelMessages'];
 
-export const LISTEN_TO_EVENTS = [
-  'UpdateNewChannelMessage',
-  'UpdateNewMessage',
-];
+export const LISTEN_TO_EVENTS = ['UpdateNewChannelMessage', 'UpdateNewMessage'];
 
 export const CHANNELS = {
   ISRAEL_TECH_FORUM: { id: '1083698033', name: `🇮🇱 Israel Tech & Innovation Forum` },

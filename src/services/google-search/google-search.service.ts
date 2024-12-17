@@ -43,9 +43,7 @@ export class GoogleSearchService {
       };
       const url = `${GOOGLE_CUSTOM_SEARCH_BASE_URL}?${new URLSearchParams(queryParams)}`;
       const response = await axios.get(url);
-      return response?.data?.items
-        ?.slice(0, MAX_SEARCH_RESULTS)
-        .map((item: ExpectedGoogleArticle) => ({ title: item.title, link: item.link, snippet: item.snippet }));
+      return response?.data?.items?.slice(0, MAX_SEARCH_RESULTS).map((item: ExpectedGoogleArticle) => ({ title: item.title, link: item.link, snippet: item.snippet }));
     } catch (err) {
       this.logger.error(this.getRawArticles.name, `error searching content in google: ${this.utilsService.getErrorMessage(err)}`);
       return [];

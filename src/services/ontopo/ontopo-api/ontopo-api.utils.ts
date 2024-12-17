@@ -21,7 +21,11 @@ export class OntopoApiUtils {
       .filter((shift) => shift.tag !== 'close')
       .forEach((shift) => {
         const { weekday } = shift.__criteria;
-        const timeRanges = shift.hours ? Object.values(shift.hours).map((h: any) => h.time).filter(Boolean) : [];
+        const timeRanges = shift.hours
+          ? Object.values(shift.hours)
+              .map((h: any) => h.time)
+              .filter(Boolean)
+          : [];
 
         // If no valid time ranges, skip
         if (timeRanges.length === 0) return;

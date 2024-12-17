@@ -8,11 +8,7 @@ describe('VoicePalBotService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        VoicePalBotService,
-        { provide: MessagesAggregatorService, useValue: MockMessagesAggregatorService },
-        { provide: TelegramGeneralService, useValue: MockTelegramGeneralService },
-      ],
+      providers: [VoicePalBotService, { provide: MessagesAggregatorService, useValue: MockMessagesAggregatorService }, { provide: TelegramGeneralService, useValue: MockTelegramGeneralService }],
     }).compile();
 
     service = module.get<VoicePalBotService>(VoicePalBotService);

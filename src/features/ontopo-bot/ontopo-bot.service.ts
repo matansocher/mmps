@@ -4,15 +4,7 @@ import { LoggerService } from '@core/logger';
 import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import {
-  ANALYTIC_EVENT_NAMES,
-  BOT_BUTTONS_ACTIONS,
-  INITIAL_BOT_RESPONSE,
-  ONTOPO_BOT_COMMANDS,
-  FlowStepsHandlerService,
-  FlowStepsManagerService,
-  OntopoUtilsService,
-} from '@services/ontopo';
+import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, ONTOPO_BOT_COMMANDS, FlowStepsHandlerService, FlowStepsManagerService, OntopoUtilsService } from '@services/ontopo';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
@@ -111,7 +103,12 @@ export class OntopoBotService implements OnModuleInit {
     const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
 
     // prevent built in options to be processed also here
-    if (Object.keys(ONTOPO_BOT_COMMANDS).map((option: string) => ONTOPO_BOT_COMMANDS[option]).includes(text)) return;
+    if (
+      Object.keys(ONTOPO_BOT_COMMANDS)
+        .map((option: string) => ONTOPO_BOT_COMMANDS[option])
+        .includes(text)
+    )
+      return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
     this.logger.info(this.textHandler.name, `${logBody} - start`);

@@ -4,9 +4,9 @@ import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IUserFlowDetails } from '../../interface';
 import { BOT_BUTTONS_ACTIONS } from '../../tabit.config';
-import { FlowStepsManagerService } from '../../tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '../../tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '../../tabit-flow/tabit-utils.service';
+import { FlowStepsManagerService } from '../flow-steps-manager.service';
+import { StepHandler } from '../step-handlers/step.handler';
+import { TabitUtilsService } from '../tabit-utils.service';
 
 const RESERVATION_MAX_SIZE = 8;
 

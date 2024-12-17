@@ -5,9 +5,9 @@ import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, IOntopoRestaurantReservationHour, IUserFlowDetails } from '../../interface';
 import { BOT_BUTTONS_ACTIONS } from '../../ontopo.config';
-import { FlowStepsManagerService } from '../../ontopo-flow/flow-steps-manager.service';
-import { StepHandler } from '../../ontopo-flow/step-handlers/step.handler';
-import { OntopoUtilsService } from '../../ontopo-flow/ontopo-utils.service';
+import { FlowStepsManagerService } from '../flow-steps-manager.service';
+import { StepHandler } from '../step-handlers/step.handler';
+import { OntopoUtilsService } from '../ontopo-utils.service';
 
 const POPULAR_HOURS = ['12:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
 

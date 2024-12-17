@@ -38,10 +38,12 @@ export class OntopoApiService {
       const generalUserSelections = { size: 2, date: this.ontopoApiUtils.getNextMondayDate(), time: '20:00' };
       const restaurantAreasRes = await this.restaurantAvailabilityApiRequest(restaurantSlug, generalUserSelections);
       const { areas } = restaurantAreasRes || {};
-      return areas?.map((area) => ({
-        name: area.id,
-        displayName: area.name,
-      })) || [];
+      return (
+        areas?.map((area) => ({
+          name: area.id,
+          displayName: area.name,
+        })) || []
+      );
     } catch (err) {
       this.logger.error(this.getRestaurantAreas.name, `error - ${this.utilsService.getErrorMessage(err)}`);
       return null;

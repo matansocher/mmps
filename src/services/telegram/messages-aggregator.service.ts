@@ -18,7 +18,8 @@ export class MessagesAggregatorService {
 
     const timeoutId = this.startOrResetTimeout(chatId);
     let combinedMessage = message;
-    if (this.messagesCache[chatId]) { // already has a pending message in cache
+    if (this.messagesCache[chatId]) {
+      // already has a pending message in cache
       combinedMessage = { ...this.messagesCache[chatId].message, ...message };
     }
     this.messagesCache[chatId] = { message: combinedMessage, timeoutId, processMessageCallback };

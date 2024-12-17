@@ -14,7 +14,8 @@ import {
   WOLT_BOT_OPTIONS,
   IWoltRestaurant,
   WoltService,
-  WoltUtilsService, CITIES_SLUGS_SUPPORTED
+  WoltUtilsService,
+  CITIES_SLUGS_SUPPORTED,
 } from '@services/wolt';
 
 @Injectable()
@@ -61,7 +62,7 @@ export class WoltBotService implements OnModuleInit {
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.startHandler.name, errorMessage);
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
@@ -81,9 +82,7 @@ export class WoltBotService implements OnModuleInit {
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
-        const inlineKeyboardButtons = [
-          { text: 'Remove', callback_data: `remove - ${subscription.restaurant}` },
-        ];
+        const inlineKeyboardButtons = [{ text: 'Remove', callback_data: `remove - ${subscription.restaurant}` }];
         const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
         return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.restaurant, inlineKeyboardMarkup);
       });
@@ -102,7 +101,12 @@ export class WoltBotService implements OnModuleInit {
     const restaurant = rawRestaurant.toLowerCase();
 
     // prevent built in options to be processed also here
-    if (Object.keys(WOLT_BOT_OPTIONS).map((option: string) => WOLT_BOT_OPTIONS[option]).includes(restaurant)) return;
+    if (
+      Object.keys(WOLT_BOT_OPTIONS)
+        .map((option: string) => WOLT_BOT_OPTIONS[option])
+        .includes(restaurant)
+    )
+      return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.info(this.textHandler.name, `${logBody} - start`);
@@ -130,7 +134,7 @@ export class WoltBotService implements OnModuleInit {
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, inlineKeyboardMarkup);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.textHandler.name, errorMessage);
       this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
@@ -154,7 +158,7 @@ export class WoltBotService implements OnModuleInit {
 
       this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`
+      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.callbackQueryHandler.name, errorMessage);
       this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
@@ -165,22 +169,17 @@ export class WoltBotService implements OnModuleInit {
     let replyText;
     let form = {};
     if (existingSubscription) {
-      replyText = '' +
-        `It seems you already have a subscription for ${restaurant} is open.\n\n` +
-        `Let\'s wait a few minutes - it might open soon.`;
+      replyText = '' + `It seems you already have a subscription for ${restaurant} is open.\n\n` + `Let\'s wait a few minutes - it might open soon.`;
     } else {
       const restaurantDetails = this.woltService.getRestaurants().find((r: IWoltRestaurant): boolean => r.name === restaurant) || null;
       if (restaurantDetails && restaurantDetails.isOnline) {
-        replyText = '' +
-          `It looks like ${restaurant} is open now\n\n` +
-          `Go ahead and order your food :)`;
+        replyText = '' + `It looks like ${restaurant} is open now\n\n` + `Go ahead and order your food :)`;
         const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurantDetails);
-        const inlineKeyboardButtons = [
-          { text: restaurantDetails.name, url: restaurantLinkUrl },
-        ];
+        const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantLinkUrl }];
         form = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
       } else {
-        replyText = `No Problem, I will let you know once ${restaurant} is open\n\n` +
+        replyText =
+          `No Problem, I will let you know once ${restaurant} is open\n\n` +
           `FYI: If the venue won't open within the next ${SUBSCRIPTION_EXPIRATION_HOURS} hours, registration will be removed\n\n` +
           `You can register for another restaurant if you like.`;
         await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails.photo);
@@ -197,8 +196,7 @@ export class WoltBotService implements OnModuleInit {
       await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
       replyText = `Subscription for ${restaurantToRemove} was removed`;
     } else {
-      replyText = `It seems like you don't have a subscription for ${restaurant}.\n\n` +
-        `You can search and register for another restaurant if you like`;
+      replyText = `It seems like you don't have a subscription for ${restaurant}.\n\n` + `You can search and register for another restaurant if you like`;
     }
     return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
   }

@@ -10,16 +10,7 @@ import { WoltBotService } from './wolt-bot.service';
 import { WoltSchedulerService } from './wolt-scheduler.service';
 
 @Module({
-  imports: [
-    LoggerModule.forChild(WoltBotModule.name),
-    NotifierBotModule,
-    ScheduleModule.forRoot(),
-    TelegramBotsFactoryModule.forChild(BOTS.WOLT),
-    TelegramModule,
-    UtilsModule,
-    WoltModule,
-    WoltMongoModule,
-  ],
+  imports: [LoggerModule.forChild(WoltBotModule.name), NotifierBotModule, ScheduleModule.forRoot(), TelegramBotsFactoryModule.forChild(BOTS.WOLT), TelegramModule, UtilsModule, WoltModule, WoltMongoModule],
   providers: [WoltBotService, WoltSchedulerService],
 })
 export class WoltBotModule implements OnModuleInit {

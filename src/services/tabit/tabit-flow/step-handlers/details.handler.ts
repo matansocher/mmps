@@ -4,9 +4,9 @@ import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
 import { IFlowStep, ITabitRestaurant, IUserFlowDetails } from '../../interface';
 import { TabitApiService } from '../../tabit-api/tabit-api.service';
-import { FlowStepsManagerService } from '../../tabit-flow/flow-steps-manager.service';
-import { StepHandler } from '../../tabit-flow/step-handlers/step.handler';
-import { TabitUtilsService } from '../../tabit-flow/tabit-utils.service';
+import { FlowStepsManagerService } from '../flow-steps-manager.service';
+import { StepHandler } from '../step-handlers/step.handler';
+import { TabitUtilsService } from '../tabit-utils.service';
 
 export class DetailsHandler extends StepHandler {
   constructor(

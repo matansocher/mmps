@@ -54,7 +54,12 @@ export class FlowStepsHandlerService {
 
   getHandlerClass(bot: TelegramBot, flowStepType: IFlowStepType): StepHandler {
     const baseDependencies: [TelegramBot, LoggerService, UtilsService, TelegramGeneralService, FlowStepsManagerService, TabitUtilsService] = [
-      bot, this.logger, this.utilsService, this.telegramGeneralService, this.flowStepsManagerService, this.tabitUtilsService
+      bot,
+      this.logger,
+      this.utilsService,
+      this.telegramGeneralService,
+      this.flowStepsManagerService,
+      this.tabitUtilsService,
     ];
 
     switch (flowStepType) {
@@ -95,7 +100,7 @@ export class FlowStepsHandlerService {
       const { text, inlineKeyboardMarkup } = this.tabitUtilsService.getSubscriptionDetails(subscription);
       const resText = `Yay! You have successfully subscribed to the restaurant:\n\n${text}\n\nI will do my best to find you the a table and let you know once I do!`;
       await this.telegramGeneralService.sendPhoto(bot, subscription.chatId, subscription.restaurantDetails.image, { ...inlineKeyboardMarkup, caption: resText });
-      this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, chatId, this.mongoUserService);
     }
     this.flowStepsManagerService.resetCurrentUserStep(chatId);
   }

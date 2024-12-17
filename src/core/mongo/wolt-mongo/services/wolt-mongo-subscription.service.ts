@@ -15,7 +15,7 @@ export class WoltMongoSubscriptionService {
   ) {}
 
   async getActiveSubscriptions(chatId: number = null) {
-  // async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {
+    // async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {
     try {
       const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
       const filter = { isActive: true };

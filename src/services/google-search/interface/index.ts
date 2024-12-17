@@ -13,7 +13,7 @@ export interface ExpectedGoogleArticle {
       readonly src: string;
       readonly width: string;
       readonly height: string;
-    }>,
+    }>;
     metatags: Array<{
       readonly 'og:image': string;
       readonly 'article:published_time': string;

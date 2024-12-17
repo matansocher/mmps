@@ -4,15 +4,7 @@ import { LoggerService } from '@core/logger';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService, SubscriptionModel } from '@core/mongo/tabit-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import {
-  ANALYTIC_EVENT_NAMES,
-  BOT_BUTTONS_ACTIONS,
-  FlowStepsHandlerService,
-  FlowStepsManagerService,
-  INITIAL_BOT_RESPONSE,
-  TABIT_BOT_COMMANDS,
-  TabitUtilsService,
-} from '@services/tabit';
+import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, FlowStepsHandlerService, FlowStepsManagerService, INITIAL_BOT_RESPONSE, TABIT_BOT_COMMANDS, TabitUtilsService } from '@services/tabit';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
@@ -111,7 +103,12 @@ export class TabitBotService implements OnModuleInit {
     const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
 
     // prevent built in options to be processed also here
-    if (Object.keys(TABIT_BOT_COMMANDS).map((option: string) => TABIT_BOT_COMMANDS[option]).includes(text)) return;
+    if (
+      Object.keys(TABIT_BOT_COMMANDS)
+        .map((option: string) => TABIT_BOT_COMMANDS[option])
+        .includes(text)
+    )
+      return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
     this.logger.info(this.textHandler.name, `${logBody} - start`);

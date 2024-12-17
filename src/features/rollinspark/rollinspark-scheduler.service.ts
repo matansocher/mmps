@@ -86,10 +86,7 @@ export class RollinsparkSchedulerService {
     const newKeys = newResult.map((res) => res.ApartmentId).sort();
 
     if (this.currentCount === COUNT_TO_NOTIFY) {
-      const messageText = [
-        `אביב! תהיה רגוע אני נותן עדכון כשיש דירה חדשה ברולינס פארק`,
-        `מה מצאתי כל הזמן הזה: ${newKeys}`,
-      ].join('\n');
+      const messageText = [`אביב! תהיה רגוע אני נותן עדכון כשיש דירה חדשה ברולינס פארק`, `מה מצאתי כל הזמן הזה: ${newKeys}`].join('\n');
       await Promise.all(this.chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, messageText)));
       this.currentCount = 0;
     }
@@ -99,10 +96,7 @@ export class RollinsparkSchedulerService {
 
   async alertSubscriptions(chatIds: number[]): Promise<void> {
     try {
-      const messageText = [
-        `אביב! נראה לי יש דירה חדשה ברולינס פארק לך לבדוק`,
-        `https://www.rollinspark.net/floor-plans`,
-      ].join('\n');
+      const messageText = [`אביב! נראה לי יש דירה חדשה ברולינס פארק לך לבדוק`, `https://www.rollinspark.net/floor-plans`].join('\n');
       await Promise.all(chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, messageText)));
     } catch (err) {
       this.logger.error(this.alertSubscriptions.name, `error - ${this.utilsService.getErrorMessage(err)}`);

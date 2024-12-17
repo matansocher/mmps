@@ -6,7 +6,6 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 
 @Injectable()
 export class RollinsparkService {
-
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,

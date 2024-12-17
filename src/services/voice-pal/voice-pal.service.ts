@@ -80,14 +80,9 @@ export class VoicePalService {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction && userAction.showLoader) {
-        await this.messageLoaderService.handleMessageWithLoader(
-          this.bot,
-          chatId,
-          { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions,
-          async (): Promise<void> => {
-            await this[userAction.handler]({ chatId, text, audio, video, photo, file });
-          },
-        );
+        await this.messageLoaderService.handleMessageWithLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions, async (): Promise<void> => {
+          await this[userAction.handler]({ chatId, text, audio, video, photo, file });
+        });
       } else {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }

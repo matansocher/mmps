@@ -118,9 +118,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
 };
 
 export const ANALYTIC_EVENT_NAMES = {
-  ...Object.fromEntries(
-    Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [VOICE_PAL_OPTIONS[option].displayName, VOICE_PAL_OPTIONS[option].analyticsEventName]),
-  ),
+  ...Object.fromEntries(Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [VOICE_PAL_OPTIONS[option].displayName, VOICE_PAL_OPTIONS[option].analyticsEventName])),
 };
 
 export const ANALYTIC_EVENT_STATES = {
@@ -130,10 +128,10 @@ export const ANALYTIC_EVENT_STATES = {
 };
 
 export const SUMMARY_PROMPT =
-  'You are a helpful assistant. You will be provided with a text from the user. ' +
-  'Please summarize the transcript. You can also split the summary into section, and add to each section its header.';
+  'You are a helpful assistant. You will be provided with a text from the user. ' + 'Please summarize the transcript. You can also split the summary into section, and add to each section its header.';
 
-export const IMAGE_ANALYSIS_PROMPT = 'What’s in this image? What text do you see in the image? if you see a riddle solve it. if you see something complicated, explain it. Add any additional value you can in addition to explaining what you see and adding the text to your answer. please provide as much data as you can.';
+export const IMAGE_ANALYSIS_PROMPT =
+  'What’s in this image? What text do you see in the image? if you see a riddle solve it. if you see something complicated, explain it. Add any additional value you can in addition to explaining what you see and adding the text to your answer. please provide as much data as you can.';
 
 export const FILE_ANALYSIS_PROMPT = 'Can you summarize this document?';
 

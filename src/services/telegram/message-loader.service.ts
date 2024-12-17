@@ -77,7 +77,7 @@ export class MessageLoaderService {
     }
     this.telegramGeneralService.sendChatAction(bot, chatId, options.loadingAction);
 
-    this.messages[chatId].loaderMessageId = (messageRes && messageRes.message_id) ? messageRes.message_id : this.messages[chatId]?.loaderMessageId;
+    this.messages[chatId].loaderMessageId = messageRes && messageRes.message_id ? messageRes.message_id : this.messages[chatId]?.loaderMessageId;
     this.messages[chatId].cycleIterationIndex = this.messages[chatId].cycleIterationIndex + 1;
     this.cycleInitiator(bot, chatId, options);
   }

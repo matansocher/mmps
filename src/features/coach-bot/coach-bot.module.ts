@@ -8,14 +8,7 @@ import { CoachBotService } from './coach-bot.service';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 
 @Module({
-  imports: [
-    LoggerModule.forChild(CoachBotModule.name),
-    UtilsModule,
-    TelegramBotsFactoryModule.forChild(BOTS.COACH),
-    TelegramModule,
-    Scores365Module,
-    ScheduleModule.forRoot(),
-  ],
+  imports: [LoggerModule.forChild(CoachBotModule.name), UtilsModule, TelegramBotsFactoryModule.forChild(BOTS.COACH), TelegramModule, Scores365Module, ScheduleModule.forRoot()],
   providers: [CoachBotService, CoachBotSchedulerService],
 })
 export class CoachBotModule implements OnModuleInit {
