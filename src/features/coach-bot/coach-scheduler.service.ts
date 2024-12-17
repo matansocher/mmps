@@ -30,13 +30,19 @@ export class CoachBotSchedulerService {
         return;
       }
       const todayDateString = this.utilsService.getTodayDateString(new Date());
-      const competitionsWithMatches = await Promise.all(competitions.map((competition) => this.scores365Service.getMatchesForCompetition(competition, todayDateString)));
+      const competitionsWithMatches = await Promise.all(
+        competitions.map((competition) => this.scores365Service.getMatchesForCompetition(competition, todayDateString)),
+      );
       if (!competitionsWithMatches?.length) {
         this.logger.error(this.handleIntervalFlow.name, 'error - could not get matches');
         return;
       }
 
       const competitionsWithMatchesFiltered = competitionsWithMatches.filter(({ matches }) => matches?.length);
+      if (!competitionsWithMatchesFiltered?.length) {
+        this.logger.info(this.handleIntervalFlow.name, 'no competitions with matches found');
+        return;
+      }
       const responseText = generateMatchResultsString(competitionsWithMatchesFiltered);
       await Promise.all(this.chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, responseText)));
     } catch (err) {
