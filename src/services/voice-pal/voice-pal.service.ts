@@ -1,5 +1,5 @@
-import axios from 'axios';
-import validUrl from 'valid-url';
+// import axios from 'axios';
+// import validUrl from 'valid-url';
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
@@ -18,13 +18,13 @@ import { UserSelectedActionsService } from './user-selected-actions.service';
 import {
   ANALYTIC_EVENT_NAMES,
   ANALYTIC_EVENT_STATES,
-  FILE_ANALYSIS_PROMPT,
+  // FILE_ANALYSIS_PROMPT,
   IMAGE_ANALYSIS_PROMPT,
   LOCAL_FILES_PATH,
   // NOT_FOUND_VIDEO_MESSAGES,
-  SUMMARY_PROMPT,
+  // SUMMARY_PROMPT,
   VOICE_PAL_OPTIONS,
-  WEB_PAGE_URL_INVALID,
+  // WEB_PAGE_URL_INVALID,
 } from './voice-pal.config';
 import { VoicePalUtilsService } from './voice-pal-utils.service';
 
@@ -80,14 +80,9 @@ export class VoicePalService {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction && userAction.showLoader) {
-        await this.messageLoaderService.handleMessageWithLoader(
-          this.bot,
-          chatId,
-          { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions,
-          async (): Promise<void> => {
-            await this[userAction.handler]({ chatId, text, audio, video, photo, file });
-          },
-        );
+        await this.messageLoaderService.handleMessageWithLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions, async (): Promise<void> => {
+          await this[userAction.handler]({ chatId, text, audio, video, photo, file });
+        });
       } else {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }

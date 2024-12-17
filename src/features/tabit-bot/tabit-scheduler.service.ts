@@ -30,7 +30,9 @@ export class TabitSchedulerService {
     // Clear existing timeout if it exists
     try {
       this.schedulerRegistry.deleteTimeout(JOB_NAME);
-    } catch {}
+    } catch {
+      /* empty */
+    }
 
     await this.handleIntervalFlow();
 
@@ -99,14 +101,7 @@ export class TabitSchedulerService {
             `Subscription for ${restaurantTitle} at ${this.tabitUtilsService.getDateStringFormat(date)} - ${time} was removed since the due date has passed 😢.\nWanna try with another restaurant?`,
           ),
         );
-        promisesArr.push(
-          this.notifierBotService.notify(
-            BOTS.TABIT.name,
-            { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED },
-            subscription.chatId,
-            this.mongoUserService,
-          ),
-        );
+        promisesArr.push(this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService));
       });
       await Promise.all(promisesArr);
     } catch (err) {

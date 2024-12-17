@@ -23,6 +23,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
     'no-console': 'warn',
+    'no-unsafe-optional-chaining': 'off',
     'prettier/prettier': [
       'warn',
       {

@@ -5,10 +5,7 @@ export class LoggerService {
   readonly filename: string;
 
   constructor(@Optional() private readonly moduleName: string = 'LoggerModule') {
-    this.filename = this.moduleName
-      .split(/[\\\/]/)
-      .splice(-2)
-      .join('/');
+    this.filename = this.moduleName.split(/[\\/]/).splice(-2).join('/');
   }
 
   info(method: string, text: string): void {

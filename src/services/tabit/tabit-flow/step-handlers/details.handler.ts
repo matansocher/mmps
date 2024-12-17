@@ -36,7 +36,7 @@ export class DetailsHandler extends StepHandler {
       const restaurantId = this.tabitApiService.getRestaurantId(userInput);
       const restaurantDetails: ITabitRestaurant = await this.tabitApiService.getRestaurantDetails(restaurantId);
       if (!restaurantDetails) {
-        const replyText = `I am sorry, I didn\'t find any restaurants matching your search - '${userInput}'`;
+        const replyText = `I am sorry, I didn't find any restaurants matching your search - '${userInput}'`;
         await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
       }
       if (!restaurantDetails.isOnlineBookingAvailable) {

@@ -4,15 +4,7 @@ import { LoggerService } from '@core/logger';
 import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import {
-  ANALYTIC_EVENT_NAMES,
-  BOT_BUTTONS_ACTIONS,
-  INITIAL_BOT_RESPONSE,
-  ONTOPO_BOT_COMMANDS,
-  FlowStepsHandlerService,
-  FlowStepsManagerService,
-  OntopoUtilsService,
-} from '@services/ontopo';
+import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, ONTOPO_BOT_COMMANDS, FlowStepsHandlerService, FlowStepsManagerService, OntopoUtilsService } from '@services/ontopo';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()
@@ -169,7 +161,7 @@ export class OntopoBotService implements OnModuleInit {
       await this.mongoSubscriptionService.archiveSubscription(chatId, subscriptionId);
       replyText = `Subscription for ${existingSubscription.restaurantDetails.title} at ${this.ontopoUtilsService.getDateStringFormat(existingSubscription.userSelections.date)} was removed`;
     } else {
-      replyText = `It seems you don\'t have a subscription for this restaurant.\n\nYou can search and register for another restaurant if you like`;
+      replyText = `It seems you don't have a subscription for this restaurant.\n\nYou can search and register for another restaurant if you like`;
     }
     this.mongoAnalyticLogService.sendAnalyticLog(ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, { data: subscriptionId, chatId });
     return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);

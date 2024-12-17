@@ -51,9 +51,10 @@ export class AiService {
 
   async analyzeImage(prompt: string, imageLocalPath: string): Promise<any> {
     switch (this.aiProvider) {
-      case AiProvider.OPENAI:
+      case AiProvider.OPENAI: {
         const imageUrl = await this.imgurService.uploadImage(imageLocalPath);
         return this.openaiService.analyzeImage(prompt, imageUrl);
+      }
       case AiProvider.GEMINI:
         return this.geminiService.generateContentFromFile(prompt, imageLocalPath);
     }

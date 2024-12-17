@@ -136,12 +136,7 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.textHandler.name, errorMessage);
-      this.notifierBotService.notify(
-        BOTS.WOLT.name,
-        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -165,12 +160,7 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.callbackQueryHandler.name, errorMessage);
-      this.notifierBotService.notify(
-        BOTS.WOLT.name,
-        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -179,7 +169,7 @@ export class WoltBotService implements OnModuleInit {
     let replyText;
     let form = {};
     if (existingSubscription) {
-      replyText = '' + `It seems you already have a subscription for ${restaurant} is open.\n\n` + `Let\'s wait a few minutes - it might open soon.`;
+      replyText = '' + `It seems you already have a subscription for ${restaurant} is open.\n\n` + `Let's wait a few minutes - it might open soon.`;
     } else {
       const restaurantDetails = this.woltService.getRestaurants().find((r: IWoltRestaurant): boolean => r.name === restaurant) || null;
       if (restaurantDetails && restaurantDetails.isOnline) {

@@ -47,8 +47,7 @@ export class NewsService implements OnModuleInit {
       const promises = TELEGRAM_CHANNEL_IDS_TO_LISTEN.map(async (channelId) => {
         return this.telegramClientService.getChannelDetails(this.telegramClient, channelId);
       });
-      const results = await Promise.all(promises);
-      this.channelDetails = results;
+      this.channelDetails = await Promise.all(promises);
     } catch (err) {
       this.logger.error(this.refreshChannelsDetails.name, `err: ${this.utilsService.getErrorMessage(err)}`);
     }

@@ -31,7 +31,7 @@ export class DateHandler extends StepHandler {
 
   async handlePreUserAction(chatId: number, currentStepDetails: IUserFlowDetails, flowStep: IFlowStep): Promise<void> {
     try {
-      const { restaurantDetails } = currentStepDetails;
+      // const { restaurantDetails } = currentStepDetails;
       const dates = this.getDatesForNextMonths().slice(0, 10);
       const inlineKeyboardButtons = dates.map((date: string) => {
         const callbackData = { action: BOT_BUTTONS_ACTIONS.DATE, data: date } as IInlineKeyboardButton;
