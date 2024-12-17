@@ -1,0 +1,14 @@
+coverage/
+reports/
+.stryker-tmp/
+dist/
+tmp/
+
+Dockerfile
+*.md
+*.properties
+*.yml
+*.yaml
+*.svg
+
+gha-creds-*.json
