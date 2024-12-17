@@ -1,12 +1,12 @@
-import TelegramBot from 'node-telegram-bot-api';
+import { LoggerService } from '@core/logger';
+import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
+import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
+import { UtilsService } from '@core/utils';
 import { Inject, Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { LoggerService } from '@core/logger';
-import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
-import { UtilsService } from '@core/utils';
+import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, OntopoApiService, OntopoUtilsService } from '@services/ontopo';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { OntopoApiService, OntopoUtilsService, ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP } from '@services/ontopo';
+import TelegramBot from 'node-telegram-bot-api';
 
 const JOB_NAME = 'ontopo-scheduler-job-interval';
 
@@ -101,7 +101,14 @@ export class OntopoSchedulerService {
             `Subscription for ${restaurantTitle} at ${this.ontopoUtilsService.getDateStringFormat(date)} - ${time} was removed since the due date has passed 😢.\nWanna try with another restaurant?`,
           ),
         );
-        promisesArr.push(this.notifierBotService.notify(BOTS.ONTOPO.name, { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService));
+        promisesArr.push(
+          this.notifierBotService.notify(
+            BOTS.ONTOPO.name,
+            { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED },
+            subscription.chatId,
+            this.mongoUserService,
+          ),
+        );
       });
       await Promise.all(promisesArr);
     } catch (err) {

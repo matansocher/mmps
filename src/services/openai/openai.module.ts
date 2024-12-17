@@ -1,6 +1,6 @@
-import { OpenAI } from 'openai';
-import { type FactoryProvider, Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
+import { type FactoryProvider, Module } from '@nestjs/common';
+import { OpenAI } from 'openai';
 import { OPENAI_API_KEY, OPENAI_CLIENT_TOKEN } from './openai.config';
 import { OpenaiService } from './openai.service';
 import { OpenaiAssistantService } from './openai-assistant.service';

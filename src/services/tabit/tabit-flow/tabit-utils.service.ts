@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
 import { SubscriptionModel } from '@core/mongo/tabit-mongo';
-import { IInlineKeyboardButton, BOT_BUTTONS_ACTIONS, RESTAURANT_FOR_USER_BASE_URL } from '@services/tabit';
+import { Injectable } from '@nestjs/common';
+import { BOT_BUTTONS_ACTIONS, IInlineKeyboardButton, RESTAURANT_FOR_USER_BASE_URL } from '@services/tabit';
 import { TelegramGeneralService } from '@services/telegram';
 
 const CALLBACK_DATA_SEPARATOR = ',';

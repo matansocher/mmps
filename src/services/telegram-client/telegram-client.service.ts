@@ -1,9 +1,9 @@
-import { get as _get } from 'lodash';
-import { TelegramClient } from 'telegram';
-import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { IChannelDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
+import { Injectable } from '@nestjs/common';
+import { get as _get } from 'lodash';
+import { TelegramClient } from 'telegram';
+import { IChannelDetails, IListenerOptions, ITelegramEvent, ITelegramMessage } from './interface';
 import { LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()

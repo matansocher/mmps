@@ -1,7 +1,7 @@
-import TelegramBot from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
+import TelegramBot from 'node-telegram-bot-api';
 import { IFlowStep, ITabitRestaurant, IUserFlowDetails } from '../../interface';
 import { TabitApiService } from '../../tabit-api/tabit-api.service';
 import { FlowStepsManagerService } from '../flow-steps-manager.service';

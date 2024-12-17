@@ -1,5 +1,5 @@
-import { Message } from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
+import { Message } from 'node-telegram-bot-api';
 
 const TIMEOUT_MS = 100;
 

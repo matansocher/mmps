@@ -1,6 +1,6 @@
-import { Db } from 'mongodb';
-import { Inject, Injectable } from '@nestjs/common';
 import { ThreadModel } from '@core/mongo/news-mongo';
+import { Inject, Injectable } from '@nestjs/common';
+import { Db } from 'mongodb';
 import { COLLECTIONS, CONNECTION_NAME } from '../news-mongo.config';
 
 @Injectable()

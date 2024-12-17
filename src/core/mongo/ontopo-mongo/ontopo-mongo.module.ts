@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { UtilsModule } from '@core/utils';
+import { Module } from '@nestjs/common';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './ontopo-mongo.config';
 import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService } from './services';
 

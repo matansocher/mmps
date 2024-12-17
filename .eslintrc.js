@@ -12,7 +12,7 @@ module.exports = {
     ecmaVersion: 2021,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin', '@typescript-eslint'],
+  plugins: ['@typescript-eslint/eslint-plugin', '@typescript-eslint', 'prettier', 'simple-import-sort', 'import'],
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
   ignorePatterns: ['.eslintrc.js'],
   rules: {
@@ -33,6 +33,21 @@ module.exports = {
         singleQuote: true, // Use single quotes or double quotes
       },
     ],
+    // 'simple-import-sort/imports': 'error',
+    // 'simple-import-sort/exports': 'error',
+    // 'import/order': [
+    //   'error',
+    //   {
+    //     alphabetize: { order: 'asc', caseInsensitive: true },
+    //     'newlines-between': 'always',
+    //     groups: [
+    //       ['^\\w'], // External libraries without `@`
+    //       ['^@\\w'], // External libraries with `@`
+    //       ['^@'], // Aliased imports starting with `@`
+    //       ['^\\.'], // Relative imports (start with .)
+    //     ],
+    //   },
+    // ],
   },
   overrides: [
     // {

@@ -1,9 +1,9 @@
+import { LoggerService } from '@core/logger';
+import { Inject, Injectable } from '@nestjs/common';
 import fs from 'fs';
 import { get as _get } from 'lodash';
 import { OpenAI } from 'openai';
 import { MessageCreateParams, Run } from 'openai/resources/beta/threads';
-import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
 import { ASSISTANT_RUN_STATUSES, ERROR_STATUSES, OPENAI_CLIENT_TOKEN } from './openai.config';
 
 @Injectable()

@@ -1,8 +1,8 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { Inject, Injectable } from '@nestjs/common';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
 
 @Injectable()

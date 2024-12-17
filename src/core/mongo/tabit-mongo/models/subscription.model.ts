@@ -1,5 +1,5 @@
-import type { ObjectId } from 'mongodb';
 import { ITabitRestaurant, IUserSelections } from '@services/tabit';
+import type { ObjectId } from 'mongodb';
 
 export interface SubscriptionModel {
   _id: ObjectId;

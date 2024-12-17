@@ -1,4 +1,3 @@
-import { Module } from '@nestjs/common';
 import { CoachBotModule } from '@features/coach-bot/coach-bot.module';
 import { DefineModule } from '@features/define/define.module';
 import { FunFactsBotModule } from '@features/fun-facts-bot/fun-facts-bot.module';
@@ -9,6 +8,7 @@ import { RollinsparkModule } from '@features/rollinspark';
 // import { TabitBotModule } from '@features/tabit-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
 import { WoltBotModule } from '@features/wolt-bot';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 

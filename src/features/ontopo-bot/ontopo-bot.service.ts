@@ -1,11 +1,11 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { OntopoMongoAnalyticLogService, OntopoMongoSubscriptionService, OntopoMongoUserService, SubscriptionModel } from '@core/mongo/ontopo-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, INITIAL_BOT_RESPONSE, ONTOPO_BOT_COMMANDS, FlowStepsHandlerService, FlowStepsManagerService, OntopoUtilsService } from '@services/ontopo';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, FlowStepsHandlerService, FlowStepsManagerService, INITIAL_BOT_RESPONSE, ONTOPO_BOT_COMMANDS, OntopoUtilsService } from '@services/ontopo';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 
 @Injectable()
 export class OntopoBotService implements OnModuleInit {

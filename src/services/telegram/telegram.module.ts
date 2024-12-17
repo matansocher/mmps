@@ -1,9 +1,9 @@
-import { Global, Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
+import { UtilsModule } from '@core/utils';
+import { Global, Module } from '@nestjs/common';
 import { MessageLoaderService } from './message-loader.service';
 import { MessagesAggregatorService } from './messages-aggregator.service';
 import { TelegramGeneralService } from './telegram-general.service';
-import { UtilsModule } from '@core/utils';
 
 @Global()
 @Module({

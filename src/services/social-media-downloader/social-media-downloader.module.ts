@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
 import { UtilsModule } from '@core/utils';
+import { Module } from '@nestjs/common';
 import { SocialMediaDownloaderService } from './social-media-downloader.service';
 
 @Module({

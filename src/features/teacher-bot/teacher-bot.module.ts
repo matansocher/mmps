@@ -1,7 +1,7 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
 import { UtilsModule } from '@core/utils';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { GoogleSearchModule } from '@services/google-search';
 import { OpenaiModule } from '@services/openai';
 import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
@@ -9,15 +9,7 @@ import { TeacherBotService } from './teacher-bot.service';
 import { TeacherSchedulerService } from './teacher-scheduler.service';
 
 @Module({
-  imports: [
-    LoggerModule.forChild(TeacherBotModule.name),
-    UtilsModule,
-    TelegramBotsFactoryModule.forChild(BOTS.TEACHER),
-    TelegramModule,
-    OpenaiModule,
-    GoogleSearchModule,
-    ScheduleModule.forRoot(),
-  ],
+  imports: [LoggerModule.forChild(TeacherBotModule.name), UtilsModule, TelegramBotsFactoryModule.forChild(BOTS.TEACHER), TelegramModule, OpenaiModule, GoogleSearchModule, ScheduleModule.forRoot()],
   providers: [TeacherBotService, TeacherSchedulerService],
 })
 export class TeacherBotModule implements OnModuleInit {

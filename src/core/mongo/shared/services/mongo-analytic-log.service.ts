@@ -1,5 +1,5 @@
-import { Db } from 'mongodb';
 import { Injectable } from '@nestjs/common';
+import { Db } from 'mongodb';
 import { COLLECTIONS } from '../mongo.config';
 
 @Injectable()

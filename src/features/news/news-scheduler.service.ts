@@ -1,14 +1,14 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Cron } from '@nestjs/schedule';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { NewsMongoSubscriptionService, NewsMongoThreadService, SubscriptionModel } from '@core/mongo/news-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { NewsService } from '@services/news';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import TelegramBot from 'node-telegram-bot-api';
 import { ANALYTIC_EVENT_NAMES } from './news-bot.config';
 
 @Injectable()

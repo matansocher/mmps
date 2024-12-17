@@ -1,17 +1,17 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
 import { MONTHS_OF_YEAR } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { OntopoMongoSubscriptionService, OntopoMongoUserService } from '@core/mongo/ontopo-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import TelegramBot from 'node-telegram-bot-api';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '../interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, ONTOPO_FLOW_STEPS } from '../ontopo.config';
 import { OntopoApiService } from '../ontopo-api/ontopo-api.service';
 import { FlowStepsManagerService } from '../ontopo-flow/flow-steps-manager.service';
-import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '../ontopo-flow/step-handlers';
 import { OntopoUtilsService } from '../ontopo-flow/ontopo-utils.service';
+import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, StepHandler, TimeHandler } from '../ontopo-flow/step-handlers';
 
 @Injectable()
 export class FlowStepsHandlerService {
@@ -91,11 +91,7 @@ export class FlowStepsHandlerService {
     } else {
       const numOfSubscriptions = await this.mongoSubscriptionService.getSubscriptionsCount(chatId);
       if (numOfSubscriptions >= MAX_SUBSCRIPTIONS_NUMBER) {
-        await this.telegramGeneralService.sendMessage(
-          bot,
-          chatId,
-          `You have reached the maximum number of subscriptions - ${MAX_SUBSCRIPTIONS_NUMBER}. Please unsubscribe from one of them before adding a new one`,
-        );
+        await this.telegramGeneralService.sendMessage(bot, chatId, `You have reached the maximum number of subscriptions - ${MAX_SUBSCRIPTIONS_NUMBER}. Please unsubscribe from one of them before adding a new one`);
         this.flowStepsManagerService.resetCurrentUserStep(chatId);
         return;
       }

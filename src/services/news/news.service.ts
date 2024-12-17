@@ -1,10 +1,10 @@
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
-import { TelegramClient } from 'telegram';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { NewsMongoThreadService, ThreadModel } from '@core/mongo/news-mongo';
+import { UtilsService } from '@core/utils';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { OpenaiAssistantService, OpenaiService } from '@services/openai';
 import { IChannelDetails, ITelegramMessage, TELEGRAM_CLIENT_TOKEN, TelegramClientService } from '@services/telegram-client';
+import { TelegramClient } from 'telegram';
 import { DAILY_PHOTO_PROMPT, NEWS_ASSISTANT_ID, TELEGRAM_CHANNEL_IDS_TO_LISTEN } from './news.config';
 
 @Injectable()

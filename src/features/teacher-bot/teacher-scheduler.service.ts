@@ -1,14 +1,14 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
-import { OpenaiAssistantService } from '@services/openai';
+import { Inject, Injectable } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { type GoogleArticle, GoogleSearchService } from '@services/google-search';
+import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { TEACHER_ASSISTANT_ID, LOCAL_FILES_PATH, HOURS_OF_DAY, THREAD_MESSAGE_INSTRUCTIONS } from './teacher-bot.config';
+import TelegramBot from 'node-telegram-bot-api';
+import { HOURS_OF_DAY, LOCAL_FILES_PATH, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_INSTRUCTIONS } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherSchedulerService {

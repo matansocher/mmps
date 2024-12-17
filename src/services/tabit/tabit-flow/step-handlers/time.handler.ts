@@ -1,8 +1,8 @@
-import TelegramBot from 'node-telegram-bot-api';
 import { DAYS_OF_WEEK } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { TelegramGeneralService } from '@services/telegram';
+import TelegramBot from 'node-telegram-bot-api';
 import { IFlowStep, IFlowStepType, IInlineKeyboardButton, ITabitRestaurantReservationHour, IUserFlowDetails } from '../../interface';
 import { BOT_BUTTONS_ACTIONS } from '../../tabit.config';
 import { FlowStepsManagerService } from '../flow-steps-manager.service';

@@ -1,7 +1,7 @@
 import { isProd } from '@core/config';
 import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
-import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
+import { Db } from 'mongodb';
 import { COLLECTIONS, CONNECTION_NAME } from '../news-mongo.config';
 
 @Injectable()

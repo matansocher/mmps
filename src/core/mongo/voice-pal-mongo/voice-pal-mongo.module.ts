@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { UtilsModule } from '@core/utils';
-import { VoicePalMongoUserService, VoicePalMongoAnalyticLogService } from './services';
+import { Module } from '@nestjs/common';
+import { VoicePalMongoAnalyticLogService, VoicePalMongoUserService } from './services';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './voice-pal-mongo.config';
 
 @Module({

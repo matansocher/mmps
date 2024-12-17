@@ -1,22 +1,22 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
+import { SubscriptionModel, WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { UtilsService } from '@core/utils';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
+  CITIES_SLUGS_SUPPORTED,
   INITIAL_BOT_RESPONSE,
+  IWoltRestaurant,
   MAX_NUM_OF_RESTAURANTS_TO_SHOW,
   SUBSCRIPTION_EXPIRATION_HOURS,
   TOO_OLD_LIST_THRESHOLD_MS,
   WOLT_BOT_OPTIONS,
-  IWoltRestaurant,
   WoltService,
   WoltUtilsService,
-  CITIES_SLUGS_SUPPORTED,
 } from '@services/wolt';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
@@ -136,7 +136,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.textHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT.name,
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -160,7 +165,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.callbackQueryHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT.name,
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }

@@ -1,5 +1,5 @@
-import { IFlowStepType } from './flow-step.enum';
 import { StepHandler } from '../tabit-flow/step-handlers/step.handler';
+import { IFlowStepType } from './flow-step.enum';
 
 export interface IFlowStep {
   id: IFlowStepType;

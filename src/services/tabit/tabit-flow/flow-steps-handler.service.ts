@@ -1,11 +1,11 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
 import { MONTHS_OF_YEAR } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import TelegramBot from 'node-telegram-bot-api';
 import { IFlowStepType, IUserFlowDetails, IUserSelections } from '../interface';
 import { ANALYTIC_EVENT_NAMES, MAX_SUBSCRIPTIONS_NUMBER, TABIT_FLOW_STEPS } from '../tabit.config';
 import { TabitApiService } from '../tabit-api/tabit-api.service';
@@ -92,11 +92,7 @@ export class FlowStepsHandlerService {
     } else {
       const numOfSubscriptions = await this.mongoSubscriptionService.getSubscriptionsCount(chatId);
       if (numOfSubscriptions >= MAX_SUBSCRIPTIONS_NUMBER) {
-        await this.telegramGeneralService.sendMessage(
-          bot,
-          chatId,
-          `You have reached the maximum number of subscriptions - ${MAX_SUBSCRIPTIONS_NUMBER}. Please unsubscribe from one of them before adding a new one`,
-        );
+        await this.telegramGeneralService.sendMessage(bot, chatId, `You have reached the maximum number of subscriptions - ${MAX_SUBSCRIPTIONS_NUMBER}. Please unsubscribe from one of them before adding a new one`);
         this.flowStepsManagerService.resetCurrentUserStep(chatId);
         return;
       }

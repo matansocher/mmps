@@ -1,10 +1,10 @@
-import axios from 'axios';
-import { pick as _pick } from 'lodash';
-import { Injectable } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
+import axios from 'axios';
+import { pick as _pick } from 'lodash';
 import { Competition, ExpectedMatch, MatchDetails } from './interface';
-import { SCORES_365_API_URL, COMPETITION_IDS } from './scores-365.config';
+import { COMPETITION_IDS, SCORES_365_API_URL } from './scores-365.config';
 
 @Injectable()
 export class Scores365Service {

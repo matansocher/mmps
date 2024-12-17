@@ -1,8 +1,9 @@
-import axios from 'axios';
 import { env } from 'node:process';
-import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
+import axios from 'axios';
+
 import { ExpectedGoogleArticle, GoogleArticle } from './interface';
 
 const GOOGLE_CUSTOM_SEARCH_BASE_URL = 'https://www.googleapis.com/customsearch/v1';

@@ -1,5 +1,5 @@
-import { IFlowStepType, IFlowStep } from './interface';
-import { DateHandler, DetailsHandler, SizeHandler, AreaHandler, TimeHandler } from './tabit-flow/step-handlers';
+import { IFlowStep, IFlowStepType } from './interface';
+import { AreaHandler, DateHandler, DetailsHandler, SizeHandler, TimeHandler } from './tabit-flow/step-handlers';
 
 export const MAX_SUBSCRIPTIONS_NUMBER = 10;
 

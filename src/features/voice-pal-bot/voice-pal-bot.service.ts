@@ -1,9 +1,9 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { BOTS, MessagesAggregatorService, TelegramGeneralService } from '@services/telegram';
 import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '@services/voice-pal';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
 
 @Injectable()
 export class VoicePalBotService implements OnModuleInit {

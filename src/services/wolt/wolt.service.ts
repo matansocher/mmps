@@ -1,9 +1,9 @@
-import axios from 'axios';
-import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
+import axios from 'axios';
 import { IRestaurantsList, IWoltRestaurant } from './interface';
-import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL, RESTAURANT_BASE_URL, RESTAURANT_LINK_BASE_URL } from './wolt.config';
+import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANT_BASE_URL, RESTAURANT_LINK_BASE_URL, RESTAURANTS_BASE_URL } from './wolt.config';
 
 @Injectable()
 export class WoltService {

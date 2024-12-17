@@ -1,8 +1,8 @@
-import { Db } from 'mongodb';
-import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
 import { ITelegramMessageData } from '@services/telegram';
+import { Db } from 'mongodb';
 import { COLLECTIONS } from '../mongo.config';
 
 @Injectable()

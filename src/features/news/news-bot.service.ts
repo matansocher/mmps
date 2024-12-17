@@ -1,13 +1,13 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { NewsMongoAnalyticLogService, NewsMongoSubscriptionService, NewsMongoUserService } from '@core/mongo/news-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { NewsService } from '@services/news';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { IChannelDetails } from '@services/telegram-client';
-import { INITIAL_BOT_RESPONSE, ANALYTIC_EVENT_NAMES, GENERAL_ERROR_MESSAGE, SUBSCRIBE_MESSAGE, UNSUBSCRIBE_MESSAGE } from './news-bot.config';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
+import { ANALYTIC_EVENT_NAMES, GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE, SUBSCRIBE_MESSAGE, UNSUBSCRIBE_MESSAGE } from './news-bot.config';
 
 @Injectable()
 export class NewsBotService implements OnModuleInit {

@@ -1,7 +1,7 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
+import TelegramBot from 'node-telegram-bot-api';
 import { MessageLoaderOptions } from './interface';
 import { TelegramGeneralService } from './telegram-general.service';
 
@@ -69,10 +69,7 @@ export class MessageLoaderService {
   async processCycle(bot: TelegramBot, chatId: number, options: MessageLoaderOptions): Promise<void> {
     let messageRes;
 
-    const messageText =
-      this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length
-        ? LOADER_MESSAGES[this.messages[chatId]?.cycleIterationIndex]
-        : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
+    const messageText = this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId]?.cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
     if (this.messages[chatId]?.cycleIterationIndex === 0) {
       messageRes = await this.telegramGeneralService.sendMessage(bot, chatId, messageText);
     } else if (this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length) {

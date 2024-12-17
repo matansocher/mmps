@@ -1,12 +1,12 @@
-import TelegramBot from 'node-telegram-bot-api';
+import { LoggerService } from '@core/logger';
+import { SubscriptionModel, TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo';
+import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
+import { UtilsService } from '@core/utils';
 import { Inject, Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { LoggerService } from '@core/logger';
-import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService, SubscriptionModel } from '@core/mongo/tabit-mongo';
-import { UtilsService } from '@core/utils';
+import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, TabitApiService, TabitUtilsService } from '@services/tabit';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { TabitApiService, TabitUtilsService, ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP } from '@services/tabit';
+import TelegramBot from 'node-telegram-bot-api';
 
 const JOB_NAME = 'tabit-scheduler-job-interval';
 
@@ -101,7 +101,14 @@ export class TabitSchedulerService {
             `Subscription for ${restaurantTitle} at ${this.tabitUtilsService.getDateStringFormat(date)} - ${time} was removed since the due date has passed 😢.\nWanna try with another restaurant?`,
           ),
         );
-        promisesArr.push(this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService));
+        promisesArr.push(
+          this.notifierBotService.notify(
+            BOTS.TABIT.name,
+            { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED },
+            subscription.chatId,
+            this.mongoUserService,
+          ),
+        );
       });
       await Promise.all(promisesArr);
     } catch (err) {

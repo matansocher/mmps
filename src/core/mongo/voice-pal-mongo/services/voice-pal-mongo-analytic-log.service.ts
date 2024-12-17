@@ -1,6 +1,6 @@
-import { Db } from 'mongodb';
-import { Inject, Injectable } from '@nestjs/common';
 import { MongoAnalyticLogService } from '@core/mongo/shared';
+import { Inject, Injectable } from '@nestjs/common';
+import { Db } from 'mongodb';
 import { CONNECTION_NAME } from '../voice-pal-mongo.config';
 
 @Injectable()

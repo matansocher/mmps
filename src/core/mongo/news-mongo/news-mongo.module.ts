@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { UtilsModule } from '@core/utils';
-import { NewsMongoAnalyticLogService, NewsMongoSubscriptionService, NewsMongoThreadService, NewsMongoUserService } from './services';
+import { Module } from '@nestjs/common';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './news-mongo.config';
+import { NewsMongoAnalyticLogService, NewsMongoSubscriptionService, NewsMongoThreadService, NewsMongoUserService } from './services';
 
 @Module({
   imports: [

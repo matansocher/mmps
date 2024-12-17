@@ -1,9 +1,9 @@
-import { promises as fs } from 'fs';
-import ffmpeg from 'fluent-ffmpeg';
-import { exec } from 'child_process';
-import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { exec } from 'child_process';
+import ffmpeg from 'fluent-ffmpeg';
+import { promises as fs } from 'fs';
 
 @Injectable()
 export class UtilsService implements OnModuleInit {

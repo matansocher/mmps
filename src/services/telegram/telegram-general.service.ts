@@ -1,8 +1,8 @@
-import { get as _get, chunk as _chunk } from 'lodash';
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
+import { Injectable } from '@nestjs/common';
+import { chunk as _chunk, get as _get } from 'lodash';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { ITelegramCallbackQueryData, ITelegramMessageData } from './interface';
 import { BOT_BROADCAST_ACTIONS } from './telegram.config';
 

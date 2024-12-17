@@ -1,7 +1,7 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
 import { UtilsModule } from '@core/utils';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { OpenaiModule } from '@services/openai';
 import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
 import { FunFactsBotService } from './fun-facts-bot.service';

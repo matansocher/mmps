@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { MockMessagesAggregatorService, MockTelegramGeneralService } from '@mocks';
+import { Test, TestingModule } from '@nestjs/testing';
 import { MessagesAggregatorService, TelegramGeneralService } from '@services/telegram';
 import { VoicePalBotService } from './voice-pal-bot.service';
 
@@ -8,11 +8,7 @@ describe('VoicePalBotService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        VoicePalBotService,
-        { provide: MessagesAggregatorService, useValue: MockMessagesAggregatorService },
-        { provide: TelegramGeneralService, useValue: MockTelegramGeneralService },
-      ],
+      providers: [VoicePalBotService, { provide: MessagesAggregatorService, useValue: MockMessagesAggregatorService }, { provide: TelegramGeneralService, useValue: MockTelegramGeneralService }],
     }).compile();
 
     service = module.get<VoicePalBotService>(VoicePalBotService);

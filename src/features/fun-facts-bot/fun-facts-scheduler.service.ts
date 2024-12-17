@@ -1,12 +1,12 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
+import { Inject, Injectable } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { OpenaiAssistantService, OpenaiService } from '@services/openai';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import TelegramBot from 'node-telegram-bot-api';
 import { FUN_FACT_PHOTO_PROMPT, FUN_FACTS_ASSISTANT_ID, FUN_FACTS_ASSISTANT_THREAD_ID, HOURS_OF_DAY } from './fun-facts-bot.config';
 
 @Injectable()

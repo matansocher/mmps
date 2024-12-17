@@ -1,13 +1,13 @@
-import axios from 'axios';
-import { isEqual as _isEqual } from 'lodash';
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { AVIV_USER_ID, MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
+import { Inject, Injectable } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import axios from 'axios';
+import { isEqual as _isEqual } from 'lodash';
+import TelegramBot from 'node-telegram-bot-api';
 
 const INTERVAL_HOURS = 6;
 const INTERVAL_MINUTES = 5;
