@@ -52,7 +52,7 @@ export class GoogleSearchService {
 
   async getArticleContent(url: string): Promise<string> {
     try {
-      return '';
+      return url;
     } catch (err) {
       this.logger.error(this.getArticleContent.name, `error getting article content: ${this.utilsService.getErrorMessage(err)}`);
       return '';
