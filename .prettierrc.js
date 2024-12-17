@@ -2,7 +2,7 @@ const base = {
   arrowParens: 'always',
   bracketSpacing: true,
   endOfLine: 'lf',
-  printWidth: 160,
+  printWidth: 220,
   singleQuote: true,
   tabWidth: 2,
   trailingComma: 'all',
