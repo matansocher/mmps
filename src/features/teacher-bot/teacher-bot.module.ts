@@ -9,7 +9,15 @@ import { TeacherBotService } from './teacher-bot.service';
 import { TeacherSchedulerService } from './teacher-scheduler.service';
 
 @Module({
-  imports: [LoggerModule.forChild(TeacherBotModule.name), UtilsModule, TelegramBotsFactoryModule.forChild(BOTS.TEACHER), TelegramModule, OpenaiModule, GoogleSearchModule, ScheduleModule.forRoot()],
+  imports: [
+    LoggerModule.forChild(TeacherBotModule.name),
+    UtilsModule,
+    TelegramBotsFactoryModule.forChild(BOTS.TEACHER),
+    TelegramModule,
+    OpenaiModule,
+    GoogleSearchModule,
+    ScheduleModule.forRoot(),
+  ],
   providers: [TeacherBotService, TeacherSchedulerService],
 })
 export class TeacherBotModule implements OnModuleInit {

@@ -13,4 +13,5 @@ export const TELEGRAM_CHANNEL_IDS_TO_LISTEN = [
 
 export const NEWS_ASSISTANT_ID = 'asst_XxqH5Y4VpkixqqugmBfDWLqq';
 
-export const DAILY_PHOTO_PROMPT = 'You are getting a summary of daily news. Try to create the best image you can get describing the events on that day. The news of the day are:';
+export const DAILY_PHOTO_PROMPT =
+  'You are getting a summary of daily news. Try to create the best image you can get describing the events on that day. The news of the day are:';

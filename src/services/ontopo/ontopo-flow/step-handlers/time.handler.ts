@@ -52,7 +52,12 @@ export class TimeHandler extends StepHandler {
         return { text: time, callback_data: this.ontopoUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 3);
-      const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      const { message_id } = await this.telegramGeneralService.sendMessage(
+        this.bot,
+        chatId,
+        flowStep.preUserActionResponseMessage,
+        inlineKeyboardMarkup,
+      );
       this.flowStepsManagerService.updateUserStepMessageId(chatId, IFlowStepType.TIME, message_id);
     } catch (err) {
       this.logger.error(`${TimeHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -64,7 +69,11 @@ export class TimeHandler extends StepHandler {
     try {
       const isInputValid = this.validateInput(userInput);
       if (!isInputValid) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, 'I think this is not the right time format, I am looking for something like hh:mm');
+        await this.telegramGeneralService.sendMessage(
+          this.bot,
+          chatId,
+          'I think this is not the right time format, I am looking for something like hh:mm',
+        );
         return;
       }
       const time = this.transformInput(userInput);

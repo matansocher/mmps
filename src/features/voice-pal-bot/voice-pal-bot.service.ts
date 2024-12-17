@@ -29,7 +29,9 @@ export class VoicePalBotService implements OnModuleInit {
   }
 
   createBotEventListeners(): void {
-    this.bot.on('message', (message: Message) => this.messagesAggregatorService.handleIncomingMessage(message, (message: Message) => this.handleMessage(message)));
+    this.bot.on('message', (message: Message) =>
+      this.messagesAggregatorService.handleIncomingMessage(message, (message: Message) => this.handleMessage(message)),
+    );
   }
 
   // @Timer()

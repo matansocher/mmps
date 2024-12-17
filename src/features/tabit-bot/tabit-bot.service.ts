@@ -4,7 +4,15 @@ import { LoggerService } from '@core/logger';
 import { TabitMongoAnalyticLogService, TabitMongoSubscriptionService, TabitMongoUserService, SubscriptionModel } from '@core/mongo/tabit-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import { ANALYTIC_EVENT_NAMES, BOT_BUTTONS_ACTIONS, FlowStepsHandlerService, FlowStepsManagerService, INITIAL_BOT_RESPONSE, TABIT_BOT_COMMANDS, TabitUtilsService } from '@services/tabit';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_BUTTONS_ACTIONS,
+  FlowStepsHandlerService,
+  FlowStepsManagerService,
+  INITIAL_BOT_RESPONSE,
+  TABIT_BOT_COMMANDS,
+  TabitUtilsService,
+} from '@services/tabit';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 
 @Injectable()

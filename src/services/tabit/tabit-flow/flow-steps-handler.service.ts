@@ -92,15 +92,27 @@ export class FlowStepsHandlerService {
     } else {
       const numOfSubscriptions = await this.mongoSubscriptionService.getSubscriptionsCount(chatId);
       if (numOfSubscriptions >= MAX_SUBSCRIPTIONS_NUMBER) {
-        await this.telegramGeneralService.sendMessage(bot, chatId, `You have reached the maximum number of subscriptions - ${MAX_SUBSCRIPTIONS_NUMBER}. Please unsubscribe from one of them before adding a new one`);
+        await this.telegramGeneralService.sendMessage(
+          bot,
+          chatId,
+          `You have reached the maximum number of subscriptions - ${MAX_SUBSCRIPTIONS_NUMBER}. Please unsubscribe from one of them before adding a new one`,
+        );
         this.flowStepsManagerService.resetCurrentUserStep(chatId);
         return;
       }
       const subscription = await this.mongoSubscriptionService.addSubscription(chatId, currentStepDetails);
       const { text, inlineKeyboardMarkup } = this.tabitUtilsService.getSubscriptionDetails(subscription);
       const resText = `Yay! You have successfully subscribed to the restaurant:\n\n${text}\n\nI will do my best to find you the a table and let you know once I do!`;
-      await this.telegramGeneralService.sendPhoto(bot, subscription.chatId, subscription.restaurantDetails.image, { ...inlineKeyboardMarkup, caption: resText });
-      this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, chatId, this.mongoUserService);
+      await this.telegramGeneralService.sendPhoto(bot, subscription.chatId, subscription.restaurantDetails.image, {
+        ...inlineKeyboardMarkup,
+        caption: resText,
+      });
+      this.notifierBotService.notify(
+        BOTS.TABIT.name,
+        { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE },
+        chatId,
+        this.mongoUserService,
+      );
     }
     this.flowStepsManagerService.resetCurrentUserStep(chatId);
   }

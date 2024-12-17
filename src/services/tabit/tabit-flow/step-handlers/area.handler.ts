@@ -22,12 +22,16 @@ export class AreaHandler extends StepHandler {
 
   validateInput(userInput: string, { currentStepDetails }): boolean {
     const { restaurantDetails } = currentStepDetails;
-    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find((area: ITabitRestaurantArea) => area.displayName === userInput);
+    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find(
+      (area: ITabitRestaurantArea) => area.displayName === userInput,
+    );
     return !!relevantArea;
   }
 
   transformInput(userInput: string, { restaurantDetails }): string {
-    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find((area: ITabitRestaurantArea) => area.displayName === userInput);
+    const relevantArea = [...restaurantDetails.areas, { displayName: ANY_AREA, name: ANY_AREA }].find(
+      (area: ITabitRestaurantArea) => area.displayName === userInput,
+    );
     return relevantArea.name;
   }
 
@@ -42,7 +46,12 @@ export class AreaHandler extends StepHandler {
         return { text: area, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 2);
-      const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      const { message_id } = await this.telegramGeneralService.sendMessage(
+        this.bot,
+        chatId,
+        flowStep.preUserActionResponseMessage,
+        inlineKeyboardMarkup,
+      );
       this.flowStepsManagerService.updateUserStepMessageId(chatId, IFlowStepType.AREA, message_id);
     } catch (err) {
       this.logger.error(`${AreaHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -54,7 +63,11 @@ export class AreaHandler extends StepHandler {
     try {
       const isInputValid = this.validateInput(userInput, { currentStepDetails });
       if (!isInputValid) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I dont think there is an area called ${userInput} in the restaurant, please choose something that exists`);
+        await this.telegramGeneralService.sendMessage(
+          this.bot,
+          chatId,
+          `I dont think there is an area called ${userInput} in the restaurant, please choose something that exists`,
+        );
         return;
       }
       const area = this.transformInput(userInput, { restaurantDetails: currentStepDetails.restaurantDetails });

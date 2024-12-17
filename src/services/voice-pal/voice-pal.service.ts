@@ -80,18 +80,33 @@ export class VoicePalService {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction && userAction.showLoader) {
-        await this.messageLoaderService.handleMessageWithLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions, async (): Promise<void> => {
-          await this[userAction.handler]({ chatId, text, audio, video, photo, file });
-        });
+        await this.messageLoaderService.handleMessageWithLoader(
+          this.bot,
+          chatId,
+          { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions,
+          async (): Promise<void> => {
+            await this[userAction.handler]({ chatId, text, audio, video, photo, file });
+          },
+        );
       } else {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.VOICE_PAL.name,
+        { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED },
+        chatId,
+        this.mongoUserService,
+      );
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.VOICE_PAL.name,
+        { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage },
+        chatId,
+        this.mongoUserService,
+      );
       throw err;
     }
   }

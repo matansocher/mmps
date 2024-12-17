@@ -2,7 +2,14 @@ import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { ITabitRestaurant, ITabitRestaurantArea, ITabitRestaurantAvailability, ITabitRestaurantReservationHour, ITabitRestaurantReservationHours, IUserSelections } from '../interface';
+import {
+  ITabitRestaurant,
+  ITabitRestaurantArea,
+  ITabitRestaurantAvailability,
+  ITabitRestaurantReservationHour,
+  ITabitRestaurantReservationHours,
+  IUserSelections,
+} from '../interface';
 import { ANY_AREA, RESTAURANT_CHECK_AVAILABILITY_BASE_BODY, RESTAURANT_CHECK_AVAILABILITY_URL, RESTAURANT_DETAILS_BASE_URL } from '../tabit.config';
 
 @Injectable()
@@ -81,7 +88,10 @@ export class TabitApiService {
     return openingHours;
   }
 
-  getRestaurantReservationHours(openingHours: ITabitRestaurantReservationHours, noReservationsMinutesFromEndOfDay: number): ITabitRestaurantReservationHours {
+  getRestaurantReservationHours(
+    openingHours: ITabitRestaurantReservationHours,
+    noReservationsMinutesFromEndOfDay: number,
+  ): ITabitRestaurantReservationHours {
     const adjustTime = (time: string): string => {
       const [hours, minutes] = time.split(':').map(Number);
       const date = new Date(1970, 0, 1, hours, minutes);
@@ -126,7 +136,10 @@ export class TabitApiService {
     return axios.post(RESTAURANT_CHECK_AVAILABILITY_URL, reqBody);
   }
 
-  async getRestaurantAvailability(restaurantDetails: ITabitRestaurant, checkAvailabilityOptions: IUserSelections): Promise<ITabitRestaurantAvailability> {
+  async getRestaurantAvailability(
+    restaurantDetails: ITabitRestaurant,
+    checkAvailabilityOptions: IUserSelections,
+  ): Promise<ITabitRestaurantAvailability> {
     try {
       if (checkAvailabilityOptions.area && checkAvailabilityOptions.area !== ANY_AREA) {
         const result = await this.restaurantAvailabilityApiRequest(restaurantDetails.id, checkAvailabilityOptions);
@@ -134,9 +147,15 @@ export class TabitApiService {
       }
 
       if (checkAvailabilityOptions.area === ANY_AREA) {
-        const areasResults = await Promise.all(restaurantDetails.areas.map((area) => this.restaurantAvailabilityApiRequest(restaurantDetails.id, { ...checkAvailabilityOptions, area: area.name })));
+        const areasResults = await Promise.all(
+          restaurantDetails.areas.map((area) =>
+            this.restaurantAvailabilityApiRequest(restaurantDetails.id, { ...checkAvailabilityOptions, area: area.name }),
+          ),
+        );
 
-        const availableArea = areasResults.map((areaResult) => this.parseRestaurantAvailabilityResult(areaResult.data, checkAvailabilityOptions)).find((areaResult) => areaResult.isAvailable);
+        const availableArea = areasResults
+          .map((areaResult) => this.parseRestaurantAvailabilityResult(areaResult.data, checkAvailabilityOptions))
+          .find((areaResult) => areaResult.isAvailable);
 
         if (!availableArea) {
           return { isAvailable: false };
@@ -158,7 +177,12 @@ export class TabitApiService {
       return { isAvailable };
     }
     const reservedArea = result.reservation.reservation_details?.preference;
-    const reservationDetails = { date: checkAvailabilityOptions.date, time: checkAvailabilityOptions.time, size: checkAvailabilityOptions.size, area: reservedArea };
+    const reservationDetails = {
+      date: checkAvailabilityOptions.date,
+      time: checkAvailabilityOptions.time,
+      size: checkAvailabilityOptions.size,
+      area: reservedArea,
+    };
     return { isAvailable, reservationDetails }; // test to see if result.area
   }
 }

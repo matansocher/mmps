@@ -29,7 +29,11 @@ export class DetailsHandler extends StepHandler {
     try {
       const isInputValid = this.validateInput(userInput);
       if (!isInputValid) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I am sorry, I didn't find any restaurants matching your search - '${userInput}'`);
+        await this.telegramGeneralService.sendMessage(
+          this.bot,
+          chatId,
+          `I am sorry, I didn't find any restaurants matching your search - '${userInput}'`,
+        );
         return;
       }
       // const restaurantId = this.ontopoApiService.getRestaurantId(userInput);

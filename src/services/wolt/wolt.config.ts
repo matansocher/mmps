@@ -20,7 +20,18 @@ export const RESTAURANT_BASE_URL = 'https://consumer-api.wolt.com/order-xp/web/v
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 
-export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'jerusalem', 'haifa', 'netanya', 'rishon-lezion', 'petah-tikva', 'ness-ziona---rehovot', 'beer-sheva', 'eilat'];
+export const CITIES_SLUGS_SUPPORTED = [
+  'tel-aviv',
+  'hasharon',
+  'jerusalem',
+  'haifa',
+  'netanya',
+  'rishon-lezion',
+  'petah-tikva',
+  'ness-ziona---rehovot',
+  'beer-sheva',
+  'eilat',
+];
 // 'afula-emek-yizrael-area',
 // 'ashdod',
 // 'ashkelon',

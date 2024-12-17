@@ -11,7 +11,17 @@ import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/teleg
 import { NewsBotService } from './news-bot.service';
 
 @Module({
-  imports: [LoggerModule.forChild(NewsBotModule.name), UtilsModule, TelegramBotsFactoryModule.forChild(BOTS.NEWS), TelegramModule, NewsModule, NewsMongoModule, NotifierBotModule, OpenaiModule, ScheduleModule.forRoot()],
+  imports: [
+    LoggerModule.forChild(NewsBotModule.name),
+    UtilsModule,
+    TelegramBotsFactoryModule.forChild(BOTS.NEWS),
+    TelegramModule,
+    NewsModule,
+    NewsMongoModule,
+    NotifierBotModule,
+    OpenaiModule,
+    ScheduleModule.forRoot(),
+  ],
   providers: [NewsBotService, NewsSchedulerService],
 })
 export class NewsBotModule implements OnModuleInit {

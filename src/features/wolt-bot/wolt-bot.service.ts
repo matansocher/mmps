@@ -64,7 +64,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.startHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT.name,
+        { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -91,7 +96,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.listHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT.name,
+        { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -136,7 +146,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.textHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT.name,
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -160,7 +175,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.callbackQueryHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT.name,
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
     }
   }
@@ -196,7 +216,8 @@ export class WoltBotService implements OnModuleInit {
       await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
       replyText = `Subscription for ${restaurantToRemove} was removed`;
     } else {
-      replyText = `It seems like you don't have a subscription for ${restaurant}.\n\n` + `You can search and register for another restaurant if you like`;
+      replyText =
+        `It seems like you don't have a subscription for ${restaurant}.\n\n` + `You can search and register for another restaurant if you like`;
     }
     return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.woltUtilsService.getKeyboardOptions());
   }

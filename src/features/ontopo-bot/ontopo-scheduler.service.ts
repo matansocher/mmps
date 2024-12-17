@@ -76,7 +76,12 @@ export class OntopoSchedulerService {
       await Promise.all([
         this.telegramGeneralService.sendPhoto(this.bot, chatId, restaurantDetails.image, { ...inlineKeyboardMarkup, caption: replyText }),
         this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id),
-        this.notifierBotService.notify(BOTS.ONTOPO.name, { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
+        this.notifierBotService.notify(
+          BOTS.ONTOPO.name,
+          { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED },
+          chatId,
+          this.mongoUserService,
+        ),
       ]);
     } catch (err) {
       this.logger.error(this.alertSubscription.name, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -99,7 +104,14 @@ export class OntopoSchedulerService {
             `Subscription for ${restaurantTitle} at ${this.ontopoUtilsService.getDateStringFormat(date)} - ${time} was removed since the due date has passed 😢.\nWanna try with another restaurant?`,
           ),
         );
-        promisesArr.push(this.notifierBotService.notify(BOTS.ONTOPO.name, { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService));
+        promisesArr.push(
+          this.notifierBotService.notify(
+            BOTS.ONTOPO.name,
+            { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED },
+            subscription.chatId,
+            this.mongoUserService,
+          ),
+        );
       });
       await Promise.all(promisesArr);
     } catch (err) {

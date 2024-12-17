@@ -45,7 +45,12 @@ export class SizeHandler extends StepHandler {
         return { text: option, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 4);
-      const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
+      const { message_id } = await this.telegramGeneralService.sendMessage(
+        this.bot,
+        chatId,
+        flowStep.preUserActionResponseMessage,
+        inlineKeyboardMarkup,
+      );
       this.flowStepsManagerService.updateUserStepMessageId(chatId, IFlowStepType.SIZE, message_id);
     } catch (err) {
       this.logger.error(`${SizeHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);

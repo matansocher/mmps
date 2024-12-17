@@ -38,7 +38,12 @@ export class TabitUtilsService {
       },
     ];
     const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
-    const resTextDetails = [`🧑‍🍳 ${restaurantDetails.title}`, `⏰ ${this.getDateStringFormat(userSelections.date)} ${userSelections.time}`, `🪑 ${userSelections.size}`, `⛺️ ${userSelections.area}`];
+    const resTextDetails = [
+      `🧑‍🍳 ${restaurantDetails.title}`,
+      `⏰ ${this.getDateStringFormat(userSelections.date)} ${userSelections.time}`,
+      `🪑 ${userSelections.size}`,
+      `⛺️ ${userSelections.area}`,
+    ];
     const text = resTextDetails.join('\n');
     return { text, inlineKeyboardMarkup };
   }
