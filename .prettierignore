@@ -1,0 +1,12 @@
+# Add files here to ignore them from prettier formatting
+
+build/
+dist/
+coverage/
+reports/
+**/CHANGELOG.md
+docs/nx-graph/
+docs/nx-targets-reporter.md
+gha-creds-*.json
+.nx/cache
+.nx/workspace-data
