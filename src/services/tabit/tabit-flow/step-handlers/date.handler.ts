@@ -38,12 +38,7 @@ export class DateHandler extends StepHandler {
         return { text: date, callback_data: this.tabitUtilsService.convertInlineKeyboardButtonToCallbackData(callbackData) };
       });
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons, 2);
-      const { message_id } = await this.telegramGeneralService.sendMessage(
-        this.bot,
-        chatId,
-        flowStep.preUserActionResponseMessage,
-        inlineKeyboardMarkup,
-      );
+      const { message_id } = await this.telegramGeneralService.sendMessage(this.bot, chatId, flowStep.preUserActionResponseMessage, inlineKeyboardMarkup);
       this.flowStepsManagerService.updateUserStepMessageId(chatId, IFlowStepType.DATE, message_id);
     } catch (err) {
       this.logger.error(`${DateHandler.name} - ${this.handlePreUserAction.name}`, `error - ${this.utilsService.getErrorMessage(err)}`);
@@ -55,11 +50,7 @@ export class DateHandler extends StepHandler {
     try {
       const isInputValid = this.validateInput(userInput);
       if (!isInputValid) {
-        await this.telegramGeneralService.sendMessage(
-          this.bot,
-          chatId,
-          'I think this is not the right date format, I am looking for something like yyyy-mm-dd',
-        );
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, 'I think this is not the right date format, I am looking for something like yyyy-mm-dd');
         return;
       }
       const date = this.transformInput(userInput);

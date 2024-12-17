@@ -8,13 +8,7 @@ import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/teleg
 import { RollinsparkService } from './rollinspark.service';
 
 @Module({
-  imports: [
-    LoggerModule.forChild(RollinsparkModule.name),
-    ScheduleModule.forRoot(),
-    TelegramBotsFactoryModule.forChild(BOTS.ROLLINSPARK),
-    TelegramModule,
-    UtilsModule,
-  ],
+  imports: [LoggerModule.forChild(RollinsparkModule.name), ScheduleModule.forRoot(), TelegramBotsFactoryModule.forChild(BOTS.ROLLINSPARK), TelegramModule, UtilsModule],
   providers: [RollinsparkService, RollinsparkSchedulerService],
 })
 export class RollinsparkModule {

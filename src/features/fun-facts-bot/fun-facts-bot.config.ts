@@ -13,10 +13,9 @@ export const FUN_FACT_PROMPT = [
   'Keep it concise but impactful, memorable, and something worth sharing with others.',
 ].join(' ');
 
-export const FUN_FACT_PHOTO_PROMPT = [
-  'You are getting a fun fact.',
-  'Try to create the best image you can get describing the fact so it is nice to get besides the fact.',
-].join(' ');
+export const FUN_FACT_PHOTO_PROMPT = ['You are getting a fun fact.', 'Try to create the best image you can get describing the fact so it is nice to get besides the fact.'].join(
+  ' ',
+);
 
 export const HOURS_OF_DAY = [11, 13, 17, 20, 23];
 

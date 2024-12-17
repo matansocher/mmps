@@ -37,8 +37,7 @@ export const TABIT_FLOW_STEPS: IFlowStep[] = [
   {
     id: IFlowStepType.DATE,
     handler: DateHandler,
-    preUserActionResponseMessage:
-      'What date do you want me to search for?\nYou can also send a custom date in the format: YYYY-MM-DD, example: 2024-12-28',
+    preUserActionResponseMessage: 'What date do you want me to search for?\nYou can also send a custom date in the format: YYYY-MM-DD, example: 2024-12-28',
   },
   {
     id: IFlowStepType.TIME,

@@ -118,9 +118,7 @@ export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
 };
 
 export const ANALYTIC_EVENT_NAMES = {
-  ...Object.fromEntries(
-    Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [VOICE_PAL_OPTIONS[option].displayName, VOICE_PAL_OPTIONS[option].analyticsEventName]),
-  ),
+  ...Object.fromEntries(Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [VOICE_PAL_OPTIONS[option].displayName, VOICE_PAL_OPTIONS[option].analyticsEventName])),
 };
 
 export const ANALYTIC_EVENT_STATES = {
@@ -140,10 +138,8 @@ export const FILE_ANALYSIS_PROMPT = 'Can you summarize this document?';
 
 export const NOT_FOUND_VIDEO_MESSAGES = {
   SOCIAL_MEDIA: 'I am having trouble finding the video you shared',
-  YOUTUBE:
-    'I am having trouble finding the youtube video you shared. please send me a link in this format - https://www.youtube.com/watch?v=xxxxxxxxxxxx',
-  TIKTOK:
-    'I am having trouble finding the tiktok video you shared. please send me a link in this format - https://www.tiktok.com/@{username}/video/xxxxxxxxxxxx',
+  YOUTUBE: 'I am having trouble finding the youtube video you shared. please send me a link in this format - https://www.youtube.com/watch?v=xxxxxxxxxxxx',
+  TIKTOK: 'I am having trouble finding the tiktok video you shared. please send me a link in this format - https://www.tiktok.com/@{username}/video/xxxxxxxxxxxx',
   META: 'I am having trouble finding the instagram video you shared',
 };
 

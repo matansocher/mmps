@@ -106,12 +106,7 @@ export class FlowStepsHandlerService {
         ...inlineKeyboardMarkup,
         caption: resText,
       });
-      this.notifierBotService.notify(
-        BOTS.ONTOPO.name,
-        { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.ONTOPO.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, chatId, this.mongoUserService);
     }
     this.flowStepsManagerService.resetCurrentUserStep(chatId);
   }

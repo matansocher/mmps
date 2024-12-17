@@ -8,14 +8,7 @@ import { FunFactsBotService } from './fun-facts-bot.service';
 import { FunFactsSchedulerService } from './fun-facts-scheduler.service';
 
 @Module({
-  imports: [
-    LoggerModule.forChild(FunFactsBotModule.name),
-    UtilsModule,
-    TelegramBotsFactoryModule.forChild(BOTS.FUN_FACTS),
-    TelegramModule,
-    OpenaiModule,
-    ScheduleModule.forRoot(),
-  ],
+  imports: [LoggerModule.forChild(FunFactsBotModule.name), UtilsModule, TelegramBotsFactoryModule.forChild(BOTS.FUN_FACTS), TelegramModule, OpenaiModule, ScheduleModule.forRoot()],
   providers: [FunFactsBotService, FunFactsSchedulerService],
 })
 export class FunFactsBotModule implements OnModuleInit {

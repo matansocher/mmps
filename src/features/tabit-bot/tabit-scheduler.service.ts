@@ -76,12 +76,7 @@ export class TabitSchedulerService {
       await Promise.all([
         this.telegramGeneralService.sendPhoto(this.bot, chatId, restaurantDetails.image, { ...inlineKeyboardMarkup, caption: replyText }),
         this.mongoSubscriptionService.archiveSubscription(chatId, subscription._id),
-        this.notifierBotService.notify(
-          BOTS.TABIT.name,
-          { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED },
-          chatId,
-          this.mongoUserService,
-        ),
+        this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantTitle, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
       ]);
     } catch (err) {
       this.logger.error(this.alertSubscription.name, `error - ${this.utilsService.getErrorMessage(err)}`);
