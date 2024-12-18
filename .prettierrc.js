@@ -7,8 +7,7 @@ const base = {
   tabWidth: 2,
   trailingComma: 'all',
   useTabs: false,
-  // importOrderSeparation: true,
-  // importOrderSortSpecifiers: true,
+  importOrderSortSpecifiers: true,
 };
 
 module.exports = {

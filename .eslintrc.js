@@ -39,7 +39,6 @@ module.exports = {
     //   'error',
     //   {
     //     alphabetize: { order: 'asc', caseInsensitive: true },
-    //     'newlines-between': 'always',
     //     groups: [
     //       ['^\\w'], // External libraries without `@`
     //       ['^@\\w'], // External libraries with `@`
