@@ -13,8 +13,14 @@ export class ScrapingService {
 
   async getArticleContent(url: string): Promise<string> {
     try {
-      const browser: Browser = await chromium.launch({ headless: true });
-      const page: Page = await browser.newPage();
+      const browser: Browser = await chromium.launch({ headless: false });
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      // await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36');
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9', 'DNT': '1', 'Upgrade-Insecure-Requests': '1' });
+      await page.waitForTimeout(2000); // Wait 2 seconds
+      await page.mouse.move(100, 200); // Simulate user movement
       await Promise.all([page.goto(url, { waitUntil: 'networkidle' }), page.waitForSelector('body')]);
       const content: string = await page.content();
       const textContent = this.getTextFromHtml(content);
