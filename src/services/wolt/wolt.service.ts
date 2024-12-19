@@ -73,7 +73,7 @@ export class WoltService {
         .filter((city) => CITIES_SLUGS_SUPPORTED.includes(city.slug))
         .map((city) => {
           return {
-            WOLT_NAME: city.slug,
+            WOLT_AREA_NAME: city.slug,
             LON: city.location.coordinates[0],
             LAT: city.location.coordinates[1],
           };
@@ -88,7 +88,7 @@ export class WoltService {
     return response
       .map((res, index) => {
         const restaurants = res.data.sections[1].items;
-        restaurants.map((restaurant) => (restaurant.area = cities[index].WOLT_NAME));
+        restaurants.map((restaurant) => (restaurant.area = cities[index].WOLT_AREA_NAME));
         return restaurants;
       })
       .flat();

@@ -30,6 +30,3 @@ if (output == 'json'){
     myresult = JSON.parse(json);
 }
 
-
-news:
-

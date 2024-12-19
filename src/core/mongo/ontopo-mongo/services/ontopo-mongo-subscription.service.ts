@@ -1,6 +1,6 @@
 import { Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { isProd } from '@core/config/main.config';
+import { isProd } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';

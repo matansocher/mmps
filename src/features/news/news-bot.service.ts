@@ -48,12 +48,12 @@ export class NewsBotService implements OnModuleInit {
   //   }
   // }
 
-  createErrorEventListeners() {
+  createErrorEventListeners(): void {
     this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NEWS.name, 'polling_error', error));
     this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NEWS.name, 'error', error));
   }
 
-  createBotEventListeners() {
+  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/channels/, (message: Message) => this.channelsHandler(message));
     this.bot.onText(/\/subscribe/, (message: Message) => this.subscribeHandler(message));

@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
-import { MONTHS_OF_YEAR } from '@core/config/main.config';
+import { MONTHS_OF_YEAR } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { TabitMongoSubscriptionService, TabitMongoUserService } from '@core/mongo/tabit-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
@@ -83,10 +83,7 @@ export class FlowStepsHandlerService {
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
       const date = `${MONTHS_OF_YEAR[new Date(reservationDetails.date).getMonth()]} ${new Date(reservationDetails.date).getDate()}`;
       const replyText = `I see that ${restaurantDetails.title} is now available at ${date} - ${reservationDetails.time}!\nI have occupied that time so wait a few minutes and then you should be able to order!`;
-      await Promise.all([
-        this.telegramGeneralService.sendMessage(bot, chatId, replyText, { ...inlineKeyboardMarkup }),
-        this.notifierBotService.notify(BOTS.TABIT.name, { restaurant: restaurantDetails.title, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, chatId, this.mongoUserService),
-      ]);
+      await Promise.all([this.telegramGeneralService.sendMessage(bot, chatId, replyText, { ...inlineKeyboardMarkup })]);
     } else {
       const numOfSubscriptions = await this.mongoSubscriptionService.getSubscriptionsCount(chatId);
       if (numOfSubscriptions >= MAX_SUBSCRIPTIONS_NUMBER) {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DAYS_OF_WEEK } from '@core/config/main.config';
+import { DAYS_OF_WEEK } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { IOntopoRestaurantReservationHours } from '../interface';

@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DEFAULT_TIMEZONE } from '@core/config/main.config';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 
 @Injectable()
@@ -22,6 +22,15 @@ export class UtilsService implements OnModuleInit {
       this.logger.info('which ffmpeg exec', `FFmpeg path: ${stdout.trim()}`);
       ffmpeg.setFfmpegPath(stdout.trim());
     });
+  }
+
+  async writeFile(filePath: string, fileContent: string): Promise<void> {
+    try {
+      await fs.writeFile(filePath, fileContent);
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
   }
 
   async deleteFile(audioFileLocalPath: string): Promise<void> {
@@ -104,5 +113,13 @@ export class UtilsService implements OnModuleInit {
 
   getDateNumber(num: number): string {
     return num < 10 ? `0${num}` : `${num}`;
+  }
+
+  getTodayDateString(date: Date): string {
+    return `${date.getFullYear()}-${this.getDateNumber(date.getMonth() + 1)}-${this.getDateNumber(date.getDate())}`;
+  }
+
+  isHebrew(text: string): boolean {
+    return /[\u0590-\u05FF]/.test(text);
   }
 }

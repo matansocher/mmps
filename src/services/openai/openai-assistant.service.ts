@@ -1,41 +1,61 @@
+import fs from 'fs';
 import { get as _get } from 'lodash';
 import { OpenAI } from 'openai';
-import { Inject, Injectable } from '@nestjs/common';
 import { MessageCreateParams, Run } from 'openai/resources/beta/threads';
-import { ASSISTANT_RUN_STATUSES, OPENAI_CLIENT_TOKEN } from './openai.config';
+import { Inject, Injectable } from '@nestjs/common';
+import { LoggerService } from '@core/logger';
+import { ASSISTANT_RUN_STATUSES, ERROR_STATUSES, OPENAI_CLIENT_TOKEN } from './openai.config';
 
 @Injectable()
 export class OpenaiAssistantService {
-  constructor(@Inject(OPENAI_CLIENT_TOKEN) private readonly openai: OpenAI) {}
+  constructor(
+    @Inject(OPENAI_CLIENT_TOKEN) private readonly openai: OpenAI,
+    private readonly logger: LoggerService,
+  ) {}
 
-  async createThread() {
+  async createThread(): Promise<string> {
     const thread = await this.openai.beta.threads.create();
     return thread.id;
   }
 
-  addMessageToThread(threadId, messageText, role = 'user') {
+  addMessageToThread(threadId: string, messageText: string, role = 'user', fileId?: string) {
     return this.openai.beta.threads.messages.create(threadId, <MessageCreateParams>{
       role,
       content: messageText,
+      ...(fileId ? { attachments: [{ file_id: fileId, tools: [{ type: 'file_search' }] }] } : {}),
     });
   }
 
-  async runThread(assistantId, threadId): Promise<Run> {
-    const run = await this.openai.beta.threads.runs.createAndPoll(threadId, { assistant_id: assistantId }); // instructions: ''
+  async runThread(assistantId: string, threadId: string): Promise<Run> {
+    const run: Run = await this.openai.beta.threads.runs.createAndPoll(threadId, { assistant_id: assistantId }); // instructions: ''
     if (run.status === ASSISTANT_RUN_STATUSES.COMPLETED) {
       return run;
     }
-    const errorStatuses = [ASSISTANT_RUN_STATUSES.FAILED, ASSISTANT_RUN_STATUSES.CANCELLED, ASSISTANT_RUN_STATUSES.REQUIRES_ACTION, ASSISTANT_RUN_STATUSES.EXPIRED];
-    if (errorStatuses.includes(run.status as ASSISTANT_RUN_STATUSES)) {
+    if (ERROR_STATUSES.includes(run.status as ASSISTANT_RUN_STATUSES)) {
+      this.logger.error(this.runThread.name, `Error running thread ${run.thread_id} with error: ${run.last_error?.message}, code: ${run.last_error.code}, status: ${run.status}`);
       return null;
     }
 
+    this.logger.error(this.runThread.name, `Error running thread ${run.thread_id}. run object: ${JSON.stringify(run)}`);
     return null;
   }
 
-  async getThreadResponse(threadId): Promise<string> {
+  async getThreadResponse(threadId: string): Promise<string> {
     const result = await this.openai.beta.threads.messages.list(threadId);
     // return result?.data[0]?.content[0]?.text?.value || null;
     return _get(result, 'data[0].content[0].text.value', null);
+  }
+
+  async uploadFile(filePath: string): Promise<string> {
+    const fileContent = fs.createReadStream(filePath);
+    const response = await this.openai.files.create({
+      file: fileContent,
+      purpose: 'assistants',
+    });
+    return response.id;
+  }
+
+  async deleteFile(fileId: string): Promise<void> {
+    await this.openai.files.del(fileId);
   }
 }

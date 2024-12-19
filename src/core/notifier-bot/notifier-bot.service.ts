@@ -1,6 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { isProd } from '@core/config/main.config';
+import { isProd } from '@core/config';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { INotifyOptions } from '@core/notifier-bot/interface';
 import { NOTIFIER_CHAT_ID } from '@core/notifier-bot/notifier-bot.config';
@@ -18,12 +18,12 @@ export class NotifierBotService implements OnModuleInit {
     this.createErrorEventListeners();
   }
 
-  createErrorEventListeners() {
+  createErrorEventListeners(): void {
     this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NOTIFIER.name, 'polling_error', error));
     this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NOTIFIER.name, 'error', error));
   }
 
-  createBotEventListeners() {
+  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
   }
 
@@ -36,7 +36,7 @@ export class NotifierBotService implements OnModuleInit {
     }
   }
 
-  async notify(botName: string, options: INotifyOptions, chatId, mongoUserService: MongoUserService): Promise<void> {
+  async notify(botName: string, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
     if (!isProd) {
       return;
     }
@@ -55,8 +55,8 @@ export class NotifierBotService implements OnModuleInit {
     const sentences = [];
     sentences.push(`bot: ${botName}`);
     userDetails && sentences.push(`name: ${firstName} ${lastName} - ${username}`);
-    sentences.push(`action: ${action}`);
+    sentences.push(`action: ${action.toLowerCase().replaceAll('_', ' ')}`);
     otherOptions && Object.keys(otherOptions).length && sentences.push(`data: ${JSON.stringify(otherOptions, null, 2)}`);
-    return sentences.join('\n\n');
+    return sentences.join('\n');
   }
 }

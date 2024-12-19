@@ -1,4 +1,4 @@
-export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 7;
+export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 8;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
 
 export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number> = {
@@ -10,7 +10,7 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
 
 export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
 
-export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a wolt restaurant opens\n\nYou can tell me the restaurant name you want to check and I will let you know once it is open\n\nTo show current notification registrations please write: /show\n\n`;
+export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a wolt restaurant opens\n\nYou can tell me the restaurant name you want to check and I will let you know once it is open\n\nTo show current registrations use: /list\n\n`;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 23;
@@ -20,7 +20,18 @@ export const RESTAURANT_BASE_URL = 'https://consumer-api.wolt.com/order-xp/web/v
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 
-export const CITIES_SLUGS_SUPPORTED = ['hasharon', 'tel-aviv'];
+export const CITIES_SLUGS_SUPPORTED = [
+  'tel-aviv',
+  'hasharon',
+  'jerusalem',
+  'haifa',
+  'netanya',
+  'rishon-lezion',
+  'petah-tikva',
+  'ness-ziona---rehovot',
+  'beer-sheva',
+  'eilat',
+];
 // 'afula-emek-yizrael-area',
 // 'ashdod',
 // 'ashkelon',
@@ -47,7 +58,7 @@ export const CITIES_SLUGS_SUPPORTED = ['hasharon', 'tel-aviv'];
 
 export const WOLT_BOT_OPTIONS = {
   START: '/start',
-  SHOW: '/show',
+  LIST: '/list',
 };
 
 export const HOUR_OF_DAY_TO_REFRESH_MAP = {
@@ -83,7 +94,7 @@ export const HOUR_OF_DAY_TO_REFRESH_MAP = {
 
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
-  SHOW: 'SHOW',
+  LIST: 'LIST',
   SEARCH: 'SEARCH',
   SUBSCRIBE: 'SUBSCRIBE',
   UNSUBSCRIBE: 'UNSUBSCRIBE',

@@ -21,6 +21,22 @@ export const BOTS = {
     name: 'News Bot',
     token: env.NEWS_TELEGRAM_BOT_TOKEN,
   },
+  ROLLINSPARK: {
+    name: 'Rollins Park',
+    token: env.ROLLINSPARK_TELEGRAM_BOT_TOKEN,
+  },
+  FUN_FACTS: {
+    name: 'Fun Facts Bot',
+    token: env.FUN_FACTS_TELEGRAM_BOT_TOKEN,
+  },
+  COACH: {
+    name: 'Coach Bot',
+    token: env.COACH_TELEGRAM_BOT_TOKEN,
+  },
+  TEACHER: {
+    name: 'Teacher Bot',
+    token: env.TEACHER_TELEGRAM_BOT_TOKEN,
+  },
   NOTIFIER: {
     name: 'Notifier Bot',
     token: env.NOTIFIER_TELEGRAM_BOT_TOKEN,
