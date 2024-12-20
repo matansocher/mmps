@@ -23,7 +23,7 @@ export class RollinsparkModule {
   onModuleInit(): void {
     // this.rollinsparkSchedulerService.handleIntervalFlow(); // for testing purposes
     if (isProd) {
-      this.rollinsparkSchedulerService.notifyOnStart();
+      // this.rollinsparkSchedulerService.notifyOnStart();
     }
   }
 }
