@@ -36,26 +36,15 @@ export class Scores365Service {
   }
 
   parseExpectedMatch(match: ExpectedMatch): MatchDetails {
+    const { id, startTime, statusText, gameTime, venue, homeCompetitor, awayCompetitor } = match;
     return {
-      id: match.id,
-      startTime: match.startTime,
-      statusText: match.statusText,
-      gameTime: match.gameTime,
-      venue: match.venue?.name,
-      homeCompetitor: {
-        id: match.homeCompetitor.id,
-        name: match.homeCompetitor.name,
-        symbolicName: match.homeCompetitor.symbolicName,
-        score: match.homeCompetitor.score,
-        nameForURL: match.homeCompetitor.nameForURL,
-      },
-      awayCompetitor: {
-        id: match.awayCompetitor.id,
-        name: match.awayCompetitor.name,
-        symbolicName: match.awayCompetitor.symbolicName,
-        score: match.awayCompetitor.score,
-        nameForURL: match.awayCompetitor.nameForURL,
-      },
+      id,
+      startTime,
+      statusText,
+      gameTime,
+      venue: venue?.name,
+      homeCompetitor: _pick(homeCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,
+      awayCompetitor: _pick(awayCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,
     } as MatchDetails;
   }
 }

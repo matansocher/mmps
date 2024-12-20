@@ -13,16 +13,18 @@ export function generateMatchResultsString(data: { competition: Competition; mat
 }
 
 export function getSingleMatchString(matchDetails: MatchDetails): string {
-  const { homeCompetitor, awayCompetitor, gameTime, statusText } = matchDetails;
+  const { startTime, homeCompetitor, awayCompetitor, gameTime, statusText } = matchDetails;
+  const displayStartTime = new Date(startTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   const result = [
     '⚽️',
+    displayStartTime,
     homeCompetitor.name,
     homeCompetitor.score === -1 ? '' : homeCompetitor.score,
     '-',
     awayCompetitor.score === -1 ? '' : awayCompetitor.score,
     awayCompetitor.name,
     '-',
-    statusText === 'הסתיים' || gameTime === -1 ? '' : gameTime,
+    statusText.includes('הסתיים') || gameTime === -1 ? '' : gameTime,
     statusText === 'טרם החל' ? '' : statusText,
   ]
     .join(' ')

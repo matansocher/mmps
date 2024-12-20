@@ -11,6 +11,7 @@ export interface ExpectedTeam {
   symbolicName: string;
   score: number;
   nameForURL: string;
+  color: string;
 }
 
 export interface ExpectedMatch {
@@ -33,6 +34,7 @@ export interface Team {
   symbolicName: string;
   score: number;
   nameForURL: string;
+  color: string;
 }
 
 export interface MatchDetails {
