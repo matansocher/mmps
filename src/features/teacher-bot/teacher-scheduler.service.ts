@@ -9,7 +9,13 @@ import { type GoogleArticle, GoogleSearchService } from '@services/google-search
 import { OpenaiAssistantService } from '@services/openai';
 import { ScrapingService } from '@services/scraping/scraping.service';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { TEACHER_ASSISTANT_ID, LOCAL_FILES_PATH, HOURS_OF_DAY, THREAD_MESSAGE_INSTRUCTIONS } from './teacher-bot.config';
+import {
+  TEACHER_ASSISTANT_ID,
+  LOCAL_FILES_PATH,
+  HOURS_OF_DAY,
+  THREAD_MESSAGE_INSTRUCTIONS,
+  MAX_NUMBER_OF_CHARS_PER_FILE,
+} from './teacher-bot.config';
 
 @Injectable()
 export class TeacherSchedulerService {
@@ -35,8 +41,8 @@ export class TeacherSchedulerService {
 
       const articlesContents: GoogleArticle[] = await Promise.all(
         rawArticles.map(async (article: GoogleArticle) => {
-          const content = await this.scrapingService.getArticleContent(article.link);
-          // const content = await this.scrapingService.getArticleContent('https://angular.dev/guide/signals');
+          const htmlContent = await this.scrapingService.getArticleContent(article.link);
+          const content = this.scrapingService.getTextFromHtml(htmlContent);
           return { ...article, content };
         }),
       );
@@ -46,15 +52,15 @@ export class TeacherSchedulerService {
         return;
       }
 
-      const fileName = await this.writeContentsToFile(articles);
+      const filePath = await this.writeContentsToFile(articles);
 
-      const openAIFileID = await this.openaiAssistantService.uploadFile(fileName);
+      const openAIFileID = await this.openaiAssistantService.uploadFile(filePath);
 
       const summary = await this.getSummary(openAIFileID, topic);
 
       await Promise.all(this.chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, summary)));
 
-      await Promise.all([this.openaiAssistantService.deleteFile(openAIFileID), this.utilsService.deleteFile(fileName)]);
+      await Promise.all([this.openaiAssistantService.deleteFile(openAIFileID), this.utilsService.deleteFile(filePath)]);
     } catch (err) {
       this.logger.error(this.handleIntervalFlow.name, `error in handleIntervalFlow: ${this.utilsService.getErrorMessage(err)}`);
       return;
@@ -64,7 +70,8 @@ export class TeacherSchedulerService {
   async writeContentsToFile(articlesContents: GoogleArticle[]): Promise<string> {
     const filePath = `${LOCAL_FILES_PATH}/teacher-articles-${Date.now()}.txt`;
     const fileContent = articlesContents.map(({ title, link, content }, i) => `#${i + 1}\n${title}\n${link}\n${content}\n`).join('\n\n');
-    await this.utilsService.writeFile(filePath, fileContent);
+    const compressedContent = fileContent.slice(0, MAX_NUMBER_OF_CHARS_PER_FILE);
+    await this.utilsService.writeFile(filePath, compressedContent);
     return filePath;
   }
 

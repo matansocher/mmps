@@ -122,4 +122,8 @@ export class UtilsService implements OnModuleInit {
   isHebrew(text: string): boolean {
     return /[\u0590-\u05FF]/.test(text);
   }
+
+  compressString(str: string): string {
+    return str.replace(/\s+/g, ' ').trim();
+  }
 }

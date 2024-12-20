@@ -21,40 +21,36 @@ export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaura
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 
 export const CITIES_SLUGS_SUPPORTED = [
-  'tel-aviv',
+  'haifa',
   'hasharon',
   'jerusalem',
-  'haifa',
   'netanya',
-  'rishon-lezion',
   'petah-tikva',
-  'ness-ziona---rehovot',
-  'beer-sheva',
-  'eilat',
+  'rishon-lezion-hashfela-area',
+  'tel-aviv',
 ];
-// 'afula-emek-yizrael-area',
-// 'ashdod',
-// 'ashkelon',
-// 'beer-sheva',
-// 'eilat',
-// 'ness-ziona---rehovot',
-// 'haifa',
-// 'hasharon',
-// 'jerusalem',
-// 'karmiel-area',
-// 'kiryat-shmona-area',
-// 'mevaseret-zion-area',
-// 'modiin',
-// 'nazareth---nof-hagalil-area',
-// 'netanya',
-// 'netivot-sderot-area',
-// 'pardes-hanna',
-// 'petah-tikva',
-// 'rishon-lezion',
-// 'rosh-pinna---zefat-area',
-// 'tel-aviv',
-// 'yavne',
-// 'yokneam',
+// 'afula-emek-yizrael-area'
+// 'ashdod'
+// 'ashkelon'
+// 'beer-sheva'
+// 'eilat'
+// 'haifa'
+// 'hasharon'
+// 'jerusalem'
+// 'karmiel-area'
+// 'kiryat-gat-area'
+// 'kiryat-shmona-area'
+// 'mevaseret-zion-area'
+// 'modiin'
+// 'nazareth---nof-hagalil-area'
+// 'netanya'
+// 'netivot-sderot-area'
+// 'pardes-hanna'
+// 'petah-tikva'
+// 'rishon-lezion-hashfela-area'
+// 'rosh-pinna---zefat-area'
+// 'tel-aviv'
+// 'yokneam'
 
 export const WOLT_BOT_OPTIONS = {
   START: '/start',

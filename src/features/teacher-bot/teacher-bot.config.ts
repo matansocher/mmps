@@ -11,3 +11,5 @@ export const TEACHER_ASSISTANT_ID = 'asst_LMVR7oTcR2lwIiYisTpX28us';
 export const THREAD_MESSAGE_INSTRUCTIONS = 'Please help me learn the subject'; // $$$$$$$$$$$$$$$$$$$$$$$$$
 
 export const HOURS_OF_DAY = [12, 20];
+
+export const MAX_NUMBER_OF_CHARS_PER_FILE = 150000;

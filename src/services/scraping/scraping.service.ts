@@ -17,9 +17,8 @@ export class ScrapingService {
       const page: Page = await browser.newPage();
       await Promise.all([page.goto(url, { waitUntil: 'networkidle' }), page.waitForSelector('body')]);
       const content: string = await page.content();
-      const textContent = this.getTextFromHtml(content);
       await browser.close();
-      return textContent;
+      return content;
     } catch (err) {
       this.logger.error(this.getArticleContent.name, `error getting article content: ${this.utilsService.getErrorMessage(err)}`);
       return '';
