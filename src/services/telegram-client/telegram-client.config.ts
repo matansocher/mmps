@@ -18,6 +18,7 @@ export const FILTER_OUT_EVENTS = [
 export const LISTEN_TO_EVENTS = [
   'UpdateNewChannelMessage',
   'UpdateNewMessage',
+  'UpdateShortMessage',
 ];
 
 export const CHANNELS = {

@@ -1,5 +1,5 @@
 import { get as _get } from 'lodash';
-import { TelegramClient } from 'telegram';
+import { TelegramClient, Api } from 'telegram';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
@@ -25,7 +25,8 @@ export class TelegramClientService {
       if (listenerOptions?.channelIds?.length && !listenerOptions.channelIds.includes(messageData?.channelId?.toString())) {
         return;
       }
-      const channelDetails = messageData.channelId ? await this.getChannelDetails(telegramClient, messageData.channelId) : null;
+      const entityId = messageData.channelId ? `-100${messageData.channelId}` : messageData.userId.toString();
+      const channelDetails = await this.getChannelDetails(telegramClient, entityId);
       if (!channelDetails?.id) {
         return;
       }
@@ -35,18 +36,18 @@ export class TelegramClientService {
 
   getMessageData(event: ITelegramEvent): ITelegramMessage {
     return {
-      id: _get(event, 'message.id', null),
-      userId: _get(event, 'message.fromId.userId', null),
+      id: _get(event, 'message.id', _get(event, 'id', null)),
+      userId: _get(event, 'message.fromId.userId', _get(event, 'userId', _get(event, 'message.peerId.userId', null))),
       channelId: _get(event, 'message.peerId.channelId', '').toString(),
-      date: _get(event, 'message.date', null),
-      text: _get(event, 'message.message', null),
+      date: _get(event, 'message.date', _get(event, 'date', null)),
+      text: _get(event, 'message.message', _get(event, 'message', null)),
     };
   }
 
-  async getChannelDetails(telegramClient: TelegramClient, channelId: string): Promise<IChannelDetails> {
-    const channel = `-100${channelId}`;
-    const channelDetails = (await telegramClient.getEntity(channel)) as any;
+  async getChannelDetails(telegramClient: TelegramClient, entityId: string): Promise<IChannelDetails> {
+    const channelDetails = (await telegramClient.getEntity(entityId)) as any;
     // const photo = await this.getChannelPhoto(telegramClient, channelDetails);
+    this.logger.info(this.getChannelDetails.name, `channelDetails: ${JSON.stringify(channelDetails)}`);
     return {
       id: _get(channelDetails, 'id', null).toString(),
       createdDate: _get(channelDetails, 'date', null),
@@ -57,26 +58,14 @@ export class TelegramClientService {
   }
 
   async getChannelPhoto(telegramClient: TelegramClient, channelDetails) {
-    // not working - we get a reconnect warning - probably something about the default timeout of the library
     try {
-      if (!channelDetails?.photo) {
-        return null;
-      }
-      const downloadedPhoto = await telegramClient.downloadProfilePhoto(channelDetails);
-      if (downloadedPhoto) {
-        // Convert Buffer to Base64 for inline usage, or use it as you need
-        return `data:image/jpeg;base64,${downloadedPhoto.toString('base64')}`;
-      }
+      const { id, accessHash } = channelDetails;
+      const channelPeer = new Api.InputPeerChannel({ channelId: id, accessHash: accessHash });
+      const file = await telegramClient.downloadProfilePhoto(channelPeer);
+      return file;
     } catch (err) {
-      this.logger.error(this.getChannelPhoto.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getChannelPhoto.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      return null;
     }
-    // let buffer = _get(channelDetails, 'photo.strippedThumb', null);
-    // if (!buffer?.length) {
-    //   return null;
-    // }
-    // const imageBuffer = Buffer.from(buffer);
-    // const base64Image = imageBuffer.toString('base64');
-    // const dataUrl = `data:image/png;base64,${base64Image}`;
-    // return dataUrl;
   }
 }
