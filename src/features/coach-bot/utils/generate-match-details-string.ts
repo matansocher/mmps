@@ -15,6 +15,7 @@ export function generateMatchResultsString(data: { competition: Competition; mat
 export function getSingleMatchString(matchDetails: MatchDetails): string {
   const { startTime, homeCompetitor, awayCompetitor, gameTime, statusText } = matchDetails;
   const displayStartTime = new Date(startTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const matchEnded = statusText.includes('הסתיים');
   const result = [
     '⚽️',
     displayStartTime,
@@ -24,8 +25,8 @@ export function getSingleMatchString(matchDetails: MatchDetails): string {
     awayCompetitor.score === -1 ? '' : awayCompetitor.score,
     awayCompetitor.name,
     '-',
-    statusText.includes('הסתיים') || gameTime === -1 ? '' : gameTime,
-    statusText === 'טרם החל' ? '' : statusText,
+    matchEnded || gameTime === -1 ? '' : gameTime,
+    statusText === 'טרם החל' || matchEnded ? '' : statusText,
   ]
     .join(' ')
     .replaceAll('  ', ' ')

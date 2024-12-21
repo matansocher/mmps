@@ -30,7 +30,7 @@ export class NewsSchedulerService implements OnModuleInit {
   }
 
   @Cron('0 20 * * *', { name: 'news-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handleIntervalFlow() {
+  async handleIntervalFlow(): Promise<void> {
     try {
       const subscriptions = (await this.mongoSubscriptionService.getActiveSubscriptions()) as SubscriptionModel[];
       if (!subscriptions?.length) {

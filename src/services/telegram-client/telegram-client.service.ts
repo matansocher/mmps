@@ -22,7 +22,7 @@ export class TelegramClientService {
       if (!messageData?.text) {
         return;
       }
-      if (!listenerOptions.channelIds.includes(messageData?.channelId?.toString())) {
+      if (listenerOptions?.channelIds?.length && !listenerOptions.channelIds.includes(messageData?.channelId?.toString())) {
         return;
       }
       const channelDetails = messageData.channelId ? await this.getChannelDetails(telegramClient, messageData.channelId) : null;

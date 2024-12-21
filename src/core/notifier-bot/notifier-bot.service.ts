@@ -41,22 +41,20 @@ export class NotifierBotService implements OnModuleInit {
       return;
     }
 
-    let userDetails = null;
-    if (chatId && mongoUserService) {
-      userDetails = await mongoUserService.getUserDetails({ chatId });
-    }
+    const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
     const notyMessageText = this.getNotyMessageText(botName, userDetails, options);
     this.telegramGeneralService.sendMessage(this.bot, NOTIFIER_CHAT_ID, notyMessageText);
   }
 
   getNotyMessageText(botName: string, userDetails: UserModel, options: INotifyOptions): string {
-    const { firstName = '', lastName = '', username = '' } = userDetails;
-    const { action, ...otherOptions } = options;
+    const { firstName = '', lastName = '', username = '' } = userDetails || {};
+    const { action, plainText, ...otherOptions } = options;
     const sentences = [];
     sentences.push(`bot: ${botName}`);
     userDetails && sentences.push(`name: ${firstName} ${lastName} - ${username}`);
     sentences.push(`action: ${action.toLowerCase().replaceAll('_', ' ')}`);
     otherOptions && Object.keys(otherOptions).length && sentences.push(`data: ${JSON.stringify(otherOptions, null, 2)}`);
+    plainText && sentences.push(plainText);
     return sentences.join('\n');
   }
 }

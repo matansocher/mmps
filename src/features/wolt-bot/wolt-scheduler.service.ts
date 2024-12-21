@@ -52,7 +52,7 @@ export class WoltSchedulerService {
     this.schedulerRegistry.addTimeout(JOB_NAME, timeout);
   }
 
-  async handleIntervalFlow() {
+  async handleIntervalFlow(): Promise<void> {
     await this.cleanExpiredSubscriptions();
     const subscriptions = (await this.mongoSubscriptionService.getActiveSubscriptions()) as SubscriptionModel[];
     if (subscriptions && subscriptions.length) {

@@ -28,7 +28,7 @@ export class RollinsparkSchedulerService {
   ) {}
 
   @Cron(`*/${INTERVAL_MINUTES} * * * *`, { name: 'rollinspark-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handleIntervalFlow() {
+  async handleIntervalFlow(): Promise<void> {
     try {
       const aptsDetails = await this.getAptsDetails();
       if (!aptsDetails) {
