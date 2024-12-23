@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
+import { toZonedTime } from 'date-fns-tz';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
@@ -115,8 +116,9 @@ export class UtilsService implements OnModuleInit {
     return num < 10 ? `0${num}` : `${num}`;
   }
 
-  getTodayDateString(date: Date): string {
-    return `${date.getFullYear()}-${this.getDateNumber(date.getMonth() + 1)}-${this.getDateNumber(date.getDate())}`;
+  getDateString(date?: Date): string {
+    const finalDate = date || toZonedTime(new Date(), DEFAULT_TIMEZONE);
+    return `${finalDate.getFullYear()}-${this.getDateNumber(finalDate.getMonth() + 1)}-${this.getDateNumber(finalDate.getDate())}`;
   }
 
   isHebrew(text: string): boolean {

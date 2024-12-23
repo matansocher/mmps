@@ -3,7 +3,7 @@ import { TelegramClient, Api } from 'telegram';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { IChannelDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
+import { IConversationDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
 import { LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()
@@ -22,11 +22,11 @@ export class TelegramClientService {
       if (!messageData?.text) {
         return;
       }
-      if (listenerOptions?.channelIds?.length && !listenerOptions.channelIds.includes(messageData?.channelId?.toString())) {
+      if (listenerOptions?.conversationsIds?.length && !listenerOptions.conversationsIds.includes(messageData?.channelId?.toString())) {
         return;
       }
       const entityId = messageData.channelId ? `-100${messageData.channelId}` : messageData.userId.toString();
-      const channelDetails = await this.getChannelDetails(telegramClient, entityId);
+      const channelDetails = await this.getConversationDetails(telegramClient, entityId);
       if (!channelDetails?.id) {
         return;
       }
@@ -44,28 +44,16 @@ export class TelegramClientService {
     };
   }
 
-  async getChannelDetails(telegramClient: TelegramClient, entityId: string): Promise<IChannelDetails> {
+  async getConversationDetails(telegramClient: TelegramClient, entityId: string): Promise<IConversationDetails> {
     const channelDetails = (await telegramClient.getEntity(entityId)) as any;
-    // const photo = await this.getChannelPhoto(telegramClient, channelDetails);
-    this.logger.info(this.getChannelDetails.name, `channelDetails: ${JSON.stringify(channelDetails)}`);
     return {
       id: _get(channelDetails, 'id', null).toString(),
       createdDate: _get(channelDetails, 'date', null),
       title: _get(channelDetails, 'title', null),
+      firstName: _get(channelDetails, 'firstName', null),
+      lastName: _get(channelDetails, 'lastName', null),
       userName: _get(channelDetails, 'username', null),
       photo: null,
     };
-  }
-
-  async getChannelPhoto(telegramClient: TelegramClient, channelDetails) {
-    try {
-      const { id, accessHash } = channelDetails;
-      const channelPeer = new Api.InputPeerChannel({ channelId: id, accessHash: accessHash });
-      const file = await telegramClient.downloadProfilePhoto(channelPeer);
-      return file;
-    } catch (err) {
-      this.logger.error(this.getChannelPhoto.name, `err: ${this.utilsService.getErrorMessage(err)}`);
-      return null;
-    }
   }
 }

@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './fun-facts-bot.config';
+import { FunFactsSchedulerService } from './fun-facts-scheduler.service';
 
 @Injectable()
 export class FunFactsBotService {
@@ -11,6 +11,7 @@ export class FunFactsBotService {
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
+    private readonly funFactsSchedulerService: FunFactsSchedulerService,
     @Inject(BOTS.FUN_FACTS.name) private readonly bot: TelegramBot,
   ) {}
 
@@ -34,11 +35,11 @@ export class FunFactsBotService {
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, INITIAL_BOT_RESPONSE);
+      await this.funFactsSchedulerService.handleFunFactIntervalFlow();
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, GENERAL_ERROR_MESSAGE);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
     }
   }
 }

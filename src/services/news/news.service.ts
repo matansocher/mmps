@@ -4,17 +4,12 @@ import { TelegramClient } from 'telegram';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { NewsMongoThreadService, ThreadModel } from '@core/mongo/news-mongo';
 import { OpenaiAssistantService, OpenaiService } from '@services/openai';
-import {
-  IChannelDetails,
-  ITelegramMessage,
-  TELEGRAM_CLIENT_TOKEN,
-  TelegramClientService
-} from '@services/telegram-client';
+import { IConversationDetails, ITelegramMessage, TELEGRAM_CLIENT_TOKEN, TelegramClientService } from '@services/telegram-client';
 import { DAILY_PHOTO_PROMPT, NEWS_ASSISTANT_ID, TELEGRAM_CHANNEL_IDS_TO_LISTEN } from './news.config';
 
 @Injectable()
 export class NewsService implements OnModuleInit {
-  channelDetails: IChannelDetails[];
+  channelDetails: IConversationDetails[];
 
   constructor(
     private readonly logger: LoggerService,
@@ -27,11 +22,11 @@ export class NewsService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const listenerOptions = { channelIds: TELEGRAM_CHANNEL_IDS_TO_LISTEN };
+    const listenerOptions = { conversationsIds: TELEGRAM_CHANNEL_IDS_TO_LISTEN };
     this.telegramClientService.listenToMessages(this.telegramClient, listenerOptions, this.handleMessage.bind(this));
   }
 
-  async handleMessage(messageData: ITelegramMessage, channelDetails: IChannelDetails) {
+  async handleMessage(messageData: ITelegramMessage, channelDetails: IConversationDetails) {
     try {
       this.logger.info(this.handleMessage.name, `${channelDetails.title} - ${messageData.text}`);
       const thread = await this.getCurrentThread();
@@ -50,7 +45,7 @@ export class NewsService implements OnModuleInit {
   async refreshChannelsDetails(): Promise<void> {
     try {
       const promises = TELEGRAM_CHANNEL_IDS_TO_LISTEN.map(async (channelId) => {
-        return this.telegramClientService.getChannelDetails(this.telegramClient, channelId);
+        return this.telegramClientService.getConversationDetails(this.telegramClient, channelId);
       });
       const results = await Promise.all(promises);
       this.channelDetails = results;
@@ -59,7 +54,7 @@ export class NewsService implements OnModuleInit {
     }
   }
 
-  getChannelsDetails(): IChannelDetails[] {
+  getChannelsDetails(): IConversationDetails[] {
     return this.channelDetails;
   }
 

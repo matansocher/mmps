@@ -1,24 +1,24 @@
-import { ANALYTIC_EVENT_NAMES } from '@services/wolt';
 import { TelegramClient } from 'telegram';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
+import { SelfieMongoDayDetailsService } from '@core/mongo/selfie-mongo';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
-import { IChannelDetails, ITelegramMessage, TELEGRAM_CLIENT_TOKEN, TelegramClientService } from '@services/telegram-client';
+import { IConversationDetails, ITelegramMessage, TELEGRAM_CLIENT_TOKEN, TelegramClientService } from '@services/telegram-client';
 
 const selfieBotName = 'Selfie Bot';
+const numberOfTopConversations = 5;
 
 @Injectable()
 export class SelfieService implements OnModuleInit {
-  readonly messagesCount: Record<string, number> = {};
-
   constructor(
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly telegramClientService: TelegramClientService,
     private readonly notifierBotService: NotifierBotService,
+    private readonly selfieMongoDayDetailsService: SelfieMongoDayDetailsService,
     @Inject(TELEGRAM_CLIENT_TOKEN) private readonly telegramClient: TelegramClient,
   ) {}
 
@@ -26,9 +26,12 @@ export class SelfieService implements OnModuleInit {
     this.telegramClientService.listenToMessages(this.telegramClient, {}, this.handleMessage.bind(this));
   }
 
-  async handleMessage(messageData: ITelegramMessage, channelDetails: IChannelDetails): Promise<void> {
+  async handleMessage(messageData: ITelegramMessage, conversationDetails: IConversationDetails): Promise<void> {
     try {
-      this.messagesCount[channelDetails.id] = this.messagesCount[channelDetails.id] ? this.messagesCount[channelDetails.id] + 1 : 1;
+      const date = this.utilsService.getDateString();
+      const { title, firstName, lastName, userName } = conversationDetails;
+      const name = title || `${firstName} ${lastName}`.trim() || userName;
+      await this.selfieMongoDayDetailsService.incrementDateItemsCount(conversationDetails.id, name, date);
     } catch (err) {
       this.logger.error(this.handleMessage.name, `err: ${this.utilsService.getErrorMessage(err)}`);
     }
@@ -37,19 +40,27 @@ export class SelfieService implements OnModuleInit {
   @Cron('0 0 * * *', { name: 'selfie-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
-      const totalMessages = Object.values(this.messagesCount).reduce((acc, curr) => acc + curr, 0);
-      const topChannels = Object.entries(this.messagesCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
+      const date = this.utilsService.getDateString();
+      const todaysData = await this.selfieMongoDayDetailsService.getDateItems(date);
+      if (!todaysData?.length) {
+        return;
+      }
+      const totalMessages = todaysData.reduce((acc, curr) => acc + curr.messageCount, 0);
+      const topConversations = todaysData
+        .sort((a, b) => b.messageCount - a.messageCount)
+        .slice(0, numberOfTopConversations)
+        .map((data) => {
+          return { name: data.conversationName, amount: data.messageCount };
+        });
+
       const messageText = [
-        `Today You had a total of ${totalMessages} messages in ${Object.keys(this.messagesCount).length} channels.`,
-        `Top channels:\n${topChannels.map(([channel, count]) => `- ${channel} - ${count}`).join('\n')}`,
+        `Today You had a total of ${totalMessages} messages in ${todaysData.length} conversations.`,
+        `Top conversations:\n${topConversations.map(({ name, amount }) => `- ${name} - ${amount}`).join('\n')}`,
       ].join('\n\n');
       this.notifierBotService.notify(selfieBotName, { action: 'Daily', plainText: messageText }, null, null);
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.handleIntervalFlow.name, errorMessage);
-      this.notifierBotService.notify(selfieBotName, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.handleIntervalFlow.name }, null, null);
     }
   }
 }

@@ -13,9 +13,9 @@ export class TabitMongoSubscriptionService {
   private subscriptionCollection;
 
   constructor(
-    @Inject(CONNECTION_NAME) private readonly db: Db,
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    @Inject(CONNECTION_NAME) private readonly db: Db,
   ) {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }

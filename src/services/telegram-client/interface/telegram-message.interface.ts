@@ -19,10 +19,12 @@ export interface ITelegramMessage {
   text: string;
 }
 
-export interface IChannelDetails {
+export interface IConversationDetails {
   id: string;
   createdDate: number;
   title: string;
+  firstName: string;
+  lastName: string;
   userName: string;
   photo: string;
 }

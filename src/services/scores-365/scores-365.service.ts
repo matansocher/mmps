@@ -30,7 +30,7 @@ export class Scores365Service {
     const queryParams = { competitions: competition.id.toString(), langId: '2', timezoneName: DEFAULT_TIMEZONE };
     const allMatchesRes = await axios.get(`${SCORES_365_API_URL}/games/current?${new URLSearchParams(queryParams)}`);
     const matches = allMatchesRes?.data?.games
-      ?.filter((match: ExpectedMatch) => date === this.utilsService.getTodayDateString(new Date(match.startTime)))
+      ?.filter((match: ExpectedMatch) => date === this.utilsService.getDateString(new Date(match.startTime)))
       .map((match: ExpectedMatch) => this.parseExpectedMatch(match));
     return { competition, matches };
   }

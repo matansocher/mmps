@@ -6,7 +6,7 @@ import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
 import { UtilsService } from '@core/utils';
 import { NewsService } from '@services/news';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { IChannelDetails } from '@services/telegram-client';
+import { IConversationDetails } from '@services/telegram-client';
 import { INITIAL_BOT_RESPONSE, ANALYTIC_EVENT_NAMES, GENERAL_ERROR_MESSAGE, SUBSCRIBE_MESSAGE, UNSUBSCRIBE_MESSAGE } from './news-bot.config';
 
 @Injectable()
@@ -90,8 +90,8 @@ export class NewsBotService implements OnModuleInit {
         return await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText);
       }
 
-      const channelNames = channelsDetails.map((channelDetails: IChannelDetails) => channelDetails.title).join('\n');
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `הנה כל הערוצים שאני עוקב אחריהם:\n\n${channelNames}`);
+      const conversationsNames = channelsDetails.map((channelDetails: IConversationDetails) => channelDetails.title).join('\n');
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `הנה כל הערוצים שאני עוקב אחריהם:\n\n${conversationsNames}`);
       this.logger.info(this.channelsHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.channelsHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);

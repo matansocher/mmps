@@ -9,9 +9,9 @@ import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
 @Injectable()
 export class WoltMongoSubscriptionService {
   constructor(
-    @Inject(CONNECTION_NAME) private readonly db: Db,
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
+    @Inject(CONNECTION_NAME) private readonly db: Db,
   ) {}
 
   async getActiveSubscriptions(chatId: number = null) {

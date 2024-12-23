@@ -11,7 +11,7 @@ import { WoltBotModule } from '@features/wolt-bot';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-let imports: Type[] = [SelfieModule];
+let imports: Type[] = [FunFactsBotModule];
 if (isProd) {
   imports = [
     VoicePalBotModule,
@@ -20,6 +20,7 @@ if (isProd) {
     DefineModule,
     FunFactsBotModule,
     CoachBotModule,
+    SelfieModule,
   ];
 }
 

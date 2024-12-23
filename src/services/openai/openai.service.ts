@@ -47,7 +47,7 @@ export class OpenaiService {
   async getChatCompletion(prompt: string, userText: string = ''): Promise<string> {
     let userMessages;
     if (typeof userText === 'string') {
-      userMessages = [userText];
+      userMessages = [userText].filter(Boolean);
     } else { // array
       userMessages = _chunk(userText, 100);
     }

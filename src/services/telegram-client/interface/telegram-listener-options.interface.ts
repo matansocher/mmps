@@ -1,3 +1,3 @@
 export interface IListenerOptions {
-  channelIds?: string[];
+  conversationsIds?: string[];
 }

@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
+import { SelfieMongoModule } from '@core/mongo/selfie-mongo';
 import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
 import { UtilsModule } from '@core/utils';
 import {
@@ -25,6 +26,7 @@ import { SelfieService } from './selfie.service';
       apiId: parseInt(TELEGRAM_API_ID),
       apiHash: TELEGRAM_API_HASH,
     }),
+    SelfieMongoModule,
     ScheduleModule.forRoot(),
   ],
   providers: [SelfieService],

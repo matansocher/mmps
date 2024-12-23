@@ -8,9 +8,9 @@ import { CONNECTION_NAME } from '../tabit-mongo.config';
 @Injectable()
 export class TabitMongoUserService extends MongoUserService {
   constructor(
-    @Inject(CONNECTION_NAME) private readonly db: Db,
     private readonly loggerService: LoggerService,
     private readonly utilsService: UtilsService,
+    @Inject(CONNECTION_NAME) private readonly db: Db,
   ) {
     super(db, loggerService, utilsService);
   }

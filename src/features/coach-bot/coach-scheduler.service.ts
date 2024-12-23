@@ -42,7 +42,7 @@ export class CoachBotSchedulerService {
       this.logger.error(this.handleIntervalFlow.name, 'error - could not get competitions');
       return;
     }
-    const todayDateString = this.utilsService.getTodayDateString(new Date());
+    const todayDateString = this.utilsService.getDateString(new Date());
     const competitionsWithMatches = await Promise.all(
       competitions.map((competition) => this.scores365Service.getMatchesForCompetition(competition, todayDateString)),
     );
