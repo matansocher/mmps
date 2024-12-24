@@ -1,5 +1,5 @@
-import axios from 'axios';
-import validUrl from 'valid-url';
+// import axios from 'axios';
+// import validUrl from 'valid-url';
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';

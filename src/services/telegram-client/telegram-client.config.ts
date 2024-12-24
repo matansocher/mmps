@@ -52,3 +52,5 @@ export const CHANNELS = {
   ALMOG_BOKER_UPDATES: { id: '1944652421', name: `אלמוג בוקר עדכונים` },
   CENTRE_GOALS: { id: '2202755767', name: `Centre goals` },
 };
+
+export const EXCLUDED_CHANNELS = ['1134883772', '1500288653', '1931973812', '1848921816', '1700501423', '1551172521', '938057166'];

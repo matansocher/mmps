@@ -1,10 +1,10 @@
 import { get as _get } from 'lodash';
-import { TelegramClient, Api } from 'telegram';
+import { TelegramClient } from 'telegram';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { IConversationDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
-import { LISTEN_TO_EVENTS } from './telegram-client.config';
+import { EXCLUDED_CHANNELS, LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()
 export class TelegramClientService {
@@ -27,7 +27,7 @@ export class TelegramClientService {
       }
       const entityId = messageData.channelId ? `-100${messageData.channelId}` : messageData.userId.toString();
       const channelDetails = await this.getConversationDetails(telegramClient, entityId);
-      if (!channelDetails?.id) {
+      if (!channelDetails?.id || EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
         return;
       }
       return callback(messageData, channelDetails);
