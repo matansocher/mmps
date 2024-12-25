@@ -2,7 +2,7 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
-import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
+import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import {
@@ -25,7 +25,6 @@ export class WoltBotService implements OnModuleInit {
     private readonly woltUtilsService: WoltUtilsService,
     private readonly woltService: WoltService,
     private readonly mongoUserService: WoltMongoUserService,
-    private readonly mongoAnalyticLogService: WoltMongoAnalyticLogService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly notifierBotService: NotifierBotService,
