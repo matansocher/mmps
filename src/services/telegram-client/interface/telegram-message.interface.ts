@@ -26,5 +26,5 @@ export interface IConversationDetails {
   firstName: string;
   lastName: string;
   userName: string;
-  photo: string;
+  photo?: string;
 }

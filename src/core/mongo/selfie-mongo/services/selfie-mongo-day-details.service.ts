@@ -20,7 +20,7 @@ export class SelfieMongoDayDetailsService {
   async incrementDateItemsCount(conversationId: string, conversationName: string, date: string): Promise<DayDetailsModel> {
     try {
       return this.dayDetailsCollection.findOneAndUpdate(
-        { _id: { conversationId, date } },
+        { conversationId, date },
         {
           $inc: { messageCount: 1 },
           $setOnInsert: { conversationName },
@@ -34,7 +34,7 @@ export class SelfieMongoDayDetailsService {
 
   getDateItems(date: string): Promise<DayDetailsModel[]> {
     try {
-      return this.dayDetailsCollection.find({ '_id.date': date }).sort({ messageCount: -1 }).toArray();
+      return this.dayDetailsCollection.find({ date }).sort({ messageCount: -1 }).toArray();
     } catch (err) {
       this.logger.error(this.getDateItems.name, `err: ${this.utilsService.getErrorMessage(err)}`);
     }

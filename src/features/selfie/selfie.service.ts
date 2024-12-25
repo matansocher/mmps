@@ -42,7 +42,7 @@ export class SelfieService implements OnModuleInit {
     }
   }
 
-  @Cron('0 0 * * *', { name: 'selfie-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron('59 23 * * *', { name: 'selfie-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
       this.notifierBotService.notify(selfieBotName, { action: 'Daily started' }, null, null);
