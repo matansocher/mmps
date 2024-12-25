@@ -7,6 +7,7 @@ import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
+  CITIES_SLUGS_SUPPORTED,
   INITIAL_BOT_RESPONSE,
   MAX_NUM_OF_RESTAURANTS_TO_SHOW,
   SUBSCRIPTION_EXPIRATION_HOURS,
@@ -14,7 +15,7 @@ import {
   WOLT_BOT_OPTIONS,
   IWoltRestaurant,
   WoltService,
-  WoltUtilsService, CITIES_SLUGS_SUPPORTED
+  WoltUtilsService,
 } from '@services/wolt';
 
 @Injectable()
@@ -107,6 +108,8 @@ export class WoltBotService implements OnModuleInit {
     this.logger.info(this.textHandler.name, `${logBody} - start`);
 
     try {
+      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: rawRestaurant, action: ANALYTIC_EVENT_NAMES.SEARCH }, chatId, this.mongoUserService);
+
       const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
       if (isLastUpdatedTooOld) {
         await this.woltService.refreshRestaurants();

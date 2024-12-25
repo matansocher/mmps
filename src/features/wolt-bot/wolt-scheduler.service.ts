@@ -104,7 +104,7 @@ export class WoltSchedulerService {
         if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
           promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
         }
-        this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService);
+        this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService);
       });
       await Promise.all(promisesArr);
     } catch (err) {
