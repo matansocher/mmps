@@ -20,8 +20,8 @@ export class RollinsparkService {
   }
 
   createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'error', error));
+    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.ROLLINSPARK.name, 'polling_error', error));
+    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.ROLLINSPARK.name, 'error', error));
   }
 
   createBotEventListeners(): void {

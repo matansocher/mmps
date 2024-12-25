@@ -20,8 +20,8 @@ export class TeacherBotService {
   }
 
   createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'error', error));
+    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TEACHER.name, 'polling_error', error));
+    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TEACHER.name, 'error', error));
   }
 
   createBotEventListeners(): void {

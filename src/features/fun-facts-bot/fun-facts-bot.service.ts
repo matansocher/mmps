@@ -21,8 +21,8 @@ export class FunFactsBotService {
   }
 
   createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TABIT.name, 'error', error));
+    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.FUN_FACTS.name, 'polling_error', error));
+    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.FUN_FACTS.name, 'error', error));
   }
 
   createBotEventListeners(): void {
