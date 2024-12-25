@@ -145,5 +145,3 @@ export const NOT_FOUND_VIDEO_MESSAGES = {
 };
 
 export const WEB_PAGE_URL_INVALID = 'This url you provided is invalid. Please provide a valid url';
-
-export const DEFAULT_NUM_OF_NEWS_ARTICLE = 3;
