@@ -17,10 +17,6 @@ export const BOTS = {
     name: 'Voice Pal Bot',
     token: env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
   },
-  NEWS: {
-    name: 'News Bot',
-    token: env.NEWS_TELEGRAM_BOT_TOKEN,
-  },
   ROLLINSPARK: {
     name: 'Rollins Park',
     token: env.ROLLINSPARK_TELEGRAM_BOT_TOKEN,
