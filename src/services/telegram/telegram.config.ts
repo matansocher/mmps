@@ -5,14 +5,6 @@ export const BOTS = {
     name: 'Wolt Bot',
     token: env.WOLT_TELEGRAM_BOT_TOKEN,
   },
-  TABIT: {
-    name: 'Tabit Bot',
-    token: env.TABIT_TELEGRAM_BOT_TOKEN,
-  },
-  ONTOPO: {
-    name: 'Ontopo Bot',
-    token: env.ONTOPO_TELEGRAM_BOT_TOKEN,
-  },
   VOICE_PAL: {
     name: 'Voice Pal Bot',
     token: env.VOICE_PAL_TELEGRAM_BOT_TOKEN,
