@@ -11,6 +11,11 @@ import { IConversationDetails, ITelegramMessage, TELEGRAM_CLIENT_TOKEN, Telegram
 const selfieBotName = 'Selfie Bot';
 const numberOfTopConversations = 5;
 
+interface TopConversation {
+  name: string;
+  amount: number;
+}
+
 @Injectable()
 export class SelfieService implements OnModuleInit {
   constructor(
@@ -46,16 +51,14 @@ export class SelfieService implements OnModuleInit {
         return;
       }
       const totalMessages = todaysData.reduce((acc, curr) => acc + curr.messageCount, 0);
-      const topConversations = todaysData
+      const topConversations: TopConversation[] = todaysData
         .sort((a, b) => b.messageCount - a.messageCount)
         .slice(0, numberOfTopConversations)
-        .map((data) => {
-          return { name: data.conversationName, amount: data.messageCount };
-        });
+        .map((data) => ({ name: data.conversationName, amount: data.messageCount }));
 
       const messageText = [
-        `Today You had a total of ${totalMessages} messages in ${todaysData.length} conversations.`,
-        `Top conversations:\n${topConversations.map(({ name, amount }) => `- ${name} - ${amount}`).join('\n')}`,
+        `In the last day - ${date} You had a total of ${totalMessages} messages in ${todaysData.length} conversations.`,
+        `Top conversations:\n${topConversations.map(({ name, amount }: TopConversation) => `- ${name} - ${amount}`).join('\n')}\n`,
       ].join('\n\n');
       this.notifierBotService.notify(selfieBotName, { action: 'Daily', plainText: messageText }, null, null);
     } catch (err) {
