@@ -8,5 +8,4 @@ export const CONNECTION_NAME = 'VOICE_PAL_MONGO_CONNECTION';
 
 export const COLLECTIONS = {
   USER: 'User',
-  ANALYTIC_LOGS: 'AnalyticLogs',
 };

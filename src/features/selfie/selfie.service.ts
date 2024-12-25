@@ -45,6 +45,7 @@ export class SelfieService implements OnModuleInit {
   @Cron('0 0 * * *', { name: 'selfie-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
+      this.notifierBotService.notify(selfieBotName, { action: 'Daily started' }, null, null);
       const date = this.utilsService.getDateString();
       const todaysData = await this.selfieMongoDayDetailsService.getDateItems(date);
       if (!todaysData?.length) {

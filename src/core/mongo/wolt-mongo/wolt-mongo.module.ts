@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { UtilsModule } from '@core/utils';
-import { WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService } from './services';
+import { WoltMongoSubscriptionService, WoltMongoUserService } from './services';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './wolt-mongo.config';
 
 @Module({
@@ -15,7 +15,7 @@ import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './wolt-mongo.config';
       dbName: DB_NAME,
     }),
   ],
-  providers: [WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService],
-  exports: [WoltMongoAnalyticLogService, WoltMongoSubscriptionService, WoltMongoUserService],
+  providers: [WoltMongoSubscriptionService, WoltMongoUserService],
+  exports: [WoltMongoSubscriptionService, WoltMongoUserService],
 })
 export class WoltMongoModule {}
