@@ -2,7 +2,7 @@ import { Module, Type } from '@nestjs/common';
 import { isProd } from '@core/config';
 import { CoachBotModule } from '@features/coach-bot/coach-bot.module';
 import { DefineModule } from '@features/define/define.module';
-import { FunFactsBotModule } from '@features/fun-facts-bot/fun-facts-bot.module';
+// import { FunFactsBotModule } from '@features/fun-facts-bot/fun-facts-bot.module';
 import { TeacherBotModule } from '@features/teacher-bot';
 import { RollinsparkModule } from '@features/rollinspark';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
@@ -17,7 +17,7 @@ if (isProd) {
     WoltBotModule,
     RollinsparkModule,
     DefineModule,
-    FunFactsBotModule,
+    // FunFactsBotModule,
     CoachBotModule,
   ];
 }
