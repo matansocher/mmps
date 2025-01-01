@@ -5,11 +5,5 @@ export const INITIAL_BOT_RESPONSE = [
 
 export const GENERAL_ERROR_MESSAGE = 'Sorry, I am unable to process your request at the moment. Please try again later.';
 
-export const LOCAL_FILES_PATH = './assets/files';
-
-export const TEACHER_ASSISTANT_ID = 'asst_ogwjFGg44XVDDJB2ZIPlplwu';
-export const THREAD_MESSAGE_INSTRUCTIONS = 'Please help me learn the subject'; // $$$$$$$$$$$$$$$$$$$$$$$$$
-
-export const HOURS_OF_DAY = [12, 20];
-
-export const MAX_NUMBER_OF_CHARS_PER_FILE = 150000;
+export const HOUR_OF_DAY_FIRST_LESSON = 12;
+export const HOURS_OF_DAY_ADDITIONAL_LESSONS = [17, 22];

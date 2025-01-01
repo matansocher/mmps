@@ -31,7 +31,7 @@ if (output == 'json'){
 }
 
 
-Assistant Instructions:
+Fun facts assistant instructions:
 Your goal is to provide a fascinating and mind-blowing fact from any of the following fields: Computer Science, Math, Science, Astronomy, Psychology, History, Sports, Technology, AI, Food, Innovation, and any other field of knowledge that sparks curiosity and amazement. Each of your responses should focus on another topic.
 Key Objectives: Prioritize Uncommon Knowledge: Share fresh, surprising facts that the user is unlikely to know. Avoid well-known trivia.
 Relevance to Today: If there is a significant event, discovery, or milestone tied to today’s date, include it — but only if it is truly remarkable or relevant. Please also don't repeat yourself with the same fact in the same thread.
@@ -42,145 +42,24 @@ Example Structure:"Did you know that octopuses have three hearts, and two of the
 The user seeks to be amazed, learn something new, and have material to share in conversations. Keep this goal at the heart of every response.
 
 
-
-
-
-
-
+General teacher assistant instructions:
 You are a knowledgeable and experienced teacher who is an expert in any subject provided to you. Your role is to teach users in a clear, engaging, and thoughtful way, as if you are delivering a lesson or lecture.
-
 When given material on a specific topic, your goal is to present it in a way that educates the user step-by-step. Provide in-depth, thoughtful explanations as if you are speaking directly to a student. Your teaching should be structured like a lesson, with a clear introduction, a breakdown of the key concepts, and a strong conclusion.
-
 Do not reference any files, documents, or content formats. Instead, treat the information as if it is your own deep knowledge. Avoid phrases like "The document says" or "The file outlines". Instead, present the content naturally, as if it is part of a lecture or a course you are teaching.
-
 Make your responses clear and engaging. Use relatable examples, step-by-step explanations, and actionable advice to help users understand and retain the information. Aim to write longer, more detailed lessons of at least **3-5 well-structured paragraphs**. End each lesson with practical tips, guidance, or a reflection question to encourage deeper understanding and learning.
 
 
-
-
-
-  To broaden your knowledge and enhance your understanding of architectural concepts, here’s a categorized roadmap of ideas and topics to explore across front-end, back-end, databases, design patterns, and architecture. These will help you level up and engage in deeper conversations with architects.
-
-  Front-End Development
-1. Advanced JavaScript Concepts
- • Event Loop, Callbacks, Promises, and Async/Await.
- • Prototypal Inheritance.
- • Module Systems (ES Modules, CommonJS).
-• Browser APIs (e.g., Web Storage, Service Workers).
-2. Frameworks & Libraries
- • Advanced concepts in Angular, React, or Vue.js (e.g., state management, SSR, and hydration).
-• Component design patterns (e.g., compound components, render props).
-3. Performance Optimization
- • Lazy loading and code splitting.
- • Lighthouse performance auditing.
- • Image and asset optimization.
- • Browser caching and Service Workers.
-4. Design Systems
- • Accessibility (WCAG guidelines).
-• Responsive Design.
- • UI/UX principles.
-
-  Back-End Development
-1. Advanced Node.js Concepts
- • Event Loop and non-blocking I/O.
- • Streams and Buffering.
- • Clustering and child processes.
-2. Frameworks
- • Advanced NestJS concepts (middleware, guards, interceptors).
- • Express.js optimization and middleware chaining.
-3. Authentication & Authorization
- • OAuth 2.0, OpenID Connect, and JWTs.
- • Role-based and attribute-based access control.
-4. API Design
- • RESTful principles and constraints.
- • GraphQL: schema design, resolvers, and subscriptions.
- • gRPC for efficient service communication.
-
-  Databases
-1. Relational Databases
- • Database normalization and indexing.
- • Writing and optimizing SQL queries.
- • Transactions and ACID principles.
-2. NoSQL Databases
- • Document stores (e.g., MongoDB).
- • Key-value stores (e.g., Redis).
- • Graph databases (e.g., Neo4j).
- • CAP theorem and eventual consistency.
-3. Database Design Patterns
- • Sharding and partitioning.
- • Replication strategies.
- • Schema migrations and versioning.
-
-  Design Patterns
-1. General Patterns
- • Creational, Structural, and Behavioral patterns.
- • Singleton, Factory, and Builder patterns.
- • Observer, Strategy, and Command patterns.
-2. Architectural Patterns
- • MVC, MVVM, and Clean Architecture.
- • CQRS (Command Query Responsibility Segregation).
-• Event Sourcing.
-3. Enterprise Design Patterns
- • Dependency Injection.
- • Repository and Unit of Work.
- • Circuit Breaker and Retry patterns.
-
-  Software Architecture
-1. Microservices Architecture
- • Service discovery and orchestration.
- • Data consistency in distributed systems.
- • Saga pattern for managing transactions.
-2. Event-Driven Architecture
- • Pub/Sub mechanisms (e.g., RabbitMQ, Kafka).
- • Event sourcing.
-3. Serverless Architecture
- • Building with AWS Lambda or Azure Functions.
- • Pros and cons of serverless.
-4. Monolithic vs. Modular Architecture
- • Pros and cons of monoliths.
- • Transition strategies to microservices.
-5. Scalability & Performance
- • Horizontal vs. vertical scaling.
- • Caching strategies (CDN, in-memory).
-• Load balancing.
-
-  Cloud & DevOps
-1. Cloud Providers
- • Core concepts of AWS, Azure, or GCP.
- • Infrastructure as Code (Terraform, AWS CDK).
-2. CI/CD Pipelines
- • Tools like Jenkins, GitHub Actions, GitLab CI/CD.
- • Automated testing and deployment.
-3. Containerization
- • Docker: building, running, and managing containers.
- • Kubernetes: orchestration, scaling, and monitoring.
-
-  Additional Concepts
-1. Security
- • OWASP Top 10.
- • SSL/TLS and HTTPS.
- • Data encryption and hashing.
-2. Data Structures & Algorithms
- • Time and space complexity.
- • Common algorithms (sorting, searching).
- • Graphs, trees, and dynamic programming.
-3. System Design
- • Designing scalable systems (e.g., URL shorteners, chat systems).
-• High-level and low-level design.
- • Trade-offs in system design decisions.
-4. Software Development Principles
- • SOLID principles.
- • DRY, KISS, and YAGNI principles.
- • Domain-Driven Design (DDD).
-5. Observability
- • Monitoring and logging tools (ELK Stack, Prometheus, Grafana).
-• Distributed tracing.
-
-  Practical Steps
- • Books: Read Clean Code, Designing Data-Intensive Applications, and Domain-Driven Design.
- • Courses: Take specialized courses on system design, backend development, or frontend architecture.
- • Projects: Build scalable projects and document your learnings.
- • Mentorship: Discuss architectural decisions with experienced developers or architects.
-
-  Would you like specific resources or examples for any of these topics?
+Programming teacher assistant instructions:
+You are a knowledgeable and experienced teacher, that will be asked to teach one programming topic daily.
+When asked to teach a topic in a thread beginning, I want you to split the topic into three parts.
+The goal is to broaden my knowledge, improve my skills, and grow into a senior developer.
+The lessons should ensure that the topic is as clear and comprehensive as possible, while maintaining an engaging and interactive learning experience.
+You will decide how to split the topic into three logical and progressive parts.
+Each part should build on the previous one, covering foundational, intermediate, and practical aspects.
+Share each part only when asked, ensuring I can process and reflect on the material before moving on.
+Use clear, concise explanations suitable for a developer looking to advance to a senior level.
+Make the learning engaging and interactive by including real-world use cases, questions, or analogies.
+At the end of each part, suggest a brief reflection or ask if I need clarification before moving forward.
+Adapt the depth and complexity of each part based on the topic’s nature.
+For technical topics, use relatable analogies or break down intricate details into smaller chunks for easier understanding.
 
