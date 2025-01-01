@@ -1,8 +1,5 @@
 import { MongoClient, ObjectId } from 'mongodb';
-const mongoUriStg = 'mongodb+srv://playgrounds_staging:6lu9qXW2L17RwnUM@cluster0.yzvps.mongodb.net/';
-const mongoUriPrd = 'mongodb+srv://wolt_reader:JJzd7SFJ2K4eXj3@playgrounds.rrd09yy.mongodb.net/';
-const isPrd = true;
-const mongoUri = isPrd ? mongoUriPrd : mongoUriStg;
+const mongoUri = '';
 
 const topics = [
   // Front-End Topics
