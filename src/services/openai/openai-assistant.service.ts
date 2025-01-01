@@ -1,7 +1,8 @@
 import fs from 'fs';
 import { get as _get } from 'lodash';
 import { OpenAI } from 'openai';
-import { MessageCreateParams, Run } from 'openai/resources/beta/threads';
+import { FileObject } from 'openai/resources';
+import { Message, MessageCreateParams, Run, Thread } from 'openai/resources/beta/threads';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { ASSISTANT_RUN_STATUSES, ERROR_STATUSES, OPENAI_CLIENT_TOKEN } from './openai.config';
@@ -13,12 +14,11 @@ export class OpenaiAssistantService {
     private readonly logger: LoggerService,
   ) {}
 
-  async createThread(): Promise<string> {
-    const thread = await this.openai.beta.threads.create();
-    return thread.id;
+  createThread(): Promise<Thread> {
+    return this.openai.beta.threads.create();
   }
 
-  addMessageToThread(threadId: string, messageText: string, role = 'user', fileId?: string) {
+  addMessageToThread(threadId: string, messageText: string, role = 'user', fileId?: string): Promise<Message> {
     return this.openai.beta.threads.messages.create(threadId, <MessageCreateParams>{
       role,
       content: messageText,
@@ -42,17 +42,16 @@ export class OpenaiAssistantService {
 
   async getThreadResponse(threadId: string): Promise<string> {
     const result = await this.openai.beta.threads.messages.list(threadId);
-    // return result?.data[0]?.content[0]?.text?.value || null;
     return _get(result, 'data[0].content[0].text.value', null);
   }
 
-  async uploadFile(filePath: string): Promise<string> {
+  async uploadFile(filePath: string): Promise<FileObject> {
     const fileContent = fs.createReadStream(filePath);
     const response = await this.openai.files.create({
       file: fileContent,
       purpose: 'assistants',
     });
-    return response.id;
+    return response;
   }
 
   async deleteFile(fileId: string): Promise<void> {

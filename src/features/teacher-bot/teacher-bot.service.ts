@@ -11,7 +11,7 @@ export class TeacherBotService {
     private readonly logger: LoggerService,
     private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
-    @Inject(BOTS.TEACHER.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -20,8 +20,8 @@ export class TeacherBotService {
   }
 
   createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TEACHER.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.TEACHER.name, 'error', error));
+    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.PROGRAMMING_TEACHER.name, 'polling_error', error));
+    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.PROGRAMMING_TEACHER.name, 'error', error));
   }
 
   createBotEventListeners(): void {
