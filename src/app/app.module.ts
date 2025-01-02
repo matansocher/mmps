@@ -2,7 +2,6 @@ import { Module, Type } from '@nestjs/common';
 import { isProd } from '@core/config';
 import { CoachBotModule } from '@features/coach-bot';
 import { DefineModule } from '@features/define';
-import { FunFactsBotModule } from '@features/fun-facts-bot';
 import { TeacherBotModule } from '@features/teacher-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
 import { WoltBotModule } from '@features/wolt-bot';
@@ -15,7 +14,6 @@ if (isProd) {
     VoicePalBotModule,
     WoltBotModule,
     DefineModule,
-    FunFactsBotModule,
     CoachBotModule,
     TeacherBotModule,
   ];
