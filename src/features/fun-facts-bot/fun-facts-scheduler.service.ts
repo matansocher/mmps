@@ -28,7 +28,7 @@ export class FunFactsSchedulerService {
     @Inject(BOTS.FUN_FACTS.name) private readonly bot: TelegramBot,
   ) {}
 
-  @Cron(`0 ${TODAY_FACTS_HOUR_OF_DAY} * * *`, { name: 'today-facts-scheduler', timeZone: DEFAULT_TIMEZONE })
+  // @Cron(`0 ${TODAY_FACTS_HOUR_OF_DAY} * * *`, { name: 'today-facts-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleTodayFactIntervalFlow(): Promise<void> {
     try {
       const todayFact = await this.getTodayFact();
