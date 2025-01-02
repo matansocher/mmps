@@ -17,6 +17,7 @@ if (isProd) {
     DefineModule,
     FunFactsBotModule,
     CoachBotModule,
+    TeacherBotModule,
   ];
 }
 
