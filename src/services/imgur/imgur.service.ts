@@ -12,7 +12,7 @@ export class ImgurService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  async uploadImage(imageLocalPath: string): Promise<any> {
+  async uploadImage(imageLocalPath: string): Promise<string> {
     try {
       this.logger.info(this.uploadImage.name, `start`);
       const imageBuffer = await fs.readFile(imageLocalPath, { encoding: 'base64' });

@@ -11,7 +11,7 @@ export class SocialMediaDownloaderService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  // async getMetaVideo(videoUrl: string): Promise<any> {
+  // async getMetaVideo(videoUrl: string): Promise<string> {
   //   try {
   //     this.logger.info(this.getMetaVideo.name, `start`);
   //     const { data } = await ndown(videoUrl);
@@ -24,7 +24,7 @@ export class SocialMediaDownloaderService {
   //   }
   // }
 
-  // async getTiktokAudio(videoUrl: string): Promise<any> {
+  // async getTiktokAudio(videoUrl: string): Promise<string> {
   //   try {
   //     this.logger.info(this.getTiktokAudio.name, `start`);
   //     const { data } = await tikdown(videoUrl);

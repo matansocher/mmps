@@ -65,7 +65,7 @@ export class WoltService {
     }
   }
 
-  async getCitiesList(): Promise<any> {
+  async getCitiesList(): Promise<{ WOLT_AREA_NAME: string; LON: number; LAT: number }[]> {
     try {
       const result = await axios.get(CITIES_BASE_URL);
       const rawCities = result['data'].results;

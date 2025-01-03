@@ -1,3 +1,4 @@
+import { APIPromise } from 'openai/core';
 import { Injectable } from '@nestjs/common';
 import { GeminiService } from '@services/gemini';
 import { ImgurService } from '@services/imgur';
@@ -14,7 +15,7 @@ export class AiService {
     private readonly imgurService: ImgurService,
   ) {}
 
-  async getTranscriptFromAudio(audioFilePath: string): Promise<any> {
+  async getTranscriptFromAudio(audioFilePath: string): Promise<string> {
     switch (this.aiProvider) {
       case AiProvider.OPENAI:
         return this.openaiService.getTranscriptFromAudio(audioFilePath);
@@ -23,7 +24,7 @@ export class AiService {
     }
   }
 
-  async getTranslationFromAudio(audioFilePath: string): Promise<any> {
+  async getTranslationFromAudio(audioFilePath: string): Promise<string> {
     switch (this.aiProvider) {
       case AiProvider.OPENAI:
         return this.openaiService.getTranslationFromAudio(audioFilePath);
@@ -32,11 +33,11 @@ export class AiService {
     }
   }
 
-  async getAudioFromText(text: string): Promise<any> {
+  async getAudioFromText(text: string): Promise<APIPromise<Response>> {
     return this.openaiService.getAudioFromText(text);
   }
 
-  async getChatCompletion(prompt: string, userText: string): Promise<any> {
+  async getChatCompletion(prompt: string, userText: string): Promise<string> {
     switch (this.aiProvider) {
       case AiProvider.OPENAI:
         return this.openaiService.getChatCompletion(prompt, userText);
@@ -45,11 +46,11 @@ export class AiService {
     }
   }
 
-  async createImage(prompt: string): Promise<any> {
+  async createImage(prompt: string): Promise<string> {
     return this.openaiService.createImage(prompt);
   }
 
-  async analyzeImage(prompt: string, imageLocalPath: string): Promise<any> {
+  async analyzeImage(prompt: string, imageLocalPath: string): Promise<string> {
     switch (this.aiProvider) {
       case AiProvider.OPENAI:
         const imageUrl = await this.imgurService.uploadImage(imageLocalPath);
@@ -59,7 +60,7 @@ export class AiService {
     }
   }
 
-  async analyzeFile(prompt: string, filePath: string): Promise<any> {
+  async analyzeFile(prompt: string, filePath: string): Promise<string> {
     return this.geminiService.generateContentFromFile(prompt, filePath);
   }
 }

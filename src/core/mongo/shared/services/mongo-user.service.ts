@@ -13,7 +13,7 @@ export class MongoUserService {
     private readonly utils: UtilsService,
   ) {}
 
-  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<any> {
+  async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<void> {
     try {
       const userCollection = this.database.collection(COLLECTIONS.USER);
       const user = { telegramUserId, chatId, firstName, lastName, username, createdAt: new Date() };
