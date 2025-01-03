@@ -26,6 +26,7 @@ export class TeacherBotModule implements OnModuleInit {
   constructor(private readonly teacherSchedulerService: TeacherSchedulerService) {}
 
   onModuleInit(): void {
-    // this.teacherSchedulerService.startLesson(); // for testing purposes
+    // this.teacherSchedulerService.handleCourseFirstLesson(); // for testing purposes
+    // this.teacherSchedulerService.handleCourseNextLesson(); // for testing purposes
   }
 }

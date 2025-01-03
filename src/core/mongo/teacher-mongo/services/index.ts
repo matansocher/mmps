@@ -1,1 +1,1 @@
-export { TeacherMongoLessonService } from './teacher-mongo-lesson.service';
+export { TeacherMongoCourseService } from './teacher-mongo-course.service';
