@@ -10,7 +10,7 @@ import { LoggerService } from '@core/logger';
 export class UtilsService implements OnModuleInit {
   constructor(private readonly logger: LoggerService) {}
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.setFfmpegPath();
   }
 
@@ -80,13 +80,13 @@ export class UtilsService implements OnModuleInit {
     return queryParams;
   }
 
-  objectToQueryParams(obj: Record<string, any>) {
+  objectToQueryParams(obj: Record<string, any>): string {
     return Object.keys(obj)
       .map((key: string) => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]))
       .join('&');
   }
 
-  queryParamsToObject(queryString: string): Record<string, any> {
+  queryParamsToObject(queryString: string): Record<string, unknown> {
     return queryString
       .split('&')
       .map((param: string) => param.split('='))

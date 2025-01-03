@@ -19,27 +19,31 @@ export class TeacherService {
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
-  async lessonFirstPart(): Promise<void> {
+  async processLesson(): Promise<void> {
+    const activeLesson = await this.mongoLessonService.getActiveLesson();
+    if (!activeLesson) {
+      const { lesson, threadId } = await this.initLesson();
+      await this.processLessonPart(lesson, threadId, `${THREAD_MESSAGE_FIRST_PART}. this lesson's topic is ${lesson.topic}`);
+    } else {
+      await this.processLessonPart(activeLesson, activeLesson.threadId, THREAD_MESSAGE_NEXT_PART);
+    }
+  }
+
+  async initLesson(): Promise<{ lesson: LessonModel; threadId: string }> {
     const lesson = await this.mongoLessonService.getRandomLesson();
     if (!lesson) {
-      return;
+      return { lesson: null, threadId: null };
     }
-
     const { id: threadId } = await this.openaiAssistantService.createThread();
-    await this.mongoLessonService.markLessonAsStarted(lesson._id, { assistantThreadId: threadId });
+    await this.mongoLessonService.startLesson(lesson?._id, { threadId: threadId });
     await this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `Lesson started: ${lesson.topic}`);
-    await this.processLessonPart(lesson, threadId, `${THREAD_MESSAGE_FIRST_PART}. today's topic is ${lesson.topic}`);
+    return { lesson, threadId };
   }
 
-  async lessonNextPart(): Promise<void> {
-    const lesson = await this.mongoLessonService.getActiveLesson();
+  async processLessonPart(lesson: LessonModel, threadId: string, prompt: string): Promise<void> {
     if (!lesson) {
       return;
     }
-    await this.processLessonPart(lesson, lesson.assistantThreadId, THREAD_MESSAGE_NEXT_PART);
-  }
-
-  async processLessonPart(lesson: LessonModel, threadId: string, prompt: string) {
     const response = await this.getAssistantAnswer(threadId, prompt);
     await this.sendMarkdownMessage(MY_USER_ID, response);
     await this.mongoLessonService.markLessonPartCompleted(lesson._id, TOTAL_LESSON_PARTS);

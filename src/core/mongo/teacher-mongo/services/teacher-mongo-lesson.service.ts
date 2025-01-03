@@ -11,15 +11,15 @@ export class TeacherMongoLessonService {
     this.lessonCollection = this.db.collection(COLLECTIONS.LESSON);
   }
 
-  getRandomLesson(): Promise<WithId<LessonModel> | null> {
+  async getRandomLesson(): Promise<WithId<LessonModel> | null> {
     const filter = { status: LessonStatus.Pending };
-    return this.lessonCollection
+    const results = await this.lessonCollection
       .aggregate<WithId<LessonModel>>([
         { $match: filter },
         { $sample: { size: 1 } }, // Get a random lesson
       ])
-      .toArray()
-      .then(results => results[0] || null); // Return the first result or null if none
+      .toArray();
+    return results[0] || null; // Return the first result or null if none
   }
 
   getActiveLesson(): Promise<WithId<LessonModel>> {
@@ -27,7 +27,7 @@ export class TeacherMongoLessonService {
     return this.lessonCollection.findOne(filter) as Promise<WithId<LessonModel>>;
   }
 
-  markLessonAsStarted(lessonId: ObjectId, additionalData: Partial<LessonModel>): Promise<UpdateResult<LessonModel>> {
+  startLesson(lessonId: ObjectId, additionalData: Partial<LessonModel>): Promise<UpdateResult<LessonModel>> {
     const filter = { _id: lessonId };
     const updateObj: UpdateFilter<LessonModel> = { $set: { status: LessonStatus.Assigned, assignedAt: new Date(), ...additionalData } };
     return this.lessonCollection.updateOne(filter, updateObj);

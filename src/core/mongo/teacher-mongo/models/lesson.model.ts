@@ -9,7 +9,7 @@ export enum LessonStatus {
 export interface LessonModel {
   _id: ObjectId;
   topic: string;
-  assistantThreadId?: string;
+  threadId?: string;
   status: LessonStatus;
   partsCompleted?: number;
   assignedAt?: Date;
