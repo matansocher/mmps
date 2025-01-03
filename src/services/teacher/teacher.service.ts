@@ -20,8 +20,11 @@ export class TeacherService {
   ) {}
 
   async processLesson(): Promise<void> {
-    const activeLesson = await this.mongoLessonService.getActiveLesson();
-    if (!activeLesson) {
+    const [activeLesson, todayLesson] = await Promise.all([
+      this.mongoLessonService.getActiveLesson(),
+      this.mongoLessonService.getTodayLesson(),
+    ]);
+    if (!activeLesson && !todayLesson) {
       const { lesson, threadId } = await this.initLesson();
       await this.processLessonPart(lesson, threadId, `${THREAD_MESSAGE_FIRST_PART}. this lesson's topic is ${lesson.topic}`);
     } else {

@@ -27,6 +27,12 @@ export class TeacherMongoLessonService {
     return this.lessonCollection.findOne(filter) as Promise<WithId<LessonModel>>;
   }
 
+  getTodayLesson(): Promise<WithId<LessonModel>> {
+    const todayDateStr = new Date().toISOString().split('T')[0];
+    const filter = { $expr: { $eq: [{ $substr: ['$assignedAt', 0, 10] }, todayDateStr] } };
+    return this.lessonCollection.findOne(filter) as Promise<WithId<LessonModel>>;
+  }
+
   startLesson(lessonId: ObjectId, additionalData: Partial<LessonModel>): Promise<UpdateResult<LessonModel>> {
     const filter = { _id: lessonId };
     const updateObj: UpdateFilter<LessonModel> = { $set: { status: LessonStatus.Assigned, assignedAt: new Date(), ...additionalData } };
