@@ -20,14 +20,15 @@ export const RESTAURANT_BASE_URL = 'https://consumer-api.wolt.com/order-xp/web/v
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 
+// the order of this array is important, this will determine the order of multiple results in restaurants search
 export const CITIES_SLUGS_SUPPORTED = [
-  'haifa',
+  'tel-aviv',
   'hasharon',
-  'jerusalem',
-  'netanya',
+  'haifa',
   'petah-tikva',
   'rishon-lezion-hashfela-area',
-  'tel-aviv',
+  'jerusalem',
+  'netanya',
 ];
 // 'afula-emek-yizrael-area'
 // 'ashdod'

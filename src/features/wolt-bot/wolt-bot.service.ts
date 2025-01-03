@@ -108,8 +108,6 @@ export class WoltBotService implements OnModuleInit {
     this.logger.info(this.textHandler.name, `${logBody} - start`);
 
     try {
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: rawRestaurant, action: ANALYTIC_EVENT_NAMES.SEARCH }, chatId, this.mongoUserService);
-
       const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
       if (isLastUpdatedTooOld) {
         await this.woltService.refreshRestaurants();
@@ -130,6 +128,7 @@ export class WoltBotService implements OnModuleInit {
       const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `Choose one of the above restaurants so I can notify you when it's online`;
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, inlineKeyboardMarkup);
+      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(', ') }, chatId, this.mongoUserService);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
