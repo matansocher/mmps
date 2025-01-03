@@ -1,1 +1,1 @@
-export { LessonModel } from './lesson.model';
+export { CourseModel } from './course.model';

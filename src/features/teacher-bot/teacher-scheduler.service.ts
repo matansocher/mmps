@@ -7,7 +7,7 @@ import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { UtilsService } from '@core/utils';
 import { TeacherService } from '@services/teacher';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { LESSONS_HOURS_OF_DAY } from './teacher-bot.config';
+import { COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherSchedulerService {
@@ -19,13 +19,23 @@ export class TeacherSchedulerService {
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
-  @Cron(`0 ${LESSONS_HOURS_OF_DAY.join(',')} * * *`, { name: 'teacher-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async startLesson(): Promise<void> {
+  @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler', timeZone: DEFAULT_TIMEZONE })
+  async handleCourseFirstLesson(): Promise<void> {
     try {
-      await this.teacherService.processLesson();
+      await this.teacherService.startNewCourse();
     } catch (err) {
-      this.logger.error(this.startLesson.name, `error: ${this.utilsService.getErrorMessage(err)}`);
-      this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `Error in lesson part: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.handleCourseFirstLesson.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+      this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `error: ${this.utilsService.getErrorMessage(err)}`);
+    }
+  }
+
+  @Cron(`0 ${COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY.join(',')} * * *`, { name: 'teacher-scheduler', timeZone: DEFAULT_TIMEZONE })
+  async handleCourseNextLesson(): Promise<void> {
+    try {
+      await this.teacherService.processLesson(true);
+    } catch (err) {
+      this.logger.error(this.handleCourseNextLesson.name, `error: ${this.utilsService.getErrorMessage(err)}`);
+      this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `error: ${this.utilsService.getErrorMessage(err)}`);
     }
   }
 }

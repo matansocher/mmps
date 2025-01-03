@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { UtilsModule } from '@core/utils';
-import { TeacherMongoLessonService } from './services';
+import { TeacherMongoCourseService } from './services';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './teacher-mongo.config';
 
 @Module({
@@ -15,7 +15,7 @@ import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './teacher-mongo.config';
       dbName: DB_NAME,
     }),
   ],
-  providers: [TeacherMongoLessonService],
-  exports: [TeacherMongoLessonService],
+  providers: [TeacherMongoCourseService],
+  exports: [TeacherMongoCourseService],
 })
 export class TeacherMongoModule {}

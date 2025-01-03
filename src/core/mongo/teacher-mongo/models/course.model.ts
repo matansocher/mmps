@@ -1,17 +1,17 @@
 import type { ObjectId } from 'mongodb';
 
-export enum LessonStatus {
+export enum CourseStatus {
   Pending = 'pending',
   Assigned = 'assigned',
   Completed = 'completed',
 }
 
-export interface LessonModel {
+export interface CourseModel {
   _id: ObjectId;
   topic: string;
   threadId?: string;
-  status: LessonStatus;
-  partsCompleted?: number;
+  status: CourseStatus;
+  lessonsCompleted?: number;
   assignedAt?: Date;
   completedAt?: Date;
   createdAt: Date;

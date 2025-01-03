@@ -74,28 +74,28 @@ const topics = [
   'High Availability: Designing for Fault Tolerance'
 ];
 
-class LessonService {
-  lessonCollection;
+class CourseService {
+  courseCollection;
 
   constructor(client, dbName) {
-    this.lessonCollection = client.db(dbName).collection('Lesson');
+    this.courseCollection = client.db(dbName).collection('Course');
   }
 
-  async createLesson(topic) {
-    const lesson = {
+  async createCourse(topic) {
+    const course = {
       _id: new ObjectId(),
       topic,
       status: 'pending',
       createdAt: new Date(),
     };
-    return this.lessonCollection.insertOne(lesson);
+    return this.courseCollection.insertOne(course);
   }
 
-  async insertLessons(topics) {
+  async insertCourses(topics) {
     for (const topic of topics) {
       try {
-        const result = await this.createLesson(topic);
-        console.log(`Inserted lesson with ID: ${result.insertedId}`);
+        const result = await this.createCourse(topic);
+        console.log(`Inserted course with ID: ${result.insertedId}`);
       } catch (error) {
         console.error(`Failed to insert topic "${topic}":`, error);
       }
@@ -110,10 +110,10 @@ async function main() {
     await client.connect();
     console.log('Connected to MongoDB.');
 
-    const lessonService = new LessonService(client, 'Teacher');
-    await lessonService.insertLessons(topics);
+    const courseService = new CourseService(client, 'Teacher');
+    await courseService.insertCourses(topics);
 
-    console.log('All lessons inserted.');
+    console.log('All courses inserted.');
   } catch (error) {
     console.error('Error during insertion:', error);
   } finally {
