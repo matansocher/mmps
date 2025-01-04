@@ -1,4 +1,4 @@
-import { Collection, Db, ObjectId, UpdateResult, WithId } from 'mongodb';
+import { Collection, Db, InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
 import { CourseModel, CourseStatus } from '../models/course.model';
@@ -9,6 +9,16 @@ export class TeacherMongoCourseService {
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.courseCollection = this.db.collection(COLLECTIONS.COURSE);
+  }
+
+  addCourse(topic: string): Promise<InsertOneResult<CourseModel>> {
+    const course = {
+      _id: new ObjectId(),
+      topic,
+      status: CourseStatus.Pending,
+      createdAt: new Date(),
+    };
+    return this.courseCollection.insertOne(course);
   }
 
   async getRandomCourse(): Promise<WithId<CourseModel> | null> {

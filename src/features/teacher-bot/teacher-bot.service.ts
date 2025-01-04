@@ -6,6 +6,7 @@ import { UtilsService } from '@core/utils';
 import { TeacherService } from '@services/teacher';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
+import { CourseStatus } from '@core/mongo/teacher-mongo/models/course.model';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
@@ -89,6 +90,13 @@ export class TeacherBotService implements OnModuleInit {
     this.logger.info(this.textHandler.name, `${logBody} - start`);
 
     try {
+      if (text.startsWith('/add')) {
+        const course = text.replace('/add', '').trim();
+        await this.teacherService.addCourse(course);
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, `OK, I added ${course} to your courses list`);
+        this.logger.info(this.textHandler.name, `${logBody} - added course '${course}' - success`);
+        return;
+      }
       await this.teacherService.processQuestion(MY_USER_ID, text);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {

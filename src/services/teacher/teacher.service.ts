@@ -87,4 +87,8 @@ export class TeacherService {
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
     await this.sendMarkdownMessage(MY_USER_ID, response);
   }
+
+  async addCourse(course: string): Promise<void> {
+    await this.mongoCourseService.addCourse(course);
+  }
 }
