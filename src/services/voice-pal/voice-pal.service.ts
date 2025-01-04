@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { NotifierBotService } from '@core/notifier-bot/notifier-bot.service';
+import { NotifierBotService } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
 import { AiService } from '@services/ai';

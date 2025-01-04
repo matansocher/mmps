@@ -2,6 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
 import { TeacherMongoModule } from '@core/mongo/teacher-mongo';
+import { NotifierBotModule } from '@core/notifier-bot';
 import { UtilsModule } from '@core/utils';
 import { OpenaiModule } from '@services/openai';
 import { TeacherModule } from '@services/teacher/teacher.module';
@@ -13,6 +14,7 @@ import { TeacherSchedulerService } from './teacher-scheduler.service';
   imports: [
     LoggerModule.forChild(TeacherBotModule.name),
     UtilsModule,
+    NotifierBotModule,
     TelegramBotsFactoryModule.forChild(BOTS.PROGRAMMING_TEACHER),
     TelegramModule,
     OpenaiModule,

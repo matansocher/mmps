@@ -2,7 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
-import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
+import { MY_USER_ID } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, TelegramGeneralService } from '@services/telegram';

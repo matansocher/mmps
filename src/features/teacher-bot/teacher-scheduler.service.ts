@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
-import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
+import { NotifierBotService } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
 import { TeacherService } from '@services/teacher';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
@@ -16,6 +16,7 @@ export class TeacherSchedulerService {
     private readonly utilsService: UtilsService,
     private readonly teacherService: TeacherService,
     private readonly telegramGeneralService: TelegramGeneralService,
+    private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
@@ -24,8 +25,9 @@ export class TeacherSchedulerService {
     try {
       await this.teacherService.startNewCourse();
     } catch (err) {
-      this.logger.error(this.handleCourseFirstLesson.name, `error: ${this.utilsService.getErrorMessage(err)}`);
-      this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `error: ${this.utilsService.getErrorMessage(err)}`);
+      const errorMessage = this.utilsService.getErrorMessage(err);
+      this.logger.error(this.handleCourseFirstLesson.name, `error: ${errorMessage}`);
+      this.notifierBotService.notify(BOTS.COACH.name, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }
 
@@ -34,8 +36,9 @@ export class TeacherSchedulerService {
     try {
       await this.teacherService.processLesson(true);
     } catch (err) {
-      this.logger.error(this.handleCourseNextLesson.name, `error: ${this.utilsService.getErrorMessage(err)}`);
-      this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `error: ${this.utilsService.getErrorMessage(err)}`);
+      const errorMessage = this.utilsService.getErrorMessage(err);
+      this.logger.error(this.handleCourseNextLesson.name, `error: ${errorMessage}`);
+      this.notifierBotService.notify(BOTS.COACH.name, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }
 }

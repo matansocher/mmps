@@ -1,7 +1,5 @@
-import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { isProd } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
@@ -20,7 +18,6 @@ export class WoltMongoSubscriptionService {
       const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
-      if (!isProd) filter['chatId'] = MY_USER_ID;
       return subscriptionCollection.find(filter).toArray();
     } catch (err) {
       this.logger.error(this.getActiveSubscriptions.name, `err: ${this.utilsService.getErrorMessage(err)}`);
@@ -57,7 +54,6 @@ export class WoltMongoSubscriptionService {
     const subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
     const validLimitTimestamp = new Date().getTime() - subscriptionExpirationHours * 60 * 60 * 1000;
     const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
-    if (!isProd) filter['chatId'] = MY_USER_ID;
     return subscriptionCollection.find(filter).toArray();
   }
 }

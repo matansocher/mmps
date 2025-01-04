@@ -1,12 +1,11 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { MY_USER_ID } from '@core/notifier-bot/notifier-bot.config';
+import { MY_USER_ID } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
 import { TeacherService } from '@services/teacher';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
-import { CourseStatus } from '@core/mongo/teacher-mongo/models/course.model';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
