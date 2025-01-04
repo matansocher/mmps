@@ -1,10 +1,9 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { MY_USER_ID } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
-import { TeacherService } from '@services/teacher';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { TeacherService } from './teacher.service';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
 
 @Injectable()
@@ -55,7 +54,7 @@ export class TeacherBotService implements OnModuleInit {
 
     try {
       this.logger.info(this.courseHandler.name, `${logBody} - start`);
-      await this.teacherService.startNewCourse();
+      await this.teacherService.startNewCourse(chatId);
       this.logger.info(this.courseHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
@@ -70,7 +69,7 @@ export class TeacherBotService implements OnModuleInit {
 
     try {
       this.logger.info(this.lessonHandler.name, `${logBody} - start`);
-      await this.teacherService.processLesson(false);
+      await this.teacherService.processLesson(chatId, false);
       this.logger.info(this.lessonHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
@@ -96,7 +95,7 @@ export class TeacherBotService implements OnModuleInit {
         this.logger.info(this.textHandler.name, `${logBody} - added course '${course}' - success`);
         return;
       }
-      await this.teacherService.processQuestion(MY_USER_ID, text);
+      await this.teacherService.processQuestion(chatId, text);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);

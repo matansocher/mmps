@@ -2,11 +2,10 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
-import { MY_USER_ID } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
+import { TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherService {
@@ -19,13 +18,13 @@ export class TeacherService {
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
-  async startNewCourse(): Promise<void> {
+  async startNewCourse(chatId: number): Promise<void> {
     await this.mongoCourseService.markActiveCourseCompleted();
-    const course = await this.getNewCourse();
-    await this.processCourseLesson(course, course.threadId, `${THREAD_MESSAGE_FIRST_LESSON}. this course's topic is ${course.topic}`);
+    const course = await this.getNewCourse(chatId);
+    await this.processCourseLesson(chatId, course, course.threadId, `${THREAD_MESSAGE_FIRST_LESSON}. this course's topic is ${course.topic}`);
   }
 
-  async getNewCourse(): Promise<CourseModel> {
+  async getNewCourse(chatId: number): Promise<CourseModel> {
     const course = await this.mongoCourseService.getRandomCourse();
     if (!course) {
       return null;
@@ -33,35 +32,35 @@ export class TeacherService {
     const { id: threadId } = await this.openaiAssistantService.createThread();
     course.threadId = threadId;
     await this.mongoCourseService.startCourse(course?._id, { threadId: threadId });
-    await this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `Course started: ${course.topic}`);
+    await this.telegramGeneralService.sendMessage(this.bot, chatId, `Course started: ${course.topic}`);
     return course;
   }
 
-  async processLesson(isScheduled = false): Promise<void> {
+  async processLesson(chatId: number, isScheduled = false): Promise<void> {
     const activeCourse = await this.mongoCourseService.getActiveCourse();
     if (!activeCourse) {
       if (!isScheduled) {
-        await this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `I see no active course. You can always start a new one.`);
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I see no active course. You can always start a new one.`);
       }
       return;
     }
 
     if (activeCourse.lessonsCompleted >= TOTAL_COURSE_LESSONS) {
       if (!isScheduled) {
-        await this.telegramGeneralService.sendMessage(this.bot, MY_USER_ID, `You completed ${activeCourse.topic} course. You can still ask questions.`);
+        await this.telegramGeneralService.sendMessage(this.bot, chatId, `You completed ${activeCourse.topic} course. You can still ask questions.`);
       }
       return;
     }
 
-    await this.processCourseLesson(activeCourse, activeCourse.threadId, THREAD_MESSAGE_NEXT_LESSON);
+    await this.processCourseLesson(chatId, activeCourse, activeCourse.threadId, THREAD_MESSAGE_NEXT_LESSON);
   }
 
-  async processCourseLesson(course: CourseModel, threadId: string, prompt: string): Promise<void> {
+  async processCourseLesson(chatId: number, course: CourseModel, threadId: string, prompt: string): Promise<void> {
     if (!course) {
       return;
     }
     const response = await this.getAssistantAnswer(threadId, prompt);
-    await this.sendMarkdownMessage(MY_USER_ID, response);
+    await this.sendMarkdownMessage(chatId, response);
     await this.mongoCourseService.markCourseLessonCompleted(course._id);
   }
 
@@ -85,7 +84,7 @@ export class TeacherService {
       await this.telegramGeneralService.sendMessage(this.bot, chatId, 'No active course');
     }
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
-    await this.sendMarkdownMessage(MY_USER_ID, response);
+    await this.sendMarkdownMessage(chatId, response);
   }
 
   async addCourse(course: string): Promise<void> {
