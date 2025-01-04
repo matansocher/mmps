@@ -1,7 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from '@core/logger';
-import { NotifierBotModule } from '@core/notifier-bot/notifier-bot.module';
+import { NotifierBotModule } from '@core/notifier-bot';
 import { UtilsModule } from '@core/utils';
 import { WoltMongoModule } from '@core/mongo/wolt-mongo';
 import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
@@ -12,8 +12,8 @@ import { WoltSchedulerService } from './wolt-scheduler.service';
 @Module({
   imports: [
     LoggerModule.forChild(WoltBotModule.name),
-    NotifierBotModule,
     ScheduleModule.forRoot(),
+    NotifierBotModule,
     TelegramBotsFactoryModule.forChild(BOTS.WOLT),
     TelegramModule,
     UtilsModule,
