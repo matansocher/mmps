@@ -1,5 +1,5 @@
 export interface Competition {
-  readonly id: string;
+  readonly id: number;
   readonly name: string;
   readonly shortName: string;
   readonly nameForURL: string;

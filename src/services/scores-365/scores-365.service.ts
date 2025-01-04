@@ -5,7 +5,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
 import { Competition, ExpectedMatch, MatchDetails, Team } from './interface';
-import { SCORES_365_API_URL, COMPETITION_IDS } from './scores-365.config';
+import { SCORES_365_API_URL, COMPETITIONS } from './scores-365.config';
 
 @Injectable()
 export class Scores365Service {
@@ -15,8 +15,9 @@ export class Scores365Service {
   ) {}
 
   async getCompetitions(): Promise<Competition[]> {
+    const competitionIds = COMPETITIONS.map((c) => c.id);
     const results = await Promise.all(
-      COMPETITION_IDS.map(async (competitionId) => {
+      competitionIds.map(async (competitionId) => {
         const queryParams = { competitions: competitionId.toString(), langId: '2', timezoneName: DEFAULT_TIMEZONE };
         const result = await axios.get(`${SCORES_365_API_URL}/competitions?${new URLSearchParams(queryParams)}`);
         const relevantCompetition = result.data?.competitions?.find((c) => c.id === competitionId);
