@@ -7,12 +7,14 @@ import { VoicePalBotModule } from '@features/voice-pal-bot';
 import { WoltBotModule } from '@features/wolt-bot';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { RollinsparkBotModule } from '@features/rollinspark-bot';
 
-let imports: Type[] = [TeacherBotModule];
+let imports: Type[] = [RollinsparkBotModule];
 if (isProd) {
   imports = [
     VoicePalBotModule,
     WoltBotModule,
+    RollinsparkBotModule,
     DefineModule,
     CoachBotModule,
     TeacherBotModule,
