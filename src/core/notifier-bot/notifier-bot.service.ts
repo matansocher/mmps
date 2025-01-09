@@ -1,13 +1,17 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { LoggerService } from '@core/logger';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
+import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { INotifyOptions } from './interface';
-import { NOTIFIER_CHAT_ID } from './notifier-bot.config';
+import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
 @Injectable()
 export class NotifierBotService implements OnModuleInit {
   constructor(
+    private readonly logger: LoggerService,
+    private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     @Inject(BOTS.NOTIFIER.name) private readonly bot: TelegramBot,
   ) {}
@@ -51,5 +55,26 @@ export class NotifierBotService implements OnModuleInit {
     otherOptions && Object.keys(otherOptions).length && sentences.push(`data: ${JSON.stringify(otherOptions, null, 2)}`);
     plainText && sentences.push(plainText);
     return sentences.join('\n');
+  }
+
+  async collect(messageType: MessageType, data: string): Promise<void> {
+    try {
+      switch (messageType) {
+        case MessageType.TEXT:
+          await this.telegramGeneralService.sendMessage(this.bot, NOTIFIER_CHAT_ID, data);
+          break;
+        case MessageType.PHOTO:
+          await this.telegramGeneralService.sendPhoto(this.bot, NOTIFIER_CHAT_ID, data);
+          break;
+        case MessageType.AUDIO:
+          await this.telegramGeneralService.sendVoice(this.bot, NOTIFIER_CHAT_ID, data);
+          break;
+        case MessageType.VIDEO:
+          await this.telegramGeneralService.sendVideo(this.bot, NOTIFIER_CHAT_ID, data);
+          break;
+      }
+    } catch (err) {
+      this.logger.error(this.collect.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+    }
   }
 }
