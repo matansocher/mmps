@@ -4,8 +4,8 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
-import { RollinsparkMongoSubscriptionService, SubscriptionModel } from '@core/mongo/rollinspark-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { RollinsparkMongoSubscriptionService } from '@core/mongo/rollinspark-mongo';
+import { MY_USER_ID, NotifierBotService } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, NAME_TO_PLAN_ID_MAP } from './constants';
@@ -14,9 +14,14 @@ import { ExpectedAptDetails } from '@features/rollinspark-bot/interfaces';
 
 const INTERVAL_MINUTES = 5;
 
+type PlanAvailability = Record<number, ExpectedAptDetails[]>;
+
 @Injectable()
 export class RollinsparkSchedulerService implements OnModuleInit {
-  latestResults: Record<number, ExpectedAptDetails[]> = {};
+  latestPlansAvailability: Record<number, ExpectedAptDetails[]> = Object.values(NAME_TO_PLAN_ID_MAP).reduce((acc, planId: number) => {
+    acc[planId] = null; // Or initialize with an empty array if needed
+    return acc;
+  }, {});
 
   constructor(
     private readonly logger: LoggerService,
@@ -31,7 +36,10 @@ export class RollinsparkSchedulerService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     const allPlanIds = Object.values(NAME_TO_PLAN_ID_MAP);
     const plansAvailability = await this.getPlansAvailability(allPlanIds);
-    this.latestResults = plansAvailability;
+    this.latestPlansAvailability = plansAvailability;
+
+    this.bot.sendPoll(MY_USER_ID, 'question', ['option1', 'option2'], { is_anonymous: false });
+    // this.handleIntervalFlow(); // for testing purposes
   }
 
   @Cron(`*/${INTERVAL_MINUTES} * * * *`, { name: 'rollinspark-scheduler', timeZone: DEFAULT_TIMEZONE })
@@ -43,25 +51,49 @@ export class RollinsparkSchedulerService implements OnModuleInit {
       }
       const planIds = subscriptions.map((sub) => sub.planId);
       const plansAvailability = await this.getPlansAvailability(planIds);
-      // $$$$$$$$$$$$$$$$$$$$$$$$$$$ here we need to compare the latestResults with the new results
-      const planIdsWithChanges = []; // $$$$$$$$$$$$$$$$$$$$$$$$$$$
+      // $$$$$$$$$$$$$$$$$$$$$$$$$$$ here we need to compare the latestPlansAvailability with the new results
+      const planIdsWithChanges = Object.values(NAME_TO_PLAN_ID_MAP)
+        .map((planId) => this.isPlanSimilarToLatest(planId, this.latestPlansAvailability, plansAvailability[planId]))
+        .filter((isSimilar) => !isSimilar);
 
-      planIdsWithChanges.map((planId) => {
-        const relevantSubscriptions = subscriptions.filter((sub) => sub.planId === planId);
-        const chatIds = relevantSubscriptions?.map((sub) => sub.chatId);
-        const planName = Object.keys(NAME_TO_PLAN_ID_MAP).find((key) => NAME_TO_PLAN_ID_MAP[key] === planId);
-        return this.alertSubscriptions(chatIds, planName);
-      });
+      if (!planIdsWithChanges.length) {
+        return;
+      }
 
-      this.latestResults[planIds] = plansAvailability; // $$$$$$$$$$$$$$$$$
+
+
+      // planIdsWithChanges.map((planId) => {
+      //   const relevantSubscriptions = subscriptions.filter((sub) => sub.planId === planId);
+      //   const chatIds = relevantSubscriptions?.map((sub) => sub.chatId);
+      //   const planName = Object.keys(NAME_TO_PLAN_ID_MAP).find((key) => NAME_TO_PLAN_ID_MAP[key] === planId);
+      //   return this.alertSubscriptions(chatIds, planName);
+      // });
+
+      this.latestPlansAvailability = plansAvailability;
     } catch (err) {
       this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
       this.logger.error(this.handleIntervalFlow.name, `error - ${this.utilsService.getErrorMessage(err)}`);
     }
   }
 
-  async getPlansAvailability(planIds: number[]): Promise<ExpectedAptDetails[][]> { // $$$$$$$$$$$$$$$ type
-    return await Promise.all(planIds.map((planId) => this.rollinsparkService.getAptsDetails(planId)));
+  async getPlansAvailability(planIds: number[]): Promise<{ planId: number; aptsDetails: ExpectedAptDetails[] }> {
+    try {
+      const results = await Promise.all(
+        planIds.map(async (planId) => {
+          const aptsDetails = await this.rollinsparkService.getAptsDetails(planId);
+          return { planId, aptsDetails };
+        }),
+      );
+
+      return results.reduce((acc, { planId, aptsDetails }) => {
+        acc[planId] = aptsDetails;
+        return acc;
+      }, {} as any);
+    } catch (err) {
+      this.logger.error(this.getPlansAvailability.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${ANALYTIC_EVENT_STATES.REFRESH}` }, null, null);
+      return null;
+    }
   }
 
   // async refreshPlanAvailability(planId: number): Promise<void> {
@@ -71,17 +103,24 @@ export class RollinsparkSchedulerService implements OnModuleInit {
   //     return;
   //   }
   //   const isResSimilarToLatest = await this.isResSimilarToLatest(aptsDetails);
-  //   if (this.latestResults?.length && !this.isFirstTime && !isResSimilarToLatest) {
+  //   if (this.latestPlansAvailability?.length && !this.isFirstTime && !isResSimilarToLatest) {
   //     await this.alertSubscriptions(this.chatIds);
   //   }
-  //   this.latestResults = aptsDetails;
+  //   this.latestPlansAvailability = aptsDetails;
   // }
 
-  async isResSimilarToLatest(newResult): Promise<boolean> {
-    const existingKeys = this.latestResults.map((res) => res.ApartmentId).sort();
-    const newKeys = newResult.map((res) => res.ApartmentId).sort();
+  isPlanSimilarToLatest(planId: number, oldPlansAvailability: PlanAvailability, newPlansAvailability: PlanAvailability): boolean {
+    const oldAptsIds = oldPlansAvailability[planId].map((res) => res.ApartmentId).sort();
+    const newAptsIds = newPlansAvailability[planId].map((res) => res.ApartmentId).sort();
+    if (!oldAptsIds || !newAptsIds) {
+      return false;
+    }
 
-    return _isEqual(existingKeys, newKeys);
+    // const existingKeys = this.latestPlansAvailability.map((res) => res.ApartmentId).sort();
+    // const newKeys = newResult.map((res) => res.ApartmentId).sort();
+
+    // return _isEqual(existingKeys, newKeys);
+    return _isEqual(1, 2);
   }
 
   async alertSubscriptions(chatIds: number[], planName: string): Promise<void> {

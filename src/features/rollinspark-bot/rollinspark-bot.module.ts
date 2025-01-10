@@ -21,10 +21,4 @@ import { RollinsparkMongoModule } from '@core/mongo/rollinspark-mongo';
   ],
   providers: [RollinsparkBotService, RollinsparkSchedulerService, RollinsparkService],
 })
-export class RollinsparkBotModule {
-  constructor(private readonly rollinsparkSchedulerService: RollinsparkSchedulerService) {}
-
-  onModuleInit(): void {
-    // this.rollinsparkSchedulerService.handleIntervalFlow(); // for testing purposes
-  }
-}
+export class RollinsparkBotModule {}

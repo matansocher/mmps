@@ -5,7 +5,7 @@ import { UtilsService } from '@core/utils';
 import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from '@core/mongo/rollinspark-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { BOTS, TelegramGeneralService } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES, NAME_TO_PLAN_ID_MAP } from './constants';
+import { ANALYTIC_EVENT_STATES, BOT_ACTIONS, NAME_TO_PLAN_ID_MAP } from './constants';
 
 @Injectable()
 export class RollinsparkBotService implements OnModuleInit {
@@ -32,8 +32,6 @@ export class RollinsparkBotService implements OnModuleInit {
   createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/management/, (message: Message) => this.managementHandler(message));
-    // this.bot.onText(/\/subscribe/, (message: Message) => this.subscribeHandler(message));
-    // this.bot.onText(/\/unsubscribe/, (message: Message) => this.unsubscribeHandler(message));
     this.bot.onText(/\/check/, (message: Message) => this.checkHandler(message));
     this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
@@ -78,7 +76,7 @@ export class RollinsparkBotService implements OnModuleInit {
           const isSubscribed = !!subscription;
           return {
             text: `${planName} - ${isSubscribed ? 'Unsubscribe 🛑' : 'Subscribe 🟢'}`,
-            callback_data: `${NAME_TO_PLAN_ID_MAP[planName]} - ${isSubscribed ? 'unsubscribe' : 'subscribe'}`,
+            callback_data: `${NAME_TO_PLAN_ID_MAP[planName]} - ${isSubscribed ? BOT_ACTIONS.UNSUBSCRIBE : BOT_ACTIONS.SUBSCRIBE}`,
           };
         })
         .sort((a, b) => a.text.localeCompare(b.text));
@@ -111,10 +109,10 @@ export class RollinsparkBotService implements OnModuleInit {
     try {
       const [planId, action] = response.split(' - ');
       switch (action) {
-        case 'subscribe':
+        case BOT_ACTIONS.SUBSCRIBE:
           await this.handleCallbackAddSubscription(logBody, chatId, +planId);
           break;
-        case 'unsubscribe':
+        case BOT_ACTIONS.UNSUBSCRIBE:
           await this.handleCallbackRemoveSubscription(logBody, chatId, +planId);
           break;
         default:
