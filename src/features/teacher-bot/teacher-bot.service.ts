@@ -39,12 +39,12 @@ export class TeacherBotService implements OnModuleInit {
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, INITIAL_BOT_RESPONSE);
+      await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.startHandler.name, `${logBody} - error - ${errorMessage}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage);
+      await this.bot.sendMessage(chatId, errorMessage);
     }
   }
 
@@ -59,7 +59,7 @@ export class TeacherBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.courseHandler.name, `${logBody} - error - ${errorMessage}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage);
+      await this.bot.sendMessage(chatId, errorMessage);
     }
   }
 
@@ -74,7 +74,7 @@ export class TeacherBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.lessonHandler.name, `${logBody} - error - ${errorMessage}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage);
+      await this.bot.sendMessage(chatId, errorMessage);
     }
   }
 
@@ -91,7 +91,7 @@ export class TeacherBotService implements OnModuleInit {
       if (text.startsWith('/add')) {
         const course = text.replace('/add', '').trim();
         await this.teacherService.addCourse(course);
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `OK, I added ${course} to your courses list`);
+        await this.bot.sendMessage(chatId, `OK, I added ${course} to your courses list`);
         this.logger.info(this.textHandler.name, `${logBody} - added course '${course}' - success`);
         return;
       }
@@ -99,7 +99,7 @@ export class TeacherBotService implements OnModuleInit {
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 }

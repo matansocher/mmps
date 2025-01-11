@@ -27,15 +27,6 @@ export class TelegramGeneralService {
     }
   }
 
-  async sendMessage(bot: TelegramBot, chatId: number, messageText: string, form = {}) {
-    try {
-      return await bot.sendMessage(chatId, messageText, form);
-    } catch (err) {
-      this.logger.error(this.sendMessage.name, `err: ${this.utilsService.getErrorMessage(err)}`);
-      throw err;
-    }
-  }
-
   getMarkupExample(): string {
     return `
       *bold \\*text*

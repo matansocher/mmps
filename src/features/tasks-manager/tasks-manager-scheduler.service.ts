@@ -53,7 +53,7 @@ export class TasksManagerSchedulerService {
       const inlineKeyboardButtons = [{ text: 'Mark as completed', callback_data: `${task._id} - ${BOT_ACTIONS.TASK_COMPLETED}` }];
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const resText = `You wanted me to remind you about:\n${title}`;
-      this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
+      this.bot.sendMessage(chatId, resText, inlineKeyboardMarkup as any);
       await this.mongoTaskService.updateLastNotifiedAt(chatId, task._id, new Date());
     } catch (err) {
       this.logger.error(`${this.notifyUser.name} | Failed to notify user ${chatId} for task "${title}": ${this.utilsService.getErrorMessage(err)}`);

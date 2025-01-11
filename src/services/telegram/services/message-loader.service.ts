@@ -71,7 +71,7 @@ export class MessageLoaderService {
 
     const messageText = this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length ? LOADER_MESSAGES[this.messages[chatId]?.cycleIterationIndex] : LOADER_MESSAGES[LOADER_MESSAGES.length - 1];
     if (this.messages[chatId]?.cycleIterationIndex === 0) {
-      messageRes = await this.telegramGeneralService.sendMessage(bot, chatId, messageText);
+      messageRes = await bot.sendMessage(chatId, messageText);
     } else if (this.messages[chatId]?.cycleIterationIndex < LOADER_MESSAGES.length) {
       messageRes = await bot.editMessageText(messageText, { chat_id: chatId, message_id: this.messages[chatId]?.loaderMessageId });
     }

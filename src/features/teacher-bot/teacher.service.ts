@@ -32,7 +32,7 @@ export class TeacherService {
     const { id: threadId } = await this.openaiAssistantService.createThread();
     course.threadId = threadId;
     await this.mongoCourseService.startCourse(course?._id, { threadId: threadId });
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, `Course started: ${course.topic}`);
+    await this.bot.sendMessage(chatId, `Course started: ${course.topic}`);
     return course;
   }
 
@@ -40,14 +40,14 @@ export class TeacherService {
     const activeCourse = await this.mongoCourseService.getActiveCourse();
     if (!activeCourse) {
       if (!isScheduled) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `I see no active course. You can always start a new one.`);
+        await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one.`);
       }
       return;
     }
 
     if (activeCourse.lessonsCompleted >= TOTAL_COURSE_LESSONS) {
       if (!isScheduled) {
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `You completed ${activeCourse.topic} course. You can still ask questions.`);
+        await this.bot.sendMessage(chatId, `You completed ${activeCourse.topic} course. You can still ask questions.`);
       }
       return;
     }
@@ -72,16 +72,16 @@ export class TeacherService {
 
   async sendMarkdownMessage(chatId: number, message: string): Promise<void> {
     try {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, message, { parse_mode: 'Markdown' });
+      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
     } catch (err) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, message);
+      await this.bot.sendMessage(chatId, message);
     }
   }
 
   async processQuestion(chatId: number, question: string): Promise<void> {
     const activeCourse = await this.mongoCourseService.getActiveCourse();
     if (!activeCourse) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, 'No active course');
+      await this.bot.sendMessage(chatId, 'No active course');
     }
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
     await this.sendMarkdownMessage(chatId, response);

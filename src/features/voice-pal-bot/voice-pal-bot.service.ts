@@ -51,7 +51,7 @@ export class VoicePalBotService implements OnModuleInit {
 
       this.logger.info('message listener', `${logBody} - success`);
     } catch (err) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 }

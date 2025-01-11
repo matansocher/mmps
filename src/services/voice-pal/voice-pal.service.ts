@@ -50,20 +50,20 @@ export class VoicePalService {
       this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
     }
 
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, this.voicePalUtilsService.getKeyboardOptions());
+    await this.bot.sendMessage(chatId, replyText, this.voicePalUtilsService.getKeyboardOptions());
   }
 
   async handleAction(message: Message, userAction: IVoicePalOption): Promise<void> {
     const { chatId, text, audio, video, photo, file } = getMessageData(message);
 
     if (!userAction) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Please select an action first.`);
+      await this.bot.sendMessage(chatId, `Please select an action first.`);
       return;
     }
 
     const inputErrorMessage = this.voicePalUtilsService.validateActionWithMessage(userAction, { text, audio, video, photo, file });
     if (inputErrorMessage) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, inputErrorMessage, this.voicePalUtilsService.getKeyboardOptions());
+      await this.bot.sendMessage(chatId, inputErrorMessage, this.voicePalUtilsService.getKeyboardOptions());
       return;
     }
 
@@ -96,7 +96,7 @@ export class VoicePalService {
     await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
     this.utilsService.deleteFile(videoFileLocalPath);
     const resText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, this.voicePalUtilsService.getKeyboardOptions());
+    await this.bot.sendMessage(chatId, resText, this.voicePalUtilsService.getKeyboardOptions());
     await this.notifierBotService.collect(MessageType.TEXT, resText);
     await this.utilsService.deleteFile(audioFileLocalPath);
   }
@@ -115,7 +115,7 @@ export class VoicePalService {
       this.utilsService.deleteFile(audioFileLocalPath);
     }
 
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, this.voicePalUtilsService.getKeyboardOptions());
+    await this.bot.sendMessage(chatId, resText, this.voicePalUtilsService.getKeyboardOptions());
     await this.notifierBotService.collect(MessageType.TEXT, resText);
   }
 
@@ -134,7 +134,7 @@ export class VoicePalService {
 
   // async handleSummarizeTextAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
   //   const textSummary = await this.aiService.getChatCompletion(SUMMARY_PROMPT, text);
-  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, textSummary, this.voicePalUtilsService.getKeyboardOptions());
+  //   await this.bot.sendMessage(chatId, textSummary, this.voicePalUtilsService.getKeyboardOptions());
   // }
 
   // async handleSummarizeSocialMediaVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
@@ -145,29 +145,29 @@ export class VoicePalService {
   //   } else if (text.includes('tiktok')) {
   //     return this.handleSummarizeTiktokVideoAction({ chatId, text });
   //   } else {
-  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.SOCIAL_MEDIA, this.voicePalUtilsService.getKeyboardOptions());
+  //     await this.bot.sendMessage(chatId, NOT_FOUND_VIDEO_MESSAGES.SOCIAL_MEDIA, this.voicePalUtilsService.getKeyboardOptions());
   //   }
   // }
 
   // async handleSummarizeYoutubeVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
   //   const videoId = this.youtubeTranscriptService.getYoutubeVideoIdFromUrl(text);
   //   if (!videoId) {
-  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.YOUTUBE, this.voicePalUtilsService.getKeyboardOptions());
+  //     await this.bot.sendMessage(chatId, NOT_FOUND_VIDEO_MESSAGES.YOUTUBE, this.voicePalUtilsService.getKeyboardOptions());
   //     return;
   //   }
   //   const { transcription, errorMessage } = await this.youtubeTranscriptService.getYoutubeVideoTranscription(videoId);
   //   if (errorMessage) {
-  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage, this.voicePalUtilsService.getKeyboardOptions());
+  //     await this.bot.sendMessage(chatId, errorMessage, this.voicePalUtilsService.getKeyboardOptions());
   //     return;
   //   }
   //   const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
+  //   await this.bot.sendMessage(chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
   // }
 
   // async handleSummarizeTiktokVideoAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
   //   const audioBuffer = await this.socialMediaDownloaderService.getTiktokAudio(text);
   //   if (!audioBuffer) {
-  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, NOT_FOUND_VIDEO_MESSAGES.TIKTOK, this.voicePalUtilsService.getKeyboardOptions());
+  //     await this.bot.sendMessage(chatId, NOT_FOUND_VIDEO_MESSAGES.TIKTOK, this.voicePalUtilsService.getKeyboardOptions());
   //     return;
   //   }
   //   const audioFilePath = `${LOCAL_FILES_PATH}/tiktok-audio-${new Date().getTime()}.mp3`;
@@ -176,7 +176,7 @@ export class VoicePalService {
   //   const transcription = await this.aiService.getTranscriptFromAudio(audioFilePath);
   //
   //   const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
+  //   await this.bot.sendMessage(chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
   //   await this.utilsService.deleteFile(audioFilePath);
   // }
 
@@ -188,7 +188,7 @@ export class VoicePalService {
   //   const transcription = await this.aiService.getTranscriptFromAudio(audioFilePath);
   //
   //   const summaryTranscription = await this.aiService.getChatCompletion(SUMMARY_PROMPT, transcription);
-  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
+  //   await this.bot.sendMessage(chatId, summaryTranscription, this.voicePalUtilsService.getKeyboardOptions());
   //   await this.utilsService.deleteFile(videoFilePath);
   //   await this.utilsService.deleteFile(audioFilePath);
   // }
@@ -202,7 +202,7 @@ export class VoicePalService {
     const imageLocalPath = await this.bot.downloadFile(photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
     await this.notifierBotService.collect(MessageType.PHOTO, imageLocalPath);
     const imageAnalysisText = await this.aiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, imageAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
+    await this.bot.sendMessage(chatId, imageAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
     await this.notifierBotService.collect(MessageType.TEXT, imageAnalysisText);
     this.utilsService.deleteFile(imageLocalPath);
   }
@@ -210,13 +210,13 @@ export class VoicePalService {
   // async handleAnalyzeFile({ chatId, file }: Partial<ITelegramMessageData>): Promise<void> {
   //   const fileLocalPath = await this.telegramGeneralService.downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
   //   const fileAnalysisText = await this.aiService.analyzeFile(FILE_ANALYSIS_PROMPT, fileLocalPath);
-  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, fileAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
+  //   await this.bot.sendMessage(chatId, fileAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
   //   this.utilsService.deleteFile(fileLocalPath);
   // }
 
   // async webPageSummary({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
   //   if (!validUrl.isUri(text)) {
-  //     await this.telegramGeneralService.sendMessage(this.bot, chatId, WEB_PAGE_URL_INVALID, this.voicePalUtilsService.getKeyboardOptions());
+  //     await this.bot.sendMessage(chatId, WEB_PAGE_URL_INVALID, this.voicePalUtilsService.getKeyboardOptions());
   //     return;
   //   }
   //   const { data: webPageContent } = await axios.get(text);
@@ -225,6 +225,6 @@ export class VoicePalService {
   //     'Please summarize the page content. You can also split the summary into section, and add to each section its header.';
   //
   //   const webPageSummary = await this.aiService.getChatCompletion(SUMMARY_PROMPT, webPageContent);
-  //   await this.telegramGeneralService.sendMessage(this.bot, chatId, webPageSummary, this.voicePalUtilsService.getKeyboardOptions());
+  //   await this.bot.sendMessage(chatId, webPageSummary, this.voicePalUtilsService.getKeyboardOptions());
   // }
 }

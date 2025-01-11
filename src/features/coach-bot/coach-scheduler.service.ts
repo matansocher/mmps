@@ -36,7 +36,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
       if (!responseText) {
         return;
       }
-      await Promise.all(this.chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, responseText)));
+      await Promise.all(this.chatIds.map((chatId) => this.bot.sendMessage(chatId, responseText)));
     } catch (err) {
       const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
       this.logger.error(this.handleIntervalFlow.name, errorMessage);

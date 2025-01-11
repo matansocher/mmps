@@ -86,7 +86,7 @@ export class WoltSchedulerService implements OnModuleInit {
           ];
           const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
           const replyText = `${restaurant.name} is now open!, go ahead and order!`;
-          // promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, replyText, inlineKeyboardMarkup), this.woltUtilsService.getKeyboardOptions());
+          // promisesArr.push(this.bot.sendMessage(subscription.chatId, replyText, inlineKeyboardMarkup), this.woltUtilsService.getKeyboardOptions());
           // promisesArr.push(this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText }));
           promisesArr.push(this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText } as any));
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
@@ -107,7 +107,7 @@ export class WoltSchedulerService implements OnModuleInit {
         promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
         const currentHour = new Date().getHours();
         if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
-          promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
+          promisesArr.push(this.bot.sendMessage(subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), this.woltUtilsService.getKeyboardOptions());
         }
         this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService);
       });

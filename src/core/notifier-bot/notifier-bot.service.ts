@@ -33,16 +33,16 @@ export class NotifierBotService implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     try {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, 'I am here');
+      await this.bot.sendMessage(chatId, 'I am here');
     } catch (err) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
   async notify(botName: string, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
     const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
     const notyMessageText = this.getNotyMessageText(botName, userDetails, options);
-    this.telegramGeneralService.sendMessage(this.bot, NOTIFIER_CHAT_ID, notyMessageText);
+    this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
 
   getNotyMessageText(botName: string, userDetails: UserModel, options: INotifyOptions): string {
