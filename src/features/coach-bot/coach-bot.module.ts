@@ -20,10 +20,4 @@ import { CoachBotSchedulerService } from './coach-scheduler.service';
   ],
   providers: [CoachBotService, CoachBotSchedulerService],
 })
-export class CoachBotModule implements OnModuleInit {
-  constructor(private readonly coachBotSchedulerService: CoachBotSchedulerService) {}
-
-  onModuleInit(): void {
-    // this.coachBotSchedulerService.handleIntervalFlow(); // for testing purposes
-  }
-}
+export class CoachBotModule {}
