@@ -20,7 +20,7 @@ export class UtilsService implements OnModuleInit {
         this.logger.error('which ffmpeg exec', `Error finding ffmpeg: ${this.getErrorMessage(error)}`);
         return;
       }
-      this.logger.info('which ffmpeg exec', `FFmpeg path: ${stdout.trim()}`);
+      this.logger.info('which ffmpeg exec', `ffmpeg path: ${stdout.trim()}`);
       ffmpeg.setFfmpegPath(stdout.trim());
     });
   }

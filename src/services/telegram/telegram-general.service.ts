@@ -60,17 +60,17 @@ export class TelegramGeneralService {
     }
   }
 
-  async downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }, localFilePath: string): Promise<string> {
+  async downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }, localFilePath: string): Promise<{ audioFileLocalPath: string, videoFileLocalPath: string }> {
     try {
-      let audioFileLocalPath;
+      let audioFileLocalPath: string;
+      let videoFileLocalPath: string;
       if (video && video.file_id) {
-        const videoFileLocalPath = await this.downloadFile(bot, video.file_id, localFilePath);
+        videoFileLocalPath = await this.downloadFile(bot, video.file_id, localFilePath);
         audioFileLocalPath = await this.utilsService.extractAudioFromVideo(videoFileLocalPath);
-        this.utilsService.deleteFile(videoFileLocalPath);
       } else if (audio && audio.file_id) {
         audioFileLocalPath = await this.downloadFile(bot, audio.file_id, localFilePath);
       }
-      return audioFileLocalPath;
+      return { audioFileLocalPath, videoFileLocalPath };
     } catch (err) {
       this.logger.error(this.downloadAudioFromVideoOrAudio.name, `err: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
@@ -145,6 +145,15 @@ export class TelegramGeneralService {
       await bot.sendPhoto(chatId, imageUrl, form);
     } catch (err) {
       this.logger.error(this.sendPhoto.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      throw err;
+    }
+  }
+
+  async sendVideo(bot: TelegramBot, chatId: number, videoFilePath: string, form = {}): Promise<void> {
+    try {
+      await bot.sendVideo(chatId, videoFilePath, form);
+    } catch (err) {
+      this.logger.error(this.sendVideo.name, `err: ${this.utilsService.getErrorMessage(err)}`);
       throw err;
     }
   }

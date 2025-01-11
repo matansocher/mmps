@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { NotifierBotService } from '@core/notifier-bot';
+import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
 import { AiService } from '@services/ai';
@@ -15,17 +15,7 @@ import { BOTS, ITelegramMessageData, MessageLoaderOptions, MessageLoaderService,
 // import { YoutubeTranscriptService } from '@services/youtube-transcript';
 import { IVoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
-import {
-  ANALYTIC_EVENT_NAMES,
-  ANALYTIC_EVENT_STATES,
-  FILE_ANALYSIS_PROMPT,
-  IMAGE_ANALYSIS_PROMPT,
-  LOCAL_FILES_PATH,
-  // NOT_FOUND_VIDEO_MESSAGES,
-  SUMMARY_PROMPT,
-  VOICE_PAL_OPTIONS,
-  WEB_PAGE_URL_INVALID,
-} from './voice-pal.config';
+import { ANALYTIC_EVENT_NAMES, ANALYTIC_EVENT_STATES, IMAGE_ANALYSIS_PROMPT, LOCAL_FILES_PATH, VOICE_PAL_OPTIONS } from './voice-pal.config';
 import { VoicePalUtilsService } from './voice-pal-utils.service';
 
 @Injectable()
@@ -102,28 +92,35 @@ export class VoicePalService {
   }
 
   async handleTranscribeAction({ chatId, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
-    const audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+    const { audioFileLocalPath, videoFileLocalPath } = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+    await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
+    this.utilsService.deleteFile(videoFileLocalPath);
     const resText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
     await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, this.voicePalUtilsService.getKeyboardOptions());
+    await this.notifierBotService.collect(MessageType.TEXT, resText);
     await this.utilsService.deleteFile(audioFileLocalPath);
   }
 
   async handleTranslateAction({ chatId, text, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
     let resText = '';
-    let audioFileLocalPath = '';
 
     if (text) {
+      await this.notifierBotService.collect(MessageType.TEXT, text);
       resText = await this.googleTranslateService.getTranslationToEnglish(text);
     } else {
-      audioFileLocalPath = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+      const { audioFileLocalPath, videoFileLocalPath } = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+      await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
+      this.utilsService.deleteFile(videoFileLocalPath);
       resText = await this.aiService.getTranslationFromAudio(audioFileLocalPath);
       this.utilsService.deleteFile(audioFileLocalPath);
     }
 
     await this.telegramGeneralService.sendMessage(this.bot, chatId, resText, this.voicePalUtilsService.getKeyboardOptions());
+    await this.notifierBotService.collect(MessageType.TEXT, resText);
   }
 
   async handleTextToSpeechAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
+    await this.notifierBotService.collect(MessageType.TEXT, text);
     const result = await this.aiService.getAudioFromText(text);
 
     const audioFilePath = `${LOCAL_FILES_PATH}/text-to-speech-${new Date().getTime()}.mp3`;
@@ -131,6 +128,7 @@ export class VoicePalService {
     await fs.writeFile(audioFilePath, buffer);
 
     await this.telegramGeneralService.sendVoice(this.bot, chatId, audioFilePath, this.voicePalUtilsService.getKeyboardOptions());
+    await this.notifierBotService.collect(MessageType.AUDIO, audioFilePath);
     await this.utilsService.deleteFile(audioFilePath);
   }
 
@@ -202,8 +200,10 @@ export class VoicePalService {
 
   async handleImageAnalyzerAction({ chatId, photo }: Partial<ITelegramMessageData>): Promise<void> {
     const imageLocalPath = await this.telegramGeneralService.downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
+    await this.notifierBotService.collect(MessageType.PHOTO, imageLocalPath);
     const imageAnalysisText = await this.aiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
     await this.telegramGeneralService.sendMessage(this.bot, chatId, imageAnalysisText, this.voicePalUtilsService.getKeyboardOptions());
+    await this.notifierBotService.collect(MessageType.TEXT, imageAnalysisText);
     this.utilsService.deleteFile(imageLocalPath);
   }
 
