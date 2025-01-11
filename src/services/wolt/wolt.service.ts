@@ -1,21 +1,17 @@
 import axios from 'axios';
-import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
+import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@core/utils';
 import { IRestaurantsList, IWoltRestaurant } from './interface';
 import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL, RESTAURANT_BASE_URL, RESTAURANT_LINK_BASE_URL } from './wolt.config';
 
 @Injectable()
 export class WoltService {
+  private readonly logger = new Logger(WoltService.name);
+
   restaurantsList: IRestaurantsList = {
     restaurants: [],
     lastUpdated: 0,
   };
-
-  constructor(
-    private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
-  ) {}
 
   getRestaurants(): IWoltRestaurant[] {
     return this.restaurantsList.restaurants;
@@ -30,10 +26,10 @@ export class WoltService {
       const restaurants = await this.getRestaurantsList();
       if (restaurants.length) {
         this.restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
-        this.logger.info(this.refreshRestaurants.name, 'Restaurants list was refreshed successfully');
+        this.logger.log(this.refreshRestaurants.name, 'Restaurants list was refreshed successfully');
       }
     } catch (err) {
-      this.logger.error(this.refreshRestaurants.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.refreshRestaurants.name, `error - ${getErrorMessage(err)}`);
     }
   }
 
@@ -60,7 +56,7 @@ export class WoltService {
         } as IWoltRestaurant;
       });
     } catch (err) {
-      this.logger.error(this.getRestaurantsList.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getRestaurantsList.name, `err - ${getErrorMessage(err)}`);
       return [];
     }
   }
@@ -79,7 +75,7 @@ export class WoltService {
           };
         });
     } catch (err) {
-      this.logger.error(this.getCitiesList.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getCitiesList.name, `err - ${getErrorMessage(err)}`);
       return [];
     }
   }
@@ -109,7 +105,7 @@ export class WoltService {
         return { ...relevantParsedRestaurant, restaurantLinkUrl, isOpen };
       });
     } catch (err) {
-      this.logger.error(this.enrichRestaurants.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.enrichRestaurants.name, `err - ${getErrorMessage(err)}`);
       return parsedRestaurants;
     }
   }

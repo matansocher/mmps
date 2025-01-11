@@ -1,14 +1,10 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
+import { Injectable, Logger } from '@nestjs/common';
+import { extractAudioFromVideo, getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TelegramGeneralService {
-  constructor(
-    private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
-  ) {}
+  private readonly logger = new Logger(TelegramGeneralService.name);
 
   async downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }, localFilePath: string): Promise<{ audioFileLocalPath: string, videoFileLocalPath: string }> {
     try {
@@ -16,13 +12,13 @@ export class TelegramGeneralService {
       let videoFileLocalPath: string;
       if (video && video.file_id) {
         videoFileLocalPath = await bot.downloadFile(video.file_id, localFilePath);
-        audioFileLocalPath = await this.utilsService.extractAudioFromVideo(videoFileLocalPath);
+        audioFileLocalPath = await extractAudioFromVideo(videoFileLocalPath);
       } else if (audio && audio.file_id) {
         audioFileLocalPath = await bot.downloadFile(audio.file_id, localFilePath);
       }
       return { audioFileLocalPath, videoFileLocalPath };
     } catch (err) {
-      this.logger.error(this.downloadAudioFromVideoOrAudio.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.downloadAudioFromVideoOrAudio.name, `err: ${getErrorMessage(err)}`);
       throw err;
     }
   }
@@ -62,6 +58,6 @@ export class TelegramGeneralService {
 
   botErrorHandler(botName: string, handlerName: string, error): void {
     const { code, message } = error;
-    this.logger.info(`${botName} - ${handlerName}`, `code: ${code}, message: ${message}`);
+    this.logger.log(`${botName} - ${handlerName}`, `code: ${code}, message: ${message}`);
   }
 }

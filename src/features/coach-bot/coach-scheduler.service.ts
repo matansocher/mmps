@@ -1,25 +1,22 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { LoggerService } from '@core/logger';
 import { NotifierBotService, MY_USER_ID } from '@core/notifier-bot';
-import { UtilsService } from '@core/utils';
+import { getDateString, getErrorMessage, isDateStringFormat } from '@core/utils';
 import { Scores365Service } from '@services/scores-365';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS } from '@services/telegram';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
 
 const HOURS_TON_NOTIFY = [12, 19, 23];
 
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {
-  readonly chatIds = [MY_USER_ID];
+  private readonly logger = new Logger(CoachBotSchedulerService.name);
+  private readonly chatIds = [MY_USER_ID];
 
   constructor(
-    private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly scores365Service: Scores365Service,
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
   ) {}
@@ -31,14 +28,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
   @Cron(`59 ${HOURS_TON_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(date: string | null): Promise<void> {
     try {
-      const dateString = this.utilsService.isDateStringFormat(date) ? date : this.utilsService.getDateString(new Date());
+      const dateString = isDateStringFormat(date) ? date : getDateString(new Date());
       const responseText = await this.getMatchesSummaryMessage(dateString);
       if (!responseText) {
         return;
       }
       await Promise.all(this.chatIds.map((chatId) => this.bot.sendMessage(chatId, responseText)));
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
+      const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.handleIntervalFlow.name, errorMessage);
       this.notifierBotService.notify(BOTS.COACH.name, { action: 'ERROR', error: errorMessage }, null, null);
     }
@@ -60,7 +57,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
 
     const competitionsWithMatchesFiltered = competitionsWithMatches.filter(({ matches }) => matches?.length);
     if (!competitionsWithMatchesFiltered?.length) {
-      this.logger.info(this.handleIntervalFlow.name, 'no competitions with matches found');
+      this.logger.log(this.handleIntervalFlow.name, 'no competitions with matches found');
       return;
     }
     return generateMatchResultsString(competitionsWithMatchesFiltered);

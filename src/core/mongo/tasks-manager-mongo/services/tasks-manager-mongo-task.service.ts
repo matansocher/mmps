@@ -1,14 +1,7 @@
-import {
-  Collection,
-  Db,
-  InsertOneResult,
-  ObjectId,
-  UpdateResult,
-} from 'mongodb';
+import { Collection, Db, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { COLLECTIONS, CONNECTION_NAME } from '../tasks-manager-mongo.config';
 import { TaskModel } from '../models/task.model';
-import { TaskDetails } from '@features/tasks-manager/tasks-manager-bot.utils';
+import { COLLECTIONS, CONNECTION_NAME } from '../tasks-manager-mongo.config';
 
 @Injectable()
 export class TasksManagerMongoTaskService {
@@ -26,7 +19,7 @@ export class TasksManagerMongoTaskService {
     return this.courseCollection.find(filter).toArray();
   }
 
-  addTask(chatId: number, taskDetails: TaskDetails): Promise<InsertOneResult<TaskModel>> {
+  addTask(chatId: number, taskDetails): Promise<InsertOneResult<TaskModel>> {
     const { title, intervalUnits, intervalAmount } = taskDetails;
     const task: TaskModel = {
       _id: new ObjectId(),
