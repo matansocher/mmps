@@ -27,6 +27,7 @@ export class CoachBotService implements OnModuleInit {
 
   createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
+    this.bot.on('text', (message: Message) => this.textHandler(message));
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -35,11 +36,29 @@ export class CoachBotService implements OnModuleInit {
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      await this.coachBotSchedulerService.handleIntervalFlow();
+      const INITIAL_BOT_RESPONSE = [
+        `Hey There 👋`,
+        `I am here to provide you with results of football matches.`,
+      ].join('\n\n');
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
       await this.telegramGeneralService.sendMessage(this.bot, chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
+    }
+  }
+
+  async textHandler(message: Message) {
+    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
+    const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
+    this.logger.info(this.textHandler.name, `${logBody} - start`);
+
+    try {
+      await this.coachBotSchedulerService.handleIntervalFlow(text);
+      this.logger.info(this.textHandler.name, `${logBody} - success`);
+    } catch (err) {
+      this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
     }
   }
 }
