@@ -1,5 +1,4 @@
 import { FactoryProvider, Module } from '@nestjs/common';
-import { LoggerModule } from '@core/logger';
 import yahooFinance from 'yahoo-finance2';
 import { YAHOO_FINANCE_CLIENT_TOKEN } from './yahoo-finance.config';
 import { YahooFinanceService } from './yahoo-finance.service';
@@ -10,7 +9,6 @@ export const YahooFinanceClientProvider: FactoryProvider = {
 };
 
 @Module({
-  imports: [LoggerModule.forChild(YahooFinanceModule.name)],
   providers: [YahooFinanceService, YahooFinanceClientProvider],
   exports: [YahooFinanceService],
 })

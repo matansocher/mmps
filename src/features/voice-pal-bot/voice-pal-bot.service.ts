@@ -1,13 +1,13 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { BOTS, MessagesAggregatorService, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '@services/voice-pal';
 
 @Injectable()
 export class VoicePalBotService implements OnModuleInit {
+  private readonly logger = new Logger(VoicePalBotService.name);
+
   constructor(
-    private readonly logger: LoggerService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly messagesAggregatorService: MessagesAggregatorService,
     private readonly telegramGeneralService: TelegramGeneralService,
@@ -37,7 +37,7 @@ export class VoicePalBotService implements OnModuleInit {
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info('message listener', `${logBody} - start`);
+      this.logger.log('message listener', `${logBody} - start`);
 
       const availableActions = Object.keys(VOICE_PAL_OPTIONS).map((option: string) => VOICE_PAL_OPTIONS[option].displayName);
       if (availableActions.includes(text)) {
@@ -47,7 +47,7 @@ export class VoicePalBotService implements OnModuleInit {
         await this.voicePalService.handleAction(message, userAction);
       }
 
-      this.logger.info('message listener', `${logBody} - success`);
+      this.logger.log('message listener', `${logBody} - success`);
     } catch (err) {
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }

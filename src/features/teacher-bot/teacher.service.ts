@@ -1,6 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
 import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS } from '@services/telegram';
@@ -9,7 +8,6 @@ import { TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_
 @Injectable()
 export class TeacherService {
   constructor(
-    private readonly logger: LoggerService,
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,

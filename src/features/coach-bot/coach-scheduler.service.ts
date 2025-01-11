@@ -1,8 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { LoggerService } from '@core/logger';
 import { NotifierBotService, MY_USER_ID } from '@core/notifier-bot';
 import { Scores365Service } from '@services/scores-365';
 import { BOTS } from '@services/telegram';
@@ -13,10 +12,10 @@ const HOURS_TON_NOTIFY = [12, 19, 23];
 
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {
-  readonly chatIds = [MY_USER_ID];
+  private readonly logger = new Logger(CoachBotSchedulerService.name);
+  private readonly chatIds = [MY_USER_ID];
 
   constructor(
-    private readonly logger: LoggerService,
     private readonly scores365Service: Scores365Service,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
@@ -58,7 +57,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
 
     const competitionsWithMatchesFiltered = competitionsWithMatches.filter(({ matches }) => matches?.length);
     if (!competitionsWithMatchesFiltered?.length) {
-      this.logger.info(this.handleIntervalFlow.name, 'no competitions with matches found');
+      this.logger.log(this.handleIntervalFlow.name, 'no competitions with matches found');
       return;
     }
     return generateMatchResultsString(competitionsWithMatchesFiltered);

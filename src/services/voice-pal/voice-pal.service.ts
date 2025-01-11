@@ -2,8 +2,7 @@
 // import validUrl from 'valid-url';
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
 import { deleteFile, getErrorMessage, setFfmpegPath } from '@core/utils';
@@ -20,8 +19,9 @@ import { getKeyboardOptions, validateActionWithMessage } from './utils';
 
 @Injectable()
 export class VoicePalService implements OnModuleInit {
+  private readonly logger = new Logger(VoicePalService.name);
+
   constructor(
-    private readonly logger: LoggerService,
     private readonly messageLoaderService: MessageLoaderService,
     private readonly mongoUserService: VoicePalMongoUserService,
     private readonly telegramGeneralService: TelegramGeneralService,

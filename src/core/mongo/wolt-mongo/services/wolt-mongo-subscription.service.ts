@@ -1,15 +1,13 @@
 import { Db } from 'mongodb';
-import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
 import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class WoltMongoSubscriptionService {
-  constructor(
-    private readonly logger: LoggerService,
-    @Inject(CONNECTION_NAME) private readonly db: Db,
-  ) {}
+  private readonly logger = new Logger(WoltMongoSubscriptionService.name);
+
+  constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {}
 
   async getActiveSubscriptions(chatId: number = null) {
   // async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {

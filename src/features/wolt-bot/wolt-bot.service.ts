@@ -1,6 +1,5 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
@@ -20,8 +19,9 @@ import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
+  private readonly logger = new Logger(WoltBotService.name);
+
   constructor(
-    private readonly logger: LoggerService,
     private readonly woltService: WoltService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
@@ -52,12 +52,12 @@ export class WoltBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info(this.startHandler.name, `${logBody} - start`);
+      this.logger.log(this.startHandler.name, `${logBody} - start`);
       this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
-      this.logger.info(this.startHandler.name, `${logBody} - success`);
+      this.logger.log(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.startHandler.name, errorMessage);
@@ -69,7 +69,7 @@ export class WoltBotService implements OnModuleInit {
   async listHandler(message: Message) {
     const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `list :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-    this.logger.info(this.listHandler.name, `${logBody} - start`);
+    this.logger.log(this.listHandler.name, `${logBody} - start`);
 
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
@@ -86,7 +86,7 @@ export class WoltBotService implements OnModuleInit {
         return this.bot.sendMessage(chatId, subscription.restaurant, inlineKeyboardMarkup as any);
       });
       await Promise.all(promisesArr);
-      this.logger.info(this.listHandler.name, `${logBody} - success`);
+      this.logger.log(this.listHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.listHandler.name, errorMessage);
@@ -103,7 +103,7 @@ export class WoltBotService implements OnModuleInit {
     if (Object.keys(WOLT_BOT_OPTIONS).map((option: string) => WOLT_BOT_OPTIONS[option]).includes(restaurant)) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
-    this.logger.info(this.textHandler.name, `${logBody} - start`);
+    this.logger.log(this.textHandler.name, `${logBody} - start`);
 
     try {
       const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
@@ -127,7 +127,7 @@ export class WoltBotService implements OnModuleInit {
       const replyText = `Choose one of the above restaurants so I can notify you when it's online`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') }, chatId, this.mongoUserService);
-      this.logger.info(this.textHandler.name, `${logBody} - success`);
+      this.logger.log(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.textHandler.name, errorMessage);
@@ -139,7 +139,7 @@ export class WoltBotService implements OnModuleInit {
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
     const { chatId, firstName, lastName, data: restaurant } = getCallbackQueryData(callbackQuery);
     const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
-    this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
+    this.logger.log(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {
       const restaurantName = restaurant.replace('remove - ', '');
@@ -151,7 +151,7 @@ export class WoltBotService implements OnModuleInit {
         await this.handleCallbackAddSubscription(chatId, restaurant, existingSubscription);
       }
 
-      this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
+      this.logger.log(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.callbackQueryHandler.name, errorMessage);

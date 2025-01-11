@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@core/logger';
 import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo';
 import { NotifierBotModule } from '@core/notifier-bot';
 import { AiModule } from '@services/ai';
@@ -15,7 +14,6 @@ import { VoicePalService } from './voice-pal.service';
     AiModule,
     GoogleTranslateModule,
     ImgurModule,
-    LoggerModule.forChild(VoicePalModule.name),
     NotifierBotModule,
     SocialMediaDownloaderModule,
     VoicePalMongoModule,

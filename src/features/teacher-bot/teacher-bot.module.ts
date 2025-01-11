@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { LoggerModule } from '@core/logger';
 import { TeacherMongoModule } from '@core/mongo/teacher-mongo';
 import { NotifierBotModule } from '@core/notifier-bot';
 import { OpenaiModule } from '@services/openai';
@@ -11,7 +10,6 @@ import { TeacherService } from './teacher.service';
 
 @Module({
   imports: [
-    LoggerModule.forChild(TeacherBotModule.name),
     NotifierBotModule,
     TelegramBotsFactoryModule.forChild(BOTS.PROGRAMMING_TEACHER),
     TelegramModule,

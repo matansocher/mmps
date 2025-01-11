@@ -2,17 +2,12 @@ import axios from 'axios';
 import { pick as _pick } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { LoggerService } from '@core/logger';
 import { Competition, ExpectedMatch, MatchDetails, Team } from './interface';
 import { SCORES_365_API_URL, COMPETITIONS } from './scores-365.config';
 import { getDateString } from '@core/utils';
 
 @Injectable()
 export class Scores365Service {
-  constructor(
-    private readonly logger: LoggerService,
-  ) {}
-
   async getCompetitions(): Promise<Competition[]> {
     const competitionIds = COMPETITIONS.map((c) => c.id);
     const results = await Promise.all(

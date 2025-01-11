@@ -1,13 +1,10 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Injectable, Logger } from '@nestjs/common';
 import { extractAudioFromVideo, getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TelegramGeneralService {
-  constructor(
-    private readonly logger: LoggerService,
-  ) {}
+  private readonly logger = new Logger(TelegramGeneralService.name);
 
   async downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }, localFilePath: string): Promise<{ audioFileLocalPath: string, videoFileLocalPath: string }> {
     try {
@@ -61,6 +58,6 @@ export class TelegramGeneralService {
 
   botErrorHandler(botName: string, handlerName: string, error): void {
     const { code, message } = error;
-    this.logger.info(`${botName} - ${handlerName}`, `code: ${code}, message: ${message}`);
+    this.logger.log(`${botName} - ${handlerName}`, `code: ${code}, message: ${message}`);
   }
 }

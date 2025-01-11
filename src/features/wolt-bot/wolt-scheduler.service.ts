@@ -1,7 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
@@ -21,8 +20,9 @@ const JOB_NAME = 'wolt-scheduler-job-interval';
 
 @Injectable()
 export class WoltSchedulerService implements OnModuleInit {
+  private readonly logger = new Logger(WoltSchedulerService.name);
+
   constructor(
-    private readonly logger: LoggerService,
     private readonly woltService: WoltService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,

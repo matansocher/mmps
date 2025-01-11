@@ -1,6 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Injectable, Logger } from '@nestjs/common';
 import { MessageLoaderOptions } from '../interface';
 import { getErrorMessage } from '@core/utils';
 
@@ -25,11 +24,8 @@ interface MessageLoaderData {
 
 @Injectable()
 export class MessageLoaderService {
+  private readonly logger = new Logger(MessageLoaderService.name);
   private messages: Record<number, MessageLoaderData> = {};
-
-  constructor(
-    private readonly logger: LoggerService,
-  ) {}
 
   async handleMessageWithLoader(bot: TelegramBot, chatId: number, options: MessageLoaderOptions, action: () => Promise<void>) {
     try {

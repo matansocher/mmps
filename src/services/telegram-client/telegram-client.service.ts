@@ -1,15 +1,12 @@
 import { get as _get } from 'lodash';
 import { TelegramClient } from 'telegram';
-import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Injectable, Logger } from '@nestjs/common';
 import { IConversationDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
 import { EXCLUDED_CHANNELS, LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()
 export class TelegramClientService {
-  constructor(
-    private readonly logger: LoggerService,
-  ) {}
+  private readonly logger = new Logger(TelegramClientService.name);
 
   listenToMessages(telegramClient: TelegramClient, listenerOptions: IListenerOptions, callback) {
     telegramClient.addEventHandler(async (event) => {

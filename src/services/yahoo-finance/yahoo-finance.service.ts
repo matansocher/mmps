@@ -1,4 +1,3 @@
-import { LoggerService } from '@core/logger';
 import { Inject, Injectable } from '@nestjs/common';
 import { DataInterface, Quote, StockDataSummary, StockSearchResult } from './interface';
 import { YAHOO_FINANCE_CLIENT_TOKEN } from './yahoo-finance.config';
@@ -6,7 +5,6 @@ import { YAHOO_FINANCE_CLIENT_TOKEN } from './yahoo-finance.config';
 @Injectable()
 export class YahooFinanceService {
   constructor(
-    private readonly logger: LoggerService,
     @Inject(YAHOO_FINANCE_CLIENT_TOKEN) private readonly yahooFinance: any,
   ) {}
 

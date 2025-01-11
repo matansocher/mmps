@@ -1,8 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { LoggerService } from '@core/logger';
 import { MY_USER_ID, NotifierBotService } from '@core/notifier-bot';
 import { BOTS } from '@services/telegram';
 import { TeacherService } from './teacher.service';
@@ -11,8 +10,9 @@ import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TeacherSchedulerService {
+  private readonly logger = new Logger(TeacherSchedulerService.name);
+
   constructor(
-    private readonly logger: LoggerService,
     private readonly teacherService: TeacherService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,

@@ -1,18 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { YoutubeTranscript } from 'youtube-transcript';
-import { LoggerService } from '@core/logger';
 import { getQueryParams } from '@core/utils';
 
 const supportedLanguages = ['en', 'iw'];
 
 @Injectable()
 export class YoutubeTranscriptService {
-  constructor(
-    private readonly logger: LoggerService,
-  ) {}
+  private readonly logger = new Logger(YoutubeTranscriptService.name);
 
   async getYoutubeVideoTranscription(videoId: string): Promise<{ transcription: any; errorMessage: string }> {
-    this.logger.info(this.getYoutubeVideoTranscription.name, `start`);
+    this.logger.log(this.getYoutubeVideoTranscription.name, `start`);
     const resultsArr = await Promise.allSettled(supportedLanguages.map((lang: string) => YoutubeTranscript.fetchTranscript(videoId, { lang })));
     const bestResult = resultsArr.find((result) => result.status === 'fulfilled');
     if (!bestResult) {
@@ -22,7 +19,7 @@ export class YoutubeTranscriptService {
       };
     }
     const transcription = this.parseTranscriptResult(bestResult['value']);
-    this.logger.info(this.getYoutubeVideoTranscription.name, `end`);
+    this.logger.log(this.getYoutubeVideoTranscription.name, `end`);
     return { transcription, errorMessage: null };
   }
 

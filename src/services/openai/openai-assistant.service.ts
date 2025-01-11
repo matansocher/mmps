@@ -3,16 +3,14 @@ import { get as _get } from 'lodash';
 import { OpenAI } from 'openai';
 import { FileObject } from 'openai/resources';
 import { Message, MessageCreateParams, Run, Thread } from 'openai/resources/beta/threads';
-import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ASSISTANT_RUN_STATUSES, ERROR_STATUSES, OPENAI_CLIENT_TOKEN } from './openai.config';
 
 @Injectable()
 export class OpenaiAssistantService {
-  constructor(
-    @Inject(OPENAI_CLIENT_TOKEN) private readonly openai: OpenAI,
-    private readonly logger: LoggerService,
-  ) {}
+  private readonly logger = new Logger(OpenaiAssistantService.name);
+
+  constructor(@Inject(OPENAI_CLIENT_TOKEN) private readonly openai: OpenAI) {}
 
   createThread(): Promise<Thread> {
     return this.openai.beta.threads.create();

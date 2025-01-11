@@ -1,6 +1,5 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TasksManagerMongoTaskService, TasksManagerMongoUserService } from '@core/mongo/tasks-manager-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
@@ -10,8 +9,9 @@ import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TasksManagerBotService implements OnModuleInit {
+  private readonly logger = new Logger(TasksManagerBotService.name);
+
   constructor(
-    private readonly logger: LoggerService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly mongoUserService: TasksManagerMongoUserService,
     private readonly mongoTaskService: TasksManagerMongoTaskService,
@@ -48,7 +48,7 @@ export class TasksManagerBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info(this.startHandler.name, `${logBody} - start`);
+      this.logger.log(this.startHandler.name, `${logBody} - start`);
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE, getKeyboardOptions());
       this.notifierBotService.notify(BOTS.TASKS_MANAGER.name, { action: ANALYTIC_EVENS.START }, chatId, this.mongoUserService);
     } catch (err) {
@@ -61,7 +61,7 @@ export class TasksManagerBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info(this.manageHandler.name, `${logBody} - start`);
+      this.logger.log(this.manageHandler.name, `${logBody} - start`);
 
       const tasks = await this.mongoTaskService.getActiveTasks(chatId);
       if (!tasks?.length) {
@@ -87,7 +87,7 @@ export class TasksManagerBotService implements OnModuleInit {
     if (Object.keys(TASKS_MANAGER_BOT_OPTIONS).map((option) => TASKS_MANAGER_BOT_OPTIONS[option]).includes(text)) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
-    this.logger.info(this.textHandler.name, `${logBody} - start`);
+    this.logger.log(this.textHandler.name, `${logBody} - start`);
 
     try {
       const isUserTaskTextValid = validateUserTaskInput(text);
@@ -108,7 +108,7 @@ export class TasksManagerBotService implements OnModuleInit {
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
     const { chatId, firstName, lastName, data: response } = getCallbackQueryData(callbackQuery);
     const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, response: ${response}`;
-    this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
+    this.logger.log(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {
       const [taskId, action] = response.split(' - ');
