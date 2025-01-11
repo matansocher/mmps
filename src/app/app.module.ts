@@ -10,7 +10,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 let imports: Type[] = [WoltBotModule];
-if (isProd) {
+if (!isProd) {
   imports = [
     VoicePalBotModule,
     WoltBotModule,

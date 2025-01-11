@@ -90,7 +90,7 @@ export class WoltService {
       .flat();
   }
 
-  async enrichRestaurants(parsedRestaurants: IWoltRestaurant[]): Promise<IWoltRestaurant[]> {
+  async enrichRestaurants(parsedRestaurants) {
     try {
       const promises = parsedRestaurants.map((restaurant) => {
         const url = `${RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
@@ -110,7 +110,7 @@ export class WoltService {
     }
   }
 
-  getRestaurantLink(restaurant: IWoltRestaurant): string {
+  getRestaurantLink(restaurant): string {
     const { area, slug } = restaurant;
     return RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
   }
