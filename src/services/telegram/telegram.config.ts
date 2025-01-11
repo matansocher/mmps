@@ -21,6 +21,10 @@ export const BOTS = {
     name: 'Programming Teacher Bot',
     token: env.PROGRAMMING_TEACHER_TELEGRAM_BOT_TOKEN,
   },
+  TASKS_MANAGER: {
+    name: 'Tasks Manager Bot',
+    token: env.TASKS_MANAGER_TELEGRAM_BOT_TOKEN,
+  },
   NOTIFIER: {
     name: 'Notifier Bot',
     token: env.NOTIFIER_TELEGRAM_BOT_TOKEN,

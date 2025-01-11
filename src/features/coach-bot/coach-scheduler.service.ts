@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
@@ -12,7 +12,7 @@ import { generateMatchResultsString } from './utils/generate-match-details-strin
 const HOURS_TON_NOTIFY = [12, 19, 23];
 
 @Injectable()
-export class CoachBotSchedulerService {
+export class CoachBotSchedulerService implements OnModuleInit {
   readonly chatIds = [MY_USER_ID];
 
   constructor(
@@ -23,6 +23,10 @@ export class CoachBotSchedulerService {
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
   ) {}
+
+  onModuleInit(): void {
+    // this.handleIntervalFlow(); // for testing purposes
+  }
 
   @Cron(`59 ${HOURS_TON_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {

@@ -22,10 +22,4 @@ import { WoltSchedulerService } from './wolt-scheduler.service';
   ],
   providers: [WoltBotService, WoltSchedulerService],
 })
-export class WoltBotModule implements OnModuleInit {
-  constructor(private readonly woltSchedulerService: WoltSchedulerService) {}
-
-  onModuleInit(): void {
-    this.woltSchedulerService.scheduleInterval();
-  }
-}
+export class WoltBotModule {}
