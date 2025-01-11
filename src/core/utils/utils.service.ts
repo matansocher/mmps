@@ -121,6 +121,10 @@ export class UtilsService implements OnModuleInit {
     return `${finalDate.getFullYear()}-${this.getDateNumber(finalDate.getMonth() + 1)}-${this.getDateNumber(finalDate.getDate())}`;
   }
 
+  isDateStringFormat(dateString: string): boolean {
+    return /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+  }
+
   isHebrew(text: string): boolean {
     return /[\u0590-\u05FF]/.test(text);
   }

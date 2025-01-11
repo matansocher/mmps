@@ -29,9 +29,10 @@ export class CoachBotSchedulerService implements OnModuleInit {
   }
 
   @Cron(`59 ${HOURS_TON_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handleIntervalFlow(): Promise<void> {
+  async handleIntervalFlow(date: string | null): Promise<void> {
     try {
-      const responseText = await this.getMatchesSummaryMessage();
+      const dateString = this.utilsService.isDateStringFormat(date) ? date : this.utilsService.getDateString(new Date());
+      const responseText = await this.getMatchesSummaryMessage(dateString);
       if (!responseText) {
         return;
       }
@@ -43,15 +44,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
     }
   }
 
-  async getMatchesSummaryMessage(): Promise<string> {
+  async getMatchesSummaryMessage(dateString: string): Promise<string> {
     const competitions = await this.scores365Service.getCompetitions();
     if (!competitions?.length) {
       this.logger.error(this.handleIntervalFlow.name, 'error - could not get competitions');
       return;
     }
-    const todayDateString = this.utilsService.getDateString(new Date());
     const competitionsWithMatches = await Promise.all(
-      competitions.map((competition) => this.scores365Service.getMatchesForCompetition(competition, todayDateString)),
+      competitions.map((competition) => this.scores365Service.getMatchesForCompetition(competition, dateString)),
     );
     if (!competitionsWithMatches?.length) {
       this.logger.error(this.handleIntervalFlow.name, 'error - could not get matches');
