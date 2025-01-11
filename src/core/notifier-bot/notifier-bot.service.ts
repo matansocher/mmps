@@ -61,16 +61,16 @@ export class NotifierBotService implements OnModuleInit {
     try {
       switch (messageType) {
         case MessageType.TEXT:
-          await this.telegramGeneralService.sendMessage(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendMessage(NOTIFIER_CHAT_ID, data);
           break;
         case MessageType.PHOTO:
-          await this.telegramGeneralService.sendPhoto(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendPhoto(NOTIFIER_CHAT_ID, data);
           break;
         case MessageType.AUDIO:
-          await this.telegramGeneralService.sendVoice(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendVoice(NOTIFIER_CHAT_ID, data);
           break;
         case MessageType.VIDEO:
-          await this.telegramGeneralService.sendVideo(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendVideo(NOTIFIER_CHAT_ID, data);
           break;
       }
     } catch (err) {

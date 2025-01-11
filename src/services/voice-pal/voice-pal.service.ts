@@ -127,7 +127,7 @@ export class VoicePalService {
     const buffer = Buffer.from(await result.arrayBuffer());
     await fs.writeFile(audioFilePath, buffer);
 
-    await this.telegramGeneralService.sendVoice(this.bot, chatId, audioFilePath, this.voicePalUtilsService.getKeyboardOptions());
+    await this.bot.sendVoice(chatId, audioFilePath, this.voicePalUtilsService.getKeyboardOptions());
     await this.notifierBotService.collect(MessageType.AUDIO, audioFilePath);
     await this.utilsService.deleteFile(audioFilePath);
   }
@@ -195,11 +195,11 @@ export class VoicePalService {
 
   // async handleImageGenerationAction({ chatId, text }: Partial<ITelegramMessageData>): Promise<void> {
   //   const imageUrl = await this.aiService.createImage(text);
-  //   await this.telegramGeneralService.sendPhoto(this.bot, chatId, imageUrl, this.voicePalUtilsService.getKeyboardOptions());
+  //   await bot.sendPhoto(chatId, imageUrl, this.voicePalUtilsService.getKeyboardOptions());
   // }
 
   async handleImageAnalyzerAction({ chatId, photo }: Partial<ITelegramMessageData>): Promise<void> {
-    const imageLocalPath = await this.telegramGeneralService.downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
+    const imageLocalPath = await this.bot.downloadFile(photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
     await this.notifierBotService.collect(MessageType.PHOTO, imageLocalPath);
     const imageAnalysisText = await this.aiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
     await this.telegramGeneralService.sendMessage(this.bot, chatId, imageAnalysisText, this.voicePalUtilsService.getKeyboardOptions());

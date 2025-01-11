@@ -9,7 +9,7 @@ import { WoltBotModule } from '@features/wolt-bot';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-let imports: Type[] = [CoachBotModule];
+let imports: Type[] = [WoltBotModule];
 if (isProd) {
   imports = [
     VoicePalBotModule,
