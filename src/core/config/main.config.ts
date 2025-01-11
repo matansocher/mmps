@@ -86,4 +86,3 @@ export const FILE_SUFFIX_TO_MIME_TYPE_MAP = {
   '.3g2': 'video/3gpp2; audio/3gpp2',
   '.7z': 'application/x-7z-compressed',
 };
-

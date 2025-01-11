@@ -1,16 +1,14 @@
 import { Db } from 'mongodb';
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@core/utils';
 import { ITelegramMessageData } from '@services/telegram';
 import { COLLECTIONS } from '../mongo.config';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class MongoUserService {
   private readonly logger = new Logger(MongoUserService.name);
 
-  constructor(
-    private readonly database: Db,
-  ) {}
+  constructor(private readonly database: Db) {}
 
   async saveUserDetails({ telegramUserId, chatId, firstName, lastName, username }: Partial<ITelegramMessageData>): Promise<void> {
     try {

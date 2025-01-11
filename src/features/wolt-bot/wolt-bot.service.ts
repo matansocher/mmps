@@ -2,6 +2,7 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
+import { getErrorMessage } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
@@ -13,9 +14,8 @@ import {
   WOLT_BOT_OPTIONS,
   IWoltRestaurant,
   WoltService,
+  getKeyboardOptions,
 } from '@services/wolt';
-import { getKeyboardOptions } from '@services/wolt';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {

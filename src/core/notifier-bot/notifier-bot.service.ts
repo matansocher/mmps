@@ -1,10 +1,10 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
+import { getErrorMessage } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { INotifyOptions } from './interface';
 import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class NotifierBotService implements OnModuleInit {

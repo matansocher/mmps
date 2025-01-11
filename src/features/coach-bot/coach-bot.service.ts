@@ -1,8 +1,8 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { getErrorMessage } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {

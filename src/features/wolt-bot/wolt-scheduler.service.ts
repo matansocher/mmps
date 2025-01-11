@@ -3,6 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
+import { getErrorMessage, getTimezoneOffset } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import {
   IWoltRestaurant,
@@ -12,9 +13,8 @@ import {
   MIN_HOUR_TO_ALERT_USER,
   SUBSCRIPTION_EXPIRATION_HOURS,
   WoltService,
+  getKeyboardOptions,
 } from '@services/wolt';
-import { getKeyboardOptions } from '@services/wolt';
-import { getErrorMessage, getTimezoneOffset } from '@core/utils';
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 

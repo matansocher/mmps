@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@core/utils';
 import { IRestaurantsList, IWoltRestaurant } from './interface';
 import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL, RESTAURANT_BASE_URL, RESTAURANT_LINK_BASE_URL } from './wolt.config';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class WoltService {
@@ -90,7 +90,7 @@ export class WoltService {
       .flat();
   }
 
-  async enrichRestaurants(parsedRestaurants) {
+  async enrichRestaurants(parsedRestaurants: IWoltRestaurant[]): Promise<IWoltRestaurant[]> {
     try {
       const promises = parsedRestaurants.map((restaurant) => {
         const url = `${RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
@@ -110,7 +110,7 @@ export class WoltService {
     }
   }
 
-  getRestaurantLink(restaurant): string {
+  getRestaurantLink(restaurant: IWoltRestaurant): string {
     const { area, slug } = restaurant;
     return RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
   }

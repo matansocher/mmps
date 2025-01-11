@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { YoutubeTranscript } from 'youtube-transcript';
+import { Injectable, Logger } from '@nestjs/common';
 import { getQueryParams } from '@core/utils';
 
 const supportedLanguages = ['en', 'iw'];

@@ -1,5 +1,5 @@
-import { IVoicePalOption } from '../interface';
 import { ITelegramMessageData, POSSIBLE_INPUTS } from '@services/telegram';
+import { IVoicePalOption } from '../interface';
 
 export function validateActionWithMessage(userAction: IVoicePalOption, messageParams: Partial<ITelegramMessageData>): string | void {
   const { possibleInputs } = userAction;

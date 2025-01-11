@@ -1,13 +1,7 @@
-import {
-  Collection,
-  Db,
-  InsertOneResult,
-  ObjectId,
-  UpdateResult,
-} from 'mongodb';
+import { Collection, Db, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
+import { TaskModel } from '../models/task.model';
 import { COLLECTIONS, CONNECTION_NAME } from '../tasks-manager-mongo.config';
-import { INTERVAL_UNITS, TaskModel } from '../models/task.model';
 
 @Injectable()
 export class TasksManagerMongoTaskService {

@@ -3,10 +3,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotifierBotService } from '@core/notifier-bot';
 import { TasksManagerMongoTaskService } from '@core/mongo/tasks-manager-mongo';
+import { getErrorMessage } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { ANALYTIC_EVENS, BOT_ACTIONS } from './tasks-manager-bot.config';
 import { isWithinQuietHours, shouldNotify } from './utils';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TasksManagerSchedulerService {

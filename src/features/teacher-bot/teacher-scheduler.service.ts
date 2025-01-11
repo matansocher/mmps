@@ -3,10 +3,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { MY_USER_ID, NotifierBotService } from '@core/notifier-bot';
+import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
 import { TeacherService } from './teacher.service';
 import { COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher-bot.config';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TeacherSchedulerService {

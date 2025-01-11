@@ -1,5 +1,5 @@
-import { FactoryProvider, Module } from '@nestjs/common';
 import yahooFinance from 'yahoo-finance2';
+import { FactoryProvider, Module } from '@nestjs/common';
 import { YAHOO_FINANCE_CLIENT_TOKEN } from './yahoo-finance.config';
 import { YahooFinanceService } from './yahoo-finance.service';
 

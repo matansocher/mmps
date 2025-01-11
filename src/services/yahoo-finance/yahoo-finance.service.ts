@@ -4,9 +4,7 @@ import { YAHOO_FINANCE_CLIENT_TOKEN } from './yahoo-finance.config';
 
 @Injectable()
 export class YahooFinanceService {
-  constructor(
-    @Inject(YAHOO_FINANCE_CLIENT_TOKEN) private readonly yahooFinance: any,
-  ) {}
+  constructor(@Inject(YAHOO_FINANCE_CLIENT_TOKEN) private readonly yahooFinance: any) {}
 
   async getStockDetailsBySymbol(symbol: string): Promise<StockDataSummary> {
     const quote = await this.yahooFinance.quote(symbol);

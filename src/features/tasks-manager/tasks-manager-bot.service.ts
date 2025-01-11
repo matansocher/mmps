@@ -2,10 +2,10 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TasksManagerMongoTaskService, TasksManagerMongoUserService } from '@core/mongo/tasks-manager-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
+import { getErrorMessage } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
 import { ANALYTIC_EVENS, BOT_ACTIONS, INITIAL_BOT_RESPONSE, INVALID_INPUT, TASKS_MANAGER_BOT_OPTIONS } from './tasks-manager-bot.config';
 import { getKeyboardOptions, getTaskDetails, validateUserTaskInput } from './utils';
-import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TasksManagerBotService implements OnModuleInit {

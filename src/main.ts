@@ -1,9 +1,9 @@
 import { configDotenv } from 'dotenv';
 configDotenv();
+import * as bodyParser from 'body-parser';
 import { env } from 'node:process';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as bodyParser from 'body-parser';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {

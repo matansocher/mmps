@@ -3,10 +3,10 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierBotService, MY_USER_ID } from '@core/notifier-bot';
+import { getDateString, getErrorMessage, isDateStringFormat } from '@core/utils';
 import { Scores365Service } from '@services/scores-365';
 import { BOTS } from '@services/telegram';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
-import { getDateString, getErrorMessage, isDateStringFormat } from '@core/utils';
 
 const HOURS_TON_NOTIFY = [12, 19, 23];
 
