@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { YoutubeTranscript } from 'youtube-transcript';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
+import { getQueryParams } from '@core/utils';
 
 const supportedLanguages = ['en', 'iw'];
 
@@ -9,7 +9,6 @@ const supportedLanguages = ['en', 'iw'];
 export class YoutubeTranscriptService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async getYoutubeVideoTranscription(videoId: string): Promise<{ transcription: any; errorMessage: string }> {
@@ -42,7 +41,7 @@ export class YoutubeTranscriptService {
       return match ? match[1] : null;
     }
     // web
-    const queryParams = this.utilsService.getQueryParams(url);
+    const queryParams = getQueryParams(url);
     return queryParams['v'];
   }
 

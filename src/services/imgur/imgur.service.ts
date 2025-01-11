@@ -2,14 +2,13 @@ import axios from 'axios';
 import { promises as fs } from 'fs';
 import { env } from 'node:process';
 import { Injectable } from '@nestjs/common';
-import { UtilsService } from '@core/utils';
 import { LoggerService } from '@core/logger';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class ImgurService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async uploadImage(imageLocalPath: string): Promise<string> {
@@ -37,7 +36,7 @@ export class ImgurService {
       this.logger.info(this.uploadImage.name, `end`);
       return result['data']?.data?.link;
     } catch (err) {
-      this.logger.error(this.uploadImage.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.uploadImage.name, `err - ${getErrorMessage(err)}`);
       throw err;
     }
   }

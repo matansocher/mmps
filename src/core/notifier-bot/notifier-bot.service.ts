@@ -2,16 +2,15 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
-import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { INotifyOptions } from './interface';
 import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class NotifierBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     @Inject(BOTS.NOTIFIER.name) private readonly bot: TelegramBot,
   ) {}
@@ -74,7 +73,7 @@ export class NotifierBotService implements OnModuleInit {
           break;
       }
     } catch (err) {
-      this.logger.error(this.collect.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.collect.name, `err: ${getErrorMessage(err)}`);
     }
   }
 }

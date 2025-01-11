@@ -1,14 +1,13 @@
 import { Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
 import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class WoltMongoSubscriptionService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     @Inject(CONNECTION_NAME) private readonly db: Db,
   ) {}
 
@@ -20,7 +19,7 @@ export class WoltMongoSubscriptionService {
       if (chatId) filter['chatId'] = chatId;
       return subscriptionCollection.find(filter).toArray();
     } catch (err) {
-      this.logger.error(this.getActiveSubscriptions.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getActiveSubscriptions.name, `err: ${getErrorMessage(err)}`);
       return [];
     }
   }

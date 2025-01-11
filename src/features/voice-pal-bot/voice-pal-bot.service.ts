@@ -1,7 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
 import { BOTS, MessagesAggregatorService, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '@services/voice-pal';
 
@@ -9,7 +8,6 @@ import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '
 export class VoicePalBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly messagesAggregatorService: MessagesAggregatorService,
     private readonly telegramGeneralService: TelegramGeneralService,

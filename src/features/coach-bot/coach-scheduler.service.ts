@@ -4,10 +4,10 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
 import { NotifierBotService, MY_USER_ID } from '@core/notifier-bot';
-import { UtilsService } from '@core/utils';
 import { Scores365Service } from '@services/scores-365';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS } from '@services/telegram';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
+import { getDateString, getErrorMessage, isDateStringFormat } from '@core/utils';
 
 const HOURS_TON_NOTIFY = [12, 19, 23];
 
@@ -17,9 +17,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly scores365Service: Scores365Service,
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
   ) {}
@@ -31,14 +29,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
   @Cron(`59 ${HOURS_TON_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(date: string | null): Promise<void> {
     try {
-      const dateString = this.utilsService.isDateStringFormat(date) ? date : this.utilsService.getDateString(new Date());
+      const dateString = isDateStringFormat(date) ? date : getDateString(new Date());
       const responseText = await this.getMatchesSummaryMessage(dateString);
       if (!responseText) {
         return;
       }
       await Promise.all(this.chatIds.map((chatId) => this.bot.sendMessage(chatId, responseText)));
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
+      const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.handleIntervalFlow.name, errorMessage);
       this.notifierBotService.notify(BOTS.COACH.name, { action: 'ERROR', error: errorMessage }, null, null);
     }

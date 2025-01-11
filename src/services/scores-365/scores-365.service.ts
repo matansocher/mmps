@@ -3,15 +3,14 @@ import { pick as _pick } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
 import { Competition, ExpectedMatch, MatchDetails, Team } from './interface';
 import { SCORES_365_API_URL, COMPETITIONS } from './scores-365.config';
+import { getDateString } from '@core/utils';
 
 @Injectable()
 export class Scores365Service {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async getCompetitions(): Promise<Competition[]> {
@@ -31,7 +30,7 @@ export class Scores365Service {
     const queryParams = { competitions: competition.id.toString(), langId: '2', timezoneName: DEFAULT_TIMEZONE };
     const allMatchesRes = await axios.get(`${SCORES_365_API_URL}/games/current?${new URLSearchParams(queryParams)}`);
     const matches = allMatchesRes?.data?.games
-      ?.filter((match: ExpectedMatch) => date === this.utilsService.getDateString(new Date(match.startTime)))
+      ?.filter((match: ExpectedMatch) => date === getDateString(new Date(match.startTime)))
       .map((match: ExpectedMatch) => this.parseExpectedMatch(match));
     return { competition, matches };
   }

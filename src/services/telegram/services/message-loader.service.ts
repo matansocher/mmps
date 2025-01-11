@@ -1,9 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
 import { MessageLoaderOptions } from '../interface';
-import { TelegramGeneralService } from '../services/telegram-general.service';
+import { getErrorMessage } from '@core/utils';
 
 const LOADER_MESSAGES = [
   'Just a moment...',
@@ -30,8 +29,6 @@ export class MessageLoaderService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
-    private readonly telegramGeneralService: TelegramGeneralService,
   ) {}
 
   async handleMessageWithLoader(bot: TelegramBot, chatId: number, options: MessageLoaderOptions, action: () => Promise<void>) {
@@ -52,7 +49,7 @@ export class MessageLoaderService {
       await bot.sendChatAction(chatId, options.loadingAction);
       this.cycleInitiator(bot, chatId, options);
     } catch (err) {
-      this.logger.error(MessageLoaderService.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(MessageLoaderService.name, `error - ${getErrorMessage(err)}`);
       await this.stopLoader(bot, chatId);
     }
   }

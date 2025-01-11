@@ -2,13 +2,11 @@
 import { Injectable } from '@nestjs/common';
 // import { ndown, tikdown } from 'nayan-media-downloader';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
 
 @Injectable()
 export class SocialMediaDownloaderService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
   ) {}
 
   // async getMetaVideo(videoUrl: string): Promise<string> {
@@ -19,7 +17,7 @@ export class SocialMediaDownloaderService {
   //     const video = await axios.get(videoDownloadLink, { responseType: 'arraybuffer' });
   //     return video['data'];
   //   } catch (err) {
-  //     this.logger.error(this.getMetaVideo.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+  //     this.logger.error(this.getMetaVideo.name, `err - ${getErrorMessage(err)}`);
   //     throw err;
   //   }
   // }
@@ -32,7 +30,7 @@ export class SocialMediaDownloaderService {
   //     const audio = await axios.get(videoDownloadLink, { responseType: 'arraybuffer' });
   //     return audio['data'];
   //   } catch (err) {
-  //     this.logger.error(this.getTiktokAudio.name, `err - ${this.utilsService.getErrorMessage(err)}`);
+  //     this.logger.error(this.getTiktokAudio.name, `err - ${getErrorMessage(err)}`);
   //     throw err;
   //   }
   // }

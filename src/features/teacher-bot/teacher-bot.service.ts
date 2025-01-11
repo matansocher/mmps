@@ -1,16 +1,15 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { TeacherService } from './teacher.service';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly teacherService: TeacherService,
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
@@ -42,7 +41,7 @@ export class TeacherBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = this.utilsService.getErrorMessage(err);
+      const errorMessage = getErrorMessage(err);
       this.logger.error(this.startHandler.name, `${logBody} - error - ${errorMessage}`);
       await this.bot.sendMessage(chatId, errorMessage);
     }
@@ -57,7 +56,7 @@ export class TeacherBotService implements OnModuleInit {
       await this.teacherService.startNewCourse(chatId);
       this.logger.info(this.courseHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = this.utilsService.getErrorMessage(err);
+      const errorMessage = getErrorMessage(err);
       this.logger.error(this.courseHandler.name, `${logBody} - error - ${errorMessage}`);
       await this.bot.sendMessage(chatId, errorMessage);
     }
@@ -72,7 +71,7 @@ export class TeacherBotService implements OnModuleInit {
       await this.teacherService.processLesson(chatId, false);
       this.logger.info(this.lessonHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = this.utilsService.getErrorMessage(err);
+      const errorMessage = getErrorMessage(err);
       this.logger.error(this.lessonHandler.name, `${logBody} - error - ${errorMessage}`);
       await this.bot.sendMessage(chatId, errorMessage);
     }
@@ -98,7 +97,7 @@ export class TeacherBotService implements OnModuleInit {
       await this.teacherService.processQuestion(chatId, text);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.textHandler.name, `error - ${getErrorMessage(err)}`);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }

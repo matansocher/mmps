@@ -3,7 +3,6 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
-import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
@@ -15,15 +14,14 @@ import {
   WOLT_BOT_OPTIONS,
   IWoltRestaurant,
   WoltService,
-  WoltUtilsService,
 } from '@services/wolt';
+import { getKeyboardOptions } from '@services/wolt';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
-    private readonly woltUtilsService: WoltUtilsService,
     private readonly woltService: WoltService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
@@ -57,14 +55,14 @@ export class WoltBotService implements OnModuleInit {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
       this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
-      await this.bot.sendMessage(chatId, replyText, this.woltUtilsService.getKeyboardOptions());
+      await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
+      const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.startHandler.name, errorMessage);
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
 
@@ -77,7 +75,7 @@ export class WoltBotService implements OnModuleInit {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = `You don't have any active subscriptions yet`;
-        return await this.bot.sendMessage(chatId, replyText, this.woltUtilsService.getKeyboardOptions());
+        return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
@@ -90,10 +88,10 @@ export class WoltBotService implements OnModuleInit {
       await Promise.all(promisesArr);
       this.logger.info(this.listHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
+      const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.listHandler.name, errorMessage);
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
 
@@ -115,7 +113,7 @@ export class WoltBotService implements OnModuleInit {
       const matchedRestaurants = this.getFilteredRestaurantsByName(restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
-        return await this.bot.sendMessage(chatId, replyText, this.woltUtilsService.getKeyboardOptions());
+        return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
       }
       const restaurants = await this.woltService.enrichRestaurants(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map((restaurant) => {
@@ -131,10 +129,10 @@ export class WoltBotService implements OnModuleInit {
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') }, chatId, this.mongoUserService);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
+      const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.textHandler.name, errorMessage);
       this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
 
@@ -155,10 +153,10 @@ export class WoltBotService implements OnModuleInit {
 
       this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${this.utilsService.getErrorMessage(err)}`;
+      const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.callbackQueryHandler.name, errorMessage);
       this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, this.woltUtilsService.getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
 
@@ -201,7 +199,7 @@ export class WoltBotService implements OnModuleInit {
       replyText = `It seems like you don't have a subscription for ${restaurant}.\n\n` +
         `You can search and register for another restaurant if you like`;
     }
-    return await this.bot.sendMessage(chatId, replyText, this.woltUtilsService.getKeyboardOptions());
+    return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
   }
 
   getFilteredRestaurantsByName(searchInput) {

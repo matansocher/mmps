@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
-import { UtilsModule } from '@core/utils';
-import { WoltUtilsService } from './wolt-utils.service';
 import { WoltService } from './wolt.service';
 
 @Module({
-  imports: [LoggerModule.forChild(WoltModule.name), UtilsModule],
-  providers: [WoltService, WoltUtilsService],
-  exports: [WoltService, WoltUtilsService],
+  imports: [LoggerModule.forChild(WoltModule.name)],
+  providers: [WoltService],
+  exports: [WoltService],
 })
 export class WoltModule {}

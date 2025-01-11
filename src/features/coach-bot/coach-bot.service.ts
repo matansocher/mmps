@@ -1,15 +1,14 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {
   constructor(
     private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly coachBotSchedulerService: CoachBotSchedulerService,
     @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
@@ -40,7 +39,7 @@ export class CoachBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.startHandler.name, `${logBody} - error - ${getErrorMessage(err)}`);
       await this.bot.sendMessage(chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
     }
   }
@@ -54,7 +53,7 @@ export class CoachBotService implements OnModuleInit {
       await this.coachBotSchedulerService.handleIntervalFlow(text);
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.textHandler.name, `error - ${getErrorMessage(err)}`);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }

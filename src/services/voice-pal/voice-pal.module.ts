@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@core/logger';
 import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo';
 import { NotifierBotModule } from '@core/notifier-bot';
-import { UtilsModule } from '@core/utils';
 import { AiModule } from '@services/ai';
 import { GoogleTranslateModule } from '@services/google-translate';
 import { ImgurModule } from '@services/imgur';
@@ -10,7 +9,6 @@ import { SocialMediaDownloaderModule } from '@services/social-media-downloader';
 import { YoutubeTranscriptModule } from '@services/youtube-transcript';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VoicePalService } from './voice-pal.service';
-import { VoicePalUtilsService } from './voice-pal-utils.service';
 
 @Module({
   imports: [
@@ -20,11 +18,10 @@ import { VoicePalUtilsService } from './voice-pal-utils.service';
     LoggerModule.forChild(VoicePalModule.name),
     NotifierBotModule,
     SocialMediaDownloaderModule,
-    UtilsModule,
     VoicePalMongoModule,
     YoutubeTranscriptModule,
   ],
-  providers: [VoicePalService, VoicePalUtilsService, UserSelectedActionsService],
+  providers: [VoicePalService, UserSelectedActionsService],
   exports: [VoicePalService, UserSelectedActionsService],
 })
 export class VoicePalModule {}

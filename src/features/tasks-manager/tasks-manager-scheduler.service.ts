@@ -3,20 +3,18 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotifierBotService } from '@core/notifier-bot';
 import { TasksManagerMongoTaskService } from '@core/mongo/tasks-manager-mongo';
-import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService, getInlineKeyboardMarkup } from '@services/telegram';
+import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { ANALYTIC_EVENS, BOT_ACTIONS } from './tasks-manager-bot.config';
-import { isWithinQuietHours, shouldNotify } from './tasks-manager-bot.utils';
+import { isWithinQuietHours, shouldNotify } from './utils';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class TasksManagerSchedulerService {
   private readonly logger = new Logger(TasksManagerSchedulerService.name);
 
   constructor(
-    private readonly utilsService: UtilsService,
     private readonly mongoTaskService: TasksManagerMongoTaskService,
     private readonly notifierBotService: NotifierBotService,
-    private readonly telegramGeneralService: TelegramGeneralService,
     @Inject(BOTS.TASKS_MANAGER.name) private readonly bot: TelegramBot,
   ) {}
 
@@ -41,7 +39,7 @@ export class TasksManagerSchedulerService {
         }
       }
     } catch (err) {
-      const error = `${this.utilsService.getErrorMessage(err)}`;
+      const error = `${getErrorMessage(err)}`;
       this.notifierBotService.notify(BOTS.TASKS_MANAGER.name, { action: ANALYTIC_EVENS.ERROR, error, flow: 'cron' }, null, null);
       this.logger.error(`Error processing tasks: ${err.message}`, err.stack);
     }
@@ -56,7 +54,7 @@ export class TasksManagerSchedulerService {
       this.bot.sendMessage(chatId, resText, inlineKeyboardMarkup as any);
       await this.mongoTaskService.updateLastNotifiedAt(chatId, task._id, new Date());
     } catch (err) {
-      this.logger.error(`${this.notifyUser.name} | Failed to notify user ${chatId} for task "${title}": ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(`${this.notifyUser.name} | Failed to notify user ${chatId} for task "${title}": ${getErrorMessage(err)}`);
     }
   }
 }
