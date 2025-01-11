@@ -56,7 +56,7 @@ export class TasksManagerSchedulerService {
       this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
       await this.mongoTaskService.updateLastNotifiedAt(chatId, task._id, new Date());
     } catch (err) {
-      this.logger.error(`Failed to notify user ${chatId} for task "${title}": ${err.message}`, err.stack);
+      this.logger.error(`${this.notifyUser.name} | Failed to notify user ${chatId} for task "${title}": ${this.utilsService.getErrorMessage(err)}`);
     }
   }
 }
