@@ -4,7 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotifierBotService } from '@core/notifier-bot';
 import { TasksManagerMongoTaskService } from '@core/mongo/tasks-manager-mongo';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getInlineKeyboardMarkup } from '@services/telegram';
 import { ANALYTIC_EVENS, BOT_ACTIONS } from './tasks-manager-bot.config';
 import { isWithinQuietHours, shouldNotify } from './tasks-manager-bot.utils';
 
@@ -51,9 +51,9 @@ export class TasksManagerSchedulerService {
     const { chatId, title } = task;
     try {
       const inlineKeyboardButtons = [{ text: 'Mark as completed', callback_data: `${task._id} - ${BOT_ACTIONS.TASK_COMPLETED}` }];
-      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+      const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const resText = `You wanted me to remind you about:\n${title}`;
-      this.telegramGeneralService.sendMessage(this.bot, chatId, resText, inlineKeyboardMarkup);
+      this.bot.sendMessage(chatId, resText, inlineKeyboardMarkup as any);
       await this.mongoTaskService.updateLastNotifiedAt(chatId, task._id, new Date());
     } catch (err) {
       this.logger.error(`${this.notifyUser.name} | Failed to notify user ${chatId} for task "${title}": ${this.utilsService.getErrorMessage(err)}`);

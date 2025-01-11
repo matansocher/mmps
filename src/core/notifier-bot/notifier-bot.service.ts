@@ -3,7 +3,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { INotifyOptions } from './interface';
 import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
@@ -31,18 +31,18 @@ export class NotifierBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId } = this.telegramGeneralService.getMessageData(message);
+    const { chatId } = getMessageData(message);
     try {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, 'I am here');
+      await this.bot.sendMessage(chatId, 'I am here');
     } catch (err) {
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
   async notify(botName: string, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
     const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
     const notyMessageText = this.getNotyMessageText(botName, userDetails, options);
-    this.telegramGeneralService.sendMessage(this.bot, NOTIFIER_CHAT_ID, notyMessageText);
+    this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
 
   getNotyMessageText(botName: string, userDetails: UserModel, options: INotifyOptions): string {
@@ -61,16 +61,16 @@ export class NotifierBotService implements OnModuleInit {
     try {
       switch (messageType) {
         case MessageType.TEXT:
-          await this.telegramGeneralService.sendMessage(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendMessage(NOTIFIER_CHAT_ID, data);
           break;
         case MessageType.PHOTO:
-          await this.telegramGeneralService.sendPhoto(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendPhoto(NOTIFIER_CHAT_ID, data);
           break;
         case MessageType.AUDIO:
-          await this.telegramGeneralService.sendVoice(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendVoice(NOTIFIER_CHAT_ID, data);
           break;
         case MessageType.VIDEO:
-          await this.telegramGeneralService.sendVideo(this.bot, NOTIFIER_CHAT_ID, data);
+          await this.bot.sendVideo(NOTIFIER_CHAT_ID, data);
           break;
       }
     } catch (err) {

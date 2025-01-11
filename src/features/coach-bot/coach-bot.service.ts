@@ -2,7 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 
 @Injectable()
@@ -31,25 +31,22 @@ export class CoachBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      const INITIAL_BOT_RESPONSE = [
-        `Hey There 👋`,
-        `I am here to provide you with results of football matches.`,
-      ].join('\n\n');
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, INITIAL_BOT_RESPONSE);
+      const INITIAL_BOT_RESPONSE = [`Hey There 👋`, `I am here to provide you with results of football matches.`].join('\n\n');
+      await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
+      await this.bot.sendMessage(chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
     }
   }
 
   async textHandler(message: Message) {
-    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, text } = getMessageData(message);
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
     this.logger.info(this.textHandler.name, `${logBody} - start`);
 
@@ -58,7 +55,7 @@ export class CoachBotService implements OnModuleInit {
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 }

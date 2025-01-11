@@ -1,7 +1,8 @@
 export * from './interface';
 export * from './telegram.config';
-export { TelegramBotsFactoryModule } from './telegram-bots-factory/telegram-bots-factory.module';
-export { MessageLoaderService } from './message-loader.service';
-export { MessagesAggregatorService } from './messages-aggregator.service';
+export * from './utils';
+export { MessageLoaderService } from './services/message-loader.service';
+export { MessagesAggregatorService } from './services/messages-aggregator.service';
+export { TelegramGeneralService } from './services/telegram-general.service';
 export { TelegramModule } from './telegram.module';
-export { TelegramGeneralService } from './telegram-general.service';
+export { TelegramBotsFactoryModule } from './telegram-bots-factory/telegram-bots-factory.module';

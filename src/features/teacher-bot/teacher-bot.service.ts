@@ -2,7 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { TeacherService } from './teacher.service';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
 
@@ -34,22 +34,22 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
       this.logger.info(this.startHandler.name, `${logBody} - start`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, INITIAL_BOT_RESPONSE);
+      await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.logger.info(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.startHandler.name, `${logBody} - error - ${errorMessage}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage);
+      await this.bot.sendMessage(chatId, errorMessage);
     }
   }
 
   async courseHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -59,12 +59,12 @@ export class TeacherBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.courseHandler.name, `${logBody} - error - ${errorMessage}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage);
+      await this.bot.sendMessage(chatId, errorMessage);
     }
   }
 
   async lessonHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -74,12 +74,12 @@ export class TeacherBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = this.utilsService.getErrorMessage(err);
       this.logger.error(this.lessonHandler.name, `${logBody} - error - ${errorMessage}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, errorMessage);
+      await this.bot.sendMessage(chatId, errorMessage);
     }
   }
 
   async textHandler(message: Message) {
-    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.keys(TEACHER_BOT_OPTIONS).map((option: string) => TEACHER_BOT_OPTIONS[option]).includes(text)) return;
@@ -91,7 +91,7 @@ export class TeacherBotService implements OnModuleInit {
       if (text.startsWith('/add')) {
         const course = text.replace('/add', '').trim();
         await this.teacherService.addCourse(course);
-        await this.telegramGeneralService.sendMessage(this.bot, chatId, `OK, I added ${course} to your courses list`);
+        await this.bot.sendMessage(chatId, `OK, I added ${course} to your courses list`);
         this.logger.info(this.textHandler.name, `${logBody} - added course '${course}' - success`);
         return;
       }
@@ -99,7 +99,7 @@ export class TeacherBotService implements OnModuleInit {
       this.logger.info(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.textHandler.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-      await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 }
