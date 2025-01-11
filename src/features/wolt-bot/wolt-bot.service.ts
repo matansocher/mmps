@@ -4,7 +4,7 @@ import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
   CITIES_SLUGS_SUPPORTED,
@@ -50,7 +50,7 @@ export class WoltBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, telegramUserId, username } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, telegramUserId, username } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -69,7 +69,7 @@ export class WoltBotService implements OnModuleInit {
   }
 
   async listHandler(message: Message) {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `list :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
     this.logger.info(this.listHandler.name, `${logBody} - start`);
 
@@ -84,7 +84,7 @@ export class WoltBotService implements OnModuleInit {
         const inlineKeyboardButtons = [
           { text: 'Remove', callback_data: `remove - ${subscription.restaurant}` },
         ];
-        const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+        const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
         return this.telegramGeneralService.sendMessage(this.bot, chatId, subscription.restaurant, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
@@ -98,7 +98,7 @@ export class WoltBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message) {
-    const { chatId, firstName, lastName, text: rawRestaurant } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, text: rawRestaurant } = getMessageData(message);
     const restaurant = rawRestaurant.toLowerCase();
 
     // prevent built in options to be processed also here
@@ -125,7 +125,7 @@ export class WoltBotService implements OnModuleInit {
           callback_data: restaurant.name,
         };
       });
-      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+      const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `Choose one of the above restaurants so I can notify you when it's online`;
       await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, inlineKeyboardMarkup);
       this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') }, chatId, this.mongoUserService);
@@ -139,7 +139,7 @@ export class WoltBotService implements OnModuleInit {
   }
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
-    const { chatId, firstName, lastName, data: restaurant } = this.telegramGeneralService.getCallbackQueryData(callbackQuery);
+    const { chatId, firstName, lastName, data: restaurant } = getCallbackQueryData(callbackQuery);
     const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
 
@@ -179,7 +179,7 @@ export class WoltBotService implements OnModuleInit {
         const inlineKeyboardButtons = [
           { text: restaurantDetails.name, url: restaurantLinkUrl },
         ];
-        form = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+        form = getInlineKeyboardMarkup(inlineKeyboardButtons);
       } else {
         replyText = `No Problem, I will let you know once ${restaurant} is open\n\n` +
           `FYI: If the venue won't open within the next ${SUBSCRIPTION_EXPIRATION_HOURS} hours, registration will be removed\n\n` +

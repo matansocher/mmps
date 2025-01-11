@@ -1,9 +1,8 @@
-import { Timer } from '@decorators';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { BOTS, MessagesAggregatorService, TelegramGeneralService } from '@services/telegram';
+import { BOTS, MessagesAggregatorService, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '@services/voice-pal';
 
 @Injectable()
@@ -36,7 +35,7 @@ export class VoicePalBotService implements OnModuleInit {
 
   // @Timer()
   async handleMessage(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, text } = getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {

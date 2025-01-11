@@ -11,7 +11,7 @@ import { AiService } from '@services/ai';
 import { GoogleTranslateService } from '@services/google-translate';
 // import { ImgurService } from '@services/imgur';
 // import { SocialMediaDownloaderService } from '@services/social-media-downloader';
-import { BOTS, ITelegramMessageData, MessageLoaderOptions, MessageLoaderService, TelegramGeneralService } from '@services/telegram';
+import { BOTS, ITelegramMessageData, MessageLoaderOptions, MessageLoaderService, TelegramGeneralService, getMessageData } from '@services/telegram';
 // import { YoutubeTranscriptService } from '@services/youtube-transcript';
 import { IVoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
@@ -38,7 +38,7 @@ export class VoicePalService {
   ) {}
 
   async handleActionSelection(message: Message, selection: string): Promise<void> {
-    const { telegramUserId, chatId, firstName, lastName, username } = this.telegramGeneralService.getMessageData(message);
+    const { telegramUserId, chatId, firstName, lastName, username } = getMessageData(message);
     const relevantAction = Object.keys(VOICE_PAL_OPTIONS).find((option: string) => VOICE_PAL_OPTIONS[option].displayName === selection);
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
@@ -54,7 +54,7 @@ export class VoicePalService {
   }
 
   async handleAction(message: Message, userAction: IVoicePalOption): Promise<void> {
-    const { chatId, text, audio, video, photo, file } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, text, audio, video, photo, file } = getMessageData(message);
 
     if (!userAction) {
       await this.telegramGeneralService.sendMessage(this.bot, chatId, `Please select an action first.`);

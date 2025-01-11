@@ -2,7 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { TeacherService } from './teacher.service';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
 
@@ -34,7 +34,7 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -49,7 +49,7 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   async courseHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -64,7 +64,7 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   async lessonHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -79,7 +79,7 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message) {
-    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.keys(TEACHER_BOT_OPTIONS).map((option: string) => TEACHER_BOT_OPTIONS[option]).includes(text)) return;

@@ -3,7 +3,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { INotifyOptions } from './interface';
 import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
@@ -31,7 +31,7 @@ export class NotifierBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId } = this.telegramGeneralService.getMessageData(message);
+    const { chatId } = getMessageData(message);
     try {
       await this.telegramGeneralService.sendMessage(this.bot, chatId, 'I am here');
     } catch (err) {

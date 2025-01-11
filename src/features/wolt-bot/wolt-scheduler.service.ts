@@ -5,7 +5,7 @@ import { LoggerService } from '@core/logger';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getInlineKeyboardMarkup } from '@services/telegram';
 import {
   IWoltRestaurant,
   ANALYTIC_EVENT_NAMES,
@@ -84,7 +84,7 @@ export class WoltSchedulerService implements OnModuleInit {
           const inlineKeyboardButtons = [
             { text: restaurant.name, url: restaurantLinkUrl },
           ];
-          const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+          const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
           const replyText = `${restaurant.name} is now open!, go ahead and order!`;
           // promisesArr.push(this.telegramGeneralService.sendMessage(this.bot, subscription.chatId, replyText, inlineKeyboardMarkup), this.woltUtilsService.getKeyboardOptions());
           promisesArr.push(this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText }));

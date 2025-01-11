@@ -1,10 +1,8 @@
-import { get as _get, chunk as _chunk } from 'lodash';
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import TelegramBot from 'node-telegram-bot-api';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@core/logger';
 import { UtilsService } from '@core/utils';
-import { ITelegramCallbackQueryData, ITelegramMessageData } from './interface';
-import { BOT_BROADCAST_ACTIONS } from './telegram.config';
+import { BOT_BROADCAST_ACTIONS } from '../telegram.config';
 
 @Injectable()
 export class TelegramGeneralService {
@@ -13,43 +11,43 @@ export class TelegramGeneralService {
     private readonly utilsService: UtilsService,
   ) {}
 
-  getMessageData(message: Message): ITelegramMessageData {
-    return {
-      chatId: _get(message, 'chat.id', null),
-      messageId: _get(message, 'message_id', null),
-      replyToMessageId: _get(message, 'reply_to_message.message_id', null),
-      replyToMessageText: _get(message, 'reply_to_message.text', null),
-      telegramUserId: _get(message, 'from.id', null),
-      firstName: _get(message, 'from.first_name', null),
-      lastName: _get(message, 'from.last_name', null),
-      username: _get(message, 'from.username', null),
-      text: _get(message, 'text', '') || _get(message, 'caption', ''),
-      audio: _get(message, 'audio', null) || _get(message, 'voice', null),
-      video: _get(message, 'video', null),
-      photo: _get(message, 'photo', null) || _get(message, 'sticker', null),
-      file: _get(message, 'document', null),
-      date: _get(message, 'date', null),
-    };
-  }
+  // getMessageData(message: Message): ITelegramMessageData {
+  //   return {
+  //     chatId: _get(message, 'chat.id', null),
+  //     messageId: _get(message, 'message_id', null),
+  //     replyToMessageId: _get(message, 'reply_to_message.message_id', null),
+  //     replyToMessageText: _get(message, 'reply_to_message.text', null),
+  //     telegramUserId: _get(message, 'from.id', null),
+  //     firstName: _get(message, 'from.first_name', null),
+  //     lastName: _get(message, 'from.last_name', null),
+  //     username: _get(message, 'from.username', null),
+  //     text: _get(message, 'text', '') || _get(message, 'caption', ''),
+  //     audio: _get(message, 'audio', null) || _get(message, 'voice', null),
+  //     video: _get(message, 'video', null),
+  //     photo: _get(message, 'photo', null) || _get(message, 'sticker', null),
+  //     file: _get(message, 'document', null),
+  //     date: _get(message, 'date', null),
+  //   };
+  // }
 
-  getCallbackQueryData(callbackQuery: CallbackQuery): ITelegramCallbackQueryData {
-    return {
-      callbackQueryId: _get(callbackQuery, 'id', null),
-      chatId: _get(callbackQuery, 'from.id', null),
-      date: _get(callbackQuery, 'message.date', null),
-      firstName: _get(callbackQuery, 'from.first_name', null),
-      lastName: _get(callbackQuery, 'from.last_name', null),
-      text: _get(callbackQuery, 'message.text', null),
-      data: _get(callbackQuery, 'data', null),
-    };
-  }
+  // getCallbackQueryData(callbackQuery: CallbackQuery): ITelegramCallbackQueryData {
+  //   return {
+  //     callbackQueryId: _get(callbackQuery, 'id', null),
+  //     chatId: _get(callbackQuery, 'from.id', null),
+  //     date: _get(callbackQuery, 'message.date', null),
+  //     firstName: _get(callbackQuery, 'from.first_name', null),
+  //     lastName: _get(callbackQuery, 'from.last_name', null),
+  //     text: _get(callbackQuery, 'message.text', null),
+  //     data: _get(callbackQuery, 'data', null),
+  //   };
+  // }
 
-  getInlineKeyboardMarkup(inlineKeyboardButtons: any[], numberOfColumnsPerRow: number = 1): { reply_markup: string } {
-    const inlineKeyboard = { inline_keyboard: [] };
-    inlineKeyboardButtons.forEach((button) => inlineKeyboard.inline_keyboard.push(button));
-    inlineKeyboard.inline_keyboard = _chunk(inlineKeyboard.inline_keyboard, numberOfColumnsPerRow);
-    return { reply_markup: JSON.stringify(inlineKeyboard) };
-  }
+  // getInlineKeyboardMarkup(inlineKeyboardButtons: any[], numberOfColumnsPerRow: number = 1): { reply_markup: string } {
+  //   const inlineKeyboard = { inline_keyboard: [] };
+  //   inlineKeyboardButtons.forEach((button) => inlineKeyboard.inline_keyboard.push(button));
+  //   inlineKeyboard.inline_keyboard = _chunk(inlineKeyboard.inline_keyboard, numberOfColumnsPerRow);
+  //   return { reply_markup: JSON.stringify(inlineKeyboard) };
+  // }
 
   async downloadFile(bot: TelegramBot, fileId: string, path: string): Promise<string> {
     try {

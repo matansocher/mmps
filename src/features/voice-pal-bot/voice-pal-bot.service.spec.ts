@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MockMessagesAggregatorService, MockTelegramGeneralService } from '@mocks';
-import { MessagesAggregatorService, TelegramGeneralService } from '@services/telegram';
+import { MockMessagesAggregatorService } from '@mocks';
+import { MessagesAggregatorService } from '@services/telegram';
 import { VoicePalBotService } from './voice-pal-bot.service';
 
 describe('VoicePalBotService', () => {
@@ -11,7 +11,6 @@ describe('VoicePalBotService', () => {
       providers: [
         VoicePalBotService,
         { provide: MessagesAggregatorService, useValue: MockMessagesAggregatorService },
-        { provide: TelegramGeneralService, useValue: MockTelegramGeneralService },
       ],
     }).compile();
 

@@ -4,7 +4,7 @@ import { LoggerService } from '@core/logger';
 import { TasksManagerMongoTaskService, TasksManagerMongoUserService } from '@core/mongo/tasks-manager-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
 import { ANALYTIC_EVENS, BOT_ACTIONS, INITIAL_BOT_RESPONSE, INVALID_INPUT, TASKS_MANAGER_BOT_OPTIONS } from './tasks-manager-bot.config';
 import { getKeyboardOptions, getTaskDetails, validateUserTaskInput } from './tasks-manager-bot.utils';
 
@@ -45,7 +45,7 @@ export class TasksManagerBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -58,7 +58,7 @@ export class TasksManagerBotService implements OnModuleInit {
   }
 
   async manageHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
@@ -72,7 +72,7 @@ export class TasksManagerBotService implements OnModuleInit {
       await Promise.all(
         tasks.map((task) => {
           const inlineKeyboardButtons = [{ text: 'Mark as completed', callback_data: `${task._id} - ${BOT_ACTIONS.TASK_COMPLETED}` }];
-          const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+          const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
           return this.telegramGeneralService.sendMessage(this.bot, chatId, task.title, inlineKeyboardMarkup);
         }),
       );
@@ -82,7 +82,7 @@ export class TasksManagerBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message) {
-    const { chatId, firstName, lastName, text } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.keys(TASKS_MANAGER_BOT_OPTIONS).map((option) => TASKS_MANAGER_BOT_OPTIONS[option]).includes(text)) return;
@@ -107,7 +107,7 @@ export class TasksManagerBotService implements OnModuleInit {
   }
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
-    const { chatId, firstName, lastName, data: response } = this.telegramGeneralService.getCallbackQueryData(callbackQuery);
+    const { chatId, firstName, lastName, data: response } = getCallbackQueryData(callbackQuery);
     const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, response: ${response}`;
     this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
 
