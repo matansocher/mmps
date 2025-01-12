@@ -21,6 +21,7 @@ export class TeacherSchedulerService {
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleCourseFirstLesson(): Promise<void> {
     try {
+      this.notifierBotService.notify(BOTS.COACH.name, { action: 'start course interval' }, null, null);
       await this.teacherService.startNewCourse(MY_USER_ID);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
