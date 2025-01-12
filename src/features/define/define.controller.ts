@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { env } from 'node:process';
 import { Body, Controller, Post } from '@nestjs/common';
-import { ContactRequestDTO, ContactResponseDTO } from '@features/define/types';
+import { ContactRequestDTO, ContactResponseDTO } from './types';
 
 @Controller('define')
 export class DefineController {

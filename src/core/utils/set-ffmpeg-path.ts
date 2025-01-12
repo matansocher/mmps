@@ -1,0 +1,15 @@
+import { exec } from 'child_process';
+import ffmpeg from 'fluent-ffmpeg';
+import { getErrorMessage } from './get-error-message';
+import { Logger } from '@nestjs/common';
+
+export function setFfmpegPath() {
+  exec('which ffmpeg', (error, stdout: string) => {
+    if (error) {
+      Logger.error('which ffmpeg exec', `Error finding ffmpeg: ${getErrorMessage(error)}`);
+      return;
+    }
+    Logger.log('which ffmpeg exec', `ffmpeg path: ${stdout.trim()}`);
+    ffmpeg.setFfmpegPath(stdout.trim());
+  });
+}
