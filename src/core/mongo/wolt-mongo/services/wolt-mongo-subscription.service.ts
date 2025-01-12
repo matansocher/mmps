@@ -1,9 +1,8 @@
 import { Collection, Db } from 'mongodb';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
+import { SubscriptionModel } from '../models/subscription.model';
 import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
-import { TaskModel } from '@core/mongo/tasks-manager-mongo';
-import { SubscriptionModel } from '@core/mongo/wolt-mongo';
 
 @Injectable()
 export class WoltMongoSubscriptionService {
