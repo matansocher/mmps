@@ -1,19 +1,15 @@
 import { Db } from 'mongodb';
-import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../rollinspark-mongo.config';
 import { SubscriptionModel } from '@core/mongo/rollinspark-mongo';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class RollinsparkMongoSubscriptionService {
+  private readonly logger = new Logger(RollinsparkMongoSubscriptionService.name);
   subscriptionCollection: any;
 
-  constructor(
-    private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
-    @Inject(CONNECTION_NAME) private readonly db: Db,
-  ) {
+  constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }
 
@@ -25,7 +21,7 @@ export class RollinsparkMongoSubscriptionService {
       }
       return this.subscriptionCollection.find(filter).toArray();
     } catch (err) {
-      this.logger.error(this.getActiveSubscriptions.name, `err: ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getActiveSubscriptions.name, `err: ${getErrorMessage(err)}`);
       return [];
     }
   }

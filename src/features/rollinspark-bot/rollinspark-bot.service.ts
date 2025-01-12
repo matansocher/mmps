@@ -1,17 +1,16 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from '@core/mongo/rollinspark-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { getErrorMessage } from '@core/utils';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TelegramGeneralService } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, BOT_ACTIONS, NAME_TO_PLAN_ID_MAP } from './constants';
 
 @Injectable()
 export class RollinsparkBotService implements OnModuleInit {
+  private readonly logger = new Logger(RollinsparkMongoSubscriptionService.name);
+
   constructor(
-    private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly mongoUserService: RollinsparkMongoUserService,
     private readonly mongoSubscriptionService: RollinsparkMongoSubscriptionService,
@@ -37,24 +36,24 @@ export class RollinsparkBotService implements OnModuleInit {
   }
 
   async handleActionError(action: string, logBody: string, err: Error, chatId: number): Promise<void> {
-    const errorMessage = `error: ${this.utilsService.getErrorMessage(err)}`;
+    const errorMessage = `error: ${getErrorMessage(err)}`;
     this.logger.error(action, `${logBody} - ${errorMessage}`);
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, `Sorry, but something went wrong`);
+    await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
   }
 
   async handleActionSuccess(action: string, logBody: string, chatId: number, replyText: string, form = {}): Promise<void> {
-    await this.telegramGeneralService.sendMessage(this.bot, chatId, replyText, form);
-    this.logger.info(action, `${logBody} - success`);
+    await this.bot.sendMessage(chatId, replyText, form);
+    this.logger.log(action, `${logBody} - success`);
     this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${action} - ${ANALYTIC_EVENT_STATES.SUCCESS}` }, chatId, this.mongoUserService);
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info(this.startHandler.name, `${logBody} - start`);
+      this.logger.log(this.startHandler.name, `${logBody} - start`);
       const replyText = `Hello, I will let you know when I find a new apartment uploaded to the rollins park neighborhood website`;
       return this.handleActionSuccess(this.startHandler.name, logBody, chatId, replyText);
     } catch (err) {
@@ -63,11 +62,11 @@ export class RollinsparkBotService implements OnModuleInit {
   }
 
   async managementHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info(this.managementHandler.name, `${logBody} - start`);
+      this.logger.log(this.managementHandler.name, `${logBody} - start`);
 
       const subscriptions = await this.mongoSubscriptionService.getSubscriptions(chatId);
       const inlineKeyboardButtons = Object.keys(NAME_TO_PLAN_ID_MAP)
@@ -80,7 +79,7 @@ export class RollinsparkBotService implements OnModuleInit {
           };
         })
         .sort((a, b) => a.text.localeCompare(b.text));
-      const inlineKeyboardMarkup = this.telegramGeneralService.getInlineKeyboardMarkup(inlineKeyboardButtons);
+      const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `Here is the full list of plans I support in rollinspark.\nPlease choose the relevant options for you`;
       return this.handleActionSuccess(this.managementHandler.name, logBody, chatId, replyText, inlineKeyboardMarkup);
     } catch (err) {
@@ -89,11 +88,11 @@ export class RollinsparkBotService implements OnModuleInit {
   }
 
   async checkHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = this.telegramGeneralService.getMessageData(message);
+    const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.info(this.checkHandler.name, `${logBody} - start`);
+      this.logger.log(this.checkHandler.name, `${logBody} - start`);
       const replyText = `Hello, I will let you know when I find a new apartment in rollins park for you.`;
       return this.handleActionSuccess(this.checkHandler.name, logBody, chatId, replyText);
     } catch (err) {
@@ -102,9 +101,9 @@ export class RollinsparkBotService implements OnModuleInit {
   }
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
-    const { chatId, firstName, lastName, data: response } = this.telegramGeneralService.getCallbackQueryData(callbackQuery);
+    const { chatId, firstName, lastName, data: response } = getCallbackQueryData(callbackQuery);
     const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, response: ${response}`;
-    this.logger.info(this.callbackQueryHandler.name, `${logBody} - start`);
+    this.logger.log(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {
       const [planId, action] = response.split(' - ');
@@ -118,7 +117,7 @@ export class RollinsparkBotService implements OnModuleInit {
         default:
           throw new Error('Invalid action');
       }
-      this.logger.info(this.callbackQueryHandler.name, `${logBody} - success`);
+      this.logger.log(this.callbackQueryHandler.name, `${logBody} - success`);
     } catch (err) {
       return this.handleActionError(this.callbackQueryHandler.name, logBody, err, chatId);
     }

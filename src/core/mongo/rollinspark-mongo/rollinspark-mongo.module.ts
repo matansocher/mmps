@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@core/logger';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
-import { UtilsModule } from '@core/utils';
 import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from './services';
 import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './rollinspark-mongo.config';
 
 @Module({
   imports: [
-    LoggerModule.forChild(RollinsparkMongoModule.name),
-    UtilsModule,
     MongoDatabaseFactoryModule.forChild({
       connectionName: CONNECTION_NAME,
       uri: MONGO_DB_URL,

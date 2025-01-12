@@ -1,16 +1,14 @@
-import { isEqual as _isEqual } from 'lodash';
 import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { LoggerService } from '@core/logger';
 import { RollinsparkMongoSubscriptionService } from '@core/mongo/rollinspark-mongo';
-import { MY_USER_ID, NotifierBotService } from '@core/notifier-bot';
-import { UtilsService } from '@core/utils';
-import { BOTS, TelegramGeneralService } from '@services/telegram';
+import { NotifierBotService } from '@core/notifier-bot';
+import { getErrorMessage } from '@core/utils';
+import { BOTS } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, NAME_TO_PLAN_ID_MAP } from './constants';
 import { RollinsparkService } from './rollinspark.service';
-import { ExpectedAptDetails } from '@features/rollinspark-bot/interfaces';
+import { ExpectedAptDetails } from './interfaces';
 
 const INTERVAL_MINUTES = 5;
 
@@ -18,17 +16,15 @@ type PlanAvailability = Record<number, ExpectedAptDetails[]>;
 
 @Injectable()
 export class RollinsparkSchedulerService implements OnModuleInit {
-  latestPlansAvailability: Record<number, ExpectedAptDetails[]> = Object.values(NAME_TO_PLAN_ID_MAP).reduce((acc, planId: number) => {
-    acc[planId] = null; // Or initialize with an empty array if needed
+  private readonly logger = new Logger(RollinsparkSchedulerService.name);
+  latestPlansAvailability: PlanAvailability = Object.values(NAME_TO_PLAN_ID_MAP).reduce((acc, planId: number) => {
+    acc[planId] = [];
     return acc;
-  }, {});
+  }, {} as PlanAvailability);
 
   constructor(
-    private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
     private readonly rollinsparkService: RollinsparkService,
     private readonly mongoSubscriptionService: RollinsparkMongoSubscriptionService,
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.ROLLINSPARK.name) private readonly bot: TelegramBot,
   ) {}
@@ -38,7 +34,6 @@ export class RollinsparkSchedulerService implements OnModuleInit {
     const plansAvailability = await this.getPlansAvailability(allPlanIds);
     this.latestPlansAvailability = plansAvailability;
 
-    this.bot.sendPoll(MY_USER_ID, 'question', ['option1', 'option2'], { is_anonymous: false });
     // this.handleIntervalFlow(); // for testing purposes
   }
 
@@ -47,36 +42,35 @@ export class RollinsparkSchedulerService implements OnModuleInit {
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
       if (!subscriptions?.length) {
+        this.logger.log('No active subscriptions found.');
         return;
       }
       const planIds = subscriptions.map((sub) => sub.planId);
-      const plansAvailability = await this.getPlansAvailability(planIds);
-      // $$$$$$$$$$$$$$$$$$$$$$$$$$$ here we need to compare the latestPlansAvailability with the new results
-      const planIdsWithChanges = Object.values(NAME_TO_PLAN_ID_MAP)
-        .map((planId) => this.isPlanSimilarToLatest(planId, this.latestPlansAvailability, plansAvailability[planId]))
-        .filter((isSimilar) => !isSimilar);
-
-      if (!planIdsWithChanges.length) {
+      const newPlansAvailability = await this.getPlansAvailability(planIds);
+      const changedPlanIds = planIds.filter((planId) => !this.isPlanSimilarToLatest(planId, this.latestPlansAvailability, newPlansAvailability));
+      if (!changedPlanIds.length) {
+        this.logger.log('No changes detected in plan availability');
         return;
       }
 
+      for (const planId of changedPlanIds) {
+        const relevantSubscriptions = subscriptions.filter((sub) => sub.planId === planId);
+        const chatIds = relevantSubscriptions.map((sub) => sub.chatId);
+        const planName = Object.keys(NAME_TO_PLAN_ID_MAP).find((key) => NAME_TO_PLAN_ID_MAP[key] === planId);
+        if (chatIds.length && planName) {
+          await this.alertSubscriptions(chatIds, planName);
+        }
+      }
 
-
-      // planIdsWithChanges.map((planId) => {
-      //   const relevantSubscriptions = subscriptions.filter((sub) => sub.planId === planId);
-      //   const chatIds = relevantSubscriptions?.map((sub) => sub.chatId);
-      //   const planName = Object.keys(NAME_TO_PLAN_ID_MAP).find((key) => NAME_TO_PLAN_ID_MAP[key] === planId);
-      //   return this.alertSubscriptions(chatIds, planName);
-      // });
-
-      this.latestPlansAvailability = plansAvailability;
+      this.latestPlansAvailability = newPlansAvailability;
+      this.logger.log('Updated latestPlansAvailability after changes.');
     } catch (err) {
       this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
-      this.logger.error(this.handleIntervalFlow.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.handleIntervalFlow.name, `error - ${getErrorMessage(err)}`);
     }
   }
 
-  async getPlansAvailability(planIds: number[]): Promise<{ planId: number; aptsDetails: ExpectedAptDetails[] }> {
+  async getPlansAvailability(planIds: number[]): Promise<PlanAvailability> {
     try {
       const results = await Promise.all(
         planIds.map(async (planId) => {
@@ -88,39 +82,28 @@ export class RollinsparkSchedulerService implements OnModuleInit {
       return results.reduce((acc, { planId, aptsDetails }) => {
         acc[planId] = aptsDetails;
         return acc;
-      }, {} as any);
+      }, {} as PlanAvailability);
     } catch (err) {
-      this.logger.error(this.getPlansAvailability.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.getPlansAvailability.name, `Error fetching plans availability: ${getErrorMessage(err)}`);
       this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${ANALYTIC_EVENT_STATES.REFRESH}` }, null, null);
       return null;
     }
   }
 
-  // async refreshPlanAvailability(planId: number): Promise<void> {
-  //   const aptsDetails = await this.rollinsparkService.getAptsDetails(planId);
-  //   if (!aptsDetails) {
-  //     this.logger.error(this.refreshPlanAvailability.name, 'error - could not get daily summary or photo');
-  //     return;
-  //   }
-  //   const isResSimilarToLatest = await this.isResSimilarToLatest(aptsDetails);
-  //   if (this.latestPlansAvailability?.length && !this.isFirstTime && !isResSimilarToLatest) {
-  //     await this.alertSubscriptions(this.chatIds);
-  //   }
-  //   this.latestPlansAvailability = aptsDetails;
-  // }
-
   isPlanSimilarToLatest(planId: number, oldPlansAvailability: PlanAvailability, newPlansAvailability: PlanAvailability): boolean {
-    const oldAptsIds = oldPlansAvailability[planId].map((res) => res.ApartmentId).sort();
-    const newAptsIds = newPlansAvailability[planId].map((res) => res.ApartmentId).sort();
-    if (!oldAptsIds || !newAptsIds) {
+    const oldApts = oldPlansAvailability[planId]?.map((res) => res.ApartmentId).sort() || [];
+    const newApts = newPlansAvailability[planId]?.map((res) => res.ApartmentId).sort() || [];
+
+    // Check for additions or removals
+    const addedApts = newApts.filter((id) => !oldApts.includes(id));
+    const removedApts = oldApts.filter((id) => !newApts.includes(id));
+
+    if (addedApts.length > 0 || removedApts.length > 0) {
+      this.logger.log(`Plan ${planId} has changes. Added apartments: ${addedApts.join(', ')}, Removed apartments: ${removedApts.join(', ')}`);
       return false;
     }
 
-    // const existingKeys = this.latestPlansAvailability.map((res) => res.ApartmentId).sort();
-    // const newKeys = newResult.map((res) => res.ApartmentId).sort();
-
-    // return _isEqual(existingKeys, newKeys);
-    return _isEqual(1, 2);
+    return true;
   }
 
   async alertSubscriptions(chatIds: number[], planName: string): Promise<void> {
@@ -130,9 +113,12 @@ export class RollinsparkSchedulerService implements OnModuleInit {
         `Go check it out here:`,
         `https://www.rollinspark.net/floor-plans`,
       ].join('\n');
-      await Promise.all(chatIds.map((chatId) => this.telegramGeneralService.sendMessage(this.bot, chatId, messageText)));
+      await Promise.all([
+        ...chatIds.map((chatId) => this.bot.sendMessage(chatId, messageText)),
+        this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: ANALYTIC_EVENT_STATES.ALERTED }, null, null)
+      ]);
     } catch (err) {
-      this.logger.error(this.alertSubscriptions.name, `error - ${this.utilsService.getErrorMessage(err)}`);
+      this.logger.error(this.alertSubscriptions.name, `error - ${getErrorMessage(err)}`);
       this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${this.alertSubscriptions.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
     }
   }

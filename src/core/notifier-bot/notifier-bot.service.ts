@@ -39,7 +39,6 @@ export class NotifierBotService implements OnModuleInit {
   }
 
   async notify(botName: string, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
-    return; // $$$$$$$$$$$$$
     const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
     const notyMessageText = this.getNotyMessageText(botName, userDetails, options);
     this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
