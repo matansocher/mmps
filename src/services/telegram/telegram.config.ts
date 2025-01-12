@@ -25,6 +25,10 @@ export const BOTS = {
     name: 'Tasks Manager Bot',
     token: env.TASKS_MANAGER_TELEGRAM_BOT_TOKEN,
   },
+  ROLLINSPARK: {
+    name: 'Rollins Park Bot',
+    token: env.ROLLINSPARK_TELEGRAM_BOT_TOKEN,
+  },
   NOTIFIER: {
     name: 'Notifier Bot',
     token: env.NOTIFIER_TELEGRAM_BOT_TOKEN,
