@@ -5,10 +5,10 @@ import { COLLECTIONS, CONNECTION_NAME } from '../tasks-manager-mongo.config';
 
 @Injectable()
 export class TasksManagerMongoTaskService {
-  private readonly courseCollection: Collection<TaskModel>;
+  private readonly taskCollection: Collection<TaskModel>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
-    this.courseCollection = this.db.collection(COLLECTIONS.TASK);
+    this.taskCollection = this.db.collection(COLLECTIONS.TASK);
   }
 
   getActiveTasks(chatId: number = null): Promise<TaskModel[]> {
@@ -16,7 +16,7 @@ export class TasksManagerMongoTaskService {
     if (chatId) {
       filter['chatId'] = chatId;
     }
-    return this.courseCollection.find(filter).toArray();
+    return this.taskCollection.find(filter).toArray();
   }
 
   addTask(chatId: number, taskDetails): Promise<InsertOneResult<TaskModel>> {
@@ -29,12 +29,12 @@ export class TasksManagerMongoTaskService {
       intervalAmount,
       createdAt: new Date(),
     };
-    return this.courseCollection.insertOne(task);
+    return this.taskCollection.insertOne(task);
   }
 
   getTask(chatId: number, taskId: string): Promise<TaskModel> {
     const filter = { chatId, taskId };
-    return this.courseCollection.findOne(filter);
+    return this.taskCollection.findOne(filter);
   }
 
   async markTaskCompleted(chatId: number, taskId: string): Promise<UpdateResult<TaskModel>> {
@@ -45,12 +45,12 @@ export class TasksManagerMongoTaskService {
         completedAt: new Date(),
       },
     };
-    return this.courseCollection.updateOne(filter, updateObj);
+    return this.taskCollection.updateOne(filter, updateObj);
   }
 
   updateLastNotifiedAt(chatId: number, taskId: string, date: Date): Promise<UpdateResult<TaskModel>> {
     const filter = { _id: taskId, chatId } as any;
     const updateObj = { $set: { lastNotifiedAt: date } };
-    return this.courseCollection.updateOne(filter, updateObj);
+    return this.taskCollection.updateOne(filter, updateObj);
   }
 }
