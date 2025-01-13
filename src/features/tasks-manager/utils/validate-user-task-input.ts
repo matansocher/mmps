@@ -1,14 +1,22 @@
-export function validateUserTaskInput(input: string): boolean {
-  const [interval, title] = input.split(' - ');
+import { TaskDetails } from '@features/tasks-manager/interface';
+
+interface ValidationOutput {
+  readonly isValid: boolean;
+  readonly taskDetails?: TaskDetails;
+}
+
+export function validateUserTaskInput(input: string): ValidationOutput {
+  const interval = input.split(' ')[0];
+  const title = input.replace(interval, '').trim();
   if (!interval || !title) {
-    return false;
+    return { isValid: false };
   }
   const [intervalAmount, intervalUnits] = interval.split('');
   if (!intervalAmount || !intervalUnits) {
-    return false;
+    return { isValid: false };
   }
   if (isNaN(parseInt(intervalAmount))) {
-    return false;
+    return { isValid: false };
   }
-  return true;
+  return { isValid: true, taskDetails: { title, intervalUnits, intervalAmount: +intervalAmount } };
 }

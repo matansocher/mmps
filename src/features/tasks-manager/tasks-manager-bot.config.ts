@@ -21,4 +21,6 @@ export enum BOT_ACTIONS {
   TASK_COMPLETED = 'task_completed',
 }
 
+export const ACTION_VALUE_SEPARATOR = ` - `;
+
 export const QUIET_HOURS = { start: 23, end: 7 };

@@ -4,8 +4,15 @@ import { TasksManagerMongoTaskService, TasksManagerMongoUserService } from '@cor
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
-import { ANALYTIC_EVENS, BOT_ACTIONS, INITIAL_BOT_RESPONSE, INVALID_INPUT, TASKS_MANAGER_BOT_OPTIONS } from './tasks-manager-bot.config';
-import { getKeyboardOptions, getTaskDetails, validateUserTaskInput } from './utils';
+import {
+  ACTION_VALUE_SEPARATOR,
+  ANALYTIC_EVENS,
+  BOT_ACTIONS,
+  INITIAL_BOT_RESPONSE,
+  INVALID_INPUT,
+  TASKS_MANAGER_BOT_OPTIONS,
+} from './tasks-manager-bot.config';
+import { getKeyboardOptions, validateUserTaskInput } from './utils';
 
 @Injectable()
 export class TasksManagerBotService implements OnModuleInit {
@@ -65,16 +72,15 @@ export class TasksManagerBotService implements OnModuleInit {
 
       const tasks = await this.mongoTaskService.getActiveTasks(chatId);
       if (!tasks?.length) {
-        const replyText = `You don't have any tasks yet. Create one by typing the task and the interval, e.g. "1d - Do something"`;
+        const replyText = `You don't have any tasks yet. Create one by typing the task and the interval, e.g. "1d Do something"`;
         await this.bot.sendMessage(chatId, replyText);
       }
-      await Promise.all(
-        tasks.map((task) => {
-          const inlineKeyboardButtons = [{ text: 'Mark as completed', callback_data: `${task._id} - ${BOT_ACTIONS.TASK_COMPLETED}` }];
-          const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-          return this.bot.sendMessage(chatId, task.title, inlineKeyboardMarkup as any);
-        }),
-      );
+
+      const inlineKeyboardButtons = tasks.map((task) => {
+        return { text: task.title, callback_data: `${task._id}${ACTION_VALUE_SEPARATOR}${BOT_ACTIONS.TASK_COMPLETED}` };
+      });
+      const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
+      await this.bot.sendMessage(chatId, `Here are your current tasks.\nClick on a task to mark it as completed`, inlineKeyboardMarkup as any);
     } catch (err) {
       return this.handleActionError(this.manageHandler.name, logBody, err, chatId);
     }
@@ -90,11 +96,10 @@ export class TasksManagerBotService implements OnModuleInit {
     this.logger.log(this.textHandler.name, `${logBody} - start`);
 
     try {
-      const isUserTaskTextValid = validateUserTaskInput(text);
-      if (!isUserTaskTextValid) {
+      const { isValid, taskDetails } = validateUserTaskInput(text);
+      if (!isValid) {
         return await this.bot.sendMessage(chatId, INVALID_INPUT);
       }
-      const taskDetails = getTaskDetails(text);
       await this.mongoTaskService.addTask(chatId, taskDetails);
       const replyText = `OK, I will remind you about "${taskDetails.title}"`;
 
@@ -111,10 +116,10 @@ export class TasksManagerBotService implements OnModuleInit {
     this.logger.log(this.callbackQueryHandler.name, `${logBody} - start`);
 
     try {
-      const [taskId, action] = response.split(' - ');
+      const [taskId, action] = response.split(ACTION_VALUE_SEPARATOR);
       switch (action) {
         case BOT_ACTIONS.TASK_COMPLETED:
-          await this.handleCallbackCompleteTask(logBody, chatId, taskId);
+          await this.handleCallbackCompleteTask(chatId, taskId);
           break;
         default:
           throw new Error('Invalid action');
@@ -124,11 +129,11 @@ export class TasksManagerBotService implements OnModuleInit {
     }
   }
 
-  async handleCallbackCompleteTask(logBody: string, chatId: number, taskId: string) {
+  async handleCallbackCompleteTask(chatId: number, taskId: string) {
     const task = await this.mongoTaskService.getTask(chatId, taskId);
     if (!task) {
       const replyText = `I couldn't find an open task under that name, are you sure you didnt already complete it? 🤔`;
-      await this.bot.sendMessage(chatId, replyText);
+      return this.bot.sendMessage(chatId, replyText);
     }
     await this.mongoTaskService.markTaskCompleted(chatId, taskId);
     const replyText = `Nice job 🎉🍾\nI have marked the task as completed`;
