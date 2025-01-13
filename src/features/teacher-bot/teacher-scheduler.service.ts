@@ -18,10 +18,9 @@ export class TeacherSchedulerService {
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
-  @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleCourseFirstLesson(): Promise<void> {
     try {
-      this.notifierBotService.notify(BOTS.COACH.name, { action: 'start course interval' }, null, null);
       await this.teacherService.startNewCourse(MY_USER_ID);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
@@ -30,7 +29,7 @@ export class TeacherSchedulerService {
     }
   }
 
-  @Cron(`0 ${COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY.join(',')} * * *`, { name: 'teacher-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 ${COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY.join(',')} * * *`, { name: 'teacher-scheduler-next', timeZone: DEFAULT_TIMEZONE })
   async handleCourseNextLesson(): Promise<void> {
     try {
       await this.teacherService.processLesson(MY_USER_ID, true);
