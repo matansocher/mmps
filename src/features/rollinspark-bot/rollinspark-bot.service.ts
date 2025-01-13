@@ -31,7 +31,6 @@ export class RollinsparkBotService implements OnModuleInit {
   createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/management/, (message: Message) => this.managementHandler(message));
-    this.bot.onText(/\/check/, (message: Message) => this.checkHandler(message));
     this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
@@ -54,7 +53,7 @@ export class RollinsparkBotService implements OnModuleInit {
 
     try {
       this.logger.log(this.startHandler.name, `${logBody} - start`);
-      const replyText = `Hello, I will let you know when I find a new apartment uploaded to the rollins park neighborhood website`;
+      const replyText = `Hello, I am bot that can you know when I find a new apartment uploaded to the rollins park neighborhood website.\n\nJust let me know what plan of an apartment you want and I will look it up for you`;
       return this.handleActionSuccess(this.startHandler.name, logBody, chatId, replyText);
     } catch (err) {
       return this.handleActionError(this.startHandler.name, logBody, err, chatId);
@@ -84,19 +83,6 @@ export class RollinsparkBotService implements OnModuleInit {
       return this.handleActionSuccess(this.managementHandler.name, logBody, chatId, replyText, inlineKeyboardMarkup);
     } catch (err) {
       return this.handleActionError(this.managementHandler.name, logBody, err, chatId);
-    }
-  }
-
-  async checkHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = getMessageData(message);
-    const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-
-    try {
-      this.logger.log(this.checkHandler.name, `${logBody} - start`);
-      const replyText = `Hello, I will let you know when I find a new apartment in rollins park for you.`;
-      return this.handleActionSuccess(this.checkHandler.name, logBody, chatId, replyText);
-    } catch (err) {
-      return this.handleActionError(this.checkHandler.name, logBody, err, chatId);
     }
   }
 
