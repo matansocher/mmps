@@ -6,7 +6,7 @@ import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { NotifierBotService } from '@core/notifier-bot';
 
-const ANALYTIC_EVENT_STATES = {
+export const ANALYTIC_EVENT_STATES = {
   START: 'START',
   SEARCH: 'SEARCH',
   ERROR: 'ERROR',
@@ -78,6 +78,7 @@ export class CoachBotService implements OnModuleInit {
       const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
       if (subscription) {
         await this.bot.sendMessage(chatId, `I see you are already subscribe.\n Don't worry, I will send you games summaries`);
+        return;
       }
       await this.mongoSubscriptionService.addSubscription(chatId);
       await this.bot.sendMessage(chatId, `OK, I will send you games summaries every day.\nYou can always ask me to stop by clicking on the unsubscribe command`);
@@ -99,6 +100,7 @@ export class CoachBotService implements OnModuleInit {
       const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
       if (subscription) {
         await this.bot.sendMessage(chatId, `I see you are not subscribed yet 😁`);
+        return;
       }
       await this.mongoSubscriptionService.archiveSubscription(chatId);
       await this.bot.sendMessage(chatId, `OK, I will stop sending you games summaries every day`);

@@ -7,6 +7,7 @@ import { NotifierBotService } from '@core/notifier-bot';
 import { getDateString, getErrorMessage, isDateStringFormat } from '@core/utils';
 import { Scores365Service } from '@services/scores-365';
 import { BOTS } from '@services/telegram';
+import { ANALYTIC_EVENT_STATES } from './coach-bot.service';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
 
 const HOURS_TON_NOTIFY = [12, 19, 23];
@@ -45,7 +46,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.handleIntervalFlow.name, errorMessage);
-      this.notifierBotService.notify(BOTS.COACH.name, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.COACH.name, { action: `cron - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, null, null);
     }
   }
 
