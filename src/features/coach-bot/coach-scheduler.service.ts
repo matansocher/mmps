@@ -2,7 +2,8 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { NotifierBotService, MY_USER_ID } from '@core/notifier-bot';
+import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
+import { NotifierBotService } from '@core/notifier-bot';
 import { getDateString, getErrorMessage, isDateStringFormat } from '@core/utils';
 import { Scores365Service } from '@services/scores-365';
 import { BOTS } from '@services/telegram';
@@ -13,27 +14,34 @@ const HOURS_TON_NOTIFY = [12, 19, 23];
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(CoachBotSchedulerService.name);
-  private readonly chatIds = [MY_USER_ID];
 
   constructor(
     private readonly scores365Service: Scores365Service,
+    private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
-    // this.handleIntervalFlow(); // for testing purposes
+    this.handleIntervalFlow(null); // for testing purposes
   }
 
   @Cron(`59 ${HOURS_TON_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(date: string | null): Promise<void> {
     try {
+      const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
+      if (!subscriptions?.length) {
+        return;
+      }
+
       const dateString = isDateStringFormat(date) ? date : getDateString(new Date());
       const responseText = await this.getMatchesSummaryMessage(dateString);
       if (!responseText) {
         return;
       }
-      await Promise.all(this.chatIds.map((chatId) => this.bot.sendMessage(chatId, responseText)));
+
+      const chatIds = subscriptions.map((subscription) => subscription.chatId);
+      await Promise.all(chatIds.map((chatId) => this.bot.sendMessage(chatId, responseText)));
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.handleIntervalFlow.name, errorMessage);
