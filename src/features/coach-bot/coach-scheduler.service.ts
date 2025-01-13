@@ -23,7 +23,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.handleIntervalFlow(null); // for testing purposes
+    // this.handleIntervalFlow(null); // for testing purposes
   }
 
   @Cron(`59 ${HOURS_TON_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
