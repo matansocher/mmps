@@ -72,8 +72,9 @@ export class TasksManagerBotService implements OnModuleInit {
 
       const tasks = await this.mongoTaskService.getActiveTasks(chatId);
       if (!tasks?.length) {
-        const replyText = `You don't have any tasks yet. Create one by typing the task and the interval, e.g. "1d Do something"`;
+        const replyText = `You don't have any tasks yet.\nCreate one by typing the task and the interval, e.g. "1d Do something"`;
         await this.bot.sendMessage(chatId, replyText);
+        return;
       }
 
       const inlineKeyboardButtons = tasks.map((task) => {
