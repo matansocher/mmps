@@ -33,12 +33,12 @@ export class TasksManagerMongoTaskService {
   }
 
   getTask(chatId: number, taskId: string): Promise<TaskModel> {
-    const filter = { chatId, taskId };
+    const filter = { _id: new ObjectId(taskId), chatId, isCompleted: { $ne: true } } as any;
     return this.taskCollection.findOne(filter);
   }
 
   async markTaskCompleted(chatId: number, taskId: string): Promise<UpdateResult<TaskModel>> {
-    const filter = { _id: taskId, chatId } as any;
+    const filter = { _id: new ObjectId(taskId), chatId } as any;
     const updateObj = {
       $set: {
         isCompleted: true,
@@ -49,7 +49,7 @@ export class TasksManagerMongoTaskService {
   }
 
   updateLastNotifiedAt(chatId: number, taskId: string, date: Date): Promise<UpdateResult<TaskModel>> {
-    const filter = { _id: taskId, chatId } as any;
+    const filter = { _id: new ObjectId(taskId), chatId } as any;
     const updateObj = { $set: { lastNotifiedAt: date } };
     return this.taskCollection.updateOne(filter, updateObj);
   }
