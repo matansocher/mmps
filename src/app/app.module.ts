@@ -10,7 +10,7 @@ import { WoltBotModule } from '@features/wolt-bot';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-let imports: Type[] = [TeacherBotModule];
+let imports: Type[] = [TasksManagerBotModule];
 if (isProd) {
   imports = [
     VoicePalBotModule,

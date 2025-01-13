@@ -96,11 +96,10 @@ export class TasksManagerBotService implements OnModuleInit {
     this.logger.log(this.textHandler.name, `${logBody} - start`);
 
     try {
-      const isUserTaskTextValid = validateUserTaskInput(text);
-      if (!isUserTaskTextValid) {
+      const { isValid, taskDetails } = validateUserTaskInput(text);
+      if (!isValid) {
         return await this.bot.sendMessage(chatId, INVALID_INPUT);
       }
-      const taskDetails = getTaskDetails(text);
       await this.mongoTaskService.addTask(chatId, taskDetails);
       const replyText = `OK, I will remind you about "${taskDetails.title}"`;
 

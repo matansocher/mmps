@@ -27,6 +27,7 @@ export class TasksManagerMongoTaskService {
       title,
       intervalUnits,
       intervalAmount,
+      lastNotifiedAt: new Date(),
       createdAt: new Date(),
     };
     return this.taskCollection.insertOne(task);
