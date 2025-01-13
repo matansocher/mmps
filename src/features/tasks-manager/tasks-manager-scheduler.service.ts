@@ -39,20 +39,13 @@ export class TasksManagerSchedulerService implements OnModuleInit {
       for (const task of tasks) {
         if (shouldNotify(task, now)) {
           await this.notifyUser(task);
-          this.logger.debug(
-            `Notified user ${task.chatId} about task "${task.title}"`,
-          );
+          this.logger.debug(`Notified user ${task.chatId} about task "${task.title}"`);
         }
       }
     } catch (err) {
       const error = `${getErrorMessage(err)}`;
-      this.notifierBotService.notify(
-        BOTS.TASKS_MANAGER.name,
-        { action: ANALYTIC_EVENS.ERROR, error, flow: 'cron' },
-        null,
-        null,
-      );
-      this.logger.error(`Error processing tasks: ${err.message}`, err.stack);
+      this.notifierBotService.notify(BOTS.TASKS_MANAGER.name, { action: ANALYTIC_EVENS.ERROR, error, flow: 'cron' }, null, null);
+      this.logger.error(`Error processing tasks: ${error}`);
     }
   }
 
@@ -60,25 +53,14 @@ export class TasksManagerSchedulerService implements OnModuleInit {
     const { chatId, title } = task;
     try {
       const inlineKeyboardButtons = [
-        {
-          text: 'Mark as completed',
-          callback_data: `${task._id}${ACTION_VALUE_SEPARATOR}${BOT_ACTIONS.TASK_COMPLETED}`,
-        },
+        { text: 'Mark as completed', callback_data: `${task._id}${ACTION_VALUE_SEPARATOR}${BOT_ACTIONS.TASK_COMPLETED}` },
       ];
-      const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-        inlineKeyboardButtons,
-      );
+      const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const resText = `You wanted me to remind you about:\n${title}`;
       this.bot.sendMessage(chatId, resText, inlineKeyboardMarkup as any);
-      await this.mongoTaskService.updateLastNotifiedAt(
-        chatId,
-        task._id,
-        new Date(),
-      );
+      await this.mongoTaskService.updateLastNotifiedAt(chatId, task._id, new Date());
     } catch (err) {
-      this.logger.error(
-        `${this.notifyUser.name} | Failed to notify user ${chatId} for task "${title}": ${getErrorMessage(err)}`,
-      );
+      this.logger.error(`${this.notifyUser.name} | Failed to notify user ${chatId} for task "${title}": ${getErrorMessage(err)}`);
     }
   }
 }

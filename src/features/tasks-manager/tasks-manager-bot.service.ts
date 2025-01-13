@@ -12,7 +12,7 @@ import {
   INVALID_INPUT,
   TASKS_MANAGER_BOT_OPTIONS,
 } from './tasks-manager-bot.config';
-import { getKeyboardOptions, getTaskDetails, validateUserTaskInput } from './utils';
+import { getKeyboardOptions, validateUserTaskInput } from './utils';
 
 @Injectable()
 export class TasksManagerBotService implements OnModuleInit {
