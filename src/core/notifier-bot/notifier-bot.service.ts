@@ -50,7 +50,7 @@ export class NotifierBotService implements OnModuleInit {
     const sentences = [];
     sentences.push(`bot: ${botName}`);
     userDetails && sentences.push(`name: ${firstName} ${lastName} - ${username}`);
-    sentences.push(`action: ${action.toLowerCase().replaceAll('_', ' ')}`);
+    sentences.push(`action: ${action.replaceAll('_', ' ')}`);
     otherOptions && Object.keys(otherOptions).length && sentences.push(`data: ${JSON.stringify(otherOptions, null, 2)}`);
     plainText && sentences.push(plainText);
     return sentences.join('\n');

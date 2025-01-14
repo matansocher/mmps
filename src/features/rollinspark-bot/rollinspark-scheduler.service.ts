@@ -65,29 +65,23 @@ export class RollinsparkSchedulerService implements OnModuleInit {
       this.latestPlansAvailability = newPlansAvailability;
       this.logger.log('Updated latestPlansAvailability after changes.');
     } catch (err) {
-      this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
+      this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: getErrorMessage(err) }, null, null);
       this.logger.error(this.handleIntervalFlow.name, `error - ${getErrorMessage(err)}`);
     }
   }
 
   async getPlansAvailability(planIds: number[]): Promise<PlanAvailability> {
-    try {
-      const results = await Promise.all(
-        planIds.map(async (planId) => {
-          const aptsDetails = await this.rollinsparkService.getAptsDetails(planId);
-          return { planId, aptsDetails };
-        }),
-      );
+    const results = await Promise.all(
+      planIds.map(async (planId) => {
+        const aptsDetails = await this.rollinsparkService.getAptsDetails(planId);
+        return { planId, aptsDetails };
+      }),
+    );
 
-      return results.reduce((acc, { planId, aptsDetails }) => {
-        acc[planId] = aptsDetails;
-        return acc;
-      }, {} as PlanAvailability);
-    } catch (err) {
-      this.logger.error(this.getPlansAvailability.name, `Error fetching plans availability: ${getErrorMessage(err)}`);
-      this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${ANALYTIC_EVENT_STATES.REFRESH}` }, null, null);
-      return null;
-    }
+    return results.reduce((acc, { planId, aptsDetails }) => {
+      acc[planId] = aptsDetails;
+      return acc;
+    }, {} as PlanAvailability);
   }
 
   isPlanSimilarToLatest(planId: number, oldPlansAvailability: PlanAvailability, newPlansAvailability: PlanAvailability): boolean {
