@@ -15,6 +15,7 @@ import { TeacherService } from './teacher.service';
     TelegramModule,
     OpenaiModule,
     TeacherMongoModule,
+    NotifierBotModule,
     ScheduleModule.forRoot(),
   ],
   providers: [TeacherBotService, TeacherSchedulerService, TeacherService],

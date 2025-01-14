@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
+import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS } from '@services/telegram';
 import { TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher-bot.config';
@@ -10,6 +11,7 @@ export class TeacherService {
   constructor(
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly openaiAssistantService: OpenaiAssistantService,
+    private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
   ) {}
 
@@ -22,6 +24,7 @@ export class TeacherService {
   async getNewCourse(chatId: number): Promise<CourseModel> {
     const course = await this.mongoCourseService.getRandomCourse();
     if (!course) {
+      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER.name, { action: 'ERROR', error: 'No new courses found' }, null, null);
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
