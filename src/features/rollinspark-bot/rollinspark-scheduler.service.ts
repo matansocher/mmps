@@ -26,7 +26,7 @@ export class RollinsparkSchedulerService implements OnModuleInit {
     private readonly rollinsparkService: RollinsparkService,
     private readonly mongoSubscriptionService: RollinsparkMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.ROLLINSPARK.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.ROLLINSPARK.id) private readonly bot: TelegramBot,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -65,7 +65,7 @@ export class RollinsparkSchedulerService implements OnModuleInit {
       this.latestPlansAvailability = newPlansAvailability;
       this.logger.log('Updated latestPlansAvailability after changes.');
     } catch (err) {
-      this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: getErrorMessage(err) }, null, null);
+      this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: getErrorMessage(err) }, null, null);
       this.logger.error(this.handleIntervalFlow.name, `error - ${getErrorMessage(err)}`);
     }
   }
@@ -109,11 +109,11 @@ export class RollinsparkSchedulerService implements OnModuleInit {
       ].join('\n');
       await Promise.all([
         ...chatIds.map((chatId) => this.bot.sendMessage(chatId, messageText)),
-        this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: ANALYTIC_EVENT_STATES.ALERTED }, null, null)
+        this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: ANALYTIC_EVENT_STATES.ALERTED }, null, null)
       ]);
     } catch (err) {
       this.logger.error(this.alertSubscriptions.name, `error - ${getErrorMessage(err)}`);
-      this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${this.alertSubscriptions.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
+      this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${this.alertSubscriptions.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
     }
   }
 }

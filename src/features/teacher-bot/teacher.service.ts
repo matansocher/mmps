@@ -12,7 +12,7 @@ export class TeacherService {
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
   async startNewCourse(chatId: number): Promise<void> {
@@ -24,7 +24,7 @@ export class TeacherService {
   async getNewCourse(chatId: number): Promise<CourseModel> {
     const course = await this.mongoCourseService.getRandomCourse();
     if (!course) {
-      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER.name, { action: 'ERROR', error: 'No new courses found' }, null, null);
+      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: 'No new courses found' }, null, null);
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();

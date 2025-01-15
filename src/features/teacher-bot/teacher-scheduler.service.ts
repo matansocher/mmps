@@ -15,7 +15,7 @@ export class TeacherSchedulerService {
   constructor(
     private readonly teacherService: TeacherService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
@@ -25,7 +25,7 @@ export class TeacherSchedulerService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(this.handleCourseFirstLesson.name, `error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.COACH.name, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }
 
@@ -36,7 +36,7 @@ export class TeacherSchedulerService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(this.handleCourseNextLesson.name, `error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.COACH.name, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }
 }

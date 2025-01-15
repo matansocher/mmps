@@ -28,7 +28,7 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -87,7 +87,7 @@ export class WoltSchedulerService implements OnModuleInit {
           // promisesArr.push(this.telegramGeneralService.sendPhoto(this.bot, subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText }));
           promisesArr.push(this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText } as any));
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
-          promisesArr.push(this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService));
+          promisesArr.push(this.notifierBotService.notify(BOTS.WOLT, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService));
         });
       });
       return Promise.all(promisesArr);
@@ -106,7 +106,7 @@ export class WoltSchedulerService implements OnModuleInit {
         if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
           promisesArr.push(this.bot.sendMessage(subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), getKeyboardOptions());
         }
-        this.notifierBotService.notify(BOTS.WOLT.name, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService);
+        this.notifierBotService.notify(BOTS.WOLT, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService);
       });
       await Promise.all(promisesArr);
     } catch (err) {
