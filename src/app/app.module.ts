@@ -3,7 +3,6 @@ import { isProd } from '@core/config';
 import { CoachBotModule } from '@features/coach-bot';
 import { DefineModule } from '@features/define';
 import { RollinsparkBotModule } from '@features/rollinspark-bot';
-import { TasksManagerBotModule } from '@features/tasks-manager';
 import { TeacherBotModule } from '@features/teacher-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
 import { WoltBotModule } from '@features/wolt-bot';
@@ -19,7 +18,6 @@ if (isProd) {
     DefineModule,
     CoachBotModule,
     TeacherBotModule,
-    TasksManagerBotModule,
   ];
 }
 
