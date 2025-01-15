@@ -7,7 +7,6 @@ import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './rollinspark-mongo.conf
   imports: [
     MongoDatabaseFactoryModule.forChild({
       connectionName: CONNECTION_NAME,
-      uri: MONGO_DB_URL,
       dbName: DB_NAME,
     }),
   ],

@@ -1,4 +1,5 @@
-import { Module, Type } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
 import { CoachBotModule } from '@features/coach-bot';
 import { DefineModule } from '@features/define';
@@ -9,20 +10,28 @@ import { WoltBotModule } from '@features/wolt-bot';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-let imports: Type[] = [TeacherBotModule];
-if (isProd) {
-  imports = [
-    VoicePalBotModule,
-    WoltBotModule,
-    RollinsparkBotModule,
-    DefineModule,
-    CoachBotModule,
-    TeacherBotModule,
+function getImports() {
+  const commonModules = [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
   ];
+
+  if (isProd) {
+    return [
+      ...commonModules,
+      VoicePalBotModule,
+      WoltBotModule,
+      RollinsparkBotModule,
+      DefineModule,
+      CoachBotModule,
+      TeacherBotModule,
+    ];
+  }
+
+  return [...commonModules, TeacherBotModule];
 }
 
 @Module({
-  imports,
+  imports: getImports(),
   controllers: [AppController],
   providers: [AppService],
 })
