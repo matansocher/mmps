@@ -1,10 +1,11 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
+import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
-import { NotifierBotService } from '@core/notifier-bot';
+import { GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
 
 export const ANALYTIC_EVENT_STATES = {
   START: 'START',
@@ -58,13 +59,12 @@ export class CoachBotService implements OnModuleInit {
     try {
       this.logger.log(this.startHandler.name, `${logBody} - start`);
       this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
-      const INITIAL_BOT_RESPONSE = [`Hey There 👋`, `I am here to provide you with results of football matches.`].join('\n\n');
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.START}` }, chatId, this.mongoUserService);
       this.logger.log(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       this.logger.error(this.startHandler.name, `${logBody} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
+      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.START} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
     }
   }
@@ -77,16 +77,16 @@ export class CoachBotService implements OnModuleInit {
       this.logger.log(this.subscribeHandler.name, `${logBody} - start`);
       const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
       if (subscription) {
-        await this.bot.sendMessage(chatId, `I see you are already subscribe.\n Don't worry, I will send you games summaries`);
+        await this.bot.sendMessage(chatId, `I see you are already subscribed ✅\n Don't worry, I will send you games summaries`);
         return;
       }
       await this.mongoSubscriptionService.addSubscription(chatId);
-      await this.bot.sendMessage(chatId, `OK, I will send you games summaries every day.\nYou can always ask me to stop by clicking on the unsubscribe command`);
+      await this.bot.sendMessage(chatId, `OK, I will send you games summaries every day ✅\nYou can always ask me to stop by clicking on the unsubscribe command`);
       this.logger.log(this.subscribeHandler.name, `${logBody} - success`);
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.SUBSCRIBE}` }, chatId, this.mongoUserService);
     } catch (err) {
       this.logger.error(this.subscribeHandler.name, `${logBody} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
+      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.SUBSCRIBE} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
     }
   }
@@ -103,12 +103,12 @@ export class CoachBotService implements OnModuleInit {
         return;
       }
       await this.mongoSubscriptionService.archiveSubscription(chatId);
-      await this.bot.sendMessage(chatId, `OK, I will stop sending you games summaries every day`);
+      await this.bot.sendMessage(chatId, `OK, I will stop sending you games summaries every day 🛑`);
       this.logger.log(this.unsubscribeHandler.name, `${logBody} - success`);
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.UNSUBSCRIBE}` }, chatId, this.mongoUserService);
     } catch (err) {
       this.logger.error(this.unsubscribeHandler.name, `${logBody} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, 'Sorry, I am unable to process your request at the moment. Please try again later.');
+      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.UNSUBSCRIBE} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
     }
   }
@@ -128,7 +128,7 @@ export class CoachBotService implements OnModuleInit {
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.SEARCH}`, text }, chatId, this.mongoUserService);
     } catch (err) {
       this.logger.error(this.textHandler.name, `error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
       this.notifierBotService.notify(BOTS.COACH.name, { action: `${ANALYTIC_EVENT_STATES.SEARCH} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
     }
   }
