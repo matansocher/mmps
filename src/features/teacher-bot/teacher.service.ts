@@ -80,6 +80,7 @@ export class TeacherService {
     const activeCourse = await this.mongoCourseService.getActiveCourse();
     if (!activeCourse) {
       await this.bot.sendMessage(chatId, 'No active course');
+      return;
     }
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
     await this.sendMarkdownMessage(chatId, response);
