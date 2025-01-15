@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { VoicePalMongoUserService } from './services';
-import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './voice-pal-mongo.config';
+import { CONNECTION_NAME, DB_NAME } from './voice-pal-mongo.config';
 
 @Module({
   imports: [

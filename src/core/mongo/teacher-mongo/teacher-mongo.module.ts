@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { TeacherMongoCourseService } from './services';
-import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './teacher-mongo.config';
+import { CONNECTION_NAME, DB_NAME } from './teacher-mongo.config';
 
 @Module({
   imports: [

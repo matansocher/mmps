@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { WoltMongoSubscriptionService, WoltMongoUserService } from './services';
-import { CONNECTION_NAME, DB_NAME, MONGO_DB_URL } from './wolt-mongo.config';
+import { CONNECTION_NAME, DB_NAME } from './wolt-mongo.config';
 
 @Module({
   imports: [
