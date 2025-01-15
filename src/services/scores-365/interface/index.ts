@@ -14,6 +14,11 @@ export interface ExpectedTeam {
   color: string;
 }
 
+export interface ExpectedTvNetworks {
+  readonly id: number;
+  readonly name: string;
+}
+
 export interface ExpectedMatch {
   readonly id: number;
   readonly startTime: string;
@@ -26,6 +31,7 @@ export interface ExpectedMatch {
   };
   readonly homeCompetitor: ExpectedTeam;
   readonly awayCompetitor: ExpectedTeam;
+  readonly tvNetworks: ExpectedTvNetworks[];
 }
 
 export interface Team {
@@ -45,4 +51,5 @@ export interface MatchDetails {
   readonly venue: string;
   readonly homeCompetitor: Team;
   readonly awayCompetitor: Team;
+  readonly channel: string;
 }

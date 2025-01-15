@@ -16,7 +16,7 @@ export function generateMatchResultsString(data: { competition: Competition; mat
 }
 
 export function getSingleMatchString(matchDetails: MatchDetails): string {
-  const { startTime, homeCompetitor, awayCompetitor, gameTime, statusText } = matchDetails;
+  const { startTime, homeCompetitor, awayCompetitor, gameTime, statusText, channel } = matchDetails;
   const displayStartTime = toZonedTime(new Date(startTime), DEFAULT_TIMEZONE).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   const matchEnded = statusText.includes('הסתיים');
   const result = [
@@ -30,8 +30,11 @@ export function getSingleMatchString(matchDetails: MatchDetails): string {
     '-',
     matchEnded || gameTime === -1 ? '' : gameTime,
     statusText === 'טרם החל' || matchEnded ? '' : statusText,
+    channel ? `(${channel})` : '',
   ]
     .join(' ')
+    .replaceAll('  ', ' ')
+    .replaceAll('  ', ' ')
     .replaceAll('  ', ' ')
     .trim();
   return result.endsWith(' -') ? result.slice(0, -2) : result;

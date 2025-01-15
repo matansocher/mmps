@@ -24,14 +24,30 @@ export class Scores365Service {
   async getMatchesForCompetition(competition: Competition, date: string): Promise<{ competition: Competition; matches: MatchDetails[] }> {
     const queryParams = { competitions: competition.id.toString(), langId: '2', timezoneName: DEFAULT_TIMEZONE };
     const allMatchesRes = await axios.get(`${SCORES_365_API_URL}/games/current?${new URLSearchParams(queryParams)}`);
-    const matches = allMatchesRes?.data?.games
-      ?.filter((match: ExpectedMatch) => date === getDateString(new Date(match.startTime)))
-      .map((match: ExpectedMatch) => this.parseExpectedMatch(match));
-    return { competition, matches };
+    const matchesRes = allMatchesRes?.data?.games.filter((matchRes: ExpectedMatch) => date === getDateString(new Date(matchRes.startTime)));
+    const enrichedMatches = await Promise.all(matchesRes.map((matchRes: MatchDetails) => this.getMatchDetails(matchRes.id)));
+    return { competition, matches: enrichedMatches.filter(Boolean) };
+  }
+
+  async getMatchDetails(matchId: number): Promise<MatchDetails> {
+    try {
+      const queryParams = {
+        appTypeId: '5',
+        langId: '2',
+        timezoneName: DEFAULT_TIMEZONE,
+        gameId: matchId.toString(),
+        userCountryId: '6',
+      };
+      const matchRes = await axios.get(`${SCORES_365_API_URL}/game?${new URLSearchParams(queryParams)}`);
+      return this.parseExpectedMatch(matchRes.data?.game);
+    } catch (err) {
+      return null;
+    }
   }
 
   parseExpectedMatch(match: ExpectedMatch): MatchDetails {
-    const { id, startTime, statusText, gameTime, venue, homeCompetitor, awayCompetitor } = match;
+    const { id, startTime, statusText, gameTime, venue, homeCompetitor, awayCompetitor, tvNetworks = [] } = match;
+    const channel = tvNetworks[0]?.name;
     return {
       id,
       startTime,
@@ -40,6 +56,7 @@ export class Scores365Service {
       venue: venue?.name,
       homeCompetitor: _pick(homeCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,
       awayCompetitor: _pick(awayCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,
+      ...(channel ? { channel } : {}),
     } as MatchDetails;
   }
 }
