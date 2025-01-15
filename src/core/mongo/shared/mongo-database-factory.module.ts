@@ -1,6 +1,6 @@
 import { MongoClient, Db, MongoClientOptions } from 'mongodb';
 import { Module, DynamicModule, Global } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { DatabaseModuleOptions } from './interface';
 
 @Global()
@@ -8,7 +8,6 @@ import { DatabaseModuleOptions } from './interface';
 export class MongoDatabaseFactoryModule {
   static forChild(options: DatabaseModuleOptions): DynamicModule {
     const connectionProvider = {
-      imports: [ConfigModule],
       provide: options.connectionName,
       inject: [ConfigService],
       useFactory: async (configService: ConfigService): Promise<Db> => {

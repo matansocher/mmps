@@ -27,7 +27,7 @@ function getImports() {
     ];
   }
 
-  return [...commonModules, TeacherBotModule];
+  return [...commonModules, VoicePalBotModule];
 }
 
 @Module({

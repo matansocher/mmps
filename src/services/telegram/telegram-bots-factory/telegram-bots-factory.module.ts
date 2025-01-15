@@ -1,5 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Module, DynamicModule, Global } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { TelegramBotFactoryOptions } from '@services/telegram';
 
 @Global()
@@ -7,9 +8,10 @@ import { TelegramBotFactoryOptions } from '@services/telegram';
 export class TelegramBotsFactoryModule {
   static forChild(options: TelegramBotFactoryOptions): DynamicModule {
     const botProvider = {
+      inject: [ConfigService],
       provide: options.id,
-      useFactory: async (): Promise<TelegramBot> => {
-        const token = options.token;
+      useFactory: async (configService: ConfigService): Promise<TelegramBot> => {
+        const token = configService.getOrThrow(options.token);
         return new TelegramBot(token, { polling: true });
       },
     };

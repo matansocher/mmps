@@ -1,12 +1,14 @@
 import axios from 'axios';
 import { promises as fs } from 'fs';
-import { env } from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class ImgurService {
   private readonly logger = new Logger(ImgurService.name);
+
+  constructor(private readonly configService: ConfigService) {}
 
   async uploadImage(imageLocalPath: string): Promise<string> {
     try {
@@ -23,7 +25,7 @@ export class ImgurService {
         url: 'https://api.imgur.com/3/image',
         method: 'post',
         headers: {
-          Authorization: `Client-ID ${env.IMGUR_CLIENT_ID}`,
+          Authorization: `Client-ID ${this.configService.get('IMGUR_CLIENT_ID')}`,
           'Content-Type': 'application/json',
         },
         data: data,
