@@ -15,7 +15,7 @@ export class RollinsparkBotService implements OnModuleInit {
     private readonly mongoUserService: RollinsparkMongoUserService,
     private readonly mongoSubscriptionService: RollinsparkMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.ROLLINSPARK.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.ROLLINSPARK.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -38,13 +38,13 @@ export class RollinsparkBotService implements OnModuleInit {
     const errorMessage = `error: ${getErrorMessage(err)}`;
     this.logger.error(action, `${logBody} - ${errorMessage}`);
     await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
-    this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
   }
 
   async handleActionSuccess(action: string, logBody: string, chatId: number, replyText: string, form = {}): Promise<void> {
     await this.bot.sendMessage(chatId, replyText, form);
     this.logger.log(action, `${logBody} - success`);
-    this.notifierBotService.notify(BOTS.ROLLINSPARK.name, { action: `${action} - ${ANALYTIC_EVENT_STATES.SUCCESS}` }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${action} - ${ANALYTIC_EVENT_STATES.SUCCESS}` }, chatId, this.mongoUserService);
   }
 
   async startHandler(message: Message): Promise<void> {

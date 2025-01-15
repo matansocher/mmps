@@ -12,7 +12,7 @@ export class VoicePalBotService implements OnModuleInit {
     private readonly messagesAggregatorService: MessagesAggregatorService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly voicePalService: VoicePalService,
-    @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {

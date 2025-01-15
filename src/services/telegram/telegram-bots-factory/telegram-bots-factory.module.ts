@@ -7,7 +7,7 @@ import { TelegramBotFactoryOptions } from '@services/telegram';
 export class TelegramBotsFactoryModule {
   static forChild(options: TelegramBotFactoryOptions): DynamicModule {
     const botProvider = {
-      provide: options.name,
+      provide: options.id,
       useFactory: async (): Promise<TelegramBot> => {
         const token = options.token;
         return new TelegramBot(token, { polling: true });

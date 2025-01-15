@@ -27,7 +27,7 @@ export class WoltBotService implements OnModuleInit {
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.WOLT.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -56,12 +56,12 @@ export class WoltBotService implements OnModuleInit {
       this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
-      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       this.logger.log(this.startHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.startHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name }, chatId, this.mongoUserService);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
@@ -90,7 +90,7 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.listHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name }, chatId, this.mongoUserService);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
@@ -126,12 +126,12 @@ export class WoltBotService implements OnModuleInit {
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `Choose one of the above restaurants so I can notify you when it's online`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
-      this.notifierBotService.notify(BOTS.WOLT.name, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') }, chatId, this.mongoUserService);
       this.logger.log(this.textHandler.name, `${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.textHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
@@ -155,7 +155,7 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.callbackQueryHandler.name, errorMessage);
-      this.notifierBotService.notify(BOTS.WOLT.name, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }

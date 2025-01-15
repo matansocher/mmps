@@ -2,7 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
+import { BOTS, TelegramGeneralService, getMessageData, TelegramBotConfig } from '@services/telegram';
 import { INotifyOptions } from './interface';
 import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
@@ -12,7 +12,7 @@ export class NotifierBotService implements OnModuleInit {
 
   constructor(
     private readonly telegramGeneralService: TelegramGeneralService,
-    @Inject(BOTS.NOTIFIER.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.NOTIFIER.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -38,9 +38,9 @@ export class NotifierBotService implements OnModuleInit {
     }
   }
 
-  async notify(botName: string, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
+  async notify(bot: TelegramBotConfig, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
     const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
-    const notyMessageText = this.getNotyMessageText(botName, userDetails, options);
+    const notyMessageText = this.getNotyMessageText(bot.name, userDetails, options);
     this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
 

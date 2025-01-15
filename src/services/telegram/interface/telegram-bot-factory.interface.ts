@@ -1,4 +1,4 @@
 export type TelegramBotFactoryOptions = {
-  name: string;
+  id: string;
   token: string;
 };

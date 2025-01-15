@@ -10,7 +10,15 @@ import { AiService } from '@services/ai';
 import { GoogleTranslateService } from '@services/google-translate';
 // import { ImgurService } from '@services/imgur';
 // import { SocialMediaDownloaderService } from '@services/social-media-downloader';
-import { BOTS, ITelegramMessageData, MessageLoaderOptions, MessageLoaderService, TelegramGeneralService, getMessageData } from '@services/telegram';
+import {
+  BOTS,
+  ITelegramMessageData,
+  MessageLoaderOptions,
+  MessageLoaderService,
+  TelegramGeneralService,
+  getMessageData,
+  BOT_BROADCAST_ACTIONS
+} from '@services/telegram';
 // import { YoutubeTranscriptService } from '@services/youtube-transcript';
 import { IVoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
@@ -32,7 +40,7 @@ export class VoicePalService implements OnModuleInit {
     // private readonly imgurService: ImgurService,
     private readonly aiService: AiService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.VOICE_PAL.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): any {
@@ -46,7 +54,7 @@ export class VoicePalService implements OnModuleInit {
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
       this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { action: ANALYTIC_EVENT_NAMES['/start'] }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { action: ANALYTIC_EVENT_NAMES['/start'] }, chatId, this.mongoUserService);
       replyText = replyText.replace('{name}', firstName || username || '');
     } else {
       this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
@@ -72,7 +80,7 @@ export class VoicePalService implements OnModuleInit {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction && userAction.showLoader) {
-        await this.messageLoaderService.handleMessageWithLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType } as MessageLoaderOptions,
+        await this.messageLoaderService.handleMessageWithLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING } as MessageLoaderOptions,
           async (): Promise<void> => {
             await this[userAction.handler]({ chatId, text, audio, video, photo, file });
           },
@@ -81,11 +89,11 @@ export class VoicePalService implements OnModuleInit {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.VOICE_PAL.name, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
       throw err;
     }
   }

@@ -12,7 +12,7 @@ export class TeacherBotService implements OnModuleInit {
   constructor(
     private readonly telegramGeneralService: TelegramGeneralService,
     private readonly teacherService: TeacherService,
-    @Inject(BOTS.PROGRAMMING_TEACHER.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {

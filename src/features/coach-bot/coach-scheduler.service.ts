@@ -20,7 +20,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     private readonly scores365Service: Scores365Service,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.COACH.name) private readonly bot: TelegramBot,
+    @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -46,7 +46,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(this.handleIntervalFlow.name, errorMessage);
-      this.notifierBotService.notify(BOTS.COACH.name, { action: `cron - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, null, null);
     }
   }
 
