@@ -59,7 +59,7 @@ export class CoachBotService implements OnModuleInit {
 
     try {
       this.logger.log(this.startHandler.name, `${logBody} - start`);
-      this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
+      await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.handleActionSuccess(ANALYTIC_EVENT_STATES.START, chatId);
     } catch (err) {

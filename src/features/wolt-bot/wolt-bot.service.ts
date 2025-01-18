@@ -42,7 +42,7 @@ export class WoltBotService implements OnModuleInit {
 
     try {
       this.logger.log(this.startHandler.name, `${logBody} - start`);
-      this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
+      await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
       this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);

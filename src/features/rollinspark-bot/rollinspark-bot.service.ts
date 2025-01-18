@@ -37,10 +37,11 @@ export class RollinsparkBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName } = getMessageData(message);
+    const { chatId, telegramUserId, firstName, lastName, username } = getMessageData(message);
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
+      await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       this.logger.log(this.startHandler.name, `${logBody} - start`);
       const replyText = `Hello, I am bot that can you know when I find a new apartment uploaded to the rollins park neighborhood website.\n\nJust let me know what plan of an apartment you want and I will look it up for you`;
       return this.handleActionSuccess(this.startHandler.name, logBody, chatId, replyText);
