@@ -1,5 +1,4 @@
 import { Message } from 'node-telegram-bot-api';
-import { Injectable } from '@nestjs/common';
 
 const TIMEOUT_MS = 100;
 
@@ -9,7 +8,6 @@ interface MessageAggregatorData {
   processMessageCallback: (message: Message) => void;
 }
 
-@Injectable()
 export class MessagesAggregatorService {
   private messagesCache: Record<number, MessageAggregatorData> = {};
 

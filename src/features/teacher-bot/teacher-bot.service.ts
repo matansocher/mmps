@@ -2,7 +2,12 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { deleteFile, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
-import { BOTS, TelegramGeneralService, getMessageData, ITelegramMessageData } from '@services/telegram';
+import {
+  BOTS,
+  getMessageData,
+  ITelegramMessageData,
+  downloadAudioFromVideoOrAudio,
+} from '@services/telegram';
 import { LOCAL_FILES_PATH } from '@services/voice-pal';
 import { TeacherService } from './teacher.service';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
@@ -14,21 +19,10 @@ export class TeacherBotService implements OnModuleInit {
   constructor(
     private readonly aiService: AiService,
     private readonly teacherService: TeacherService,
-    private readonly telegramGeneralService: TelegramGeneralService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
-    this.createBotEventListeners();
-    this.createErrorEventListeners();
-  }
-
-  createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.PROGRAMMING_TEACHER.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.PROGRAMMING_TEACHER.name, 'error', error));
-  }
-
-  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/course/, (message: Message) => this.courseHandler(message));
     this.bot.onText(/\/lesson/, (message: Message) => this.lessonHandler(message));
@@ -112,7 +106,7 @@ export class TeacherBotService implements OnModuleInit {
   async getQuestion({ text, audio }: Partial<ITelegramMessageData>): Promise<string> {
     let question = text;
     if (audio) {
-      const { audioFileLocalPath } = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { audio, video: null }, LOCAL_FILES_PATH);
+      const { audioFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { audio, video: null }, LOCAL_FILES_PATH);
       const resText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
       await deleteFile(audioFileLocalPath);
       question = resText;

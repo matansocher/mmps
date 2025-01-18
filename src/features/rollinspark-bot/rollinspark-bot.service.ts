@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from '@core/mongo/rollinspark-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TelegramGeneralService } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, BOT_ACTIONS, NAME_TO_PLAN_ID_MAP } from './constants';
 
 @Injectable()
@@ -11,7 +11,6 @@ export class RollinsparkBotService implements OnModuleInit {
   private readonly logger = new Logger(RollinsparkMongoSubscriptionService.name);
 
   constructor(
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly mongoUserService: RollinsparkMongoUserService,
     private readonly mongoSubscriptionService: RollinsparkMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
@@ -19,16 +18,6 @@ export class RollinsparkBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.createBotEventListeners();
-    this.createErrorEventListeners();
-  }
-
-  createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.ROLLINSPARK.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.ROLLINSPARK.name, 'error', error));
-  }
-
-  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/management/, (message: Message) => this.managementHandler(message));
     this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));

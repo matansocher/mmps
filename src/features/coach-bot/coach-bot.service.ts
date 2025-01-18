@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, TelegramGeneralService, getMessageData } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoaderService, MessageLoaderOptions } from '@services/telegram';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
 
@@ -27,7 +27,6 @@ export class CoachBotService implements OnModuleInit {
   private readonly logger = new Logger(CoachBotService.name);
 
   constructor(
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly mongoUserService: CoachMongoUserService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly coachBotSchedulerService: CoachBotSchedulerService,
@@ -36,20 +35,22 @@ export class CoachBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.createBotEventListeners();
-    this.createErrorEventListeners();
-  }
-
-  createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.COACH.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.COACH.name, 'error', error));
-  }
-
-  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/subscribe/, (message: Message) => this.subscribeHandler(message));
     this.bot.onText(/\/unsubscribe/, (message: Message) => this.unsubscribeHandler(message));
     this.bot.on('text', (message: Message) => this.textHandler(message));
+  }
+
+  async handleActionError(action: string, err: Error, chatId: number): Promise<void> {
+    const errorMessage = `error: ${getErrorMessage(err)}`;
+    this.logger.error(action, `${errorMessage}`);
+    await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
+    this.notifierBotService.notify(BOTS.COACH, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
+  }
+
+  async handleActionSuccess(action: string, chatId: number, notifierAdditionalData = {}): Promise<void> {
+    this.logger.log(action, `success`);
+    this.notifierBotService.notify(BOTS.COACH, { action: `${action} - ${ANALYTIC_EVENT_STATES.SUCCESS}`, ...notifierAdditionalData }, chatId, this.mongoUserService);
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -60,12 +61,9 @@ export class CoachBotService implements OnModuleInit {
       this.logger.log(this.startHandler.name, `${logBody} - start`);
       this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.START}` }, chatId, this.mongoUserService);
-      this.logger.log(this.startHandler.name, `${logBody} - success`);
+      this.handleActionSuccess(ANALYTIC_EVENT_STATES.START, chatId);
     } catch (err) {
-      this.logger.error(this.startHandler.name, `${logBody} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.START} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
+      this.handleActionError(this.startHandler.name, err, chatId);
     }
   }
 
@@ -77,17 +75,14 @@ export class CoachBotService implements OnModuleInit {
       this.logger.log(this.subscribeHandler.name, `${logBody} - start`);
       const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
       if (subscription) {
-        await this.bot.sendMessage(chatId, `I see you are already subscribed ✅\n Don't worry, I will send you games summaries`);
+        await this.bot.sendMessage(chatId, `וואלה אני רואה שכבר שמת עוקב, אז הכל טוב ✅`);
         return;
       }
       await this.mongoSubscriptionService.addSubscription(chatId);
-      await this.bot.sendMessage(chatId, `OK, I will send you games summaries every day ✅\nYou can always ask me to stop by clicking on the unsubscribe command`);
-      this.logger.log(this.subscribeHandler.name, `${logBody} - success`);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.SUBSCRIBE}` }, chatId, this.mongoUserService);
+      await this.bot.sendMessage(chatId, `סבבה, אני אשלח לך עדכונים יומיים ✅. אפשר להסיר עוקב תמיד פה למטה (unsubscribe)`);
+      this.handleActionSuccess(ANALYTIC_EVENT_STATES.SUBSCRIBE, chatId);
     } catch (err) {
-      this.logger.error(this.subscribeHandler.name, `${logBody} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.SUBSCRIBE} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
+      this.handleActionError(this.subscribeHandler.name, err, chatId);
     }
   }
 
@@ -99,17 +94,14 @@ export class CoachBotService implements OnModuleInit {
       this.logger.log(this.unsubscribeHandler.name, `${logBody} - start`);
       const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
       if (subscription) {
-        await this.bot.sendMessage(chatId, `I see you are not subscribed yet 😁`);
+        await this.bot.sendMessage(chatId, `טוב אני רואה שעדיין לא שמת עוקב, לא סבבה 😁`);
         return;
       }
       await this.mongoSubscriptionService.archiveSubscription(chatId);
-      await this.bot.sendMessage(chatId, `OK, I will stop sending you games summaries every day 🛑`);
-      this.logger.log(this.unsubscribeHandler.name, `${logBody} - success`);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.UNSUBSCRIBE}` }, chatId, this.mongoUserService);
+      await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
+      this.handleActionSuccess(ANALYTIC_EVENT_STATES.UNSUBSCRIBE, chatId);
     } catch (err) {
-      this.logger.error(this.unsubscribeHandler.name, `${logBody} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.UNSUBSCRIBE} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
+      this.handleActionError(this.unsubscribeHandler.name, err, chatId);
     }
   }
 
@@ -123,13 +115,16 @@ export class CoachBotService implements OnModuleInit {
     this.logger.log(this.textHandler.name, `${logBody} - start`);
 
     try {
-      await this.coachBotSchedulerService.handleIntervalFlow(text);
-      this.logger.log(this.textHandler.name, `${logBody} - success`);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.SEARCH}`, text }, chatId, this.mongoUserService);
+      // $$$$$$$$$$$$$$$$$$$$$$
+      await this.coachBotSchedulerService.handleIntervalFlow(chatId),
+      // const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000 } as MessageLoaderOptions);
+      // await messageLoaderService.handleMessageWithLoader(
+      //   async () => await this.coachBotSchedulerService.handleIntervalFlow(chatId),
+      // );
+
+      this.handleActionSuccess(ANALYTIC_EVENT_STATES.SEARCH, chatId, { text });
     } catch (err) {
-      this.logger.error(this.textHandler.name, `error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-      this.notifierBotService.notify(BOTS.COACH, { action: `${ANALYTIC_EVENT_STATES.SEARCH} - ${ANALYTIC_EVENT_STATES.ERROR}` }, chatId, this.mongoUserService);
+      this.handleActionError(this.textHandler.name, err, chatId);
     }
   }
 }

@@ -28,15 +28,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
   }
 
   @Cron(`59 ${HOURS_TON_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handleIntervalFlow(date: string | null): Promise<void> {
+  async handleIntervalFlow(chatId: number = null): Promise<void> {
     try {
-      const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
+      const subscriptions = chatId ? [chatId] : await this.mongoSubscriptionService.getActiveSubscriptions();
       if (!subscriptions?.length) {
         return;
       }
 
-      const dateString = isDateStringFormat(date) ? date : getDateString(new Date());
-      const responseText = await this.getMatchesSummaryMessage(dateString);
+      const responseText = await this.getMatchesSummaryMessage(getDateString(new Date()));
       if (!responseText) {
         return;
       }

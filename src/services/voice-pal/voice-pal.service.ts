@@ -15,9 +15,9 @@ import {
   ITelegramMessageData,
   MessageLoaderOptions,
   MessageLoaderService,
-  TelegramGeneralService,
   getMessageData,
-  BOT_BROADCAST_ACTIONS
+  BOT_BROADCAST_ACTIONS,
+  downloadAudioFromVideoOrAudio,
 } from '@services/telegram';
 // import { YoutubeTranscriptService } from '@services/youtube-transcript';
 import { IVoicePalOption } from './interface';
@@ -30,9 +30,7 @@ export class VoicePalService implements OnModuleInit {
   private readonly logger = new Logger(VoicePalService.name);
 
   constructor(
-    private readonly messageLoaderService: MessageLoaderService,
     private readonly mongoUserService: VoicePalMongoUserService,
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly googleTranslateService: GoogleTranslateService,
     // private readonly youtubeTranscriptService: YoutubeTranscriptService,
     // private readonly socialMediaDownloaderService: SocialMediaDownloaderService,
@@ -63,6 +61,10 @@ export class VoicePalService implements OnModuleInit {
     await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
   }
 
+  async sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   async handleAction(message: Message, userAction: IVoicePalOption): Promise<void> {
     const { chatId, text, audio, video, photo, file } = getMessageData(message);
 
@@ -79,12 +81,16 @@ export class VoicePalService implements OnModuleInit {
 
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
-      if (userAction && userAction.showLoader) {
-        await this.messageLoaderService.handleMessageWithLoader(this.bot, chatId, { cycleDuration: 5000, loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING } as MessageLoaderOptions,
-          async (): Promise<void> => {
-            await this[userAction.handler]({ chatId, text, audio, video, photo, file });
-          },
-        );
+      if (userAction?.showLoader) {
+        await this[userAction.handler]({ chatId, text, audio, video, photo, file });
+        // const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING } as MessageLoaderOptions);
+        // await messageLoaderService.handleMessageWithLoader(
+        //   async (): Promise<void> => {
+        //     await this.sleep(4100);
+        //     await this.bot.sendMessage(chatId, `done`);
+        //     await this[userAction.handler]({ chatId, text, audio, video, photo, file });
+          // },
+        // );
       } else {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
@@ -99,7 +105,7 @@ export class VoicePalService implements OnModuleInit {
   }
 
   async handleTranscribeAction({ chatId, video, audio }: Partial<ITelegramMessageData>): Promise<void> {
-    const { audioFileLocalPath, videoFileLocalPath } = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+    const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
     await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
     deleteFile(videoFileLocalPath);
     const resText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
@@ -115,7 +121,7 @@ export class VoicePalService implements OnModuleInit {
       await this.notifierBotService.collect(MessageType.TEXT, text);
       resText = await this.googleTranslateService.getTranslationToEnglish(text);
     } else {
-      const { audioFileLocalPath, videoFileLocalPath } = await this.telegramGeneralService.downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+      const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
       await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
       deleteFile(videoFileLocalPath);
       resText = await this.aiService.getTranslationFromAudio(audioFileLocalPath);
@@ -215,7 +221,7 @@ export class VoicePalService implements OnModuleInit {
   }
 
   // async handleAnalyzeFile({ chatId, file }: Partial<ITelegramMessageData>): Promise<void> {
-  //   const fileLocalPath = await this.telegramGeneralService.downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
+  //   const fileLocalPath = await downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
   //   const fileAnalysisText = await this.aiService.analyzeFile(FILE_ANALYSIS_PROMPT, fileLocalPath);
   //   await this.bot.sendMessage(chatId, fileAnalysisText, getKeyboardOptions());
   //   deleteFile(fileLocalPath);

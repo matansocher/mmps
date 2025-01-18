@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, TelegramGeneralService, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
+import { BOTS, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
   CITIES_SLUGS_SUPPORTED,
@@ -25,22 +25,11 @@ export class WoltBotService implements OnModuleInit {
     private readonly woltService: WoltService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
-    this.createBotEventListeners();
-    this.createErrorEventListeners();
-  }
-
-  createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.WOLT.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.WOLT.name, 'error', error));
-  }
-
-  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
     this.bot.onText(/\/list/, (message: Message) => this.listHandler(message));
     this.bot.on('text', (message: Message) => this.textHandler(message));

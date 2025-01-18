@@ -2,7 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, TelegramGeneralService, getMessageData, TelegramBotConfig } from '@services/telegram';
+import { BOTS, getMessageData, TelegramBotConfig } from '@services/telegram';
 import { INotifyOptions } from './interface';
 import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
@@ -10,22 +10,9 @@ import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 export class NotifierBotService implements OnModuleInit {
   private readonly logger = new Logger(NotifierBotService.name);
 
-  constructor(
-    private readonly telegramGeneralService: TelegramGeneralService,
-    @Inject(BOTS.NOTIFIER.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(@Inject(BOTS.NOTIFIER.id) private readonly bot: TelegramBot) {}
 
   onModuleInit(): void {
-    this.createBotEventListeners();
-    this.createErrorEventListeners();
-  }
-
-  createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NOTIFIER.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.NOTIFIER.name, 'error', error));
-  }
-
-  createBotEventListeners(): void {
     this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
   }
 
