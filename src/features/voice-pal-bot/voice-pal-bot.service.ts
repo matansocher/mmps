@@ -1,6 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { BOTS, MessagesAggregatorService, TelegramGeneralService, getMessageData } from '@services/telegram';
+import { BOTS, MessagesAggregatorService, getMessageData } from '@services/telegram';
 import { UserSelectedActionsService, VOICE_PAL_OPTIONS, VoicePalService } from '@services/voice-pal';
 
 @Injectable()
@@ -9,29 +9,16 @@ export class VoicePalBotService implements OnModuleInit {
 
   constructor(
     private readonly userSelectedActionsService: UserSelectedActionsService,
-    private readonly messagesAggregatorService: MessagesAggregatorService,
-    private readonly telegramGeneralService: TelegramGeneralService,
     private readonly voicePalService: VoicePalService,
     @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
-    this.createBotEventListeners();
-    this.createErrorEventListeners();
-  }
-
-  createErrorEventListeners(): void {
-    this.bot.on('polling_error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.VOICE_PAL.name, 'polling_error', error));
-    this.bot.on('error', async (error) => this.telegramGeneralService.botErrorHandler(BOTS.VOICE_PAL.name, 'error', error));
-  }
-
-  createBotEventListeners(): void {
     this.bot.on('message', (message: Message) =>
-      this.messagesAggregatorService.handleIncomingMessage(message, (message: Message) => this.handleMessage(message)),
+      new MessagesAggregatorService().handleIncomingMessage(message, (message: Message) => this.handleMessage(message)),
     );
   }
 
-  // @Timer()
   async handleMessage(message: Message): Promise<void> {
     const { chatId, firstName, lastName, text } = getMessageData(message);
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;

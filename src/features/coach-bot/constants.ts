@@ -1,8 +1,8 @@
 export const INITIAL_BOT_RESPONSE = [
-  `Hey There 👋`,
-  `I am here to provide you with results of football matches.`,
-  `If you want to see today's results, just send me a message, any message `,
-  `if you want to see another day's results, just send me a message with the date in the format of 'YYYY-MM-DD', example: '2025-03-17' 📅`,
+  `שלום 👋`,
+  `אני פה כדי לתת תוצאות של משחקי ספורט`,
+  `כדי לראות תוצאות של משחקים מהיום נכון לעכשיו, אפשר פשוט לשלוח לי הודעה, כל הודעה`,
+  `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17 📅) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
 ].join('\n\n');
 
-export const GENERAL_ERROR_RESPONSE = 'Sorry, I am unable to process your request at the moment. Please try again later. 🙁';
+export const GENERAL_ERROR_RESPONSE = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';

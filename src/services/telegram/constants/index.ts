@@ -1,8 +1,4 @@
-export interface TelegramBotConfig {
-  id: string;
-  name: string;
-  token: string;
-}
+import { TelegramBotConfig } from '../interface';
 
 export const BOTS: Record<string, TelegramBotConfig> = {
   WOLT: {
