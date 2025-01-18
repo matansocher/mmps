@@ -1,5 +1,9 @@
 export const SCORES_365_API_URL = 'https://webws.365scores.com/web';
 
+export const APP_TYPE_ID = 5;
+export const LANGUAGE_ID = 2;
+export const COUNTRY_ID = 6;
+
 export const COMPETITION_IDS_MAP = {
   LIGAT_HAAL: 42,
   ISR_FA_CUP: 49,

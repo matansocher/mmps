@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CoachMongoModule } from '@core/mongo/coach-mongo';
 import { NotifierBotModule } from '@core/notifier-bot';
 import { BOTS, TelegramBotsFactoryModule } from '@services/telegram';
+import { CoachService } from './coach.service';
 import { CoachBotService } from './coach-bot.service';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 
@@ -13,6 +14,6 @@ import { CoachBotSchedulerService } from './coach-scheduler.service';
     TelegramBotsFactoryModule.forChild(BOTS.COACH),
     CoachMongoModule,
   ],
-  providers: [CoachBotService, CoachBotSchedulerService],
+  providers: [CoachBotService, CoachBotSchedulerService, CoachService],
 })
 export class CoachBotModule {}

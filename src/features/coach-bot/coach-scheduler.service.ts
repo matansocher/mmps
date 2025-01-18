@@ -4,11 +4,10 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getDateString, getErrorMessage } from '@core/utils';
-import { getCompetitions, getMatchesForCompetition } from '@services/scores-365';
+import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES } from './coach-bot.service';
-import { generateMatchResultsString } from './utils/generate-match-details-string';
+import { CoachService } from './coach.service';
+import { ANALYTIC_EVENT_STATES } from './constants';
 
 const HOURS_TO_NOTIFY = [12, 19, 23];
 
@@ -17,6 +16,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(CoachBotSchedulerService.name);
 
   constructor(
+    private readonly coachService: CoachService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
@@ -27,14 +27,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
   }
 
   @Cron(`59 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handleIntervalFlow(chatId: number = null): Promise<void> {
+  async handleIntervalFlow(): Promise<void> {
     try {
-      const subscriptions = chatId ? [chatId] : await this.mongoSubscriptionService.getActiveSubscriptions();
+      const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
       if (!subscriptions?.length) {
         return;
       }
 
-      const responseText = await this.getMatchesSummaryMessage(getDateString(new Date()));
+      const responseText = await this.coachService.getMatchesSummaryMessage();
       if (!responseText) {
         return;
       }
@@ -46,25 +46,5 @@ export class CoachBotSchedulerService implements OnModuleInit {
       this.logger.error(this.handleIntervalFlow.name, errorMessage);
       this.notifierBotService.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, null, null);
     }
-  }
-
-  async getMatchesSummaryMessage(dateString: string): Promise<string> {
-    const competitions = await getCompetitions();
-    if (!competitions?.length) {
-      this.logger.error(this.handleIntervalFlow.name, 'error - could not get competitions');
-      return;
-    }
-    const competitionsWithMatches = await Promise.all(competitions.map((competition) => getMatchesForCompetition(competition, dateString)));
-    if (!competitionsWithMatches?.length) {
-      this.logger.error(this.handleIntervalFlow.name, 'error - could not get matches');
-      return;
-    }
-
-    const competitionsWithMatchesFiltered = competitionsWithMatches.filter(({ matches }) => matches?.length);
-    if (!competitionsWithMatchesFiltered?.length) {
-      this.logger.log(this.handleIntervalFlow.name, 'no competitions with matches found');
-      return;
-    }
-    return generateMatchResultsString(competitionsWithMatchesFiltered);
   }
 }
