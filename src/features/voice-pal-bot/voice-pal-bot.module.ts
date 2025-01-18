@@ -1,13 +1,23 @@
 import { Module } from '@nestjs/common';
+import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo';
+import { NotifierBotModule } from '@core/notifier-bot';
+import { AiModule } from '@services/ai';
+import { GoogleTranslateModule } from '@services/google-translate';
+import { ImgurModule } from '@services/imgur';
 import { BOTS, TelegramBotsFactoryModule } from '@services/telegram';
-import { VoicePalModule } from '@services/voice-pal';
+import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VoicePalBotService } from './voice-pal-bot.service';
+import { VoicePalService } from './voice-pal.service';
 
 @Module({
   imports: [
     TelegramBotsFactoryModule.forChild(BOTS.VOICE_PAL),
-    VoicePalModule,
+    AiModule,
+    GoogleTranslateModule,
+    ImgurModule,
+    NotifierBotModule,
+    VoicePalMongoModule,
   ],
-  providers: [VoicePalBotService],
+  providers: [VoicePalBotService, VoicePalService, UserSelectedActionsService],
 })
 export class VoicePalBotModule {}

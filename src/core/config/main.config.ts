@@ -7,6 +7,8 @@ export const MONTHS_OF_YEAR = ['January', 'February', 'March', 'April', 'May', '
 
 export const DEFAULT_TIMEZONE = 'Asia/Jerusalem';
 
+export const LOCAL_FILES_PATH = './assets/downloads';
+
 export const FILE_SUFFIX_TO_MIME_TYPE_MAP = {
   '.aac': 'audio/aac',
   '.abw': 'application/x-abiword',

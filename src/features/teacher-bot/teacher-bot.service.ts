@@ -1,14 +1,9 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { LOCAL_FILES_PATH } from '@core/config';
 import { deleteFile, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
-import {
-  BOTS,
-  getMessageData,
-  ITelegramMessageData,
-  downloadAudioFromVideoOrAudio,
-} from '@services/telegram';
-import { LOCAL_FILES_PATH } from '@services/voice-pal';
+import { BOTS, getMessageData, ITelegramMessageData, downloadAudioFromVideoOrAudio } from '@services/telegram';
 import { TeacherService } from './teacher.service';
 import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
 
