@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
 
-export function createErrorEventListeners(bot: TelegramBot, botName: string) {
+export function createErrorEventListeners(bot: TelegramBot, botName: string): void {
   const botErrorHandler = (botName: string, handlerName: string, error): void => {
     const logger = new Logger(createErrorEventListeners.name);
     const { code, message } = error;
