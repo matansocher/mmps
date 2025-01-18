@@ -1,3 +1,8 @@
+export interface CompetitionDetails {
+  readonly competition: Competition;
+  readonly matches: MatchDetails[];
+}
+
 export interface Competition {
   readonly id: number;
   readonly name: string;

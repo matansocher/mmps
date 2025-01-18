@@ -4,23 +4,8 @@ import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mong
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getMessageData, MessageLoaderService, MessageLoaderOptions } from '@services/telegram';
-import { CoachBotSchedulerService } from './coach-scheduler.service';
-import { GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
-
-export const ANALYTIC_EVENT_STATES = {
-  START: 'START',
-  SEARCH: 'SEARCH',
-  ERROR: 'ERROR',
-  SUBSCRIBE: 'SUBSCRIBE',
-  UNSUBSCRIBE: 'UNSUBSCRIBE',
-  SUCCESS: 'SUCCESS',
-};
-
-const COACH_BOT_OPTIONS = {
-  START: '/start',
-  SUBSCRIBE: '/subscribe',
-  UNSUBSCRIBE: '/unsubscribe',
-};
+import { CoachService } from './coach.service';
+import { ANALYTIC_EVENT_STATES, COACH_BOT_OPTIONS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {
@@ -29,7 +14,7 @@ export class CoachBotService implements OnModuleInit {
   constructor(
     private readonly mongoUserService: CoachMongoUserService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
-    private readonly coachBotSchedulerService: CoachBotSchedulerService,
+    private readonly coachService: CoachService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
   ) {}
@@ -105,7 +90,7 @@ export class CoachBotService implements OnModuleInit {
     }
   }
 
-  async textHandler(message: Message) {
+  async textHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
@@ -115,12 +100,14 @@ export class CoachBotService implements OnModuleInit {
     this.logger.log(this.textHandler.name, `${logBody} - start`);
 
     try {
+      const resText = await this.coachService.getMatchesSummaryMessage(text);
+      await this.bot.sendMessage(chatId, resText);
       // $$$$$$$$$$$$$$$$$$$$$$
-      await this.coachBotSchedulerService.handleIntervalFlow(chatId),
       // const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000 } as MessageLoaderOptions);
-      // await messageLoaderService.handleMessageWithLoader(
-      //   async () => await this.coachBotSchedulerService.handleIntervalFlow(chatId),
-      // );
+      // await messageLoaderService.handleMessageWithLoader(async () => {
+      //   const resText = await this.coachService.getMatchesSummaryMessage(text);
+      //   await this.bot.sendMessage(chatId, resText);
+      // });
 
       this.handleActionSuccess(ANALYTIC_EVENT_STATES.SEARCH, chatId, { text });
     } catch (err) {

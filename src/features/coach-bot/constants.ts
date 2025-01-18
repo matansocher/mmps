@@ -6,3 +6,18 @@ export const INITIAL_BOT_RESPONSE = [
 ].join('\n\n');
 
 export const GENERAL_ERROR_RESPONSE = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
+
+export const ANALYTIC_EVENT_STATES = {
+  START: 'START',
+  SEARCH: 'SEARCH',
+  ERROR: 'ERROR',
+  SUBSCRIBE: 'SUBSCRIBE',
+  UNSUBSCRIBE: 'UNSUBSCRIBE',
+  SUCCESS: 'SUCCESS',
+};
+
+export const COACH_BOT_OPTIONS = {
+  START: '/start',
+  SUBSCRIBE: '/subscribe',
+  UNSUBSCRIBE: '/unsubscribe',
+};
