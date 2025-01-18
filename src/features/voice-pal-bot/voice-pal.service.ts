@@ -6,7 +6,7 @@ import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
 import { deleteFile, getErrorMessage, setFfmpegPath } from '@core/utils';
 import { AiService } from '@services/ai';
-import { GoogleTranslateService } from '@services/google-translate';
+import { getTranslationToEnglish } from '@services/google-translate';
 import {
   BOTS,
   ITelegramMessageData,
@@ -27,7 +27,6 @@ export class VoicePalService implements OnModuleInit {
 
   constructor(
     private readonly mongoUserService: VoicePalMongoUserService,
-    private readonly googleTranslateService: GoogleTranslateService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly aiService: AiService,
     private readonly notifierBotService: NotifierBotService,
@@ -112,7 +111,7 @@ export class VoicePalService implements OnModuleInit {
 
     if (text) {
       await this.notifierBotService.collect(MessageType.TEXT, text);
-      resText = await this.googleTranslateService.getTranslationToEnglish(text);
+      resText = await getTranslationToEnglish(text);
     } else {
       const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
       await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);

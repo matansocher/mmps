@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { VoicePalMongoModule } from '@core/mongo/voice-pal-mongo';
 import { NotifierBotModule } from '@core/notifier-bot';
 import { AiModule } from '@services/ai';
-import { GoogleTranslateModule } from '@services/google-translate';
-import { ImgurModule } from '@services/imgur';
 import { BOTS, TelegramBotsFactoryModule } from '@services/telegram';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VoicePalBotService } from './voice-pal-bot.service';
@@ -13,8 +11,6 @@ import { VoicePalService } from './voice-pal.service';
   imports: [
     TelegramBotsFactoryModule.forChild(BOTS.VOICE_PAL),
     AiModule,
-    GoogleTranslateModule,
-    ImgurModule,
     NotifierBotModule,
     VoicePalMongoModule,
   ],
