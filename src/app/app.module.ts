@@ -15,7 +15,7 @@ function getImports() {
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
   ];
 
-  if (!isProd) {
+  if (isProd) {
     return [
       ...commonModules,
       VoicePalBotModule,
