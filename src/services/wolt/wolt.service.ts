@@ -26,10 +26,10 @@ export class WoltService {
       const restaurants = await this.getRestaurantsList();
       if (restaurants.length) {
         this.restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
-        this.logger.log(this.refreshRestaurants.name, 'Restaurants list was refreshed successfully');
+        this.logger.log(`${this.refreshRestaurants.name} - Restaurants list was refreshed successfully`);
       }
     } catch (err) {
-      this.logger.error(this.refreshRestaurants.name, `error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.refreshRestaurants.name} - error - ${getErrorMessage(err)}`);
     }
   }
 
@@ -56,7 +56,7 @@ export class WoltService {
         } as IWoltRestaurant;
       });
     } catch (err) {
-      this.logger.error(this.getRestaurantsList.name, `err - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.getRestaurantsList.name} - err - ${getErrorMessage(err)}`);
       return [];
     }
   }
@@ -75,7 +75,7 @@ export class WoltService {
           };
         });
     } catch (err) {
-      this.logger.error(this.getCitiesList.name, `err - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.getCitiesList.name} - err - ${getErrorMessage(err)}`);
       return [];
     }
   }
@@ -105,7 +105,7 @@ export class WoltService {
         return { ...relevantParsedRestaurant, restaurantLinkUrl, isOpen };
       });
     } catch (err) {
-      this.logger.error(this.enrichRestaurants.name, `err - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.enrichRestaurants.name} - err - ${getErrorMessage(err)}`);
       return parsedRestaurants;
     }
   }

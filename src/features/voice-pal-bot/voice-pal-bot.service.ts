@@ -26,7 +26,7 @@ export class VoicePalBotService implements OnModuleInit {
     const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log('message listener', `${logBody} - start`);
+      this.logger.log(`${this.handleMessage.name} - ${logBody} - start`);
 
       const availableActions = Object.keys(VOICE_PAL_OPTIONS).map((option: string) => VOICE_PAL_OPTIONS[option].displayName);
       if (availableActions.includes(text)) {
@@ -36,7 +36,7 @@ export class VoicePalBotService implements OnModuleInit {
         await this.voicePalService.handleAction(message, userAction);
       }
 
-      this.logger.log('message listener', `${logBody} - success`);
+      this.logger.log(`${this.handleMessage.name} - ${logBody} - success`);
     } catch (err) {
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }

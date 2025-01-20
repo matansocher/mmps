@@ -24,7 +24,7 @@ export class TeacherSchedulerService {
       await this.teacherService.startNewCourse(MY_USER_ID);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
-      this.logger.error(this.handleCourseFirstLesson.name, `error: ${errorMessage}`);
+      this.logger.error(`${this.handleCourseFirstLesson.name} - error: ${errorMessage}`);
       this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }
@@ -35,7 +35,7 @@ export class TeacherSchedulerService {
       await this.teacherService.processLesson(MY_USER_ID, true);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
-      this.logger.error(this.handleCourseNextLesson.name, `error: ${errorMessage}`);
+      this.logger.error(`${this.handleCourseNextLesson.name} - error: ${errorMessage}`);
       this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }

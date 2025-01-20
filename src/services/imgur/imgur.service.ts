@@ -7,7 +7,7 @@ export async function imgurUploadImage(imgurToken: string, imageLocalPath: strin
   const logger = new Logger(imgurUploadImage.name);
 
   try {
-    logger.log(imgurUploadImage.name, `start`);
+    logger.log(`${imgurUploadImage.name} - start`);
     const imageBuffer = await fs.readFile(imageLocalPath, { encoding: 'base64' });
     const data = {
       image: imageBuffer,
@@ -27,10 +27,10 @@ export async function imgurUploadImage(imgurToken: string, imageLocalPath: strin
     };
 
     const result = await axios(config);
-    logger.log(imgurUploadImage.name, `end`);
+    logger.log(`${imgurUploadImage.name} - end`);
     return result['data']?.data?.link;
   } catch (err) {
-    logger.error(imgurUploadImage.name, `err - ${getErrorMessage(err)}`);
+    logger.error(`${imgurUploadImage.name} - err - ${getErrorMessage(err)}`);
     throw err;
   }
 }

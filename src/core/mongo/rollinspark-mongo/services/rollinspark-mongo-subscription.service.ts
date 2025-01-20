@@ -21,7 +21,7 @@ export class RollinsparkMongoSubscriptionService {
       }
       return this.subscriptionCollection.find(filter).toArray();
     } catch (err) {
-      this.logger.error(this.getActiveSubscriptions.name, `err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.getActiveSubscriptions.name} - err: ${getErrorMessage(err)}`);
       return [];
     }
   }

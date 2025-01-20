@@ -50,7 +50,7 @@ export class MessageLoaderService {
       await this.bot.sendChatAction(this.chatId, this.loadingAction);
       this.cycleInitiator();
     } catch (err) {
-      this.logger.error(MessageLoaderService.name, `error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.waitForMessage.name} - error - ${getErrorMessage(err)}`);
       await this.stopLoader();
     }
   }

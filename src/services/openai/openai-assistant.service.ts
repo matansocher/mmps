@@ -30,11 +30,11 @@ export class OpenaiAssistantService {
       return run;
     }
     if (ERROR_STATUSES.includes(run.status as ASSISTANT_RUN_STATUSES)) {
-      this.logger.error(this.runThread.name, `Error running thread ${run.thread_id} with error: ${run.last_error?.message}, code: ${run.last_error.code}, status: ${run.status}`);
+      this.logger.error(`${this.runThread.name} - Error running thread ${run.thread_id} with error: ${run.last_error?.message}, code: ${run.last_error.code}, status: ${run.status}`);
       return null;
     }
 
-    this.logger.error(this.runThread.name, `Error running thread ${run.thread_id}. run object: ${JSON.stringify(run)}`);
+    this.logger.error(`${this.runThread.name} - Error running thread ${run.thread_id}. run object: ${JSON.stringify(run)}`);
     return null;
   }
 
