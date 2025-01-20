@@ -29,12 +29,12 @@ export class TeacherBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log(this.startHandler.name, `${logBody} - start`);
+      this.logger.log(`${this.startHandler.name} - ${logBody} - start`);
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
-      this.logger.log(this.startHandler.name, `${logBody} - success`);
+      this.logger.log(`${this.startHandler.name} - ${logBody} - success`);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
-      this.logger.error(this.startHandler.name, `${logBody} - error - ${errorMessage}`);
+      this.logger.error(`${this.startHandler.name} - ${logBody} - error - ${errorMessage}`);
       await this.bot.sendMessage(chatId, errorMessage);
     }
   }
@@ -44,12 +44,12 @@ export class TeacherBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log(this.courseHandler.name, `${logBody} - start`);
+      this.logger.log(`${this.courseHandler.name} - ${logBody} - start`);
       await this.teacherService.startNewCourse(chatId);
-      this.logger.log(this.courseHandler.name, `${logBody} - success`);
+      this.logger.log(`${this.courseHandler.name} - ${logBody} - success`);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
-      this.logger.error(this.courseHandler.name, `${logBody} - error - ${errorMessage}`);
+      this.logger.error(`${this.courseHandler.name} - ${logBody} - error - ${errorMessage}`);
       await this.bot.sendMessage(chatId, errorMessage);
     }
   }
@@ -59,12 +59,12 @@ export class TeacherBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log(this.lessonHandler.name, `${logBody} - start`);
+      this.logger.log(`${this.lessonHandler.name} - ${logBody} - start`);
       await this.teacherService.processLesson(chatId, false);
-      this.logger.log(this.lessonHandler.name, `${logBody} - success`);
+      this.logger.log(`${this.lessonHandler.name} - ${logBody} - success`);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
-      this.logger.error(this.lessonHandler.name, `${logBody} - error - ${errorMessage}`);
+      this.logger.error(`${this.lessonHandler.name} - ${logBody} - error - ${errorMessage}`);
       await this.bot.sendMessage(chatId, errorMessage);
     }
   }
@@ -76,7 +76,7 @@ export class TeacherBotService implements OnModuleInit {
     if (Object.keys(TEACHER_BOT_OPTIONS).map((option: string) => TEACHER_BOT_OPTIONS[option]).includes(text)) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
-    this.logger.log(this.handleMessage.name, `${logBody} - start`);
+    this.logger.log(`${this.handleMessage.name} - ${logBody} - start`);
 
     try {
       if (text.startsWith('/add')) {
@@ -84,9 +84,9 @@ export class TeacherBotService implements OnModuleInit {
       }
       const question = await this.getQuestion({ text, audio });
       await this.teacherService.processQuestion(chatId, question);
-      this.logger.log(this.handleMessage.name, `${logBody} - success`);
+      this.logger.log(`${this.handleMessage.name} - ${logBody} - success`);
     } catch (err) {
-      this.logger.error(this.handleMessage.name, `error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.handleMessage.name} - error - ${getErrorMessage(err)}`);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
@@ -95,7 +95,7 @@ export class TeacherBotService implements OnModuleInit {
     const course = topic.replace('/add', '').trim();
     await this.teacherService.addCourse(course);
     await this.bot.sendMessage(chatId, `OK, I added ${course} to your courses list`);
-    this.logger.log(this.handleMessage.name, `${logBody} - added course '${course}' - success`);
+    this.logger.log(`${this.handleMessage.name} - ${logBody} - added course '${course}' - success`);
   }
 
   async getQuestion({ text, audio }: Partial<ITelegramMessageData>): Promise<string> {

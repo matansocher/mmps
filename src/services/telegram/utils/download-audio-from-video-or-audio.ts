@@ -20,7 +20,7 @@ export async function downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, a
     }
     return { audioFileLocalPath, videoFileLocalPath };
   } catch (err) {
-    logger.error(this.downloadAudioFromVideoOrAudio.name, `err: ${getErrorMessage(err)}`);
+    logger.error(`${this.downloadAudioFromVideoOrAudio.name} - err: ${getErrorMessage(err)}`);
     throw err;
   }
 }

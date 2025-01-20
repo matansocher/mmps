@@ -14,13 +14,12 @@ export class WoltMongoSubscriptionService {
   }
 
   async getActiveSubscriptions(chatId: number = null) {
-  // async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {
     try {
       const filter = { isActive: true };
       if (chatId) filter['chatId'] = chatId;
       return this.subscriptionCollection.find(filter).toArray();
     } catch (err) {
-      this.logger.error(this.getActiveSubscriptions.name, `err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.getActiveSubscriptions.name} - err: ${getErrorMessage(err)}`);
       return [];
     }
   }

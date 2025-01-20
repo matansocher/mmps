@@ -90,7 +90,7 @@ export class WoltSchedulerService implements OnModuleInit {
       });
       return Promise.all(promisesArr);
     } catch (err) {
-      this.logger.error(this.alertSubscriptions.name, `error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.alertSubscriptions.name} - error - ${getErrorMessage(err)}`);
     }
   }
 
@@ -108,7 +108,7 @@ export class WoltSchedulerService implements OnModuleInit {
       });
       await Promise.all(promisesArr);
     } catch (err) {
-      this.logger.error(this.cleanExpiredSubscriptions.name, `error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.cleanExpiredSubscriptions.name} - error - ${getErrorMessage(err)}`);
     }
   }
 }

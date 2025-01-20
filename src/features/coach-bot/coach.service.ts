@@ -29,18 +29,18 @@ export class CoachService {
   async getMatchesSummaryDetails(dateString: string): Promise<CompetitionDetails[]> {
     const competitions = await getCompetitions();
     if (!competitions?.length) {
-      this.logger.error(this.getMatchesSummaryMessage.name, 'error - could not get competitions');
+      this.logger.error(`${this.getMatchesSummaryMessage.name} - error - could not get competitions`);
       return;
     }
     const competitionsWithMatches = await Promise.all(competitions.map((competition) => getMatchesForCompetition(competition, dateString)));
     if (!competitionsWithMatches?.length) {
-      this.logger.error(this.getMatchesSummaryMessage.name, 'error - could not get matches');
+      this.logger.error(`${this.getMatchesSummaryMessage.name} - error - could not get matches`);
       return;
     }
 
     const competitionsWithMatchesFiltered = competitionsWithMatches.filter(({ matches }) => matches?.length);
     if (!competitionsWithMatchesFiltered?.length) {
-      this.logger.log(this.getMatchesSummaryMessage.name, 'no competitions with matches found');
+      this.logger.log(`${this.getMatchesSummaryMessage.name} - no competitions with matches found`);
       return;
     }
 

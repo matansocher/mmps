@@ -16,7 +16,7 @@ export class MongoUserService {
       const user = { telegramUserId, chatId, firstName, lastName, username, createdAt: new Date() };
       await userCollection.insertOne(user);
     } catch (err) {
-      this.logger.error(this.saveUserDetails.name, `err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.saveUserDetails.name} - err: ${getErrorMessage(err)}`);
     }
   }
 
@@ -25,7 +25,7 @@ export class MongoUserService {
       const userCollection = this.database.collection(COLLECTIONS.USER);
       return userCollection.findOne({ chatId });
     } catch (err) {
-      this.logger.error(this.getUserDetails.name, `err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.getUserDetails.name} - err: ${getErrorMessage(err)}`);
       return null;
     }
   }

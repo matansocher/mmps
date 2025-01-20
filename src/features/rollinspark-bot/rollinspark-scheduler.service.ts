@@ -42,14 +42,14 @@ export class RollinsparkSchedulerService implements OnModuleInit {
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
       if (!subscriptions?.length) {
-        this.logger.log('No active subscriptions found.');
+        this.logger.log(`${this.handleIntervalFlow.name} - No active subscriptions found.`);
         return;
       }
       const planIds = subscriptions.map((sub) => sub.planId);
       const newPlansAvailability = await this.getPlansAvailability(planIds);
       const changedPlanIds = planIds.filter((planId) => !this.isPlanSimilarToLatest(planId, this.latestPlansAvailability, newPlansAvailability));
       if (!changedPlanIds.length) {
-        this.logger.log('No changes detected in plan availability');
+        this.logger.log(`${this.handleIntervalFlow.name} - No changes detected in plan availability`);
         return;
       }
 
@@ -63,10 +63,10 @@ export class RollinsparkSchedulerService implements OnModuleInit {
       }
 
       this.latestPlansAvailability = newPlansAvailability;
-      this.logger.log('Updated latestPlansAvailability after changes.');
+      this.logger.log(`${this.handleIntervalFlow.name} - Updated latestPlansAvailability after changes.`);
     } catch (err) {
       this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: getErrorMessage(err) }, null, null);
-      this.logger.error(this.handleIntervalFlow.name, `error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.handleIntervalFlow.name} - error - ${getErrorMessage(err)}`);
     }
   }
 
@@ -112,7 +112,7 @@ export class RollinsparkSchedulerService implements OnModuleInit {
         this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: ANALYTIC_EVENT_STATES.ALERTED }, null, null)
       ]);
     } catch (err) {
-      this.logger.error(this.alertSubscriptions.name, `error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.alertSubscriptions.name} - error - ${getErrorMessage(err)}`);
       this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${this.alertSubscriptions.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
     }
   }

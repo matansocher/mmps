@@ -60,7 +60,7 @@ export class NotifierBotService implements OnModuleInit {
           break;
       }
     } catch (err) {
-      this.logger.error(this.collect.name, `err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.collect.name} - err: ${getErrorMessage(err)}`);
     }
   }
 }

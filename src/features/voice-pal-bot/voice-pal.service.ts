@@ -75,6 +75,7 @@ export class VoicePalService implements OnModuleInit {
     try {
       if (userAction?.showLoader) {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
+        // $$$$$$$$$$$$$$$$$$$$$$
         // const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING } as MessageLoaderOptions);
         // await messageLoaderService.handleMessageWithLoader(
         //   async (): Promise<void> => {
@@ -90,7 +91,7 @@ export class VoicePalService implements OnModuleInit {
       this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
-      this.logger.error(this.handleAction.name, `error: ${errorMessage}`);
+      this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);
       this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
       throw err;
     }

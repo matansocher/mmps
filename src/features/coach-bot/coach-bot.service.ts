@@ -28,13 +28,13 @@ export class CoachBotService implements OnModuleInit {
 
   async handleActionError(action: string, err: Error, chatId: number): Promise<void> {
     const errorMessage = `error: ${getErrorMessage(err)}`;
-    this.logger.error(action, `${errorMessage}`);
+    this.logger.error(`${action} - ${errorMessage}`);
     await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
     this.notifierBotService.notify(BOTS.COACH, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
   }
 
   async handleActionSuccess(action: string, chatId: number, notifierAdditionalData = {}): Promise<void> {
-    this.logger.log(action, `success`);
+    this.logger.log(`${action} - success`);
     this.notifierBotService.notify(BOTS.COACH, { action: `${action} - ${ANALYTIC_EVENT_STATES.SUCCESS}`, ...notifierAdditionalData }, chatId, this.mongoUserService);
   }
 
@@ -43,7 +43,7 @@ export class CoachBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log(this.startHandler.name, `${logBody} - start`);
+      this.logger.log(`${this.startHandler.name} - ${logBody} - start`);
       await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
       this.handleActionSuccess(ANALYTIC_EVENT_STATES.START, chatId);
@@ -57,7 +57,7 @@ export class CoachBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log(this.subscribeHandler.name, `${logBody} - start`);
+      this.logger.log(`${this.subscribeHandler.name} - ${logBody} - start`);
       const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
       if (subscription) {
         await this.bot.sendMessage(chatId, `וואלה אני רואה שכבר שמת עוקב, אז הכל טוב ✅`);
@@ -76,7 +76,7 @@ export class CoachBotService implements OnModuleInit {
     const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log(this.unsubscribeHandler.name, `${logBody} - start`);
+      this.logger.log(`${this.unsubscribeHandler.name} - ${logBody} - start`);
       const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
       if (subscription) {
         await this.bot.sendMessage(chatId, `טוב אני רואה שעדיין לא שמת עוקב, לא סבבה 😁`);
@@ -97,7 +97,7 @@ export class CoachBotService implements OnModuleInit {
     if (Object.keys(COACH_BOT_OPTIONS).map((option: string) => COACH_BOT_OPTIONS[option]).includes(text)) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
-    this.logger.log(this.textHandler.name, `${logBody} - start`);
+    this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
 
     try {
       const resText = await this.coachService.getMatchesSummaryMessage(text);
