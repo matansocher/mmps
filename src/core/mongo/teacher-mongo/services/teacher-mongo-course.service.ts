@@ -1,4 +1,4 @@
-import { Collection, Db, InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
+import { Collection, Db, DeleteResult, InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { CourseModel, CourseStatus } from '../models/course.model';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
@@ -21,6 +21,11 @@ export class TeacherMongoCourseService {
     return this.courseCollection.insertOne(course);
   }
 
+  removeCourse(courseId: string): Promise<DeleteResult> {
+    const filter = { _id: new ObjectId(courseId) };
+    return this.courseCollection.deleteOne(filter as any);
+  }
+
   async getRandomCourse(): Promise<WithId<CourseModel> | null> {
     const filter = { status: CourseStatus.Pending };
     const results = await this.courseCollection
@@ -30,6 +35,11 @@ export class TeacherMongoCourseService {
       ])
       .toArray();
     return results[0] || null; // Return the first result or null if none
+  }
+
+  getUnassignedCourses(): Promise<WithId<CourseModel>[]> {
+    const filter = { status: CourseStatus.Pending };
+    return this.courseCollection.find(filter).toArray();
   }
 
   getActiveCourse(): Promise<WithId<CourseModel>> {

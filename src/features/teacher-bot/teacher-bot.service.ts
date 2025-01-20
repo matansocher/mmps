@@ -3,9 +3,9 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { deleteFile, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
-import { BOTS, getMessageData, ITelegramMessageData, downloadAudioFromVideoOrAudio } from '@services/telegram';
+import { BOTS, getMessageData, downloadAudioFromVideoOrAudio } from '@services/telegram';
 import { TeacherService } from './teacher.service';
-import { INITIAL_BOT_RESPONSE, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
+import { INITIAL_BOT_RESPONSE, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
@@ -18,9 +18,12 @@ export class TeacherBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
-    this.bot.onText(/\/course/, (message: Message) => this.courseHandler(message));
-    this.bot.onText(/\/lesson/, (message: Message) => this.lessonHandler(message));
+    this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
+    this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.COURSE), (message: Message) => this.courseHandler(message));
+    this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.LESSON), (message: Message) => this.lessonHandler(message));
+    this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.LIST), (message: Message) => this.listHandler(message));
+    this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.ADD), (message: Message) => this.addHandler(message));
+    this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.REMOVE), (message: Message) => this.removeHandler(message));
     this.bot.on('message', (message: Message) => this.handleMessage(message));
   }
 
@@ -69,20 +72,86 @@ export class TeacherBotService implements OnModuleInit {
     }
   }
 
+  async listHandler(message: Message): Promise<void> {
+    const { chatId, firstName, lastName } = getMessageData(message);
+    const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+
+    try {
+      this.logger.log(`${this.listHandler.name} - ${logBody} - start`);
+      let courses = await this.teacherService.getCoursesList();
+      if (!courses?.length) {
+        await this.bot.sendMessage(chatId, 'I see you dont have any unfinished courses\nYou can add one with the /add command');
+        return;
+      }
+      let messagePrefix = 'Available Courses';
+      const isListTooBig = courses.length > NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW;
+      if (isListTooBig) {
+        courses = courses.slice(0, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW);
+        messagePrefix = `Available Courses list it too big, showing the random first ${NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW}`;
+      }
+      const coursesStr = courses.map(({ _id, topic }) => `\`${_id}\` - ${topic}`).join('\n');
+      const resText = `${messagePrefix}:\n\n${coursesStr}`;
+      await this.sendMarkdownMessage(chatId, resText);
+      this.logger.log(`${this.listHandler.name} - ${logBody} - success`);
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      this.logger.error(`${this.listHandler.name} - ${logBody} - error - ${errorMessage}`);
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
+  async addHandler(message: Message): Promise<void> {
+    const { chatId, firstName, lastName, text } = getMessageData(message);
+    const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+
+    try {
+      this.logger.log(`${this.addHandler.name} - ${logBody} - start`);
+      const course = text.replace(TEACHER_BOT_OPTIONS.ADD, '').trim();
+      await this.teacherService.addCourse(course);
+      await this.bot.sendMessage(chatId, `OK, I added \`${course}\` to your courses list`);
+      this.logger.log(`${this.handleMessage.name} - ${logBody} - added course '${course}' - success`);
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      this.logger.error(`${this.addHandler.name} - ${logBody} - error - ${errorMessage}`);
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
+  async removeHandler(message: Message): Promise<void> {
+    const { chatId, firstName, lastName, text } = getMessageData(message);
+    const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+
+    try {
+      this.logger.log(`${this.removeHandler.name} - ${logBody} - start`);
+      const courseId = text.replace(TEACHER_BOT_OPTIONS.REMOVE, '').trim();
+      await this.teacherService.removeCourse(courseId);
+      await this.bot.sendMessage(chatId, 'OK, I removed that course');
+      this.logger.log(`${this.removeHandler.name} - ${logBody} - success`);
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      this.logger.error(`${this.removeHandler.name} - ${logBody} - error - ${errorMessage}`);
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
   async handleMessage(message: Message) {
     const { chatId, firstName, lastName, text, audio } = getMessageData(message);
 
     // prevent built in options to be processed also here
-    if (Object.keys(TEACHER_BOT_OPTIONS).map((option: string) => TEACHER_BOT_OPTIONS[option]).includes(text)) return;
+    if (Object.keys(TEACHER_BOT_OPTIONS).some((option: string) => text.includes(TEACHER_BOT_OPTIONS[option]))) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
     this.logger.log(`${this.handleMessage.name} - ${logBody} - start`);
 
     try {
-      if (text.startsWith('/add')) {
-        return this.handleAddCourse(chatId, text.replace('/add', '').trim(), logBody);
+      let question = text;
+      if (audio) {
+        const { audioFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { audio, video: null }, LOCAL_FILES_PATH);
+        const resText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
+        await deleteFile(audioFileLocalPath);
+        question = resText;
       }
-      const question = await this.getQuestion({ text, audio });
+
       await this.teacherService.processQuestion(chatId, question);
       this.logger.log(`${this.handleMessage.name} - ${logBody} - success`);
     } catch (err) {
@@ -91,21 +160,11 @@ export class TeacherBotService implements OnModuleInit {
     }
   }
 
-  async handleAddCourse(chatId: number, topic: string, logBody: string): Promise<void> {
-    const course = topic.replace('/add', '').trim();
-    await this.teacherService.addCourse(course);
-    await this.bot.sendMessage(chatId, `OK, I added ${course} to your courses list`);
-    this.logger.log(`${this.handleMessage.name} - ${logBody} - added course '${course}' - success`);
-  }
-
-  async getQuestion({ text, audio }: Partial<ITelegramMessageData>): Promise<string> {
-    let question = text;
-    if (audio) {
-      const { audioFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { audio, video: null }, LOCAL_FILES_PATH);
-      const resText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
-      await deleteFile(audioFileLocalPath);
-      question = resText;
+  async sendMarkdownMessage(chatId: number, message: string): Promise<void> {
+    try {
+      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+    } catch (err) {
+      await this.bot.sendMessage(chatId, message);
     }
-    return question;
   }
 }

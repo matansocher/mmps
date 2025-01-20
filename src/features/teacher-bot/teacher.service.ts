@@ -86,7 +86,15 @@ export class TeacherService {
     await this.sendMarkdownMessage(chatId, response);
   }
 
+  async getCoursesList(): Promise<CourseModel[]> {
+    return this.mongoCourseService.getUnassignedCourses();
+  }
+
   async addCourse(course: string): Promise<void> {
     await this.mongoCourseService.addCourse(course);
+  }
+
+  async removeCourse(courseId: string): Promise<void> {
+    await this.mongoCourseService.removeCourse(courseId);
   }
 }

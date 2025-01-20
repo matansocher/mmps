@@ -12,6 +12,9 @@ export const TEACHER_BOT_OPTIONS = {
   START: '/start',
   COURSE: '/course',
   LESSON: '/lesson',
+  LIST: '/list',
+  ADD: '/add',
+  REMOVE: '/remove',
 };
 
 export const TEACHER_ASSISTANT_ID = 'asst_ogwjFGg44XVDDJB2ZIPlplwu';
@@ -20,3 +23,5 @@ export const THREAD_MESSAGE_FIRST_LESSON = `I am ready to learn today's course, 
 export const THREAD_MESSAGE_NEXT_LESSON = 'I am ready for the next lesson';
 
 export const TOTAL_COURSE_LESSONS = 3;
+
+export const NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW = 20;
