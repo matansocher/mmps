@@ -101,17 +101,25 @@ export class CoachBotService implements OnModuleInit {
 
     try {
       const resText = await this.coachService.getMatchesSummaryMessage(text);
-      await this.bot.sendMessage(chatId, resText);
+      await this.sendMarkdownMessage(chatId, resText);
       // $$$$$$$$$$$$$$$$$$$$$$
       // const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000 } as MessageLoaderOptions);
       // await messageLoaderService.handleMessageWithLoader(async () => {
       //   const resText = await this.coachService.getMatchesSummaryMessage(text);
-      //   await this.bot.sendMessage(chatId, resText);
+      //   await this.sendMarkdownMessage(chatId, resText);
       // });
 
       this.handleActionSuccess(ANALYTIC_EVENT_STATES.SEARCH, chatId, { text });
     } catch (err) {
       this.handleActionError(this.textHandler.name, err, chatId);
+    }
+  }
+
+  async sendMarkdownMessage(chatId: number, message: string): Promise<void> {
+    try {
+      await this.bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
+    } catch (err) {
+      await this.bot.sendMessage(chatId, message);
     }
   }
 }
