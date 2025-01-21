@@ -89,7 +89,7 @@ export class WoltBotService implements OnModuleInit {
     const restaurant = rawRestaurant.toLowerCase();
 
     // prevent built in options to be processed also here
-    if (Object.keys(WOLT_BOT_OPTIONS).map((option: string) => WOLT_BOT_OPTIONS[option]).includes(restaurant)) return;
+    if (Object.keys(WOLT_BOT_OPTIONS).some((option: string) => restaurant.includes(WOLT_BOT_OPTIONS[option]))) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.log(`${this.textHandler.name} - ${logBody} - start`);

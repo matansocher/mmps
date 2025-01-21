@@ -24,7 +24,7 @@ export class TeacherBotService implements OnModuleInit {
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.LIST), (message: Message) => this.listHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.ADD), (message: Message) => this.addHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.REMOVE), (message: Message) => this.removeHandler(message));
-    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.handleMessage(message));
+    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.messageHandler(message));
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -109,7 +109,7 @@ export class TeacherBotService implements OnModuleInit {
       const course = text.replace(TEACHER_BOT_OPTIONS.ADD, '').trim();
       await this.teacherService.addCourse(course);
       await this.bot.sendMessage(chatId, `OK, I added \`${course}\` to your courses list`);
-      this.logger.log(`${this.handleMessage.name} - ${logBody} - added course '${course}' - success`);
+      this.logger.log(`${this.addHandler.name} - ${logBody} - added course '${course}' - success`);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.addHandler.name} - ${logBody} - error - ${errorMessage}`);
@@ -134,14 +134,14 @@ export class TeacherBotService implements OnModuleInit {
     }
   }
 
-  async handleMessage(message: Message) {
+  async messageHandler(message: Message) {
     const { chatId, firstName, lastName, text, audio } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.keys(TEACHER_BOT_OPTIONS).some((option: string) => text.includes(TEACHER_BOT_OPTIONS[option]))) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
-    this.logger.log(`${this.handleMessage.name} - ${logBody} - start`);
+    this.logger.log(`${this.messageHandler.name} - ${logBody} - start`);
 
     try {
       let question = text;
@@ -153,9 +153,9 @@ export class TeacherBotService implements OnModuleInit {
       }
 
       await this.teacherService.processQuestion(chatId, question);
-      this.logger.log(`${this.handleMessage.name} - ${logBody} - success`);
+      this.logger.log(`${this.messageHandler.name} - ${logBody} - success`);
     } catch (err) {
-      this.logger.error(`${this.handleMessage.name} - error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.messageHandler.name} - error - ${getErrorMessage(err)}`);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }

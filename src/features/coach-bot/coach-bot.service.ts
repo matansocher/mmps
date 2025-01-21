@@ -94,7 +94,7 @@ export class CoachBotService implements OnModuleInit {
     const { chatId, firstName, lastName, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
-    if (Object.keys(COACH_BOT_OPTIONS).map((option: string) => COACH_BOT_OPTIONS[option]).includes(text)) return;
+    if (Object.keys(COACH_BOT_OPTIONS).some((option: string) => text.includes(COACH_BOT_OPTIONS[option]))) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
     this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
