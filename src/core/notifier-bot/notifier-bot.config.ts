@@ -8,3 +8,7 @@ export enum MessageType {
   AUDIO = 'AUDIO',
   VIDEO = 'VIDEO',
 }
+
+export const NOTIFIER_BOT_OPTIONS = {
+  START: '/start',
+};

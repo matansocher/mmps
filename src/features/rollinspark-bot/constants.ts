@@ -21,3 +21,8 @@ export enum BOT_ACTIONS {
   SUBSCRIBE = 'subscribe',
   UNSUBSCRIBE = 'unsubscribe',
 }
+
+export const ROLLINSPARK_BOT_OPTIONS = {
+  START: '/start',
+  MANAGEMENT: '/management',
+};

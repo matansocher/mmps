@@ -3,8 +3,8 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from '@core/mongo/rollinspark-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES, BOT_ACTIONS, NAME_TO_PLAN_ID_MAP } from './constants';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS } from '@services/telegram';
+import { ANALYTIC_EVENT_STATES, BOT_ACTIONS, NAME_TO_PLAN_ID_MAP, ROLLINSPARK_BOT_OPTIONS } from './constants';
 
 @Injectable()
 export class RollinsparkBotService implements OnModuleInit {
@@ -18,9 +18,9 @@ export class RollinsparkBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
-    this.bot.onText(/\/management/, (message: Message) => this.managementHandler(message));
-    this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
+    this.bot.onText(new RegExp(ROLLINSPARK_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
+    this.bot.onText(new RegExp(ROLLINSPARK_BOT_OPTIONS.MANAGEMENT), (message: Message) => this.managementHandler(message));
+    this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
   async handleActionError(action: string, logBody: string, err: Error, chatId: number): Promise<void> {
@@ -78,7 +78,7 @@ export class RollinsparkBotService implements OnModuleInit {
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
     const { chatId, firstName, lastName, data: response } = getCallbackQueryData(callbackQuery);
-    const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, response: ${response}`;
+    const logBody = `${TELEGRAM_EVENTS.CALLBACK_QUERY} :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, response: ${response}`;
     this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
 
     try {
