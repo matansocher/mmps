@@ -51,6 +51,14 @@ export enum POSSIBLE_INPUTS {
   FILE = 'file',
 }
 
+export enum TELEGRAM_EVENTS {
+  TEXT = 'text',
+  MESSAGE = 'message',
+  CALLBACK_QUERY = 'callback_query',
+  POLLING_ERROR = 'polling_error',
+  ERROR = 'error',
+}
+
 // getMarkupExample() {
 //   return `
 //       *bold \\*text*

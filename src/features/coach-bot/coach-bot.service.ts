@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, MessageLoaderService, MessageLoaderOptions } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoaderService, MessageLoaderOptions, TELEGRAM_EVENTS } from '@services/telegram';
 import { CoachService } from './coach.service';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_OPTIONS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
 
@@ -20,10 +20,10 @@ export class CoachBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
-    this.bot.onText(/\/subscribe/, (message: Message) => this.subscribeHandler(message));
-    this.bot.onText(/\/unsubscribe/, (message: Message) => this.unsubscribeHandler(message));
-    this.bot.on('text', (message: Message) => this.textHandler(message));
+    this.bot.onText(new RegExp(COACH_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
+    this.bot.onText(new RegExp(COACH_BOT_OPTIONS.SUBSCRIBE), (message: Message) => this.subscribeHandler(message));
+    this.bot.onText(new RegExp(COACH_BOT_OPTIONS.UNSUBSCRIBE), (message: Message) => this.unsubscribeHandler(message));
+    this.bot.on(TELEGRAM_EVENTS.TEXT, (message: Message) => this.textHandler(message));
   }
 
   async handleActionError(action: string, err: Error, chatId: number): Promise<void> {

@@ -4,7 +4,7 @@ import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getMessageData, TelegramBotConfig } from '@services/telegram';
 import { INotifyOptions } from './interface';
-import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
+import { MessageType, NOTIFIER_BOT_OPTIONS, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
 @Injectable()
 export class NotifierBotService implements OnModuleInit {
@@ -13,7 +13,7 @@ export class NotifierBotService implements OnModuleInit {
   constructor(@Inject(BOTS.NOTIFIER.id) private readonly bot: TelegramBot) {}
 
   onModuleInit(): void {
-    this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
+    this.bot.onText(new RegExp(NOTIFIER_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
   }
 
   async startHandler(message: Message): Promise<void> {

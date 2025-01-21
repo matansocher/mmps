@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup } from '@services/telegram';
+import { BOTS, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup, TELEGRAM_EVENTS } from '@services/telegram';
 import {
   ANALYTIC_EVENT_NAMES,
   CITIES_SLUGS_SUPPORTED,
@@ -30,10 +30,10 @@ export class WoltBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.onText(/\/start/, (message: Message) => this.startHandler(message));
-    this.bot.onText(/\/list/, (message: Message) => this.listHandler(message));
-    this.bot.on('text', (message: Message) => this.textHandler(message));
-    this.bot.on('callback_query', (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
+    this.bot.onText(new RegExp(WOLT_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
+    this.bot.onText(new RegExp(WOLT_BOT_OPTIONS.LIST), (message: Message) => this.listHandler(message));
+    this.bot.on(TELEGRAM_EVENTS.TEXT, (message: Message) => this.textHandler(message));
+    this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -127,7 +127,7 @@ export class WoltBotService implements OnModuleInit {
 
   async callbackQueryHandler(callbackQuery: CallbackQuery) {
     const { chatId, firstName, lastName, data: restaurant } = getCallbackQueryData(callbackQuery);
-    const logBody = `callback_query :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
+    const logBody = `${TELEGRAM_EVENTS.CALLBACK_QUERY} :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
 
     try {

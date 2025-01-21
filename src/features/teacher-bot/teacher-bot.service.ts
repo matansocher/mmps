@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { deleteFile, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
-import { BOTS, getMessageData, downloadAudioFromVideoOrAudio } from '@services/telegram';
+import { BOTS, getMessageData, downloadAudioFromVideoOrAudio, TELEGRAM_EVENTS } from '@services/telegram';
 import { TeacherService } from './teacher.service';
 import { INITIAL_BOT_RESPONSE, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
 
@@ -24,7 +24,7 @@ export class TeacherBotService implements OnModuleInit {
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.LIST), (message: Message) => this.listHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.ADD), (message: Message) => this.addHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.REMOVE), (message: Message) => this.removeHandler(message));
-    this.bot.on('message', (message: Message) => this.handleMessage(message));
+    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.handleMessage(message));
   }
 
   async startHandler(message: Message): Promise<void> {
