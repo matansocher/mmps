@@ -1,6 +1,6 @@
 import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
 
-export interface IVoicePalOption {
+export interface VoicePalOption {
   analyticsEventName: string;
   displayName: string;
   handler?: string;

@@ -2,8 +2,8 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, TelegramBotConfig } from '@services/telegram';
-import { INotifyOptions } from './interface';
+import { BOTS, getMessageData, TELEGRAM_EVENTS, TelegramBotConfig } from '@services/telegram';
+import { NotifyOptions } from './interface';
 import { MessageType, NOTIFIER_BOT_OPTIONS, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
 @Injectable()
@@ -13,25 +13,23 @@ export class NotifierBotService implements OnModuleInit {
   constructor(@Inject(BOTS.NOTIFIER.id) private readonly bot: TelegramBot) {}
 
   onModuleInit(): void {
-    this.bot.onText(new RegExp(NOTIFIER_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
+    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.messageHandler(message));
   }
 
-  async startHandler(message: Message): Promise<void> {
+  async messageHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     try {
       await this.bot.sendMessage(chatId, 'I am here');
-    } catch (err) {
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
-    }
+    } catch {}
   }
 
-  async notify(bot: TelegramBotConfig, options: INotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
+  async notify(bot: TelegramBotConfig, options: NotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
     const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
     const notyMessageText = this.getNotyMessageText(bot.name, userDetails, options);
     this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
 
-  getNotyMessageText(botName: string, userDetails: UserModel, options: INotifyOptions): string {
+  getNotyMessageText(botName: string, userDetails: UserModel, options: NotifyOptions): string {
     const { firstName = '', lastName = '', username = '' } = userDetails || {};
     const { action, plainText, ...otherOptions } = options;
     const sentences = [];

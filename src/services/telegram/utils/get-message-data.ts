@@ -1,8 +1,8 @@
 import { get as _get } from 'lodash';
 import { Message } from 'node-telegram-bot-api';
-import { ITelegramMessageData } from '../interface';
+import { TelegramMessageData } from '../interface';
 
-export function getMessageData(message: Message): ITelegramMessageData {
+export function getMessageData(message: Message): TelegramMessageData {
   return {
     chatId: _get(message, 'chat.id', null),
     messageId: _get(message, 'message_id', null),

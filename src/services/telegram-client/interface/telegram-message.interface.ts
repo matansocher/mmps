@@ -1,4 +1,4 @@
-export interface ITelegramMessageBody {
+export interface TelegramMessageBody {
   id: string;
   fromId: { userId: string; className: string };
   peerId: { channelId: string; className: string };
@@ -6,12 +6,12 @@ export interface ITelegramMessageBody {
   text: string;
 }
 
-export interface ITelegramEvent {
+export interface TelegramEvent {
   className: string;
-  message: ITelegramMessageBody;
+  message: TelegramMessageBody;
 }
 
-export interface ITelegramMessage {
+export interface TelegramMessage {
   id: string;
   userId: string;
   channelId: string;
@@ -19,7 +19,7 @@ export interface ITelegramMessage {
   text: string;
 }
 
-export interface IConversationDetails {
+export interface ConversationDetails {
   id: string;
   createdDate: number;
   title: string;

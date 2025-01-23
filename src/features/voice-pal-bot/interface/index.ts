@@ -1,1 +1,1 @@
-export { IVoicePalOption } from './voice-pal-option.interface';
+export { VoicePalOption } from './voice-pal-option.interface';

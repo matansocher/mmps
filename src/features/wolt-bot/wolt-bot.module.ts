@@ -3,7 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { NotifierBotModule } from '@core/notifier-bot';
 import { WoltMongoModule } from '@core/mongo/wolt-mongo';
 import { BOTS, TelegramBotsFactoryModule } from '@services/telegram';
-import { WoltModule } from '@services/wolt';
+import { WoltService } from './wolt.service';
 import { WoltBotService } from './wolt-bot.service';
 import { WoltSchedulerService } from './wolt-scheduler.service';
 
@@ -12,9 +12,8 @@ import { WoltSchedulerService } from './wolt-scheduler.service';
     ScheduleModule.forRoot(),
     NotifierBotModule,
     TelegramBotsFactoryModule.forChild(BOTS.WOLT),
-    WoltModule,
     WoltMongoModule,
   ],
-  providers: [WoltBotService, WoltSchedulerService],
+  providers: [WoltBotService, WoltSchedulerService, WoltService],
 })
 export class WoltBotModule {}

@@ -90,8 +90,8 @@ export class TeacherBotService implements OnModuleInit {
         messagePrefix = `Available Courses list it too big, showing the random first ${NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW}`;
       }
       const coursesStr = courses.map(({ _id, topic }) => `\`${_id}\` - ${topic}`).join('\n');
-      const resText = `${messagePrefix}:\n\n${coursesStr}`;
-      await this.sendMarkdownMessage(chatId, resText);
+      const replyText = `${messagePrefix}:\n\n${coursesStr}`;
+      await this.sendMarkdownMessage(chatId, replyText);
       this.logger.log(`${this.listHandler.name} - ${logBody} - success`);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
@@ -147,9 +147,9 @@ export class TeacherBotService implements OnModuleInit {
       let question = text;
       if (audio) {
         const { audioFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { audio, video: null }, LOCAL_FILES_PATH);
-        const resText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
+        const replyText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
         await deleteFile(audioFileLocalPath);
-        question = resText;
+        question = replyText;
       }
 
       await this.teacherService.processQuestion(chatId, question);

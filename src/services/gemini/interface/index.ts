@@ -1,5 +1,5 @@
 import { GenerativeModel } from '@google/generative-ai';
 
-export interface IGeminiClientProvider {
+export interface GeminiClientProvider {
   flashModel: GenerativeModel;
 }

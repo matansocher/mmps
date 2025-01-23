@@ -1,19 +1,26 @@
 import axios from 'axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
-import { IRestaurantsList, IWoltRestaurant } from './interface';
-import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL, RESTAURANT_BASE_URL, RESTAURANT_LINK_BASE_URL } from './wolt.config';
+import { RestaurantsList, WoltRestaurant } from './interface';
+import {
+  CITIES_BASE_URL,
+  CITIES_SLUGS_SUPPORTED,
+  RESTAURANTS_BASE_URL,
+  RESTAURANT_BASE_URL,
+  RESTAURANT_LINK_BASE_URL,
+  MAX_NUM_OF_RESTAURANTS_TO_SHOW,
+} from './wolt-bot.config';
 
 @Injectable()
 export class WoltService {
   private readonly logger = new Logger(WoltService.name);
 
-  restaurantsList: IRestaurantsList = {
+  restaurantsList: RestaurantsList = {
     restaurants: [],
     lastUpdated: 0,
   };
 
-  getRestaurants(): IWoltRestaurant[] {
+  getRestaurants(): WoltRestaurant[] {
     return this.restaurantsList.restaurants;
   }
 
@@ -33,7 +40,7 @@ export class WoltService {
     }
   }
 
-  async getRestaurantsList(): Promise<IWoltRestaurant[]> {
+  async getRestaurantsList(): Promise<WoltRestaurant[]> {
     try {
       const cities = await this.getCitiesList();
       const promises = cities.map((city) => {
@@ -53,7 +60,7 @@ export class WoltService {
           slug: restaurant.venue.slug,
           area: restaurant.area,
           photo: restaurant.image.url,
-        } as IWoltRestaurant;
+        } as WoltRestaurant;
       });
     } catch (err) {
       this.logger.error(`${this.getRestaurantsList.name} - err - ${getErrorMessage(err)}`);
@@ -110,8 +117,25 @@ export class WoltService {
     }
   }
 
-  getRestaurantLink(restaurant): string {
+  getRestaurantLink(restaurant: WoltRestaurant): string {
     const { area, slug } = restaurant;
     return RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
+  }
+
+  getRestaurantDetailsByName(restaurantName: string): WoltRestaurant {
+    return this.getRestaurants().find((r: WoltRestaurant): boolean => r.name === restaurantName) || null;
+  }
+
+  getFilteredRestaurantsByName(searchInput: string): WoltRestaurant[] {
+    const restaurants = [...this.getRestaurants()];
+    return restaurants
+      .filter((restaurant: WoltRestaurant) => {
+        return restaurant.name.toLowerCase().includes(searchInput.toLowerCase());
+      })
+      .sort((a: WoltRestaurant, b: WoltRestaurant) => {
+        // sort by the order of areas in CITIES_SLUGS_SUPPORTED
+        return CITIES_SLUGS_SUPPORTED.indexOf(a.area) - CITIES_SLUGS_SUPPORTED.indexOf(b.area);
+      })
+      .slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
   }
 }

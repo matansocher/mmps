@@ -5,16 +5,16 @@ import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage, getTimezoneOffset } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
+import { WoltRestaurant } from './interface';
+import { getKeyboardOptions } from './utils';
+import { WoltService } from './wolt.service';
 import {
-  IWoltRestaurant,
   ANALYTIC_EVENT_NAMES,
   HOUR_OF_DAY_TO_REFRESH_MAP,
   MAX_HOUR_TO_ALERT_USER,
   MIN_HOUR_TO_ALERT_USER,
   SUBSCRIPTION_EXPIRATION_HOURS,
-  WoltService,
-  getKeyboardOptions,
-} from '@services/wolt';
+} from './wolt-bot.config';
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
@@ -72,9 +72,9 @@ export class WoltSchedulerService implements OnModuleInit {
       const restaurantsWithSubscriptionNames = subscriptions.map((subscription: SubscriptionModel) => subscription.restaurant);
       const subscribedAndOnlineRestaurants = this.woltService
         .getRestaurants()
-        .filter((restaurant: IWoltRestaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline);
+        .filter((restaurant: WoltRestaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline);
       const promisesArr = [];
-      subscribedAndOnlineRestaurants.forEach((restaurant: IWoltRestaurant) => {
+      subscribedAndOnlineRestaurants.forEach((restaurant: WoltRestaurant) => {
         const relevantSubscriptions = subscriptions.filter((subscription: SubscriptionModel) => subscription.restaurant === restaurant.name);
         relevantSubscriptions.forEach((subscription: SubscriptionModel) => {
           const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurant);

@@ -1,4 +1,4 @@
-export interface ITelegramMessageData {
+export interface TelegramMessageData {
   chatId: number;
   messageId: number;
   replyToMessageId: number;

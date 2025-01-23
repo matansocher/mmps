@@ -1,4 +1,4 @@
-import { WOLT_BOT_OPTIONS } from '@services/wolt';
+import { WOLT_BOT_OPTIONS } from '../wolt-bot.config';
 
 export function getKeyboardOptions() {
   return {

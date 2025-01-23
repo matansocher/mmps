@@ -3,12 +3,12 @@ import { StringSession } from 'telegram/sessions';
 import { Module, DynamicModule, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TELEGRAM_CLIENT_TOKEN } from '@services/telegram-client';
-import { ITelegramClientFactoryOptions } from '../interface';
+import { TelegramClientFactoryOptions } from '../interface';
 
 @Global()
 @Module({})
 export class TelegramClientFactoryModule {
-  static forChild(options: ITelegramClientFactoryOptions): DynamicModule {
+  static forChild(options: TelegramClientFactoryOptions): DynamicModule {
     const { connectionRetries = 5 } = options;
     const TelegramClientProvider = {
       provide: TELEGRAM_CLIENT_TOKEN,
