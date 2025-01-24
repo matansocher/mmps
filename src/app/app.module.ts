@@ -27,7 +27,7 @@ function getImports() {
     ];
   }
 
-  return [...commonModules, WoltBotModule];
+  return [...commonModules, CoachBotModule];
 }
 
 @Module({

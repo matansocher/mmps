@@ -7,7 +7,7 @@ export function generateMatchResultsString(data: { competition: Competition; mat
   return data
     .map(({ competition, matches }) => {
       const leagueName = competition.name;
-      const matchResults = matches.map((matchDetails) => getSingleMatchString(matchDetails)).join('\n');
+      const matchResults = matches?.map((matchDetails) => getSingleMatchString(matchDetails)).join('\n') || [];
       const relevantCompetition = COMPETITIONS.find((c) => c.id === competition.id);
       const competitionLogo = relevantCompetition.icon || '🏟️';
       return `${leagueName} ${competitionLogo}\n${matchResults}`;

@@ -53,10 +53,6 @@ export class VoicePalService implements OnModuleInit {
     await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
   }
 
-  async sleep(ms) { // $$$$$$$$$$$$$$$$$$$$
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   async handleAction(message: Message, userAction: VoicePalOption): Promise<void> {
     const { chatId, text, audio, video, photo, file } = getMessageData(message);
 
@@ -74,12 +70,8 @@ export class VoicePalService implements OnModuleInit {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction?.showLoader) {
-        // await this[userAction.handler]({ chatId, text, audio, video, photo, file });
-        // $$$$$$$$$$$$$$$$$$$$$$
-        const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING } as MessageLoaderOptions);
+        const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING, loaderEmoji: '🤔' } as MessageLoaderOptions);
         await messageLoaderService.handleMessageWithLoader(async (): Promise<void> => {
-          // await this.sleep(4100);
-          // await this.bot.sendMessage(chatId, `done`);
           await this[userAction.handler]({ chatId, text, audio, video, photo, file });
         });
       } else {

@@ -104,13 +104,8 @@ export class CoachBotService implements OnModuleInit {
     this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
 
     try {
-      // const replyText = await this.coachService.getMatchesSummaryMessage(text);
-      // await this.sendMarkdownMessage(chatId, replyText);
-      // $$$$$$$$$$$$$$$$$$$$$$
-      const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000 } as MessageLoaderOptions);
+      const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loaderEmoji: '🤔' } as MessageLoaderOptions);
       await messageLoaderService.handleMessageWithLoader(async () => {
-        // await this.sleep(3100);
-        // await this.bot.sendMessage(chatId, `done`);
         const replyText = await this.coachService.getMatchesSummaryMessage(text);
         await this.sendMarkdownMessage(chatId, replyText);
       });
