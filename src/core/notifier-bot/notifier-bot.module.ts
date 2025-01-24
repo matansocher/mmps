@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { BOTS, TelegramBotsFactoryModule } from '@services/telegram';
+import { BOTS, TelegramBotsFactoryProvider } from '@services/telegram';
 import { NotifierBotService } from './notifier-bot.service';
 
 @Module({
-  imports: [TelegramBotsFactoryModule.forChild(BOTS.NOTIFIER)],
-  providers: [NotifierBotService],
+  providers: [NotifierBotService, TelegramBotsFactoryProvider(BOTS.NOTIFIER)],
   exports: [NotifierBotService],
 })
 export class NotifierBotModule {}
