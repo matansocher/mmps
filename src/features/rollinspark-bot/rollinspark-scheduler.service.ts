@@ -65,7 +65,6 @@ export class RollinsparkSchedulerService implements OnModuleInit {
       this.latestPlansAvailability = newPlansAvailability;
       this.logger.log(`${this.handleIntervalFlow.name} - Updated latestPlansAvailability after changes.`);
     } catch (err) {
-      this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${this.handleIntervalFlow.name} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: getErrorMessage(err) }, null, null);
       this.logger.error(`${this.handleIntervalFlow.name} - error - ${getErrorMessage(err)}`);
     }
   }
@@ -107,10 +106,7 @@ export class RollinsparkSchedulerService implements OnModuleInit {
         `Go check it out here:`,
         `https://www.rollinspark.net/floor-plans`,
       ].join('\n');
-      await Promise.all([
-        ...chatIds.map((chatId) => this.bot.sendMessage(chatId, messageText)),
-        this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: ANALYTIC_EVENT_STATES.ALERTED }, null, null)
-      ]);
+      await Promise.all([...chatIds.map((chatId) => this.bot.sendMessage(chatId, messageText))]);
     } catch (err) {
       this.logger.error(`${this.alertSubscriptions.name} - error - ${getErrorMessage(err)}`);
       this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${this.alertSubscriptions.name} - ${ANALYTIC_EVENT_STATES.ERROR}` }, null, null);
