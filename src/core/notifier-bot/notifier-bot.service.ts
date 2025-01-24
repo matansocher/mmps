@@ -4,7 +4,7 @@ import { MongoUserService, UserModel } from '@core/mongo/shared';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getMessageData, TELEGRAM_EVENTS, TelegramBotConfig } from '@services/telegram';
 import { NotifyOptions } from './interface';
-import { MessageType, NOTIFIER_BOT_OPTIONS, NOTIFIER_CHAT_ID } from './notifier-bot.config';
+import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
 
 @Injectable()
 export class NotifierBotService implements OnModuleInit {
