@@ -1,7 +1,7 @@
-import { ITelegramMessageData, POSSIBLE_INPUTS } from '@services/telegram';
-import { IVoicePalOption } from '../interface';
+import { TelegramMessageData, POSSIBLE_INPUTS } from '@services/telegram';
+import { VoicePalOption } from '../interface';
 
-export function validateActionWithMessage(userAction: IVoicePalOption, messageParams: Partial<ITelegramMessageData>): string | void {
+export function validateActionWithMessage(userAction: VoicePalOption, messageParams: Partial<TelegramMessageData>): string | void {
   const { possibleInputs } = userAction;
 
   const messageParamsExistenceMap = {};

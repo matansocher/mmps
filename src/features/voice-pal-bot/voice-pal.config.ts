@@ -1,7 +1,7 @@
 import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
-import { IVoicePalOption } from './interface';
+import { VoicePalOption } from './interface';
 
-export const VOICE_PAL_OPTIONS: Record<string, IVoicePalOption> = {
+export const VOICE_PAL_OPTIONS: Record<string, VoicePalOption> = {
   START: {
     displayName: '/start',
     selectedActionResponse: `Hi {name}!\n\nI'm a bot that can help you with translations, transcriptions of text, audio and video files, and summarizing stuff\n\nJust send me the data and I will do my thing`,

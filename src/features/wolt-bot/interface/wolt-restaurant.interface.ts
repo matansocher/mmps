@@ -1,4 +1,4 @@
-export interface IWoltRestaurant {
+export interface WoltRestaurant {
   id: string;
   name: string;
   isOnline: string;

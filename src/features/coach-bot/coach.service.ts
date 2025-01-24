@@ -14,14 +14,17 @@ interface CompetitionsDetailsCache {
 @Injectable()
 export class CoachService {
   private readonly logger = new Logger(CoachService.name);
-  private competitionsDetailsCache: CompetitionsDetailsCache = { competitionsDetails: null, lastUpdated: null };
+  private competitionsDetailsCache: Record<string, CompetitionsDetailsCache> = {};
 
   async getMatchesSummaryMessage(dateString?: string): Promise<string> {
     const date = isDateStringFormat(dateString) ? dateString : getDateString();
-    let summaryDetails = this.getMatchesSummaryFromCache();
+    let summaryDetails = this.getMatchesSummaryFromCache(date);
     if (!summaryDetails?.length) {
       summaryDetails = await this.getMatchesSummaryDetails(date);
-      this.saveMatchesSummaryToCache(summaryDetails);
+      this.saveMatchesSummaryToCache(date, summaryDetails);
+    }
+    if (!summaryDetails?.length) {
+      return 'וואלה לא מצאתי משחקים ליום הזה, יש מצב שאין היום משחקים בכלל?';
     }
     return generateMatchResultsString(summaryDetails);
   }
@@ -41,24 +44,34 @@ export class CoachService {
     const competitionsWithMatchesFiltered = competitionsWithMatches.filter(({ matches }) => matches?.length);
     if (!competitionsWithMatchesFiltered?.length) {
       this.logger.log(`${this.getMatchesSummaryMessage.name} - no competitions with matches found`);
-      return;
+      return [];
     }
 
     return competitionsWithMatchesFiltered;
   }
 
-  getMatchesSummaryFromCache(): CompetitionDetails[] {
-    const isLastUpdatedTooOld = new Date().getTime() - this.competitionsDetailsCache.lastUpdated > cacheValidForMinutes * 1000 * 60;
-    if (!isLastUpdatedTooOld) {
-      return this.competitionsDetailsCache.competitionsDetails;
+  getMatchesSummaryFromCache(date: string): CompetitionDetails[] {
+    const fromCache = this.competitionsDetailsCache[date];
+    if (!fromCache) {
+      return null;
     }
-    return null;
+
+    const isLastUpdatedTooOld = new Date().getTime() - fromCache.lastUpdated > cacheValidForMinutes * 1000 * 60;
+    if (isLastUpdatedTooOld) {
+      delete this.competitionsDetailsCache[date];
+      return null;
+    }
+
+    return fromCache.competitionsDetails;
   }
 
-  saveMatchesSummaryToCache(competitionsDetails: CompetitionDetails[]): void {
+  saveMatchesSummaryToCache(date: string, competitionsDetails: CompetitionDetails[]): void {
     if (!competitionsDetails?.length) {
       return;
     }
-    this.competitionsDetailsCache = { competitionsDetails: competitionsDetails, lastUpdated: new Date().getTime() };
+    this.competitionsDetailsCache[date] = {
+      competitionsDetails: competitionsDetails,
+      lastUpdated: new Date().getTime()
+    };
   }
 }

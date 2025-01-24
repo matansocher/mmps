@@ -1,3 +1,3 @@
-export interface IListenerOptions {
+export interface ListenerOptions {
   conversationsIds?: string[];
 }

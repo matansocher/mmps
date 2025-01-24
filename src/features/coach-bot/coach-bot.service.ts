@@ -90,6 +90,10 @@ export class CoachBotService implements OnModuleInit {
     }
   }
 
+  async sleep(ms) { // $$$$$$$$$$$$$$$$$
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   async textHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName, text } = getMessageData(message);
 
@@ -100,14 +104,11 @@ export class CoachBotService implements OnModuleInit {
     this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
 
     try {
-      const resText = await this.coachService.getMatchesSummaryMessage(text);
-      await this.sendMarkdownMessage(chatId, resText);
-      // $$$$$$$$$$$$$$$$$$$$$$
-      // const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000 } as MessageLoaderOptions);
-      // await messageLoaderService.handleMessageWithLoader(async () => {
-      //   const resText = await this.coachService.getMatchesSummaryMessage(text);
-      //   await this.sendMarkdownMessage(chatId, resText);
-      // });
+      const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loaderEmoji: '🤔' } as MessageLoaderOptions);
+      await messageLoaderService.handleMessageWithLoader(async () => {
+        const replyText = await this.coachService.getMatchesSummaryMessage(text);
+        await this.sendMarkdownMessage(chatId, replyText);
+      });
 
       this.handleActionSuccess(ANALYTIC_EVENT_STATES.SEARCH, chatId, { text });
     } catch (err) {

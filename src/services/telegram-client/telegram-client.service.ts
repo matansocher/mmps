@@ -1,14 +1,14 @@
 import { get as _get } from 'lodash';
 import { TelegramClient } from 'telegram';
 import { Injectable, Logger } from '@nestjs/common';
-import { IConversationDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
+import { ConversationDetails, TelegramEvent, TelegramMessage, ListenerOptions } from './interface';
 import { EXCLUDED_CHANNELS, LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()
 export class TelegramClientService {
   private readonly logger = new Logger(TelegramClientService.name);
 
-  listenToMessages(telegramClient: TelegramClient, listenerOptions: IListenerOptions, callback) {
+  listenToMessages(telegramClient: TelegramClient, listenerOptions: ListenerOptions, callback) {
     telegramClient.addEventHandler(async (event) => {
       if (!LISTEN_TO_EVENTS.includes(event.className)) {
         return;
@@ -29,7 +29,7 @@ export class TelegramClientService {
     });
   }
 
-  getMessageData(event: ITelegramEvent): ITelegramMessage {
+  getMessageData(event: TelegramEvent): TelegramMessage {
     return {
       id: _get(event, 'message.id', _get(event, 'id', null)),
       userId: _get(event, 'message.fromId.userId', _get(event, 'userId', _get(event, 'message.peerId.userId', null))),
@@ -39,7 +39,7 @@ export class TelegramClientService {
     };
   }
 
-  async getConversationDetails(telegramClient: TelegramClient, entityId: string): Promise<IConversationDetails> {
+  async getConversationDetails(telegramClient: TelegramClient, entityId: string): Promise<ConversationDetails> {
     const channelDetails = (await telegramClient.getEntity(entityId)) as any;
     return {
       id: _get(channelDetails, 'id', null).toString(),

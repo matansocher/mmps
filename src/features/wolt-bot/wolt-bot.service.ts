@@ -4,18 +4,15 @@ import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup, TELEGRAM_EVENTS } from '@services/telegram';
+import { getEnrichedRestaurantsDetails, getKeyboardOptions, getRestaurantLink } from './utils';
+import { WoltService } from './wolt.service';
 import {
   ANALYTIC_EVENT_NAMES,
-  CITIES_SLUGS_SUPPORTED,
   INITIAL_BOT_RESPONSE,
-  MAX_NUM_OF_RESTAURANTS_TO_SHOW,
   SUBSCRIPTION_EXPIRATION_HOURS,
   TOO_OLD_LIST_THRESHOLD_MS,
   WOLT_BOT_OPTIONS,
-  IWoltRestaurant,
-  WoltService,
-  getKeyboardOptions,
-} from '@services/wolt';
+} from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
@@ -86,7 +83,7 @@ export class WoltBotService implements OnModuleInit {
 
   async textHandler(message: Message) {
     const { chatId, firstName, lastName, text: rawRestaurant } = getMessageData(message);
-    const restaurant = rawRestaurant.toLowerCase();
+    const restaurant = rawRestaurant.toLowerCase().trim();
 
     // prevent built in options to be processed also here
     if (Object.keys(WOLT_BOT_OPTIONS).some((option: string) => restaurant.includes(WOLT_BOT_OPTIONS[option]))) return;
@@ -99,14 +96,14 @@ export class WoltBotService implements OnModuleInit {
       if (isLastUpdatedTooOld) {
         await this.woltService.refreshRestaurants();
       }
-      const matchedRestaurants = this.getFilteredRestaurantsByName(restaurant);
+      const matchedRestaurants = this.woltService.getFilteredRestaurantsByName(restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
         return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
       }
-      const restaurants = await this.woltService.enrichRestaurants(matchedRestaurants);
+      const restaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map((restaurant) => {
-        const isAvailableComment = restaurant.isOnline ? 'Open' : restaurant.isOpen ? 'Busy' : 'Closed';
+        const isAvailableComment = restaurant.isOnline ? 'Open 🟢' : restaurant.isOpen ? 'Busy ⏳' : 'Closed 🛑';
         return {
           text: `${restaurant.name} - ${isAvailableComment}`,
           callback_data: restaurant.name,
@@ -121,7 +118,7 @@ export class WoltBotService implements OnModuleInit {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.textHandler.name} - ${errorMessage}`);
       this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
@@ -137,7 +134,7 @@ export class WoltBotService implements OnModuleInit {
       if (restaurant.startsWith('remove - ')) {
         await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
       } else {
-        await this.handleCallbackAddSubscription(chatId, restaurant, existingSubscription);
+        await this.handleCallbackAddSubscription(chatId, restaurantName, existingSubscription);
       }
 
       this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - success`);
@@ -145,37 +142,37 @@ export class WoltBotService implements OnModuleInit {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.callbackQueryHandler.name} - ${errorMessage}`);
       this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
   async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
-    let replyText;
-    let form = {};
     if (existingSubscription) {
-      replyText = '' +
-        `It seems you already have a subscription for ${restaurant} is open.\n\n` +
-        `Let\'s wait a few minutes - it might open soon.`;
-    } else {
-      const restaurantDetails = this.woltService.getRestaurants().find((r: IWoltRestaurant): boolean => r.name === restaurant) || null;
-      if (restaurantDetails && restaurantDetails.isOnline) {
-        replyText = '' +
-          `It looks like ${restaurant} is open now\n\n` +
-          `Go ahead and order your food :)`;
-        const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurantDetails);
-        const inlineKeyboardButtons = [
-          { text: restaurantDetails.name, url: restaurantLinkUrl },
-        ];
-        form = getInlineKeyboardMarkup(inlineKeyboardButtons);
-      } else {
-        replyText = `No Problem, I will let you know once ${restaurant} is open\n\n` +
-          `FYI: If the venue won't open within the next ${SUBSCRIPTION_EXPIRATION_HOURS} hours, registration will be removed\n\n` +
-          `You can register for another restaurant if you like.`;
-        await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails.photo);
-      }
+      const replyText = [
+        `It seems you already have a subscription for ${restaurant} is open.`,
+        `Let\'s wait a few minutes - it might open soon.`,
+      ].join('\n\n');
+      await this.bot.sendMessage(chatId, replyText);
+      return;
     }
 
-    await this.bot.sendMessage(chatId, replyText, form);
+    const restaurantDetails = this.woltService.getRestaurantDetailsByName(restaurant);
+    if (restaurantDetails?.isOnline) {
+      const replyText = [`It looks like ${restaurant} is open now 🟢`, `Go ahead and order your food 🍴`].join('\n\n');
+      const restaurantLinkUrl = getRestaurantLink(restaurantDetails);
+      const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantLinkUrl }];
+      const form = getInlineKeyboardMarkup(inlineKeyboardButtons);
+      await this.bot.sendMessage(chatId, replyText, form as any);
+      return;
+    }
+
+    const replyText = [
+      `No Problem, I will let you know once ${restaurant} is open 🚨`,
+      `FYI: If the venue won't open within the next ${SUBSCRIPTION_EXPIRATION_HOURS} hours, registration will be removed`,
+      `You can register for another restaurant if you like.`,
+    ].join('\n\n');
+    await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails.photo);
+    await this.bot.sendMessage(chatId, replyText);
   }
 
   async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
@@ -185,22 +182,11 @@ export class WoltBotService implements OnModuleInit {
       await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
       replyText = `Subscription for ${restaurantToRemove} was removed`;
     } else {
-      replyText = `It seems like you don't have a subscription for ${restaurant}.\n\n` +
-        `You can search and register for another restaurant if you like`;
+      replyText = [
+        `It seems like you don't have a subscription for ${restaurant} 🤔`,
+        `You can search and register for another restaurant if you like`,
+      ].join('\n\n');
     }
-    return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
-  }
-
-  getFilteredRestaurantsByName(searchInput) {
-    const restaurants = [...this.woltService.getRestaurants()];
-    return restaurants
-      .filter((restaurant: IWoltRestaurant) => {
-        return restaurant.name.toLowerCase().includes(searchInput.toLowerCase());
-      })
-      .sort((a: IWoltRestaurant, b: IWoltRestaurant) => {
-        // sort by the order of areas in CITIES_SLUGS_SUPPORTED
-        return CITIES_SLUGS_SUPPORTED.indexOf(a.area) - CITIES_SLUGS_SUPPORTED.indexOf(b.area);
-      })
-      .slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
+    return await this.bot.sendMessage(chatId, replyText);
   }
 }

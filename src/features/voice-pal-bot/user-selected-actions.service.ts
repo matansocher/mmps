@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { IVoicePalOption } from './interface';
+import { VoicePalOption } from './interface';
 import { VOICE_PAL_OPTIONS } from './voice-pal.config';
 
 @Injectable()
 export class UserSelectedActionsService {
   private userActions: any = {};
 
-  getCurrentUserAction(chatId: number): IVoicePalOption {
+  getCurrentUserAction(chatId: number): VoicePalOption {
     const userAction = this.userActions[chatId];
     if (!userAction) {
       return null;
