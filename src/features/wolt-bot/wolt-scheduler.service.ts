@@ -6,7 +6,7 @@ import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel }
 import { getErrorMessage, getTimezoneOffset } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { WoltRestaurant } from './interface';
-import { getKeyboardOptions } from './utils';
+import { getRestaurantLink } from './utils';
 import { WoltService } from './wolt.service';
 import {
   ANALYTIC_EVENT_NAMES,
@@ -77,7 +77,7 @@ export class WoltSchedulerService implements OnModuleInit {
       subscribedAndOnlineRestaurants.forEach((restaurant: WoltRestaurant) => {
         const relevantSubscriptions = subscriptions.filter((subscription: SubscriptionModel) => subscription.restaurant === restaurant.name);
         relevantSubscriptions.forEach((subscription: SubscriptionModel) => {
-          const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurant);
+          const restaurantLinkUrl = getRestaurantLink(restaurant);
           const inlineKeyboardButtons = [
             { text: restaurant.name, url: restaurantLinkUrl },
           ];
@@ -102,7 +102,7 @@ export class WoltSchedulerService implements OnModuleInit {
         promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
         const currentHour = new Date().getHours();
         if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) { // let user know that subscription was removed only between 8am to 11pm
-          promisesArr.push(this.bot.sendMessage(subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`), getKeyboardOptions());
+          promisesArr.push(this.bot.sendMessage(subscription.chatId, `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`));
         }
         this.notifierBotService.notify(BOTS.WOLT, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService);
       });

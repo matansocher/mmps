@@ -4,7 +4,7 @@ import { NotifierBotService } from '@core/notifier-bot';
 import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup, TELEGRAM_EVENTS } from '@services/telegram';
-import { getKeyboardOptions } from './utils';
+import { getEnrichedRestaurantsDetails, getKeyboardOptions, getRestaurantLink } from './utils';
 import { WoltService } from './wolt.service';
 import {
   ANALYTIC_EVENT_NAMES,
@@ -83,7 +83,7 @@ export class WoltBotService implements OnModuleInit {
 
   async textHandler(message: Message) {
     const { chatId, firstName, lastName, text: rawRestaurant } = getMessageData(message);
-    const restaurant = rawRestaurant.toLowerCase();
+    const restaurant = rawRestaurant.toLowerCase().trim();
 
     // prevent built in options to be processed also here
     if (Object.keys(WOLT_BOT_OPTIONS).some((option: string) => restaurant.includes(WOLT_BOT_OPTIONS[option]))) return;
@@ -101,7 +101,7 @@ export class WoltBotService implements OnModuleInit {
         const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
         return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
       }
-      const restaurants = await this.woltService.enrichRestaurants(matchedRestaurants);
+      const restaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map((restaurant) => {
         const isAvailableComment = restaurant.isOnline ? 'Open 🟢' : restaurant.isOpen ? 'Busy ⏳' : 'Closed 🛑';
         return {
@@ -118,7 +118,7 @@ export class WoltBotService implements OnModuleInit {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.textHandler.name} - ${errorMessage}`);
       this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
@@ -142,7 +142,7 @@ export class WoltBotService implements OnModuleInit {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.callbackQueryHandler.name} - ${errorMessage}`);
       this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
@@ -159,7 +159,7 @@ export class WoltBotService implements OnModuleInit {
     const restaurantDetails = this.woltService.getRestaurantDetailsByName(restaurant);
     if (restaurantDetails?.isOnline) {
       const replyText = [`It looks like ${restaurant} is open now 🟢`, `Go ahead and order your food 🍴`].join('\n\n');
-      const restaurantLinkUrl = this.woltService.getRestaurantLink(restaurantDetails);
+      const restaurantLinkUrl = getRestaurantLink(restaurantDetails);
       const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantLinkUrl }];
       const form = getInlineKeyboardMarkup(inlineKeyboardButtons);
       await this.bot.sendMessage(chatId, replyText, form as any);
@@ -187,6 +187,6 @@ export class WoltBotService implements OnModuleInit {
         `You can search and register for another restaurant if you like`,
       ].join('\n\n');
     }
-    return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
+    return await this.bot.sendMessage(chatId, replyText);
   }
 }
