@@ -62,7 +62,7 @@ export class TeacherBotService implements OnModuleInit {
     try {
       this.logger.log(`${this.stopHandler.name} - ${logBody} - start`);
       await this.bot.sendMessage(chatId, `OK, I will stop teaching you for now 🛑\n\nWhenever you are ready, just send me the ${TEACHER_BOT_OPTIONS.START} command and we will continue learning\n\nAnother option for you is to start courses manually with the ${TEACHER_BOT_OPTIONS.COURSE} command and another lesson with the ${TEACHER_BOT_OPTIONS.LESSON} command`);
-      await this.mongoUserPreferencesService.updateUserPreference(chatId, true);
+      await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
       this.logger.log(`${this.stopHandler.name} - ${logBody} - success`);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
@@ -208,6 +208,7 @@ export class TeacherBotService implements OnModuleInit {
     try {
       const activeCourse = await this.mongoCourseService.getActiveCourse();
       if (!activeCourse) {
+        await this.bot.sendMessage(chatId, `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_OPTIONS.COURSE} command`);
         return;
       }
 

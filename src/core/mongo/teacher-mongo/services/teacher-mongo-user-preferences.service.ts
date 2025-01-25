@@ -26,9 +26,9 @@ export class TeacherMongoUserPreferencesService {
     return this.userPreferencesCollection.insertOne(userPreference);
   }
 
-  updateUserPreference(userId: number, isStopped: boolean): Promise<UpdateResult<UserPreferencesModel>> {
+  updateUserPreference(userId: number, update: Partial<UserPreferencesModel>): Promise<UpdateResult<UserPreferencesModel>> {
     const filter = { userId };
-    const updateObj = { $set: { isStopped } };
+    const updateObj = { $set: update };
     return this.userPreferencesCollection.updateOne(filter, updateObj);
   }
 }
