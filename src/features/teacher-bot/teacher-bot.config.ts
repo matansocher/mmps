@@ -13,6 +13,7 @@ export const TEACHER_BOT_OPTIONS = {
   COURSE: '/course',
   LESSON: '/lesson',
   LIST: '/list',
+  HISTORY: '/history',
   ADD: '/add',
   REMOVE: '/remove',
 };
@@ -25,3 +26,4 @@ export const THREAD_MESSAGE_NEXT_LESSON = 'I am ready for the next lesson';
 export const TOTAL_COURSE_LESSONS = 3;
 
 export const NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW = 20;
+export const NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW = 50;

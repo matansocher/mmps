@@ -90,6 +90,10 @@ export class TeacherService {
     return this.mongoCourseService.getUnassignedCourses();
   }
 
+  async getCompletedCoursesList(): Promise<CourseModel[]> {
+    return this.mongoCourseService.getCompletedCourses();
+  }
+
   async addCourse(course: string): Promise<void> {
     await this.mongoCourseService.addCourse(course);
   }
