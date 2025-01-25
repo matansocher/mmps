@@ -5,7 +5,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS } from '@services/telegram';
+import { BOTS, sendStyledMessage } from '@services/telegram';
 import { CoachService } from './coach.service';
 import { ANALYTIC_EVENT_STATES } from './constants';
 
@@ -40,7 +40,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
       }
 
       const chatIds = subscriptions.map((subscription) => subscription.chatId);
-      await Promise.all(chatIds.map((chatId) => this.bot.sendMessage(chatId, responseText)));
+      await Promise.all(chatIds.map((chatId) => sendStyledMessage(this.bot, chatId, responseText)));
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.handleIntervalFlow.name} - ${errorMessage}`);

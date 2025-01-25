@@ -3,7 +3,14 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, MessageLoaderService, MessageLoaderOptions, TELEGRAM_EVENTS } from '@services/telegram';
+import {
+  BOTS,
+  getMessageData,
+  MessageLoaderService,
+  MessageLoaderOptions,
+  TELEGRAM_EVENTS,
+  sendStyledMessage
+} from '@services/telegram';
 import { CoachService } from './coach.service';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_OPTIONS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
 
@@ -90,10 +97,6 @@ export class CoachBotService implements OnModuleInit {
     }
   }
 
-  async sleep(ms) { // $$$$$$$$$$$$$$$$$
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   async textHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName, text } = getMessageData(message);
 
@@ -107,20 +110,12 @@ export class CoachBotService implements OnModuleInit {
       const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loaderEmoji: '🤔' } as MessageLoaderOptions);
       await messageLoaderService.handleMessageWithLoader(async () => {
         const replyText = await this.coachService.getMatchesSummaryMessage(text);
-        await this.sendMarkdownMessage(chatId, replyText);
+        await sendStyledMessage(this.bot, chatId, replyText);
       });
 
       this.handleActionSuccess(ANALYTIC_EVENT_STATES.SEARCH, chatId, { text });
     } catch (err) {
       this.handleActionError(this.textHandler.name, err, chatId);
-    }
-  }
-
-  async sendMarkdownMessage(chatId: number, message: string): Promise<void> {
-    try {
-      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-    } catch (err) {
-      await this.bot.sendMessage(chatId, message);
     }
   }
 }
