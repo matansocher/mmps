@@ -4,3 +4,4 @@ export { getInlineKeyboardMarkup } from './get-inline-keyboard-markup';
 export { getMessageData } from './get-message-data';
 export { MessageLoaderService } from './message-loader.service';
 export { MessagesAggregatorService } from './messages-aggregator.service';
+export { sendStyledMessage } from './send-styled-message';

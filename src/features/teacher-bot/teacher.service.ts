@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
-import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
+import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import {
   BOT_ACTIONS,
   TEACHER_ASSISTANT_ID,
@@ -63,7 +63,7 @@ export class TeacherService {
     const isLastLesson = course.lessonsCompleted === TOTAL_COURSE_LESSONS - 1;
     const inlineKeyboardButtons = [{ text: '✅ Complete Course', callback_data: `${course._id} - ${BOT_ACTIONS.COMPLETE}` }];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    await this.sendMarkdownMessage(chatId, response, isLastLesson ? inlineKeyboardMarkup : {});
+    await sendStyledMessage(this.bot, chatId, response, 'Markdown', isLastLesson ? inlineKeyboardMarkup : {});
     await this.mongoCourseService.markCourseLessonCompleted(course._id);
   }
 
@@ -73,14 +73,6 @@ export class TeacherService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async sendMarkdownMessage(chatId: number, message: string, form = {}): Promise<void> {
-    try {
-      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown', ...form });
-    } catch (err) {
-      await this.bot.sendMessage(chatId, message, form);
-    }
-  }
-
   async processQuestion(chatId: number, question: string): Promise<void> {
     const activeCourse = await this.mongoCourseService.getActiveCourse();
     if (!activeCourse) {
@@ -88,6 +80,6 @@ export class TeacherService {
       return;
     }
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
-    await this.sendMarkdownMessage(chatId, response);
+    await sendStyledMessage(this.bot, chatId, response);
   }
 }

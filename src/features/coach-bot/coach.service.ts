@@ -71,7 +71,7 @@ export class CoachService {
     }
     this.competitionsDetailsCache[date] = {
       competitionsDetails: competitionsDetails,
-      lastUpdated: new Date().getTime()
+      lastUpdated: new Date().getTime(),
     };
   }
 }

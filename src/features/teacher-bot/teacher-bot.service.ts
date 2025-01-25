@@ -4,7 +4,14 @@ import { LOCAL_FILES_PATH } from '@core/config';
 import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { deleteFile, getDateString, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
-import { BOTS, TELEGRAM_EVENTS, getCallbackQueryData, getMessageData, downloadAudioFromVideoOrAudio } from '@services/telegram';
+import {
+  BOTS,
+  TELEGRAM_EVENTS,
+  getCallbackQueryData,
+  getMessageData,
+  downloadAudioFromVideoOrAudio,
+  sendStyledMessage
+} from '@services/telegram';
 import { TeacherService } from './teacher.service';
 import {
   BOT_ACTIONS,
@@ -13,7 +20,6 @@ import {
   NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW,
   TEACHER_BOT_OPTIONS,
 } from './teacher-bot.config';
-import { getStockDetailsByName, getStockDetailsBySymbol } from '@services/yahoo-finance';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
@@ -27,7 +33,7 @@ export class TeacherBotService implements OnModuleInit {
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
-  async onModuleInit(): Promise<void> {
+  onModuleInit() {
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.STOP), (message: Message) => this.stopHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.COURSE), (message: Message) => this.courseHandler(message));
@@ -38,9 +44,6 @@ export class TeacherBotService implements OnModuleInit {
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.REMOVE), (message: Message) => this.removeHandler(message));
     this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.messageHandler(message));
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
-
-    const res1 = await getStockDetailsBySymbol('zi');
-    const res2 = await getStockDetailsByName('apple', 10);
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -125,7 +128,7 @@ export class TeacherBotService implements OnModuleInit {
       }
       const coursesStr = courses.map(({ _id, topic }) => `\`${_id}\` - ${topic}`).join('\n');
       const replyText = `${messagePrefix}:\n\n${coursesStr}`;
-      await this.teacherService.sendMarkdownMessage(chatId, replyText);
+      await sendStyledMessage(this.bot, chatId, replyText);
       this.logger.log(`${this.listHandler.name} - ${logBody} - success`);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
