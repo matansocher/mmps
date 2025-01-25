@@ -13,6 +13,7 @@ import {
   NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW,
   TEACHER_BOT_OPTIONS,
 } from './teacher-bot.config';
+import { getStockDetailsByName, getStockDetailsBySymbol } from '@services/yahoo-finance';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
@@ -26,7 +27,7 @@ export class TeacherBotService implements OnModuleInit {
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
-  onModuleInit(): void {
+  async onModuleInit(): Promise<void> {
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.STOP), (message: Message) => this.stopHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.COURSE), (message: Message) => this.courseHandler(message));
@@ -37,6 +38,9 @@ export class TeacherBotService implements OnModuleInit {
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.REMOVE), (message: Message) => this.removeHandler(message));
     this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.messageHandler(message));
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
+
+    const res1 = await getStockDetailsBySymbol('zi');
+    const res2 = await getStockDetailsByName('apple', 10);
   }
 
   async startHandler(message: Message): Promise<void> {
