@@ -58,16 +58,14 @@ export class RollinsparkBotService implements OnModuleInit {
       this.logger.log(`${this.managementHandler.name} - ${logBody} - start`);
 
       const subscriptions = await this.mongoSubscriptionService.getSubscriptions(chatId);
-      const inlineKeyboardButtons = Object.keys(NAME_TO_PLAN_ID_MAP)
-        .map((planName) => {
-          const subscription = subscriptions.find((sub) => sub.planId === NAME_TO_PLAN_ID_MAP[planName] && sub.isActive);
-          const isSubscribed = !!subscription;
-          return {
-            text: `${planName} - ${isSubscribed ? 'Unsubscribe 🛑' : 'Subscribe 🟢'}`,
-            callback_data: `${NAME_TO_PLAN_ID_MAP[planName]} - ${isSubscribed ? BOT_ACTIONS.UNSUBSCRIBE : BOT_ACTIONS.SUBSCRIBE}`,
-          };
-        })
-        .sort((a, b) => a.text.localeCompare(b.text));
+      const inlineKeyboardButtons = Object.keys(NAME_TO_PLAN_ID_MAP).map((planName) => {
+        const subscription = subscriptions.find((sub) => sub.planId === NAME_TO_PLAN_ID_MAP[planName] && sub.isActive);
+        const isSubscribed = !!subscription;
+        return {
+          text: `${isSubscribed ? '🟢' : '🛑'} ${planName} - ${isSubscribed ? 'Unsubscribe 🛑' : 'Subscribe 🟢'}`,
+          callback_data: `${NAME_TO_PLAN_ID_MAP[planName]} - ${isSubscribed ? BOT_ACTIONS.UNSUBSCRIBE : BOT_ACTIONS.SUBSCRIBE}`,
+        };
+      });
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `Here is the full list of plans I support in rollinspark.\nPlease choose the relevant options for you`;
       return this.handleActionSuccess(this.managementHandler.name, logBody, chatId, replyText, inlineKeyboardMarkup);
