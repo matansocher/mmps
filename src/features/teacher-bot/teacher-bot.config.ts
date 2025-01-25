@@ -10,6 +10,7 @@ export const COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY = [17, 22];
 
 export const TEACHER_BOT_OPTIONS = {
   START: '/start',
+  STOP: '/stop',
   COURSE: '/course',
   LESSON: '/lesson',
   LIST: '/list',
@@ -17,6 +18,10 @@ export const TEACHER_BOT_OPTIONS = {
   ADD: '/add',
   REMOVE: '/remove',
 };
+
+export enum BOT_ACTIONS {
+  COMPLETE = 'complete',
+}
 
 export const TEACHER_ASSISTANT_ID = 'asst_ogwjFGg44XVDDJB2ZIPlplwu';
 

@@ -1,7 +1,7 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { MY_USER_ID, NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
@@ -14,13 +14,24 @@ export class TeacherSchedulerService {
 
   constructor(
     private readonly teacherService: TeacherService,
+    private readonly mongoCourseService: TeacherMongoCourseService,
+    private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly notifierBotService: NotifierBotService,
-    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleCourseFirstLesson(): Promise<void> {
     try {
+      const userPreferences = await this.mongoUserPreferencesService.getUserPreference(MY_USER_ID);
+      if (userPreferences?.isStopped) {
+        return;
+      }
+
+      const activeCourse = await this.mongoCourseService.getActiveCourse();
+      if (activeCourse) {
+        return;
+      }
+
       await this.teacherService.startNewCourse(MY_USER_ID);
     } catch (err) {
       const errorMessage = getErrorMessage(err);

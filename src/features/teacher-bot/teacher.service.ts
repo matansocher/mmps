@@ -3,8 +3,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
-import { BOTS } from '@services/telegram';
-import { TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher-bot.config';
+import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
+import {
+  BOT_ACTIONS,
+  TEACHER_ASSISTANT_ID,
+  THREAD_MESSAGE_FIRST_LESSON,
+  THREAD_MESSAGE_NEXT_LESSON,
+  TOTAL_COURSE_LESSONS,
+} from './teacher-bot.config';
 
 @Injectable()
 export class TeacherService {
@@ -16,7 +22,6 @@ export class TeacherService {
   ) {}
 
   async startNewCourse(chatId: number): Promise<void> {
-    await this.mongoCourseService.markActiveCourseCompleted();
     const course = await this.getNewCourse(chatId);
     await this.processCourseLesson(chatId, course, course.threadId, `${THREAD_MESSAGE_FIRST_LESSON}. this course's topic is ${course.topic}`);
   }
@@ -37,16 +42,12 @@ export class TeacherService {
   async processLesson(chatId: number, isScheduled = false): Promise<void> {
     const activeCourse = await this.mongoCourseService.getActiveCourse();
     if (!activeCourse) {
-      if (!isScheduled) {
-        await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one.`);
-      }
+      !isScheduled && (await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one.`));
       return;
     }
 
     if (activeCourse.lessonsCompleted >= TOTAL_COURSE_LESSONS) {
-      if (!isScheduled) {
-        await this.bot.sendMessage(chatId, `You completed ${activeCourse.topic} course. You can still ask questions.`);
-      }
+      !isScheduled && (await this.bot.sendMessage(chatId, `You completed ${activeCourse.topic} course. You can still ask questions.`));
       return;
     }
 
@@ -58,7 +59,11 @@ export class TeacherService {
       return;
     }
     const response = await this.getAssistantAnswer(threadId, prompt);
-    await this.sendMarkdownMessage(chatId, response);
+
+    const isLastLesson = course.lessonsCompleted === TOTAL_COURSE_LESSONS - 1;
+    const inlineKeyboardButtons = [{ text: '✅ Complete Course', callback_data: `${course._id} - ${BOT_ACTIONS.COMPLETE}` }];
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
+    await this.sendMarkdownMessage(chatId, response, isLastLesson ? inlineKeyboardMarkup : {});
     await this.mongoCourseService.markCourseLessonCompleted(course._id);
   }
 
@@ -68,11 +73,11 @@ export class TeacherService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async sendMarkdownMessage(chatId: number, message: string): Promise<void> {
+  async sendMarkdownMessage(chatId: number, message: string, form = {}): Promise<void> {
     try {
-      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown', ...form });
     } catch (err) {
-      await this.bot.sendMessage(chatId, message);
+      await this.bot.sendMessage(chatId, message, form);
     }
   }
 
@@ -84,21 +89,5 @@ export class TeacherService {
     }
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
     await this.sendMarkdownMessage(chatId, response);
-  }
-
-  async getCoursesList(): Promise<CourseModel[]> {
-    return this.mongoCourseService.getUnassignedCourses();
-  }
-
-  async getCompletedCoursesList(): Promise<CourseModel[]> {
-    return this.mongoCourseService.getCompletedCourses();
-  }
-
-  async addCourse(course: string): Promise<void> {
-    await this.mongoCourseService.addCourse(course);
-  }
-
-  async removeCourse(courseId: string): Promise<void> {
-    await this.mongoCourseService.removeCourse(courseId);
   }
 }
