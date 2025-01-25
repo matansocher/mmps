@@ -1,11 +1,16 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
-import { deleteFile, getErrorMessage } from '@core/utils';
+import { deleteFile, getDateString, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
 import { BOTS, getMessageData, downloadAudioFromVideoOrAudio, TELEGRAM_EVENTS } from '@services/telegram';
 import { TeacherService } from './teacher.service';
-import { INITIAL_BOT_RESPONSE, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_OPTIONS } from './teacher-bot.config';
+import {
+  INITIAL_BOT_RESPONSE,
+  NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW,
+  NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW,
+  TEACHER_BOT_OPTIONS,
+} from './teacher-bot.config';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
@@ -22,6 +27,7 @@ export class TeacherBotService implements OnModuleInit {
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.COURSE), (message: Message) => this.courseHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.LESSON), (message: Message) => this.lessonHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.LIST), (message: Message) => this.listHandler(message));
+    this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.HISTORY), (message: Message) => this.historyHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.ADD), (message: Message) => this.addHandler(message));
     this.bot.onText(new RegExp(TEACHER_BOT_OPTIONS.REMOVE), (message: Message) => this.removeHandler(message));
     this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.messageHandler(message));
@@ -96,6 +102,38 @@ export class TeacherBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.listHandler.name} - ${logBody} - error - ${errorMessage}`);
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
+  async historyHandler(message: Message): Promise<void> {
+    const { chatId, firstName, lastName } = getMessageData(message);
+    const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+
+    try {
+      this.logger.log(`${this.historyHandler.name} - ${logBody} - start`);
+      let courses = await this.teacherService.getCompletedCoursesList();
+      if (!courses?.length) {
+        await this.bot.sendMessage(chatId, 'I see you dont have any completed courses yet');
+        return;
+      }
+      let messagePrefix = 'Completed Courses';
+      const isListTooBig = courses.length > NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW;
+      if (isListTooBig) {
+        courses = courses.slice(0, NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW);
+        messagePrefix = `Available Courses list it too big, showing the random first ${NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW}`;
+      }
+
+      const coursesStr = courses
+        .sort((a, b) => a.completedAt.getTime() - b.completedAt.getTime())
+        .map(({ topic, completedAt }) => `${getDateString(completedAt)} | ${topic}`)
+        .join('\n');
+      const replyText = `${messagePrefix}:\n\n${coursesStr}`;
+      await this.bot.sendMessage(chatId, replyText);
+      this.logger.log(`${this.historyHandler.name} - ${logBody} - success`);
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      this.logger.error(`${this.historyHandler.name} - ${logBody} - error - ${errorMessage}`);
       await this.bot.sendMessage(chatId, errorMessage);
     }
   }
