@@ -43,6 +43,11 @@ export class TeacherSchedulerService {
   @Cron(`0 ${COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY.join(',')} * * *`, { name: 'teacher-scheduler-next', timeZone: DEFAULT_TIMEZONE })
   async handleCourseNextLesson(): Promise<void> {
     try {
+      const userPreferences = await this.mongoUserPreferencesService.getUserPreference(MY_USER_ID);
+      if (userPreferences?.isStopped) {
+        return;
+      }
+
       await this.teacherService.processLesson(MY_USER_ID, true);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
