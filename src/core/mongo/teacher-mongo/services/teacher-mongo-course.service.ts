@@ -21,6 +21,11 @@ export class TeacherMongoCourseService {
     return this.courseCollection.insertOne(course);
   }
 
+  getCourse(courseId: string): Promise<CourseModel> {
+    const filter = { _id: new ObjectId(courseId) };
+    return this.courseCollection.findOne(filter);
+  }
+
   removeCourse(courseId: string): Promise<DeleteResult> {
     const filter = { _id: new ObjectId(courseId) };
     return this.courseCollection.deleteOne(filter as any);
@@ -79,5 +84,16 @@ export class TeacherMongoCourseService {
       },
     };
     return this.courseCollection.updateMany({ status: CourseStatus.Assigned }, updateObj);
+  }
+
+  async markCourseCompleted(courseId: string): Promise<UpdateResult<CourseModel>> {
+    const filter = { _id: new ObjectId(courseId) };
+    const updateObj = {
+      $set: {
+        status: CourseStatus.Completed,
+        completedAt: new Date(),
+      },
+    };
+    return this.courseCollection.updateOne(filter, updateObj);
   }
 }
