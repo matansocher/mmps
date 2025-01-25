@@ -118,7 +118,7 @@ export class CoachBotService implements OnModuleInit {
 
   async sendMarkdownMessage(chatId: number, message: string): Promise<void> {
     try {
-      await this.bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
+      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
     } catch (err) {
       await this.bot.sendMessage(chatId, message);
     }

@@ -30,7 +30,7 @@ export function getSingleMatchString(matchDetails: MatchDetails): string {
     '-',
     matchEnded || gameTime === -1 ? '' : gameTime,
     statusText === 'טרם החל' || matchEnded ? '' : statusText,
-    channel ? `(<b>${channel}</b>)` : '',
+    channel ? `(*${channel}*)` : '',
     // `<a href="https://google.com">google</a>`,
   ]
     .join(' ')
