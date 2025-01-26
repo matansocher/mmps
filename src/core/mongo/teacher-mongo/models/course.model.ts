@@ -9,7 +9,7 @@ export enum CourseStatus {
 export interface CourseModel {
   readonly _id: ObjectId;
   readonly topic: string;
-  readonly threadId?: string;
+  threadId?: string;
   readonly status: CourseStatus;
   readonly lessonsCompleted?: number;
   readonly assignedAt?: Date;
