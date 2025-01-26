@@ -3,9 +3,9 @@ import { Message } from 'node-telegram-bot-api';
 const TIMEOUT_MS = 100;
 
 interface MessageAggregatorData {
-  message: Message;
-  timeoutId: NodeJS.Timeout | number;
-  processMessageCallback: (message: Message) => void;
+  readonly message: Message;
+  readonly timeoutId: NodeJS.Timeout | number;
+  readonly processMessageCallback: (message: Message) => void;
 }
 
 export class MessagesAggregatorService {

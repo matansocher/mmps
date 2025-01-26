@@ -1,16 +1,16 @@
 export interface TelegramMessageData {
-  chatId: number;
-  messageId: number;
-  replyToMessageId: number;
-  replyToMessageText: string;
-  telegramUserId: number;
-  firstName: string;
-  lastName: string;
-  username: string;
-  text: string;
-  audio: any;
-  video: any;
-  photo: any;
-  file: any;
-  date: number;
+  readonly chatId: number;
+  readonly messageId: number;
+  readonly replyToMessageId: number;
+  readonly replyToMessageText: string;
+  readonly telegramUserId: number;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly username: string;
+  readonly text: string;
+  readonly audio: any;
+  readonly video: any;
+  readonly photo: any;
+  readonly file: any;
+  readonly date: number;
 }

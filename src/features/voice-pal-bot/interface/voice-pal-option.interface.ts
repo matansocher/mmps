@@ -1,12 +1,12 @@
 import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
 
 export interface VoicePalOption {
-  analyticsEventName: string;
-  displayName: string;
-  handler?: string;
-  hideFromKeyboard?: boolean;
-  loaderType?: BOT_BROADCAST_ACTIONS;
-  possibleInputs?: POSSIBLE_INPUTS[];
-  selectedActionResponse: string;
-  showLoader?: boolean;
+  readonly analyticsEventName: string;
+  readonly displayName: string;
+  readonly handler?: string;
+  readonly hideFromKeyboard?: boolean;
+  readonly loaderType?: BOT_BROADCAST_ACTIONS;
+  readonly possibleInputs?: POSSIBLE_INPUTS[];
+  readonly selectedActionResponse: string;
+  readonly showLoader?: boolean;
 }

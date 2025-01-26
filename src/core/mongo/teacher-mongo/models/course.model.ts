@@ -7,12 +7,12 @@ export enum CourseStatus {
 }
 
 export interface CourseModel {
-  _id: ObjectId;
-  topic: string;
-  threadId?: string;
-  status: CourseStatus;
-  lessonsCompleted?: number;
-  assignedAt?: Date;
-  completedAt?: Date;
-  createdAt: Date;
+  readonly _id: ObjectId;
+  readonly topic: string;
+  readonly threadId?: string;
+  readonly status: CourseStatus;
+  readonly lessonsCompleted?: number;
+  readonly assignedAt?: Date;
+  readonly completedAt?: Date;
+  readonly createdAt: Date;
 }

@@ -1,4 +1,4 @@
 export interface DatabaseModuleOptions {
-  connectionName: string;
-  dbName: string;
+  readonly connectionName: string;
+  readonly dbName: string;
 }
