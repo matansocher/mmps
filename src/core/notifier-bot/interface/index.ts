@@ -1,5 +1,5 @@
 export interface NotifyOptions {
-  [key: string]: any;
-  action: string;
-  plainText?: string;
+  readonly [key: string]: any;
+  readonly action: string;
+  readonly plainText?: string;
 }

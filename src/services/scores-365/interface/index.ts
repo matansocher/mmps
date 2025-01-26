@@ -11,12 +11,12 @@ export interface Competition {
 }
 
 export interface ExpectedTeam {
-  id: number;
-  name: string;
-  symbolicName: string;
-  score: number;
-  nameForURL: string;
-  color: string;
+  readonly id: number;
+  readonly name: string;
+  readonly symbolicName: string;
+  readonly score: number;
+  readonly nameForURL: string;
+  readonly color: string;
 }
 
 export interface ExpectedTvNetworks {
@@ -30,9 +30,9 @@ export interface ExpectedMatch {
   readonly statusText: string;
   readonly gameTime: number;
   readonly venue: {
-    id: number;
-    name: string;
-    shortName: string;
+    readonly id: number;
+    readonly name: string;
+    readonly shortName: string;
   };
   readonly homeCompetitor: ExpectedTeam;
   readonly awayCompetitor: ExpectedTeam;
@@ -40,12 +40,12 @@ export interface ExpectedMatch {
 }
 
 export interface Team {
-  id: number;
-  name: string;
-  symbolicName: string;
-  score: number;
-  nameForURL: string;
-  color: string;
+  readonly id: number;
+  readonly name: string;
+  readonly symbolicName: string;
+  readonly score: number;
+  readonly nameForURL: string;
+  readonly color: string;
 }
 
 export interface MatchDetails {

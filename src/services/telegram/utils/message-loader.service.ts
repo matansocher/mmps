@@ -9,9 +9,9 @@ const MAX_TURTLES = 10;
 const DEFAULT_CYCLE_DURATION = 3000;
 
 interface MessageLoaderData {
-  cycleIterationIndex: number;
-  timeoutId: NodeJS.Timeout;
-  loaderMessageId: number;
+  readonly cycleIterationIndex: number;
+  readonly timeoutId: NodeJS.Timeout;
+  readonly loaderMessageId: number;
 }
 
 export class MessageLoaderService {

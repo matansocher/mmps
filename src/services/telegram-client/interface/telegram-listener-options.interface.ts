@@ -1,3 +1,3 @@
 export interface ListenerOptions {
-  conversationsIds?: string[];
+  readonly conversationsIds?: string[];
 }

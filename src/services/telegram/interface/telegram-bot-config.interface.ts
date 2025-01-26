@@ -1,5 +1,5 @@
 export interface TelegramBotConfig {
-  id: string;
-  name: string;
-  token: string;
+  readonly id: string;
+  readonly name: string;
+  readonly token: string;
 }

@@ -1,8 +1,8 @@
 export interface WoltRestaurant {
-  id: string;
-  name: string;
-  isOnline: string;
-  slug: string;
-  area: string;
-  photo: string;
+  readonly id: string;
+  readonly name: string;
+  readonly isOnline: string;
+  readonly slug: string;
+  readonly area: string;
+  readonly photo: string;
 }

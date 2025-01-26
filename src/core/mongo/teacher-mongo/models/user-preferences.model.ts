@@ -1,8 +1,8 @@
 import type { ObjectId } from 'mongodb';
 
 export interface UserPreferencesModel {
-  _id: ObjectId;
-  userId: number;
-  isStopped: boolean;
-  createdAt: Date;
+  readonly _id: ObjectId;
+  readonly userId: number;
+  readonly isStopped: boolean;
+  readonly createdAt: Date;
 }

@@ -1,7 +1,7 @@
 export interface TelegramClientFactoryOptions {
-  name: string;
-  apiId: number;
-  apiHash: string;
-  stringSession: string;
-  connectionRetries?: number;
+  readonly name: string;
+  readonly apiId: number;
+  readonly apiHash: string;
+  readonly stringSession: string;
+  readonly connectionRetries?: number;
 }

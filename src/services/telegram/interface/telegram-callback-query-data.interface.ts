@@ -1,10 +1,10 @@
 export interface TelegramCallbackQueryData {
-  messageId: number;
-  callbackQueryId: string;
-  chatId: number;
-  date: number;
-  firstName: string;
-  lastName: string;
-  text: string;
-  data: string;
+  readonly messageId: number;
+  readonly callbackQueryId: string;
+  readonly chatId: number;
+  readonly date: number;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly text: string;
+  readonly data: string;
 }

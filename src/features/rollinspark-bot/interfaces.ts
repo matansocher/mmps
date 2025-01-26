@@ -1,3 +1,3 @@
 export interface ExpectedAptDetails {
-  ApartmentId: string;
+  readonly ApartmentId: string;
 }
