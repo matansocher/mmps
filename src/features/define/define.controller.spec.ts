@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { DefineController } from './define.controller';
-import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
+import { DefineController, telegramBaseUrl } from './define.controller';
 import { ContactRequestDTO } from './types';
 
 jest.mock('axios');
@@ -49,7 +49,7 @@ describe('DefineController', () => {
     expect(configService.get).toHaveBeenCalledWith('DEFINE_TELEGRAM_BOT_TOKEN');
     expect(configService.get).toHaveBeenCalledWith('DEFINE_TELEGRAM_CHAT_ID');
     expect(axios.get).toHaveBeenCalledWith(
-      `https://api.telegram.org/bot${mockTelegramBotToken}/sendMessage?chat_id=${mockTelegramChatId}&text=A new user contacted from the Define website\nEmail: user@example.com`,
+      `${telegramBaseUrl}/bot${mockTelegramBotToken}/sendMessage?chat_id=${mockTelegramChatId}&text=A new user contacted from the Define website\nEmail: user@example.com`,
     );
     expect(result).toEqual({ success: true });
   });
@@ -75,7 +75,7 @@ describe('DefineController', () => {
     expect(configService.get).toHaveBeenCalledWith('DEFINE_TELEGRAM_BOT_TOKEN');
     expect(configService.get).toHaveBeenCalledWith('DEFINE_TELEGRAM_CHAT_ID');
     expect(axios.get).toHaveBeenCalledWith(
-      `https://api.telegram.org/bot${mockTelegramBotToken}/sendMessage?chat_id=${mockTelegramChatId}&text=A new user contacted from the Define website\nEmail: user@example.com`,
+      `${telegramBaseUrl}/bot${mockTelegramBotToken}/sendMessage?chat_id=${mockTelegramChatId}&text=A new user contacted from the Define website\nEmail: user@example.com`,
     );
     expect(result).toEqual({ success: false });
   });
