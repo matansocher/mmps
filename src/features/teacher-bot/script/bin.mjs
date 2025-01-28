@@ -71,7 +71,7 @@ const topics = [
   'Event Sourcing: Principles and Applications',
   'CQRS: Command Query Responsibility Segregation',
   'Distributed Tracing and Monitoring',
-  'High Availability: Designing for Fault Tolerance'
+  'High Availability: Designing for Fault Tolerance',
 ];
 
 class CourseService {

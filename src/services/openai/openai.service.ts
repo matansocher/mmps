@@ -44,11 +44,12 @@ export class OpenaiService {
     });
   }
 
-  async getChatCompletion(prompt: string, userText: string = ''): Promise<string> {
+  async getChatCompletion(prompt: string, userText = ''): Promise<string | null> {
     let userMessages;
     if (typeof userText === 'string') {
       userMessages = [userText].filter(Boolean);
-    } else { // array
+    } else {
+      // array
       userMessages = _chunk(userText, 100);
     }
     const result = await this.openai.chat.completions.create({
@@ -67,7 +68,7 @@ export class OpenaiService {
     return result.choices[0].message.content;
   }
 
-  async createImage(prompt: string): Promise<string> {
+  async createImage(prompt: string): Promise<string | undefined> {
     const response = await this.openai.images.generate({
       model: IMAGE_GENERATION_MODEL,
       prompt,
@@ -77,7 +78,7 @@ export class OpenaiService {
     return response.data[0].url;
   }
 
-  async analyzeImage(prompt: string, imageUrl: string): Promise<string> {
+  async analyzeImage(prompt: string, imageUrl: string): Promise<string | null> {
     const response = await this.openai.chat.completions.create({
       model: IMAGE_ANALYZER_MODEL,
       messages: [

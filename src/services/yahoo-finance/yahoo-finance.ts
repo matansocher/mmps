@@ -1,8 +1,8 @@
 import yahooFinance from 'yahoo-finance2';
-import { Quote, StockDataSummary, StockSearchResult } from './interface';
+import type { Quote, StockDataSummary, StockSearchResult } from './interface';
 import { parseStockDetails, parseStockSearchResults } from './utils';
 
-export async function getStockDetailsBySymbol(symbol: string): Promise<StockDataSummary> {
+export async function getStockDetailsBySymbol(symbol: string): Promise<StockDataSummary | null> {
   const quote = await yahooFinance.quote(symbol);
   if (!quote) {
     return null;
@@ -10,7 +10,7 @@ export async function getStockDetailsBySymbol(symbol: string): Promise<StockData
   return parseStockDetails(quote as any); // TODO: change to real types
 }
 
-export async function getStockDetailsByName(name: string, numOfResults: number): Promise<StockSearchResult[]> {
+export async function getStockDetailsByName(name: string, numOfResults: number): Promise<StockSearchResult[] | null> {
   const searchResults = await yahooFinance.search(name);
   if (!searchResults) {
     return null;

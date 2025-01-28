@@ -9,11 +9,7 @@ export const FILTER_OUT_EVENTS = [
   'UpdateDeleteChannelMessages',
 ];
 
-export const LISTEN_TO_EVENTS = [
-  'UpdateNewChannelMessage',
-  'UpdateNewMessage',
-  'UpdateShortMessage',
-];
+export const LISTEN_TO_EVENTS = ['UpdateNewChannelMessage', 'UpdateNewMessage', 'UpdateShortMessage'];
 
 export const CHANNELS = {
   ISRAEL_TECH_FORUM: { id: '1083698033', name: `🇮🇱 Israel Tech & Innovation Forum` },

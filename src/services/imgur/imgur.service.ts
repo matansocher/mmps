@@ -28,7 +28,7 @@ export async function imgurUploadImage(imgurToken: string, imageLocalPath: strin
 
     const result = await axios(config);
     logger.log(`${imgurUploadImage.name} - end`);
-    return result['data']?.data?.link;
+    return result.data?.data?.link;
   } catch (err) {
     logger.error(`${imgurUploadImage.name} - err - ${getErrorMessage(err)}`);
     throw err;

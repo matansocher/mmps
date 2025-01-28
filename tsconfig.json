@@ -13,7 +13,7 @@
     "incremental": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
@@ -29,12 +29,6 @@
       "@test/*": ["test/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.js"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.js"],
+  "exclude": ["node_modules", "dist"]
 }

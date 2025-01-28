@@ -20,7 +20,7 @@ export class RollinsparkSchedulerService implements OnModuleInit {
   latestPlansAvailability: PlanAvailability = Object.values(NAME_TO_PLAN_ID_MAP).reduce((acc, planId: number) => {
     acc[planId] = [];
     return acc;
-  }, {} as PlanAvailability);
+  }, {});
 
   constructor(
     private readonly rollinsparkService: RollinsparkService,
@@ -80,7 +80,7 @@ export class RollinsparkSchedulerService implements OnModuleInit {
     return results.reduce((acc, { planId, aptsDetails }) => {
       acc[planId] = aptsDetails;
       return acc;
-    }, {} as PlanAvailability);
+    }, {});
   }
 
   isPlanSimilarToLatest(planId: number, oldPlansAvailability: PlanAvailability, newPlansAvailability: PlanAvailability): boolean {

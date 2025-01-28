@@ -1,22 +1,21 @@
-import { get as _get } from 'lodash';
-import { Message } from 'node-telegram-bot-api';
-import { TelegramMessageData } from '../interface';
+import type { Message } from 'node-telegram-bot-api';
+import type { TelegramMessageData } from '../interface';
 
 export function getMessageData(message: Message): TelegramMessageData {
   return {
-    chatId: _get(message, 'chat.id', null),
-    messageId: _get(message, 'message_id', null),
-    replyToMessageId: _get(message, 'reply_to_message.message_id', null),
-    replyToMessageText: _get(message, 'reply_to_message.text', null),
-    telegramUserId: _get(message, 'from.id', null),
-    firstName: _get(message, 'from.first_name', null),
-    lastName: _get(message, 'from.last_name', null),
-    username: _get(message, 'from.username', null),
-    text: _get(message, 'text', '') || _get(message, 'caption', ''),
-    audio: _get(message, 'audio', null) || _get(message, 'voice', null),
-    video: _get(message, 'video', null),
-    photo: _get(message, 'photo', null) || _get(message, 'sticker', null),
-    file: _get(message, 'document', null),
-    date: _get(message, 'date', null),
+    chatId: message?.chat.id ?? null,
+    messageId: message?.message_id ?? null,
+    replyToMessageId: message?.reply_to_message?.message_id ?? 0,
+    replyToMessageText: message?.reply_to_message?.text ?? '',
+    telegramUserId: message?.from?.id ?? 0,
+    firstName: message?.from?.first_name ?? '',
+    lastName: message?.from?.last_name ?? '',
+    username: message?.from?.username ?? '',
+    text: (message?.text || message?.caption) ?? '',
+    audio: (message?.audio || message?.voice) ?? null,
+    video: message?.video ?? '',
+    photo: (message?.photo || message?.sticker) ?? null,
+    file: message?.document ?? null,
+    date: message?.date ?? null,
   };
 }

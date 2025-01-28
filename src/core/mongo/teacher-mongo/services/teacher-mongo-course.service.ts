@@ -21,7 +21,7 @@ export class TeacherMongoCourseService {
     return this.courseCollection.insertOne(course);
   }
 
-  getCourse(courseId: string): Promise<CourseModel> {
+  getCourse(courseId: string): Promise<CourseModel | null> {
     const filter = { _id: new ObjectId(courseId) };
     return this.courseCollection.findOne(filter);
   }
@@ -54,7 +54,7 @@ export class TeacherMongoCourseService {
 
   getActiveCourse(): Promise<WithId<CourseModel>> {
     const filter = { status: CourseStatus.Assigned };
-    return this.courseCollection.findOne(filter) as Promise<WithId<CourseModel>>;
+    return this.courseCollection.findOne(filter);
   }
 
   startCourse(courseId: ObjectId, additionalData: Partial<CourseModel>): Promise<UpdateResult<CourseModel>> {

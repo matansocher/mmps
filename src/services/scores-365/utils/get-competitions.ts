@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { pick as _pick } from 'lodash';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Competition } from '../interface';
+import type { Competition } from '../interface';
 import { COMPETITIONS, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 
 export async function getCompetitions(): Promise<Competition[]> {

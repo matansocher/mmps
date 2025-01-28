@@ -9,12 +9,13 @@ import { GeminiClientProvider } from './interface';
 export class GeminiService {
   constructor(@Inject(GENERATIVE_MODEL_CLIENT_TOKEN) private readonly genAI: GeminiClientProvider) {}
 
-  async getChatCompletion(prompt: string, userText: string | unknown[]): Promise<string> {
+  async getChatCompletion(prompt: string, userText: string | string[]): Promise<string> {
     let finalPrompt = `${prompt}.\n\n`;
 
     if (typeof userText === 'string') {
       finalPrompt += userText;
-    } else { // array
+    } else {
+      // array
       finalPrompt += userText.join('.');
     }
 

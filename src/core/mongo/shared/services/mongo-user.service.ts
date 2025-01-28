@@ -1,4 +1,4 @@
-import { Db } from 'mongodb';
+import { Db, Document, WithId } from 'mongodb';
 import { Injectable, Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
 import { TelegramMessageData } from '@services/telegram';
@@ -20,7 +20,7 @@ export class MongoUserService {
     }
   }
 
-  async getUserDetails({ chatId }): Promise<any> {
+  async getUserDetails({ chatId }): Promise<WithId<Document> | null> {
     try {
       const userCollection = this.database.collection(COLLECTIONS.USER);
       return userCollection.findOne({ chatId });

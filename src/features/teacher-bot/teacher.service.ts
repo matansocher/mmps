@@ -4,13 +4,7 @@ import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mong
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
-import {
-  BOT_ACTIONS,
-  TEACHER_ASSISTANT_ID,
-  THREAD_MESSAGE_FIRST_LESSON,
-  THREAD_MESSAGE_NEXT_LESSON,
-  TOTAL_COURSE_LESSONS,
-} from './teacher-bot.config';
+import { BOT_ACTIONS, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherService {

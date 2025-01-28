@@ -51,12 +51,13 @@ export class AiService {
     return this.openaiService.createImage(prompt);
   }
 
-  async analyzeImage(prompt: string, imageLocalPath: string): Promise<string> {
+  async analyzeImage(prompt: string, imageLocalPath: string): Promise<string | null> {
     switch (this.aiProvider) {
-      case AiProvider.OPENAI:
+      case AiProvider.OPENAI: {
         const imgurToken = this.configService.get('IMGUR_CLIENT_ID');
         const imageUrl = await imgurUploadImage(imgurToken, imageLocalPath);
         return this.openaiService.analyzeImage(prompt, imageUrl);
+      }
       case AiProvider.GEMINI:
         return this.geminiService.generateContentFromFile(prompt, imageLocalPath);
     }

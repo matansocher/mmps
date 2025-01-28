@@ -1,2 +1,2 @@
-export { RestaurantsList } from './restaurants-list.interface';
-export { WoltRestaurant } from './wolt-restaurant.interface';
+export type { RestaurantsList } from './restaurants-list.interface';
+export type { WoltRestaurant } from './wolt-restaurant.interface';

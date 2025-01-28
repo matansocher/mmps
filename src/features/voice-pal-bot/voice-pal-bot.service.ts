@@ -4,6 +4,7 @@ import { BOTS, MessagesAggregatorService, getMessageData, TELEGRAM_EVENTS } from
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VOICE_PAL_OPTIONS } from './voice-pal.config';
 import { VoicePalService } from './voice-pal.service';
+import { getErrorMessage } from '@core/utils';
 
 @Injectable()
 export class VoicePalBotService implements OnModuleInit {
@@ -16,9 +17,9 @@ export class VoicePalBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) =>
-      new MessagesAggregatorService().handleIncomingMessage(message, (message: Message) => this.handleMessage(message)),
-    );
+    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => {
+      new MessagesAggregatorService().handleIncomingMessage(message, (message: Message) => this.handleMessage(message));
+    });
   }
 
   async handleMessage(message: Message): Promise<void> {
@@ -38,6 +39,7 @@ export class VoicePalBotService implements OnModuleInit {
 
       this.logger.log(`${this.handleMessage.name} - ${logBody} - success`);
     } catch (err) {
+      this.logger.error(`${this.handleMessage.name} - err: ${getErrorMessage(err)}`);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }

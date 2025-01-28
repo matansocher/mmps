@@ -1,5 +1,5 @@
 import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
-import { VoicePalOption } from './interface';
+import type { VoicePalOption } from './interface';
 
 export const VOICE_PAL_OPTIONS: Record<string, VoicePalOption> = {
   START: {
@@ -55,4 +55,5 @@ export const ANALYTIC_EVENT_STATES = {
   ERROR: 'ERROR',
 };
 
-export const IMAGE_ANALYSIS_PROMPT = 'What’s in this image? What text do you see in the image? if you see a riddle solve it. if you see something complicated, explain it. Add any additional value you can in addition to explaining what you see and adding the text to your answer. please provide as much data as you can.';
+export const IMAGE_ANALYSIS_PROMPT =
+  'What’s in this image? What text do you see in the image? if you see a riddle solve it. if you see something complicated, explain it. Add any additional value you can in addition to explaining what you see and adding the text to your answer. please provide as much data as you can.';

@@ -6,7 +6,9 @@ export async function extractAudioFromVideo(videoFilePath: string): Promise<stri
   return new Promise((resolve, reject) => {
     ffmpeg(videoFilePath)
       .output(audioFilePath)
-      .on('end', () => resolve(audioFilePath))
+      .on('end', () => {
+        resolve(audioFilePath);
+      })
       .on('error', reject)
       .run();
   });

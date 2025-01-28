@@ -27,7 +27,12 @@ export class RollinsparkBotService implements OnModuleInit {
     const errorMessage = `error: ${getErrorMessage(err)}`;
     this.logger.error(`${action} - ${logBody} - ${errorMessage}`);
     await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
-    this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(
+      BOTS.ROLLINSPARK,
+      { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage },
+      chatId,
+      this.mongoUserService,
+    );
   }
 
   async handleActionSuccess(action: string, logBody: string, chatId: number, replyText: string, form = {}): Promise<void> {
@@ -44,7 +49,8 @@ export class RollinsparkBotService implements OnModuleInit {
       await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       this.logger.log(`${this.startHandler.name} - ${logBody} - start`);
       const replyText = `Hello, I am bot that can you know when I find a new apartment uploaded to the rollins park neighborhood website.\n\nJust let me know what plan of an apartment you want and I will look it up for you`;
-      return this.handleActionSuccess(this.startHandler.name, logBody, chatId, replyText);
+      await this.handleActionSuccess(this.startHandler.name, logBody, chatId, replyText);
+      return;
     } catch (err) {
       return this.handleActionError(this.startHandler.name, logBody, err, chatId);
     }
@@ -68,7 +74,8 @@ export class RollinsparkBotService implements OnModuleInit {
       });
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `Here is the full list of plans I support in rollinspark.\nPlease choose the relevant options for you`;
-      return this.handleActionSuccess(this.managementHandler.name, logBody, chatId, replyText, inlineKeyboardMarkup);
+      await this.handleActionSuccess(this.managementHandler.name, logBody, chatId, replyText, inlineKeyboardMarkup);
+      return;
     } catch (err) {
       return this.handleActionError(this.managementHandler.name, logBody, err, chatId);
     }

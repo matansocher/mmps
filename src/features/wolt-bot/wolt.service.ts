@@ -33,7 +33,7 @@ export class WoltService {
     }
   }
 
-  getRestaurantDetailsByName(restaurantName: string): WoltRestaurant {
+  getRestaurantDetailsByName(restaurantName: string): WoltRestaurant | null {
     return this.getRestaurants().find((r: WoltRestaurant): boolean => r.name === restaurantName) || null;
   }
 

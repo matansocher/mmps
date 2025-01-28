@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { pick as _pick } from 'lodash';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { ExpectedMatch, MatchDetails, Team } from '../interface';
+import type { ExpectedMatch, MatchDetails, Team } from '../interface';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 
-export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
+export async function getMatchDetails(matchId: number): Promise<MatchDetails | null> {
   try {
     const queryParams = {
       appTypeId: `${APP_TYPE_ID}`,
@@ -15,7 +15,7 @@ export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
     };
     const matchRes = await axios.get(`${SCORES_365_API_URL}/game?${new URLSearchParams(queryParams)}`);
     return parseExpectedMatch(matchRes.data?.game);
-  } catch (err) {
+  } catch {
     return null;
   }
 }

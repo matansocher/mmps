@@ -18,7 +18,14 @@ export class TelegramClientFactoryModule {
         const apiHash = configService.getOrThrow<string>('TELEGRAM_API_HASH');
         const stringSession = configService.getOrThrow<string>('TELEGRAM_STRING_SESSION');
         const client = new TelegramClient(new StringSession(stringSession), apiId, apiHash, { connectionRetries });
-        await client.start({ phoneNumber: null, password: null, phoneCode: null, onError: (err) => console.log(err) });
+        await client.start({
+          phoneNumber: null,
+          password: null,
+          phoneCode: null,
+          onError: (err) => {
+            console.log(err);
+          },
+        });
         return client;
       },
     };

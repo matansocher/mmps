@@ -17,20 +17,22 @@ export class OpenaiAssistantService {
   }
 
   addMessageToThread(threadId: string, messageText: string, role = 'user', fileId?: string): Promise<Message> {
-    return this.openai.beta.threads.messages.create(threadId, <MessageCreateParams>{
+    return this.openai.beta.threads.messages.create(threadId, {
       role,
       content: messageText,
       ...(fileId ? { attachments: [{ file_id: fileId, tools: [{ type: 'file_search' }] }] } : {}),
-    });
+    } as MessageCreateParams);
   }
 
-  async runThread(assistantId: string, threadId: string): Promise<Run> {
+  async runThread(assistantId: string, threadId: string): Promise<Run | null> {
     const run: Run = await this.openai.beta.threads.runs.createAndPoll(threadId, { assistant_id: assistantId }); // instructions: ''
     if (run.status === ASSISTANT_RUN_STATUSES.COMPLETED) {
       return run;
     }
     if (ERROR_STATUSES.includes(run.status as ASSISTANT_RUN_STATUSES)) {
-      this.logger.error(`${this.runThread.name} - Error running thread ${run.thread_id} with error: ${run.last_error?.message}, code: ${run.last_error.code}, status: ${run.status}`);
+      this.logger.error(
+        `${this.runThread.name} - Error running thread ${run.thread_id} with error: ${run.last_error?.message}, code: ${run?.last_error?.code}, status: ${run.status}`,
+      );
       return null;
     }
 
@@ -38,18 +40,17 @@ export class OpenaiAssistantService {
     return null;
   }
 
-  async getThreadResponse(threadId: string): Promise<string> {
+  async getThreadResponse(threadId: string): Promise<string | null> {
     const result = await this.openai.beta.threads.messages.list(threadId);
     return _get(result, 'data[0].content[0].text.value', null);
   }
 
   async uploadFile(filePath: string): Promise<FileObject> {
     const fileContent = fs.createReadStream(filePath);
-    const response = await this.openai.files.create({
+    return this.openai.files.create({
       file: fileContent,
       purpose: 'assistants',
     });
-    return response;
   }
 
   async deleteFile(fileId: string): Promise<void> {
