@@ -1,6 +1,6 @@
 import { toZonedTime } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Competition, MatchDetails } from '@services/scores-365/interface';
+import type { Competition, MatchDetails } from '@services/scores-365/interface';
 import { COMPETITIONS } from '@services/scores-365/scores-365.config';
 
 export function generateMatchResultsString(data: { competition: Competition; matches: MatchDetails[] }[]): string {
@@ -9,7 +9,7 @@ export function generateMatchResultsString(data: { competition: Competition; mat
       const leagueName = competition.name;
       const matchResults = matches?.map((matchDetails) => getSingleMatchString(matchDetails)).join('\n') || [];
       const relevantCompetition = COMPETITIONS.find((c) => c.id === competition.id);
-      const competitionLogo = relevantCompetition.icon || '🏟️';
+      const competitionLogo = relevantCompetition?.icon || '🏟️';
       return `${leagueName} ${competitionLogo}\n${matchResults}`;
     })
     .join('\n\n');

@@ -7,7 +7,7 @@ export async function getEnrichedRestaurantsDetails(parsedRestaurants) {
   try {
     const responses = await Promise.all(
       parsedRestaurants.map((restaurant) => {
-        const url = `${RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
+        const url = RESTAURANT_BASE_URL.replace('{slug}', restaurant.slug);
         return axios.get(url);
       }),
     );

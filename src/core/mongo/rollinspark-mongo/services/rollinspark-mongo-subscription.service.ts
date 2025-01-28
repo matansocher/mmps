@@ -13,7 +13,7 @@ export class RollinsparkMongoSubscriptionService {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }
 
-  async getActiveSubscriptions(chatId: number = null): Promise<SubscriptionModel[]> {
+  getActiveSubscriptions(chatId: number = null): SubscriptionModel[] {
     try {
       const filter = { isActive: true };
       if (chatId) {
@@ -26,17 +26,17 @@ export class RollinsparkMongoSubscriptionService {
     }
   }
 
-  async getSubscription(chatId: number, planId: number): Promise<SubscriptionModel> {
+  getSubscription(chatId: number, planId: number): Promise<SubscriptionModel> {
     const filter = { chatId, planId, isActive: true };
     return this.subscriptionCollection.findOne(filter);
   }
 
-  async getSubscriptions(chatId: number): Promise<SubscriptionModel[]> {
+  getSubscriptions(chatId: number): Promise<SubscriptionModel[]> {
     const filter = { chatId, isActive: true };
     return this.subscriptionCollection.find(filter).toArray();
   }
 
-  async addSubscription(chatId: number, planId: number) {
+  addSubscription(chatId: number, planId: number) {
     const subscription = {
       chatId,
       planId,

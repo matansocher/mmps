@@ -1,2 +1,3 @@
-export { CourseModel, CourseStatus } from './course.model';
-export { UserPreferencesModel } from './user-preferences.model';
+export { CourseStatus } from './course.model';
+export type { CourseModel } from './course.model';
+export type { UserPreferencesModel } from './user-preferences.model';

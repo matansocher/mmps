@@ -1,4 +1,4 @@
-import { Quote, StockSearchResult } from '@services/yahoo-finance/interface';
+import type { Quote, StockSearchResult } from '@services/yahoo-finance/interface';
 
 export function parseStockSearchResults(quote: Quote): StockSearchResult {
   return {

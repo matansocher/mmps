@@ -1,4 +1,4 @@
-import { DataInterface, StockDataSummary } from '@services/yahoo-finance/interface';
+import type { DataInterface, StockDataSummary } from '@services/yahoo-finance/interface';
 
 export function parseStockDetails(quote: DataInterface): StockDataSummary {
   return {

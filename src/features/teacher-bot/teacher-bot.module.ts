@@ -10,14 +10,7 @@ import { TeacherSchedulerService } from './teacher-scheduler.service';
 import { TeacherService } from './teacher.service';
 
 @Module({
-  imports: [
-    NotifierBotModule,
-    AiModule,
-    OpenaiModule,
-    TeacherMongoModule,
-    NotifierBotModule,
-    ScheduleModule.forRoot(),
-  ],
+  imports: [NotifierBotModule, AiModule, OpenaiModule, TeacherMongoModule, NotifierBotModule, ScheduleModule.forRoot()],
   providers: [TeacherBotService, TeacherSchedulerService, TeacherService, TelegramBotsFactoryProvider(BOTS.PROGRAMMING_TEACHER)],
 })
 export class TeacherBotModule {}

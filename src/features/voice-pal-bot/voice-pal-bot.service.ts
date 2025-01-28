@@ -1,5 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { getErrorMessage } from '@core/utils';
 import { BOTS, MessagesAggregatorService, getMessageData, TELEGRAM_EVENTS } from '@services/telegram';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VOICE_PAL_OPTIONS } from './voice-pal.config';
@@ -38,6 +39,7 @@ export class VoicePalBotService implements OnModuleInit {
 
       this.logger.log(`${this.handleMessage.name} - ${logBody} - success`);
     } catch (err) {
+      this.logger.error(`${this.handleMessage.name} - err: ${getErrorMessage(err)}`);
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }

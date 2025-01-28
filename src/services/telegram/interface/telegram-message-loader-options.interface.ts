@@ -1,4 +1,4 @@
-import { BOT_BROADCAST_ACTIONS } from '../constants';
+import type { BOT_BROADCAST_ACTIONS } from '../constants';
 
 export interface MessageLoaderOptions {
   readonly loaderEmoji?: string;

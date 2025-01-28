@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+import type TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
 import { extractAudioFromVideo, getErrorMessage } from '@core/utils';
 
@@ -12,10 +12,10 @@ export async function downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, a
   try {
     let audioFileLocalPath: string;
     let videoFileLocalPath: string;
-    if (video && video.file_id) {
+    if (video?.file_id) {
       videoFileLocalPath = await bot.downloadFile(video.file_id, localFilePath);
       audioFileLocalPath = await extractAudioFromVideo(videoFileLocalPath);
-    } else if (audio && audio.file_id) {
+    } else if (audio?.file_id) {
       audioFileLocalPath = await bot.downloadFile(audio.file_id, localFilePath);
     }
     return { audioFileLocalPath, videoFileLocalPath };

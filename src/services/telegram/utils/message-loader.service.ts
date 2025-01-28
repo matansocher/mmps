@@ -1,8 +1,8 @@
-import TelegramBot from 'node-telegram-bot-api';
+import type TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
-import { MessageLoaderOptions } from '../interface';
 import { BOT_BROADCAST_ACTIONS } from '@services/telegram';
+import { MessageLoaderOptions } from '../interface';
 
 const LOADER_EMOJI = '🐢';
 const MAX_TURTLES = 10;

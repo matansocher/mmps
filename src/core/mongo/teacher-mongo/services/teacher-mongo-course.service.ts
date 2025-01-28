@@ -66,7 +66,7 @@ export class TeacherMongoCourseService {
   async markCourseLessonCompleted(courseId: ObjectId): Promise<UpdateResult<CourseModel>> {
     const filter = { _id: courseId };
     const course = await this.courseCollection.findOne(filter);
-    const lessonsCompleted = course.lessonsCompleted ? course.lessonsCompleted + 1 : 1;
+    const lessonsCompleted = course?.lessonsCompleted ? course?.lessonsCompleted + 1 : 1;
     const updateObj = {
       $set: {
         status: CourseStatus.Assigned,

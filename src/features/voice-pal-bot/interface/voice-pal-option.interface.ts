@@ -1,4 +1,4 @@
-import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
+import type { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
 
 export interface VoicePalOption {
   readonly analyticsEventName: string;
