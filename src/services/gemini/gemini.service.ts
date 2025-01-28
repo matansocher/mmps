@@ -14,7 +14,8 @@ export class GeminiService {
 
     if (typeof userText === 'string') {
       finalPrompt += userText;
-    } else { // array
+    } else {
+      // array
       finalPrompt += userText.join('.');
     }
 

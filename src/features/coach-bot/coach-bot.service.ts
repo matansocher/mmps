@@ -3,14 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import {
-  BOTS,
-  getMessageData,
-  MessageLoaderService,
-  MessageLoaderOptions,
-  TELEGRAM_EVENTS,
-  sendStyledMessage
-} from '@services/telegram';
+import { BOTS, getMessageData, MessageLoaderService, MessageLoaderOptions, TELEGRAM_EVENTS, sendStyledMessage } from '@services/telegram';
 import { CoachService } from './coach.service';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_OPTIONS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
 
@@ -42,7 +35,12 @@ export class CoachBotService implements OnModuleInit {
 
   async handleActionSuccess(action: string, chatId: number, notifierAdditionalData = {}): Promise<void> {
     this.logger.log(`${action} - success`);
-    this.notifierBotService.notify(BOTS.COACH, { action: `${action} - ${ANALYTIC_EVENT_STATES.SUCCESS}`, ...notifierAdditionalData }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(
+      BOTS.COACH,
+      { action: `${action} - ${ANALYTIC_EVENT_STATES.SUCCESS}`, ...notifierAdditionalData },
+      chatId,
+      this.mongoUserService,
+    );
   }
 
   async startHandler(message: Message): Promise<void> {
