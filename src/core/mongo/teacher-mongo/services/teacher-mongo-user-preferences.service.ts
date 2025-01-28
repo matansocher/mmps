@@ -1,4 +1,4 @@
-import { Collection, Db, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
+import { Collection, Db, InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { UserPreferencesModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
@@ -11,7 +11,7 @@ export class TeacherMongoUserPreferencesService {
     this.userPreferencesCollection = this.db.collection(COLLECTIONS.USER_PREFERENCES);
   }
 
-  getUserPreference(userId: number): Promise<UserPreferencesModel> {
+  getUserPreference(userId: number): Promise<WithId<UserPreferencesModel> | null> {
     const filter = { userId };
     return this.userPreferencesCollection.findOne(filter);
   }

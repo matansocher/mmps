@@ -48,7 +48,7 @@ export class TelegramClientService {
       firstName: _get(channelDetails, 'firstName', null),
       lastName: _get(channelDetails, 'lastName', null),
       userName: _get(channelDetails, 'username', null),
-      photo: null,
+      // photo: null,
     };
   }
 }

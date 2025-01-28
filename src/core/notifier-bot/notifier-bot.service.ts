@@ -23,13 +23,13 @@ export class NotifierBotService implements OnModuleInit {
     } catch {}
   }
 
-  async notify(bot: TelegramBotConfig, options: NotifyOptions, chatId: number, mongoUserService: MongoUserService): Promise<void> {
+  async notify(bot: TelegramBotConfig, options: NotifyOptions, chatId: number | null, mongoUserService: MongoUserService | null): Promise<void> {
     const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
     const notyMessageText = this.getNotyMessageText(bot.name, userDetails, options);
     this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
 
-  getNotyMessageText(botName: string, userDetails: UserModel, options: NotifyOptions): string {
+  getNotyMessageText(botName: string, userDetails: UserModel | null, options: NotifyOptions): string {
     const { firstName = '', lastName = '', username = '' } = userDetails || {};
     const { action, plainText, ...otherOptions } = options;
     const sentences = [];

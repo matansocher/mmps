@@ -6,7 +6,7 @@ import { VOICE_PAL_OPTIONS } from './voice-pal.config';
 export class UserSelectedActionsService {
   private userActions: any = {};
 
-  getCurrentUserAction(chatId: number): VoicePalOption {
+  getCurrentUserAction(chatId: number): VoicePalOption | null {
     const userAction = this.userActions[chatId];
     if (!userAction) {
       return null;

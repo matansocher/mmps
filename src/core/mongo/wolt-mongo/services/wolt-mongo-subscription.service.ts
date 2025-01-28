@@ -13,7 +13,7 @@ export class WoltMongoSubscriptionService {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }
 
-  async getActiveSubscriptions(chatId: number = null) {
+  async getActiveSubscriptions(chatId = null) {
     try {
       const filter = { isActive: true };
       if (chatId) filter.chatId = chatId;

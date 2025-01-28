@@ -7,8 +7,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "format": "prettier \"src/**/*.ts\" --cache --write --ignore-unknown .",
-    "format:check": "prettier \"src/**/*.ts\" --cache --check --ignore-unknown .",
+    "format": "prettier --cache --write --ignore-unknown .",
+    "format:check": "prettier --cache --check --ignore-unknown .",
     "start": "node dist/main.js",
     "not-start": "nest start",
     "start:dev": "nest start --watch",
