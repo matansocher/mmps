@@ -1,6 +1,6 @@
 name: Unit Tests 🧪
 
-on: [push]
+on: [ push ]
 
 jobs:
   tests:
@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [ 22.x ]
 
     steps:
       - uses: actions/checkout@v2
