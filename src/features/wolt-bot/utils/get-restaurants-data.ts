@@ -1,7 +1,7 @@
-import { WoltRestaurant } from '../interface';
-import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANT_LINK_BASE_URL, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
 import axios from 'axios';
 import { getErrorMessage } from '@core/utils';
+import { WoltRestaurant } from '../interface';
+import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANT_LINK_BASE_URL, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
 
 export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
   try {

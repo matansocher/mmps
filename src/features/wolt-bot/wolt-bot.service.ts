@@ -1,12 +1,12 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup, TELEGRAM_EVENTS } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS } from '@services/telegram';
 import { getEnrichedRestaurantsDetails, getKeyboardOptions, getRestaurantLink } from './utils';
-import { WoltService } from './wolt.service';
 import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_OPTIONS } from './wolt-bot.config';
+import { WoltService } from './wolt.service';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {

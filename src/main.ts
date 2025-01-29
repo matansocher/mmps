@@ -1,11 +1,12 @@
-import { configDotenv } from 'dotenv';
-configDotenv();
 import * as bodyParser from 'body-parser';
+import { configDotenv } from 'dotenv';
 import { env } from 'node:process';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
+
+configDotenv();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -23,4 +24,5 @@ async function bootstrap() {
 
   await app.listen(env.PORT || 3000);
 }
+
 bootstrap();

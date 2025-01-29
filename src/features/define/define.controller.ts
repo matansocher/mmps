@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { ConfigService } from '@nestjs/config';
 import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ContactRequestDTO, ContactResponseDTO } from './types';
 
 export const telegramBaseUrl = 'https://api.telegram.org';

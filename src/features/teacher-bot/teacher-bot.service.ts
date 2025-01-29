@@ -4,8 +4,7 @@ import { LOCAL_FILES_PATH } from '@core/config';
 import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { deleteFile, getDateString, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
-import { BOTS, TELEGRAM_EVENTS, getCallbackQueryData, getMessageData, downloadAudioFromVideoOrAudio, sendStyledMessage } from '@services/telegram';
-import { TeacherService } from './teacher.service';
+import { BOTS, downloadAudioFromVideoOrAudio, getCallbackQueryData, getMessageData, sendStyledMessage, TELEGRAM_EVENTS } from '@services/telegram';
 import {
   BOT_ACTIONS,
   INITIAL_BOT_RESPONSE,
@@ -13,6 +12,7 @@ import {
   NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW,
   TEACHER_BOT_OPTIONS,
 } from './teacher-bot.config';
+import { TeacherService } from './teacher.service';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {

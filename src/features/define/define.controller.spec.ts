@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { ConfigService } from '@nestjs/config';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { DefineController, telegramBaseUrl } from './define.controller';
 import type { ContactRequestDTO } from './types';
 

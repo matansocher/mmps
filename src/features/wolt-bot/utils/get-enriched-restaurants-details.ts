@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getErrorMessage } from '@core/utils';
-import { getRestaurantLink } from './get-restaurant-link';
 import { RESTAURANT_BASE_URL } from '../wolt-bot.config';
+import { getRestaurantLink } from './get-restaurant-link';
 
 export async function getEnrichedRestaurantsDetails(parsedRestaurants) {
   try {

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { getCompetitions, getMatchesForCompetition } from '@services/scores-365';
-import { generateMatchResultsString } from './utils/generate-match-details-string';
 import { getDateString, isDateStringFormat } from '@core/utils';
+import { getCompetitions, getMatchesForCompetition } from '@services/scores-365';
 import { CompetitionDetails } from '@services/scores-365/interface';
+import { generateMatchResultsString } from './utils/generate-match-details-string';
 
 const cacheValidForMinutes = 5;
 

@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, MessageLoaderService, MessageLoaderOptions, TELEGRAM_EVENTS, sendStyledMessage } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoaderOptions, MessageLoaderService, sendStyledMessage, TELEGRAM_EVENTS } from '@services/telegram';
 import { CoachService } from './coach.service';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_OPTIONS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './constants';
 

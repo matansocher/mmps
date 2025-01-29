@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
 import fs from 'fs';
 import { chunk as _chunk } from 'lodash';
 import { OpenAI } from 'openai';
 import { APIPromise } from 'openai/core';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   CHAT_COMPLETIONS_MODEL,
   IMAGE_ANALYZER_MODEL,

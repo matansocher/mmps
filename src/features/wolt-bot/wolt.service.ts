@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
 import { RestaurantsList, WoltRestaurant } from './interface';
 import { getRestaurantLink, getRestaurantsList } from './utils';
-import { CITIES_SLUGS_SUPPORTED, RESTAURANT_BASE_URL, MAX_NUM_OF_RESTAURANTS_TO_SHOW } from './wolt-bot.config';
+import { CITIES_SLUGS_SUPPORTED, MAX_NUM_OF_RESTAURANTS_TO_SHOW, RESTAURANT_BASE_URL } from './wolt-bot.config';
 
 @Injectable()
 export class WoltService {
