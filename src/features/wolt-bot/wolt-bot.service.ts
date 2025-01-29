@@ -116,7 +116,11 @@ export class WoltBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
       this.notifierBotService.notify(
         BOTS.WOLT,
-        { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') },
+        {
+          action: ANALYTIC_EVENT_NAMES.SEARCH,
+          search: rawRestaurant,
+          restaurants: restaurants.map((r) => r.name).join(' | '),
+        },
         chatId,
         this.mongoUserService,
       );
@@ -187,6 +191,16 @@ export class WoltBotService implements OnModuleInit {
     ].join('\n\n');
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo || '');
     await this.bot.sendMessage(chatId, replyText);
+
+    this.notifierBotService.notify(
+      BOTS.WOLT,
+      {
+        action: ANALYTIC_EVENT_NAMES.SUBSCRIBE,
+        restaurant,
+      },
+      chatId,
+      this.mongoUserService,
+    );
   }
 
   async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {

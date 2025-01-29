@@ -30,7 +30,15 @@ export class CoachBotService implements OnModuleInit {
     const errorMessage = `error: ${getErrorMessage(err)}`;
     this.logger.error(`${action} - ${errorMessage}`);
     await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-    this.notifierBotService.notify(BOTS.COACH, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(
+      BOTS.COACH,
+      {
+        action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`,
+        error: errorMessage,
+      },
+      chatId,
+      this.mongoUserService,
+    );
   }
 
   handleActionSuccess(action: string, chatId: number, notifierAdditionalData = {}): void {
@@ -105,7 +113,10 @@ export class CoachBotService implements OnModuleInit {
     this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
 
     try {
-      const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loaderEmoji: '🤔' } as MessageLoaderOptions);
+      const messageLoaderService = new MessageLoaderService(this.bot, chatId, {
+        cycleDuration: 3000,
+        loaderEmoji: '🤔',
+      } as MessageLoaderOptions);
       await messageLoaderService.handleMessageWithLoader(async () => {
         const replyText = await this.coachService.getMatchesSummaryMessage(text);
         await sendStyledMessage(this.bot, chatId, replyText);
