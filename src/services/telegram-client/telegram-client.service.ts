@@ -1,7 +1,7 @@
 import { get as _get } from 'lodash';
 import { TelegramClient } from 'telegram';
 import { Injectable, Logger } from '@nestjs/common';
-import { ConversationDetails, TelegramEvent, TelegramMessage, ListenerOptions } from './interface';
+import { ConversationDetails, ListenerOptions, TelegramEvent, TelegramMessage } from './interface';
 import { EXCLUDED_CHANNELS, LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()

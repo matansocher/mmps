@@ -1,13 +1,12 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { SchedulerRegistry } from '@nestjs/schedule';
+import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage, getTimezoneOffset } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { getRestaurantLink } from './utils';
-import { WoltService } from './wolt.service';
 import {
   ANALYTIC_EVENT_NAMES,
   HOUR_OF_DAY_TO_REFRESH_MAP,
@@ -15,6 +14,7 @@ import {
   MIN_HOUR_TO_ALERT_USER,
   SUBSCRIPTION_EXPIRATION_HOURS,
 } from './wolt-bot.config';
+import { WoltService } from './wolt.service';
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 

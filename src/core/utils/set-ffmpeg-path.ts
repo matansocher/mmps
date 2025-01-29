@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import ffmpeg from 'fluent-ffmpeg';
-import { getErrorMessage } from './get-error-message';
 import { Logger } from '@nestjs/common';
+import { getErrorMessage } from './get-error-message';
 
 export function setFfmpegPath() {
   const logger = new Logger(setFfmpegPath.name);

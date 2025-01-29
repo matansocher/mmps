@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
-import { CoachMongoSubscriptionService, CoachMongoUserService } from './services';
 import { CONNECTION_NAME, DB_NAME } from './coach-mongo.config';
+import { CoachMongoSubscriptionService, CoachMongoUserService } from './services';
 
 @Module({
   imports: [

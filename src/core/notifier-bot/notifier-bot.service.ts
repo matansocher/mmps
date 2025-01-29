@@ -25,7 +25,7 @@ export class NotifierBotService implements OnModuleInit {
 
   async notify(bot: TelegramBotConfig, options: NotifyOptions, chatId: number | null, mongoUserService: MongoUserService | null): Promise<void> {
     const userDetails = chatId && mongoUserService ? await mongoUserService.getUserDetails({ chatId }) : null;
-    const notyMessageText = this.getNotyMessageText(bot.name, userDetails, options);
+    const notyMessageText = this.getNotyMessageText(bot.name, userDetails as UserModel, options);
     this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
 

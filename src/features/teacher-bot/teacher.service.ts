@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
