@@ -1,5 +1,5 @@
 import yahooFinance from 'yahoo-finance2';
-import { Quote, StockDataSummary, StockSearchResult } from './interface';
+import type { Quote, StockDataSummary, StockSearchResult } from './interface';
 import { parseStockDetails, parseStockSearchResults } from './utils';
 
 export async function getStockDetailsBySymbol(symbol: string): Promise<StockDataSummary> {

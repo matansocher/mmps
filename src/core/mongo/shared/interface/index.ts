@@ -1,1 +1,1 @@
-export { DatabaseModuleOptions } from './database-module-options.interface';
+export type { DatabaseModuleOptions } from './database-module-options.interface';

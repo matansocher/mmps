@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { getErrorMessage } from '@core/utils';
-import { getRestaurantLink } from './get-restaurant-link';
 import { RESTAURANT_BASE_URL } from '../wolt-bot.config';
+import { getRestaurantLink } from './get-restaurant-link';
 
 export async function getEnrichedRestaurantsDetails(parsedRestaurants) {
   try {
     const responses = await Promise.all(
       parsedRestaurants.map((restaurant) => {
-        const url = `${RESTAURANT_BASE_URL}`.replace('{slug}', restaurant.slug);
+        const url = RESTAURANT_BASE_URL.replace('{slug}', restaurant.slug);
         return axios.get(url);
       }),
     );

@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+import type TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
 import { TELEGRAM_EVENTS } from '../constants';
 

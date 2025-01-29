@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
@@ -7,8 +7,8 @@ import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, NAME_TO_PLAN_ID_MAP } from './constants';
-import { RollinsparkService } from './rollinspark.service';
 import { ExpectedAptDetails } from './interfaces';
+import { RollinsparkService } from './rollinspark.service';
 
 const INTERVAL_MINUTES = 5;
 

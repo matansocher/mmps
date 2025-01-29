@@ -27,7 +27,12 @@ export class RollinsparkBotService implements OnModuleInit {
     const errorMessage = `error: ${getErrorMessage(err)}`;
     this.logger.error(`${action} - ${logBody} - ${errorMessage}`);
     await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
-    this.notifierBotService.notify(BOTS.ROLLINSPARK, { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(
+      BOTS.ROLLINSPARK,
+      { action: `${action} - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage },
+      chatId,
+      this.mongoUserService,
+    );
   }
 
   async handleActionSuccess(action: string, logBody: string, chatId: number, replyText: string, form = {}): Promise<void> {

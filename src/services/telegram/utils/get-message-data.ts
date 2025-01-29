@@ -1,6 +1,6 @@
 import { get as _get } from 'lodash';
-import { Message } from 'node-telegram-bot-api';
-import { TelegramMessageData } from '../interface';
+import type { Message } from 'node-telegram-bot-api';
+import type { TelegramMessageData } from '../interface';
 
 export function getMessageData(message: Message): TelegramMessageData {
   return {

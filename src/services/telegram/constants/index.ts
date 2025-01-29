@@ -1,4 +1,4 @@
-import { TelegramBotConfig } from '../interface';
+import type { TelegramBotConfig } from '../interface';
 
 export const BOTS: Record<string, TelegramBotConfig> = {
   WOLT: {

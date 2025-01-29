@@ -11,20 +11,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 function getImports() {
-  const commonModules = [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-  ];
+  const commonModules = [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })];
 
-  if (!isProd) {
-    return [
-      ...commonModules,
-      VoicePalBotModule,
-      WoltBotModule,
-      RollinsparkBotModule,
-      DefineModule,
-      CoachBotModule,
-      TeacherBotModule,
-    ];
+  if (isProd) {
+    return [...commonModules, VoicePalBotModule, WoltBotModule, RollinsparkBotModule, DefineModule, CoachBotModule, TeacherBotModule];
   }
 
   return [...commonModules, CoachBotModule];

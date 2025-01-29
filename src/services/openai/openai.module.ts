@@ -1,9 +1,9 @@
-import { ConfigService } from '@nestjs/config';
 import { OpenAI } from 'openai';
 import { type FactoryProvider, Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { OpenaiAssistantService } from './openai-assistant.service';
 import { OPENAI_CLIENT_TOKEN } from './openai.config';
 import { OpenaiService } from './openai.service';
-import { OpenaiAssistantService } from './openai-assistant.service';
 
 export const OpenAiClientProvider: FactoryProvider = {
   provide: OPENAI_CLIENT_TOKEN,

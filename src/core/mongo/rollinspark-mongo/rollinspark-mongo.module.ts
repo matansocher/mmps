@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
-import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from './services';
 import { CONNECTION_NAME, DB_NAME } from './rollinspark-mongo.config';
+import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from './services';
 
 @Module({
   imports: [

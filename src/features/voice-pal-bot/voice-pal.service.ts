@@ -2,19 +2,19 @@ import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
-import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
+import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { deleteFile, getErrorMessage, setFfmpegPath } from '@core/utils';
 import { AiService } from '@services/ai';
 import { getTranslationToEnglish } from '@services/google-translate';
 import {
+  BOT_BROADCAST_ACTIONS,
   BOTS,
-  TelegramMessageData,
+  downloadAudioFromVideoOrAudio,
+  getMessageData,
   MessageLoaderOptions,
   MessageLoaderService,
-  getMessageData,
-  BOT_BROADCAST_ACTIONS,
-  downloadAudioFromVideoOrAudio,
+  TelegramMessageData,
 } from '@services/telegram';
 import { VoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
@@ -70,7 +70,11 @@ export class VoicePalService implements OnModuleInit {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction?.showLoader) {
-        const messageLoaderService = new MessageLoaderService(this.bot, chatId, { cycleDuration: 3000, loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING, loaderEmoji: '🤔' } as MessageLoaderOptions);
+        const messageLoaderService = new MessageLoaderService(this.bot, chatId, {
+          cycleDuration: 3000,
+          loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING,
+          loaderEmoji: '🤔',
+        } as MessageLoaderOptions);
         await messageLoaderService.handleMessageWithLoader(async (): Promise<void> => {
           await this[userAction.handler]({ chatId, text, audio, video, photo, file });
         });
@@ -82,7 +86,12 @@ export class VoicePalService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.VOICE_PAL,
+        { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage },
+        chatId,
+        this.mongoUserService,
+      );
       throw err;
     }
   }

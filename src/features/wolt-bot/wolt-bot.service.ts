@@ -1,18 +1,12 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { WoltMongoSubscriptionService, WoltMongoUserService, SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, getCallbackQueryData, getInlineKeyboardMarkup, TELEGRAM_EVENTS } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS } from '@services/telegram';
 import { getEnrichedRestaurantsDetails, getKeyboardOptions, getRestaurantLink } from './utils';
+import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_OPTIONS } from './wolt-bot.config';
 import { WoltService } from './wolt.service';
-import {
-  ANALYTIC_EVENT_NAMES,
-  INITIAL_BOT_RESPONSE,
-  SUBSCRIPTION_EXPIRATION_HOURS,
-  TOO_OLD_LIST_THRESHOLD_MS,
-  WOLT_BOT_OPTIONS,
-} from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
@@ -47,7 +41,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.startHandler.name} - ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT,
+        { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
@@ -65,9 +64,7 @@ export class WoltBotService implements OnModuleInit {
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
-        const inlineKeyboardButtons = [
-          { text: 'Remove', callback_data: `remove - ${subscription.restaurant}` },
-        ];
+        const inlineKeyboardButtons = [{ text: 'Remove', callback_data: `remove - ${subscription.restaurant}` }];
         const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
         return this.bot.sendMessage(chatId, subscription.restaurant, inlineKeyboardMarkup as any);
       });
@@ -76,7 +73,12 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.listHandler.name} - ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT,
+        { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
     }
   }
@@ -112,12 +114,22 @@ export class WoltBotService implements OnModuleInit {
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `Choose one of the above restaurants so I can notify you when it's online`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT,
+        { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: restaurants.map((r) => r.name).join(' | ') },
+        chatId,
+        this.mongoUserService,
+      );
       this.logger.log(`${this.textHandler.name} - ${logBody} - success`);
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.textHandler.name} - ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT,
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
@@ -141,17 +153,19 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.callbackQueryHandler.name} - ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.WOLT,
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name },
+        chatId,
+        this.mongoUserService,
+      );
       await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
   async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
     if (existingSubscription) {
-      const replyText = [
-        `It seems you already have a subscription for ${restaurant} is open.`,
-        `Let\'s wait a few minutes - it might open soon.`,
-      ].join('\n\n');
+      const replyText = [`It seems you already have a subscription for ${restaurant} is open.`, `Let\'s wait a few minutes - it might open soon.`].join('\n\n');
       await this.bot.sendMessage(chatId, replyText);
       return;
     }
@@ -171,7 +185,7 @@ export class WoltBotService implements OnModuleInit {
       `FYI: If the venue won't open within the next ${SUBSCRIPTION_EXPIRATION_HOURS} hours, registration will be removed`,
       `You can register for another restaurant if you like.`,
     ].join('\n\n');
-    await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails.photo);
+    await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
   }
 
@@ -182,10 +196,9 @@ export class WoltBotService implements OnModuleInit {
       await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
       replyText = `Subscription for ${restaurantToRemove} was removed`;
     } else {
-      replyText = [
-        `It seems like you don't have a subscription for ${restaurant} 🤔`,
-        `You can search and register for another restaurant if you like`,
-      ].join('\n\n');
+      replyText = [`It seems like you don't have a subscription for ${restaurant} 🤔`, `You can search and register for another restaurant if you like`].join(
+        '\n\n',
+      );
     }
     return await this.bot.sendMessage(chatId, replyText);
   }
