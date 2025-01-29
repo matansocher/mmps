@@ -1,8 +1,8 @@
 import { Db } from 'mongodb';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { COLLECTIONS, CONNECTION_NAME } from '../rollinspark-mongo.config';
 import { SubscriptionModel } from '@core/mongo/rollinspark-mongo';
 import { getErrorMessage } from '@core/utils';
+import { COLLECTIONS, CONNECTION_NAME } from '../rollinspark-mongo.config';
 
 @Injectable()
 export class RollinsparkMongoSubscriptionService {

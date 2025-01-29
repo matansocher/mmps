@@ -1,5 +1,5 @@
-import { MongoClient, Db, MongoClientOptions } from 'mongodb';
-import { Module, DynamicModule, Global } from '@nestjs/common';
+import { Db, MongoClient, MongoClientOptions } from 'mongodb';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseModuleOptions } from './interface';
 
