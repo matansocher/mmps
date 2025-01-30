@@ -2,7 +2,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
 import { BOT_BROADCAST_ACTIONS } from '@services/telegram';
-import { MessageLoaderOptions } from '../interface';
+import type { MessageLoaderOptions } from '../interface';
 
 const LOADER_EMOJI = '🐢';
 const MAX_TURTLES = 10;
@@ -90,7 +90,10 @@ export class MessageLoaderService {
     }
     await this.bot.sendChatAction(this.chatId, this.loadingAction);
 
-    this.setMessageCache({ loaderMessageId: messageRes?.message_id || loaderMessageId, cycleIterationIndex: cycleIterationIndex + 1 });
+    this.setMessageCache({
+      loaderMessageId: messageRes?.message_id || loaderMessageId,
+      cycleIterationIndex: cycleIterationIndex + 1,
+    });
     this.cycleInitiator();
   }
 
