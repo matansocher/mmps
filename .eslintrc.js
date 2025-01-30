@@ -1,34 +1,38 @@
 module.exports = {
+  root: true,
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: 'tsconfig.json',
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin'],
-  extends: [
-    'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
-  ],
-  root: true,
+  plugins: ['@typescript-eslint/eslint-plugin', 'prettier'],
+  extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
   env: {
     node: true,
     jest: true,
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
-    '@typescript-eslint/interface-name-prefix': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'prettier/prettier': 'error',
+    // 'no-empty': 'off',
+    // '@typescript-eslint/consistent-type-exports': 'error',
+    // '@typescript-eslint/consistent-type-imports': 'error',
     '@typescript-eslint/no-explicit-any': 'off',
-    'prettier/prettier': [
-      'warn',
-      {
-        printWidth: 150, // Customize the print width (default 80)
-        tabWidth: 2, // Customize tab width
-        semi: true, // Add or remove semicolons
-        singleQuote: true, // Use single quotes or double quotes
-      },
-    ],
+    // '@typescript-eslint/no-extraneous-class': 'off',
+    // '@typescript-eslint/no-floating-promises': 'off',
+    // '@typescript-eslint/no-misused-promises': 'off',
+    // '@typescript-eslint/no-unnecessary-condition': 'off',
+    // '@typescript-eslint/no-unsafe-argument': 'off',
+    // '@typescript-eslint/return-await': 'off',
+    // '@typescript-eslint/no-unsafe-assignment': 'off',
+    // '@typescript-eslint/no-unsafe-call': 'off',
+    // '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+    // '@typescript-eslint/no-unsafe-member-access': 'off',
+    // '@typescript-eslint/no-unsafe-return': 'off',
+    // '@typescript-eslint/no-unused-expressions': 'off',
+    // '@typescript-eslint/prefer-nullish-coalescing': 'off',
+    // '@typescript-eslint/require-await': 'off',
+    // '@typescript-eslint/restrict-template-expressions': 'off',
   },
 };

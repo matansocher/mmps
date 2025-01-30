@@ -1,6 +1,6 @@
 import { get as _get } from 'lodash';
-import { CallbackQuery } from 'node-telegram-bot-api';
-import { TelegramCallbackQueryData } from '../interface';
+import type { CallbackQuery } from 'node-telegram-bot-api';
+import type { TelegramCallbackQueryData } from '../interface';
 
 export function getCallbackQueryData(callbackQuery: CallbackQuery): TelegramCallbackQueryData {
   return {
