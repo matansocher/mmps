@@ -2,6 +2,6 @@ export { downloadAudioFromVideoOrAudio } from './download-audio-from-video-or-au
 export { getCallbackQueryData } from './get-callback-query-data';
 export { getInlineKeyboardMarkup } from './get-inline-keyboard-markup';
 export { getMessageData } from './get-message-data';
-export { MessageLoaderService } from './message-loader.service';
-export { MessagesAggregatorService } from './messages-aggregator.service';
+export { MessageLoader } from './message-loader';
+export { MessagesAggregator } from './messages-aggregator';
 export { sendStyledMessage } from './send-styled-message';

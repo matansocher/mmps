@@ -24,7 +24,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, documentFactory);
 
   const logger = new Logger('main.ts');
-  logger.log(process.versions.node);
+  logger.log(`NODE_VERSION: ${process.versions.node}`);
 
   await app.listen(env.PORT || 3000);
 }
