@@ -1,4 +1,5 @@
-export interface INotifyOptions {
-  [key: string]: any;
-  action: string;
+export interface NotifyOptions {
+  readonly [key: string]: any;
+  readonly action: string;
+  readonly plainText?: string;
 }

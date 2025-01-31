@@ -1,21 +1,29 @@
 import axios from 'axios';
-import { env } from 'node:process';
-import { Body, Controller, Post } from '@nestjs/common';
-import { ContactRequestDTO, ContactResponseDTO } from '@features/define/types';
+import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ContactRequestDTO, ContactResponseDTO } from './types';
+
+export const telegramBaseUrl = 'https://api.telegram.org';
 
 @Controller('define')
 export class DefineController {
+  private readonly logger = new Logger(DefineController.name);
+
+  constructor(private readonly configService: ConfigService) {}
+
   @Post('contact')
-  protected async contact(@Body() body: ContactRequestDTO): Promise<ContactResponseDTO> {
+  async contact(@Body() body: ContactRequestDTO): Promise<ContactResponseDTO> {
     try {
       const { email } = body;
-      console.log(`A new user contacted from the Define website`, `Email: ${email}`);
+      this.logger.log(`A new user contacted from the Define website`, `Email: ${email}`);
       const messageText = [`A new user contacted from the Define website`, `Email: ${email}`].join('\n');
-      const telegramApiUrl = `https://api.telegram.org/bot${env.DEFINE_TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${env.DEFINE_TELEGRAM_CHAT_ID}&text=${messageText}`;
+      const telegramBotToken = this.configService.get('DEFINE_TELEGRAM_BOT_TOKEN');
+      const telegramChatId = this.configService.get('DEFINE_TELEGRAM_CHAT_ID');
+      const telegramApiUrl = `${telegramBaseUrl}/bot${telegramBotToken}/sendMessage?chat_id=${telegramChatId}&text=${messageText}`;
       const result = await axios.get(telegramApiUrl);
       return { success: result.status === 200 };
     } catch (err) {
-      console.error(`Failed to send contact form, error: ${err}`);
+      this.logger.error(`Failed to send contact form, error: ${err}`);
       return { success: false };
     }
   }

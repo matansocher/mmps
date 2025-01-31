@@ -1,19 +1,14 @@
 import { get as _get } from 'lodash';
 import { TelegramClient } from 'telegram';
-import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@core/logger';
-import { UtilsService } from '@core/utils';
-import { IChannelDetails, ITelegramEvent, ITelegramMessage, IListenerOptions } from './interface';
-import { LISTEN_TO_EVENTS } from './telegram-client.config';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConversationDetails, ListenerOptions, TelegramEvent, TelegramMessage } from './interface';
+import { EXCLUDED_CHANNELS, LISTEN_TO_EVENTS } from './telegram-client.config';
 
 @Injectable()
 export class TelegramClientService {
-  constructor(
-    private readonly logger: LoggerService,
-    private readonly utilsService: UtilsService,
-  ) {}
+  private readonly logger = new Logger(TelegramClientService.name);
 
-  listenToMessages(telegramClient: TelegramClient, listenerOptions: IListenerOptions, callback) {
+  listenToMessages(telegramClient: TelegramClient, listenerOptions: ListenerOptions, callback) {
     telegramClient.addEventHandler(async (event) => {
       if (!LISTEN_TO_EVENTS.includes(event.className)) {
         return;
@@ -22,61 +17,38 @@ export class TelegramClientService {
       if (!messageData?.text) {
         return;
       }
-      if (!listenerOptions.channelIds.includes(messageData?.channelId?.toString())) {
+      if (listenerOptions?.conversationsIds?.length && !listenerOptions.conversationsIds.includes(messageData?.channelId?.toString())) {
         return;
       }
-      const channelDetails = messageData.channelId ? await this.getChannelDetails(telegramClient, messageData.channelId) : null;
-      if (!channelDetails?.id) {
+      const entityId = messageData.channelId ? `-100${messageData.channelId}` : messageData.userId.toString();
+      const channelDetails = await this.getConversationDetails(telegramClient, entityId);
+      if (!channelDetails?.id || EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
         return;
       }
       return callback(messageData, channelDetails);
     });
   }
 
-  getMessageData(event: ITelegramEvent): ITelegramMessage {
+  getMessageData(event: TelegramEvent): TelegramMessage {
     return {
-      id: _get(event, 'message.id', null),
-      userId: _get(event, 'message.fromId.userId', null),
+      id: _get(event, 'message.id', _get(event, 'id', null)),
+      userId: _get(event, 'message.fromId.userId', _get(event, 'userId', _get(event, 'message.peerId.userId', null))),
       channelId: _get(event, 'message.peerId.channelId', '').toString(),
-      date: _get(event, 'message.date', null),
-      text: _get(event, 'message.message', null),
+      date: _get(event, 'message.date', _get(event, 'date', null)),
+      text: _get(event, 'message.message', _get(event, 'message', null)),
     };
   }
 
-  async getChannelDetails(telegramClient: TelegramClient, channelId: string): Promise<IChannelDetails> {
-    const channel = `-100${channelId}`;
-    const channelDetails = (await telegramClient.getEntity(channel)) as any;
-    // const photo = await this.getChannelPhoto(telegramClient, channelDetails);
+  async getConversationDetails(telegramClient: TelegramClient, entityId: string): Promise<ConversationDetails> {
+    const channelDetails = (await telegramClient.getEntity(entityId)) as any;
     return {
       id: _get(channelDetails, 'id', null).toString(),
       createdDate: _get(channelDetails, 'date', null),
       title: _get(channelDetails, 'title', null),
+      firstName: _get(channelDetails, 'firstName', null),
+      lastName: _get(channelDetails, 'lastName', null),
       userName: _get(channelDetails, 'username', null),
       photo: null,
     };
-  }
-
-  async getChannelPhoto(telegramClient: TelegramClient, channelDetails) {
-    // not working - we get a reconnect warning - probably something about the default timeout of the library
-    try {
-      if (!channelDetails?.photo) {
-        return null;
-      }
-      const downloadedPhoto = await telegramClient.downloadProfilePhoto(channelDetails);
-      if (downloadedPhoto) {
-        // Convert Buffer to Base64 for inline usage, or use it as you need
-        return `data:image/jpeg;base64,${downloadedPhoto.toString('base64')}`;
-      }
-    } catch (err) {
-      this.logger.error(this.getChannelPhoto.name, `error - ${this.utilsService.getErrorMessage(err)}`);
-    }
-    // let buffer = _get(channelDetails, 'photo.strippedThumb', null);
-    // if (!buffer?.length) {
-    //   return null;
-    // }
-    // const imageBuffer = Buffer.from(buffer);
-    // const base64Image = imageBuffer.toString('base64');
-    // const dataUrl = `data:image/png;base64,${base64Image}`;
-    // return dataUrl;
   }
 }

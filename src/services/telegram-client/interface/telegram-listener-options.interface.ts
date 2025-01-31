@@ -1,3 +1,3 @@
-export interface IListenerOptions {
-  channelIds: string[];
+export interface ListenerOptions {
+  readonly conversationsIds?: string[];
 }

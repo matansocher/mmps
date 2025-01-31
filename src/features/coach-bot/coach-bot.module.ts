@@ -1,27 +1,14 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { LoggerModule } from '@core/logger';
-import { UtilsModule } from '@core/utils';
-import { Scores365Module } from '@services/scores-365';
-import { BOTS, TelegramBotsFactoryModule, TelegramModule } from '@services/telegram';
+import { CoachMongoModule } from '@core/mongo/coach-mongo';
+import { NotifierBotModule } from '@core/notifier-bot';
+import { BOTS, TelegramBotsFactoryProvider } from '@services/telegram';
 import { CoachBotService } from './coach-bot.service';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
+import { CoachService } from './coach.service';
 
 @Module({
-  imports: [
-    LoggerModule.forChild(CoachBotModule.name),
-    UtilsModule,
-    TelegramBotsFactoryModule.forChild(BOTS.COACH),
-    TelegramModule,
-    Scores365Module,
-    ScheduleModule.forRoot(),
-  ],
-  providers: [CoachBotService, CoachBotSchedulerService],
+  imports: [ScheduleModule.forRoot(), NotifierBotModule, CoachMongoModule],
+  providers: [CoachBotService, CoachBotSchedulerService, CoachService, TelegramBotsFactoryProvider(BOTS.COACH)],
 })
-export class CoachBotModule implements OnModuleInit {
-  constructor(private readonly coachBotSchedulerService: CoachBotSchedulerService) {}
-
-  onModuleInit(): void {
-    // this.coachBotSchedulerService.handleIntervalFlow(); // for testing purposes
-  }
-}
+export class CoachBotModule {}

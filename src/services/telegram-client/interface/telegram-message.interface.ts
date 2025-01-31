@@ -1,28 +1,30 @@
-export interface ITelegramMessageBody {
-  id: string;
-  fromId: { userId: string; className: string };
-  peerId: { channelId: string; className: string };
-  date: number;
-  text: string;
+export interface TelegramMessageBody {
+  readonly id: string;
+  readonly fromId: { readonly userId: string; readonly className: string };
+  readonly peerId: { readonly channelId: string; readonly className: string };
+  readonly date: number;
+  readonly text: string;
 }
 
-export interface ITelegramEvent {
-  className: string;
-  message: ITelegramMessageBody;
+export interface TelegramEvent {
+  readonly className: string;
+  readonly message: TelegramMessageBody;
 }
 
-export interface ITelegramMessage {
-  id: string;
-  userId: string;
-  channelId: string;
-  date: number;
-  text: string;
+export interface TelegramMessage {
+  readonly id: string;
+  readonly userId: string;
+  readonly channelId: string;
+  readonly date: number;
+  readonly text: string;
 }
 
-export interface IChannelDetails {
-  id: string;
-  createdDate: number;
-  title: string;
-  userName: string;
-  photo: string;
+export interface ConversationDetails {
+  readonly id: string;
+  readonly createdDate: number;
+  readonly title: string;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly userName: string;
+  readonly photo?: string;
 }

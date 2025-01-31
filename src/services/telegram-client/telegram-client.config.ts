@@ -1,10 +1,4 @@
-import { env } from 'node:process';
-
 export const TELEGRAM_CLIENT_TOKEN = 'TELEGRAM_CLIENT_TOKEN';
-
-export const TELEGRAM_API_ID = env.TELEGRAM_API_ID;
-export const TELEGRAM_API_HASH = env.TELEGRAM_API_HASH;
-export const TELEGRAM_STRING_SESSION = env.TELEGRAM_STRING_SESSION;
 
 export const FILTER_OUT_EVENTS = [
   'UpdateUserStatus',
@@ -15,10 +9,7 @@ export const FILTER_OUT_EVENTS = [
   'UpdateDeleteChannelMessages',
 ];
 
-export const LISTEN_TO_EVENTS = [
-  'UpdateNewChannelMessage',
-  'UpdateNewMessage',
-];
+export const LISTEN_TO_EVENTS = ['UpdateNewChannelMessage', 'UpdateNewMessage', 'UpdateShortMessage'];
 
 export const CHANNELS = {
   ISRAEL_TECH_FORUM: { id: '1083698033', name: `🇮🇱 Israel Tech & Innovation Forum` },
@@ -51,3 +42,5 @@ export const CHANNELS = {
   ALMOG_BOKER_UPDATES: { id: '1944652421', name: `אלמוג בוקר עדכונים` },
   CENTRE_GOALS: { id: '2202755767', name: `Centre goals` },
 };
+
+export const EXCLUDED_CHANNELS = ['1134883772', '1500288653', '1931973812', '1848921816', '1700501423', '1551172521', '938057166'];
