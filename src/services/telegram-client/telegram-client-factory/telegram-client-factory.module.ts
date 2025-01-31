@@ -1,6 +1,6 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
-import { DynamicModule, Global, Module } from '@nestjs/common';
+import { DynamicModule, Global, Logger, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TELEGRAM_CLIENT_TOKEN } from '@services/telegram-client';
 import { TelegramClientFactoryOptions } from '../interface';
@@ -18,7 +18,12 @@ export class TelegramClientFactoryModule {
         const apiHash = configService.getOrThrow<string>('TELEGRAM_API_HASH');
         const stringSession = configService.getOrThrow<string>('TELEGRAM_STRING_SESSION');
         const client = new TelegramClient(new StringSession(stringSession), apiId, apiHash, { connectionRetries });
-        await client.start({ phoneNumber: null, password: null, phoneCode: null, onError: (err) => console.log(err) });
+        await client.start({
+          phoneNumber: null,
+          password: null,
+          phoneCode: null,
+          onError: (err) => new Logger(TelegramClientFactoryModule.name).error(err),
+        });
         return client;
       },
     };
