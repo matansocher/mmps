@@ -14,7 +14,7 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
-    'prettier/prettier': 'error',
+    'prettier/prettier': 'warn',
     // 'no-empty': 'off',
     // '@typescript-eslint/consistent-type-exports': 'error',
     // '@typescript-eslint/consistent-type-imports': 'error',

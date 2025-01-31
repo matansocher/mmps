@@ -14,8 +14,8 @@ interface MessageLoaderData {
   readonly loaderMessageId: number;
 }
 
-export class MessageLoaderService {
-  private readonly logger = new Logger(MessageLoaderService.name);
+export class MessageLoader {
+  private readonly logger = new Logger(MessageLoader.name);
   private messages: Record<number, MessageLoaderData> = {};
 
   private readonly bot: TelegramBot;

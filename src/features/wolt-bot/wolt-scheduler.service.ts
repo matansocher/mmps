@@ -81,7 +81,12 @@ export class WoltSchedulerService implements OnModuleInit {
           const inlineKeyboardButtons = [{ text: restaurant.name, url: restaurantLinkUrl }];
           const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
           const replyText = `${restaurant.name} is now open!, go ahead and order!`;
-          promisesArr.push(this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText } as any));
+          promisesArr.push(
+            this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, {
+              ...inlineKeyboardMarkup,
+              caption: replyText,
+            } as any),
+          );
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
           promisesArr.push(
             this.notifierBotService.notify(

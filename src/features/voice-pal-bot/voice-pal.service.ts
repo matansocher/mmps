@@ -12,8 +12,8 @@ import {
   BOTS,
   downloadAudioFromVideoOrAudio,
   getMessageData,
+  MessageLoader,
   MessageLoaderOptions,
-  MessageLoaderService,
   TelegramMessageData,
 } from '@services/telegram';
 import { VoicePalOption } from './interface';
@@ -70,7 +70,7 @@ export class VoicePalService implements OnModuleInit {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction?.showLoader) {
-        const messageLoaderService = new MessageLoaderService(this.bot, chatId, {
+        const messageLoaderService = new MessageLoader(this.bot, chatId, {
           cycleDuration: 3000,
           loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING,
           loaderEmoji: '🤔',
@@ -82,7 +82,15 @@ export class VoicePalService implements OnModuleInit {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.VOICE_PAL,
+        {
+          handler: analyticAction,
+          action: ANALYTIC_EVENT_STATES.FULFILLED,
+        },
+        chatId,
+        this.mongoUserService,
+      );
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);
@@ -97,7 +105,14 @@ export class VoicePalService implements OnModuleInit {
   }
 
   async handleTranscribeAction({ chatId, video, audio }: Partial<TelegramMessageData>): Promise<void> {
-    const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+    const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(
+      this.bot,
+      {
+        video,
+        audio,
+      },
+      LOCAL_FILES_PATH,
+    );
     await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
     deleteFile(videoFileLocalPath);
     const replyText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
@@ -113,7 +128,14 @@ export class VoicePalService implements OnModuleInit {
       await this.notifierBotService.collect(MessageType.TEXT, text);
       replyText = await getTranslationToEnglish(text);
     } else {
-      const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(this.bot, { video, audio }, LOCAL_FILES_PATH);
+      const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(
+        this.bot,
+        {
+          video,
+          audio,
+        },
+        LOCAL_FILES_PATH,
+      );
       await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
       deleteFile(videoFileLocalPath);
       replyText = await this.aiService.getTranslationFromAudio(audioFileLocalPath);

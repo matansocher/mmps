@@ -8,7 +8,7 @@ interface MessageAggregatorData {
   readonly processMessageCallback: (message: Message) => void;
 }
 
-export class MessagesAggregatorService {
+export class MessagesAggregator {
   private messagesCache: Record<number, MessageAggregatorData> = {};
 
   handleIncomingMessage(message: Message, processMessageCallback: (message: Message) => void): void {

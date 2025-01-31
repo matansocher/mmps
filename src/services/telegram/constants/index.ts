@@ -1,3 +1,4 @@
+import { Message } from 'node-telegram-bot-api';
 import type { TelegramBotConfig } from '../interface';
 
 export const BOTS: Record<string, TelegramBotConfig> = {
@@ -57,4 +58,9 @@ export enum TELEGRAM_EVENTS {
   CALLBACK_QUERY = 'callback_query',
   POLLING_ERROR = 'polling_error',
   ERROR = 'error',
+}
+
+export interface TelegramBotHandler {
+  readonly regex: string;
+  readonly handler: (message: Message) => Promise<void>;
 }
