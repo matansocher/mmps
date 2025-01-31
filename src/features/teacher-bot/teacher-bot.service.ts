@@ -4,7 +4,15 @@ import { LOCAL_FILES_PATH } from '@core/config';
 import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { deleteFile, getDateString, getErrorMessage } from '@core/utils';
 import { AiService } from '@services/ai';
-import { BOTS, downloadAudioFromVideoOrAudio, getCallbackQueryData, getMessageData, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
+import {
+  BOTS,
+  downloadAudioFromVideoOrAudio,
+  getCallbackQueryData,
+  getMessageData,
+  sendStyledMessage,
+  TELEGRAM_EVENTS,
+  TelegramBotHandler,
+} from '@services/telegram';
 import {
   BOT_ACTIONS,
   INITIAL_BOT_RESPONSE,
@@ -156,7 +164,10 @@ export class TeacherBotService implements OnModuleInit {
     try {
       const activeCourse = await this.mongoCourseService.getActiveCourse();
       if (!activeCourse) {
-        await this.bot.sendMessage(chatId, `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_OPTIONS.COURSE} command`);
+        await this.bot.sendMessage(
+          chatId,
+          `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_OPTIONS.COURSE} command`,
+        );
         return;
       }
 
