@@ -1,11 +1,11 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS } from '@services/telegram';
-import { getEnrichedRestaurantsDetails, getKeyboardOptions, getRestaurantLink } from './utils';
-import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_OPTIONS } from './wolt-bot.config';
+import { getEnrichedRestaurantsDetails, getRestaurantLink } from './utils';
+import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_COMMANDS } from './wolt-bot.config';
 import { WoltService } from './wolt.service';
 
 @Injectable()
@@ -21,8 +21,9 @@ export class WoltBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.onText(new RegExp(WOLT_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
-    this.bot.onText(new RegExp(WOLT_BOT_OPTIONS.LIST), (message: Message) => this.listHandler(message));
+    this.bot.setMyCommands(Object.values(WOLT_BOT_COMMANDS));
+    this.bot.onText(new RegExp(WOLT_BOT_COMMANDS.START.command), (message: Message) => this.startHandler(message));
+    this.bot.onText(new RegExp(WOLT_BOT_COMMANDS.LIST.command), (message: Message) => this.listHandler(message));
     this.bot.on(TELEGRAM_EVENTS.TEXT, (message: Message) => this.textHandler(message));
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
@@ -35,7 +36,7 @@ export class WoltBotService implements OnModuleInit {
       this.logger.log(`${this.startHandler.name} - ${logBody} - start`);
       await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
-      await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
+      await this.bot.sendMessage(chatId, replyText);
       this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
       this.logger.log(`${this.startHandler.name} - ${logBody} - success`);
     } catch (err) {
@@ -47,7 +48,7 @@ export class WoltBotService implements OnModuleInit {
         chatId,
         this.mongoUserService,
       );
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
@@ -60,7 +61,7 @@ export class WoltBotService implements OnModuleInit {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = `You don't have any active subscriptions yet`;
-        return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
+        return await this.bot.sendMessage(chatId, replyText);
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
@@ -79,7 +80,7 @@ export class WoltBotService implements OnModuleInit {
         chatId,
         this.mongoUserService,
       );
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`, getKeyboardOptions());
+      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
     }
   }
 
@@ -88,7 +89,7 @@ export class WoltBotService implements OnModuleInit {
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     // prevent built in options to be processed also here
-    if (Object.keys(WOLT_BOT_OPTIONS).some((option: string) => restaurant.includes(WOLT_BOT_OPTIONS[option]))) return;
+    if (Object.values(WOLT_BOT_COMMANDS).some((command: BotCommand) => restaurant.includes(command.command))) return;
 
     const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
@@ -101,7 +102,7 @@ export class WoltBotService implements OnModuleInit {
       const matchedRestaurants = this.woltService.getFilteredRestaurantsByName(restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
-        return await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
+        return await this.bot.sendMessage(chatId, replyText);
       }
       const restaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map((restaurant) => {

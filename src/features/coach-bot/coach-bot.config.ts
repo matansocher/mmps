@@ -1,3 +1,5 @@
+import { BotCommand } from 'node-telegram-bot-api';
+
 export const INITIAL_BOT_RESPONSE = [
   `שלום 👋`,
   `אני פה כדי לתת תוצאות של משחקי ספורט`,
@@ -16,8 +18,8 @@ export const ANALYTIC_EVENT_STATES = {
   SUCCESS: 'SUCCESS',
 };
 
-export const COACH_BOT_OPTIONS = {
-  START: '/start',
-  SUBSCRIBE: '/subscribe',
-  UNSUBSCRIBE: '/unsubscribe',
+export const COACH_BOT_COMMANDS: Record<string, BotCommand> = {
+  START: { command: '/start', description: 'Start all over' },
+  SUBSCRIBE: { command: '/subscribe', description: 'Start getting daily games summaries' },
+  UNSUBSCRIBE: { command: '/unsubscribe', description: 'Stop getting daily games summaries' },
 };
