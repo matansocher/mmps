@@ -1,8 +1,6 @@
 import { endOfDay, endOfYear, startOfDay, startOfYear } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 import { Collection, Db, InsertOneResult, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { DEFAULT_TIMEZONE } from '@core/config';
 import { ExerciseModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../trainer-mongo.config';
 

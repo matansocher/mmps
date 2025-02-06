@@ -38,7 +38,6 @@ export class TeacherService {
     course.threadId = threadId;
     await this.mongoCourseService.startCourse(course?._id, { threadId: threadId });
     await sendStyledMessage(this.bot, chatId, `\`Course started: ${course.topic}\``);
-    await this.bot.sendMessage(chatId, `Course started: ${course.topic}`);
     return course;
   }
 
