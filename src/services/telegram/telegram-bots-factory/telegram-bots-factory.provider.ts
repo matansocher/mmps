@@ -4,14 +4,14 @@ import { ConfigService } from '@nestjs/config';
 import type { TelegramBotConfig } from '@services/telegram';
 import { createErrorEventListeners } from '@services/telegram/telegram-bots-factory/telegram-bot-error-handler';
 
-export const TelegramBotsFactoryProvider = (options: TelegramBotConfig): Provider => {
+export const TelegramBotsFactoryProvider = (botConfig: TelegramBotConfig): Provider => {
   return {
     inject: [ConfigService],
-    provide: options.id,
-    useFactory: async (configService: ConfigService): Promise<TelegramBot> => {
-      const token = configService.getOrThrow(options.token);
+    provide: botConfig.id,
+    useFactory: (configService: ConfigService): TelegramBot => {
+      const token = configService.getOrThrow(botConfig.token);
       const bot = new TelegramBot(token, { polling: true });
-      createErrorEventListeners(bot, options.name);
+      createErrorEventListeners(bot, botConfig.name);
       return bot;
     },
   };

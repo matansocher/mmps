@@ -65,9 +65,7 @@ export class TrainerBotService implements OnModuleInit {
 
     // Check if the user broke their longest streak
     if (currentStreak > 1 && currentStreak > longestStreak) {
-      const caption = [`🎉 Incredible! You've just broken your longest streak of ${longestStreak} days with **${currentStreak} days** in a row! 🏆🔥`].join(
-        '\n\n',
-      );
+      const caption = `🎉 Incredible! You've just broken your longest streak of ${longestStreak} days with **${currentStreak} days** in a row! 🏆🔥`;
       const generatedImage = await this.openaiService.createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
       await this.bot.sendPhoto(chatId, generatedImage, { caption });
       return;
