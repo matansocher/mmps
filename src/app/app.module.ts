@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
 import { CoachBotModule } from '@features/coach-bot';
 import { DefineModule } from '@features/define';
-import { RollinsparkBotModule } from '@features/rollinspark-bot';
 import { TeacherBotModule } from '@features/teacher-bot';
 import { TrainerBotModule } from '@features/trainer-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
@@ -15,7 +14,7 @@ function getImports() {
   const commonModules = [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })];
 
   if (isProd) {
-    return [...commonModules, VoicePalBotModule, WoltBotModule, RollinsparkBotModule, DefineModule, CoachBotModule, TeacherBotModule, TrainerBotModule];
+    return [...commonModules, VoicePalBotModule, WoltBotModule, DefineModule, CoachBotModule, TeacherBotModule, TrainerBotModule];
   }
 
   return [...commonModules, TrainerBotModule];

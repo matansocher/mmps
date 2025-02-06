@@ -32,11 +32,6 @@ export const BOTS: Record<string, TelegramBotConfig> = {
     name: 'Trainer Bot 🏋️‍♂️',
     token: 'TRAINER_TELEGRAM_BOT_TOKEN',
   },
-  ROLLINSPARK: {
-    id: 'ROLLINSPARK',
-    name: 'Rollins Park Bot 🏘️',
-    token: 'ROLLINSPARK_TELEGRAM_BOT_TOKEN',
-  },
   NOTIFIER: {
     id: 'NOTIFIER',
     name: 'Notifier Bot 🦔',
