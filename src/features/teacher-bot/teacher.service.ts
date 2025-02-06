@@ -23,13 +23,21 @@ export class TeacherService {
   async getNewCourse(chatId: number): Promise<CourseModel> {
     const course = await this.mongoCourseService.getRandomCourse();
     if (!course) {
-      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: 'No new courses found' }, null, null);
+      this.notifierBotService.notify(
+        BOTS.PROGRAMMING_TEACHER,
+        {
+          action: 'ERROR',
+          error: 'No new courses found',
+        },
+        null,
+        null,
+      );
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
     course.threadId = threadId;
     await this.mongoCourseService.startCourse(course?._id, { threadId: threadId });
-    await this.bot.sendMessage(chatId, `Course started: ${course.topic}`);
+    await sendStyledMessage(this.bot, chatId, `\`Course started: ${course.topic}\``);
     return course;
   }
 
@@ -55,7 +63,12 @@ export class TeacherService {
     const response = await this.getAssistantAnswer(threadId, prompt);
 
     const isLastLesson = course.lessonsCompleted === TOTAL_COURSE_LESSONS - 1;
-    const inlineKeyboardButtons = [{ text: '✅ Complete Course', callback_data: `${course._id} - ${BOT_ACTIONS.COMPLETE}` }];
+    const inlineKeyboardButtons = [
+      {
+        text: '✅ Complete Course',
+        callback_data: `${course._id} - ${BOT_ACTIONS.COMPLETE}`,
+      },
+    ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
     await sendStyledMessage(this.bot, chatId, response, 'Markdown', isLastLesson ? inlineKeyboardMarkup : {});
     await this.mongoCourseService.markCourseLessonCompleted(course._id);

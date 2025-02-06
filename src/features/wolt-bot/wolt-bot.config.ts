@@ -1,3 +1,5 @@
+import { BotCommand } from 'node-telegram-bot-api';
+
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 8;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
 
@@ -45,9 +47,9 @@ export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-t
 // 'tel-aviv'
 // 'yokneam'
 
-export const WOLT_BOT_OPTIONS = {
-  START: '/start',
-  LIST: '/list',
+export const WOLT_BOT_COMMANDS: Record<string, BotCommand> = {
+  START: { command: '/start', description: 'Start all over' },
+  LIST: { command: '/list', description: 'Show list of open subscriptions' },
 };
 
 export const HOUR_OF_DAY_TO_REFRESH_MAP = {

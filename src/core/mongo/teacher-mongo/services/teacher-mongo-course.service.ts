@@ -1,6 +1,6 @@
 import { Collection, Db, DeleteResult, InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { CourseModel, CourseStatus } from '../models/course.model';
+import { CourseModel, CourseStatus } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
 
 @Injectable()

@@ -6,8 +6,8 @@ import { RollinsparkMongoSubscriptionService } from '@core/mongo/rollinspark-mon
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES, NAME_TO_PLAN_ID_MAP } from './constants';
 import { ExpectedAptDetails } from './interfaces';
+import { ANALYTIC_EVENT_STATES, NAME_TO_PLAN_ID_MAP } from './rollinspark-bot.config';
 import { RollinsparkService } from './rollinspark.service';
 
 const INTERVAL_MINUTES = 5;

@@ -1,3 +1,5 @@
+import { BotCommand } from 'node-telegram-bot-api';
+
 export const INITIAL_BOT_RESPONSE = [
   `Hey There 👋`,
   `I am here to teach you all you need about any subject you want.`,
@@ -8,15 +10,15 @@ export const INITIAL_BOT_RESPONSE = [
 export const COURSE_START_HOUR_OF_DAY = 12;
 export const COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY = [17, 22];
 
-export const TEACHER_BOT_OPTIONS = {
-  START: '/start',
-  STOP: '/stop',
-  COURSE: '/course',
-  LESSON: '/lesson',
-  LIST: '/list',
-  HISTORY: '/history',
-  ADD: '/add',
-  REMOVE: '/remove',
+export const TEACHER_BOT_COMMANDS: Record<string, BotCommand> = {
+  START: { command: '/start', description: 'Start learning daily' },
+  STOP: { command: '/stop', description: 'Stop learning daily' },
+  COURSE: { command: '/course', description: 'Start the next course' },
+  LESSON: { command: '/lesson', description: 'Start the next lesson' },
+  LIST: { command: '/list', description: 'List of all available courses' },
+  HISTORY: { command: '/history', description: 'List of completed courses' },
+  ADD: { command: '/add', description: 'Add a new course' },
+  REMOVE: { command: '/remove', description: 'Remove a course' },
 };
 
 export enum BOT_ACTIONS {

@@ -1,7 +1,7 @@
 import { Collection, Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../coach-mongo.config';
-import { SubscriptionModel } from '../models/subscription.model';
+import { SubscriptionModel } from '../models';
 
 @Injectable()
 export class CoachMongoSubscriptionService {

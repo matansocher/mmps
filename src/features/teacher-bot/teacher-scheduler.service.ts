@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import type TelegramBot from 'node-telegram-bot-api';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
@@ -17,6 +18,7 @@ export class TeacherSchedulerService {
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly notifierBotService: NotifierBotService,
+    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
@@ -29,6 +31,9 @@ export class TeacherSchedulerService {
 
       const activeCourse = await this.mongoCourseService.getActiveCourse();
       if (activeCourse) {
+        if (activeCourse.assignedAt.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000) {
+          await this.bot.sendMessage(MY_USER_ID, `I has been too long since you last studied. Let me know if you want to start a new course 😁`);
+        }
         return;
       }
 
@@ -40,7 +45,10 @@ export class TeacherSchedulerService {
     }
   }
 
-  @Cron(`0 ${COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY.join(',')} * * *`, { name: 'teacher-scheduler-next', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 ${COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY.join(',')} * * *`, {
+    name: 'teacher-scheduler-next',
+    timeZone: DEFAULT_TIMEZONE,
+  })
   async handleCourseNextLesson(): Promise<void> {
     try {
       const userPreferences = await this.mongoUserPreferencesService.getUserPreference(MY_USER_ID);

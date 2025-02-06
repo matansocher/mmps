@@ -1,3 +1,5 @@
+import { BotCommand } from 'node-telegram-bot-api';
+
 export const ANALYTIC_EVENT_STATES = {
   START: 'START',
   MANAGEMENT: 'MANAGEMENT',
@@ -22,7 +24,7 @@ export enum BOT_ACTIONS {
   UNSUBSCRIBE = 'unsubscribe',
 }
 
-export const ROLLINSPARK_BOT_OPTIONS = {
-  START: '/start',
-  MANAGEMENT: '/management',
+export const ROLLINSPARK_BOT_COMMANDS: Record<string, BotCommand> = {
+  START: { command: '/start', description: 'Start all over' },
+  MANAGEMENT: { command: '/management', description: 'Manage subscriptions' },
 };

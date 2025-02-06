@@ -1,11 +1,11 @@
-hebrew
-deal with alternative results to show the user close suggestions
+teacher:
+// show the right date in history command
+// the header of course should be highlighted
+// After seven days of no progress, send a message
+Save messages of completed courses and react to all three messages as completed reaction
 
-rest testing infra
+trainer:
 
-voice pal many actions - if content too long openai throws error
-
-messages loader - consider adding periodic cleanup logic to remove stale entries from the messages object.
 
 +------------------+------------------+------------------+
 |      Column 1    |      Column 2    |      Column 3    |

@@ -4,7 +4,7 @@ import { RollinsparkMongoSubscriptionService, RollinsparkMongoUserService } from
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES, BOT_ACTIONS, NAME_TO_PLAN_ID_MAP, ROLLINSPARK_BOT_OPTIONS } from './constants';
+import { ANALYTIC_EVENT_STATES, BOT_ACTIONS, NAME_TO_PLAN_ID_MAP, ROLLINSPARK_BOT_COMMANDS } from './rollinspark-bot.config';
 
 @Injectable()
 export class RollinsparkBotService implements OnModuleInit {
@@ -18,8 +18,9 @@ export class RollinsparkBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.onText(new RegExp(ROLLINSPARK_BOT_OPTIONS.START), (message: Message) => this.startHandler(message));
-    this.bot.onText(new RegExp(ROLLINSPARK_BOT_OPTIONS.MANAGEMENT), (message: Message) => this.managementHandler(message));
+    this.bot.setMyCommands(Object.values(ROLLINSPARK_BOT_COMMANDS));
+    this.bot.onText(new RegExp(ROLLINSPARK_BOT_COMMANDS.START.command), (message: Message) => this.startHandler(message));
+    this.bot.onText(new RegExp(ROLLINSPARK_BOT_COMMANDS.MANAGEMENT.command), (message: Message) => this.managementHandler(message));
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
