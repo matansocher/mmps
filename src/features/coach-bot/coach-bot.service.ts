@@ -50,7 +50,7 @@ export class CoachBotService implements OnModuleInit {
       this.notifierBotService.notify(
         BOTS.COACH,
         {
-          action: `${handler.name} - ${ANALYTIC_EVENT_STATES.ERROR}`,
+          action: `${handlerName} - ${ANALYTIC_EVENT_STATES.ERROR}`,
           error: errorMessage,
         },
         chatId,
@@ -64,6 +64,7 @@ export class CoachBotService implements OnModuleInit {
     const { telegramUserId, firstName, lastName, username } = getMessageData(message);
     await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
     await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.START }, chatId, this.mongoUserService);
   }
 
   private async subscribeHandler(message: Message) {
@@ -75,6 +76,7 @@ export class CoachBotService implements OnModuleInit {
     }
     await this.mongoSubscriptionService.addSubscription(chatId);
     await this.bot.sendMessage(chatId, `סבבה, אני אשלח לך עדכונים יומיים ✅. אפשר להסיר עוקב תמיד פה למטה (unsubscribe)`);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SUBSCRIBE }, chatId, this.mongoUserService);
   }
 
   private async unsubscribeHandler(message: Message) {
@@ -86,6 +88,7 @@ export class CoachBotService implements OnModuleInit {
     }
     await this.mongoSubscriptionService.archiveSubscription(chatId);
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.UNSUBSCRIBE }, chatId, this.mongoUserService);
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -106,6 +109,8 @@ export class CoachBotService implements OnModuleInit {
         const replyText = await this.coachService.getMatchesSummaryMessage(text);
         await sendStyledMessage(this.bot, chatId, replyText);
       });
+
+      this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH }, chatId, this.mongoUserService);
 
       this.logger.log(`${this.textHandler.name} - success`);
     } catch (err) {

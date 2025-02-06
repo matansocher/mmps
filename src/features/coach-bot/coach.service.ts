@@ -4,7 +4,7 @@ import { getCompetitions, getMatchesForCompetition } from '@services/scores-365'
 import { CompetitionDetails } from '@services/scores-365/interface';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
 
-const cacheValidForMinutes = 5;
+const cacheValidForMinutes = 1;
 
 interface CompetitionsDetailsCache {
   readonly competitionsDetails: CompetitionDetails[];
