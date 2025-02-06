@@ -1,4 +1,3 @@
-import axios from 'axios';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';

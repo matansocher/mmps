@@ -5,10 +5,7 @@ teacher:
 Save messages of completed courses and react to all three messages as completed reaction
 
 trainer:
-at the end of the day (endpoint exists), encourage user to train for even a few minutes (generateExerciseEncourageMessage)
-at the end of the week, weekly summary
-complete text for generateExerciseReplyMessage
-after exercise - if user gets to a "ladder" step, do something nice (generate image | nice emoji...)
+
 
 +------------------+------------------+------------------+
 |      Column 1    |      Column 2    |      Column 3    |

@@ -16,7 +16,7 @@ export class TrainerMongoExerciseService {
     const exercise = {
       _id: new ObjectId(),
       chatId,
-      createdAt: new Date(), // $$$$$$$$$$$$$$$$$$$$$$$$$
+      createdAt: new Date(),
     };
     return this.exerciseCollection.insertOne(exercise);
   }
@@ -30,7 +30,7 @@ export class TrainerMongoExerciseService {
     const utcStart = new Date(localStart.getTime() + now.getTimezoneOffset() * 60000);
     const utcEnd = new Date(localEnd.getTime() + now.getTimezoneOffset() * 60000);
 
-    const filter = { chatId, createdAt: { $gte: utcStart, $lt: utcEnd } }; // $$$$$$$$$$$$$$$$$$$$$ add today filter
+    const filter = { chatId, createdAt: { $gte: utcStart, $lt: utcEnd } };
     return this.exerciseCollection.findOne(filter);
   }
 

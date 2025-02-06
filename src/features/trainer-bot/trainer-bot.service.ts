@@ -2,10 +2,11 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
 import { getDateString, getErrorMessage } from '@core/utils';
+import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, TelegramBotHandler } from '@services/telegram';
-import { INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
+import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
-import { generateExerciseReplyMessage, getLongestStreak, getStreak } from './utils';
+import { generateExerciseReplyMessage, generateSpecialStreakMessage, getLongestStreak, getStreak } from './utils';
 
 @Injectable()
 export class TrainerBotService implements OnModuleInit {
@@ -14,6 +15,7 @@ export class TrainerBotService implements OnModuleInit {
   constructor(
     private readonly trainerService: TrainerService,
     private readonly mongoExerciseService: TrainerMongoExerciseService,
+    private readonly openaiService: OpenaiService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -54,12 +56,30 @@ export class TrainerBotService implements OnModuleInit {
 
   private async exerciseHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
+    const exercisesDates = await this.trainerService.getExercisesDates(chatId);
+    const longestStreak = getLongestStreak(exercisesDates);
+
     await this.mongoExerciseService.addExercise(chatId);
 
-    const exercisesDates = await this.trainerService.getExercisesDates(chatId);
-    const currentStreak = getStreak(exercisesDates);
-    const longestStreak = getLongestStreak(exercisesDates);
-    const replyText = generateExerciseReplyMessage({ currentStreak, longestStreak });
+    const currentStreak = getStreak(exercisesDates) + 1;
+
+    // Check if the user broke their longest streak
+    if (currentStreak > longestStreak) {
+      const caption = [
+        `🎉 Incredible! You've just broken your longest streak of ${longestStreak} days with **${currentStreak} days** in a row! 🏆🔥`,
+        `As a reward, here’s a special badge for your achievement! 🖼️`,
+      ].join('\n\n');
+      const generatedImage = await this.openaiService.createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
+      await this.bot.sendPhoto(chatId, generatedImage, { caption });
+      return;
+    }
+
+    const replyText =
+      generateSpecialStreakMessage(currentStreak) ||
+      generateExerciseReplyMessage({
+        currentStreak,
+        longestStreak,
+      });
     await this.bot.sendMessage(chatId, replyText);
   }
 
