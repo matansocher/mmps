@@ -27,6 +27,11 @@ export const BOTS: Record<string, TelegramBotConfig> = {
     name: 'Programming Teacher Bot 👨‍🏫',
     token: 'PROGRAMMING_TEACHER_TELEGRAM_BOT_TOKEN',
   },
+  EDUCATOR: {
+    id: 'EDUCATOR',
+    name: 'Educator Bot 📚',
+    token: 'EDUCATOR_TELEGRAM_BOT_TOKEN',
+  },
   TRAINER: {
     id: 'TRAINER',
     name: 'Trainer Bot 🏋️‍♂️',

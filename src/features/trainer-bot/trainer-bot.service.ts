@@ -61,11 +61,13 @@ export class TrainerBotService implements OnModuleInit {
 
     await this.mongoExerciseService.addExercise(chatId);
 
-    const currentStreak = getStreak(exercisesDates) + 1;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentStreak = getStreak([...exercisesDates, today]);
 
     // Check if the user broke their longest streak
     if (currentStreak > 1 && currentStreak > longestStreak) {
-      const caption = `🎉 Incredible! You've just broken your longest streak of ${longestStreak} days with **${currentStreak} days** in a row! 🏆🔥`;
+      const caption = `🎉 Incredible! You've just broken your record and set a new streak - ${currentStreak} days in a row! 🏆🔥`;
       const generatedImage = await this.openaiService.createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
       await this.bot.sendPhoto(chatId, generatedImage, { caption });
       return;
