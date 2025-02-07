@@ -47,8 +47,8 @@ export class TeacherMongoCourseService {
     return this.courseCollection.find(filter).toArray();
   }
 
-  getCompletedCourses(): Promise<WithId<CourseModel>[]> {
-    const filter = { status: CourseStatus.Completed };
+  getAssignedCourses(): Promise<WithId<CourseModel>[]> {
+    const filter = { status: CourseStatus.Assigned };
     return this.courseCollection.find(filter).toArray();
   }
 

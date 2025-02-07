@@ -88,11 +88,9 @@ export class TrainerBotService implements OnModuleInit {
       return;
     }
     const messagePrefix = 'Exercises History';
-    const latestExercises = exercises.length > MAX_EXERCISES_HISTORY_TO_SHOW ? exercises.slice(0, MAX_EXERCISES_HISTORY_TO_SHOW) : exercises;
-    const exercisesStr = latestExercises
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-      .map(({ createdAt }) => `${getDateString(createdAt)}`)
-      .join('\n');
+    const sortedExercises = exercises.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const latestExercises = sortedExercises.length > MAX_EXERCISES_HISTORY_TO_SHOW ? sortedExercises.slice(0, MAX_EXERCISES_HISTORY_TO_SHOW) : sortedExercises;
+    const exercisesStr = latestExercises.map(({ createdAt }) => `${getDateString(createdAt)}`).join('\n');
     await this.bot.sendMessage(chatId, `${messagePrefix}:\n\n${exercisesStr}`);
   }
 

@@ -6,6 +6,8 @@ Save messages of completed courses and react to all three messages as completed 
 
 trainer:
 
+rollinspark:
+user just subscribed, and no data on appt before, and then after it checks for the first time
 
 +------------------+------------------+------------------+
 |      Column 1    |      Column 2    |      Column 3    |

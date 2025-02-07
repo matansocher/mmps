@@ -117,20 +117,19 @@ export class TeacherBotService implements OnModuleInit {
 
   private async historyHandler(message: Message) {
     const { chatId } = getMessageData(message);
-    let courses = await this.mongoCourseService.getCompletedCourses();
+    const courses = await this.mongoCourseService.getAssignedCourses();
     if (!courses?.length) {
       await this.bot.sendMessage(chatId, 'I see you dont have any completed courses yet');
       return;
     }
+    // here always show the last 20 and not random 20
     let messagePrefix = 'Completed Courses';
-    if (courses.length > NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW) {
-      courses = courses.slice(0, NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW);
-      messagePrefix = `Available Courses list it too big, showing the random first ${NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW}`;
+    let sortedCourses = courses?.sort((a, b) => b.assignedAt.getTime() - a.assignedAt.getTime());
+    if (sortedCourses.length > NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW) {
+      sortedCourses = sortedCourses.slice(0, NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW);
+      messagePrefix = `Available Courses list it too big, showing the latest ${NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW}`;
     }
-    const coursesStr = courses
-      .sort((a, b) => a.assignedAt.getTime() - b.assignedAt.getTime())
-      .map(({ topic, assignedAt }) => `${getDateString(assignedAt)} | ${topic}`)
-      .join('\n');
+    const coursesStr = sortedCourses.map(({ topic, assignedAt }) => `${getDateString(assignedAt)} | ${topic}`).join('\n');
     await this.bot.sendMessage(chatId, `${messagePrefix}:\n\n${coursesStr}`);
   }
 
