@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
 import { CoachBotModule } from '@features/coach-bot';
 import { DefineModule } from '@features/define';
+import { EducatorBotModule } from '@features/educator-bot';
 import { TeacherBotModule } from '@features/teacher-bot';
 import { TrainerBotModule } from '@features/trainer-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
@@ -17,7 +18,7 @@ function getImports() {
     return [...commonModules, VoicePalBotModule, WoltBotModule, DefineModule, CoachBotModule, TeacherBotModule, TrainerBotModule];
   }
 
-  return [...commonModules, TrainerBotModule];
+  return [...commonModules, EducatorBotModule];
 }
 
 @Module({
