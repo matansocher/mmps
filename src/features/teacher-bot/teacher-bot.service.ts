@@ -122,7 +122,7 @@ export class TeacherBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, 'I see you dont have any completed courses yet');
       return;
     }
-    // here always show the last 20 and not random 20
+
     let messagePrefix = 'Completed Courses';
     let sortedCourses = courses?.sort((a, b) => b.assignedAt.getTime() - a.assignedAt.getTime());
     if (sortedCourses.length > NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW) {

@@ -48,8 +48,8 @@ export class TeacherMongoCourseService {
   }
 
   getAssignedCourses(): Promise<WithId<CourseModel>[]> {
-    const filter = { status: CourseStatus.Assigned };
-    return this.courseCollection.find(filter).toArray();
+    const filter = { $or: [{ status: { $ne: 'pending' } }, { status: { $ne: 'pending' } }] };
+    return this.courseCollection.find(filter as any).toArray();
   }
 
   getActiveCourse(): Promise<WithId<CourseModel>> {
