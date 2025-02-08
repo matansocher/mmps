@@ -1,14 +1,15 @@
-import { isSameDay, startOfDay } from 'date-fns';
+import { isSameDay } from 'date-fns';
 
 export function getStreak(dates: Date[]): number {
-  const today = startOfDay(new Date());
+  if (dates.length === 0) return 0;
 
-  const lastExerciseDate = startOfDay(dates[dates.length - 1]);
-  if (isSameDay(lastExerciseDate, today)) {
-    return calculateStreak(dates).currentStreak;
+  const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime());
+  const lastExerciseDate = sortedDates[dates.length - 1];
+  if (isSameDay(lastExerciseDate, new Date())) {
+    return calculateStreak(sortedDates).currentStreak;
   }
 
-  return calculateStreak(dates.slice(0, -1)).currentStreak;
+  return calculateStreak(sortedDates).currentStreak;
 }
 
 export function getLongestStreak(dates: Date[]): number {
