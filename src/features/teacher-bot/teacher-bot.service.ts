@@ -1,18 +1,8 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { LOCAL_FILES_PATH } from '@core/config';
 import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
-import { deleteFile, getDateString, getErrorMessage } from '@core/utils';
-import { AiService } from '@services/ai';
-import {
-  BOTS,
-  downloadAudioFromVideoOrAudio,
-  getCallbackQueryData,
-  getMessageData,
-  sendStyledMessage,
-  TELEGRAM_EVENTS,
-  TelegramBotHandler,
-} from '@services/telegram';
+import { getDateString, getErrorMessage } from '@core/utils';
+import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import {
   BOT_ACTIONS,
   INITIAL_BOT_RESPONSE,
@@ -27,7 +17,6 @@ export class TeacherBotService implements OnModuleInit {
   private readonly logger = new Logger(TeacherBotService.name);
 
   constructor(
-    private readonly aiService: AiService,
     private readonly teacherService: TeacherService,
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
@@ -91,12 +80,20 @@ export class TeacherBotService implements OnModuleInit {
   private async courseHandler(message: Message) {
     const { chatId } = getMessageData(message);
     await this.mongoCourseService.markActiveCourseCompleted();
-    await this.teacherService.startNewCourse(chatId);
+
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      await this.teacherService.startNewCourse(chatId);
+    });
   }
 
   private async lessonHandler(message: Message) {
     const { chatId } = getMessageData(message);
-    await this.teacherService.processLesson(chatId, false);
+
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      await this.teacherService.processLesson(chatId, false);
+    });
   }
 
   private async listHandler(message: Message) {
@@ -152,7 +149,7 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   async messageHandler(message: Message) {
-    const { chatId, text, audio } = getMessageData(message);
+    const { chatId, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(TEACHER_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
@@ -169,21 +166,10 @@ export class TeacherBotService implements OnModuleInit {
         return;
       }
 
-      let question = text;
-      if (audio) {
-        const { audioFileLocalPath } = await downloadAudioFromVideoOrAudio(
-          this.bot,
-          {
-            audio,
-            video: null,
-          },
-          LOCAL_FILES_PATH,
-        );
-        question = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
-        await deleteFile(audioFileLocalPath);
-      }
-
-      await this.teacherService.processQuestion(chatId, question);
+      const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
+      await messageLoaderService.handleMessageWithLoader(async () => {
+        await this.teacherService.processQuestion(chatId, text);
+      });
       this.logger.log(`${this.messageHandler.name} - chatId: ${chatId} - success`);
     } catch (err) {
       this.logger.error(`${this.messageHandler.name} - chatId: ${chatId} - error - ${getErrorMessage(err)}`);

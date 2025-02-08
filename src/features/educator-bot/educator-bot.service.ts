@@ -2,7 +2,7 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicStatus } from '@core/mongo/educator-mongo';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getCallbackQueryData, getMessageData, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
@@ -80,7 +80,9 @@ export class EducatorBotService implements OnModuleInit {
     if (activeTopic?._id) {
       await this.mongoTopicService.markTopicCompleted(activeTopic._id.toString());
     }
-    await this.educatorService.startNewTopic(chatId);
+
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
+    await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
   }
 
   private async addHandler(message: Message) {
@@ -109,7 +111,10 @@ export class EducatorBotService implements OnModuleInit {
         return;
       }
 
-      await this.educatorService.processQuestion(chatId, text);
+      const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
+      await messageLoaderService.handleMessageWithLoader(async () => {
+        await this.educatorService.processQuestion(chatId, text);
+      });
       this.logger.log(`${this.messageHandler.name} - chatId: ${chatId} - success`);
     } catch (err) {
       this.logger.error(`${this.messageHandler.name} - chatId: ${chatId} - error - ${getErrorMessage(err)}`);

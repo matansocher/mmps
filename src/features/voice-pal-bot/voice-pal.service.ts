@@ -74,7 +74,7 @@ export class VoicePalService implements OnModuleInit {
           cycleDuration: 3000,
           loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING,
           loaderEmoji: '🤔',
-        } as MessageLoaderOptions);
+        });
         await messageLoaderService.handleMessageWithLoader(async (): Promise<void> => {
           await this[userAction.handler]({ chatId, text, audio, video, photo, file });
         });

@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
 import { getDateString, getErrorMessage } from '@core/utils';
 import { OpenaiService } from '@services/openai';
-import { BOTS, getMessageData, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoader, TelegramBotHandler } from '@services/telegram';
 import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
 import { generateExerciseReplyMessage, generateSpecialStreakMessage, getLongestStreak, getStreak } from './utils';
@@ -56,30 +56,34 @@ export class TrainerBotService implements OnModuleInit {
 
   private async exerciseHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const exercisesDates = await this.trainerService.getExercisesDates(chatId);
-    const longestStreak = getLongestStreak(exercisesDates);
 
-    await this.mongoExerciseService.addExercise(chatId);
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🏋️‍♂️' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      const exercisesDates = await this.trainerService.getExercisesDates(chatId);
+      const longestStreak = getLongestStreak(exercisesDates);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const currentStreak = getStreak([...exercisesDates, today]);
+      await this.mongoExerciseService.addExercise(chatId);
 
-    // Check if the user broke their longest streak
-    if (currentStreak > 1 && currentStreak > longestStreak) {
-      const caption = `🎉 Incredible! You've just broken your record and set a new streak - ${currentStreak} days in a row! 🏆🔥`;
-      const generatedImage = await this.openaiService.createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
-      await this.bot.sendPhoto(chatId, generatedImage, { caption });
-      return;
-    }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const currentStreak = getStreak([...exercisesDates, today]);
 
-    const replyText =
-      generateSpecialStreakMessage(currentStreak) ||
-      generateExerciseReplyMessage({
-        currentStreak,
-        longestStreak,
-      });
-    await this.bot.sendMessage(chatId, replyText);
+      // Check if the user broke their longest streak
+      if (currentStreak > 1 && currentStreak > longestStreak) {
+        const caption = `🎉 Incredible! You've just broken your record and set a new streak - ${currentStreak} days in a row! 🏆🔥`;
+        const generatedImage = await this.openaiService.createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
+        await this.bot.sendPhoto(chatId, generatedImage, { caption });
+        return;
+      }
+
+      const replyText =
+        generateSpecialStreakMessage(currentStreak) ||
+        generateExerciseReplyMessage({
+          currentStreak,
+          longestStreak,
+        });
+      await this.bot.sendMessage(chatId, replyText);
+    });
   }
 
   private async historyHandler(message: Message): Promise<void> {
