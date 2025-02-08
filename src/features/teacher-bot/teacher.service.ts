@@ -1,19 +1,61 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
-import { CourseModel, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { CourseModel, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
+import { getErrorMessage } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherService {
+  private readonly logger = new Logger(TeacherService.name);
+
   constructor(
     private readonly mongoCourseService: TeacherMongoCourseService,
+    private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
+
+  async processCourseFirstLesson(chatId: number): Promise<void> {
+    try {
+      const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
+      if (userPreferences?.isStopped) {
+        return;
+      }
+
+      const activeCourse = await this.mongoCourseService.getActiveCourse();
+      if (activeCourse) {
+        if (activeCourse.assignedAt.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000) {
+          await this.bot.sendMessage(chatId, `I has been too long since you last studied. Let me know if you want to start a new course 😁`);
+        }
+        return;
+      }
+
+      await this.startNewCourse(chatId);
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      this.logger.error(`${this.processCourseFirstLesson.name} - error: ${errorMessage}`);
+      this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
+    }
+  }
+
+  async processCourseNextLesson(chatId: number): Promise<void> {
+    try {
+      const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
+      if (userPreferences?.isStopped) {
+        return;
+      }
+
+      await this.processLesson(chatId, true);
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      this.logger.error(`${this.processCourseNextLesson.name} - error: ${errorMessage}`);
+      this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
+    }
+  }
 
   async startNewCourse(chatId: number): Promise<void> {
     const course = await this.getNewCourse(chatId);
