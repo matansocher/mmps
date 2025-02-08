@@ -116,7 +116,7 @@ export class VoicePalService implements OnModuleInit {
     await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
     deleteFile(videoFileLocalPath);
     const replyText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
-    await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
+    await this.bot.sendMessage(chatId, replyText);
     await this.notifierBotService.collect(MessageType.TEXT, replyText);
     await deleteFile(audioFileLocalPath);
   }
@@ -142,7 +142,7 @@ export class VoicePalService implements OnModuleInit {
       deleteFile(audioFileLocalPath);
     }
 
-    await this.bot.sendMessage(chatId, replyText, getKeyboardOptions());
+    await this.bot.sendMessage(chatId, replyText);
     await this.notifierBotService.collect(MessageType.TEXT, replyText);
   }
 
@@ -154,7 +154,7 @@ export class VoicePalService implements OnModuleInit {
     const buffer = Buffer.from(await result.arrayBuffer());
     await fs.writeFile(audioFilePath, buffer);
 
-    await this.bot.sendVoice(chatId, audioFilePath, getKeyboardOptions());
+    await this.bot.sendVoice(chatId, audioFilePath);
     await this.notifierBotService.collect(MessageType.AUDIO, audioFilePath);
     await deleteFile(audioFilePath);
   }
@@ -163,7 +163,7 @@ export class VoicePalService implements OnModuleInit {
     const imageLocalPath = await this.bot.downloadFile(photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
     await this.notifierBotService.collect(MessageType.PHOTO, imageLocalPath);
     const imageAnalysisText = await this.aiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
-    await this.bot.sendMessage(chatId, imageAnalysisText, getKeyboardOptions());
+    await this.bot.sendMessage(chatId, imageAnalysisText);
     await this.notifierBotService.collect(MessageType.TEXT, imageAnalysisText);
     deleteFile(imageLocalPath);
   }
