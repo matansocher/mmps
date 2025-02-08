@@ -1,6 +1,7 @@
 import { BotCommand } from 'node-telegram-bot-api';
 
 export const TOPIC_START_HOUR_OF_DAY = 18;
+export const IDLE_DAYS_REMINDER = 3;
 
 export const EDUCATOR_BOT_COMMANDS: Record<string, BotCommand> = {
   START: { command: '/start', description: 'Start learning daily' },

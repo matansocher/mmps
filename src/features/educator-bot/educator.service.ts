@@ -4,7 +4,7 @@ import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicMo
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
-import { BOT_ACTIONS, EDUCATOR_ASSISTANT_ID } from './educator-bot.config';
+import { BOT_ACTIONS, EDUCATOR_ASSISTANT_ID, IDLE_DAYS_REMINDER } from './educator-bot.config';
 
 @Injectable()
 export class EducatorService {
@@ -24,7 +24,7 @@ export class EducatorService {
 
     const activeTopic = await this.mongoTopicService.getActiveTopic();
     if (activeTopic) {
-      if (activeTopic.assignedAt.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000) {
+      if (activeTopic.assignedAt.getTime() < Date.now() - IDLE_DAYS_REMINDER * 24 * 60 * 60 * 1000) {
         await this.bot.sendMessage(chatId, `וואלה יצא הרבה זמן שלא למדת, מה אתה אומר נחזור?`);
       }
       return;
