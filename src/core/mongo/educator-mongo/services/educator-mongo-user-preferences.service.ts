@@ -16,14 +16,21 @@ export class EducatorMongoUserPreferencesService {
     return this.userPreferencesCollection.findOne(filter);
   }
 
-  createUserPreference(userId: number): Promise<InsertOneResult<UserPreferencesModel>> {
+  async createUserPreference(userId: number): Promise<void> {
+    const userPreferences = await this.userPreferencesCollection.findOne({ userId });
+    if (userPreferences) {
+      await this.updateUserPreference(userId, { isStopped: false });
+      return;
+    }
+
     const userPreference = {
       _id: new ObjectId(),
       userId,
       isStopped: false,
       createdAt: new Date(),
     };
-    return this.userPreferencesCollection.insertOne(userPreference);
+    await this.userPreferencesCollection.insertOne(userPreference);
+    return;
   }
 
   updateUserPreference(userId: number, update: Partial<UserPreferencesModel>): Promise<UpdateResult<UserPreferencesModel>> {

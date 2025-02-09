@@ -16,7 +16,13 @@ export class TeacherMongoUserPreferencesService {
     return this.userPreferencesCollection.findOne(filter);
   }
 
-  createUserPreference(userId: number): Promise<InsertOneResult<UserPreferencesModel>> {
+  async createUserPreference(userId: number): Promise<InsertOneResult<UserPreferencesModel>> {
+    const userPreferences = await this.userPreferencesCollection.findOne({ userId });
+    if (userPreferences) {
+      await this.updateUserPreference(userId, { isStopped: false });
+      return;
+    }
+
     const userPreference = {
       _id: new ObjectId(),
       userId,

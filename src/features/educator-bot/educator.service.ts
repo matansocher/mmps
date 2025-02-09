@@ -68,7 +68,7 @@ export class EducatorService {
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
     topic.threadId = threadId;
-    await this.mongoTopicService.startTopic(topic?._id, { threadId: threadId });
+    await this.mongoTopicService.startTopic(topic?._id, { threadId });
     return topic;
   }
 
