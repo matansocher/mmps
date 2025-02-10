@@ -25,7 +25,7 @@ export class EducatorBotService implements OnModuleInit {
       { regex: EDUCATOR_BOT_COMMANDS.TOPIC.command, handler: this.TopicHandler },
       { regex: EDUCATOR_BOT_COMMANDS.ADD.command, handler: this.addHandler },
     ];
-    const handleCommandOptions = { logger: this.logger, isBlocked: true };
+    const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
 
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {

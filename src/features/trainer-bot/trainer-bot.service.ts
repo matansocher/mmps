@@ -1,8 +1,7 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MY_USER_ID } from '@core/config';
 import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
-import { getDateString, getErrorMessage } from '@core/utils';
+import { getDateString } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, handleCommand, MessageLoader, TelegramBotHandler } from '@services/telegram';
 import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
@@ -28,7 +27,7 @@ export class TrainerBotService implements OnModuleInit {
       { regex: TRAINER_BOT_COMMANDS.HISTORY.command, handler: this.historyHandler },
       { regex: TRAINER_BOT_COMMANDS.ACHIEVEMENTS.command, handler: this.achievementsHandler },
     ];
-    const handleCommandOptions = { logger: this.logger, isBlocked: true };
+    const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
 
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {

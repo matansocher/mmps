@@ -2,7 +2,6 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
 import { BOTS, getMessageData, handleCommand, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
 import { CoachService } from './coach.service';
@@ -26,11 +25,12 @@ export class CoachBotService implements OnModuleInit {
       { regex: COACH_BOT_COMMANDS.SUBSCRIBE.command, handler: this.subscribeHandler },
       { regex: COACH_BOT_COMMANDS.UNSUBSCRIBE.command, handler: this.unsubscribeHandler },
     ];
+    const handleCommandOptions = { bot: this.bot, logger: this.logger };
 
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
         await handleCommand({
-          logger: this.logger,
+          ...handleCommandOptions,
           message,
           handlerName: handler.name,
           handler: async () => handler.call(this, message),
@@ -41,7 +41,7 @@ export class CoachBotService implements OnModuleInit {
 
     this.bot.on(TELEGRAM_EVENTS.TEXT, async (message: Message) => {
       await handleCommand({
-        logger: this.logger,
+        ...handleCommandOptions,
         message,
         handlerName: this.textHandler.name,
         handler: async () => this.textHandler.call(this, message),

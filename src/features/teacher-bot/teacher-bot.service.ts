@@ -44,7 +44,7 @@ export class TeacherBotService implements OnModuleInit {
       { regex: TEACHER_BOT_COMMANDS.ADD.command, handler: this.addHandler },
       { regex: TEACHER_BOT_COMMANDS.REMOVE.command, handler: this.removeHandler },
     ];
-    const handleCommandOptions = { logger: this.logger, isBlocked: true };
+    const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
 
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
