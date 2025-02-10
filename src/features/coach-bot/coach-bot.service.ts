@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, MessageLoader, MessageLoaderOptions, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getMessageData, handleCommand, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
@@ -26,37 +26,26 @@ export class CoachBotService implements OnModuleInit {
       { regex: COACH_BOT_COMMANDS.SUBSCRIBE.command, handler: this.subscribeHandler },
       { regex: COACH_BOT_COMMANDS.UNSUBSCRIBE.command, handler: this.unsubscribeHandler },
     ];
+
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await this.handleCommand(message, handler.name, async () => handler.call(this, message));
+        await handleCommand({
+          logger: this.logger,
+          message,
+          handlerName: handler.name,
+          handler: async () => handler.call(this, message),
+        });
       });
     });
 
-    this.bot.on(TELEGRAM_EVENTS.TEXT, (message: Message) => this.textHandler(message));
-  }
-
-  private async handleCommand(message: Message, handlerName: string, handler: (chatId: number) => Promise<void>) {
-    const { chatId, firstName, lastName } = getMessageData(message);
-    const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-
-    try {
-      this.logger.log(`${handlerName} - ${logBody} - start`);
-      await handler(chatId);
-      this.logger.log(`${handlerName} - success`);
-    } catch (err) {
-      const errorMessage = `error: ${getErrorMessage(err)}`;
-      this.logger.error(`${handlerName} - chatId:${chatId} - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-      this.notifierBotService.notify(
-        BOTS.COACH,
-        {
-          action: `${handlerName} - ${ANALYTIC_EVENT_STATES.ERROR}`,
-          error: errorMessage,
-        },
-        chatId,
-        this.mongoUserService,
-      );
-    }
+    this.bot.on(TELEGRAM_EVENTS.TEXT, async (message: Message) => {
+      await handleCommand({
+        logger: this.logger,
+        message,
+        handlerName: this.textHandler.name,
+        handler: async () => this.textHandler.call(this, message),
+      });
+    });
   }
 
   private async startHandler(message: Message) {
@@ -107,7 +96,15 @@ export class CoachBotService implements OnModuleInit {
         await sendStyledMessage(this.bot, chatId, replyText);
       });
 
-      this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(
+        BOTS.COACH,
+        {
+          action: ANALYTIC_EVENT_STATES.SEARCH,
+          text,
+        },
+        chatId,
+        this.mongoUserService,
+      );
 
       this.logger.log(`${this.textHandler.name} - success`);
     } catch (err) {

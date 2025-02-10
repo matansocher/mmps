@@ -52,7 +52,7 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async listHandler(message: Message) {
+  async listHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName } = getMessageData(message);
     const logBody = `list :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
     this.logger.log(`${this.listHandler.name} - ${logBody} - start`);
@@ -61,7 +61,8 @@ export class WoltBotService implements OnModuleInit {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = `You don't have any active subscriptions yet`;
-        return await this.bot.sendMessage(chatId, replyText);
+        await this.bot.sendMessage(chatId, replyText);
+        return;
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
@@ -84,7 +85,7 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async textHandler(message: Message) {
+  async textHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName, text: rawRestaurant } = getMessageData(message);
     const restaurant = rawRestaurant.toLowerCase().trim();
 
@@ -102,7 +103,8 @@ export class WoltBotService implements OnModuleInit {
       const matchedRestaurants = this.woltService.getFilteredRestaurantsByName(restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
-        return await this.bot.sendMessage(chatId, replyText);
+        await this.bot.sendMessage(chatId, replyText);
+        return;
       }
       const restaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map((restaurant) => {
@@ -139,7 +141,7 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async callbackQueryHandler(callbackQuery: CallbackQuery) {
+  async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, firstName, lastName, data: restaurant } = getCallbackQueryData(callbackQuery);
     const logBody = `${TELEGRAM_EVENTS.CALLBACK_QUERY} :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
@@ -168,7 +170,7 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
+  async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
     if (existingSubscription) {
       const replyText = [`It seems you already have a subscription for ${restaurant} is open.`, `Let\'s wait a few minutes - it might open soon.`].join('\n\n');
       await this.bot.sendMessage(chatId, replyText);
@@ -204,7 +206,7 @@ export class WoltBotService implements OnModuleInit {
     );
   }
 
-  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
+  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
     let replyText;
     if (existingSubscription) {
       const restaurantToRemove = restaurant.replace('remove - ', '');
@@ -215,6 +217,6 @@ export class WoltBotService implements OnModuleInit {
         '\n\n',
       );
     }
-    return await this.bot.sendMessage(chatId, replyText);
+    await this.bot.sendMessage(chatId, replyText);
   }
 }

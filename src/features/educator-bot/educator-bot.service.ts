@@ -1,8 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { MY_USER_ID } from '@core/config';
 import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicStatus } from '@core/mongo/educator-mongo';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getMessageData, handleCommand, MessageLoader, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
@@ -25,29 +26,28 @@ export class EducatorBotService implements OnModuleInit {
       { regex: EDUCATOR_BOT_COMMANDS.TOPIC.command, handler: this.TopicHandler },
       { regex: EDUCATOR_BOT_COMMANDS.ADD.command, handler: this.addHandler },
     ];
+    const handleCommandOptions = { logger: this.logger, isBlocked: true };
+
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await this.handleCommand(message, handler.name, async () => handler.call(this, message));
+        await handleCommand({
+          ...handleCommandOptions,
+          message,
+          handlerName: handler.name,
+          handler: async () => handler.call(this, message),
+        });
       });
     });
 
-    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.messageHandler(message));
+    this.bot.on(TELEGRAM_EVENTS.MESSAGE, async (message: Message) => {
+      await handleCommand({
+        ...handleCommandOptions,
+        message,
+        handlerName: this.messageHandler.name,
+        handler: async () => this.messageHandler.call(this, message),
+      });
+    });
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
-  }
-
-  private async handleCommand(message: Message, handlerName: string, handler: (chatId: number) => Promise<void>) {
-    const { chatId, firstName, lastName } = getMessageData(message);
-    const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-
-    try {
-      this.logger.log(`${handlerName} - ${logBody} - start`);
-      await handler(chatId);
-      this.logger.log(`${handlerName} - ${logBody} - success`);
-    } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${handlerName} - ${logBody} - error - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, errorMessage);
-    }
   }
 
   private async startHandler(message: Message) {
