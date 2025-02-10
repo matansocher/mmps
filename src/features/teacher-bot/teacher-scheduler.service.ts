@@ -1,11 +1,6 @@
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { DEFAULT_TIMEZONE } from '@core/config';
-import { TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
-import { MY_USER_ID, NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
-import { BOTS } from '@services/telegram';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher-bot.config';
 import { TeacherService } from './teacher.service';
 

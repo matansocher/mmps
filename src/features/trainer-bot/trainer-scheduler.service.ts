@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { DEFAULT_TIMEZONE } from '@core/config';
-import { MY_USER_ID, NotifierBotService } from '@core/notifier-bot';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
+import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
 import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from './trainer-bot.config';
