@@ -4,17 +4,17 @@ import { MY_USER_ID } from '@core/config';
 import { getErrorMessage } from '@core/utils';
 import { getMessageData } from '@services/telegram';
 
-export interface HandleCommandOptions {
+interface HandleCommandOptions {
   readonly message: Message;
   readonly logger: Logger;
   readonly handlerName: string;
   readonly handler: (chatId: number) => Promise<void>;
   readonly isBlocked?: boolean;
+  readonly customErrorMessage?: string;
 }
 
-// export async function handleCommand(message: Message, logger: Logger, handlerName: string, handler: (chatId: number) => Promise<void>, isBlocked: boolean) {
 export async function handleCommand(handleCommandOptions: HandleCommandOptions) {
-  const { message, logger, handlerName, handler, isBlocked = false } = handleCommandOptions;
+  const { message, logger, handlerName, handler, isBlocked = false, customErrorMessage = null } = handleCommandOptions;
   const { chatId, firstName, lastName } = getMessageData(message);
   const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
@@ -28,6 +28,6 @@ export async function handleCommand(handleCommandOptions: HandleCommandOptions) 
   } catch (err) {
     const errorMessage = getErrorMessage(err);
     logger.error(`${handlerName} - ${logBody} - error - ${errorMessage}`);
-    await this.bot.sendMessage(chatId, isBlocked ? errorMessage : 'Sorry, but something went wrong');
+    await this.bot.sendMessage(chatId, isBlocked ? errorMessage : customErrorMessage || 'Sorry, but something went wrong');
   }
 }

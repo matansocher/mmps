@@ -34,6 +34,7 @@ export class CoachBotService implements OnModuleInit {
           message,
           handlerName: handler.name,
           handler: async () => handler.call(this, message),
+          customErrorMessage: GENERAL_ERROR_RESPONSE,
         });
       });
     });
@@ -44,6 +45,7 @@ export class CoachBotService implements OnModuleInit {
         message,
         handlerName: this.textHandler.name,
         handler: async () => this.textHandler.call(this, message),
+        customErrorMessage: GENERAL_ERROR_RESPONSE,
       });
     });
   }
@@ -81,36 +83,25 @@ export class CoachBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, text } = getMessageData(message);
+    const { chatId, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(COACH_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
 
-    const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
-    this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '⚽️' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      const replyText = await this.coachService.getMatchesSummaryMessage(text);
+      await sendStyledMessage(this.bot, chatId, replyText);
+    });
 
-    try {
-      const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '⚽️' });
-      await messageLoaderService.handleMessageWithLoader(async () => {
-        const replyText = await this.coachService.getMatchesSummaryMessage(text);
-        await sendStyledMessage(this.bot, chatId, replyText);
-      });
-
-      this.notifierBotService.notify(
-        BOTS.COACH,
-        {
-          action: ANALYTIC_EVENT_STATES.SEARCH,
-          text,
-        },
-        chatId,
-        this.mongoUserService,
-      );
-
-      this.logger.log(`${this.textHandler.name} - success`);
-    } catch (err) {
-      const errorMessage = `error: ${getErrorMessage(err)}`;
-      this.logger.error(`${this.textHandler.name} - chatId:${chatId} - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-    }
+    this.notifierBotService.notify(
+      BOTS.COACH,
+      {
+        action: ANALYTIC_EVENT_STATES.SEARCH,
+        text,
+      },
+      chatId,
+      this.mongoUserService,
+    );
   }
 }

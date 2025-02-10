@@ -1,10 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MY_USER_ID } from '@core/config';
 import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicStatus } from '@core/mongo/educator-mongo';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getCallbackQueryData, getMessageData, handleCommand, MessageLoader, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
-import { BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
+import { BOT_ACTIONS, CUSTOM_ERROR_MESSAGE, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
 @Injectable()
@@ -35,6 +34,7 @@ export class EducatorBotService implements OnModuleInit {
           message,
           handlerName: handler.name,
           handler: async () => handler.call(this, message),
+          customErrorMessage: CUSTOM_ERROR_MESSAGE,
         });
       });
     });
@@ -45,6 +45,7 @@ export class EducatorBotService implements OnModuleInit {
         message,
         handlerName: this.messageHandler.name,
         handler: async () => this.messageHandler.call(this, message),
+        customErrorMessage: CUSTOM_ERROR_MESSAGE,
       });
     });
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
@@ -102,24 +103,17 @@ export class EducatorBotService implements OnModuleInit {
     // prevent built in options to be processed also here
     if (Object.values(EDUCATOR_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
 
-    this.logger.log(`${this.messageHandler.name} - chatId: ${chatId} - start`);
-
-    try {
-      const activeTopic = await this.mongoTopicService.getActiveTopic();
-      if (!activeTopic) {
-        await this.bot.sendMessage(chatId, `אני רואה שאין לך נושא פתוח, אז אני לא מבין על מה לענות. אולי תתחיל נושא חדש?`);
-        return;
-      }
-
-      const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
-      await messageLoaderService.handleMessageWithLoader(async () => {
-        await this.educatorService.processQuestion(chatId, text);
-      });
-      this.logger.log(`${this.messageHandler.name} - chatId: ${chatId} - success`);
-    } catch (err) {
-      this.logger.error(`${this.messageHandler.name} - chatId: ${chatId} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, `וואלה מצטער, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`);
+    const activeTopic = await this.mongoTopicService.getActiveTopic();
+    if (!activeTopic) {
+      await this.bot.sendMessage(chatId, `אני רואה שאין לך נושא פתוח, אז אני לא מבין על מה לענות. אולי תתחיל נושא חדש?`);
+      return;
     }
+
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      await this.educatorService.processQuestion(chatId, text);
+    });
+    await this.bot.sendMessage(chatId, CUSTOM_ERROR_MESSAGE);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery) {
@@ -140,7 +134,7 @@ export class EducatorBotService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error: ${getErrorMessage(err)}`;
       this.logger.error(`${this.callbackQueryHandler.name} - chatId: ${chatId} - ${logBody} - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, `וואלה מצטער, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`);
+      await this.bot.sendMessage(chatId, CUSTOM_ERROR_MESSAGE);
     }
   }
 
