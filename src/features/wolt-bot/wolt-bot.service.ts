@@ -79,19 +79,18 @@ export class WoltBotService implements OnModuleInit {
 
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
-      throw 'smome new error';
-      // if (!subscriptions.length) {
-      //   const replyText = `You don't have any active subscriptions yet`;
-      //   await this.bot.sendMessage(chatId, replyText);
-      //   return;
-      // }
-      //
-      // const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
-      //   const inlineKeyboardButtons = [{ text: 'Remove', callback_data: `remove - ${subscription.restaurant}` }];
-      //   const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-      //   return this.bot.sendMessage(chatId, subscription.restaurant, inlineKeyboardMarkup as any);
-      // });
-      // await Promise.all(promisesArr);
+      if (!subscriptions.length) {
+        const replyText = `You don't have any active subscriptions yet`;
+        await this.bot.sendMessage(chatId, replyText);
+        return;
+      }
+
+      const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
+        const inlineKeyboardButtons = [{ text: 'Remove', callback_data: `remove - ${subscription.restaurant}` }];
+        const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
+        return this.bot.sendMessage(chatId, subscription.restaurant, inlineKeyboardMarkup as any);
+      });
+      await Promise.all(promisesArr);
     } catch (err) {
       this.notifierBotService.notify(
         BOTS.WOLT,
