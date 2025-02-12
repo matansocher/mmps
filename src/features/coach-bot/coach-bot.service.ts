@@ -2,8 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
-import { BOTS, getMessageData, MessageLoader, MessageLoaderOptions, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getMessageData, handleCommand, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS, GENERAL_ERROR_RESPONSE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
@@ -26,37 +25,29 @@ export class CoachBotService implements OnModuleInit {
       { regex: COACH_BOT_COMMANDS.SUBSCRIBE.command, handler: this.subscribeHandler },
       { regex: COACH_BOT_COMMANDS.UNSUBSCRIBE.command, handler: this.unsubscribeHandler },
     ];
+    const handleCommandOptions = { bot: this.bot, logger: this.logger };
+
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await this.handleCommand(message, handler.name, async () => handler.call(this, message));
+        await handleCommand({
+          ...handleCommandOptions,
+          message,
+          handlerName: handler.name,
+          handler: async () => handler.call(this, message),
+          customErrorMessage: GENERAL_ERROR_RESPONSE,
+        });
       });
     });
 
-    this.bot.on(TELEGRAM_EVENTS.TEXT, (message: Message) => this.textHandler(message));
-  }
-
-  private async handleCommand(message: Message, handlerName: string, handler: (chatId: number) => Promise<void>) {
-    const { chatId, firstName, lastName } = getMessageData(message);
-    const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-
-    try {
-      this.logger.log(`${handlerName} - ${logBody} - start`);
-      await handler(chatId);
-      this.logger.log(`${handlerName} - success`);
-    } catch (err) {
-      const errorMessage = `error: ${getErrorMessage(err)}`;
-      this.logger.error(`${handlerName} - chatId:${chatId} - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-      this.notifierBotService.notify(
-        BOTS.COACH,
-        {
-          action: `${handlerName} - ${ANALYTIC_EVENT_STATES.ERROR}`,
-          error: errorMessage,
-        },
-        chatId,
-        this.mongoUserService,
-      );
-    }
+    this.bot.on(TELEGRAM_EVENTS.TEXT, async (message: Message) => {
+      await handleCommand({
+        ...handleCommandOptions,
+        message,
+        handlerName: this.textHandler.name,
+        handler: async () => this.textHandler.call(this, message),
+        customErrorMessage: GENERAL_ERROR_RESPONSE,
+      });
+    });
   }
 
   private async startHandler(message: Message) {
@@ -92,28 +83,25 @@ export class CoachBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, text } = getMessageData(message);
+    const { chatId, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(COACH_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
 
-    const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, text: ${text}`;
-    this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '⚽️' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      const replyText = await this.coachService.getMatchesSummaryMessage(text);
+      await sendStyledMessage(this.bot, chatId, replyText);
+    });
 
-    try {
-      const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '⚽️' });
-      await messageLoaderService.handleMessageWithLoader(async () => {
-        const replyText = await this.coachService.getMatchesSummaryMessage(text);
-        await sendStyledMessage(this.bot, chatId, replyText);
-      });
-
-      this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH }, chatId, this.mongoUserService);
-
-      this.logger.log(`${this.textHandler.name} - success`);
-    } catch (err) {
-      const errorMessage = `error: ${getErrorMessage(err)}`;
-      this.logger.error(`${this.textHandler.name} - chatId:${chatId} - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_RESPONSE);
-    }
+    this.notifierBotService.notify(
+      BOTS.COACH,
+      {
+        action: ANALYTIC_EVENT_STATES.SEARCH,
+        text,
+      },
+      chatId,
+      this.mongoUserService,
+    );
   }
 }

@@ -1,9 +1,9 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
-import { getDateString, getErrorMessage } from '@core/utils';
+import { getDateString } from '@core/utils';
 import { OpenaiService } from '@services/openai';
-import { BOTS, getMessageData, MessageLoader, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getMessageData, handleCommand, MessageLoader, TelegramBotHandler } from '@services/telegram';
 import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
 import { generateExerciseReplyMessage, generateSpecialStreakMessage, getLongestStreak, getStreak } from './utils';
@@ -27,26 +27,18 @@ export class TrainerBotService implements OnModuleInit {
       { regex: TRAINER_BOT_COMMANDS.HISTORY.command, handler: this.historyHandler },
       { regex: TRAINER_BOT_COMMANDS.ACHIEVEMENTS.command, handler: this.achievementsHandler },
     ];
+    const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
+
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await this.handleCommand(message, handler.name, async () => handler.call(this, message));
+        await handleCommand({
+          ...handleCommandOptions,
+          message,
+          handlerName: handler.name,
+          handler: async () => handler.call(this, message),
+        });
       });
     });
-  }
-
-  private async handleCommand(message: Message, handlerName: string, handler: (chatId: number) => Promise<void>): Promise<void> {
-    const { chatId, firstName, lastName } = getMessageData(message);
-    const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-
-    try {
-      this.logger.log(`${handlerName} - ${logBody} - start`);
-      await handler(chatId);
-      this.logger.log(`${handlerName} - ${logBody} - success`);
-    } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${handlerName} - ${logBody} - error - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, errorMessage);
-    }
   }
 
   private async startHandler(message: Message): Promise<void> {

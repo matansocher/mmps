@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, handleCommand, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { getEnrichedRestaurantsDetails, getRestaurantLink } from './utils';
 import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_COMMANDS } from './wolt-bot.config';
 import { WoltService } from './wolt.service';
@@ -22,46 +22,67 @@ export class WoltBotService implements OnModuleInit {
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(WOLT_BOT_COMMANDS));
-    this.bot.onText(new RegExp(WOLT_BOT_COMMANDS.START.command), (message: Message) => this.startHandler(message));
-    this.bot.onText(new RegExp(WOLT_BOT_COMMANDS.LIST.command), (message: Message) => this.listHandler(message));
-    this.bot.on(TELEGRAM_EVENTS.TEXT, (message: Message) => this.textHandler(message));
+    const handlers: TelegramBotHandler[] = [
+      { regex: WOLT_BOT_COMMANDS.START.command, handler: this.startHandler },
+      { regex: WOLT_BOT_COMMANDS.LIST.command, handler: this.listHandler },
+    ];
+    const handleCommandOptions = { bot: this.bot, logger: this.logger };
+
+    handlers.forEach(({ regex, handler }) => {
+      this.bot.onText(new RegExp(regex), async (message: Message) => {
+        await handleCommand({
+          ...handleCommandOptions,
+          message,
+          handlerName: handler.name,
+          handler: async () => handler.call(this, message),
+        });
+      });
+    });
+
+    this.bot.on(TELEGRAM_EVENTS.TEXT, async (message: Message) => {
+      await handleCommand({
+        ...handleCommandOptions,
+        message,
+        handlerName: this.textHandler.name,
+        handler: async () => this.textHandler.call(this, message),
+      });
+    });
+
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
   async startHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName, telegramUserId, username } = getMessageData(message);
-    const logBody = `start :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
 
     try {
-      this.logger.log(`${this.startHandler.name} - ${logBody} - start`);
       await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
       const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
       await this.bot.sendMessage(chatId, replyText);
       this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
-      this.logger.log(`${this.startHandler.name} - ${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${getErrorMessage(err)}`;
-      this.logger.error(`${this.startHandler.name} - ${errorMessage}`);
       this.notifierBotService.notify(
         BOTS.WOLT,
-        { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.startHandler.name },
+        {
+          action: ANALYTIC_EVENT_NAMES.ERROR,
+          error: `error - ${getErrorMessage(err)}`,
+          method: this.startHandler.name,
+        },
         chatId,
         this.mongoUserService,
       );
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
+      throw err;
     }
   }
 
-  async listHandler(message: Message) {
-    const { chatId, firstName, lastName } = getMessageData(message);
-    const logBody = `list :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
-    this.logger.log(`${this.listHandler.name} - ${logBody} - start`);
+  async listHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
 
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = `You don't have any active subscriptions yet`;
-        return await this.bot.sendMessage(chatId, replyText);
+        await this.bot.sendMessage(chatId, replyText);
+        return;
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
@@ -70,29 +91,23 @@ export class WoltBotService implements OnModuleInit {
         return this.bot.sendMessage(chatId, subscription.restaurant, inlineKeyboardMarkup as any);
       });
       await Promise.all(promisesArr);
-      this.logger.log(`${this.listHandler.name} - ${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${getErrorMessage(err)}`;
-      this.logger.error(`${this.listHandler.name} - ${errorMessage}`);
       this.notifierBotService.notify(
         BOTS.WOLT,
-        { action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.listHandler.name },
+        { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name },
         chatId,
         this.mongoUserService,
       );
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
+      throw err;
     }
   }
 
-  async textHandler(message: Message) {
-    const { chatId, firstName, lastName, text: rawRestaurant } = getMessageData(message);
+  async textHandler(message: Message): Promise<void> {
+    const { chatId, text: rawRestaurant } = getMessageData(message);
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     // prevent built in options to be processed also here
     if (Object.values(WOLT_BOT_COMMANDS).some((command: BotCommand) => restaurant.includes(command.command))) return;
-
-    const logBody = `message :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
-    this.logger.log(`${this.textHandler.name} - ${logBody} - start`);
 
     try {
       const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
@@ -102,7 +117,8 @@ export class WoltBotService implements OnModuleInit {
       const matchedRestaurants = this.woltService.getFilteredRestaurantsByName(restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
-        return await this.bot.sendMessage(chatId, replyText);
+        await this.bot.sendMessage(chatId, replyText);
+        return;
       }
       const restaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
       const inlineKeyboardButtons = restaurants.map((restaurant) => {
@@ -125,21 +141,23 @@ export class WoltBotService implements OnModuleInit {
         chatId,
         this.mongoUserService,
       );
-      this.logger.log(`${this.textHandler.name} - ${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${getErrorMessage(err)}`;
-      this.logger.error(`${this.textHandler.name} - ${errorMessage}`);
       this.notifierBotService.notify(
         BOTS.WOLT,
-        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.textHandler.name },
+        {
+          restaurant,
+          action: ANALYTIC_EVENT_NAMES.ERROR,
+          error: `error - ${getErrorMessage(err)}`,
+          method: this.textHandler.name,
+        },
         chatId,
         this.mongoUserService,
       );
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
+      throw err;
     }
   }
 
-  async callbackQueryHandler(callbackQuery: CallbackQuery) {
+  async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, firstName, lastName, data: restaurant } = getCallbackQueryData(callbackQuery);
     const logBody = `${TELEGRAM_EVENTS.CALLBACK_QUERY} :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
     this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
@@ -168,7 +186,7 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
+  async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
     if (existingSubscription) {
       const replyText = [`It seems you already have a subscription for ${restaurant} is open.`, `Let\'s wait a few minutes - it might open soon.`].join('\n\n');
       await this.bot.sendMessage(chatId, replyText);
@@ -204,7 +222,7 @@ export class WoltBotService implements OnModuleInit {
     );
   }
 
-  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel) {
+  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
     let replyText;
     if (existingSubscription) {
       const restaurantToRemove = restaurant.replace('remove - ', '');
@@ -215,6 +233,6 @@ export class WoltBotService implements OnModuleInit {
         '\n\n',
       );
     }
-    return await this.bot.sendMessage(chatId, replyText);
+    await this.bot.sendMessage(chatId, replyText);
   }
 }
