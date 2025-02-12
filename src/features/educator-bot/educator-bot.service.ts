@@ -51,7 +51,7 @@ export class EducatorBotService implements OnModuleInit {
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
-  private async startHandler(message: Message) {
+  private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
     const replyText = [
@@ -63,7 +63,7 @@ export class EducatorBotService implements OnModuleInit {
     await this.bot.sendMessage(chatId, replyText);
   }
 
-  private async stopHandler(message: Message) {
+  private async stopHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const replyText = [
       `סבבה, הפסקנו 🛑`,
@@ -75,7 +75,7 @@ export class EducatorBotService implements OnModuleInit {
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
   }
 
-  private async TopicHandler(message: Message) {
+  private async TopicHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const activeTopic = await this.mongoTopicService.getActiveTopic();
     if (activeTopic?._id) {
@@ -86,7 +86,7 @@ export class EducatorBotService implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
   }
 
-  private async addHandler(message: Message) {
+  private async addHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const topic = message.text.replace(EDUCATOR_BOT_COMMANDS.ADD.command, '').trim();
     if (!topic?.length) {
@@ -97,7 +97,7 @@ export class EducatorBotService implements OnModuleInit {
     await this.bot.sendMessage(chatId, `סבבה, הוספתי את זה כנושא`);
   }
 
-  async messageHandler(message: Message) {
+  async messageHandler(message: Message): Promise<void> {
     const { chatId, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
@@ -116,7 +116,7 @@ export class EducatorBotService implements OnModuleInit {
     await this.bot.sendMessage(chatId, CUSTOM_ERROR_MESSAGE);
   }
 
-  private async callbackQueryHandler(callbackQuery: CallbackQuery) {
+  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, firstName, lastName, data: response } = getCallbackQueryData(callbackQuery);
     const logBody = `${TELEGRAM_EVENTS.CALLBACK_QUERY} :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, response: ${response}`;
     this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
@@ -138,7 +138,7 @@ export class EducatorBotService implements OnModuleInit {
     }
   }
 
-  private async handleCallbackCompleteTopic(chatId: number, topicId: string) {
+  private async handleCallbackCompleteTopic(chatId: number, topicId: string): Promise<void> {
     const topic = await this.mongoTopicService.getTopic(topicId);
     if (!topic) {
       await this.bot.sendMessage(chatId, `וואלה לא מצאתי את הנושא, בטוח שיש נושא כזה?`);
@@ -151,7 +151,6 @@ export class EducatorBotService implements OnModuleInit {
     }
 
     await this.mongoTopicService.markTopicCompleted(topicId);
-    const replyText = [`אש 🔥`, `תגיד לי כשאתה מוכן לנושא הבא או שאני פשוט אשלח נושא חדש בפעם הבאה`].join('\n');
-    this.bot.sendMessage(chatId, replyText);
+    await this.bot.sendMessage(chatId, '🔥');
   }
 }
