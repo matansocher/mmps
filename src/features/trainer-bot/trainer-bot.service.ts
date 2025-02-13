@@ -6,7 +6,7 @@ import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, handleCommand, MessageLoader, TelegramBotHandler } from '@services/telegram';
 import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
-import { generateExerciseReplyMessage, generateSpecialStreakMessage, getLongestStreak, getStreak } from './utils';
+import { getLongestStreak, getStreak } from './utils';
 
 @Injectable()
 export class TrainerBotService implements OnModuleInit {
@@ -68,12 +68,7 @@ export class TrainerBotService implements OnModuleInit {
         return;
       }
 
-      const replyText =
-        generateSpecialStreakMessage(currentStreak) ||
-        generateExerciseReplyMessage({
-          currentStreak,
-          longestStreak,
-        });
+      const replyText = this.trainerService.getExerciseReplyText({ currentStreak, longestStreak });
       await this.bot.sendMessage(chatId, replyText);
     });
   }
