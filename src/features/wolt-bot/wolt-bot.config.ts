@@ -16,7 +16,7 @@ export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
 export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a wolt restaurant opens\n\nYou can tell me the restaurant name you want to check and I will let you know once it is open\n\nTo show current registrations use: /list\n\n`;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
-export const MAX_HOUR_TO_ALERT_USER = 23;
+export const MAX_HOUR_TO_ALERT_USER = 1;
 
 export const RESTAURANTS_BASE_URL = 'https://consumer-api.wolt.com/v1/pages/restaurants';
 export const RESTAURANT_BASE_URL = 'https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/{slug}/dynamic/';

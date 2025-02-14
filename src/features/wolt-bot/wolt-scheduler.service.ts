@@ -1,6 +1,8 @@
+import { toZonedTime } from 'date-fns-tz';
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage, getTimezoneOffset } from '@core/utils';
@@ -111,9 +113,9 @@ export class WoltSchedulerService implements OnModuleInit {
       const promisesArr = [];
       expiredSubscriptions.forEach((subscription: SubscriptionModel) => {
         promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
-        const currentHour = new Date().getHours();
-        if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) {
-          // let user know that subscription was removed only between 8am to 11pm
+        const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
+        if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
+          // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER
           promisesArr.push(
             this.bot.sendMessage(
               subscription.chatId,
