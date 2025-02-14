@@ -6,6 +6,7 @@ export { getErrorMessage } from './get-error-message';
 export { getQueryParams } from './get-query-params';
 export { getTimeWithOffset } from './get-time-with-offset';
 export { getTimezoneOffset } from './get-timezone-offset';
+export { hasHebrew } from './has-hebrew';
 export { isDateStringFormat } from './is-date-string-format';
 export { objectToQueryParams } from './object-to-query-params';
 export { queryParamsToObject } from './query-params-to-object';

@@ -13,7 +13,13 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
 
 export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
 
-export const INITIAL_BOT_RESPONSE = `Hi {firstName}!\n\nI'm a bot that can alert you when a wolt restaurant opens\n\nYou can tell me the restaurant name you want to check and I will let you know once it is open\n\nTo show current registrations use: /list\n\n`;
+export const INITIAL_BOT_RESPONSE = [
+  `שלום {firstName}!`,
+  `אני בוט שמתריע על מסעדות שנפתחות להזמנה בוולט`,
+  `פשוט תשלחו לי את שם המסעדה (באנגלית 🇺🇸), ואני אגיד לכם מתי היא נפתחת`,
+  `כדי לראות את רשימת ההתראות הפתוחות אפשר להשתמש בפקודה /list`,
+].join('\n');
+export const GENERAL_ERROR_MESSAGE = `מצטער, אבל קרתה לי תקלה. אפשר לנסות מאוחר יותר 😥`;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;
@@ -49,8 +55,8 @@ export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-t
 // 'yokneam'
 
 export const WOLT_BOT_COMMANDS: Record<string, BotCommand> = {
-  START: { command: '/start', description: 'Start all over' },
-  LIST: { command: '/list', description: 'Show list of open subscriptions' },
+  START: { command: '/start', description: 'התחל מהתחלה' },
+  LIST: { command: '/list', description: 'רשימת ההתראות הפתוחות' },
 };
 
 export const HOUR_OF_DAY_TO_REFRESH_MAP = {
@@ -83,6 +89,10 @@ export const HOUR_OF_DAY_TO_REFRESH_MAP = {
   22: SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS.FAST,
   23: SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS.FAST,
 };
+
+export enum BOT_ACTIONS {
+  REMOVE = 'remove',
+}
 
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
