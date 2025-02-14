@@ -29,7 +29,7 @@ export class TeacherService {
       const activeCourse = await this.mongoCourseService.getActiveCourse();
       if (activeCourse) {
         if (activeCourse.assignedAt.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000) {
-          await this.bot.sendMessage(chatId, `I has been too long since you last studied. Let me know if you want to start a new course 😁`);
+          await this.bot.sendMessage(chatId, `It has been too long since you last studied. Let me know if you want to start a new course 😁`);
         }
         return;
       }

@@ -55,7 +55,7 @@ export class EducatorBotService implements OnModuleInit {
     const { chatId } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
     const replyText = [
-      `הופה שלום 👋`,
+      `שלום לך 👋`,
       `אני פה כדי ללמד אותך על כל מיני נושאים, כדי שהיה חכם יותר 😁`,
       `אני אשלח לך כל יום שיעורים על נושאים מעניינים`,
       `אפשר גם להשתמש בפקודה של נושא ולקבל אותו מיד`,
@@ -66,7 +66,7 @@ export class EducatorBotService implements OnModuleInit {
   private async stopHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const replyText = [
-      `סבבה, הפסקנו 🛑`,
+      `סבבה, אני מפסיקה 🛑`,
       `תגיד לי מתי אתה רוצה לחזור ללמוד ונמשיך`,
       `כשתהיה מוכן, תשלח לי את הפקודה של ההתחלה ונחזור ללמוד`,
       `אתה יכול גם לבקש נושאים כשתרצה בלי תזכורות ממני, תשתמש בפקודה של הנושא`,
@@ -105,7 +105,7 @@ export class EducatorBotService implements OnModuleInit {
 
     const activeTopic = await this.mongoTopicService.getActiveTopic();
     if (!activeTopic) {
-      await this.bot.sendMessage(chatId, `אני רואה שאין לך נושא פתוח, אז אני לא מבין על מה לענות. אולי תתחיל נושא חדש?`);
+      await this.bot.sendMessage(chatId, `אני רואה שאין לך נושא פתוח, אז אני לא מבינה על מה לענות. אולי נתחיל נושא חדש?`);
       return;
     }
 

@@ -19,7 +19,7 @@ export const ANALYTIC_EVENT_STATES = {
 };
 
 export const COACH_BOT_COMMANDS: Record<string, BotCommand> = {
-  START: { command: '/start', description: 'Start all over' },
-  SUBSCRIBE: { command: '/subscribe', description: 'Start getting daily games summaries' },
-  UNSUBSCRIBE: { command: '/unsubscribe', description: 'Stop getting daily games summaries' },
+  START: { command: '/start', description: 'התחלה' },
+  SUBSCRIBE: { command: '/subscribe', description: 'רוצה לקבל עדכונים יומיים' },
+  UNSUBSCRIBE: { command: '/unsubscribe', description: 'רוצה להפסיק לקבל עדכונים יומיים' },
 };
