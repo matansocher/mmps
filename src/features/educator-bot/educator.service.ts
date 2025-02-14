@@ -78,13 +78,15 @@ export class EducatorService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async processQuestion(chatId: number, question: string): Promise<void> {
-    const activeTopic = await this.mongoTopicService.getActiveTopic();
-    if (!activeTopic) {
-      await this.bot.sendMessage(chatId, 'אין נושא פעיל כרגע');
-      return;
-    }
+  async processQuestion(chatId: number, question: string, activeTopic: TopicModel): Promise<void> {
     const response = await this.getAssistantAnswer(activeTopic.threadId, question);
-    await this.bot.sendMessage(chatId, response);
+    const inlineKeyboardButtons = [
+      {
+        text: '✅ סיימתי',
+        callback_data: `${activeTopic._id} - ${BOT_ACTIONS.COMPLETE}`,
+      },
+    ];
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
+    await this.bot.sendMessage(chatId, response, inlineKeyboardMarkup as any);
   }
 }

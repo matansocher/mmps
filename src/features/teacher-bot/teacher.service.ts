@@ -122,13 +122,15 @@ export class TeacherService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async processQuestion(chatId: number, question: string): Promise<void> {
-    const activeCourse = await this.mongoCourseService.getActiveCourse();
-    if (!activeCourse) {
-      await this.bot.sendMessage(chatId, 'No active course');
-      return;
-    }
+  async processQuestion(chatId: number, question: string, activeCourse: CourseModel): Promise<void> {
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
-    await sendStyledMessage(this.bot, chatId, response);
+    const inlineKeyboardButtons = [
+      {
+        text: '✅ Complete Course',
+        callback_data: `${activeCourse._id} - ${BOT_ACTIONS.COMPLETE}`,
+      },
+    ];
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
+    await sendStyledMessage(this.bot, chatId, response, 'Markdown', inlineKeyboardMarkup);
   }
 }

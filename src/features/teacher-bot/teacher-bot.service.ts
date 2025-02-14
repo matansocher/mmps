@@ -176,7 +176,7 @@ export class TeacherBotService implements OnModuleInit {
 
       const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
       await messageLoaderService.handleMessageWithLoader(async () => {
-        await this.teacherService.processQuestion(chatId, text);
+        await this.teacherService.processQuestion(chatId, text, activeCourse);
       });
       this.logger.log(`${this.messageHandler.name} - chatId: ${chatId} - success`);
     } catch (err) {

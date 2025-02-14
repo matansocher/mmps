@@ -111,9 +111,8 @@ export class EducatorBotService implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.educatorService.processQuestion(chatId, text);
+      await this.educatorService.processQuestion(chatId, text, activeTopic);
     });
-    await this.bot.sendMessage(chatId, CUSTOM_ERROR_MESSAGE);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
