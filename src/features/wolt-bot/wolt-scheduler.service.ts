@@ -1,11 +1,14 @@
+import { toZonedTime } from 'date-fns-tz';
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage, getTimezoneOffset } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { WoltRestaurant } from './interface';
+import { RestaurantsService } from './restaurants.service';
 import { getRestaurantLink } from './utils';
 import {
   ANALYTIC_EVENT_NAMES,
@@ -14,7 +17,6 @@ import {
   MIN_HOUR_TO_ALERT_USER,
   SUBSCRIPTION_EXPIRATION_HOURS,
 } from './wolt-bot.config';
-import { WoltService } from './wolt.service';
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
@@ -23,7 +25,7 @@ export class WoltSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(WoltSchedulerService.name);
 
   constructor(
-    private readonly woltService: WoltService,
+    private readonly restaurantsService: RestaurantsService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly schedulerRegistry: SchedulerRegistry,
@@ -55,10 +57,10 @@ export class WoltSchedulerService implements OnModuleInit {
   async handleIntervalFlow(): Promise<void> {
     await this.cleanExpiredSubscriptions();
     const subscriptions = (await this.mongoSubscriptionService.getActiveSubscriptions()) as SubscriptionModel[];
-    if (subscriptions?.length) {
-      await this.woltService.refreshRestaurants();
-      await this.alertSubscriptions(subscriptions);
+    if (!subscriptions?.length) {
+      return;
     }
+    await this.alertSubscriptions(subscriptions);
   }
 
   getSecondsToNextRefresh(): number {
@@ -67,12 +69,13 @@ export class WoltSchedulerService implements OnModuleInit {
     return HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }
 
-  alertSubscriptions(subscriptions: SubscriptionModel[]): Promise<any> {
+  async alertSubscriptions(subscriptions: SubscriptionModel[]): Promise<any> {
     try {
       const restaurantsWithSubscriptionNames = subscriptions.map((subscription: SubscriptionModel) => subscription.restaurant);
-      const subscribedAndOnlineRestaurants = this.woltService
-        .getRestaurants()
-        .filter((restaurant: WoltRestaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline);
+      const restaurants = await this.restaurantsService.getRestaurants();
+      const subscribedAndOnlineRestaurants = restaurants.filter(
+        (restaurant: WoltRestaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline,
+      );
       const promisesArr = [];
       subscribedAndOnlineRestaurants.forEach((restaurant: WoltRestaurant) => {
         const relevantSubscriptions = subscriptions.filter((subscription: SubscriptionModel) => subscription.restaurant === restaurant.name);
@@ -80,7 +83,7 @@ export class WoltSchedulerService implements OnModuleInit {
           const restaurantLinkUrl = getRestaurantLink(restaurant);
           const inlineKeyboardButtons = [{ text: restaurant.name, url: restaurantLinkUrl }];
           const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-          const replyText = `${restaurant.name} is now open!, go ahead and order!`;
+          const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', restaurant.name, 'אפשר להזמין עכשיו! 📱'].join('\n');
           promisesArr.push(
             this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, {
               ...inlineKeyboardMarkup,
@@ -98,7 +101,7 @@ export class WoltSchedulerService implements OnModuleInit {
           );
         });
       });
-      return Promise.all(promisesArr);
+      await Promise.all(promisesArr);
     } catch (err) {
       this.logger.error(`${this.alertSubscriptions.name} - error - ${getErrorMessage(err)}`);
     }
@@ -110,13 +113,18 @@ export class WoltSchedulerService implements OnModuleInit {
       const promisesArr = [];
       expiredSubscriptions.forEach((subscription: SubscriptionModel) => {
         promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
-        const currentHour = new Date().getHours();
-        if (currentHour >= MIN_HOUR_TO_ALERT_USER && currentHour <= MAX_HOUR_TO_ALERT_USER) {
-          // let user know that subscription was removed only between 8am to 11pm
+        const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
+        if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
+          // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER
           promisesArr.push(
             this.bot.sendMessage(
               subscription.chatId,
-              `Subscription for ${subscription.restaurant} was removed since it didn't open for the last ${SUBSCRIPTION_EXPIRATION_HOURS} hours`,
+              [
+                `אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`,
+                `אני כמובן מדבר על:`,
+                subscription.restaurant,
+                `תמיד אפשר ליצור התראה חדשה`,
+              ].join('\n'),
             ),
           );
         }

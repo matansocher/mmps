@@ -2,18 +2,25 @@ import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-b
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
+import { getErrorMessage, hasHebrew } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, handleCommand, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
-import { getEnrichedRestaurantsDetails, getRestaurantLink } from './utils';
-import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_COMMANDS } from './wolt-bot.config';
-import { WoltService } from './wolt.service';
+import { RestaurantsService } from './restaurants.service';
+import { filterRestaurantsByName, getEnrichedRestaurantsDetails, getRestaurantByName, getRestaurantLink } from './utils';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_ACTIONS,
+  GENERAL_ERROR_MESSAGE,
+  INITIAL_BOT_RESPONSE,
+  MAX_NUM_OF_SUBSCRIPTIONS_PER_USER,
+  WOLT_BOT_COMMANDS,
+} from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
   private readonly logger = new Logger(WoltBotService.name);
 
   constructor(
-    private readonly woltService: WoltService,
+    private readonly restaurantsService: RestaurantsService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
@@ -35,6 +42,7 @@ export class WoltBotService implements OnModuleInit {
           message,
           handlerName: handler.name,
           handler: async () => handler.call(this, message),
+          customErrorMessage: GENERAL_ERROR_MESSAGE,
         });
       });
     });
@@ -45,6 +53,7 @@ export class WoltBotService implements OnModuleInit {
         message,
         handlerName: this.textHandler.name,
         handler: async () => this.textHandler.call(this, message),
+        customErrorMessage: GENERAL_ERROR_MESSAGE,
       });
     });
 
@@ -80,13 +89,18 @@ export class WoltBotService implements OnModuleInit {
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
-        const replyText = `You don't have any active subscriptions yet`;
+        const replyText = `אין לך התראות פתוחות`;
         await this.bot.sendMessage(chatId, replyText);
         return;
       }
 
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
-        const inlineKeyboardButtons = [{ text: 'Remove', callback_data: `remove - ${subscription.restaurant}` }];
+        const inlineKeyboardButtons = [
+          {
+            text: 'הסרה',
+            callback_data: `${BOT_ACTIONS.REMOVE} - ${subscription.restaurant}`,
+          },
+        ];
         const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
         return this.bot.sendMessage(chatId, subscription.restaurant, inlineKeyboardMarkup as any);
       });
@@ -110,18 +124,20 @@ export class WoltBotService implements OnModuleInit {
     if (Object.values(WOLT_BOT_COMMANDS).some((command: BotCommand) => restaurant.includes(command.command))) return;
 
     try {
-      const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
-      if (isLastUpdatedTooOld) {
-        await this.woltService.refreshRestaurants();
+      if (hasHebrew(restaurant)) {
+        await this.bot.sendMessage(chatId, 'אני מדבר עברית שוטף, אבל אני יכול לחפש מסעדות רק באנגלית 🇺🇸');
+        return;
       }
-      const matchedRestaurants = this.woltService.getFilteredRestaurantsByName(restaurant);
+
+      const restaurants = await this.restaurantsService.getRestaurants();
+      const matchedRestaurants = filterRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
-        const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
+        const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
         await this.bot.sendMessage(chatId, replyText);
         return;
       }
-      const restaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
-      const inlineKeyboardButtons = restaurants.map((restaurant) => {
+      const enrichedRestaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
+      const inlineKeyboardButtons = enrichedRestaurants.map((restaurant) => {
         const isAvailableComment = restaurant.isOnline ? 'Open 🟢' : restaurant.isOpen ? 'Busy ⏳' : 'Closed 🛑';
         return {
           text: `${restaurant.name} - ${isAvailableComment}`,
@@ -129,14 +145,14 @@ export class WoltBotService implements OnModuleInit {
         };
       });
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-      const replyText = `Choose one of the above restaurants so I can notify you when it's online`;
+      const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
       this.notifierBotService.notify(
         BOTS.WOLT,
         {
           action: ANALYTIC_EVENT_NAMES.SEARCH,
           search: rawRestaurant,
-          restaurants: restaurants.map((r) => r.name).join(' | '),
+          restaurants: enrichedRestaurants.map((r) => r.name).join(' | '),
         },
         chatId,
         this.mongoUserService,
@@ -163,13 +179,13 @@ export class WoltBotService implements OnModuleInit {
     this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
 
     try {
-      const restaurantName = restaurant.replace('remove - ', '');
-      const existingSubscription = (await this.mongoSubscriptionService.getSubscription(chatId, restaurantName)) as SubscriptionModel;
+      const restaurantName = restaurant.replace(`${BOT_ACTIONS.REMOVE} - `, '');
+      const activeSubscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
 
-      if (restaurant.startsWith('remove - ')) {
-        await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
+      if (restaurant.startsWith(`${BOT_ACTIONS.REMOVE} - `)) {
+        await this.handleCallbackRemoveSubscription(chatId, restaurantName, activeSubscriptions);
       } else {
-        await this.handleCallbackAddSubscription(chatId, restaurantName, existingSubscription);
+        await this.handleCallbackAddSubscription(chatId, restaurantName, activeSubscriptions);
       }
 
       this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - success`);
@@ -182,20 +198,31 @@ export class WoltBotService implements OnModuleInit {
         chatId,
         this.mongoUserService,
       );
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
+      await this.bot.sendMessage(chatId, GENERAL_ERROR_MESSAGE);
     }
   }
 
-  async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
+  async handleCallbackAddSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
+    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
-      const replyText = [`It seems you already have a subscription for ${restaurant} is open.`, `Let\'s wait a few minutes - it might open soon.`].join('\n\n');
+      const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
       await this.bot.sendMessage(chatId, replyText);
       return;
     }
 
-    const restaurantDetails = this.woltService.getRestaurantDetailsByName(restaurant);
-    if (restaurantDetails?.isOnline) {
-      const replyText = [`It looks like ${restaurant} is open now 🟢`, `Go ahead and order your food 🍴`].join('\n\n');
+    if (activeSubscriptions?.length >= MAX_NUM_OF_SUBSCRIPTIONS_PER_USER) {
+      await this.bot.sendMessage(chatId, ['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', 'יש לי הגבלה של עד 3 התראות למשתמש 😥'].join('\n'));
+      return;
+    }
+
+    const restaurants = await this.restaurantsService.getRestaurants();
+    const restaurantDetails = getRestaurantByName(restaurants, restaurant);
+    if (!restaurantDetails) {
+      await this.bot.sendMessage(chatId, 'אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
+      return;
+    }
+    if (restaurantDetails.isOnline) {
+      const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
       const restaurantLinkUrl = getRestaurantLink(restaurantDetails);
       const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantLinkUrl }];
       const form = getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -203,11 +230,7 @@ export class WoltBotService implements OnModuleInit {
       return;
     }
 
-    const replyText = [
-      `No Problem, I will let you know once ${restaurant} is open 🚨`,
-      `FYI: If the venue won't open within the next ${SUBSCRIPTION_EXPIRATION_HOURS} hours, registration will be removed`,
-      `You can register for another restaurant if you like.`,
-    ].join('\n\n');
+    const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
@@ -222,16 +245,14 @@ export class WoltBotService implements OnModuleInit {
     );
   }
 
-  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
+  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
     let replyText;
+    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
-      const restaurantToRemove = restaurant.replace('remove - ', '');
-      await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
-      replyText = `Subscription for ${restaurantToRemove} was removed`;
+      await this.mongoSubscriptionService.archiveSubscription(chatId, restaurant);
+      replyText = [`סבבה, הורדתי את ההזמנה ל:`, restaurant].join('\n');
     } else {
-      replyText = [`It seems like you don't have a subscription for ${restaurant} 🤔`, `You can search and register for another restaurant if you like`].join(
-        '\n\n',
-      );
+      replyText = [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n');
     }
     await this.bot.sendMessage(chatId, replyText);
   }
