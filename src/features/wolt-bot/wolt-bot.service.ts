@@ -6,7 +6,13 @@ import { getErrorMessage } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, handleCommand, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { RestaurantsService } from './restaurants.service';
 import { filterRestaurantsByName, getEnrichedRestaurantsDetails, getRestaurantByName, getRestaurantLink } from './utils';
-import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, WOLT_BOT_COMMANDS } from './wolt-bot.config';
+import {
+  ANALYTIC_EVENT_NAMES,
+  INITIAL_BOT_RESPONSE,
+  MAX_NUM_OF_SUBSCRIPTIONS_PER_USER,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+  WOLT_BOT_COMMANDS,
+} from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
@@ -161,12 +167,12 @@ export class WoltBotService implements OnModuleInit {
 
     try {
       const restaurantName = restaurant.replace('remove - ', '');
-      const existingSubscription = (await this.mongoSubscriptionService.getSubscription(chatId, restaurantName)) as SubscriptionModel;
+      const activeSubscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
 
       if (restaurant.startsWith('remove - ')) {
-        await this.handleCallbackRemoveSubscription(chatId, restaurantName, existingSubscription);
+        await this.handleCallbackRemoveSubscription(chatId, restaurantName, activeSubscriptions);
       } else {
-        await this.handleCallbackAddSubscription(chatId, restaurantName, existingSubscription);
+        await this.handleCallbackAddSubscription(chatId, restaurantName, activeSubscriptions);
       }
 
       this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - success`);
@@ -183,10 +189,16 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async handleCallbackAddSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
+  async handleCallbackAddSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
+    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
-      const replyText = [`It seems you already have a subscription for ${restaurant} is open.`, `Let\'s wait a few minutes - it might open soon.`].join('\n\n');
+      const replyText = [`It seems you already have a subscription for ${restaurant}`, `Let\'s wait a few minutes - it might be opened soon`].join('\n\n');
       await this.bot.sendMessage(chatId, replyText);
+      return;
+    }
+
+    if (activeSubscriptions?.length >= MAX_NUM_OF_SUBSCRIPTIONS_PER_USER) {
+      await this.bot.sendMessage(chatId, 'I am sorry but it looks like you have too many subscriptions, and I cant add more 😥');
       return;
     }
 
@@ -224,8 +236,9 @@ export class WoltBotService implements OnModuleInit {
     );
   }
 
-  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, existingSubscription: SubscriptionModel): Promise<void> {
+  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
     let replyText;
+    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       const restaurantToRemove = restaurant.replace('remove - ', '');
       await this.mongoSubscriptionService.archiveSubscription(chatId, restaurantToRemove);
