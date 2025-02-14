@@ -83,7 +83,7 @@ export class WoltSchedulerService implements OnModuleInit {
           const restaurantLinkUrl = getRestaurantLink(restaurant);
           const inlineKeyboardButtons = [{ text: restaurant.name, url: restaurantLinkUrl }];
           const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-          const replyText = ['מצאתי מסעדה שנפתחה! 🔍', restaurant.name, 'אפשר להזמין עכשיו! 📱'].join('\n');
+          const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', restaurant.name, 'אפשר להזמין עכשיו! 📱'].join('\n');
           promisesArr.push(
             this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, {
               ...inlineKeyboardMarkup,

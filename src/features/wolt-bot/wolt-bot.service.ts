@@ -132,7 +132,7 @@ export class WoltBotService implements OnModuleInit {
       const restaurants = await this.restaurantsService.getRestaurants();
       const matchedRestaurants = filterRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
-        const replyText = ['וואלה, חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
+        const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
         await this.bot.sendMessage(chatId, replyText);
         return;
       }
@@ -221,8 +221,8 @@ export class WoltBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, 'אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
       return;
     }
-    if (restaurantDetails?.isOnline) {
-      const replyText = [`וואלה נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
+    if (restaurantDetails.isOnline) {
+      const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
       const restaurantLinkUrl = getRestaurantLink(restaurantDetails);
       const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantLinkUrl }];
       const form = getInlineKeyboardMarkup(inlineKeyboardButtons);
