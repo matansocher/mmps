@@ -4,16 +4,16 @@ import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService }
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, handleCommand, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
-import { getEnrichedRestaurantsDetails, getRestaurantLink } from './utils';
-import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, TOO_OLD_LIST_THRESHOLD_MS, WOLT_BOT_COMMANDS } from './wolt-bot.config';
-import { WoltService } from './wolt.service';
+import { RestaurantsService } from './restaurants.service';
+import { filterRestaurantsByName, getEnrichedRestaurantsDetails, getRestaurantByName, getRestaurantLink } from './utils';
+import { ANALYTIC_EVENT_NAMES, INITIAL_BOT_RESPONSE, SUBSCRIPTION_EXPIRATION_HOURS, WOLT_BOT_COMMANDS } from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
   private readonly logger = new Logger(WoltBotService.name);
 
   constructor(
-    private readonly woltService: WoltService,
+    private readonly restaurantsService: RestaurantsService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly notifierBotService: NotifierBotService,
@@ -110,18 +110,15 @@ export class WoltBotService implements OnModuleInit {
     if (Object.values(WOLT_BOT_COMMANDS).some((command: BotCommand) => restaurant.includes(command.command))) return;
 
     try {
-      const isLastUpdatedTooOld = new Date().getTime() - this.woltService.getLastUpdated() > TOO_OLD_LIST_THRESHOLD_MS;
-      if (isLastUpdatedTooOld) {
-        await this.woltService.refreshRestaurants();
-      }
-      const matchedRestaurants = this.woltService.getFilteredRestaurantsByName(restaurant);
+      const restaurants = await this.restaurantsService.getRestaurants();
+      const matchedRestaurants = filterRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
         const replyText = `I am sorry, I didn't find any restaurants matching your search - '${restaurant}'`;
         await this.bot.sendMessage(chatId, replyText);
         return;
       }
-      const restaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
-      const inlineKeyboardButtons = restaurants.map((restaurant) => {
+      const enrichedRestaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
+      const inlineKeyboardButtons = enrichedRestaurants.map((restaurant) => {
         const isAvailableComment = restaurant.isOnline ? 'Open 🟢' : restaurant.isOpen ? 'Busy ⏳' : 'Closed 🛑';
         return {
           text: `${restaurant.name} - ${isAvailableComment}`,
@@ -136,7 +133,7 @@ export class WoltBotService implements OnModuleInit {
         {
           action: ANALYTIC_EVENT_NAMES.SEARCH,
           search: rawRestaurant,
-          restaurants: restaurants.map((r) => r.name).join(' | '),
+          restaurants: enrichedRestaurants.map((r) => r.name).join(' | '),
         },
         chatId,
         this.mongoUserService,
@@ -193,7 +190,12 @@ export class WoltBotService implements OnModuleInit {
       return;
     }
 
-    const restaurantDetails = this.woltService.getRestaurantDetailsByName(restaurant);
+    const restaurants = await this.restaurantsService.getRestaurants();
+    const restaurantDetails = getRestaurantByName(restaurants, restaurant);
+    if (!restaurantDetails) {
+      await this.bot.sendMessage(chatId, 'I am sorry but I am having issues finding this restaurant');
+      return;
+    }
     if (restaurantDetails?.isOnline) {
       const replyText = [`It looks like ${restaurant} is open now 🟢`, `Go ahead and order your food 🍴`].join('\n\n');
       const restaurantLinkUrl = getRestaurantLink(restaurantDetails);

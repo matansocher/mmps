@@ -1,9 +1,11 @@
 import axios from 'axios';
+import { Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
 import { RESTAURANT_BASE_URL } from '../wolt-bot.config';
 import { getRestaurantLink } from './get-restaurant-link';
 
 export async function getEnrichedRestaurantsDetails(parsedRestaurants) {
+  const logger = new Logger(getEnrichedRestaurantsDetails.name);
   try {
     const responses = await Promise.all(
       parsedRestaurants.map((restaurant) => {
@@ -19,7 +21,7 @@ export async function getEnrichedRestaurantsDetails(parsedRestaurants) {
       return { ...relevantParsedRestaurant, restaurantLinkUrl, isOpen };
     });
   } catch (err) {
-    this.logger.error(`${this.enrichRestaurants.name} - err - ${getErrorMessage(err)}`);
+    logger.error(`err - ${getErrorMessage(err)}`);
     return parsedRestaurants;
   }
 }

@@ -1,9 +1,11 @@
 import axios from 'axios';
+import { Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
 import type { WoltRestaurant } from '../interface';
 import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
 
 export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
+  const logger = new Logger(getRestaurantsList.name);
   try {
     const cities = await getCitiesList();
     const responses = await Promise.all(
@@ -33,12 +35,13 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
       } as WoltRestaurant;
     });
   } catch (err) {
-    this.logger.error(`${this.getRestaurantsList.name} - err - ${getErrorMessage(err)}`);
+    logger.error(`err - ${getErrorMessage(err)}`);
     return [];
   }
 }
 
 async function getCitiesList(): Promise<{ areaSlug: string; lon: number; lat: number }[]> {
+  const logger = new Logger(getCitiesList.name);
   try {
     const result = await axios.get(CITIES_BASE_URL);
     const rawCities = result['data'].results;
@@ -52,7 +55,7 @@ async function getCitiesList(): Promise<{ areaSlug: string; lon: number; lat: nu
         };
       });
   } catch (err) {
-    this.logger.error(`${this.getCitiesList.name} - err - ${getErrorMessage(err)}`);
+    logger.error(`err - ${getErrorMessage(err)}`);
     return [];
   }
 }
