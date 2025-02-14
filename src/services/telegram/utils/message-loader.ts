@@ -1,6 +1,4 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { Logger } from '@nestjs/common';
-import { getErrorMessage } from '@core/utils';
 import { BOT_BROADCAST_ACTIONS } from '@services/telegram';
 import type { MessageLoaderOptions } from '../interface';
 
@@ -10,12 +8,11 @@ const DEFAULT_CYCLE_DURATION = 3000;
 
 interface MessageLoaderData {
   readonly cycleIterationIndex: number;
-  readonly timeoutId: NodeJS.Timeout;
-  readonly loaderMessageId: number;
+  readonly timeoutId?: NodeJS.Timeout;
+  readonly loaderMessageId?: number;
 }
 
 export class MessageLoader {
-  private readonly logger = new Logger(MessageLoader.name);
   private messages: Record<number, MessageLoaderData> = {};
 
   private readonly bot: TelegramBot;
@@ -32,12 +29,12 @@ export class MessageLoader {
     this.cycleDuration = options.cycleDuration || DEFAULT_CYCLE_DURATION;
   }
 
-  getMessageCache(): MessageLoaderData {
+  getMessageCache(): MessageLoaderData | null {
     return this.messages[this.chatId] || null;
   }
 
   setMessageCache(messageLoaderData: Partial<MessageLoaderData>): void {
-    const currentMessageLoaderData = this.getMessageCache();
+    const currentMessageLoaderData = (this.getMessageCache() || {}) as MessageLoaderData;
     this.messages[this.chatId] = { ...currentMessageLoaderData, ...messageLoaderData };
   }
 
@@ -59,42 +56,65 @@ export class MessageLoader {
 
   async waitForMessage() {
     try {
-      this.setMessageCache({ cycleIterationIndex: 0, timeoutId: null, loaderMessageId: null });
+      this.setMessageCache({ cycleIterationIndex: 0, timeoutId: undefined, loaderMessageId: undefined });
       await this.bot.sendChatAction(this.chatId, this.loadingAction);
       this.cycleInitiator();
-    } catch (err) {
-      this.logger.error(`${this.waitForMessage.name} - error - ${getErrorMessage(err)}`);
+    } catch {
       await this.stopLoader();
     }
   }
 
   cycleInitiator(): void {
-    const timeoutId = setTimeout(async () => {
-      const { cycleIterationIndex } = this.getMessageCache();
-      if (cycleIterationIndex >= MAX_TURTLES) {
-        return this.stopLoader();
+    const messageCache = this.getMessageCache();
+    if (!messageCache) {
+      return;
+    }
+
+    const { cycleIterationIndex, timeoutId } = messageCache;
+    timeoutId && clearTimeout(timeoutId);
+
+    if (cycleIterationIndex >= MAX_TURTLES) {
+      this.stopLoader();
+      return;
+    }
+
+    const newTimeoutId = setTimeout(async () => {
+      try {
+        await this.processCycle();
+      } catch {
+        await this.stopLoader();
       }
-      await this.processCycle();
-    }, this.cycleDuration || DEFAULT_CYCLE_DURATION);
-    this.setMessageCache({ timeoutId });
+    }, this.cycleDuration);
+    this.setMessageCache({ timeoutId: newTimeoutId });
   }
 
   async processCycle(): Promise<void> {
-    const { cycleIterationIndex = 0, loaderMessageId } = this.getMessageCache();
-    const turtles = this.loaderEmoji.repeat(cycleIterationIndex + 1);
-    let messageRes;
-    if (cycleIterationIndex === 0) {
-      messageRes = await this.bot.sendMessage(this.chatId, turtles);
-    } else {
-      await this.bot.editMessageText(turtles, { chat_id: this.chatId, message_id: loaderMessageId });
+    const messageCache = this.getMessageCache();
+    if (!messageCache) {
+      return;
     }
-    await this.bot.sendChatAction(this.chatId, this.loadingAction);
 
-    this.setMessageCache({
-      loaderMessageId: messageRes?.message_id || loaderMessageId,
-      cycleIterationIndex: cycleIterationIndex + 1,
-    });
-    this.cycleInitiator();
+    const { cycleIterationIndex = 0, loaderMessageId } = messageCache;
+    const turtles = this.loaderEmoji.repeat(cycleIterationIndex + 1);
+
+    let messageRes;
+    try {
+      if (cycleIterationIndex === 0) {
+        messageRes = await this.bot.sendMessage(this.chatId, turtles);
+        this.setMessageCache({ loaderMessageId: messageRes.message_id });
+      } else if (loaderMessageId) {
+        await this.bot.editMessageText(turtles, { chat_id: this.chatId, message_id: loaderMessageId });
+      }
+      await this.bot.sendChatAction(this.chatId, this.loadingAction);
+
+      this.setMessageCache({
+        loaderMessageId: messageRes?.message_id || loaderMessageId,
+        cycleIterationIndex: cycleIterationIndex + 1,
+      });
+      this.cycleInitiator();
+    } catch {
+      await this.stopLoader();
+    }
   }
 
   async stopLoader(): Promise<void> {
@@ -103,7 +123,7 @@ export class MessageLoader {
       return;
     }
     const { timeoutId, loaderMessageId } = messageCache;
-    clearTimeout(timeoutId);
+    timeoutId && clearTimeout(timeoutId);
     loaderMessageId && (await this.bot.deleteMessage(this.chatId, loaderMessageId));
     this.deleteMessageCache();
   }
