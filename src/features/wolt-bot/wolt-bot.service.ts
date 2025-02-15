@@ -234,7 +234,15 @@ export class WoltBotService implements OnModuleInit {
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(
+      BOTS.WOLT,
+      {
+        action: ANALYTIC_EVENT_NAMES.SUBSCRIBE,
+        restaurant,
+      },
+      chatId,
+      this.mongoUserService,
+    );
   }
 
   async handleCallbackRemoveSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
@@ -242,7 +250,7 @@ export class WoltBotService implements OnModuleInit {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       await this.mongoSubscriptionService.archiveSubscription(chatId, restaurant);
-      replyText = [`סבבה, הורדתי את ההזמנה ל:`, restaurant].join('\n');
+      replyText = [`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n');
     } else {
       replyText = [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n');
     }
