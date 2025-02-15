@@ -5,4 +5,5 @@ export interface WoltRestaurant {
   readonly slug: string;
   readonly area: string;
   readonly photo: string;
+  readonly link: string;
 }

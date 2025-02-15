@@ -24,13 +24,13 @@ export const GENERAL_ERROR_MESSAGE = `מצטער, אבל קרתה לי תקלה.
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;
 
-export const RESTAURANTS_BASE_URL = 'https://consumer-api.wolt.com/v1/pages/restaurants';
-export const RESTAURANT_BASE_URL = 'https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/{slug}/dynamic/';
-export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
+export const RESTAURANTS_BASE_URL = 'https://consumer-api.wolt.com/v1/pages/restaurants';
+export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 
 // the order of this array is important, this will determine the order of multiple results in restaurants search
-export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-tikva', 'rishon-lezion-hashfela-area', 'jerusalem', 'netanya'];
+export const CITIES_SLUGS_SUPPORTED = ['hasharon'];
+// export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-tikva', 'rishon-lezion-hashfela-area', 'jerusalem', 'netanya'];
 // 'afula-emek-yizrael-area'
 // 'ashdod'
 // 'ashkelon'

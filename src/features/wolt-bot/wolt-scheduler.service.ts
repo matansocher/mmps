@@ -9,7 +9,6 @@ import { getErrorMessage, getTimezoneOffset } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
-import { getRestaurantLink } from './utils';
 import {
   ANALYTIC_EVENT_NAMES,
   HOUR_OF_DAY_TO_REFRESH_MAP,
@@ -80,8 +79,7 @@ export class WoltSchedulerService implements OnModuleInit {
       subscribedAndOnlineRestaurants.forEach((restaurant: WoltRestaurant) => {
         const relevantSubscriptions = subscriptions.filter((subscription: SubscriptionModel) => subscription.restaurant === restaurant.name);
         relevantSubscriptions.forEach((subscription: SubscriptionModel) => {
-          const restaurantLinkUrl = getRestaurantLink(restaurant);
-          const inlineKeyboardButtons = [{ text: restaurant.name, url: restaurantLinkUrl }];
+          const inlineKeyboardButtons = [{ text: restaurant.name, url: restaurant.link }];
           const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
           const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', restaurant.name, 'אפשר להזמין עכשיו! 📱'].join('\n');
           promisesArr.push(

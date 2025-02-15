@@ -71,7 +71,7 @@ export class TeacherService {
     const { id: threadId } = await this.openaiAssistantService.createThread();
     course.threadId = threadId;
     await this.mongoCourseService.startCourse(course?._id, { threadId });
-    await sendStyledMessage(this.bot, chatId, `\`Course started: ${course.topic}\``);
+    await sendStyledMessage(this.bot, chatId, `Course started: \`${course.topic}\``);
     return course;
   }
 

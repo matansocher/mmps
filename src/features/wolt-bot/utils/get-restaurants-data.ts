@@ -2,19 +2,19 @@ import axios from 'axios';
 import { Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
 import type { WoltRestaurant } from '../interface';
-import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
+import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANT_LINK_BASE_URL, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
+
+interface WoltCity {
+  readonly lat: number;
+  readonly lon: number;
+  readonly areaSlug: string;
+}
 
 export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
   const logger = new Logger(getRestaurantsList.name);
   try {
     const cities = await getCitiesList();
-    const responses = await Promise.all(
-      cities.map((city) => {
-        const { lat, lon } = city;
-        const url = `${RESTAURANTS_BASE_URL}?lat=${lat}&lon=${lon}`;
-        return axios.get(url);
-      }),
-    );
+    const responses = await Promise.all(cities.map(({ lat, lon }: WoltCity) => axios.get(`${RESTAURANTS_BASE_URL}?lat=${lat}&lon=${lon}`)));
 
     const restaurantsWithArea = responses
       .map((res, index) => {
@@ -32,6 +32,7 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
         slug: restaurant.venue.slug,
         area: restaurant.area,
         photo: restaurant.image.url,
+        link: RESTAURANT_LINK_BASE_URL.replace('{area}', restaurant.area).replace('{slug}', restaurant.venue.slug),
       } as WoltRestaurant;
     });
   } catch (err) {
@@ -40,7 +41,7 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
   }
 }
 
-async function getCitiesList(): Promise<{ areaSlug: string; lon: number; lat: number }[]> {
+async function getCitiesList(): Promise<WoltCity[]> {
   const logger = new Logger(getCitiesList.name);
   try {
     const result = await axios.get(CITIES_BASE_URL);
