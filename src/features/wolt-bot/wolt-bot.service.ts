@@ -3,9 +3,10 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage, hasHebrew } from '@core/utils';
+import { WoltRestaurant } from '@features/wolt-bot/interface';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, handleCommand, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
 import { RestaurantsService } from './restaurants.service';
-import { filterRestaurantsByName, getEnrichedRestaurantsDetails, getRestaurantByName, getRestaurantLink } from './utils';
+import { getRestaurantsByName } from './utils';
 import {
   ANALYTIC_EVENT_NAMES,
   BOT_ACTIONS,
@@ -130,15 +131,15 @@ export class WoltBotService implements OnModuleInit {
       }
 
       const restaurants = await this.restaurantsService.getRestaurants();
-      const matchedRestaurants = filterRestaurantsByName(restaurants, restaurant);
+      const matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
         const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
         await this.bot.sendMessage(chatId, replyText);
         return;
       }
-      const enrichedRestaurants = await getEnrichedRestaurantsDetails(matchedRestaurants);
-      const inlineKeyboardButtons = enrichedRestaurants.map((restaurant) => {
-        const isAvailableComment = restaurant.isOnline ? 'Open 🟢' : restaurant.isOpen ? 'Busy ⏳' : 'Closed 🛑';
+      const inlineKeyboardButtons = matchedRestaurants.map((restaurant) => {
+        // const isAvailableComment = restaurant.isOnline ? 'Open 🟢' : restaurant.isOpen ? 'Busy ⏳' : 'Closed 🛑';
+        const isAvailableComment = restaurant.isOnline ? 'זמין 🟢' : 'לא זמין 🛑';
         return {
           text: `${restaurant.name} - ${isAvailableComment}`,
           callback_data: restaurant.name,
@@ -152,7 +153,7 @@ export class WoltBotService implements OnModuleInit {
         {
           action: ANALYTIC_EVENT_NAMES.SEARCH,
           search: rawRestaurant,
-          restaurants: enrichedRestaurants.map((r) => r.name).join(' | '),
+          restaurants: matchedRestaurants.map((r) => r.name).join(' | '),
         },
         chatId,
         this.mongoUserService,
@@ -216,15 +217,14 @@ export class WoltBotService implements OnModuleInit {
     }
 
     const restaurants = await this.restaurantsService.getRestaurants();
-    const restaurantDetails = getRestaurantByName(restaurants, restaurant);
+    const restaurantDetails = restaurants.find((r: WoltRestaurant): boolean => r.name === restaurant);
     if (!restaurantDetails) {
       await this.bot.sendMessage(chatId, 'אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
       return;
     }
     if (restaurantDetails.isOnline) {
       const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
-      const restaurantLinkUrl = getRestaurantLink(restaurantDetails);
-      const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantLinkUrl }];
+      const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantDetails.link }];
       const form = getInlineKeyboardMarkup(inlineKeyboardButtons);
       await this.bot.sendMessage(chatId, replyText, form as any);
       return;

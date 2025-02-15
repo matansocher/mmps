@@ -2,19 +2,19 @@ import axios from 'axios';
 import { Logger } from '@nestjs/common';
 import { getErrorMessage } from '@core/utils';
 import type { WoltRestaurant } from '../interface';
-import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
+import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANT_LINK_BASE_URL, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
+
+interface WoltCity {
+  readonly lat: number;
+  readonly lon: number;
+  readonly areaSlug: string;
+}
 
 export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
   const logger = new Logger(getRestaurantsList.name);
   try {
     const cities = await getCitiesList();
-    const responses = await Promise.all(
-      cities.map((city) => {
-        const { lat, lon } = city;
-        const url = `${RESTAURANTS_BASE_URL}?lat=${lat}&lon=${lon}`;
-        return axios.get(url);
-      }),
-    );
+    const responses = await Promise.all(cities.map(({ lat, lon }: WoltCity) => axios.get(`${RESTAURANTS_BASE_URL}?lat=${lat}&lon=${lon}`)));
 
     const restaurantsWithArea = responses
       .map((res, index) => {
@@ -25,14 +25,10 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
       .flat();
 
     return restaurantsWithArea.map((restaurant) => {
-      return {
-        id: restaurant.venue.id,
-        name: restaurant.title,
-        isOnline: restaurant.venue.online,
-        slug: restaurant.venue.slug,
-        area: restaurant.area,
-        photo: restaurant.image.url,
-      } as WoltRestaurant;
+      const { venue, title: name, area, image } = restaurant;
+      const { id, online: isOnline, slug } = venue;
+      const link = RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
+      return { id, name, isOnline, slug, area, photo: image.url, link } as WoltRestaurant;
     });
   } catch (err) {
     logger.error(`err - ${getErrorMessage(err)}`);
@@ -40,19 +36,15 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
   }
 }
 
-async function getCitiesList(): Promise<{ areaSlug: string; lon: number; lat: number }[]> {
+async function getCitiesList(): Promise<WoltCity[]> {
   const logger = new Logger(getCitiesList.name);
   try {
     const result = await axios.get(CITIES_BASE_URL);
     const rawCities = result['data'].results;
     return rawCities
-      .filter((city) => CITIES_SLUGS_SUPPORTED.includes(city.slug))
-      .map((city) => {
-        return {
-          areaSlug: city.slug,
-          lon: city.location.coordinates[0],
-          lat: city.location.coordinates[1],
-        };
+      .filter(({ slug }) => CITIES_SLUGS_SUPPORTED.includes(slug))
+      .map(({ slug, location }) => {
+        return { areaSlug: slug, lon: location.coordinates[0], lat: location.coordinates[1] };
       });
   } catch (err) {
     logger.error(`err - ${getErrorMessage(err)}`);
