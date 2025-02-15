@@ -94,14 +94,6 @@ export class CoachBotService implements OnModuleInit {
       await sendStyledMessage(this.bot, chatId, replyText);
     });
 
-    this.notifierBotService.notify(
-      BOTS.COACH,
-      {
-        action: ANALYTIC_EVENT_STATES.SEARCH,
-        text,
-      },
-      chatId,
-      this.mongoUserService,
-    );
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH, text }, chatId, this.mongoUserService);
   }
 }

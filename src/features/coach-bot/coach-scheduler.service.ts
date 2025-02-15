@@ -44,15 +44,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.handleIntervalFlow.name} - ${errorMessage}`);
-      this.notifierBotService.notify(
-        BOTS.COACH,
-        {
-          action: `cron - ${ANALYTIC_EVENT_STATES.ERROR}`,
-          error: errorMessage,
-        },
-        null,
-        null,
-      );
+      this.notifierBotService.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage }, null, null);
     }
   }
 }

@@ -234,15 +234,7 @@ export class WoltBotService implements OnModuleInit {
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifierBotService.notify(
-      BOTS.WOLT,
-      {
-        action: ANALYTIC_EVENT_NAMES.SUBSCRIBE,
-        restaurant,
-      },
-      chatId,
-      this.mongoUserService,
-    );
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, chatId, this.mongoUserService);
   }
 
   async handleCallbackRemoveSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {

@@ -82,15 +82,7 @@ export class VoicePalService implements OnModuleInit {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifierBotService.notify(
-        BOTS.VOICE_PAL,
-        {
-          handler: analyticAction,
-          action: ANALYTIC_EVENT_STATES.FULFILLED,
-        },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);

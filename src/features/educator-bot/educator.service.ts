@@ -55,15 +55,7 @@ export class EducatorService {
   async getNewTopic(): Promise<TopicModel> {
     const topic = await this.mongoTopicService.getRandomTopic();
     if (!topic) {
-      this.notifierBotService.notify(
-        BOTS.EDUCATOR,
-        {
-          action: 'ERROR',
-          error: 'No new topics found',
-        },
-        null,
-        null,
-      );
+      this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found' }, null, null);
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
