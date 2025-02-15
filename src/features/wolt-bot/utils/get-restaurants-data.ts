@@ -25,15 +25,10 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
       .flat();
 
     return restaurantsWithArea.map((restaurant) => {
-      return {
-        id: restaurant.venue.id,
-        name: restaurant.title,
-        isOnline: restaurant.venue.online,
-        slug: restaurant.venue.slug,
-        area: restaurant.area,
-        photo: restaurant.image.url,
-        link: RESTAURANT_LINK_BASE_URL.replace('{area}', restaurant.area).replace('{slug}', restaurant.venue.slug),
-      } as WoltRestaurant;
+      const { venue, title: name, area, image } = restaurant;
+      const { id, online: isOnline, slug } = venue;
+      const link = RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
+      return { id, name, isOnline, slug, area, photo: image.url, link } as WoltRestaurant;
     });
   } catch (err) {
     logger.error(`err - ${getErrorMessage(err)}`);
@@ -47,13 +42,9 @@ async function getCitiesList(): Promise<WoltCity[]> {
     const result = await axios.get(CITIES_BASE_URL);
     const rawCities = result['data'].results;
     return rawCities
-      .filter((city) => CITIES_SLUGS_SUPPORTED.includes(city.slug))
-      .map((city) => {
-        return {
-          areaSlug: city.slug,
-          lon: city.location.coordinates[0],
-          lat: city.location.coordinates[1],
-        };
+      .filter(({ slug }) => CITIES_SLUGS_SUPPORTED.includes(slug))
+      .map(({ slug, location }) => {
+        return { areaSlug: slug, lon: location.coordinates[0], lat: location.coordinates[1] };
       });
   } catch (err) {
     logger.error(`err - ${getErrorMessage(err)}`);
