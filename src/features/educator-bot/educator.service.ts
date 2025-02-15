@@ -33,8 +33,8 @@ export class EducatorService {
     await this.startNewTopic(chatId);
   }
 
-  async startNewTopic(chatId: number): Promise<void> {
-    const topic = await this.getNewTopic();
+  async startNewTopic(chatId: number, customTopic?: string): Promise<void> {
+    const topic = await this.getNewTopic(customTopic);
     if (!topic) {
       await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
       return;
@@ -52,8 +52,8 @@ export class EducatorService {
     await this.bot.sendMessage(chatId, response, inlineKeyboardMarkup as any);
   }
 
-  async getNewTopic(): Promise<TopicModel> {
-    const topic = await this.mongoTopicService.getRandomTopic();
+  async getNewTopic(customTopic?: string): Promise<TopicModel> {
+    const topic = customTopic ? await this.mongoTopicService.createTopic(customTopic) : await this.mongoTopicService.getRandomTopic();
     if (!topic) {
       this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found' }, null, null);
       return null;

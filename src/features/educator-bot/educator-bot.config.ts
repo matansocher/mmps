@@ -9,6 +9,7 @@ export const EDUCATOR_BOT_COMMANDS: Record<string, BotCommand> = {
   START: { command: '/start', description: 'רוצה להתחיל ללמוד' },
   STOP: { command: '/stop', description: 'רוצה להפסיק ללמוד' },
   TOPIC: { command: '/topic', description: 'נושא הבא' },
+  CUSTOM: { command: '/custom', description: 'נושא ספציפי' },
   ADD: { command: '/add', description: 'הוספת נושא' },
 };
 

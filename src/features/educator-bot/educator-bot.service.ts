@@ -22,7 +22,8 @@ export class EducatorBotService implements OnModuleInit {
     const handlers: TelegramBotHandler[] = [
       { regex: EDUCATOR_BOT_COMMANDS.START.command, handler: this.startHandler },
       { regex: EDUCATOR_BOT_COMMANDS.STOP.command, handler: this.stopHandler },
-      { regex: EDUCATOR_BOT_COMMANDS.TOPIC.command, handler: this.TopicHandler },
+      { regex: EDUCATOR_BOT_COMMANDS.TOPIC.command, handler: this.topicHandler },
+      { regex: EDUCATOR_BOT_COMMANDS.CUSTOM.command, handler: this.customTopicHandler },
       { regex: EDUCATOR_BOT_COMMANDS.ADD.command, handler: this.addHandler },
     ];
     const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
@@ -75,7 +76,7 @@ export class EducatorBotService implements OnModuleInit {
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
   }
 
-  private async TopicHandler(message: Message): Promise<void> {
+  private async topicHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const activeTopic = await this.mongoTopicService.getActiveTopic();
     if (activeTopic?._id) {
@@ -84,6 +85,22 @@ export class EducatorBotService implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
+  }
+
+  private async customTopicHandler(message: Message): Promise<void> {
+    const { chatId, text } = getMessageData(message);
+    const activeTopic = await this.mongoTopicService.getActiveTopic();
+    if (activeTopic?._id) {
+      await this.mongoTopicService.markTopicCompleted(activeTopic._id.toString());
+    }
+
+    const customTopic = text.replace(EDUCATOR_BOT_COMMANDS.CUSTOM.command, '').trim();
+    if (!customTopic) {
+      await this.bot.sendMessage(chatId, 'כדי לההשתמש בפקודה ההזאת, צריך לשלוח אותו ומיד לאחריה את הנושא');
+      return;
+    }
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
+    await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId, customTopic));
   }
 
   private async addHandler(message: Message): Promise<void> {

@@ -42,6 +42,17 @@ export class EducatorMongoTopicService {
     return this.topicCollection.findOne(filter) as Promise<WithId<TopicModel>>;
   }
 
+  async createTopic(title: string): Promise<TopicModel> {
+    const topic = {
+      _id: new ObjectId(),
+      title,
+      status: TopicStatus.Pending,
+      createdAt: new Date(),
+    };
+    await this.topicCollection.insertOne(topic);
+    return topic;
+  }
+
   startTopic(topicId: ObjectId, additionalData: Partial<TopicModel>): Promise<UpdateResult<TopicModel>> {
     const filter = { _id: topicId };
     const updateObj = { $set: { status: TopicStatus.Assigned, assignedAt: new Date(), ...additionalData } };
