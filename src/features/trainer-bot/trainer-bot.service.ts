@@ -75,16 +75,13 @@ export class TrainerBotService implements OnModuleInit {
 
   private async historyHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const exercises = await this.mongoExerciseService.getExercises(chatId);
+    const exercises = await this.mongoExerciseService.getExercises(chatId, MAX_EXERCISES_HISTORY_TO_SHOW);
     if (!exercises?.length) {
       await this.bot.sendMessage(chatId, 'I see you still did not exercise.\nGet going! 🤾');
       return;
     }
-    const messagePrefix = 'Exercises History';
-    const sortedExercises = exercises.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    const latestExercises = sortedExercises.length > MAX_EXERCISES_HISTORY_TO_SHOW ? sortedExercises.slice(0, MAX_EXERCISES_HISTORY_TO_SHOW) : sortedExercises;
-    const exercisesStr = latestExercises.map(({ createdAt }) => `${getDateString(createdAt)}`).join('\n');
-    await this.bot.sendMessage(chatId, `${messagePrefix}:\n\n${exercisesStr}`);
+    const exercisesStr = exercises.map(({ createdAt }) => `${getDateString(createdAt)}`).join('\n');
+    await this.bot.sendMessage(chatId, `Exercises History:\n\n${exercisesStr}`);
   }
 
   private async achievementsHandler(message: Message): Promise<void> {

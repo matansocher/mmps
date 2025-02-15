@@ -34,8 +34,8 @@ export class TrainerMongoExerciseService {
     return this.exerciseCollection.findOne(filter);
   }
 
-  getExercises(chatId: number): Promise<ExerciseModel[]> {
-    return this.exerciseCollection.find({ chatId }).sort({ createdAt: -1 }).limit(1000).toArray();
+  getExercises(chatId: number, limit: number = 1000): Promise<ExerciseModel[]> {
+    return this.exerciseCollection.find({ chatId }).sort({ createdAt: -1 }).limit(limit).toArray();
   }
 
   getYearExercises(chatId: number, year: number): Promise<ExerciseModel[]> {
