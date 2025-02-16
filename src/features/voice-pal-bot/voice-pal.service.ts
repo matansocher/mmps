@@ -7,15 +7,7 @@ import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { deleteFile, getErrorMessage, setFfmpegPath } from '@core/utils';
 import { AiService } from '@services/ai';
 import { getTranslationToEnglish } from '@services/google-translate';
-import {
-  BOT_BROADCAST_ACTIONS,
-  BOTS,
-  downloadAudioFromVideoOrAudio,
-  getMessageData,
-  MessageLoader,
-  MessageLoaderOptions,
-  TelegramMessageData,
-} from '@services/telegram';
+import { BOT_BROADCAST_ACTIONS, BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, TelegramMessageData } from '@services/telegram';
 import { VoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { getKeyboardOptions, validateActionWithMessage } from './utils';

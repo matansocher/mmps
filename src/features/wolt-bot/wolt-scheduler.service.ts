@@ -5,7 +5,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage, getTimezoneOffset } from '@core/utils';
+import { getErrorMessage } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
@@ -37,7 +37,7 @@ export class WoltSchedulerService implements OnModuleInit {
   }
 
   async scheduleInterval(): Promise<void> {
-    const secondsToNextRefresh = this.getSecondsToNextRefresh();
+    const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];
 
     // Clear existing timeout if it exists
     try {
@@ -60,12 +60,6 @@ export class WoltSchedulerService implements OnModuleInit {
       return;
     }
     await this.alertSubscriptions(subscriptions);
-  }
-
-  getSecondsToNextRefresh(): number {
-    const currentHour = new Date().getHours() + getTimezoneOffset();
-    const israelHour = currentHour % 24;
-    return HOUR_OF_DAY_TO_REFRESH_MAP[israelHour];
   }
 
   async alertSubscriptions(subscriptions: SubscriptionModel[]): Promise<any> {
