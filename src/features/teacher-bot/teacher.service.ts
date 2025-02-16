@@ -99,7 +99,7 @@ export class TeacherService {
     const isLastLesson = course.lessonsCompleted === TOTAL_COURSE_LESSONS - 1;
     const inlineKeyboardButtons = [
       {
-        text: '✅ Complete Course',
+        text: '✅ Complete Course ✅',
         callback_data: `${course._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
@@ -118,7 +118,7 @@ export class TeacherService {
     const response = await this.getAssistantAnswer(activeCourse.threadId, question);
     const inlineKeyboardButtons = [
       {
-        text: '✅ Complete Course',
+        text: '✅ Complete Course ✅',
         callback_data: `${activeCourse._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];

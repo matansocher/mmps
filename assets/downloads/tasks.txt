@@ -1,8 +1,4 @@
 teacher:
-// show the right date in history command
-// the header of course should be highlighted
-// After seven days of no progress, send a message
-Save messages of completed courses and react to all three messages as completed reaction
 
 trainer:
 

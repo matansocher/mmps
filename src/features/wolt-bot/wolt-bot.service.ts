@@ -98,7 +98,7 @@ export class WoltBotService implements OnModuleInit {
       const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
         const inlineKeyboardButtons = [
           {
-            text: 'הסרה',
+            text: '⛔️ הסרה ⛔️',
             callback_data: `${BOT_ACTIONS.REMOVE} - ${subscription.restaurant}`,
           },
         ];
@@ -139,7 +139,7 @@ export class WoltBotService implements OnModuleInit {
       }
       const inlineKeyboardButtons = matchedRestaurants.map((restaurant) => {
         // const isAvailableComment = restaurant.isOnline ? 'Open 🟢' : restaurant.isOpen ? 'Busy ⏳' : 'Closed 🛑';
-        const isAvailableComment = restaurant.isOnline ? 'זמין 🟢' : 'לא זמין 🛑';
+        const isAvailableComment = restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑';
         return {
           text: `${restaurant.name} - ${isAvailableComment}`,
           callback_data: restaurant.name,

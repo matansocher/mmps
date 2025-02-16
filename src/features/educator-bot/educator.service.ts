@@ -44,7 +44,7 @@ export class EducatorService {
 
     const inlineKeyboardButtons = [
       {
-        text: '✅ סיימתי',
+        text: '✅ סיימתי ✅',
         callback_data: `${topic._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
@@ -74,7 +74,7 @@ export class EducatorService {
     const response = await this.getAssistantAnswer(activeTopic.threadId, question);
     const inlineKeyboardButtons = [
       {
-        text: '✅ סיימתי',
+        text: '✅ סיימתי ✅',
         callback_data: `${activeTopic._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
