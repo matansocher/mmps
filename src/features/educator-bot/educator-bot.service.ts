@@ -26,7 +26,12 @@ export class EducatorBotService implements OnModuleInit {
       { regex: EDUCATOR_BOT_COMMANDS.CUSTOM.command, handler: this.customTopicHandler },
       { regex: EDUCATOR_BOT_COMMANDS.ADD.command, handler: this.addHandler },
     ];
-    const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
+    const handleCommandOptions = {
+      bot: this.bot,
+      logger: this.logger,
+      isBlocked: true,
+      customErrorMessage: CUSTOM_ERROR_MESSAGE,
+    };
 
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
@@ -35,7 +40,6 @@ export class EducatorBotService implements OnModuleInit {
           message,
           handlerName: handler.name,
           handler: async () => handler.call(this, message),
-          customErrorMessage: CUSTOM_ERROR_MESSAGE,
         });
       });
     });
@@ -46,7 +50,6 @@ export class EducatorBotService implements OnModuleInit {
         message,
         handlerName: this.messageHandler.name,
         handler: async () => this.messageHandler.call(this, message),
-        customErrorMessage: CUSTOM_ERROR_MESSAGE,
       });
     });
     this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));

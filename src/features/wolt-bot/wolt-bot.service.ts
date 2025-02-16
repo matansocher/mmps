@@ -34,7 +34,7 @@ export class WoltBotService implements OnModuleInit {
       { regex: WOLT_BOT_COMMANDS.START.command, handler: this.startHandler },
       { regex: WOLT_BOT_COMMANDS.LIST.command, handler: this.listHandler },
     ];
-    const handleCommandOptions = { bot: this.bot, logger: this.logger };
+    const handleCommandOptions = { bot: this.bot, logger: this.logger, customErrorMessage: GENERAL_ERROR_MESSAGE };
 
     handlers.forEach(({ regex, handler }) => {
       this.bot.onText(new RegExp(regex), async (message: Message) => {
@@ -43,7 +43,6 @@ export class WoltBotService implements OnModuleInit {
           message,
           handlerName: handler.name,
           handler: async () => handler.call(this, message),
-          customErrorMessage: GENERAL_ERROR_MESSAGE,
         });
       });
     });
@@ -54,7 +53,6 @@ export class WoltBotService implements OnModuleInit {
         message,
         handlerName: this.textHandler.name,
         handler: async () => this.textHandler.call(this, message),
-        customErrorMessage: GENERAL_ERROR_MESSAGE,
       });
     });
 

@@ -7,7 +7,7 @@ export const INITIAL_BOT_RESPONSE = [
   `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17 📅) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
 ].join('\n\n');
 
-export const GENERAL_ERROR_RESPONSE = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
+export const GENERAL_ERROR_MESSAGE = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
 
 export const ANALYTIC_EVENT_STATES = {
   START: 'START',
