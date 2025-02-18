@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicModel } from '@core/mongo/educator-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
-import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
+import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, EDUCATOR_ASSISTANT_ID, IDLE_DAYS_REMINDER } from './educator-bot.config';
 
 @Injectable()
@@ -39,7 +39,7 @@ export class EducatorService {
       await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
       return;
     }
-    await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
+    await sendStyledMessage(this.bot, chatId, [`נושא השיעור הבא שלנו:`, `\`${topic.title}\``].join('\n'));
     const response = await this.getAssistantAnswer(topic.threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
 
     const inlineKeyboardButtons = [
