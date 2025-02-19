@@ -76,5 +76,6 @@ export interface TelegramBotHandler {
 export interface TelegramEventHandler {
   readonly event: TELEGRAM_EVENTS;
   readonly regex?: string;
+  readonly handlerName: string;
   readonly handler: (payload: Message | CallbackQuery) => Promise<void> | void;
 }

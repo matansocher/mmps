@@ -15,23 +15,52 @@ export class EducatorBotService implements OnModuleInit {
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
   ) {}
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.bot.setMyCommands(Object.values(EDUCATOR_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, STOP, TOPIC, CUSTOM, ADD } = EDUCATOR_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
-      { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
-      { event: COMMAND, regex: CUSTOM.command, handler: (message) => this.customTopicHandler.call(this, message) },
-      { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
-      { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
-      { event: CALLBACK_QUERY, handler: (message) => this.callbackQueryHandler.call(this, message) },
+      {
+        event: COMMAND,
+        regex: START.command,
+        handlerName: 'startHandler',
+        handler: (message) => this.startHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: STOP.command,
+        handlerName: 'stopHandler',
+        handler: (message) => this.stopHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: TOPIC.command,
+        handlerName: 'topicHandler',
+        handler: (message) => this.topicHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: CUSTOM.command,
+        handlerName: 'customTopicHandler',
+        handler: (message) => this.customTopicHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: ADD.command,
+        handlerName: 'addHandler',
+        handler: (message) => this.addHandler.call(this, message),
+      },
+      { event: MESSAGE, handlerName: 'messageHandler', handler: (message) => this.messageHandler.call(this, message) },
+      {
+        event: CALLBACK_QUERY,
+        handlerName: 'callbackQueryHandler',
+        handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery),
+      },
     ];
     registerHandlers({
       bot: this.bot,
-      logger: new Logger(BOTS.EDUCATOR.name),
+      logger: new Logger(BOTS.EDUCATOR.id),
       isBlocked: true,
       handlers,
       customErrorMessage: CUSTOM_ERROR_MESSAGE,
@@ -102,7 +131,7 @@ export class EducatorBotService implements OnModuleInit {
     await this.bot.sendMessage(chatId, `סבבה, הוספתי את זה כנושא`);
   }
 
-  async messageHandler(message: Message): Promise<void> {
+  private async messageHandler(message: Message): Promise<void> {
     const { chatId, text } = getMessageData(message);
 
     // prevent built in options to be processed also here

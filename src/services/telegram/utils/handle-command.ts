@@ -1,21 +1,17 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Logger } from '@nestjs/common';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage } from '@core/utils';
 import { getCallbackQueryData, getMessageData } from '@services/telegram';
+import { RegisterCommandsOptions } from '@services/telegram/utils/register-handlers';
 
-interface HandleCommandOptions {
-  readonly bot: TelegramBot;
+type HandleCommandOptions = Pick<RegisterCommandsOptions, 'bot' | 'logger' | 'isBlocked' | 'customErrorMessage'> & {
   readonly message: Message | CallbackQuery;
-  readonly logger: Logger;
   readonly handlerName: string;
-  readonly handler: (message: Message | CallbackQuery) => Promise<void>;
+  readonly handler: (message: Message | CallbackQuery) => Promise<void> | void;
   readonly isCallbackQuery?: boolean;
-  readonly isBlocked?: boolean;
-  readonly customErrorMessage?: string;
-}
+};
 
-export async function handleCommand(handleCommandOptions: HandleCommandOptions) {
+export async function handleCommand(handleCommandOptions: HandleCommandOptions): Promise<void> {
   const { bot, message, logger, handlerName, handler, isCallbackQuery = false, isBlocked = false, customErrorMessage = null } = handleCommandOptions;
   const { chatId, firstName, lastName } = isCallbackQuery ? getCallbackQueryData(message as CallbackQuery) : getMessageData(message as Message);
   const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;

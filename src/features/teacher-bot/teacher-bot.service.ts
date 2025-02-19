@@ -1,17 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
-import { getDateString, getErrorMessage } from '@core/utils';
-import {
-  BOTS,
-  getCallbackQueryData,
-  getMessageData,
-  handleCommand,
-  MessageLoader,
-  sendStyledMessage,
-  TELEGRAM_EVENTS,
-  TelegramBotHandler,
-} from '@services/telegram';
+import { getDateString } from '@core/utils';
+import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { registerHandlers } from '@services/telegram/utils/register-handlers';
 import {
   BOT_ACTIONS,
   INITIAL_BOT_RESPONSE,
@@ -23,8 +15,6 @@ import { TeacherService } from './teacher.service';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
-  private readonly logger = new Logger(TeacherBotService.name);
-
   constructor(
     private readonly teacherService: TeacherService,
     private readonly mongoCourseService: TeacherMongoCourseService,
@@ -32,49 +22,82 @@ export class TeacherBotService implements OnModuleInit {
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.bot.setMyCommands(Object.values(TEACHER_BOT_COMMANDS));
-    const handlers: TelegramBotHandler[] = [
-      { regex: TEACHER_BOT_COMMANDS.START.command, handler: this.startHandler },
-      { regex: TEACHER_BOT_COMMANDS.STOP.command, handler: this.stopHandler },
-      { regex: TEACHER_BOT_COMMANDS.COURSE.command, handler: this.courseHandler },
-      { regex: TEACHER_BOT_COMMANDS.LESSON.command, handler: this.lessonHandler },
-      { regex: TEACHER_BOT_COMMANDS.LIST.command, handler: this.listHandler },
-      { regex: TEACHER_BOT_COMMANDS.HISTORY.command, handler: this.historyHandler },
-      { regex: TEACHER_BOT_COMMANDS.ADD.command, handler: this.addHandler },
-      { regex: TEACHER_BOT_COMMANDS.REMOVE.command, handler: this.removeHandler },
+
+    const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
+    const { START, STOP, COURSE, LESSON, LIST, HISTORY, ADD, REMOVE } = TEACHER_BOT_COMMANDS;
+    const handlers: TelegramEventHandler[] = [
+      {
+        event: COMMAND,
+        regex: START.command,
+        handlerName: 'startHandler',
+        handler: (message) => this.startHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: STOP.command,
+        handlerName: 'stopHandler',
+        handler: (message) => this.stopHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: COURSE.command,
+        handlerName: 'courseHandler',
+        handler: (message) => this.courseHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: LESSON.command,
+        handlerName: 'lessonHandler',
+        handler: (message) => this.lessonHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: LIST.command,
+        handlerName: 'listHandler',
+        handler: (message) => this.listHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: HISTORY.command,
+        handlerName: 'historyHandler',
+        handler: (message) => this.historyHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: ADD.command,
+        handlerName: 'addHandler',
+        handler: (message) => this.addHandler.call(this, message),
+      },
+      {
+        event: COMMAND,
+        regex: REMOVE.command,
+        handlerName: 'removeHandler',
+        handler: (message) => this.removeHandler.call(this, message),
+      },
+      { event: MESSAGE, handlerName: 'messageHandler', handler: (message) => this.messageHandler.call(this, message) },
+      {
+        event: CALLBACK_QUERY,
+        handlerName: 'callbackQueryHandler',
+        handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery),
+      },
     ];
-    const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
-
-    handlers.forEach(({ regex, handler }) => {
-      this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await handleCommand({
-          ...handleCommandOptions,
-          message,
-          handlerName: handler.name,
-          handler: async () => handler.call(this, message),
-        });
-      });
+    registerHandlers({
+      bot: this.bot,
+      logger: new Logger(BOTS.PROGRAMMING_TEACHER.id),
+      isBlocked: true,
+      handlers,
     });
-
-    this.bot.on(TELEGRAM_EVENTS.MESSAGE, async (message: Message) => {
-      await handleCommand({
-        ...handleCommandOptions,
-        message,
-        handlerName: this.messageHandler.name,
-        handler: async () => this.messageHandler.call(this, message),
-      });
-    });
-    this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
-  private async startHandler(message: Message) {
+  private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
     await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
   }
 
-  private async stopHandler(message: Message) {
+  private async stopHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const replyText = [
       'OK, I will stop teaching you for now 🛑',
@@ -85,7 +108,7 @@ export class TeacherBotService implements OnModuleInit {
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
   }
 
-  private async courseHandler(message: Message) {
+  private async courseHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     await this.mongoCourseService.markActiveCourseCompleted();
 
@@ -95,7 +118,7 @@ export class TeacherBotService implements OnModuleInit {
     });
   }
 
-  private async lessonHandler(message: Message) {
+  private async lessonHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
@@ -104,7 +127,7 @@ export class TeacherBotService implements OnModuleInit {
     });
   }
 
-  private async listHandler(message: Message) {
+  private async listHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     let courses = await this.mongoCourseService.getUnassignedCourses();
     if (!courses?.length) {
@@ -120,7 +143,7 @@ export class TeacherBotService implements OnModuleInit {
     await sendStyledMessage(this.bot, chatId, `${messagePrefix}:\n\n${coursesStr}`);
   }
 
-  private async historyHandler(message: Message) {
+  private async historyHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const courses = await this.mongoCourseService.getAssignedCourses();
     if (!courses?.length) {
@@ -138,7 +161,7 @@ export class TeacherBotService implements OnModuleInit {
     await this.bot.sendMessage(chatId, `${messagePrefix}:\n\n${coursesStr}`);
   }
 
-  private async addHandler(message: Message) {
+  private async addHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const course = message.text.replace(TEACHER_BOT_COMMANDS.ADD.command, '').trim();
     if (!course?.length) {
@@ -149,65 +172,48 @@ export class TeacherBotService implements OnModuleInit {
     await this.bot.sendMessage(chatId, `OK, I added \`${course}\` to your courses list`);
   }
 
-  private async removeHandler(message: Message) {
+  private async removeHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const courseId = message.text.replace(TEACHER_BOT_COMMANDS.REMOVE.command, '').trim();
     await this.mongoCourseService.removeCourse(courseId);
     await this.bot.sendMessage(chatId, 'OK, I removed that course');
   }
 
-  async messageHandler(message: Message) {
+  async messageHandler(message: Message): Promise<void> {
     const { chatId, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(TEACHER_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
 
-    this.logger.log(`${this.messageHandler.name} - chatId: ${chatId} - start`);
+    const activeCourse = await this.mongoCourseService.getActiveCourse();
+    if (!activeCourse) {
+      await this.bot.sendMessage(
+        chatId,
+        `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_COMMANDS.COURSE.command} command`,
+      );
+      return;
+    }
 
-    try {
-      const activeCourse = await this.mongoCourseService.getActiveCourse();
-      if (!activeCourse) {
-        await this.bot.sendMessage(
-          chatId,
-          `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_COMMANDS.COURSE.command} command`,
-        );
-        return;
-      }
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      await this.teacherService.processQuestion(chatId, text, activeCourse);
+    });
+  }
 
-      const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
-      await messageLoaderService.handleMessageWithLoader(async () => {
-        await this.teacherService.processQuestion(chatId, text, activeCourse);
-      });
-      this.logger.log(`${this.messageHandler.name} - chatId: ${chatId} - success`);
-    } catch (err) {
-      this.logger.error(`${this.messageHandler.name} - chatId: ${chatId} - error - ${getErrorMessage(err)}`);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
+  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
+    const { chatId, data: response } = getCallbackQueryData(callbackQuery);
+
+    const [courseId, action] = response.split(' - ');
+    switch (action) {
+      case BOT_ACTIONS.COMPLETE:
+        await this.handleCallbackCompleteCourse(chatId, courseId);
+        break;
+      default:
+        throw new Error('Invalid action');
     }
   }
 
-  private async callbackQueryHandler(callbackQuery: CallbackQuery) {
-    const { chatId, firstName, lastName, data: response } = getCallbackQueryData(callbackQuery);
-    const logBody = `${TELEGRAM_EVENTS.CALLBACK_QUERY} :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, response: ${response}`;
-    this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
-
-    try {
-      const [courseId, action] = response.split(' - ');
-      switch (action) {
-        case BOT_ACTIONS.COMPLETE:
-          await this.handleCallbackCompleteCourse(chatId, courseId);
-          break;
-        default:
-          throw new Error('Invalid action');
-      }
-      this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - success`);
-    } catch (err) {
-      const errorMessage = `error: ${getErrorMessage(err)}`;
-      this.logger.error(`${this.callbackQueryHandler.name} - chatId: ${chatId} - ${logBody} - ${errorMessage}`);
-      await this.bot.sendMessage(chatId, `Sorry, but something went wrong`);
-    }
-  }
-
-  private async handleCallbackCompleteCourse(chatId: number, courseId: string) {
+  private async handleCallbackCompleteCourse(chatId: number, courseId: string): Promise<void> {
     const course = await this.mongoCourseService.getCourse(courseId);
     if (!course) {
       await this.bot.sendMessage(chatId, 'I am sorry but I couldnt find that course');
