@@ -23,7 +23,7 @@ export class MessagesAggregator {
     this.messagesCache[chatId] = { message: combinedMessage, timeoutId, processMessageCallback };
   }
 
-  startOrResetTimeout(chatId: number): NodeJS.Timeout | number {
+  private startOrResetTimeout(chatId: number): NodeJS.Timeout | number {
     if (this.messagesCache[chatId]?.timeoutId) {
       clearTimeout(this.messagesCache[chatId].timeoutId);
     }
@@ -32,7 +32,7 @@ export class MessagesAggregator {
     }, TIMEOUT_MS);
   }
 
-  handleTimeoutEnd(chatId: number): void {
+  private handleTimeoutEnd(chatId: number): void {
     const { message } = this.messagesCache[chatId];
     this.messagesCache[chatId].processMessageCallback(message);
     delete this.messagesCache[chatId];
