@@ -2,8 +2,9 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { BOTS, getMessageData, handleCommand, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS, GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
+import { BOTS, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { registerHandlers } from '@services/telegram/utils/register-handlers';
+import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS, CUSTOM_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
 @Injectable()
@@ -20,31 +21,20 @@ export class CoachBotService implements OnModuleInit {
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(COACH_BOT_COMMANDS));
-    const handlers: TelegramBotHandler[] = [
-      { regex: COACH_BOT_COMMANDS.START.command, handler: this.startHandler },
-      { regex: COACH_BOT_COMMANDS.SUBSCRIBE.command, handler: this.subscribeHandler },
-      { regex: COACH_BOT_COMMANDS.UNSUBSCRIBE.command, handler: this.unsubscribeHandler },
+
+    const { COMMAND, TEXT } = TELEGRAM_EVENTS;
+    const { START, SUBSCRIBE, UNSUBSCRIBE } = COACH_BOT_COMMANDS;
+    const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: SUBSCRIBE.command, handler: (message) => this.subscribeHandler.call(this, message) },
+      { event: COMMAND, regex: UNSUBSCRIBE.command, handler: (message) => this.unsubscribeHandler.call(this, message) },
+      { event: TEXT, handler: (message) => this.textHandler.call(this, message) },
     ];
-    const handleCommandOptions = { bot: this.bot, logger: this.logger, customErrorMessage: GENERAL_ERROR_MESSAGE };
-
-    handlers.forEach(({ regex, handler }) => {
-      this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await handleCommand({
-          ...handleCommandOptions,
-          message,
-          handlerName: handler.name,
-          handler: async () => handler.call(this, message),
-        });
-      });
-    });
-
-    this.bot.on(TELEGRAM_EVENTS.TEXT, async (message: Message) => {
-      await handleCommand({
-        ...handleCommandOptions,
-        message,
-        handlerName: this.textHandler.name,
-        handler: async () => this.textHandler.call(this, message),
-      });
+    registerHandlers({
+      bot: this.bot,
+      logger: new Logger(BOTS.COACH.id),
+      handlers,
+      customErrorMessage: CUSTOM_ERROR_MESSAGE,
     });
   }
 
@@ -92,6 +82,14 @@ export class CoachBotService implements OnModuleInit {
       await sendStyledMessage(this.bot, chatId, replyText);
     });
 
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH, text }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(
+      BOTS.COACH,
+      {
+        action: ANALYTIC_EVENT_STATES.SEARCH,
+        text,
+      },
+      chatId,
+      this.mongoUserService,
+    );
   }
 }

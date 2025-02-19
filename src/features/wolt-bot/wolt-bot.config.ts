@@ -53,7 +53,7 @@ export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-t
 // 'tel-aviv'
 // 'yokneam'
 
-export const WOLT_BOT_COMMANDS: Record<string, BotCommand> = {
+export const WOLT_BOT_COMMANDS = {
   START: { command: '/start', description: 'התחל מהתחלה' },
   LIST: { command: '/list', description: 'רשימת ההתראות הפתוחות' },
 };

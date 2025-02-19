@@ -11,15 +11,15 @@ export type RegisterCommandsOptions = {
 };
 
 export function registerHandlers({ bot, logger, handlers, isBlocked = false, customErrorMessage = null }: RegisterCommandsOptions) {
-  handlers.forEach(({ event, handler, handlerName, regex }) => {
-    const unifiedCommandOptions = { bot, logger, isBlocked, customErrorMessage };
+  handlers.forEach(({ event, handler, regex }) => {
+    const handlerName = (regex || event).replace('/', '');
+    const unifiedCommandOptions = { bot, logger, handlerName, isBlocked, customErrorMessage };
     switch (event) {
       case TELEGRAM_EVENTS.COMMAND: {
         bot.onText(new RegExp(regex), async (message: Message) => {
           await handleCommand({
             ...unifiedCommandOptions,
             message,
-            handlerName,
             handler,
           });
         });
@@ -33,7 +33,6 @@ export function registerHandlers({ bot, logger, handlers, isBlocked = false, cus
           await handleCommand({
             ...unifiedCommandOptions,
             message,
-            handlerName,
             handler,
             isCallbackQuery: event === TELEGRAM_EVENTS.CALLBACK_QUERY,
           });

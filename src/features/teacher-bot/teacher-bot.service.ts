@@ -28,60 +28,16 @@ export class TeacherBotService implements OnModuleInit {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, STOP, COURSE, LESSON, LIST, HISTORY, ADD, REMOVE } = TEACHER_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      {
-        event: COMMAND,
-        regex: START.command,
-        handlerName: 'startHandler',
-        handler: (message) => this.startHandler.call(this, message),
-      },
-      {
-        event: COMMAND,
-        regex: STOP.command,
-        handlerName: 'stopHandler',
-        handler: (message) => this.stopHandler.call(this, message),
-      },
-      {
-        event: COMMAND,
-        regex: COURSE.command,
-        handlerName: 'courseHandler',
-        handler: (message) => this.courseHandler.call(this, message),
-      },
-      {
-        event: COMMAND,
-        regex: LESSON.command,
-        handlerName: 'lessonHandler',
-        handler: (message) => this.lessonHandler.call(this, message),
-      },
-      {
-        event: COMMAND,
-        regex: LIST.command,
-        handlerName: 'listHandler',
-        handler: (message) => this.listHandler.call(this, message),
-      },
-      {
-        event: COMMAND,
-        regex: HISTORY.command,
-        handlerName: 'historyHandler',
-        handler: (message) => this.historyHandler.call(this, message),
-      },
-      {
-        event: COMMAND,
-        regex: ADD.command,
-        handlerName: 'addHandler',
-        handler: (message) => this.addHandler.call(this, message),
-      },
-      {
-        event: COMMAND,
-        regex: REMOVE.command,
-        handlerName: 'removeHandler',
-        handler: (message) => this.removeHandler.call(this, message),
-      },
-      { event: MESSAGE, handlerName: 'messageHandler', handler: (message) => this.messageHandler.call(this, message) },
-      {
-        event: CALLBACK_QUERY,
-        handlerName: 'callbackQueryHandler',
-        handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery),
-      },
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
+      { event: COMMAND, regex: COURSE.command, handler: (message) => this.courseHandler.call(this, message) },
+      { event: COMMAND, regex: LESSON.command, handler: (message) => this.lessonHandler.call(this, message) },
+      { event: COMMAND, regex: LIST.command, handler: (message) => this.listHandler.call(this, message) },
+      { event: COMMAND, regex: HISTORY.command, handler: (message) => this.historyHandler.call(this, message) },
+      { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
+      { event: COMMAND, regex: REMOVE.command, handler: (message) => this.removeHandler.call(this, message) },
+      { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
+      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({
       bot: this.bot,
