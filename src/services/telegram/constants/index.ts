@@ -1,4 +1,5 @@
-import { Message } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { Logger } from '@nestjs/common';
 import type { TelegramBotConfig } from '../interface';
 
 export const BOTS: Record<string, TelegramBotConfig> = {
@@ -58,6 +59,7 @@ export enum POSSIBLE_INPUTS {
 }
 
 export enum TELEGRAM_EVENTS {
+  COMMAND = 'command',
   TEXT = 'text',
   MESSAGE = 'message',
   CALLBACK_QUERY = 'callback_query',
@@ -65,7 +67,14 @@ export enum TELEGRAM_EVENTS {
   ERROR = 'error',
 }
 
+// @deprecated
 export interface TelegramBotHandler {
   readonly regex: string;
   readonly handler: (message: Message) => Promise<void>;
+}
+
+export interface TelegramEventHandler {
+  readonly event: TELEGRAM_EVENTS;
+  readonly regex?: string;
+  readonly handler: (payload: Message | CallbackQuery) => Promise<void> | void;
 }

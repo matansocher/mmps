@@ -1,6 +1,6 @@
 import { BotCommand } from 'node-telegram-bot-api';
 
-export const TOPIC_START_HOUR_OF_DAY = 18;
+export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
 export const IDLE_DAYS_REMINDER = 3;
 
 export const CUSTOM_ERROR_MESSAGE = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
