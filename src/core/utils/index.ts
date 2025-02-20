@@ -3,7 +3,7 @@ export { extractAudioFromVideo } from './extract-audio-from-video';
 export { getDateNumber } from './get-date-number';
 export { getDateString } from './get-date-string';
 export { getErrorMessage } from './get-error-message';
-export { getLogBody } from './get-log-body';
+export { stringify } from './stringify';
 export { getQueryParams } from './get-query-params';
 export { hasHebrew } from './has-hebrew';
 export { isDateStringFormat } from './is-date-string-format';

@@ -1,6 +1,6 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
-import { getErrorMessage, getLogBody } from '@core/utils';
+import { getErrorMessage, stringify } from '@core/utils';
 import { getCallbackQueryData, getMessageData } from '@services/telegram';
 import { RegisterCommandsOptions } from '@services/telegram/utils/register-handlers';
 
@@ -14,7 +14,7 @@ type HandleCommandOptions = Pick<RegisterCommandsOptions, 'bot' | 'logger' | 'is
 export async function handleCommand(handleCommandOptions: HandleCommandOptions): Promise<void> {
   const { bot, message, logger, handlerName, handler, isCallbackQuery = false, isBlocked = false, customErrorMessage = null } = handleCommandOptions;
   const { chatId, firstName, lastName, text } = isCallbackQuery ? getCallbackQueryData(message as CallbackQuery) : getMessageData(message as Message);
-  const logBody = getLogBody({ chatId, firstName, lastName, text });
+  const logBody = stringify({ chatId, firstName, lastName, text });
 
   try {
     if (isBlocked && chatId !== MY_USER_ID) {

@@ -1,4 +1,4 @@
-export function getLogBody(body: Record<string, unknown>): string {
+export function stringify(body: Record<string, unknown>): string {
   if (Object.keys(body).length < 1) {
     return '';
   }
