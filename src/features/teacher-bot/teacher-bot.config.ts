@@ -1,5 +1,3 @@
-import { BotCommand } from 'node-telegram-bot-api';
-
 export const INITIAL_BOT_RESPONSE = [
   `Hey There 👋`,
   `I am here to teach you all you need about any subject you want.`,
@@ -10,7 +8,7 @@ export const INITIAL_BOT_RESPONSE = [
 export const COURSE_START_HOUR_OF_DAY = 12;
 export const COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY = [17, 22];
 
-export const TEACHER_BOT_COMMANDS: Record<string, BotCommand> = {
+export const TEACHER_BOT_COMMANDS = {
   START: { command: '/start', description: 'Start learning daily' },
   STOP: { command: '/stop', description: 'Stop learning daily' },
   COURSE: { command: '/course', description: 'Start the next course' },

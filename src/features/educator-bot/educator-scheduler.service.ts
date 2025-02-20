@@ -4,7 +4,7 @@ import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
-import { TOPIC_START_HOUR_OF_DAY } from './educator-bot.config';
+import { TOPIC_START_HOURS_OF_DAY } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
 @Injectable()
@@ -16,7 +16,10 @@ export class EducatorSchedulerService {
     private readonly notifierBotService: NotifierBotService,
   ) {}
 
-  @Cron(`0 ${TOPIC_START_HOUR_OF_DAY} * * *`, { name: 'educator-scheduler-start', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 ${TOPIC_START_HOURS_OF_DAY.join(',')} * * *`, {
+    name: 'educator-scheduler-start',
+    timeZone: DEFAULT_TIMEZONE,
+  })
   async handleTopic(): Promise<void> {
     try {
       const chatIds = [MY_USER_ID];

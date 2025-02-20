@@ -1,6 +1,7 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { BOTS, getMessageData, handleCommand, MessagesAggregator, TELEGRAM_EVENTS } from '@services/telegram';
+import { BOTS, getMessageData, MessagesAggregator, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { registerHandlers } from '@services/telegram/utils/register-handlers';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VOICE_PAL_OPTIONS } from './voice-pal.config';
 import { VoicePalService } from './voice-pal.service';
@@ -16,17 +17,22 @@ export class VoicePalBotService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) =>
-      new MessagesAggregator().handleIncomingMessage(message, async (message: Message) => {
-        await handleCommand({
-          bot: this.bot,
-          logger: this.logger,
-          message,
-          handlerName: this.handleMessage.name,
-          handler: async () => this.handleMessage.call(this, message),
-        });
-      }),
-    );
+    const { MESSAGE } = TELEGRAM_EVENTS;
+    const handlers: TelegramEventHandler[] = [
+      {
+        event: MESSAGE,
+        handler: (message) => {
+          new MessagesAggregator().handleIncomingMessage(message as Message, async (message: Message) => {
+            await this.handleMessage.call(this, message);
+          });
+        },
+      },
+    ];
+    registerHandlers({
+      bot: this.bot,
+      logger: new Logger(BOTS.VOICE_PAL.id),
+      handlers,
+    });
   }
 
   async handleMessage(message: Message): Promise<void> {

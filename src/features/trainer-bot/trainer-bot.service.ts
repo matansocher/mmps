@@ -3,7 +3,8 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
 import { getDateString } from '@core/utils';
 import { OpenaiService } from '@services/openai';
-import { BOTS, getMessageData, handleCommand, MessageLoader, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { registerHandlers } from '@services/telegram/utils/register-handlers';
 import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
 import { getLongestStreak, getStreak } from './utils';
@@ -21,23 +22,23 @@ export class TrainerBotService implements OnModuleInit {
 
   onModuleInit() {
     this.bot.setMyCommands(Object.values(TRAINER_BOT_COMMANDS));
-    const handlers: TelegramBotHandler[] = [
-      { regex: TRAINER_BOT_COMMANDS.START.command, handler: this.startHandler },
-      { regex: TRAINER_BOT_COMMANDS.EXERCISE.command, handler: this.exerciseHandler },
-      { regex: TRAINER_BOT_COMMANDS.HISTORY.command, handler: this.historyHandler },
-      { regex: TRAINER_BOT_COMMANDS.ACHIEVEMENTS.command, handler: this.achievementsHandler },
+    const { COMMAND } = TELEGRAM_EVENTS;
+    const { START, EXERCISE, HISTORY, ACHIEVEMENTS } = TRAINER_BOT_COMMANDS;
+    const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
+      { event: COMMAND, regex: HISTORY.command, handler: (message) => this.historyHandler.call(this, message) },
+      {
+        event: COMMAND,
+        regex: ACHIEVEMENTS.command,
+        handler: (message) => this.achievementsHandler.call(this, message),
+      },
     ];
-    const handleCommandOptions = { bot: this.bot, logger: this.logger, isBlocked: true };
-
-    handlers.forEach(({ regex, handler }) => {
-      this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await handleCommand({
-          ...handleCommandOptions,
-          message,
-          handlerName: handler.name,
-          handler: async () => handler.call(this, message),
-        });
-      });
+    registerHandlers({
+      bot: this.bot,
+      logger: new Logger(BOTS.TRAINER.id),
+      isBlocked: true,
+      handlers,
     });
   }
 

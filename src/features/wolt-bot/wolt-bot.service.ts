@@ -4,17 +4,11 @@ import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService }
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage, hasHebrew } from '@core/utils';
 import { WoltRestaurant } from '@features/wolt-bot/interface';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, handleCommand, TELEGRAM_EVENTS, TelegramBotHandler } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { registerHandlers } from '@services/telegram/utils/register-handlers';
 import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
-import {
-  ANALYTIC_EVENT_NAMES,
-  BOT_ACTIONS,
-  GENERAL_ERROR_MESSAGE,
-  INITIAL_BOT_RESPONSE,
-  MAX_NUM_OF_SUBSCRIPTIONS_PER_USER,
-  WOLT_BOT_COMMANDS,
-} from './wolt-bot.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, INITIAL_BOT_RESPONSE, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
@@ -30,33 +24,20 @@ export class WoltBotService implements OnModuleInit {
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(WOLT_BOT_COMMANDS));
-    const handlers: TelegramBotHandler[] = [
-      { regex: WOLT_BOT_COMMANDS.START.command, handler: this.startHandler },
-      { regex: WOLT_BOT_COMMANDS.LIST.command, handler: this.listHandler },
+
+    const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
+    const { START, LIST } = WOLT_BOT_COMMANDS;
+    const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: LIST.command, handler: (message) => this.listHandler.call(this, message) },
+      { event: MESSAGE, handler: (message) => this.textHandler.call(this, message) },
+      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    const handleCommandOptions = { bot: this.bot, logger: this.logger, customErrorMessage: GENERAL_ERROR_MESSAGE };
-
-    handlers.forEach(({ regex, handler }) => {
-      this.bot.onText(new RegExp(regex), async (message: Message) => {
-        await handleCommand({
-          ...handleCommandOptions,
-          message,
-          handlerName: handler.name,
-          handler: async () => handler.call(this, message),
-        });
-      });
+    registerHandlers({
+      bot: this.bot,
+      logger: new Logger(BOTS.WOLT.id),
+      handlers,
     });
-
-    this.bot.on(TELEGRAM_EVENTS.TEXT, async (message: Message) => {
-      await handleCommand({
-        ...handleCommandOptions,
-        message,
-        handlerName: this.textHandler.name,
-        handler: async () => this.textHandler.call(this, message),
-      });
-    });
-
-    this.bot.on(TELEGRAM_EVENTS.CALLBACK_QUERY, (callbackQuery: CallbackQuery) => this.callbackQueryHandler(callbackQuery));
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -173,9 +154,7 @@ export class WoltBotService implements OnModuleInit {
   }
 
   async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, firstName, lastName, data: restaurant } = getCallbackQueryData(callbackQuery);
-    const logBody = `${TELEGRAM_EVENTS.CALLBACK_QUERY} :: chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}, restaurant: ${restaurant}`;
-    this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - start`);
+    const { chatId, data: restaurant } = getCallbackQueryData(callbackQuery);
 
     try {
       const restaurantName = restaurant.replace(`${BOT_ACTIONS.REMOVE} - `, '');
@@ -186,18 +165,19 @@ export class WoltBotService implements OnModuleInit {
       } else {
         await this.handleCallbackAddSubscription(chatId, restaurantName, activeSubscriptions);
       }
-
-      this.logger.log(`${this.callbackQueryHandler.name} - ${logBody} - success`);
     } catch (err) {
-      const errorMessage = `error - ${getErrorMessage(err)}`;
-      this.logger.error(`${this.callbackQueryHandler.name} - ${errorMessage}`);
-      this.notifierBotService.notify(
+      await this.notifierBotService.notify(
         BOTS.WOLT,
-        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: errorMessage, method: this.callbackQueryHandler.name },
+        {
+          restaurant,
+          action: ANALYTIC_EVENT_NAMES.ERROR,
+          error: getErrorMessage(err),
+          method: this.callbackQueryHandler.name,
+        },
         chatId,
         this.mongoUserService,
       );
-      await this.bot.sendMessage(chatId, GENERAL_ERROR_MESSAGE);
+      throw err;
     }
   }
 
