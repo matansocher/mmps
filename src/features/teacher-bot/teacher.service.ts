@@ -38,7 +38,7 @@ export class TeacherService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.processCourseFirstLesson.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }
 
@@ -53,7 +53,7 @@ export class TeacherService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.processCourseNextLesson.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.COACH, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage }, null, null);
     }
   }
 
@@ -65,7 +65,15 @@ export class TeacherService {
   async getNewCourse(chatId: number): Promise<CourseModel> {
     const course = await this.mongoCourseService.getRandomCourse();
     if (!course) {
-      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: 'No new courses found' }, null, null);
+      this.notifierBotService.notify(
+        BOTS.PROGRAMMING_TEACHER,
+        {
+          action: 'ERROR',
+          error: 'No new courses found',
+        },
+        null,
+        null,
+      );
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
