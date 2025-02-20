@@ -1,11 +1,9 @@
-import { BotCommand } from 'node-telegram-bot-api';
-
-export const TOPIC_START_HOUR_OF_DAY = 18;
+export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
 export const IDLE_DAYS_REMINDER = 3;
 
 export const CUSTOM_ERROR_MESSAGE = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
-export const EDUCATOR_BOT_COMMANDS: Record<string, BotCommand> = {
+export const EDUCATOR_BOT_COMMANDS = {
   START: { command: '/start', description: 'רוצה להתחיל ללמוד' },
   STOP: { command: '/stop', description: 'רוצה להפסיק ללמוד' },
   TOPIC: { command: '/topic', description: 'נושא הבא' },

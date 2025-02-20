@@ -1,30 +1,27 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
-import { Logger } from '@nestjs/common';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
-import { getErrorMessage } from '@core/utils';
-import { getMessageData } from '@services/telegram';
+import { getErrorMessage, stringify } from '@core/utils';
+import { getCallbackQueryData, getMessageData } from '@services/telegram';
+import { RegisterCommandsOptions } from '@services/telegram/utils/register-handlers';
 
-interface HandleCommandOptions {
-  readonly bot: TelegramBot;
-  readonly message: Message;
-  readonly logger: Logger;
+type HandleCommandOptions = Pick<RegisterCommandsOptions, 'bot' | 'logger' | 'isBlocked' | 'customErrorMessage'> & {
+  readonly message: Message | CallbackQuery;
   readonly handlerName: string;
-  readonly handler: (chatId: number) => Promise<void>;
-  readonly isBlocked?: boolean;
-  readonly customErrorMessage?: string;
-}
+  readonly handler: (message: Message | CallbackQuery) => Promise<void> | void;
+  readonly isCallbackQuery?: boolean;
+};
 
-export async function handleCommand(handleCommandOptions: HandleCommandOptions) {
-  const { bot, message, logger, handlerName, handler, isBlocked = false, customErrorMessage = null } = handleCommandOptions;
-  const { chatId, firstName, lastName } = getMessageData(message);
-  const logBody = `chatId: ${chatId}, firstname: ${firstName}, lastname: ${lastName}`;
+export async function handleCommand(handleCommandOptions: HandleCommandOptions): Promise<void> {
+  const { bot, message, logger, handlerName, handler, isCallbackQuery = false, isBlocked = false, customErrorMessage = null } = handleCommandOptions;
+  const { chatId, firstName, lastName, text } = isCallbackQuery ? getCallbackQueryData(message as CallbackQuery) : getMessageData(message as Message);
+  const logBody = stringify({ chatId, firstName, lastName, text });
 
   try {
     if (isBlocked && chatId !== MY_USER_ID) {
       return;
     }
     logger.log(`${handlerName} - ${logBody} - start`);
-    await handler(chatId);
+    await handler(message);
     logger.log(`${handlerName} - ${logBody} - success`);
   } catch (err) {
     const errorMessage = getErrorMessage(err);
