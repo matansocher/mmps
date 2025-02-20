@@ -1,5 +1,3 @@
-import { BotCommand } from 'node-telegram-bot-api';
-
 export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
 export const IDLE_DAYS_REMINDER = 3;
 

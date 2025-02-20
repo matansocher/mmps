@@ -1,5 +1,3 @@
-import { BotCommand } from 'node-telegram-bot-api';
-
 export const INITIAL_BOT_RESPONSE = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
 
 export const SMART_REMINDER_HOUR_OF_DAY = 19;

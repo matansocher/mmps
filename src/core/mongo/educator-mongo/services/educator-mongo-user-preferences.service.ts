@@ -1,4 +1,4 @@
-import { Collection, Db, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
+import { Collection, Db, ObjectId, UpdateResult } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
 import { UserPreferencesModel } from '../models';

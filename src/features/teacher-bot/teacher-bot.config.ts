@@ -1,5 +1,3 @@
-import { BotCommand } from 'node-telegram-bot-api';
-
 export const INITIAL_BOT_RESPONSE = [
   `Hey There 👋`,
   `I am here to teach you all you need about any subject you want.`,

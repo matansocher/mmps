@@ -1,5 +1,3 @@
-import { BotCommand } from 'node-telegram-bot-api';
-
 export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 3;
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 8;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;

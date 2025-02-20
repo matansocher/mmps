@@ -1,5 +1,3 @@
-import { BotCommand } from 'node-telegram-bot-api';
-
 export const INITIAL_BOT_RESPONSE = [
   `שלום 👋`,
   `אני פה כדי לתת תוצאות של משחקי ספורט`,
