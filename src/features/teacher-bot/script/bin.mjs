@@ -1,4 +1,5 @@
 import { MongoClient, ObjectId } from 'mongodb';
+
 const mongoUri = '';
 
 const topics = [

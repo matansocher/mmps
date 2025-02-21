@@ -7,15 +7,7 @@ import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { deleteFile, getErrorMessage, setFfmpegPath } from '@core/utils';
 import { AiService } from '@services/ai';
 import { getTranslationToEnglish } from '@services/google-translate';
-import {
-  BOT_BROADCAST_ACTIONS,
-  BOTS,
-  downloadAudioFromVideoOrAudio,
-  getMessageData,
-  MessageLoader,
-  sendShortenedMessage,
-  TelegramMessageData,
-} from '@services/telegram';
+import { BOT_BROADCAST_ACTIONS, BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, sendShortenedMessage, TelegramMessageData } from '@services/telegram';
 import { VoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { getKeyboardOptions, validateActionWithMessage } from './utils';
@@ -86,12 +78,7 @@ export class VoicePalService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(
-        BOTS.VOICE_PAL,
-        { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
       throw err;
     }
   }

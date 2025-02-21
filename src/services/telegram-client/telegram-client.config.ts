@@ -1,13 +1,6 @@
 export const TELEGRAM_CLIENT_TOKEN = 'TELEGRAM_CLIENT_TOKEN';
 
-export const FILTER_OUT_EVENTS = [
-  'UpdateUserStatus',
-  'UpdateMessagePoll',
-  'UpdateReadChannelInbox',
-  'UpdateChannelWebPage',
-  'UpdateEditChannelMessage',
-  'UpdateDeleteChannelMessages',
-];
+export const FILTER_OUT_EVENTS = ['UpdateUserStatus', 'UpdateMessagePoll', 'UpdateReadChannelInbox', 'UpdateChannelWebPage', 'UpdateEditChannelMessage', 'UpdateDeleteChannelMessages'];
 
 export const LISTEN_TO_EVENTS = ['UpdateNewChannelMessage', 'UpdateNewMessage', 'UpdateShortMessage'];
 

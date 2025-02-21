@@ -9,13 +9,7 @@ import { getErrorMessage } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
-import {
-  ANALYTIC_EVENT_NAMES,
-  HOUR_OF_DAY_TO_REFRESH_MAP,
-  MAX_HOUR_TO_ALERT_USER,
-  MIN_HOUR_TO_ALERT_USER,
-  SUBSCRIPTION_EXPIRATION_HOURS,
-} from './wolt-bot.config';
+import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt-bot.config';
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
@@ -66,9 +60,7 @@ export class WoltSchedulerService implements OnModuleInit {
     try {
       const restaurantsWithSubscriptionNames = subscriptions.map((subscription: SubscriptionModel) => subscription.restaurant);
       const restaurants = await this.restaurantsService.getRestaurants();
-      const subscribedAndOnlineRestaurants = restaurants.filter(
-        (restaurant: WoltRestaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline,
-      );
+      const subscribedAndOnlineRestaurants = restaurants.filter((restaurant: WoltRestaurant) => restaurantsWithSubscriptionNames.includes(restaurant.name) && restaurant.isOnline);
       const promisesArr = [];
       subscribedAndOnlineRestaurants.forEach((restaurant: WoltRestaurant) => {
         const relevantSubscriptions = subscriptions.filter((subscription: SubscriptionModel) => subscription.restaurant === restaurant.name);
@@ -84,12 +76,7 @@ export class WoltSchedulerService implements OnModuleInit {
           );
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
           promisesArr.push(
-            this.notifierBotService.notify(
-              BOTS.WOLT,
-              { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED },
-              subscription.chatId,
-              this.mongoUserService,
-            ),
+            this.notifierBotService.notify(BOTS.WOLT, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService),
           );
         });
       });
@@ -111,21 +98,11 @@ export class WoltSchedulerService implements OnModuleInit {
           promisesArr.push(
             this.bot.sendMessage(
               subscription.chatId,
-              [
-                `אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`,
-                `אני כמובן מדבר על:`,
-                subscription.restaurant,
-                `תמיד אפשר ליצור התראה חדשה`,
-              ].join('\n'),
+              [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, subscription.restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n'),
             ),
           );
         }
-        this.notifierBotService.notify(
-          BOTS.WOLT,
-          { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED },
-          subscription.chatId,
-          this.mongoUserService,
-        );
+        this.notifierBotService.notify(BOTS.WOLT, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService);
       });
       await Promise.all(promisesArr);
     } catch (err) {

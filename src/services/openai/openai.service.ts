@@ -3,15 +3,7 @@ import { chunk as _chunk } from 'lodash';
 import { OpenAI } from 'openai';
 import { APIPromise } from 'openai/core';
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  CHAT_COMPLETIONS_MODEL,
-  IMAGE_ANALYZER_MODEL,
-  IMAGE_GENERATION_MODEL,
-  OPENAI_CLIENT_TOKEN,
-  SOUND_MODEL,
-  TEXT_TO_SPEECH_MODEL,
-  TEXT_TO_SPEECH_VOICE,
-} from './openai.config';
+import { CHAT_COMPLETIONS_MODEL, IMAGE_ANALYZER_MODEL, IMAGE_GENERATION_MODEL, OPENAI_CLIENT_TOKEN, SOUND_MODEL, TEXT_TO_SPEECH_MODEL, TEXT_TO_SPEECH_VOICE } from './openai.config';
 
 @Injectable()
 export class OpenaiService {

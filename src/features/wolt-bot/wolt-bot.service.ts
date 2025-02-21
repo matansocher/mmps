@@ -12,8 +12,6 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, INITIAL_BOT_RESPONSE, MAX_NUM_OF_SUB
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
-  private readonly logger = new Logger(WoltBotService.name);
-
   constructor(
     private readonly restaurantsService: RestaurantsService,
     private readonly mongoUserService: WoltMongoUserService,
@@ -86,12 +84,7 @@ export class WoltBotService implements OnModuleInit {
       });
       await Promise.all(promisesArr);
     } catch (err) {
-      this.notifierBotService.notify(
-        BOTS.WOLT,
-        { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name }, chatId, this.mongoUserService);
       throw err;
     }
   }
