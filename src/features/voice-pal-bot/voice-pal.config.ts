@@ -44,9 +44,7 @@ export const VOICE_PAL_OPTIONS: Record<string, VoicePalOption> = {
 };
 
 export const ANALYTIC_EVENT_NAMES = {
-  ...Object.fromEntries(
-    Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [VOICE_PAL_OPTIONS[option].displayName, VOICE_PAL_OPTIONS[option].analyticsEventName]),
-  ),
+  ...Object.fromEntries(Object.keys(VOICE_PAL_OPTIONS).map((option: string) => [VOICE_PAL_OPTIONS[option].displayName, VOICE_PAL_OPTIONS[option].analyticsEventName])),
 };
 
 export const ANALYTIC_EVENT_STATES = {

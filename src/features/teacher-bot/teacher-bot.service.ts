@@ -4,13 +4,7 @@ import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesSer
 import { getDateString } from '@core/utils';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram/utils/register-handlers';
-import {
-  BOT_ACTIONS,
-  INITIAL_BOT_RESPONSE,
-  NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW,
-  NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW,
-  TEACHER_BOT_COMMANDS,
-} from './teacher-bot.config';
+import { BOT_ACTIONS, INITIAL_BOT_RESPONSE, NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_COMMANDS } from './teacher-bot.config';
 import { TeacherService } from './teacher.service';
 
 @Injectable()
@@ -143,10 +137,7 @@ export class TeacherBotService implements OnModuleInit {
 
     const activeCourse = await this.mongoCourseService.getActiveCourse();
     if (!activeCourse) {
-      await this.bot.sendMessage(
-        chatId,
-        `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_COMMANDS.COURSE.command} command`,
-      );
+      await this.bot.sendMessage(chatId, `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_COMMANDS.COURSE.command} command`);
       return;
     }
 
