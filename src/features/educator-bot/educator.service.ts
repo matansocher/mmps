@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicModel } from '@core/mongo/educator-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
-import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
+import { BOTS, getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, EDUCATOR_ASSISTANT_ID, IDLE_DAYS_REMINDER } from './educator-bot.config';
 
 @Injectable()
@@ -49,7 +49,7 @@ export class EducatorService {
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    await this.bot.sendMessage(chatId, response, inlineKeyboardMarkup as any);
+    await sendShortenedMessage(this.bot, chatId, response, inlineKeyboardMarkup);
   }
 
   async getNewTopic(customTopic?: string): Promise<TopicModel> {
@@ -79,6 +79,6 @@ export class EducatorService {
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    await this.bot.sendMessage(chatId, response, inlineKeyboardMarkup as any);
+    await sendShortenedMessage(this.bot, chatId, response, inlineKeyboardMarkup);
   }
 }

@@ -7,7 +7,15 @@ import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { deleteFile, getErrorMessage, setFfmpegPath } from '@core/utils';
 import { AiService } from '@services/ai';
 import { getTranslationToEnglish } from '@services/google-translate';
-import { BOT_BROADCAST_ACTIONS, BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, TelegramMessageData } from '@services/telegram';
+import {
+  BOT_BROADCAST_ACTIONS,
+  BOTS,
+  downloadAudioFromVideoOrAudio,
+  getMessageData,
+  MessageLoader,
+  sendShortenedMessage,
+  TelegramMessageData,
+} from '@services/telegram';
 import { VoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { getKeyboardOptions, validateActionWithMessage } from './utils';
@@ -100,7 +108,7 @@ export class VoicePalService implements OnModuleInit {
     await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
     deleteFile(videoFileLocalPath);
     const replyText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
-    await this.bot.sendMessage(chatId, replyText);
+    await sendShortenedMessage(this.bot, chatId, replyText);
     await this.notifierBotService.collect(MessageType.TEXT, replyText);
     await deleteFile(audioFileLocalPath);
   }
@@ -126,7 +134,7 @@ export class VoicePalService implements OnModuleInit {
       deleteFile(audioFileLocalPath);
     }
 
-    await this.bot.sendMessage(chatId, replyText);
+    await sendShortenedMessage(this.bot, chatId, replyText);
     await this.notifierBotService.collect(MessageType.TEXT, replyText);
   }
 
@@ -147,7 +155,7 @@ export class VoicePalService implements OnModuleInit {
     const imageLocalPath = await this.bot.downloadFile(photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
     await this.notifierBotService.collect(MessageType.PHOTO, imageLocalPath);
     const imageAnalysisText = await this.aiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
-    await this.bot.sendMessage(chatId, imageAnalysisText);
+    await sendShortenedMessage(this.bot, chatId, imageAnalysisText);
     await this.notifierBotService.collect(MessageType.TEXT, imageAnalysisText);
     deleteFile(imageLocalPath);
   }
