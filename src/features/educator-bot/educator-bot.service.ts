@@ -29,13 +29,7 @@ export class EducatorBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({
-      bot: this.bot,
-      logger: new Logger(BOTS.EDUCATOR.id),
-      isBlocked: true,
-      handlers,
-      customErrorMessage: CUSTOM_ERROR_MESSAGE,
-    });
+    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.EDUCATOR.id), isBlocked: true, handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
   }
 
   private async startHandler(message: Message): Promise<void> {

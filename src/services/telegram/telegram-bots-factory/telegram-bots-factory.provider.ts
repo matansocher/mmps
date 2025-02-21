@@ -1,7 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
 import type { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createErrorEventListeners, type TelegramBotConfig } from '@services/telegram';
+import type { TelegramBotConfig } from '../interface';
+import { createErrorEventListeners } from './telegram-bot-error-handler';
 
 export const TelegramBotsFactoryProvider = (botConfig: TelegramBotConfig): Provider => {
   return {

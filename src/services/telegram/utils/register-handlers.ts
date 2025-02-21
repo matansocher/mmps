@@ -1,8 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
-import { handleCommand, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { handleCommand } from '.';
+import { TELEGRAM_EVENTS, TelegramEventHandler } from '../constants';
 
-export type RegisterCommandsOptions = {
+export type RegisterHandlersOptions = {
   readonly bot: TelegramBot;
   readonly logger: Logger;
   readonly handlers: TelegramEventHandler[];
@@ -10,18 +11,14 @@ export type RegisterCommandsOptions = {
   readonly customErrorMessage?: string;
 };
 
-export function registerHandlers({ bot, logger, handlers, isBlocked = false, customErrorMessage = null }: RegisterCommandsOptions) {
+export function registerHandlers({ bot, logger, handlers, isBlocked = false, customErrorMessage = null }: RegisterHandlersOptions) {
   handlers.forEach(({ event, handler, regex }) => {
     const handlerName = (regex || event).replace('/', '');
     const unifiedCommandOptions = { bot, logger, handlerName, isBlocked, customErrorMessage };
     switch (event) {
       case TELEGRAM_EVENTS.COMMAND: {
         bot.onText(new RegExp(regex), async (message: Message) => {
-          await handleCommand({
-            ...unifiedCommandOptions,
-            message,
-            handler,
-          });
+          await handleCommand({ ...unifiedCommandOptions, message, handler });
         });
         break;
       }
@@ -30,12 +27,7 @@ export function registerHandlers({ bot, logger, handlers, isBlocked = false, cus
       case TELEGRAM_EVENTS.TEXT:
       case TELEGRAM_EVENTS.CALLBACK_QUERY: {
         bot.on(event, async (message: Message | CallbackQuery) => {
-          await handleCommand({
-            ...unifiedCommandOptions,
-            message,
-            handler,
-            isCallbackQuery: event === TELEGRAM_EVENTS.CALLBACK_QUERY,
-          });
+          await handleCommand({ ...unifiedCommandOptions, message, handler, isCallbackQuery: event === TELEGRAM_EVENTS.CALLBACK_QUERY });
         });
         break;
       }

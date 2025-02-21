@@ -7,7 +7,7 @@ import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHand
 import { registerHandlers } from '@services/telegram/utils/register-handlers';
 import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
-import { getLongestStreak, getStreak } from './utils';
+import { getExerciseReplyText, getLongestStreak, getStreak } from './utils';
 
 @Injectable()
 export class TrainerBotService implements OnModuleInit {
@@ -34,12 +34,7 @@ export class TrainerBotService implements OnModuleInit {
         handler: (message) => this.achievementsHandler.call(this, message),
       },
     ];
-    registerHandlers({
-      bot: this.bot,
-      logger: new Logger(BOTS.TRAINER.id),
-      isBlocked: true,
-      handlers,
-    });
+    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.TRAINER.id), isBlocked: true, handlers });
   }
 
   private async startHandler(message: Message): Promise<void> {
@@ -69,7 +64,7 @@ export class TrainerBotService implements OnModuleInit {
         return;
       }
 
-      const replyText = this.trainerService.getExerciseReplyText({ currentStreak, longestStreak });
+      const replyText = getExerciseReplyText({ currentStreak, longestStreak });
       await this.bot.sendMessage(chatId, replyText);
     });
   }

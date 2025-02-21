@@ -28,11 +28,7 @@ export class VoicePalBotService implements OnModuleInit {
         },
       },
     ];
-    registerHandlers({
-      bot: this.bot,
-      logger: new Logger(BOTS.VOICE_PAL.id),
-      handlers,
-    });
+    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.VOICE_PAL.id), handlers });
   }
 
   async handleMessage(message: Message): Promise<void> {
