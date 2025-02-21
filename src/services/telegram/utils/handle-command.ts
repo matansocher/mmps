@@ -1,10 +1,10 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, stringify } from '@core/utils';
-import { getCallbackQueryData, getMessageData } from '@services/telegram';
-import { RegisterCommandsOptions } from '@services/telegram/utils/register-handlers';
+import { getCallbackQueryData, getMessageData } from '.';
+import { RegisterHandlersOptions } from './register-handlers';
 
-type HandleCommandOptions = Pick<RegisterCommandsOptions, 'bot' | 'logger' | 'isBlocked' | 'customErrorMessage'> & {
+type HandleCommandOptions = Pick<RegisterHandlersOptions, 'bot' | 'logger' | 'isBlocked' | 'customErrorMessage'> & {
   readonly message: Message | CallbackQuery;
   readonly handlerName: string;
   readonly handler: (message: Message | CallbackQuery) => Promise<void> | void;

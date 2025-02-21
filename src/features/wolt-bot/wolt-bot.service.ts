@@ -31,11 +31,7 @@ export class WoltBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.textHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({
-      bot: this.bot,
-      logger: new Logger(BOTS.WOLT.id),
-      handlers,
-    });
+    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.WOLT.id), handlers });
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -47,16 +43,7 @@ export class WoltBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, replyText);
       this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
     } catch (err) {
-      this.notifierBotService.notify(
-        BOTS.WOLT,
-        {
-          action: ANALYTIC_EVENT_NAMES.ERROR,
-          error: `error - ${getErrorMessage(err)}`,
-          method: this.startHandler.name,
-        },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.startHandler.name }, chatId, this.mongoUserService);
       throw err;
     }
   }
@@ -122,23 +109,14 @@ export class WoltBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
       this.notifierBotService.notify(
         BOTS.WOLT,
-        {
-          action: ANALYTIC_EVENT_NAMES.SEARCH,
-          search: rawRestaurant,
-          restaurants: matchedRestaurants.map((r) => r.name).join(' | '),
-        },
+        { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') },
         chatId,
         this.mongoUserService,
       );
     } catch (err) {
       this.notifierBotService.notify(
         BOTS.WOLT,
-        {
-          restaurant,
-          action: ANALYTIC_EVENT_NAMES.ERROR,
-          error: `error - ${getErrorMessage(err)}`,
-          method: this.textHandler.name,
-        },
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.textHandler.name },
         chatId,
         this.mongoUserService,
       );
@@ -161,12 +139,7 @@ export class WoltBotService implements OnModuleInit {
     } catch (err) {
       await this.notifierBotService.notify(
         BOTS.WOLT,
-        {
-          restaurant,
-          action: ANALYTIC_EVENT_NAMES.ERROR,
-          error: getErrorMessage(err),
-          method: this.callbackQueryHandler.name,
-        },
+        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: getErrorMessage(err), method: this.callbackQueryHandler.name },
         chatId,
         this.mongoUserService,
       );
@@ -205,15 +178,7 @@ export class WoltBotService implements OnModuleInit {
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifierBotService.notify(
-      BOTS.WOLT,
-      {
-        action: ANALYTIC_EVENT_NAMES.SUBSCRIBE,
-        restaurant,
-      },
-      chatId,
-      this.mongoUserService,
-    );
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, chatId, this.mongoUserService);
   }
 
   async handleCallbackRemoveSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {

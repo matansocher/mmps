@@ -1,5 +1,5 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { BOT_BROADCAST_ACTIONS } from '@services/telegram';
+import { BOT_BROADCAST_ACTIONS } from '../constants';
 import type { MessageLoaderOptions } from '../interface';
 
 const LOADER_EMOJI = '🐢';

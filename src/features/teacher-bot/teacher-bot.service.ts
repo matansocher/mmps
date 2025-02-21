@@ -33,12 +33,7 @@ export class TeacherBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({
-      bot: this.bot,
-      logger: new Logger(BOTS.PROGRAMMING_TEACHER.id),
-      isBlocked: true,
-      handlers,
-    });
+    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.PROGRAMMING_TEACHER.id), isBlocked: true, handlers });
   }
 
   private async startHandler(message: Message): Promise<void> {

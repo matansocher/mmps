@@ -30,12 +30,7 @@ export class CoachBotService implements OnModuleInit {
       { event: COMMAND, regex: UNSUBSCRIBE.command, handler: (message) => this.unsubscribeHandler.call(this, message) },
       { event: TEXT, handler: (message) => this.textHandler.call(this, message) },
     ];
-    registerHandlers({
-      bot: this.bot,
-      logger: new Logger(BOTS.COACH.id),
-      handlers,
-      customErrorMessage: CUSTOM_ERROR_MESSAGE,
-    });
+    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.COACH.id), handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
   }
 
   private async startHandler(message: Message) {
@@ -82,14 +77,6 @@ export class CoachBotService implements OnModuleInit {
       await sendStyledMessage(this.bot, chatId, replyText);
     });
 
-    this.notifierBotService.notify(
-      BOTS.COACH,
-      {
-        action: ANALYTIC_EVENT_STATES.SEARCH,
-        text,
-      },
-      chatId,
-      this.mongoUserService,
-    );
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH, text }, chatId, this.mongoUserService);
   }
 }
