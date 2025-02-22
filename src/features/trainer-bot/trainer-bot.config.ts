@@ -6,7 +6,6 @@ export const WEEKLY_SUMMARY_HOUR_OF_DAY = 22;
 export const TRAINER_BOT_COMMANDS = {
   START: { command: '/start', description: 'Start all over' },
   EXERCISE: { command: '/exercise', description: 'Log exercise' },
-  HISTORY: { command: '/history', description: 'Show exercises history' },
   ACHIEVEMENTS: { command: '/achievements', description: 'Show Achievements' },
 };
 

@@ -1,8 +1,10 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
+import { DAYS_OF_WEEK } from '@core/config';
 import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
 import { BOTS } from '@services/telegram';
-import { EXERCISE_ENCOURAGE_MESSAGES, getLastWeekDates, getLongestStreak, getStreak, processMessageTemplate, WEEKLY_SUMMARY_MESSAGES } from './utils';
+import { searchMeme } from '@services/tenor';
+import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
 
 @Injectable()
 export class TrainerService {
@@ -11,37 +13,34 @@ export class TrainerService {
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
-  async getExercisesDates(chatId: number): Promise<Date[]> {
-    const exercises = await this.mongoExerciseService.getExercises(chatId);
-    return exercises.map((exercise) => exercise.createdAt);
-  }
-
   async processEODReminder(chatId: number): Promise<void> {
     const todayExercise = await this.mongoExerciseService.getTodayExercise(chatId);
     if (todayExercise) {
       return;
     }
-    const exercisesDates = await this.getExercisesDates(chatId);
-    const currentStreak = getStreak(exercisesDates);
-    const template = EXERCISE_ENCOURAGE_MESSAGES[Math.floor(Math.random() * EXERCISE_ENCOURAGE_MESSAGES.length)];
-    const replyText = processMessageTemplate(template, { currentStreak });
-    await this.bot.sendMessage(chatId, replyText);
+    const result = await searchMeme('funny lazy workout');
+    if (result) {
+      await this.bot.sendPhoto(chatId, result, { caption: '🦔🦔🦔🦔' });
+    } else {
+      await this.bot.sendMessage(chatId, '🦔🦔🦔🦔');
+    }
   }
 
   async processWeeklySummary(chatId: number): Promise<void> {
     const { lastSunday, lastSaturday } = getLastWeekDates();
 
-    const exercisesDates = await this.getExercisesDates(chatId);
+    const exercises = await this.mongoExerciseService.getExercises(chatId);
+    const exercisesDates = exercises.map((exercise) => exercise.createdAt);
     const lastWeekExercises = exercisesDates.filter((exerciseDate) => {
       return exerciseDate.getTime() > lastSunday.getTime() && exerciseDate.getTime() < lastSaturday.getTime();
     });
-    const totalExercises = lastWeekExercises.length;
     const currentStreak = getStreak(lastWeekExercises);
     const longestStreak = getLongestStreak(exercisesDates);
 
-    const template = WEEKLY_SUMMARY_MESSAGES[Math.floor(Math.random() * WEEKLY_SUMMARY_MESSAGES.length)];
-    const summaryMessage = processMessageTemplate(template, { totalExercises, currentStreak, longestStreak });
-
-    await this.bot.sendMessage(chatId, summaryMessage);
+    const exercisesDays = lastWeekExercises.map((exerciseDate) => `🟢 ${DAYS_OF_WEEK[exerciseDate.getDay()]}`);
+    const exercisesDaysText = ['Last Week Exercises:', ...exercisesDays].join('\n');
+    const streaksText = [`🚀Current Streak: ${currentStreak}`, `🏋️‍♂️Longest Streak: ${longestStreak}`].join('\n');
+    const replyText = [streaksText, exercisesDaysText].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
   }
 }
