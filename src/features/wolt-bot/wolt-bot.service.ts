@@ -5,13 +5,15 @@ import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage, hasHebrew } from '@core/utils';
 import { WoltRestaurant } from '@features/wolt-bot/interface';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram/utils/register-handlers';
+import { registerHandlers } from '@services/telegram';
 import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, INITIAL_BOT_RESPONSE, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
+  private readonly logger = new Logger(WoltBotService.name);
+
   constructor(
     private readonly restaurantsService: RestaurantsService,
     private readonly mongoUserService: WoltMongoUserService,
@@ -31,7 +33,7 @@ export class WoltBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.textHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.WOLT.id), handlers });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
 
   async startHandler(message: Message): Promise<void> {

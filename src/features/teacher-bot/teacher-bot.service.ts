@@ -3,12 +3,14 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { getDateString } from '@core/utils';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram/utils/register-handlers';
+import { registerHandlers } from '@services/telegram';
 import { BOT_ACTIONS, INITIAL_BOT_RESPONSE, NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_COMMANDS } from './teacher-bot.config';
 import { TeacherService } from './teacher.service';
 
 @Injectable()
 export class TeacherBotService implements OnModuleInit {
+  private readonly logger = new Logger(TeacherBotService.name);
+
   constructor(
     private readonly teacherService: TeacherService,
     private readonly mongoCourseService: TeacherMongoCourseService,
@@ -33,7 +35,7 @@ export class TeacherBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.PROGRAMMING_TEACHER.id), isBlocked: true, handlers });
+    registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers });
   }
 
   private async startHandler(message: Message): Promise<void> {
