@@ -2,7 +2,7 @@ import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, stringify } from '@core/utils';
 import { getCallbackQueryData, getMessageData } from '.';
-import { RegisterHandlersOptions } from './register-handlers';
+import { RegisterHandlersOptions } from '.';
 
 type HandleCommandOptions = Pick<RegisterHandlersOptions, 'bot' | 'logger' | 'isBlocked' | 'customErrorMessage'> & {
   readonly message: Message | CallbackQuery;

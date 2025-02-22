@@ -1,6 +1,11 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 
 export const BOTS = {
+  PLAYGROUNDS: {
+    id: 'PLAYGROUNDS',
+    name: 'Playgrounds Bot 🃏',
+    token: 'PLAYGROUNDS_TELEGRAM_BOT_TOKEN',
+  },
   WOLT: {
     id: 'WOLT',
     name: 'Wolt Bot 🍔',

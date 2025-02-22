@@ -1,7 +1,7 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { BOTS, getMessageData, MessagesAggregator, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram/utils/register-handlers';
+import { registerHandlers } from '@services/telegram';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { VOICE_PAL_OPTIONS } from './voice-pal.config';
 import { VoicePalService } from './voice-pal.service';
@@ -28,7 +28,7 @@ export class VoicePalBotService implements OnModuleInit {
         },
       },
     ];
-    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.VOICE_PAL.id), handlers });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
 
   async handleMessage(message: Message): Promise<void> {

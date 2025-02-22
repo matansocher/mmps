@@ -4,7 +4,7 @@ import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
 import { getDateString } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram/utils/register-handlers';
+import { registerHandlers } from '@services/telegram';
 import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, MAX_EXERCISES_HISTORY_TO_SHOW, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
 import { getExerciseReplyText, getLongestStreak, getStreak } from './utils';
@@ -34,7 +34,7 @@ export class TrainerBotService implements OnModuleInit {
         handler: (message) => this.achievementsHandler.call(this, message),
       },
     ];
-    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.TRAINER.id), isBlocked: true, handlers });
+    registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers });
   }
 
   private async startHandler(message: Message): Promise<void> {

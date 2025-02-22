@@ -3,12 +3,14 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { BOTS, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram/utils/register-handlers';
+import { registerHandlers } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS, CUSTOM_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {
+  private readonly logger = new Logger(CoachBotService.name);
+
   constructor(
     private readonly mongoUserService: CoachMongoUserService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
@@ -28,7 +30,7 @@ export class CoachBotService implements OnModuleInit {
       { event: COMMAND, regex: UNSUBSCRIBE.command, handler: (message) => this.unsubscribeHandler.call(this, message) },
       { event: TEXT, handler: (message) => this.textHandler.call(this, message) },
     ];
-    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.COACH.id), handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
   }
 
   private async startHandler(message: Message): Promise<void> {

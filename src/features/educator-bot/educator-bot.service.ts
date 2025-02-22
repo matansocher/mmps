@@ -2,12 +2,14 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicStatus } from '@core/mongo/educator-mongo';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram/utils/register-handlers';
+import { registerHandlers } from '@services/telegram';
 import { BOT_ACTIONS, CUSTOM_ERROR_MESSAGE, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
 @Injectable()
 export class EducatorBotService implements OnModuleInit {
+  private readonly logger = new Logger(EducatorBotService.name);
+
   constructor(
     private readonly educatorService: EducatorService,
     private readonly mongoTopicService: EducatorMongoTopicService,
@@ -29,7 +31,7 @@ export class EducatorBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({ bot: this.bot, logger: new Logger(BOTS.EDUCATOR.id), isBlocked: true, handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
+    registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
   }
 
   private async startHandler(message: Message): Promise<void> {

@@ -4,6 +4,7 @@ import { isProd } from '@core/config';
 import { CoachBotModule } from '@features/coach-bot';
 import { DefineModule } from '@features/define';
 import { EducatorBotModule } from '@features/educator-bot';
+import { PlaygroundsBotModule } from '@features/playgrounds-bot';
 import { TeacherBotModule } from '@features/teacher-bot';
 import { TrainerBotModule } from '@features/trainer-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
@@ -18,7 +19,7 @@ function getImports() {
     return [...commonModules, CoachBotModule, DefineModule, EducatorBotModule, TeacherBotModule, TrainerBotModule, VoicePalBotModule, WoltBotModule];
   }
 
-  return [...commonModules, WoltBotModule];
+  return [...commonModules, PlaygroundsBotModule, WoltBotModule];
 }
 
 @Module({
