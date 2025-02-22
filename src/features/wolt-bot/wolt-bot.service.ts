@@ -124,15 +124,15 @@ export class WoltBotService implements OnModuleInit {
     }
   }
 
-  async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, data: restaurant } = getCallbackQueryData(callbackQuery);
+  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
+    const { chatId, messageId, data: restaurant } = getCallbackQueryData(callbackQuery);
 
     try {
       const restaurantName = restaurant.replace(`${BOT_ACTIONS.REMOVE} - `, '');
       const activeSubscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
 
       if (restaurant.startsWith(`${BOT_ACTIONS.REMOVE} - `)) {
-        await this.handleCallbackRemoveSubscription(chatId, restaurantName, activeSubscriptions);
+        await this.handleCallbackRemoveSubscription(chatId, messageId, restaurantName, activeSubscriptions);
       } else {
         await this.handleCallbackAddSubscription(chatId, restaurantName, activeSubscriptions);
       }
@@ -181,7 +181,7 @@ export class WoltBotService implements OnModuleInit {
     this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, chatId, this.mongoUserService);
   }
 
-  async handleCallbackRemoveSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
+  async handleCallbackRemoveSubscription(chatId: number, messageId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
     let replyText;
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
@@ -191,5 +191,6 @@ export class WoltBotService implements OnModuleInit {
       replyText = [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n');
     }
     await this.bot.sendMessage(chatId, replyText);
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
   }
 }

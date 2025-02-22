@@ -115,19 +115,19 @@ export class EducatorBotService implements OnModuleInit {
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, data: response } = getCallbackQueryData(callbackQuery);
+    const { chatId, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
     const [topicId, action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.COMPLETE:
-        await this.handleCallbackCompleteTopic(chatId, topicId);
+        await this.handleCallbackCompleteTopic(chatId, messageId, topicId);
         break;
       default:
         throw new Error('Invalid action');
     }
   }
 
-  private async handleCallbackCompleteTopic(chatId: number, topicId: string): Promise<void> {
+  private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicId: string): Promise<void> {
     const topic = await this.mongoTopicService.getTopic(topicId);
     if (!topic) {
       await this.bot.sendMessage(chatId, `וואלה לא מצאתי את הנושא, בטוח שיש נושא כזה?`);
@@ -141,5 +141,6 @@ export class EducatorBotService implements OnModuleInit {
 
     await this.mongoTopicService.markTopicCompleted(topicId);
     await this.bot.sendMessage(chatId, '🔥');
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
   }
 }

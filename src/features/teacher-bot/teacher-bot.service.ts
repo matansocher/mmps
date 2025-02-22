@@ -143,19 +143,19 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, data: response } = getCallbackQueryData(callbackQuery);
+    const { chatId, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
     const [courseId, action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.COMPLETE:
-        await this.handleCallbackCompleteCourse(chatId, courseId);
+        await this.handleCallbackCompleteCourse(chatId, messageId, courseId);
         break;
       default:
         throw new Error('Invalid action');
     }
   }
 
-  private async handleCallbackCompleteCourse(chatId: number, courseId: string): Promise<void> {
+  private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseId: string): Promise<void> {
     const course = await this.mongoCourseService.getCourse(courseId);
     if (!course) {
       await this.bot.sendMessage(chatId, 'I am sorry but I couldnt find that course');
@@ -168,6 +168,7 @@ export class TeacherBotService implements OnModuleInit {
     }
 
     await this.mongoCourseService.markCourseCompleted(courseId);
-    this.bot.sendMessage(chatId, 'Great 👏\nLet me know once you are ready for the next course');
+    await this.bot.sendMessage(chatId, '👏');
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
   }
 }

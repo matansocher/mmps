@@ -9,8 +9,6 @@ import { CoachService } from './coach.service';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {
-  private readonly logger = new Logger(CoachBotService.name);
-
   constructor(
     private readonly mongoUserService: CoachMongoUserService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
@@ -33,7 +31,7 @@ export class CoachBotService implements OnModuleInit {
     registerHandlers({ bot: this.bot, logger: new Logger(BOTS.COACH.id), handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
   }
 
-  private async startHandler(message: Message) {
+  private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const { telegramUserId, firstName, lastName, username } = getMessageData(message);
     await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
@@ -41,7 +39,7 @@ export class CoachBotService implements OnModuleInit {
     this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.START }, chatId, this.mongoUserService);
   }
 
-  private async subscribeHandler(message: Message) {
+  private async subscribeHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     if (subscription) {
@@ -53,7 +51,7 @@ export class CoachBotService implements OnModuleInit {
     this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SUBSCRIBE }, chatId, this.mongoUserService);
   }
 
-  private async unsubscribeHandler(message: Message) {
+  private async unsubscribeHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     if (subscription) {
