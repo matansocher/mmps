@@ -1,6 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { BOTS, getMessageData, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { BOTS, getMessageData, sendMessageInStyle, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
 import { PLAYGROUNDS_BOT_COMMANDS } from './playgrounds-bot.config';
 
@@ -23,7 +23,8 @@ export class PlaygroundsBotService implements OnModuleInit {
 
   private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    await this.bot.sendMessage(chatId, 'Hi');
+    const replyMessage = 'this is a very long message and we want to send each word separately so it looks like it is being written live';
+    await sendMessageInStyle(this.bot, chatId, replyMessage);
   }
 
   private async pollHandler(message: Message): Promise<void> {
