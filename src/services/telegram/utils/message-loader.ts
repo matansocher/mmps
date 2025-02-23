@@ -3,7 +3,7 @@ import { BOT_BROADCAST_ACTIONS } from '../constants';
 import type { MessageLoaderOptions } from '../interface';
 
 const LOADER_EMOJI = '🐢';
-const MAX_TURTLES = 10;
+const MAX_EMOJIS = 10;
 const DEFAULT_CYCLE_DURATION = 3000;
 
 interface MessageLoaderData {
@@ -73,7 +73,7 @@ export class MessageLoader {
     const { cycleIterationIndex, timeoutId } = messageCache;
     timeoutId && clearTimeout(timeoutId);
 
-    if (cycleIterationIndex >= MAX_TURTLES) {
+    if (cycleIterationIndex >= MAX_EMOJIS) {
       this.stopLoader();
       return;
     }
@@ -95,15 +95,15 @@ export class MessageLoader {
     }
 
     const { cycleIterationIndex = 0, loaderMessageId } = messageCache;
-    const turtles = this.loaderEmoji.repeat(cycleIterationIndex + 1);
+    const loaderEmojis = this.loaderEmoji.repeat(cycleIterationIndex + 1);
 
     let messageRes;
     try {
       if (cycleIterationIndex === 0) {
-        messageRes = await this.bot.sendMessage(this.chatId, turtles);
+        messageRes = await this.bot.sendMessage(this.chatId, loaderEmojis);
         this.setMessageCache({ loaderMessageId: messageRes.message_id });
       } else if (loaderMessageId) {
-        await this.bot.editMessageText(turtles, { chat_id: this.chatId, message_id: loaderMessageId });
+        await this.bot.editMessageText(loaderEmojis, { chat_id: this.chatId, message_id: loaderMessageId });
       }
       await this.bot.sendChatAction(this.chatId, this.loadingAction);
 
