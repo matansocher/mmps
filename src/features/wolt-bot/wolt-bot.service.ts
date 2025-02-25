@@ -8,7 +8,7 @@ import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TE
 import { registerHandlers } from '@services/telegram';
 import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, INITIAL_BOT_RESPONSE, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt-bot.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, CONTACT_BOT_RESPONSE, GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt-bot.config';
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
@@ -26,28 +26,31 @@ export class WoltBotService implements OnModuleInit {
     this.bot.setMyCommands(Object.values(WOLT_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, LIST } = WOLT_BOT_COMMANDS;
+    const { START, LIST, CONTACT } = WOLT_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: LIST.command, handler: (message) => this.listHandler.call(this, message) },
+      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.textHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({ bot: this.bot, logger: this.logger, handlers });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage: GENERAL_ERROR_MESSAGE });
   }
 
   async startHandler(message: Message): Promise<void> {
     const { chatId, firstName, lastName, telegramUserId, username } = getMessageData(message);
 
-    try {
-      await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
-      const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
-      await this.bot.sendMessage(chatId, replyText);
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
-    } catch (err) {
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.startHandler.name }, chatId, this.mongoUserService);
-      throw err;
-    }
+    await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
+    const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
+    await this.bot.sendMessage(chatId, replyText);
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
+  }
+
+  async contactHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+
+    await this.bot.sendMessage(chatId, CONTACT_BOT_RESPONSE);
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, chatId, this.mongoUserService);
   }
 
   async listHandler(message: Message): Promise<void> {

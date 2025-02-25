@@ -1,3 +1,5 @@
+import { MY_USER_NAME } from '@core/config';
+
 export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 3;
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 8;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
@@ -17,6 +19,7 @@ export const INITIAL_BOT_RESPONSE = [
   `פשוט תשלחו לי את שם המסעדה (באנגלית 🇺🇸), ואני אגיד לכם מתי היא נפתחת`,
   `כדי לראות את רשימת ההתראות הפתוחות אפשר להשתמש בפקודה /list`,
 ].join('\n');
+export const CONTACT_BOT_RESPONSE = [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n');
 export const GENERAL_ERROR_MESSAGE = `מצטער, אבל קרתה לי תקלה. אפשר לנסות מאוחר יותר 😥`;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
@@ -54,6 +57,7 @@ export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon'];
 export const WOLT_BOT_COMMANDS = {
   START: { command: '/start', description: 'התחל מהתחלה' },
   LIST: { command: '/list', description: 'רשימת ההתראות הפתוחות' },
+  CONTACT: { command: '/contact', description: 'צור קשר' },
 };
 
 export const HOUR_OF_DAY_TO_REFRESH_MAP = {
@@ -93,6 +97,7 @@ export enum BOT_ACTIONS {
 
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
+  CONTACT: 'CONTACT',
   LIST: 'LIST',
   SEARCH: 'SEARCH',
   SUBSCRIBE: 'SUBSCRIBE',
