@@ -6,8 +6,8 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
-import { BOTS, getInlineKeyboardMarkup } from '@services/telegram';
-import { WoltRestaurant } from './interface';
+import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
+import { AnalyticEventValue, WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
 import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt-bot.config';
 
@@ -75,9 +75,7 @@ export class WoltSchedulerService implements OnModuleInit {
             } as any),
           );
           promisesArr.push(this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant));
-          promisesArr.push(
-            this.notifierBotService.notify(BOTS.WOLT, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED }, subscription.chatId, this.mongoUserService),
-          );
+          promisesArr.push(this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED));
         });
       });
       await Promise.all(promisesArr);
@@ -102,11 +100,16 @@ export class WoltSchedulerService implements OnModuleInit {
             ),
           );
         }
-        this.notifierBotService.notify(BOTS.WOLT, { restaurant: subscription.restaurant, action: ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED }, subscription.chatId, this.mongoUserService);
+        this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
       });
       await Promise.all(promisesArr);
     } catch (err) {
       this.logger.error(`${this.cleanExpiredSubscriptions.name} - error - ${getErrorMessage(err)}`);
     }
+  }
+
+  async notifyWithUserDetails(chatId: number, restaurant: string, action: AnalyticEventValue) {
+    const userDetails = (await this.mongoUserService.getUserDetails({ chatId })) as unknown as UserDetails;
+    this.notifierBotService.notify(BOTS.WOLT, { restaurant, action }, userDetails);
   }
 }

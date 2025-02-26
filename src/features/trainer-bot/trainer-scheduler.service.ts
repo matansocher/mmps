@@ -24,7 +24,7 @@ export class TrainerSchedulerService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleEODReminder.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage });
     }
   }
 
@@ -36,7 +36,7 @@ export class TrainerSchedulerService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleWeeklySummary.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage });
     }
   }
 }

@@ -1,10 +1,11 @@
+import { UserDetails } from './telegram-message-data.interface';
+
 export interface TelegramCallbackQueryData {
   readonly messageId: number;
   readonly callbackQueryId: string;
   readonly chatId: number;
   readonly date: number;
-  readonly firstName: string;
-  readonly lastName: string;
+  readonly userDetails: UserDetails;
   readonly text: string;
   readonly data: string;
 }

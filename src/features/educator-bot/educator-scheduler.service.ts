@@ -27,7 +27,7 @@ export class EducatorSchedulerService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleTopic.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: errorMessage }, null, null);
+      this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: errorMessage });
     }
   }
 }
