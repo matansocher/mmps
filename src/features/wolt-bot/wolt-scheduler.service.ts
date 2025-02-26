@@ -100,7 +100,7 @@ export class WoltSchedulerService implements OnModuleInit {
             ),
           );
         }
-        this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
+        this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
       });
       await Promise.all(promisesArr);
     } catch (err) {

@@ -2,11 +2,10 @@ import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-b
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { UserDetails } from '@core/notifier-bot/interface';
 import { getErrorMessage, hasHebrew } from '@core/utils';
 import { WoltRestaurant } from '@features/wolt-bot/interface';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram';
+import { registerHandlers, UserDetails } from '@services/telegram';
 import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, CONTACT_BOT_RESPONSE, GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt-bot.config';
