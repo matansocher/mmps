@@ -34,15 +34,14 @@ export class CoachBotService implements OnModuleInit {
   }
 
   private async startHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
-    const { telegramUserId, firstName, lastName, username } = getMessageData(message);
-    await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
+    const { chatId, userDetails } = getMessageData(message);
+    await this.mongoUserService.saveUserDetails(userDetails);
     await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.START }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.START }, userDetails);
   }
 
   private async subscribeHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     if (subscription) {
       await this.bot.sendMessage(chatId, `וואלה אני רואה שכבר שמת עוקב, אז הכל טוב ✅`);
@@ -50,11 +49,11 @@ export class CoachBotService implements OnModuleInit {
     }
     await this.mongoSubscriptionService.addSubscription(chatId);
     await this.bot.sendMessage(chatId, `סבבה, אני אשלח לך עדכונים יומיים ✅. אפשר להסיר עוקב תמיד פה למטה (unsubscribe)`);
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SUBSCRIBE }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SUBSCRIBE }, userDetails);
   }
 
   private async unsubscribeHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     if (subscription) {
       await this.bot.sendMessage(chatId, `טוב אני רואה שעדיין לא שמת עוקב, לא סבבה 😁`);
@@ -62,11 +61,11 @@ export class CoachBotService implements OnModuleInit {
     }
     await this.mongoSubscriptionService.archiveSubscription(chatId);
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.UNSUBSCRIBE }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.UNSUBSCRIBE }, userDetails);
   }
 
   async textHandler(message: Message): Promise<void> {
-    const { chatId, text } = getMessageData(message);
+    const { chatId, userDetails, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(COACH_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
@@ -77,6 +76,6 @@ export class CoachBotService implements OnModuleInit {
       await sendStyledMessage(this.bot, chatId, replyText);
     });
 
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH, text }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH, text }, userDetails);
   }
 }

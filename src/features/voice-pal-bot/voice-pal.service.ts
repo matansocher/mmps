@@ -30,14 +30,14 @@ export class VoicePalService implements OnModuleInit {
   }
 
   async handleActionSelection(message: Message, selection: string): Promise<void> {
-    const { telegramUserId, chatId, firstName, lastName, username } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const relevantAction = Object.keys(VOICE_PAL_OPTIONS).find((option: string) => VOICE_PAL_OPTIONS[option].displayName === selection);
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
-      await this.mongoUserService.saveUserDetails({ telegramUserId, chatId, firstName, lastName, username });
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { action: ANALYTIC_EVENT_NAMES['/start'] }, chatId, this.mongoUserService);
-      replyText = replyText.replace('{name}', firstName || username || '');
+      await this.mongoUserService.saveUserDetails(userDetails);
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { action: ANALYTIC_EVENT_NAMES['/start'] }, userDetails);
+      replyText = replyText.replace('{name}', userDetails.firstName || userDetails.username || '');
     } else {
       this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
     }
@@ -46,7 +46,7 @@ export class VoicePalService implements OnModuleInit {
   }
 
   async handleAction(message: Message, userAction: VoicePalOption): Promise<void> {
-    const { chatId, text, audio, video, photo, file } = getMessageData(message);
+    const { chatId, userDetails, text, audio, video, photo, file } = getMessageData(message);
 
     if (!userAction) {
       await this.bot.sendMessage(chatId, `Please select an action first.`);
@@ -74,11 +74,11 @@ export class VoicePalService implements OnModuleInit {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, userDetails);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, userDetails);
       throw err;
     }
   }

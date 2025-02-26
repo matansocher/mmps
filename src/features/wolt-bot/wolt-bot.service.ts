@@ -2,6 +2,7 @@ import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-b
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
+import { UserDetails } from '@core/notifier-bot/interface';
 import { getErrorMessage, hasHebrew } from '@core/utils';
 import { WoltRestaurant } from '@features/wolt-bot/interface';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
@@ -38,23 +39,23 @@ export class WoltBotService implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, firstName, lastName, telegramUserId, username } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
 
-    await this.mongoUserService.saveUserDetails({ chatId, telegramUserId, firstName, lastName, username });
-    const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', firstName || username || '');
+    await this.mongoUserService.saveUserDetails(userDetails);
+    const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', userDetails.firstName || userDetails.username || '');
     await this.bot.sendMessage(chatId, replyText);
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, CONTACT_BOT_RESPONSE);
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   async listHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
 
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
@@ -76,13 +77,13 @@ export class WoltBotService implements OnModuleInit {
       });
       await Promise.all(promisesArr);
     } catch (err) {
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name }, chatId, this.mongoUserService);
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name }, userDetails);
       throw err;
     }
   }
 
   async textHandler(message: Message): Promise<void> {
-    const { chatId, text: rawRestaurant } = getMessageData(message);
+    const { chatId, userDetails, text: rawRestaurant } = getMessageData(message);
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     // prevent built in options to be processed also here
@@ -112,25 +113,15 @@ export class WoltBotService implements OnModuleInit {
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
-      this.notifierBotService.notify(
-        BOTS.WOLT,
-        { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
-      this.notifierBotService.notify(
-        BOTS.WOLT,
-        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.textHandler.name },
-        chatId,
-        this.mongoUserService,
-      );
+      this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.textHandler.name }, userDetails);
       throw err;
     }
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, messageId, data: restaurant } = getCallbackQueryData(callbackQuery);
+    const { chatId, userDetails, messageId, data: restaurant } = getCallbackQueryData(callbackQuery);
 
     try {
       const restaurantName = restaurant.replace(`${BOT_ACTIONS.REMOVE} - `, '');
@@ -139,20 +130,15 @@ export class WoltBotService implements OnModuleInit {
       if (restaurant.startsWith(`${BOT_ACTIONS.REMOVE} - `)) {
         await this.handleCallbackRemoveSubscription(chatId, messageId, restaurantName, activeSubscriptions);
       } else {
-        await this.handleCallbackAddSubscription(chatId, restaurantName, activeSubscriptions);
+        await this.handleCallbackAddSubscription(chatId, userDetails, restaurantName, activeSubscriptions);
       }
     } catch (err) {
-      await this.notifierBotService.notify(
-        BOTS.WOLT,
-        { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: getErrorMessage(err), method: this.callbackQueryHandler.name },
-        chatId,
-        this.mongoUserService,
-      );
+      await this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: getErrorMessage(err), method: this.callbackQueryHandler.name }, userDetails);
       throw err;
     }
   }
 
-  async handleCallbackAddSubscription(chatId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
+  async handleCallbackAddSubscription(chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
@@ -183,7 +169,7 @@ export class WoltBotService implements OnModuleInit {
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, chatId, this.mongoUserService);
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
   async handleCallbackRemoveSubscription(chatId: number, messageId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
