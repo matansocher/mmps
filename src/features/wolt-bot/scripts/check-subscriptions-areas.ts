@@ -1,12 +1,14 @@
+import { config } from 'dotenv';
 import { MongoClient } from 'mongodb';
+import { join } from 'node:path';
+import { cwd, env } from 'node:process';
 import { SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { COLLECTIONS, DB_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { getRestaurantsList } from '../utils/get-restaurants-data';
 
-const mongoUri = '';
-
 async function main() {
-  const client = new MongoClient(mongoUri);
+  config({ path: join(cwd(), 'env.serve') });
+  const client = new MongoClient(env.MONGO_URI);
 
   try {
     await client.connect();
