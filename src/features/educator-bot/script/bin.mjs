@@ -1,6 +1,7 @@
+import { config } from 'dotenv';
 import { MongoClient, ObjectId } from 'mongodb';
-
-const mongoUri = '';
+import { join } from 'node:path';
+import { cwd, env } from 'node:process';
 
 const titles = [
   'קומוניזם – שיטה שבה כל הרכוש הוא ציבורי, וכל אדם עובד ומקבל שכר לפי צרכיו',
@@ -102,7 +103,8 @@ class TopicService {
 }
 
 async function main() {
-  const client = new MongoClient(mongoUri);
+  config({ path: join(cwd(), 'env.serve') });
+  const client = new MongoClient(env.MONGO_URI);
 
   try {
     await client.connect();

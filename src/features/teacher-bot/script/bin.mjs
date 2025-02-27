@@ -1,6 +1,7 @@
+import { config } from 'dotenv';
 import { MongoClient, ObjectId } from 'mongodb';
-
-const mongoUri = '';
+import { join } from 'node:path';
+import { cwd, env } from 'node:process';
 
 const topics = [
   // Front-End Topics
@@ -105,7 +106,8 @@ class CourseService {
 }
 
 async function main() {
-  const client = new MongoClient(mongoUri);
+  config({ path: join(cwd(), 'env.serve') });
+  const client = new MongoClient(env.MONGO_URI);
 
   try {
     await client.connect();
