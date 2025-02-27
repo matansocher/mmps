@@ -3,7 +3,7 @@ import { SubscriptionModel } from '@core/mongo/wolt-mongo';
 import { COLLECTIONS, DB_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { getRestaurantsList } from '../utils/get-restaurants-data';
 
-const mongoUri = 'mongodb+srv://wolt_reader:JJzd7SFJ2K4eXj3@playgrounds.rrd09yy.mongodb.net/';
+const mongoUri = '';
 
 async function main() {
   const client = new MongoClient(mongoUri);
