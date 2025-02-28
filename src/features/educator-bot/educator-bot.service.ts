@@ -3,8 +3,10 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicStatus } from '@core/mongo/educator-mongo';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
-import { BOT_ACTIONS, CUSTOM_ERROR_MESSAGE, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
+import { BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
+
+export const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
 @Injectable()
 export class EducatorBotService implements OnModuleInit {
@@ -31,7 +33,7 @@ export class EducatorBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
+    registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers, customErrorMessage });
   }
 
   private async startHandler(message: Message): Promise<void> {

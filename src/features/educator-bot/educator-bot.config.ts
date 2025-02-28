@@ -1,8 +1,6 @@
 export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
 export const IDLE_DAYS_REMINDER = 3;
 
-export const CUSTOM_ERROR_MESSAGE = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
-
 export const EDUCATOR_BOT_COMMANDS = {
   START: { command: '/start', description: 'רוצה להתחיל ללמוד' },
   STOP: { command: '/stop', description: 'רוצה להפסיק ללמוד' },

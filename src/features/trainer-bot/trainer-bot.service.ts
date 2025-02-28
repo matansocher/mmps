@@ -4,7 +4,7 @@ import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
 import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
-import { BROKEN_RECORD_IMAGE_PROMPT, INITIAL_BOT_RESPONSE, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
+import { BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { TrainerService } from './trainer.service';
 import { getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
@@ -37,7 +37,8 @@ export class TrainerBotService implements OnModuleInit {
 
   private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
+    const replyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
   }
 
   private async exerciseHandler(message: Message): Promise<void> {
