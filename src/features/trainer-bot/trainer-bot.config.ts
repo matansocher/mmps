@@ -1,5 +1,3 @@
-export const INITIAL_BOT_RESPONSE = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
-
 export const SMART_REMINDER_HOUR_OF_DAY = 19;
 export const WEEKLY_SUMMARY_HOUR_OF_DAY = 22;
 

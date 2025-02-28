@@ -1,5 +1,6 @@
 import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { MY_USER_NAME } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage, hasHebrew } from '@core/utils';
@@ -8,7 +9,9 @@ import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TE
 import { registerHandlers, UserDetails } from '@services/telegram';
 import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, CONTACT_BOT_RESPONSE, GENERAL_ERROR_MESSAGE, INITIAL_BOT_RESPONSE, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt-bot.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt-bot.config';
+
+const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר לנסות מאוחר יותר 😥`;
 
 @Injectable()
 export class WoltBotService implements OnModuleInit {
@@ -34,14 +37,22 @@ export class WoltBotService implements OnModuleInit {
       { event: MESSAGE, handler: (message) => this.textHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage: GENERAL_ERROR_MESSAGE });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
   }
 
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.mongoUserService.saveUserDetails(userDetails);
-    const replyText = INITIAL_BOT_RESPONSE.replace('{firstName}', userDetails.firstName || userDetails.username || '');
+
+    const replyText = [
+      `שלום {firstName}!`,
+      `אני בוט שמתריע על מסעדות שנפתחות להזמנה בוולט`,
+      `פשוט תשלחו לי את שם המסעדה (באנגלית 🇺🇸), ואני אגיד לכם מתי היא נפתחת`,
+      `כדי לראות את רשימת ההתראות הפתוחות אפשר להשתמש בפקודה /list`,
+    ]
+      .join('\n')
+      .replace('{firstName}', userDetails.firstName || userDetails.username || '');
     await this.bot.sendMessage(chatId, replyText);
     this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
@@ -49,7 +60,7 @@ export class WoltBotService implements OnModuleInit {
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
-    await this.bot.sendMessage(chatId, CONTACT_BOT_RESPONSE);
+    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
     this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 

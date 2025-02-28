@@ -4,7 +4,7 @@ import { CourseStatus, TeacherMongoCourseService, TeacherMongoUserPreferencesSer
 import { getDateString } from '@core/utils';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
-import { BOT_ACTIONS, INITIAL_BOT_RESPONSE, NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_COMMANDS } from './teacher-bot.config';
+import { BOT_ACTIONS, NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_COMMANDS } from './teacher-bot.config';
 import { TeacherService } from './teacher.service';
 
 @Injectable()
@@ -41,7 +41,13 @@ export class TeacherBotService implements OnModuleInit {
   private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
-    await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
+    const replyText = [
+      `Hey There 👋`,
+      `I am here to teach you all you need about any subject you want.`,
+      `I will send you daily lessons of stuff I collect on the internet and summarize it for you in a great way that you can learn from. 😁`,
+      `You can always add a course topic by sending me the topic on this format - /add <course topic>, example: /add JavaScript Heap`,
+    ].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
   }
 
   private async stopHandler(message: Message): Promise<void> {

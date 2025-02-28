@@ -1,11 +1,15 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
+import { ANALYTIC_EVENT_NAMES } from '@features/wolt-bot/wolt-bot.config';
 import { BOTS, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS, CUSTOM_ERROR_MESSAGE, INITIAL_BOT_RESPONSE } from './coach-bot.config';
+import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS } from './coach-bot.config';
 import { CoachService } from './coach.service';
+
+export const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {
@@ -23,20 +27,27 @@ export class CoachBotService implements OnModuleInit {
     this.bot.setMyCommands(Object.values(COACH_BOT_COMMANDS));
 
     const { COMMAND, TEXT } = TELEGRAM_EVENTS;
-    const { START, SUBSCRIBE, UNSUBSCRIBE } = COACH_BOT_COMMANDS;
+    const { START, SUBSCRIBE, UNSUBSCRIBE, CONTACT } = COACH_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: SUBSCRIBE.command, handler: (message) => this.subscribeHandler.call(this, message) },
       { event: COMMAND, regex: UNSUBSCRIBE.command, handler: (message) => this.unsubscribeHandler.call(this, message) },
+      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
       { event: TEXT, handler: (message) => this.textHandler.call(this, message) },
     ];
-    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage: CUSTOM_ERROR_MESSAGE });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
   }
 
   private async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserService.saveUserDetails(userDetails);
-    await this.bot.sendMessage(chatId, INITIAL_BOT_RESPONSE);
+    const replyText = [
+      `שלום 👋`,
+      `אני פה כדי לתת תוצאות של משחקי ספורט`,
+      `כדי לראות תוצאות של משחקים מהיום נכון לעכשיו, אפשר פשוט לשלוח לי הודעה, כל הודעה`,
+      `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17 📅) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
+    ].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
     this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.START }, userDetails);
   }
 
@@ -62,6 +73,13 @@ export class CoachBotService implements OnModuleInit {
     await this.mongoSubscriptionService.archiveSubscription(chatId);
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
     this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.UNSUBSCRIBE }, userDetails);
+  }
+
+  async contactHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+
+    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   async textHandler(message: Message): Promise<void> {

@@ -1,6 +1,4 @@
-import { MY_USER_NAME } from '@core/config';
-
-export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 3;
+export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 6;
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 8;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
 
@@ -12,15 +10,6 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
 };
 
 export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
-
-export const INITIAL_BOT_RESPONSE = [
-  `שלום {firstName}!`,
-  `אני בוט שמתריע על מסעדות שנפתחות להזמנה בוולט`,
-  `פשוט תשלחו לי את שם המסעדה (באנגלית 🇺🇸), ואני אגיד לכם מתי היא נפתחת`,
-  `כדי לראות את רשימת ההתראות הפתוחות אפשר להשתמש בפקודה /list`,
-].join('\n');
-export const CONTACT_BOT_RESPONSE = [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n');
-export const GENERAL_ERROR_MESSAGE = `מצטער, אבל קרתה לי תקלה. אפשר לנסות מאוחר יותר 😥`;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;
