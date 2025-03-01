@@ -4,7 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
+import { getDateString, getErrorMessage } from '@core/utils';
 import { BOTS, sendStyledMessage } from '@services/telegram';
 import { ANALYTIC_EVENT_STATES } from './coach-bot.config';
 import { CoachService } from './coach.service';
@@ -34,13 +34,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
         return;
       }
 
-      const responseText = await this.coachService.getMatchesSummaryMessage();
+      const responseText = await this.coachService.getMatchesSummaryMessage(getDateString());
       if (!responseText) {
         return;
       }
 
       const chatIds = subscriptions.map((subscription) => subscription.chatId);
-      await Promise.all(chatIds.map((chatId) => sendStyledMessage(this.bot, chatId, responseText)));
+      const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
+      await Promise.all(chatIds.map((chatId) => sendStyledMessage(this.bot, chatId, replyText)));
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.handleIntervalFlow.name} - ${errorMessage}`);

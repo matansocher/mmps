@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
+import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
 import { ANALYTIC_EVENT_NAMES } from '@features/wolt-bot/wolt-bot.config';
 import { BOTS, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
@@ -97,7 +98,13 @@ export class CoachBotService implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '⚽️' });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const replyText = await this.coachService.getMatchesSummaryMessage(text);
+      const date = isDateStringFormat(text) ? text : getDateString();
+      const resultText = await this.coachService.getMatchesSummaryMessage(date);
+      if (!resultText) {
+        throw new Error('no matches result found');
+      }
+      const datePrefix = `זה המצב הנוכחי של המשחקים בתאריך: ${getDateDescription(new Date(date))}`;
+      const replyText = [datePrefix, resultText].join('\n\n');
       await sendStyledMessage(this.bot, chatId, replyText);
     });
 
