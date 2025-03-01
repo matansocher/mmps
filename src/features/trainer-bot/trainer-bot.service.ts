@@ -5,7 +5,6 @@ import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
 import { BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
-import { TrainerService } from './trainer.service';
 import { getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
 @Injectable()
@@ -13,7 +12,6 @@ export class TrainerBotService implements OnModuleInit {
   private readonly logger = new Logger(TrainerBotService.name);
 
   constructor(
-    private readonly trainerService: TrainerService,
     private readonly mongoExerciseService: TrainerMongoExerciseService,
     private readonly openaiService: OpenaiService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
@@ -26,11 +24,7 @@ export class TrainerBotService implements OnModuleInit {
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
-      {
-        event: COMMAND,
-        regex: ACHIEVEMENTS.command,
-        handler: (message) => this.achievementsHandler.call(this, message),
-      },
+      { event: COMMAND, regex: ACHIEVEMENTS.command, handler: (message) => this.achievementsHandler.call(this, message) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers });
   }
