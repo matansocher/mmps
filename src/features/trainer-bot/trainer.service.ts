@@ -20,7 +20,7 @@ export class TrainerService {
     }
     const result = await searchMeme('funny lazy workout');
     if (result) {
-      await this.bot.sendPhoto(chatId, result, { caption: '🦔🦔🦔🦔' });
+      await this.bot.sendVideo(chatId, result, { caption: '🦔🦔🦔🦔' });
     } else {
       await this.bot.sendMessage(chatId, '🦔🦔🦔🦔');
     }

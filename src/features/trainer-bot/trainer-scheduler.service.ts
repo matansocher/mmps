@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { NotifierBotService } from '@core/notifier-bot';
@@ -8,13 +8,17 @@ import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from './traine
 import { TrainerService } from './trainer.service';
 
 @Injectable()
-export class TrainerSchedulerService {
+export class TrainerSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(TrainerSchedulerService.name);
 
   constructor(
     private readonly trainerService: TrainerService,
     private readonly notifierBotService: NotifierBotService,
   ) {}
+
+  onModuleInit(): any {
+    // this.handleEODReminder(); // for testing purposes
+  }
 
   @Cron(`0 ${SMART_REMINDER_HOUR_OF_DAY} * * *`, { name: 'trainer-daily-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleEODReminder(): Promise<void> {
