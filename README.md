@@ -34,46 +34,23 @@ To run this application, ensure you have Node.js installed. Each bot operates as
     MONGO_DB_URL=
    ```
 
+
+## Running the Application
+To start the NestJS application:
+
+   ```bash
+    npm run start:debug
+   ```
+
 ## Available Bots
-1. Playgrounds
-    
-**Description**: A dev only bot to test telegram stuff
-****
-
-2. Wolt
-    
-**Description**: A bot to notify the user when a Wolt restaurant is open and available to get orders
-****
-
-3. Voice Pal
-
-**Description**: A bot to help the user with transcriptions, translation and images
-****
-
-4. Coach
-
-**Description**: A bot to show the user a daily list of sports games
-****
-
-5. Trainer
-
-**Description**: A bot to encourage the user the train every day with nice rewards for records.
-****
-
-6. Educator
-
-**Description**: A bot to teach the user of interesting stuff with a signel message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
-****
-
-7. Programming Teacher
-
-**Description**: A bot to teach programming. It has a list of courses it can teach the user each day,  with 3 lessons a day.
-****
-
-8. Rollinspark
-
-**Description**: A bot to notify when it finds a new appartment details uploaded to the Rollinspark neighborhood in Maryland
-****
+1. Playgrounds - A dev only bot to test telegram stuff
+2. Wolt - A bot to notify the user when a Wolt restaurant is open and available to get orders
+3. Voice Pal - A bot to help the user with transcriptions, translation and images
+4. Coach - A bot to show the user a daily list of sports games
+5. Trainer - A bot to encourage the user the train every day with nice rewards for records.
+6. Educator - A bot to teach the user of interesting stuff with a single message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
+7. Programming Teacher - A bot to teach programming. It has a list of courses it can teach the user each day,  with 3 lessons a day.
+8. Rollinspark - A bot to notify when it finds a new apartment details uploaded to the Rollinspark neighborhood in Maryland
 
 ## Bots IDs
 
@@ -88,14 +65,6 @@ To run this application, ensure you have Node.js installed. Each bot operates as
 | 7     | Educator            | [@mmps_educator_bot](https://web.telegram.org/k/#@mmps_educator_bot)                       | [@mmps_educator_stg_bot](https://web.telegram.org/k/#@mmps_educator_stg_bot)                       |
 | 8     | Programming Teacher | [@mmps_programming_teacher_bot](https://web.telegram.org/k/#@mmps_programming_teacher_bot) | [@mmps_programming_teacher_stg_bot](https://web.telegram.org/k/#@mmps_programming_teacher_stg_bot) |
 | 9     | Rollinspark         | [@mmps_rollinspark_bot](https://web.telegram.org/k/#@mmps_rollinspark_bot)                 | [@mmps_rollinspark_staging_bot](https://web.telegram.org/k/#@mmps_rollinspark_staging_bot)         |
-
-
-## Running the Application
-To start the NestJS application:
-
-```bash
-    npm run start:debug
-```
 
 ## License
 This project is licensed under the MIT License.
