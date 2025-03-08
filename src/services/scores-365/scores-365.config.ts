@@ -16,7 +16,9 @@ export const COMPETITION_IDS_MAP = {
   LA_LIGA: 11,
   COPA_DEL_REY: 13,
   BUNDESLIGA: 25,
+  BUNDESLIGA_CUP: 28,
   SERIE_A: 17,
+  SERIE_A_CUP: 20,
   WORLD_CUP: 5930,
   EURO: 6316,
 };
@@ -32,7 +34,9 @@ export const COMPETITIONS = [
   { id: COMPETITION_IDS_MAP.LA_LIGA, icon: '🇪🇸' },
   { id: COMPETITION_IDS_MAP.COPA_DEL_REY, icon: '🇪🇸' },
   { id: COMPETITION_IDS_MAP.SERIE_A, icon: '🇮🇹' },
+  { id: COMPETITION_IDS_MAP.SERIE_A_CUP, icon: '🇮🇹' },
   { id: COMPETITION_IDS_MAP.BUNDESLIGA, icon: '🇩🇪' },
+  { id: COMPETITION_IDS_MAP.BUNDESLIGA_CUP, icon: '🇩🇪' },
   // { id: COMPETITION_IDS_MAP.WORLD_CUP, icon: '🌍' },
   // { id: COMPETITION_IDS_MAP.EURO, icon: '🇪🇺' },
 ];
