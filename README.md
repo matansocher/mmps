@@ -54,17 +54,17 @@ To start the NestJS application:
 
 ## Bots IDs
 
-| **#** | **Bot**             | **Prod ID**                                                                                | **Testing ID**                                                                                     |
-|-------|---------------------|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
-| 1     | Notifier            | [@mmps_notifier_bot](https://web.telegram.org/k/#@mmps_notifier_bot)                       | [@mmps_notifier_staging_bot](https://web.telegram.org/k/#@mmps_notifier_staging_bot)               |
-| 2     | Playgrounds         | [@guzi_playgrounds_bot](https://web.telegram.org/k/#@guzi_playgrounds_bot)                 | -                                                                                                  |
-| 3     | Wolt                | [@guzi_wolt_checker_bot](https://web.telegram.org/k/#@guzi_wolt_checker_bot)               | [@wolt_testing_bot](https://web.telegram.org/k/#@wolt_testing_bot)                                 |
-| 4     | Voice Pal           | [@voice_pal_bot](https://web.telegram.org/k/#@voice_pal_bot)                               | [@voice_pal_staging_bot](https://web.telegram.org/k/#@voice_pal_staging_bot)                       |
-| 5     | Coach               | [@mmps_football_coach_bot](https://web.telegram.org/k/#@mmps_football_coach_bot)           | [@mmps_football_coach_staging_bot](https://web.telegram.org/k/#@mmps_football_coach_staging_bot)   |
-| 6     | Trainer             | [@mmps_trainer_bot](https://web.telegram.org/k/#@mmps_trainer_bot)                         | [@mmps_trainer_stg_bot](https://web.telegram.org/k/#@mmps_trainer_stg_bot)                         |
-| 7     | Educator            | [@mmps_educator_bot](https://web.telegram.org/k/#@mmps_educator_bot)                       | [@mmps_educator_stg_bot](https://web.telegram.org/k/#@mmps_educator_stg_bot)                       |
-| 8     | Programming Teacher | [@mmps_programming_teacher_bot](https://web.telegram.org/k/#@mmps_programming_teacher_bot) | [@mmps_programming_teacher_stg_bot](https://web.telegram.org/k/#@mmps_programming_teacher_stg_bot) |
-| 9     | Rollinspark         | [@mmps_rollinspark_bot](https://web.telegram.org/k/#@mmps_rollinspark_bot)                 | [@mmps_rollinspark_staging_bot](https://web.telegram.org/k/#@mmps_rollinspark_staging_bot)         |
+| **Bot**             | **Prod ID**                                                                                | **Testing ID**                                                                                     |
+|---------------------|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| Notifier            | [@mmps_notifier_bot](https://web.telegram.org/k/#@mmps_notifier_bot)                       | [@mmps_notifier_staging_bot](https://web.telegram.org/k/#@mmps_notifier_staging_bot)               |
+| Playgrounds         | [@guzi_playgrounds_bot](https://web.telegram.org/k/#@guzi_playgrounds_bot)                 | -                                                                                                  |
+| Wolt                | [@guzi_wolt_checker_bot](https://web.telegram.org/k/#@guzi_wolt_checker_bot)               | [@wolt_testing_bot](https://web.telegram.org/k/#@wolt_testing_bot)                                 |
+| Voice Pal           | [@voice_pal_bot](https://web.telegram.org/k/#@voice_pal_bot)                               | [@voice_pal_staging_bot](https://web.telegram.org/k/#@voice_pal_staging_bot)                       |
+| Coach               | [@mmps_football_coach_bot](https://web.telegram.org/k/#@mmps_football_coach_bot)           | [@mmps_football_coach_staging_bot](https://web.telegram.org/k/#@mmps_football_coach_staging_bot)   |
+| Trainer             | [@mmps_trainer_bot](https://web.telegram.org/k/#@mmps_trainer_bot)                         | [@mmps_trainer_stg_bot](https://web.telegram.org/k/#@mmps_trainer_stg_bot)                         |
+| Educator            | [@mmps_educator_bot](https://web.telegram.org/k/#@mmps_educator_bot)                       | [@mmps_educator_stg_bot](https://web.telegram.org/k/#@mmps_educator_stg_bot)                       |
+| Programming Teacher | [@mmps_programming_teacher_bot](https://web.telegram.org/k/#@mmps_programming_teacher_bot) | [@mmps_programming_teacher_stg_bot](https://web.telegram.org/k/#@mmps_programming_teacher_stg_bot) |
+| Rollinspark         | [@mmps_rollinspark_bot](https://web.telegram.org/k/#@mmps_rollinspark_bot)                 | [@mmps_rollinspark_staging_bot](https://web.telegram.org/k/#@mmps_rollinspark_staging_bot)         |
 
 ## License
 This project is licensed under the MIT License.
