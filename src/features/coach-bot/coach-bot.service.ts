@@ -101,7 +101,8 @@ export class CoachBotService implements OnModuleInit {
       const date = isDateStringFormat(text) ? text : getDateString();
       const resultText = await this.coachService.getMatchesSummaryMessage(date);
       if (!resultText) {
-        throw new Error('no matches result found');
+        await this.bot.sendMessage(chatId, `וואלה לא מצאתי אף משחק בתאריך הזה 😔`);
+        return;
       }
       const datePrefix = `זה המצב הנוכחי של המשחקים בתאריך: ${getDateDescription(new Date(date))}`;
       const replyText = [datePrefix, resultText].join('\n\n');
