@@ -16,8 +16,7 @@ export class CoachService {
   private readonly logger = new Logger(CoachService.name);
   private competitionsDetailsCache: Record<string, CompetitionsDetailsCache> = {};
 
-  async getMatchesSummaryMessage(dateString?: string): Promise<string> {
-    const date = isDateStringFormat(dateString) ? dateString : getDateString();
+  async getMatchesSummaryMessage(date: string): Promise<string> {
     let summaryDetails = this.getMatchesSummaryFromCache(date);
     if (!summaryDetails?.length) {
       summaryDetails = await this.getMatchesSummaryDetails(date);
@@ -32,18 +31,18 @@ export class CoachService {
   async getMatchesSummaryDetails(dateString: string): Promise<CompetitionDetails[]> {
     const competitions = await getCompetitions();
     if (!competitions?.length) {
-      this.logger.error(`${this.getMatchesSummaryMessage.name} - error - could not get competitions`);
+      this.logger.error(`${this.getMatchesSummaryDetails.name} - error - could not get competitions`);
       return;
     }
     const competitionsWithMatches = await Promise.all(competitions.map((competition) => getMatchesForCompetition(competition, dateString)));
     if (!competitionsWithMatches?.length) {
-      this.logger.error(`${this.getMatchesSummaryMessage.name} - error - could not get matches`);
+      this.logger.error(`${this.getMatchesSummaryDetails.name} - error - could not get matches`);
       return;
     }
 
     const competitionsWithMatchesFiltered = competitionsWithMatches.filter(({ matches }) => matches?.length);
     if (!competitionsWithMatchesFiltered?.length) {
-      this.logger.log(`${this.getMatchesSummaryMessage.name} - no competitions with matches found`);
+      this.logger.log(`${this.getMatchesSummaryDetails.name} - no competitions with matches found`);
       return [];
     }
 
