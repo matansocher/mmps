@@ -5,9 +5,8 @@ This repository contains a NestJS application that hosts multiple Telegram bots.
 ## Table of Contents
 - [Getting Started](#getting-started)
 - [Installation](#installation)
-- [Configuration](#configuration)
-- [Available Bots](#available-bots)
 - [Running the Application](#running-the-application)
+- [Available Bots](#available-bots)
 - [License](#license)
 
 ## Getting Started
