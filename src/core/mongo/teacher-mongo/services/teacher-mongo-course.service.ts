@@ -1,4 +1,4 @@
-import { Collection, Db, DeleteResult, InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
+import { Collection, Db, DeleteResult, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { CourseModel, CourseStatus } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
@@ -31,10 +31,10 @@ export class TeacherMongoCourseService {
     return this.courseCollection.deleteOne(filter as any);
   }
 
-  async getRandomCourse(): Promise<WithId<CourseModel> | null> {
+  async getRandomCourse(): Promise<CourseModel | null> {
     const filter = { status: CourseStatus.Pending };
     const results = await this.courseCollection
-      .aggregate<WithId<CourseModel>>([
+      .aggregate<CourseModel>([
         { $match: filter },
         { $sample: { size: 1 } }, // Get a random course
       ])
@@ -42,19 +42,19 @@ export class TeacherMongoCourseService {
     return results[0] || null; // Return the first result or null if none
   }
 
-  getUnassignedCourses(): Promise<WithId<CourseModel>[]> {
+  getUnassignedCourses(): Promise<CourseModel[]> {
     const filter = { status: CourseStatus.Pending };
     return this.courseCollection.find(filter).toArray();
   }
 
-  getAssignedCourses(): Promise<WithId<CourseModel>[]> {
+  getAssignedCourses(): Promise<CourseModel[]> {
     const filter = { $or: [{ status: { $ne: 'pending' } }, { status: { $ne: 'pending' } }] };
     return this.courseCollection.find(filter as any).toArray();
   }
 
-  getActiveCourse(): Promise<WithId<CourseModel>> {
+  getActiveCourse(): Promise<CourseModel> {
     const filter = { status: CourseStatus.Assigned };
-    return this.courseCollection.findOne(filter) as Promise<WithId<CourseModel>>;
+    return this.courseCollection.findOne(filter);
   }
 
   startCourse(courseId: ObjectId, additionalData: Partial<CourseModel>): Promise<UpdateResult<CourseModel>> {

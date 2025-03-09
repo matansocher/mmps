@@ -7,7 +7,7 @@ import { COLLECTIONS, DB_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { getRestaurantsList } from '../utils/get-restaurants-data';
 
 async function main() {
-  config({ path: join(cwd(), 'env.serve') });
+  config({ path: join(cwd(), '.env.serve') });
   const client = new MongoClient(env.MONGO_URI);
 
   try {

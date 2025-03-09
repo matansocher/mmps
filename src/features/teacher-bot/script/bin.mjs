@@ -106,7 +106,7 @@ class CourseService {
 }
 
 async function main() {
-  config({ path: join(cwd(), 'env.serve') });
+  config({ path: join(cwd(), '.env.serve') });
   const client = new MongoClient(env.MONGO_URI);
 
   try {
