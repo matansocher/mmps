@@ -1,7 +1,10 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { MY_USER_NAME } from '@core/config';
 import { CourseParticipationStatus, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
+import { NotifierBotService } from '@core/notifier-bot';
 import { shuffleArray } from '@core/utils';
+import { ANALYTIC_EVENT_NAMES } from '@features/wolt-bot/wolt-bot.config';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
 import { BOT_ACTIONS, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_COMMANDS } from './teacher-bot.config';
@@ -17,6 +20,7 @@ export class TeacherBotService implements OnModuleInit {
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly mongoUserService: TeacherMongoUserService,
+    private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -24,7 +28,7 @@ export class TeacherBotService implements OnModuleInit {
     this.bot.setMyCommands(Object.values(TEACHER_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, STOP, COURSE, LESSON, LIST, ADD } = TEACHER_BOT_COMMANDS;
+    const { START, STOP, COURSE, LESSON, LIST, ADD, CONTACT } = TEACHER_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
@@ -32,6 +36,7 @@ export class TeacherBotService implements OnModuleInit {
       { event: COMMAND, regex: LESSON.command, handler: (message) => this.lessonHandler.call(this, message) },
       { event: COMMAND, regex: LIST.command, handler: (message) => this.listHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
+      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
@@ -60,6 +65,13 @@ export class TeacherBotService implements OnModuleInit {
       `Another option for you is to start courses manually with the ${TEACHER_BOT_COMMANDS.COURSE.command} command and another lesson with the ${TEACHER_BOT_COMMANDS.LESSON.command} command`,
     ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+  }
+
+  async contactHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+
+    await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async courseHandler(message: Message): Promise<void> {

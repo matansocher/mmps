@@ -1,6 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { MY_USER_NAME } from '@core/config';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService, TopicParticipationStatus } from '@core/mongo/educator-mongo';
+import { NotifierBotService } from '@core/notifier-bot';
+import { ANALYTIC_EVENT_NAMES } from '@features/wolt-bot/wolt-bot.config';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
 import { BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
@@ -18,6 +21,7 @@ export class EducatorBotService implements OnModuleInit {
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
     private readonly mongoUserService: EducatorMongoUserService,
+    private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -25,13 +29,14 @@ export class EducatorBotService implements OnModuleInit {
     this.bot.setMyCommands(Object.values(EDUCATOR_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, STOP, TOPIC, CUSTOM, ADD } = EDUCATOR_BOT_COMMANDS;
+    const { START, STOP, TOPIC, CUSTOM, ADD, CONTACT } = EDUCATOR_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
       { event: COMMAND, regex: CUSTOM.command, handler: (message) => this.customTopicHandler.call(this, message) },
+      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
@@ -56,6 +61,13 @@ export class EducatorBotService implements OnModuleInit {
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
     const replyText = [`סבבה, אני מפסיקה 🛑`, `תגיד לי מתי אתה רוצה לחזור ללמוד ונמשיך - רק תשלח לי את הפקודה`, `אתה יכול גם לבקש נושאים כשתרצה בלי תזכורות ממני, גם לזה הכנתי פקודה`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+  }
+
+  async contactHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+
+    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
+    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async topicHandler(message: Message): Promise<void> {

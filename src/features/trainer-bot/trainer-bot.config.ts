@@ -6,6 +6,7 @@ export const TRAINER_BOT_COMMANDS = {
   STOP: { command: '/stop', description: 'Stop daily reminders' },
   EXERCISE: { command: '/exercise', description: 'Log exercise' },
   ACHIEVEMENTS: { command: '/achievements', description: 'Show Achievements' },
+  CONTACT: { command: '/contact', description: 'Contact' },
 };
 
 export const BROKEN_RECORD_IMAGE_PROMPT = [
