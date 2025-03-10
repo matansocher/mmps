@@ -74,7 +74,7 @@ export class TrainerBotService implements OnModuleInit {
     }
 
     await this.bot.sendMessage(chatId, `💪🔥`);
-    await this.bot.sendMessage(chatId, [`🚀Current Streak: ${getSpecialNumber(currentStreak)}`, `💯Longest Streak: ${getSpecialNumber(longestStreak)}`].join('\n'));
+    await this.bot.sendMessage(chatId, [`🚀 Current Streak: ${getSpecialNumber(currentStreak)}`, `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`].join('\n'));
   }
 
   private async achievementsHandler(message: Message): Promise<void> {
@@ -89,7 +89,11 @@ export class TrainerBotService implements OnModuleInit {
     const currentStreak = getStreak(exercisesDates);
     const longestStreak = getLongestStreak(exercisesDates);
 
-    const replyText = [`🤾Whole Life Total Exercises: ${exercises.length}`, `🚀Current Streak: ${currentStreak}`, `💯Longest Streak: ${longestStreak}`].join('\n');
+    const replyText = [
+      `🤾 Whole Life Total Exercises: ${getSpecialNumber(exercises.length)}`,
+      `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`,
+      `💯Longest Streak: ${getSpecialNumber(longestStreak)}`,
+    ].join('\n');
     await this.bot.sendMessage(chatId, replyText);
   }
 }
