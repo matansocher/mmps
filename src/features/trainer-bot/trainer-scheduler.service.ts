@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
+import { DEFAULT_TIMEZONE } from '@core/config';
+import { TrainerMongoUserPreferencesService } from '@core/mongo/trainer-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
@@ -13,6 +14,7 @@ export class TrainerSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly trainerService: TrainerService,
+    private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
     private readonly notifierBotService: NotifierBotService,
   ) {}
 
@@ -23,7 +25,8 @@ export class TrainerSchedulerService implements OnModuleInit {
   @Cron(`0 ${SMART_REMINDER_HOUR_OF_DAY} * * *`, { name: 'trainer-daily-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleEODReminder(): Promise<void> {
     try {
-      const chatIds = [MY_USER_ID];
+      const users = await this.mongoUserPreferencesService.getActiveUsers();
+      const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.trainerService.processEODReminder(chatId)));
     } catch (err) {
       const errorMessage = getErrorMessage(err);
@@ -35,7 +38,8 @@ export class TrainerSchedulerService implements OnModuleInit {
   @Cron(`0 ${WEEKLY_SUMMARY_HOUR_OF_DAY} * * 6`, { name: 'trainer-weekly-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleWeeklySummary(): Promise<void> {
     try {
-      const chatIds = [MY_USER_ID];
+      const users = await this.mongoUserPreferencesService.getActiveUsers();
+      const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.trainerService.processWeeklySummary(chatId)));
     } catch (err) {
       const errorMessage = getErrorMessage(err);

@@ -30,7 +30,6 @@ async function main() {
           };
           await topicParticipationCollection.insertOne(topicParticipation);
         }
-        const a = 5;
         await topicCollection.updateOne({ _id: topic._id.toString }, { $unset: { status: 1, threadId: 1, assignedAt: 1, completedAt: 1 } });
       } catch (err) {
         console.error(`failed processing topic ${topic._id.toString()}`);
