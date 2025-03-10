@@ -25,7 +25,7 @@ export class VoicePalService implements OnModuleInit {
     @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
   ) {}
 
-  onModuleInit(): any {
+  onModuleInit(): void {
     setFfmpegPath();
   }
 

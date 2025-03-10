@@ -5,7 +5,7 @@ export const EDUCATOR_BOT_COMMANDS = {
   START: { command: '/start', description: 'רוצה להתחיל ללמוד' },
   STOP: { command: '/stop', description: 'רוצה להפסיק ללמוד' },
   TOPIC: { command: '/topic', description: 'נושא הבא' },
-  CUSTOM: { command: '/custom', description: 'נושא ספציפי' },
+  CUSTOM: { command: '/custom', description: 'נושא ספציפי עכשיו' },
   ADD: { command: '/add', description: 'הוספת נושא' },
 };
 

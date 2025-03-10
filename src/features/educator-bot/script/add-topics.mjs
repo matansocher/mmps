@@ -73,35 +73,6 @@ const titles = [
   'השפל הגדול (1929) – המשבר הכלכלי החמור ביותר במאה ה-20',
 ];
 
-class TopicService {
-  topicCollection;
-
-  constructor(client, dbName) {
-    this.topicCollection = client.db(dbName).collection('Topic');
-  }
-
-  async createTopic(title) {
-    const topic = {
-      _id: new ObjectId(),
-      title,
-      status: 'pending',
-      createdAt: new Date(),
-    };
-    return this.topicCollection.insertOne(topic);
-  }
-
-  async insertTopics(titles) {
-    for (const title of titles) {
-      try {
-        const result = await this.createTopic(title);
-        console.log(`Inserted topic with ID: ${result.insertedId}`);
-      } catch (error) {
-        console.error(`Failed to insert title "${title}":`, error);
-      }
-    }
-  }
-}
-
 async function main() {
   config({ path: join(cwd(), '.env.serve') });
   const client = new MongoClient(env.MONGO_URI);
@@ -109,11 +80,23 @@ async function main() {
   try {
     await client.connect();
     console.log('Connected to MongoDB.');
+    const topicCollection = client.db('Educator').collection('Topic');
 
-    const topicService = new TopicService(client, 'Educator');
-    await topicService.insertTopics(titles);
+    for (const title of titles) {
+      try {
+        const topic = {
+          _id: new ObjectId(),
+          title,
+          createdAt: new Date(),
+        };
+        const result = await topicCollection.insertOne(topic);
+        console.log(`Inserted topic with ID: ${result.insertedId}`);
+      } catch (error) {
+        console.error(`Failed to insert title "${title}":`, error);
+      }
+    }
 
-    console.log('All topics inserted.');
+    console.log('All topics inserted');
   } catch (error) {
     console.error('Error during insertion:', error);
   } finally {

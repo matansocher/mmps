@@ -11,5 +11,6 @@ export { isDateStringFormat } from './is-date-string-format';
 export { objectToQueryParams } from './object-to-query-params';
 export { queryParamsToObject } from './query-params-to-object';
 export { saveVideoBytesArray } from './save-video-bytes-array';
+export { shuffleArray } from './shuffle-array';
 export { setFfmpegPath } from './set-ffmpeg-path';
 export { writeFile } from './write-file';

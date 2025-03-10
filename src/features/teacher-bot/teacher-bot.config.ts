@@ -6,10 +6,8 @@ export const TEACHER_BOT_COMMANDS = {
   STOP: { command: '/stop', description: 'Stop learning daily' },
   COURSE: { command: '/course', description: 'Start the next course' },
   LESSON: { command: '/lesson', description: 'Start the next lesson' },
-  LIST: { command: '/list', description: 'List of all available courses' },
-  HISTORY: { command: '/history', description: 'List of completed courses' },
+  LIST: { command: '/list', description: 'List of all available unfinished courses' },
   ADD: { command: '/add', description: 'Add a new course' },
-  REMOVE: { command: '/remove', description: 'Remove a course' },
 };
 
 export enum BOT_ACTIONS {

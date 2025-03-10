@@ -29,8 +29,8 @@ export class EducatorBotService implements OnModuleInit {
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
-      { event: COMMAND, regex: CUSTOM.command, handler: (message) => this.customTopicHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
+      { event: COMMAND, regex: CUSTOM.command, handler: (message) => this.customTopicHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
@@ -58,9 +58,9 @@ export class EducatorBotService implements OnModuleInit {
 
   private async topicHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
-    if (activeTopic?._id) {
-      await this.mongoTopicParticipationService.markTopicParticipationCompleted(activeTopic._id.toString());
+    const Participation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
+    if (Participation?._id) {
+      await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
     }
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
@@ -76,9 +76,9 @@ export class EducatorBotService implements OnModuleInit {
       return;
     }
 
-    const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
-    if (activeTopic?._id) {
-      await this.mongoTopicParticipationService.markTopicParticipationCompleted(activeTopic._id.toString());
+    const Participation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
+    if (Participation?._id) {
+      await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
     }
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
@@ -102,33 +102,33 @@ export class EducatorBotService implements OnModuleInit {
     // prevent built in options to be processed also here
     if (Object.values(EDUCATOR_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
 
-    const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
-    if (!activeTopic) {
+    const activeTopicParticipation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
+    if (!activeTopicParticipation) {
       await this.bot.sendMessage(chatId, `אני רואה שאין לך נושא פתוח, אז אני לא מבינה על מה לענות. אולי נתחיל נושא חדש?`);
       return;
     }
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.educatorService.processQuestion(chatId, text, activeTopic);
+      await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
     });
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
-    const [topicId, action] = response.split(' - ');
+    const [topicParticipationId, action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.COMPLETE:
-        await this.handleCallbackCompleteTopic(chatId, messageId, topicId);
+        await this.handleCallbackCompleteTopic(chatId, messageId, topicParticipationId);
         break;
       default:
         throw new Error('Invalid action');
     }
   }
 
-  private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicId: string): Promise<void> {
-    const topic = await this.mongoTopicParticipationService.getTopicParticipation(topicId);
+  private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
+    const topic = await this.mongoTopicParticipationService.getTopicParticipation(topicParticipationId);
     if (!topic) {
       await this.bot.sendMessage(chatId, `וואלה לא מצאתי את הנושא, בטוח שיש נושא כזה?`);
       return;
@@ -139,7 +139,7 @@ export class EducatorBotService implements OnModuleInit {
       return;
     }
 
-    await this.mongoTopicParticipationService.markTopicParticipationCompleted(topicId);
+    await this.mongoTopicParticipationService.markTopicParticipationCompleted(topicParticipationId);
     await this.bot.sendMessage(chatId, '🔥');
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
   }

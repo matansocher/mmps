@@ -12,7 +12,7 @@ export class EducatorMongoTopicParticipationService {
   }
 
   async createTopicParticipation(chatId: number, topicId: string): Promise<TopicParticipationModel> {
-    const topicParticipation = {
+    const topicParticipation: TopicParticipationModel = {
       _id: new ObjectId(),
       topicId,
       chatId,
@@ -23,8 +23,8 @@ export class EducatorMongoTopicParticipationService {
     return topicParticipation;
   }
 
-  getTopicParticipation(topicId: string): Promise<TopicParticipationModel> {
-    const filter = { topicId };
+  getTopicParticipation(topicParticipationId: string): Promise<TopicParticipationModel> {
+    const filter = { _id: new ObjectId(topicParticipationId) };
     return this.topicParticipationCollection.findOne(filter);
   }
 
@@ -44,14 +44,14 @@ export class EducatorMongoTopicParticipationService {
     return this.topicParticipationCollection.updateOne(filter, updateObj);
   }
 
-  async markTopicParticipationCompleted(topicId: string): Promise<UpdateResult<TopicParticipationModel>> {
-    const filter = { topicId };
+  async markTopicParticipationCompleted(topicParticipationId: string): Promise<void> {
+    const filter = { _id: new ObjectId(topicParticipationId) };
     const updateObj = {
       $set: {
         status: TopicParticipationStatus.Completed,
         completedAt: new Date(),
       },
     };
-    return this.topicParticipationCollection.updateOne(filter, updateObj);
+    await this.topicParticipationCollection.updateOne(filter, updateObj);
   }
 }

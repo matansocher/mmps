@@ -24,7 +24,7 @@ export class EducatorMongoTopicService {
 
   async getRandomTopic(chatId: number, excludedTopics: string[]): Promise<TopicModel | null> {
     const filter = {
-      _id: { $nin: excludedTopics.map((topic) => new ObjectId(topic)) },
+      _id: { $nin: excludedTopics.map((topicId) => new ObjectId(topicId)) },
       $or: [
         { createdBy: chatId }, // Topics created by the user
         { createdBy: { $exists: false } }, // Topics without createdBy field
