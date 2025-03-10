@@ -10,7 +10,7 @@ export class PlaygroundsBotService implements OnModuleInit {
 
   constructor(@Inject(BOTS.PLAYGROUNDS.id) private readonly bot: TelegramBot) {}
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.bot.setMyCommands(Object.values(PLAYGROUNDS_BOT_COMMANDS));
     const { COMMAND } = TELEGRAM_EVENTS;
     const { START, POLL } = PLAYGROUNDS_BOT_COMMANDS;

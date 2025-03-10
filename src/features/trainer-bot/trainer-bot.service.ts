@@ -17,7 +17,7 @@ export class TrainerBotService implements OnModuleInit {
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
-  onModuleInit() {
+  onModuleInit(): void {
     this.bot.setMyCommands(Object.values(TRAINER_BOT_COMMANDS));
     const { COMMAND } = TELEGRAM_EVENTS;
     const { START, EXERCISE, ACHIEVEMENTS } = TRAINER_BOT_COMMANDS;

@@ -16,7 +16,7 @@ export class TrainerSchedulerService implements OnModuleInit {
     private readonly notifierBotService: NotifierBotService,
   ) {}
 
-  onModuleInit(): any {
+  onModuleInit(): void {
     // this.handleEODReminder(); // for testing purposes
   }
 

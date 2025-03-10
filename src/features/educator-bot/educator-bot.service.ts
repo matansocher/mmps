@@ -58,9 +58,9 @@ export class EducatorBotService implements OnModuleInit {
 
   private async topicHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
-    if (activeTopic?._id) {
-      await this.mongoTopicParticipationService.markTopicParticipationCompleted(activeTopic._id.toString());
+    const Participation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
+    if (Participation?._id) {
+      await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
     }
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
@@ -76,9 +76,9 @@ export class EducatorBotService implements OnModuleInit {
       return;
     }
 
-    const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
-    if (activeTopic?._id) {
-      await this.mongoTopicParticipationService.markTopicParticipationCompleted(activeTopic._id.toString());
+    const Participation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
+    if (Participation?._id) {
+      await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
     }
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
