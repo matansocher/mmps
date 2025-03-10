@@ -1,6 +1,6 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { CourseParticipationStatus, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
+import { CourseParticipationStatus, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { shuffleArray } from '@core/utils';
 import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
@@ -16,6 +16,7 @@ export class TeacherBotService implements OnModuleInit {
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
+    private readonly mongoUserService: TeacherMongoUserService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -38,8 +39,9 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   private async startHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
+    await this.mongoUserService.saveUserDetails(userDetails);
     const replyText = [
       `Hey There 👋`,
       `I am here to teach you all you need about any subject you want.`,

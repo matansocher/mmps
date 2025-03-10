@@ -70,12 +70,6 @@ export enum TELEGRAM_EVENTS {
   ERROR = 'error',
 }
 
-// @deprecated
-export interface TelegramBotHandler {
-  readonly regex: string;
-  readonly handler: (message: Message) => Promise<void>;
-}
-
 export interface TelegramEventHandler {
   readonly event: TELEGRAM_EVENTS;
   readonly regex?: string;
