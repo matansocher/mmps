@@ -92,7 +92,7 @@ export class TrainerBotService implements OnModuleInit {
     const replyText = [
       `🤾 Whole Life Total Exercises: ${getSpecialNumber(exercises.length)}`,
       `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`,
-      `💯Longest Streak: ${getSpecialNumber(longestStreak)}`,
+      `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`,
     ].join('\n');
     await this.bot.sendMessage(chatId, replyText);
   }
