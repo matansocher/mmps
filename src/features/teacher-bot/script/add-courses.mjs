@@ -116,7 +116,7 @@ async function main() {
     const courseService = new CourseService(client, 'Teacher');
     await courseService.insertCourses(topics);
 
-    console.log('All courses inserted.');
+    console.log('All courses inserted');
   } catch (error) {
     console.error('Error during insertion:', error);
   } finally {

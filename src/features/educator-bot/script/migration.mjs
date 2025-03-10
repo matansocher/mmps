@@ -39,7 +39,7 @@ async function main() {
       console.log(`finished processing topic ${topic._id.toString()}`);
     }
 
-    console.log('All topics inserted.');
+    console.log('Migration finished successfully');
   } catch (error) {
     console.error('Error during insertion:', error);
   } finally {
@@ -49,13 +49,3 @@ async function main() {
 }
 
 main().catch(console.error);
-
-// export interface OLDTopicModel {
-//   readonly _id: ObjectId;
-//   readonly title: string;
-//   threadId?: string; // DELETE
-//   readonly status: TopicStatus; // DELETE
-//   readonly assignedAt?: Date; // DELETE
-//   readonly completedAt?: Date; // DELETE
-//   readonly createdAt: Date;
-// }

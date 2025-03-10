@@ -19,7 +19,7 @@ export class EducatorSchedulerService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.handleTopic();
+    // this.handleTopic();
   }
 
   @Cron(`0 ${TOPIC_START_HOURS_OF_DAY.join(',')} * * *`, {

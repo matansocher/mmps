@@ -113,7 +113,7 @@ async function main() {
     const topicService = new TopicService(client, 'Educator');
     await topicService.insertTopics(titles);
 
-    console.log('All topics inserted.');
+    console.log('All topics inserted');
   } catch (error) {
     console.error('Error during insertion:', error);
   } finally {

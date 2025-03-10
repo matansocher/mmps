@@ -46,7 +46,7 @@ export class EducatorService {
     const inlineKeyboardButtons = [
       {
         text: '✅ סיימתי ✅',
-        callback_data: `${topic._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${topicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -55,7 +55,7 @@ export class EducatorService {
 
   async getNewTopic(chatId: number, customTopic?: string): Promise<{ topic: TopicModel; topicParticipation: TopicParticipationModel }> {
     const topicParticipations = await this.mongoTopicParticipationService.getTopicParticipations(chatId);
-    const topicsParticipated = topicParticipations.map((topic) => topic.topicId.toString());
+    const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
 
     const topic = customTopic ? await this.mongoTopicService.createTopic(chatId, customTopic) : await this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
     if (!topic) {
@@ -76,12 +76,12 @@ export class EducatorService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async processQuestion(chatId: number, question: string, activeTopic: TopicParticipationModel): Promise<void> {
-    const response = await this.getAssistantAnswer(activeTopic.threadId, question);
+  async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
+    const response = await this.getAssistantAnswer(activeTopicParticipation.threadId, question);
     const inlineKeyboardButtons = [
       {
         text: '✅ סיימתי ✅',
-        callback_data: `${activeTopic._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${activeTopicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);

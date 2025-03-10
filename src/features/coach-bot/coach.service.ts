@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { getDateString, isDateStringFormat } from '@core/utils';
 import { getCompetitions, getMatchesForCompetition } from '@services/scores-365';
 import { CompetitionDetails } from '@services/scores-365/interface';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
