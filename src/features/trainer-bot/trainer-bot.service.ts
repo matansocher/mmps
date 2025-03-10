@@ -1,6 +1,7 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
+import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService } from '@core/mongo/trainer-mongo';
+import { TEACHER_BOT_COMMANDS } from '@features/teacher-bot/teacher-bot.config';
 import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
@@ -13,6 +14,7 @@ export class TrainerBotService implements OnModuleInit {
 
   constructor(
     private readonly mongoExerciseService: TrainerMongoExerciseService,
+    private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
     private readonly openaiService: OpenaiService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
@@ -20,9 +22,10 @@ export class TrainerBotService implements OnModuleInit {
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(TRAINER_BOT_COMMANDS));
     const { COMMAND } = TELEGRAM_EVENTS;
-    const { START, EXERCISE, ACHIEVEMENTS } = TRAINER_BOT_COMMANDS;
+    const { START, STOP, EXERCISE, ACHIEVEMENTS } = TRAINER_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
       { event: COMMAND, regex: ACHIEVEMENTS.command, handler: (message) => this.achievementsHandler.call(this, message) },
     ];
@@ -31,7 +34,19 @@ export class TrainerBotService implements OnModuleInit {
 
   private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
+    await this.mongoUserPreferencesService.createUserPreference(chatId);
     const replyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
+  }
+
+  private async stopHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
+    const replyText = [
+      'OK, I will stop teaching you for now 🛑',
+      `Whenever you are ready, just send me the ${TEACHER_BOT_COMMANDS.START.command} command and we will continue learning`,
+      `Another option for you is to start courses manually with the ${TEACHER_BOT_COMMANDS.COURSE.command} command and another lesson with the ${TEACHER_BOT_COMMANDS.LESSON.command} command`,
+    ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
   }
 

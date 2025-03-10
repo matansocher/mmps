@@ -1,7 +1,7 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
-import { TrainerMongoExerciseService } from '@core/mongo/trainer-mongo';
+import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService } from '@core/mongo/trainer-mongo';
 import { BOTS } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
 import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
@@ -10,10 +10,16 @@ import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
 export class TrainerService {
   constructor(
     private readonly mongoExerciseService: TrainerMongoExerciseService,
+    private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
   async processEODReminder(chatId: number): Promise<void> {
+    const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
+    if (userPreferences?.isStopped) {
+      return;
+    }
+
     const todayExercise = await this.mongoExerciseService.getTodayExercise(chatId);
     if (todayExercise) {
       return;
@@ -27,6 +33,11 @@ export class TrainerService {
   }
 
   async processWeeklySummary(chatId: number): Promise<void> {
+    const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
+    if (userPreferences?.isStopped) {
+      return;
+    }
+
     const { lastSunday, lastSaturday } = getLastWeekDates();
 
     const exercises = await this.mongoExerciseService.getExercises(chatId);
