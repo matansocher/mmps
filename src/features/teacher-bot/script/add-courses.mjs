@@ -76,35 +76,6 @@ const topics = [
   'High Availability: Designing for Fault Tolerance',
 ];
 
-class CourseService {
-  courseCollection;
-
-  constructor(client, dbName) {
-    this.courseCollection = client.db(dbName).collection('Course');
-  }
-
-  async createCourse(topic) {
-    const course = {
-      _id: new ObjectId(),
-      topic,
-      status: 'pending',
-      createdAt: new Date(),
-    };
-    return this.courseCollection.insertOne(course);
-  }
-
-  async insertCourses(topics) {
-    for (const topic of topics) {
-      try {
-        const result = await this.createCourse(topic);
-        console.log(`Inserted course with ID: ${result.insertedId}`);
-      } catch (error) {
-        console.error(`Failed to insert topic "${topic}":`, error);
-      }
-    }
-  }
-}
-
 async function main() {
   config({ path: join(cwd(), '.env.serve') });
   const client = new MongoClient(env.MONGO_URI);
@@ -112,9 +83,21 @@ async function main() {
   try {
     await client.connect();
     console.log('Connected to MongoDB.');
+    const courseCollection = client.db('Teacher').collection('Course');
 
-    const courseService = new CourseService(client, 'Teacher');
-    await courseService.insertCourses(topics);
+    for (const topic of topics) {
+      try {
+        const course = {
+          _id: new ObjectId(),
+          topic,
+          createdAt: new Date(),
+        };
+        const result = await courseCollection.insertOne(course);
+        console.log(`Inserted course with ID: ${result.insertedId}`);
+      } catch (error) {
+        console.error(`Failed to insert topic "${topic}":`, error);
+      }
+    }
 
     console.log('All courses inserted');
   } catch (error) {
