@@ -4,10 +4,9 @@ import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
-import { ANALYTIC_EVENT_NAMES } from '@features/wolt-bot/wolt-bot.config';
 import { BOTS, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES, COACH_BOT_COMMANDS } from './coach-bot.config';
+import { ANALYTIC_EVENT_NAMES, COACH_BOT_COMMANDS } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
 export const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
@@ -28,11 +27,10 @@ export class CoachBotService implements OnModuleInit {
     this.bot.setMyCommands(Object.values(COACH_BOT_COMMANDS));
 
     const { COMMAND, TEXT } = TELEGRAM_EVENTS;
-    const { START, SUBSCRIBE, UNSUBSCRIBE, CONTACT } = COACH_BOT_COMMANDS;
+    const { START, STOP, CONTACT } = COACH_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: SUBSCRIBE.command, handler: (message) => this.subscribeHandler.call(this, message) },
-      { event: COMMAND, regex: UNSUBSCRIBE.command, handler: (message) => this.unsubscribeHandler.call(this, message) },
+      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
       { event: TEXT, handler: (message) => this.textHandler.call(this, message) },
     ];
@@ -56,38 +54,21 @@ export class CoachBotService implements OnModuleInit {
       await this.mongoSubscriptionService.addSubscription(chatId);
     }
 
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.START }, userDetails);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
-  private async subscribeHandler(message: Message): Promise<void> {
+  private async stopHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    if (subscription) {
-      await this.bot.sendMessage(chatId, `וואלה אני רואה שכבר שמת עוקב, אז הכל טוב ✅`);
-      return;
-    }
-    await this.mongoSubscriptionService.addSubscription(chatId);
-    await this.bot.sendMessage(chatId, `סבבה, אני אשלח לך עדכונים יומיים ✅. אפשר להסיר עוקב תמיד פה למטה (unsubscribe)`);
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SUBSCRIBE }, userDetails);
-  }
-
-  private async unsubscribeHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    if (subscription) {
-      await this.bot.sendMessage(chatId, `טוב אני רואה שעדיין לא שמת עוקב, לא סבבה 😁`);
-      return;
-    }
     await this.mongoSubscriptionService.archiveSubscription(chatId);
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.UNSUBSCRIBE }, userDetails);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -109,6 +90,6 @@ export class CoachBotService implements OnModuleInit {
       await sendStyledMessage(this.bot, chatId, replyText);
     });
 
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_STATES.SEARCH, text }, userDetails);
+    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
   }
 }

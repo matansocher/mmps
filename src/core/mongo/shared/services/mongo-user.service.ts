@@ -16,6 +16,13 @@ export class MongoUserService {
 
   async saveUserDetails(userDetails: UserDetails): Promise<void> {
     try {
+      const filter = { chatId: userDetails.chatId };
+      const existingUserDetails = await this.userCollection.findOne(filter);
+      if (existingUserDetails) {
+        await this.userCollection.updateOne(filter, { $set: { ...userDetails } });
+        return;
+      }
+
       const user = { ...userDetails, createdAt: new Date() } as unknown as UserModel;
       await this.userCollection.insertOne(user);
     } catch (err) {

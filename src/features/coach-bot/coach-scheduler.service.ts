@@ -6,7 +6,7 @@ import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getDateString, getErrorMessage } from '@core/utils';
 import { BOTS, sendStyledMessage } from '@services/telegram';
-import { ANALYTIC_EVENT_STATES } from './coach-bot.config';
+import { ANALYTIC_EVENT_NAMES } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
 const HOURS_TO_NOTIFY = [12, 19, 23];
@@ -45,7 +45,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.handleIntervalFlow.name} - ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_STATES.ERROR}`, error: errorMessage });
+      this.notifierBotService.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: errorMessage });
     }
   }
 }

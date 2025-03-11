@@ -21,11 +21,6 @@ export class TeacherService {
   ) {}
 
   async processCourseFirstLesson(chatId: number): Promise<void> {
-    const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
-    if (userPreferences?.isStopped) {
-      return;
-    }
-
     const activeCourseParticipation = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
     if (activeCourseParticipation) {
       if (activeCourseParticipation.assignedAt.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000) {
@@ -39,11 +34,6 @@ export class TeacherService {
 
   async processCourseNextLesson(chatId: number): Promise<void> {
     try {
-      const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
-      if (userPreferences?.isStopped) {
-        return;
-      }
-
       await this.processLesson(chatId, true);
     } catch (err) {
       const errorMessage = getErrorMessage(err);

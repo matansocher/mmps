@@ -56,6 +56,7 @@ To start the NestJS application:
 | **Bot**             | **Prod ID**                                                                                | **Testing ID**                                                                                     |
 |---------------------|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
 | Notifier            | [@mmps_notifier_bot](https://web.telegram.org/k/#@mmps_notifier_bot)                       | [@mmps_notifier_staging_bot](https://web.telegram.org/k/#@mmps_notifier_staging_bot)               |
+| Announcer           | [@mmps_announcer_bot](https://web.telegram.org/k/#@mmps_announcer_bot)                     | [@mmps_announcer_staging_bot](https://web.telegram.org/k/#@mmps_announcer_staging_bot)                     |
 | Playgrounds         | [@guzi_playgrounds_bot](https://web.telegram.org/k/#@guzi_playgrounds_bot)                 | -                                                                                                  |
 | Wolt                | [@guzi_wolt_checker_bot](https://web.telegram.org/k/#@guzi_wolt_checker_bot)               | [@wolt_testing_bot](https://web.telegram.org/k/#@wolt_testing_bot)                                 |
 | Voice Pal           | [@voice_pal_bot](https://web.telegram.org/k/#@voice_pal_bot)                               | [@voice_pal_staging_bot](https://web.telegram.org/k/#@voice_pal_staging_bot)                       |
