@@ -35,13 +35,11 @@ export class EducatorMongoUserPreferencesService {
       createdAt: new Date(),
     };
     await this.userPreferencesCollection.insertOne(userPreference);
-    return;
   }
 
   async updateUserPreference(chatId: number, update: Partial<UserPreferencesModel>): Promise<void> {
     const filter = { chatId };
     const updateObj = { $set: update };
     await this.userPreferencesCollection.updateOne(filter, updateObj);
-    return;
   }
 }

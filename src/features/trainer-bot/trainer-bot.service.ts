@@ -1,11 +1,12 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService } from '@core/mongo/trainer-mongo';
-import { TEACHER_BOT_COMMANDS } from '@features/teacher-bot/teacher-bot.config';
+import { MY_USER_NAME } from '@core/config';
+import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
+import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
-import { BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
+import { ANALYTIC_EVENT_NAMES, BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
 @Injectable()
@@ -15,26 +16,30 @@ export class TrainerBotService implements OnModuleInit {
   constructor(
     private readonly mongoExerciseService: TrainerMongoExerciseService,
     private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
+    private readonly mongoUserService: TrainerMongoUserService,
     private readonly openaiService: OpenaiService,
+    private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(TRAINER_BOT_COMMANDS));
     const { COMMAND } = TELEGRAM_EVENTS;
-    const { START, STOP, EXERCISE, ACHIEVEMENTS } = TRAINER_BOT_COMMANDS;
+    const { START, STOP, EXERCISE, ACHIEVEMENTS, CONTACT } = TRAINER_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
       { event: COMMAND, regex: ACHIEVEMENTS.command, handler: (message) => this.achievementsHandler.call(this, message) },
+      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
     ];
-    registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
 
   private async startHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
+    await this.mongoUserService.saveUserDetails(userDetails);
     const replyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
   }
@@ -42,12 +47,15 @@ export class TrainerBotService implements OnModuleInit {
   private async stopHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
-    const replyText = [
-      'OK, I will stop teaching you for now 🛑',
-      `Whenever you are ready, just send me the ${TEACHER_BOT_COMMANDS.START.command} command and we will continue learning`,
-      `Another option for you is to start courses manually with the ${TEACHER_BOT_COMMANDS.COURSE.command} command and another lesson with the ${TEACHER_BOT_COMMANDS.LESSON.command} command`,
-    ].join('\n\n');
+    const replyText = ['OK, I will stop reminding you for now 🛑', `Whenever you are ready, just send me the ${TRAINER_BOT_COMMANDS.START.command} command and we will continue training`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+  }
+
+  async contactHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+
+    await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
+    this.notifierBotService.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async exerciseHandler(message: Message): Promise<void> {

@@ -8,6 +8,7 @@ export const TEACHER_BOT_COMMANDS = {
   LESSON: { command: '/lesson', description: 'Start the next lesson' },
   LIST: { command: '/list', description: 'List of all available unfinished courses' },
   ADD: { command: '/add', description: 'Add a new course' },
+  CONTACT: { command: '/contact', description: 'Contact' },
 };
 
 export enum BOT_ACTIONS {
@@ -23,3 +24,9 @@ export const TOTAL_COURSE_LESSONS = 3;
 
 export const NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW = 20;
 export const NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW = 50;
+
+export const ANALYTIC_EVENT_NAMES = {
+  START: 'START',
+  STOP: 'STOP',
+  CONTACT: 'CONTACT',
+};

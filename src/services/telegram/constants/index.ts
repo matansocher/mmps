@@ -1,6 +1,11 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 
 export const BOTS = {
+  ANNOUNCER: {
+    id: 'ANNOUNCER',
+    name: 'Announcer Bot 📢',
+    token: 'ANNOUNCER_TELEGRAM_BOT_TOKEN',
+  },
   PLAYGROUNDS: {
     id: 'PLAYGROUNDS',
     name: 'Playgrounds Bot 🃏',
@@ -68,12 +73,6 @@ export enum TELEGRAM_EVENTS {
   CALLBACK_QUERY = 'callback_query',
   POLLING_ERROR = 'polling_error',
   ERROR = 'error',
-}
-
-// @deprecated
-export interface TelegramBotHandler {
-  readonly regex: string;
-  readonly handler: (message: Message) => Promise<void>;
 }
 
 export interface TelegramEventHandler {

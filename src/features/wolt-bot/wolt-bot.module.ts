@@ -10,5 +10,6 @@ import { WoltSchedulerService } from './wolt-scheduler.service';
 @Module({
   imports: [ScheduleModule.forRoot(), NotifierBotModule, WoltMongoModule],
   providers: [WoltBotService, WoltSchedulerService, RestaurantsService, TelegramBotsFactoryProvider(BOTS.WOLT)],
+  exports: [TelegramBotsFactoryProvider(BOTS.WOLT)],
 })
 export class WoltBotModule {}
