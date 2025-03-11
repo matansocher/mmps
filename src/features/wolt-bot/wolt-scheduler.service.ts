@@ -65,7 +65,7 @@ export class WoltSchedulerService implements OnModuleInit {
       subscribedAndOnlineRestaurants.forEach((restaurant: WoltRestaurant) => {
         const relevantSubscriptions = subscriptions.filter((subscription: SubscriptionModel) => subscription.restaurant === restaurant.name);
         relevantSubscriptions.forEach((subscription: SubscriptionModel) => {
-          const inlineKeyboardButtons = [{ text: restaurant.name, url: `🍽️ ${restaurant.link} 🍽️` }];
+          const inlineKeyboardButtons = [{ text: `🍽️ ${restaurant.name} 🍽️`, url: restaurant.link }];
           const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
           const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', restaurant.name, 'אפשר להזמין עכשיו! 📱'].join('\n');
           promisesArr.push(
