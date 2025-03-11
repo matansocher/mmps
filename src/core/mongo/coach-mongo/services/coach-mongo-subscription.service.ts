@@ -1,4 +1,4 @@
-import { Collection, Db, InsertOneResult, UpdateResult } from 'mongodb';
+import { Collection, Db, InsertOneResult } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../coach-mongo.config';
 import { SubscriptionModel } from '../models';
@@ -30,9 +30,9 @@ export class CoachMongoSubscriptionService {
     return this.subscriptionCollection.insertOne(subscription);
   }
 
-  archiveSubscription(chatId: number): Promise<UpdateResult<SubscriptionModel>> {
-    const filter = { chatId, isActive: true };
+  async archiveSubscription(chatId: number): Promise<void> {
+    const filter = { chatId };
     const updateObj = { $set: { isActive: false } };
-    return this.subscriptionCollection.updateOne(filter, updateObj);
+    await this.subscriptionCollection.updateOne(filter, updateObj);
   }
 }

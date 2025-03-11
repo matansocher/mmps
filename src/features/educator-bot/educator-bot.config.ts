@@ -15,3 +15,9 @@ export enum BOT_ACTIONS {
 }
 
 export const EDUCATOR_ASSISTANT_ID = 'asst_2uMH7TYQkUwbwxWlp5f7L6NY';
+
+export const ANALYTIC_EVENT_NAMES = {
+  START: 'START',
+  STOP: 'STOP',
+  CONTACT: 'CONTACT',
+};

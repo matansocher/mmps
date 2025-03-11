@@ -1,6 +1,6 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
+import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
@@ -12,17 +12,11 @@ export class EducatorService {
     private readonly mongoTopicService: EducatorMongoTopicService,
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
-    private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
     private readonly notifierBotService: NotifierBotService,
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
   ) {}
 
   async processTopic(chatId: number): Promise<void> {
-    const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
-    if (userPreferences?.isStopped) {
-      return;
-    }
-
     const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
     if (activeTopic) {
       if (activeTopic.assignedAt.getTime() < Date.now() - IDLE_DAYS_REMINDER * 24 * 60 * 60 * 1000) {

@@ -16,3 +16,9 @@ export const BROKEN_RECORD_IMAGE_PROMPT = [
   `The scene is vibrant, colorful, and motivational, evoking a sense of achievement and relentless perseverance.`,
   `The image should feel epic, cinematic, and triumphant, with sparks, glowing embers, or energy waves surrounding the main elements.`,
 ].join(' ');
+
+export const ANALYTIC_EVENT_NAMES = {
+  START: 'START',
+  STOP: 'STOP',
+  CONTACT: 'CONTACT',
+};
