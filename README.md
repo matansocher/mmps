@@ -1,73 +1,69 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# NestJS Telegram Bots
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This repository contains a NestJS application that hosts multiple Telegram bots. Each bot is designed to handle specific tasks and interact with users through Telegram.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Table of Contents
+- [Getting Started](#getting-started)
+- [Installation](#installation)
+- [Running the Application](#running-the-application)
+- [Available Bots](#available-bots)
+- [License](#license)
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Getting Started
+To run this application, ensure you have Node.js installed. Each bot operates as part of the NestJS ecosystem and interacts with Telegram using the `node-telegram-bot-api` library.
 
 ## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/matansocher/mmps
+   cd mmps
+   ```
+2. Install dependencies:
+   ```bash
+   npm i
+   ```
+3. Set up environment variables
+   Create a .env file in the root directory and define the required environment variables:
+   ```bash
+    IS_PROD=false
+    
+    OPEN_AI_API_KEY=
+    GEMINI_API_KEY=
 
-```bash
-$ npm install
-```
+    MONGO_DB_URL=
+   ```
 
-## Running the app
 
-```bash
-# development
-$ npm run start
+## Running the Application
+To start the NestJS application:
 
-# watch mode
-$ npm run start:dev
+   ```bash
+    npm run start:debug
+   ```
 
-# production mode
-$ npm run start:prod
-```
+## Available Bots
+1. Playgrounds - A dev only bot to test telegram stuff
+2. Wolt - A bot to notify the user when a Wolt restaurant is open and available to get orders
+3. Voice Pal - A bot to help the user with transcriptions, translation and images
+4. Coach - A bot to show the user a daily list of sports games
+5. Trainer - A bot to encourage the user the train every day with nice rewards for records.
+6. Educator - A bot to teach the user of interesting stuff with a single message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
+7. Programming Teacher - A bot to teach programming. It has a list of courses it can teach the user each day,  with 3 lessons a day.
+8. Rollinspark - A bot to notify when it finds a new apartment details uploaded to the Rollinspark neighborhood in Maryland
 
-## Test
+## Bots IDs
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+| **Bot**             | **Prod ID**                                                                                | **Testing ID**                                                                                     |
+|---------------------|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| Notifier            | [@mmps_notifier_bot](https://web.telegram.org/k/#@mmps_notifier_bot)                       | [@mmps_notifier_staging_bot](https://web.telegram.org/k/#@mmps_notifier_staging_bot)               |
+| Playgrounds         | [@guzi_playgrounds_bot](https://web.telegram.org/k/#@guzi_playgrounds_bot)                 | -                                                                                                  |
+| Wolt                | [@guzi_wolt_checker_bot](https://web.telegram.org/k/#@guzi_wolt_checker_bot)               | [@wolt_testing_bot](https://web.telegram.org/k/#@wolt_testing_bot)                                 |
+| Voice Pal           | [@voice_pal_bot](https://web.telegram.org/k/#@voice_pal_bot)                               | [@voice_pal_staging_bot](https://web.telegram.org/k/#@voice_pal_staging_bot)                       |
+| Coach               | [@mmps_football_coach_bot](https://web.telegram.org/k/#@mmps_football_coach_bot)           | [@mmps_football_coach_staging_bot](https://web.telegram.org/k/#@mmps_football_coach_staging_bot)   |
+| Trainer             | [@mmps_trainer_bot](https://web.telegram.org/k/#@mmps_trainer_bot)                         | [@mmps_trainer_stg_bot](https://web.telegram.org/k/#@mmps_trainer_stg_bot)                         |
+| Educator            | [@mmps_educator_bot](https://web.telegram.org/k/#@mmps_educator_bot)                       | [@mmps_educator_stg_bot](https://web.telegram.org/k/#@mmps_educator_stg_bot)                       |
+| Programming Teacher | [@mmps_programming_teacher_bot](https://web.telegram.org/k/#@mmps_programming_teacher_bot) | [@mmps_programming_teacher_stg_bot](https://web.telegram.org/k/#@mmps_programming_teacher_stg_bot) |
+| Rollinspark         | [@mmps_rollinspark_bot](https://web.telegram.org/k/#@mmps_rollinspark_bot)                 | [@mmps_rollinspark_staging_bot](https://web.telegram.org/k/#@mmps_rollinspark_staging_bot)         |
 
 ## License
-
-Nest is [MIT licensed](LICENSE).
+This project is licensed under the MIT License.

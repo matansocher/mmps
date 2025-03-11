@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
 import { CONNECTION_NAME, DB_NAME } from './educator-mongo.config';
-import { EducatorMongoTopicService, EducatorMongoUserPreferencesService } from './services';
+import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService } from './services';
 
 @Module({
   imports: [
@@ -10,7 +10,7 @@ import { EducatorMongoTopicService, EducatorMongoUserPreferencesService } from '
       dbName: DB_NAME,
     }),
   ],
-  providers: [EducatorMongoTopicService, EducatorMongoUserPreferencesService],
-  exports: [EducatorMongoTopicService, EducatorMongoUserPreferencesService],
+  providers: [EducatorMongoTopicService, EducatorMongoTopicParticipationService, EducatorMongoUserPreferencesService],
+  exports: [EducatorMongoTopicService, EducatorMongoTopicParticipationService, EducatorMongoUserPreferencesService],
 })
 export class EducatorMongoModule {}

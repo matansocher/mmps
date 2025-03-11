@@ -3,11 +3,10 @@ export const WEEKLY_SUMMARY_HOUR_OF_DAY = 22;
 
 export const TRAINER_BOT_COMMANDS = {
   START: { command: '/start', description: 'Start all over' },
+  STOP: { command: '/stop', description: 'Stop daily reminders' },
   EXERCISE: { command: '/exercise', description: 'Log exercise' },
   ACHIEVEMENTS: { command: '/achievements', description: 'Show Achievements' },
 };
-
-export const MAX_EXERCISES_HISTORY_TO_SHOW = 14;
 
 export const BROKEN_RECORD_IMAGE_PROMPT = [
   `A highly energetic and inspiring digital artwork celebrating a fitness streak record.`,

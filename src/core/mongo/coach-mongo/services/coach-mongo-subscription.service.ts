@@ -1,4 +1,4 @@
-import { Collection, Db, InsertOneResult, UpdateResult, WithId } from 'mongodb';
+import { Collection, Db, InsertOneResult, UpdateResult } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../coach-mongo.config';
 import { SubscriptionModel } from '../models';
@@ -11,12 +11,12 @@ export class CoachMongoSubscriptionService {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }
 
-  getActiveSubscriptions(): Promise<WithId<SubscriptionModel>[]> {
+  getActiveSubscriptions(): Promise<SubscriptionModel[]> {
     const filter = { isActive: true };
     return this.subscriptionCollection.find(filter).toArray();
   }
 
-  getSubscription(chatId: number): Promise<WithId<SubscriptionModel>> {
+  getSubscription(chatId: number): Promise<SubscriptionModel> {
     const filter = { chatId, isActive: true };
     return this.subscriptionCollection.findOne(filter);
   }

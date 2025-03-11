@@ -1,7 +1,7 @@
-import { Collection, Db, InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
+import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
-import { TopicModel, TopicStatus } from '../models';
+import { TopicModel } from '../models';
 
 @Injectable()
 export class EducatorMongoTopicService {
@@ -11,62 +11,31 @@ export class EducatorMongoTopicService {
     this.topicCollection = this.db.collection(COLLECTIONS.TOPIC);
   }
 
-  addTopic(title: string): Promise<InsertOneResult<TopicModel>> {
-    const topic = {
+  async createTopic(chatId: number, title: string): Promise<TopicModel> {
+    const topic: TopicModel = {
       _id: new ObjectId(),
       title,
-      status: TopicStatus.Pending,
-      createdAt: new Date(),
-    };
-    return this.topicCollection.insertOne(topic);
-  }
-
-  getTopic(topicId: string): Promise<TopicModel> {
-    const filter = { _id: new ObjectId(topicId) };
-    return this.topicCollection.findOne(filter);
-  }
-
-  async getRandomTopic(): Promise<WithId<TopicModel> | null> {
-    const filter = { status: TopicStatus.Pending };
-    const results = await this.topicCollection
-      .aggregate<WithId<TopicModel>>([
-        { $match: filter },
-        { $sample: { size: 1 } }, // Get a random topic
-      ])
-      .toArray();
-    return results[0] || null; // Return the first result or null if none
-  }
-
-  getActiveTopic(): Promise<WithId<TopicModel>> {
-    const filter = { status: TopicStatus.Assigned };
-    return this.topicCollection.findOne(filter) as Promise<WithId<TopicModel>>;
-  }
-
-  async createTopic(title: string): Promise<TopicModel> {
-    const topic = {
-      _id: new ObjectId(),
-      title,
-      status: TopicStatus.Pending,
+      createdBy: chatId,
       createdAt: new Date(),
     };
     await this.topicCollection.insertOne(topic);
     return topic;
   }
 
-  startTopic(topicId: ObjectId, additionalData: Partial<TopicModel>): Promise<UpdateResult<TopicModel>> {
-    const filter = { _id: topicId };
-    const updateObj = { $set: { status: TopicStatus.Assigned, assignedAt: new Date(), ...additionalData } };
-    return this.topicCollection.updateOne(filter, updateObj);
-  }
-
-  async markTopicCompleted(topicId: string): Promise<UpdateResult<TopicModel>> {
-    const filter = { _id: new ObjectId(topicId) };
-    const updateObj = {
-      $set: {
-        status: TopicStatus.Completed,
-        completedAt: new Date(),
-      },
+  async getRandomTopic(chatId: number, excludedTopics: string[]): Promise<TopicModel | null> {
+    const filter = {
+      _id: { $nin: excludedTopics.map((topicId) => new ObjectId(topicId)) },
+      $or: [
+        { createdBy: chatId }, // Topics created by the user
+        { createdBy: { $exists: false } }, // Topics without createdBy field
+      ],
     };
-    return this.topicCollection.updateOne(filter, updateObj);
+    const results = await this.topicCollection
+      .aggregate<TopicModel>([
+        { $match: filter },
+        { $sample: { size: 1 } }, // Get a random topic
+      ])
+      .toArray();
+    return results[0] || null;
   }
 }

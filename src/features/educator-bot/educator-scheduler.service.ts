@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
+import { DEFAULT_TIMEZONE } from '@core/config';
+import { EducatorMongoUserPreferencesService } from '@core/mongo/educator-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
@@ -8,13 +9,18 @@ import { TOPIC_START_HOURS_OF_DAY } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
 @Injectable()
-export class EducatorSchedulerService {
+export class EducatorSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(EducatorSchedulerService.name);
 
   constructor(
     private readonly educatorService: EducatorService,
+    private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
     private readonly notifierBotService: NotifierBotService,
   ) {}
+
+  onModuleInit(): void {
+    // this.handleTopic();
+  }
 
   @Cron(`0 ${TOPIC_START_HOURS_OF_DAY.join(',')} * * *`, {
     name: 'educator-scheduler-start',
@@ -22,7 +28,8 @@ export class EducatorSchedulerService {
   })
   async handleTopic(): Promise<void> {
     try {
-      const chatIds = [MY_USER_ID];
+      const users = await this.mongoUserPreferencesService.getActiveUsers();
+      const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.educatorService.processTopic(chatId)));
     } catch (err) {
       const errorMessage = getErrorMessage(err);

@@ -1,4 +1,4 @@
-import { endOfDay, endOfYear, startOfDay, startOfYear } from 'date-fns';
+import { endOfDay, startOfDay } from 'date-fns';
 import { Collection, Db, InsertOneResult, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { ExerciseModel } from '../models';
@@ -36,12 +36,5 @@ export class TrainerMongoExerciseService {
 
   getExercises(chatId: number, limit: number = 1000): Promise<ExerciseModel[]> {
     return this.exerciseCollection.find({ chatId }).sort({ createdAt: -1 }).limit(limit).toArray();
-  }
-
-  getYearExercises(chatId: number, year: number): Promise<ExerciseModel[]> {
-    const start = startOfYear(new Date(`${year}-01-01`));
-    const end = endOfYear(new Date(`${year}-01-01`));
-
-    return this.exerciseCollection.find({ chatId, createdAt: { $gte: start, $lt: end } }).toArray();
   }
 }

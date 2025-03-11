@@ -1,10 +1,10 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
 import { UserPreferencesModel } from '../models';
+import { COLLECTIONS, CONNECTION_NAME } from '../trainer-mongo.config';
 
 @Injectable()
-export class EducatorMongoUserPreferencesService {
+export class TrainerMongoUserPreferencesService {
   private readonly userPreferencesCollection: Collection<UserPreferencesModel>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
-import { TeacherMongoCourseService, TeacherMongoUserPreferencesService } from './services';
+import { TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from './services';
 import { CONNECTION_NAME, DB_NAME } from './teacher-mongo.config';
 
 @Module({
@@ -10,7 +10,7 @@ import { CONNECTION_NAME, DB_NAME } from './teacher-mongo.config';
       dbName: DB_NAME,
     }),
   ],
-  providers: [TeacherMongoCourseService, TeacherMongoUserPreferencesService],
-  exports: [TeacherMongoCourseService, TeacherMongoUserPreferencesService],
+  providers: [TeacherMongoCourseService, TeacherMongoCourseParticipationService, TeacherMongoUserPreferencesService],
+  exports: [TeacherMongoCourseService, TeacherMongoCourseParticipationService, TeacherMongoUserPreferencesService],
 })
 export class TeacherMongoModule {}

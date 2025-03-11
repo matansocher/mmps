@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
-import { TrainerMongoExerciseService } from './services';
+import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService } from './services';
 import { CONNECTION_NAME, DB_NAME } from './trainer-mongo.config';
 
 @Module({
@@ -10,7 +10,7 @@ import { CONNECTION_NAME, DB_NAME } from './trainer-mongo.config';
       dbName: DB_NAME,
     }),
   ],
-  providers: [TrainerMongoExerciseService],
-  exports: [TrainerMongoExerciseService],
+  providers: [TrainerMongoExerciseService, TrainerMongoUserPreferencesService],
+  exports: [TrainerMongoExerciseService, TrainerMongoUserPreferencesService],
 })
 export class TrainerMongoModule {}

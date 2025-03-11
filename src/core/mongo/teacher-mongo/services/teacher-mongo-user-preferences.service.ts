@@ -1,4 +1,4 @@
-import { Collection, Db, InsertOneResult, ObjectId, UpdateResult } from 'mongodb';
+import { Collection, Db, ObjectId, UpdateResult } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { UserPreferencesModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
@@ -11,30 +11,37 @@ export class TeacherMongoUserPreferencesService {
     this.userPreferencesCollection = this.db.collection(COLLECTIONS.USER_PREFERENCES);
   }
 
-  getUserPreference(userId: number): Promise<UserPreferencesModel> {
-    const filter = { userId };
+  getUserPreference(chatId: number): Promise<UserPreferencesModel> {
+    const filter = { chatId };
     return this.userPreferencesCollection.findOne(filter);
   }
 
-  async createUserPreference(userId: number): Promise<InsertOneResult<UserPreferencesModel>> {
-    const userPreferences = await this.userPreferencesCollection.findOne({ userId });
+  getActiveUsers(): Promise<UserPreferencesModel[]> {
+    const filter = { isStopped: false };
+    return this.userPreferencesCollection.find(filter).toArray();
+  }
+
+  async createUserPreference(chatId: number): Promise<void> {
+    const userPreferences = await this.userPreferencesCollection.findOne({ chatId });
     if (userPreferences) {
-      await this.updateUserPreference(userId, { isStopped: false });
+      await this.updateUserPreference(chatId, { isStopped: false });
       return;
     }
 
     const userPreference = {
       _id: new ObjectId(),
-      userId,
+      chatId,
       isStopped: false,
       createdAt: new Date(),
     };
-    return this.userPreferencesCollection.insertOne(userPreference);
+    await this.userPreferencesCollection.insertOne(userPreference);
+    return;
   }
 
-  updateUserPreference(userId: number, update: Partial<UserPreferencesModel>): Promise<UpdateResult<UserPreferencesModel>> {
-    const filter = { userId };
+  async updateUserPreference(chatId: number, update: Partial<UserPreferencesModel>): Promise<void> {
+    const filter = { chatId };
     const updateObj = { $set: update };
-    return this.userPreferencesCollection.updateOne(filter, updateObj);
+    await this.userPreferencesCollection.updateOne(filter, updateObj);
+    return;
   }
 }

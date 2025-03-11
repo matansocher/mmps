@@ -1,6 +1,6 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicModel } from '@core/mongo/educator-mongo';
+import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
@@ -10,6 +10,7 @@ import { BOT_ACTIONS, EDUCATOR_ASSISTANT_ID, IDLE_DAYS_REMINDER } from './educat
 export class EducatorService {
   constructor(
     private readonly mongoTopicService: EducatorMongoTopicService,
+    private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
     private readonly notifierBotService: NotifierBotService,
@@ -22,7 +23,7 @@ export class EducatorService {
       return;
     }
 
-    const activeTopic = await this.mongoTopicService.getActiveTopic();
+    const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
     if (activeTopic) {
       if (activeTopic.assignedAt.getTime() < Date.now() - IDLE_DAYS_REMINDER * 24 * 60 * 60 * 1000) {
         await this.bot.sendMessage(chatId, `וואלה יצא הרבה זמן שלא למדת, מה אתה אומר נחזור?`);
@@ -34,34 +35,39 @@ export class EducatorService {
   }
 
   async startNewTopic(chatId: number, customTopic?: string): Promise<void> {
-    const topic = await this.getNewTopic(customTopic);
+    const { topic, topicParticipation } = await this.getNewTopic(chatId, customTopic);
     if (!topic) {
       await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
       return;
     }
     await sendStyledMessage(this.bot, chatId, [`נושא השיעור הבא שלנו:`, `\`${topic.title}\``].join('\n'));
-    const response = await this.getAssistantAnswer(topic.threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
+    const response = await this.getAssistantAnswer(topicParticipation.threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
 
     const inlineKeyboardButtons = [
       {
         text: '✅ סיימתי ✅',
-        callback_data: `${topic._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${topicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
     await sendShortenedMessage(this.bot, chatId, response, inlineKeyboardMarkup);
   }
 
-  async getNewTopic(customTopic?: string): Promise<TopicModel> {
-    const topic = customTopic ? await this.mongoTopicService.createTopic(customTopic) : await this.mongoTopicService.getRandomTopic();
+  async getNewTopic(chatId: number, customTopic?: string): Promise<{ topic: TopicModel; topicParticipation: TopicParticipationModel }> {
+    const topicParticipations = await this.mongoTopicParticipationService.getTopicParticipations(chatId);
+    const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
+
+    const topic = customTopic ? await this.mongoTopicService.createTopic(chatId, customTopic) : await this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
     if (!topic) {
       this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found' });
       return null;
     }
+
     const { id: threadId } = await this.openaiAssistantService.createThread();
-    topic.threadId = threadId;
-    await this.mongoTopicService.startTopic(topic?._id, { threadId });
-    return topic;
+    const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString());
+    topicParticipation.threadId = threadId;
+    await this.mongoTopicParticipationService.startTopicParticipation(topicParticipation?._id, { threadId });
+    return { topic, topicParticipation };
   }
 
   async getAssistantAnswer(threadId: string, prompt: string): Promise<string> {
@@ -70,12 +76,12 @@ export class EducatorService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async processQuestion(chatId: number, question: string, activeTopic: TopicModel): Promise<void> {
-    const response = await this.getAssistantAnswer(activeTopic.threadId, question);
+  async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
+    const response = await this.getAssistantAnswer(activeTopicParticipation.threadId, question);
     const inlineKeyboardButtons = [
       {
         text: '✅ סיימתי ✅',
-        callback_data: `${activeTopic._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${activeTopicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
