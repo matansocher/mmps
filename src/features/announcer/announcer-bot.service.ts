@@ -20,6 +20,11 @@ export class AnnouncerBotService implements OnModuleInit {
   constructor(
     @Inject(BOTS.ANNOUNCER.id) private readonly bot: TelegramBot,
     @Inject(BOTS.WOLT.id) private readonly woltBot: TelegramBot,
+    @Inject(BOTS.VOICE_PAL.id) private readonly voicePalBot: TelegramBot,
+    @Inject(BOTS.COACH.id) private readonly coachBot: TelegramBot,
+    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly programmingTeacherBot: TelegramBot,
+    @Inject(BOTS.EDUCATOR.id) private readonly educatorBot: TelegramBot,
+    @Inject(BOTS.TRAINER.id) private readonly trainerBot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -32,19 +37,39 @@ export class AnnouncerBotService implements OnModuleInit {
 
     try {
       const details = isMessageValid(text);
-      if (!details) {
+      const relevantBot = this.getRelevantBot(details.botName);
+      if (!details || !relevantBot) {
         await this.bot.sendMessage(chatId, 'not a valid message');
         return;
       }
 
       for (const userChatId of details.chatIds) {
-        await this.sendMessageToUser(this.woltBot, userChatId, details.text);
+        await this.sendMessageToUser(relevantBot, userChatId, details.text);
         await sleep(5000);
       }
       await this.bot.sendMessage(chatId, `finished announcement to ${details.chatIds.length} users`);
     } catch (err) {
       const errMessage = getErrorMessage(err);
       await this.bot.sendMessage(chatId, errMessage);
+    }
+  }
+
+  getRelevantBot(botName: string): TelegramBot {
+    switch (botName) {
+      case BOTS.WOLT.id:
+        return this.woltBot;
+      case BOTS.VOICE_PAL.id:
+        return this.voicePalBot;
+      case BOTS.COACH.id:
+        return this.coachBot;
+      case BOTS.PROGRAMMING_TEACHER.id:
+        return this.programmingTeacherBot;
+      case BOTS.EDUCATOR.id:
+        return this.educatorBot;
+      case BOTS.TRAINER.id:
+        return this.trainerBot;
+      default:
+        return null;
     }
   }
 

@@ -11,5 +11,6 @@ import { TeacherService } from './teacher.service';
 @Module({
   imports: [NotifierBotModule, OpenaiModule, TeacherMongoModule, NotifierBotModule, ScheduleModule.forRoot()],
   providers: [TeacherBotService, TeacherSchedulerService, TeacherService, TelegramBotsFactoryProvider(BOTS.PROGRAMMING_TEACHER)],
+  exports: [TelegramBotsFactoryProvider(BOTS.PROGRAMMING_TEACHER)],
 })
 export class TeacherBotModule {}
