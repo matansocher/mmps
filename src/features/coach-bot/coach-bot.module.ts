@@ -10,5 +10,6 @@ import { CoachService } from './coach.service';
 @Module({
   imports: [ScheduleModule.forRoot(), NotifierBotModule, CoachMongoModule],
   providers: [CoachBotService, CoachBotSchedulerService, CoachService, TelegramBotsFactoryProvider(BOTS.COACH)],
+  exports: [TelegramBotsFactoryProvider(BOTS.COACH)],
 })
 export class CoachBotModule {}
