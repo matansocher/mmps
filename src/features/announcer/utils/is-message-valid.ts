@@ -1,4 +1,5 @@
 type ExpectedMessageParse = {
+  readonly botName: string;
   readonly chatIds: number[];
   readonly text: string;
 };
