@@ -33,24 +33,24 @@ export class AnnouncerBotService implements OnModuleInit {
   }
 
   async textHandler(message: Message): Promise<void> {
-    const { chatId, text } = getMessageData(message);
+    const { chatId: announcerChatId, text } = getMessageData(message);
 
     try {
       const details = isMessageValid(text);
       const relevantBot = this.getRelevantBot(details.botName);
       if (!details || !relevantBot) {
-        await this.bot.sendMessage(chatId, 'not a valid message');
+        await this.bot.sendMessage(announcerChatId, 'not a valid message');
         return;
       }
 
       for (const userChatId of details.chatIds) {
-        await this.sendMessageToUser(relevantBot, userChatId, details.text);
+        await this.sendMessageToUser(relevantBot, userChatId, announcerChatId, details.text);
         await sleep(5000);
       }
-      await this.bot.sendMessage(chatId, `finished announcement to ${details.chatIds.length} users`);
+      await this.bot.sendMessage(announcerChatId, `finished announcement to ${details.chatIds.length} users`);
     } catch (err) {
       const errMessage = getErrorMessage(err);
-      await this.bot.sendMessage(chatId, errMessage);
+      await this.bot.sendMessage(announcerChatId, errMessage);
     }
   }
 
@@ -73,12 +73,12 @@ export class AnnouncerBotService implements OnModuleInit {
     }
   }
 
-  async sendMessageToUser(bot: TelegramBot, chatId: number, message: string): Promise<void> {
+  async sendMessageToUser(bot: TelegramBot, userChatId: number, announcerChatId: number, message: string): Promise<void> {
     try {
-      await bot.sendMessage(chatId, message);
-      await this.bot.sendMessage(chatId, `chatId: ${chatId} - SENT`);
+      await bot.sendMessage(userChatId, message);
+      await this.bot.sendMessage(announcerChatId, `chatId: ${userChatId} - SENT`);
     } catch (err) {
-      await this.bot.sendMessage(chatId, `chatId: ${chatId} - ERROR, ${getErrorMessage(err)}`);
+      await this.bot.sendMessage(announcerChatId, `chatId: ${userChatId} - ERROR, ${getErrorMessage(err)}`);
     }
   }
 }
