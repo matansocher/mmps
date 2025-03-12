@@ -78,9 +78,7 @@ export class AnnouncerBotService implements OnModuleInit {
       await bot.sendMessage(chatId, message);
       await this.bot.sendMessage(chatId, `chatId: ${chatId} - SENT`);
     } catch (err) {
-      const errMessage = getErrorMessage(err);
-      await bot.sendMessage(chatId, errMessage);
-      await this.bot.sendMessage(chatId, `chatId: ${chatId} - ERROR, ${errMessage}`);
+      await this.bot.sendMessage(chatId, `chatId: ${chatId} - ERROR, ${getErrorMessage(err)}`);
     }
   }
 }
