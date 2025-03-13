@@ -34,8 +34,6 @@ export class TrainerService {
       } else {
         await this.bot.sendMessage(chatId, '🦔🦔🦔🦔');
       }
-
-      this.notifyWithUserDetails(chatId, ANALYTIC_EVENT_NAMES.ACHIEVEMENTS);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.processEODReminder.name} - error: ${errorMessage}`);
@@ -60,8 +58,6 @@ export class TrainerService {
       const streaksText = [`🚀 Current Streak: ${getSpecialNumber(currentStreak)}`, `🏋️‍♂️ Longest Streak: ${getSpecialNumber(longestStreak)}`].join('\n');
       const replyText = [streaksText, exercisesDaysText].join('\n\n');
       await this.bot.sendMessage(chatId, replyText);
-
-      this.notifyWithUserDetails(chatId, ANALYTIC_EVENT_NAMES.WEEKLY_SUMMARY);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.processWeeklySummary.name} - error: ${errorMessage}`);
