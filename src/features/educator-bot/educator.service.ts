@@ -29,13 +29,19 @@ export class EducatorService {
   }
 
   async startNewTopic(chatId: number, customTopic?: string): Promise<void> {
-    const { topic, topicParticipation } = await this.getNewTopic(chatId, customTopic);
+    const topic = await this.getNewTopic(chatId, customTopic);
     if (!topic) {
-      await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
+      this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found', chatId });
+      // await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
       return;
     }
+
+    const { id: threadId } = await this.openaiAssistantService.createThread();
+    const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString());
+    await this.mongoTopicParticipationService.startTopicParticipation(topicParticipation?._id, { threadId });
+
     await sendStyledMessage(this.bot, chatId, [`נושא השיעור הבא שלנו:`, `\`${topic.title}\``].join('\n'));
-    const response = await this.getAssistantAnswer(topicParticipation.threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
+    const response = await this.getAssistantAnswer(threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
 
     const inlineKeyboardButtons = [
       {
@@ -47,21 +53,11 @@ export class EducatorService {
     await sendShortenedMessage(this.bot, chatId, response, inlineKeyboardMarkup);
   }
 
-  async getNewTopic(chatId: number, customTopic?: string): Promise<{ topic: TopicModel; topicParticipation: TopicParticipationModel }> {
+  async getNewTopic(chatId: number, customTopic?: string): Promise<TopicModel> {
     const topicParticipations = await this.mongoTopicParticipationService.getTopicParticipations(chatId);
     const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
 
-    const topic = customTopic ? await this.mongoTopicService.createTopic(chatId, customTopic) : await this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
-    if (!topic) {
-      this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found' });
-      return null;
-    }
-
-    const { id: threadId } = await this.openaiAssistantService.createThread();
-    const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString());
-    topicParticipation.threadId = threadId;
-    await this.mongoTopicParticipationService.startTopicParticipation(topicParticipation?._id, { threadId });
-    return { topic, topicParticipation };
+    return customTopic ? await this.mongoTopicService.createTopic(chatId, customTopic) : await this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
   }
 
   async getAssistantAnswer(threadId: string, prompt: string): Promise<string> {
