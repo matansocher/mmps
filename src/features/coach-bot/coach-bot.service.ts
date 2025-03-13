@@ -40,6 +40,10 @@ export class CoachBotService implements OnModuleInit {
   private async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserService.saveUserDetails(userDetails);
+
+    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, true) : await this.mongoSubscriptionService.addSubscription(chatId);
+
     const replyText = [
       `שלום 👋`,
       `אני פה כדי לתת תוצאות של משחקי ספורט`,
@@ -49,17 +53,12 @@ export class CoachBotService implements OnModuleInit {
     ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
 
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    if (!subscription) {
-      await this.mongoSubscriptionService.addSubscription(chatId);
-    }
-
     this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async stopHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    await this.mongoSubscriptionService.archiveSubscription(chatId);
+    await this.mongoSubscriptionService.updateSubscription(chatId, false);
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
     this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }

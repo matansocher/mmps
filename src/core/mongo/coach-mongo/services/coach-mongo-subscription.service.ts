@@ -17,7 +17,7 @@ export class CoachMongoSubscriptionService {
   }
 
   getSubscription(chatId: number): Promise<SubscriptionModel> {
-    const filter = { chatId, isActive: true };
+    const filter = { chatId };
     return this.subscriptionCollection.findOne(filter);
   }
 
@@ -30,9 +30,9 @@ export class CoachMongoSubscriptionService {
     return this.subscriptionCollection.insertOne(subscription);
   }
 
-  async archiveSubscription(chatId: number): Promise<void> {
+  async updateSubscription(chatId: number, isActive: boolean): Promise<void> {
     const filter = { chatId };
-    const updateObj = { $set: { isActive: false } };
+    const updateObj = { $set: { isActive } };
     await this.subscriptionCollection.updateOne(filter, updateObj);
   }
 }
