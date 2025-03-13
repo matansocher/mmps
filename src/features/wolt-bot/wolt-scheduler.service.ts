@@ -7,9 +7,11 @@ import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService }
 import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
-import { AnalyticEventValue, WoltRestaurant } from './interface';
+import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
 import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt-bot.config';
+
+export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
