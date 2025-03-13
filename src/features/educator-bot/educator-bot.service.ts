@@ -20,7 +20,7 @@ export class EducatorBotService implements OnModuleInit {
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
     private readonly mongoUserService: EducatorMongoUserService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -66,7 +66,7 @@ export class EducatorBotService implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async topicHandler(message: Message): Promise<void> {

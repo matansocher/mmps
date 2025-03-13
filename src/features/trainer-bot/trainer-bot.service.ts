@@ -18,7 +18,7 @@ export class TrainerBotService implements OnModuleInit {
     private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
     private readonly mongoUserService: TrainerMongoUserService,
     private readonly openaiService: OpenaiService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -55,7 +55,7 @@ export class TrainerBotService implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async exerciseHandler(message: Message): Promise<void> {

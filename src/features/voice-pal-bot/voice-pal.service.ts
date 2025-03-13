@@ -21,7 +21,7 @@ export class VoicePalService implements OnModuleInit {
     private readonly mongoUserService: VoicePalMongoUserService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly aiService: AiService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -36,7 +36,7 @@ export class VoicePalService implements OnModuleInit {
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
       await this.mongoUserService.saveUserDetails(userDetails);
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { action: ANALYTIC_EVENT_NAMES['/start'] }, userDetails);
+      this.notifier.notify(BOTS.VOICE_PAL, { action: ANALYTIC_EVENT_NAMES['/start'] }, userDetails);
       replyText = replyText.replace('{name}', userDetails.firstName || userDetails.username || '');
     } else {
       this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
@@ -74,11 +74,11 @@ export class VoicePalService implements OnModuleInit {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, userDetails);
+      this.notifier.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, userDetails);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, userDetails);
+      this.notifier.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, userDetails);
       throw err;
     }
   }
@@ -92,11 +92,11 @@ export class VoicePalService implements OnModuleInit {
       },
       LOCAL_FILES_PATH,
     );
-    await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
+    await this.notifier.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
     deleteFile(videoFileLocalPath);
     const replyText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
     await sendShortenedMessage(this.bot, chatId, replyText);
-    await this.notifierBotService.collect(MessageType.TEXT, replyText);
+    await this.notifier.collect(MessageType.TEXT, replyText);
     await deleteFile(audioFileLocalPath);
   }
 
@@ -104,7 +104,7 @@ export class VoicePalService implements OnModuleInit {
     let replyText = '';
 
     if (text) {
-      await this.notifierBotService.collect(MessageType.TEXT, text);
+      await this.notifier.collect(MessageType.TEXT, text);
       replyText = await getTranslationToEnglish(text);
     } else {
       const { audioFileLocalPath, videoFileLocalPath } = await downloadAudioFromVideoOrAudio(
@@ -115,18 +115,18 @@ export class VoicePalService implements OnModuleInit {
         },
         LOCAL_FILES_PATH,
       );
-      await this.notifierBotService.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
+      await this.notifier.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
       deleteFile(videoFileLocalPath);
       replyText = await this.aiService.getTranslationFromAudio(audioFileLocalPath);
       deleteFile(audioFileLocalPath);
     }
 
     await sendShortenedMessage(this.bot, chatId, replyText);
-    await this.notifierBotService.collect(MessageType.TEXT, replyText);
+    await this.notifier.collect(MessageType.TEXT, replyText);
   }
 
   async handleTextToSpeechAction({ chatId, text }: Partial<TelegramMessageData>): Promise<void> {
-    await this.notifierBotService.collect(MessageType.TEXT, text);
+    await this.notifier.collect(MessageType.TEXT, text);
     const result = await this.aiService.getAudioFromText(text);
 
     const audioFilePath = `${LOCAL_FILES_PATH}/text-to-speech-${new Date().getTime()}.mp3`;
@@ -134,16 +134,16 @@ export class VoicePalService implements OnModuleInit {
     await fs.writeFile(audioFilePath, buffer);
 
     await this.bot.sendVoice(chatId, audioFilePath);
-    await this.notifierBotService.collect(MessageType.AUDIO, audioFilePath);
+    await this.notifier.collect(MessageType.AUDIO, audioFilePath);
     await deleteFile(audioFilePath);
   }
 
   async handleImageAnalyzerAction({ chatId, photo }: Partial<TelegramMessageData>): Promise<void> {
     const imageLocalPath = await this.bot.downloadFile(photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
-    await this.notifierBotService.collect(MessageType.PHOTO, imageLocalPath);
+    await this.notifier.collect(MessageType.PHOTO, imageLocalPath);
     const imageAnalysisText = await this.aiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
     await sendShortenedMessage(this.bot, chatId, imageAnalysisText);
-    await this.notifierBotService.collect(MessageType.TEXT, imageAnalysisText);
+    await this.notifier.collect(MessageType.TEXT, imageAnalysisText);
     deleteFile(imageLocalPath);
   }
 }

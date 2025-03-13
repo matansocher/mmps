@@ -22,7 +22,7 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly schedulerRegistry: SchedulerRegistry,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -65,7 +65,7 @@ export class WoltSchedulerService implements OnModuleInit {
     } catch (err) {
       const errMessage = getErrorMessage(err);
       this.logger.error(`${this.alertSubscription.name} - error - ${errMessage}`);
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: errMessage });
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: errMessage });
     }
   }
 
@@ -95,7 +95,7 @@ export class WoltSchedulerService implements OnModuleInit {
     } catch (err) {
       const errMessage = getErrorMessage(err);
       this.logger.error(`${this.cleanSubscription.name} - error - ${errMessage}`);
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: errMessage });
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: errMessage });
     }
   }
 
@@ -106,6 +106,6 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async notifyWithUserDetails(chatId: number, restaurant: string, action: AnalyticEventValue) {
     const userDetails = (await this.mongoUserService.getUserDetails({ chatId })) as unknown as UserDetails;
-    this.notifierBotService.notify(BOTS.WOLT, { restaurant, action }, userDetails);
+    this.notifier.notify(BOTS.WOLT, { restaurant, action }, userDetails);
   }
 }

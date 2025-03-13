@@ -15,7 +15,7 @@ export class TrainerSchedulerService implements OnModuleInit {
   constructor(
     private readonly trainerService: TrainerService,
     private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
   ) {}
 
   onModuleInit(): void {
@@ -31,7 +31,7 @@ export class TrainerSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleEODReminder.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage });
+      this.notifier.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage });
     }
   }
 
@@ -44,7 +44,7 @@ export class TrainerSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleWeeklySummary.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage });
+      this.notifier.notify(BOTS.TRAINER, { action: 'ERROR', error: errorMessage });
     }
   }
 }
