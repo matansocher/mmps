@@ -143,14 +143,15 @@ export class EducatorBotService implements OnModuleInit {
     const [topicParticipationId, action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.COMPLETE:
-        await this.handleCallbackCompleteTopic(chatId, userDetails, messageId, topicParticipationId);
+        await this.handleCallbackCompleteTopic(chatId, messageId, topicParticipationId);
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
         break;
       default:
         throw new Error('Invalid action');
     }
   }
 
-  private async handleCallbackCompleteTopic(chatId: number, userDetails, messageId: number, topicParticipationId: string): Promise<void> {
+  private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
     const topic = await this.mongoTopicParticipationService.getTopicParticipation(topicParticipationId);
     if (!topic) {
       await this.bot.sendMessage(chatId, `נראה לי שסיימת את הנושא הזה, הכל טוב`);
@@ -165,7 +166,5 @@ export class EducatorBotService implements OnModuleInit {
     await this.mongoTopicParticipationService.markTopicParticipationCompleted(topicParticipationId);
     await this.bot.sendMessage(chatId, '🔥');
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
-
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
   }
 }

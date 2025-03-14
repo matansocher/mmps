@@ -1,4 +1,4 @@
-import { Collection, Db, ObjectId, UpdateResult } from 'mongodb';
+import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
 import { TopicParticipationModel, TopicParticipationStatus } from '../models';
@@ -38,10 +38,10 @@ export class EducatorMongoTopicParticipationService {
     return this.topicParticipationCollection.findOne(filter);
   }
 
-  startTopicParticipation(id: ObjectId, additionalData: Partial<TopicParticipationModel>): Promise<UpdateResult<TopicParticipationModel>> {
+  async startTopicParticipation(id: ObjectId, additionalData: Partial<TopicParticipationModel>): Promise<void> {
     const filter = { _id: id };
     const updateObj = { $set: { status: TopicParticipationStatus.Assigned, assignedAt: new Date(), ...additionalData } };
-    return this.topicParticipationCollection.updateOne(filter, updateObj);
+    await this.topicParticipationCollection.updateOne(filter, updateObj);
   }
 
   async markTopicParticipationCompleted(topicParticipationId: string): Promise<void> {
