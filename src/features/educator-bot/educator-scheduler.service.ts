@@ -15,7 +15,7 @@ export class EducatorSchedulerService implements OnModuleInit {
   constructor(
     private readonly educatorService: EducatorService,
     private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
   ) {}
 
   onModuleInit(): void {
@@ -34,7 +34,7 @@ export class EducatorSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleTopic.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: errorMessage });
+      this.notifier.notify(BOTS.EDUCATOR, { action: 'ERROR', error: errorMessage });
     }
   }
 }

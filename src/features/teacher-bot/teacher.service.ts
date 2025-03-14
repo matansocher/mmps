@@ -16,7 +16,7 @@ export class TeacherService {
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly openaiAssistantService: OpenaiAssistantService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -38,7 +38,7 @@ export class TeacherService {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.processCourseNextLesson.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
+      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
     }
   }
 
@@ -53,7 +53,7 @@ export class TeacherService {
 
     const course = await this.mongoCourseService.getRandomCourse(chatId, coursesParticipated);
     if (!course) {
-      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: 'No new courses found' });
+      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: 'No new courses found' });
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();

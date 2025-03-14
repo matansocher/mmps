@@ -18,7 +18,7 @@ export class TrainerBotService implements OnModuleInit {
     private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
     private readonly mongoUserService: TrainerMongoUserService,
     private readonly openaiService: OpenaiService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -42,24 +42,26 @@ export class TrainerBotService implements OnModuleInit {
     await this.mongoUserService.saveUserDetails(userDetails);
     const replyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async stopHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
     const replyText = ['OK, I will stop reminding you for now 🛑', `Whenever you are ready, just send me the ${TRAINER_BOT_COMMANDS.START.command} command and we will continue training`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async exerciseHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
 
     const exercises = await this.mongoExerciseService.getExercises(chatId);
     const exercisesDates = exercises.map((exercise) => exercise.createdAt);
@@ -70,6 +72,8 @@ export class TrainerBotService implements OnModuleInit {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const currentStreak = getStreak([...exercisesDates, today]);
+
+    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.EXERCISE }, userDetails);
 
     // Check if the user broke their longest streak
     if (currentStreak > 1 && currentStreak > longestStreak) {
@@ -86,7 +90,7 @@ export class TrainerBotService implements OnModuleInit {
   }
 
   private async achievementsHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const exercises = await this.mongoExerciseService.getExercises(chatId);
     if (!exercises?.length) {
       await this.bot.sendMessage(chatId, 'I see you still did not exercise.\nGet going! 🤾');
@@ -103,5 +107,7 @@ export class TrainerBotService implements OnModuleInit {
       `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`,
     ].join('\n');
     await this.bot.sendMessage(chatId, replyText);
+
+    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.ACHIEVEMENTS }, userDetails);
   }
 }

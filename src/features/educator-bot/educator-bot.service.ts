@@ -20,7 +20,7 @@ export class EducatorBotService implements OnModuleInit {
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
     private readonly mongoUserService: EducatorMongoUserService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -53,24 +53,26 @@ export class EducatorBotService implements OnModuleInit {
       `יש עוד כמה פקודות מעניינות שהגדרו ששווה לבדוק`,
     ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async stopHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
     const replyText = [`סבבה, אני מפסיקה 🛑`, `תגיד לי מתי אתה רוצה לחזור ללמוד ונמשיך - רק תשלח לי את הפקודה`, `אתה יכול גם לבקש נושאים כשתרצה בלי תזכורות ממני, גם לזה הכנתי פקודה`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async topicHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const Participation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
     if (Participation?._id) {
       await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
@@ -78,10 +80,12 @@ export class EducatorBotService implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
+
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
   }
 
   private async customTopicHandler(message: Message): Promise<void> {
-    const { chatId, text } = getMessageData(message);
+    const { chatId, userDetails, text } = getMessageData(message);
 
     const customTopic = text.replace(EDUCATOR_BOT_COMMANDS.CUSTOM.command, '').trim();
     if (!customTopic) {
@@ -96,10 +100,12 @@ export class EducatorBotService implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId, customTopic));
+
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CUSTOM_TOPIC }, userDetails);
   }
 
   private async addHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const topic = message.text.replace(EDUCATOR_BOT_COMMANDS.ADD.command, '').trim();
     if (!topic?.length) {
       await this.bot.sendMessage(chatId, `אין בעיה אני אוסיף מה שתגיד לי רק תרשום לי בנוסף לפקודה את הנושא`);
@@ -107,10 +113,12 @@ export class EducatorBotService implements OnModuleInit {
     }
     await this.mongoTopicService.createTopic(chatId, topic);
     await this.bot.sendMessage(chatId, `סבבה, הוספתי את זה כנושא, ונלמד על זה בשיעורים הבאים`);
+
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.ADD_TOPIC }, userDetails);
   }
 
   private async messageHandler(message: Message): Promise<void> {
-    const { chatId, text } = getMessageData(message);
+    const { chatId, userDetails, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(EDUCATOR_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
@@ -125,15 +133,18 @@ export class EducatorBotService implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
     });
+
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.MESSAGE }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, messageId, data: response } = getCallbackQueryData(callbackQuery);
+    const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
     const [topicParticipationId, action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteTopic(chatId, messageId, topicParticipationId);
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
         break;
       default:
         throw new Error('Invalid action');

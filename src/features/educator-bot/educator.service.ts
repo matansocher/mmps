@@ -12,7 +12,7 @@ export class EducatorService {
     private readonly mongoTopicService: EducatorMongoTopicService,
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -31,7 +31,7 @@ export class EducatorService {
   async startNewTopic(chatId: number, customTopic?: string): Promise<void> {
     const topic = await this.getNewTopic(chatId, customTopic);
     if (!topic) {
-      this.notifierBotService.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found', chatId });
+      this.notifier.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found', chatId });
       // await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
       return;
     }

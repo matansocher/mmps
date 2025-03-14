@@ -21,7 +21,7 @@ export class WoltBotService implements OnModuleInit {
     private readonly restaurantsService: RestaurantsService,
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -54,14 +54,14 @@ export class WoltBotService implements OnModuleInit {
       .join('\n')
       .replace('{firstName}', userDetails.firstName || userDetails.username || '');
     await this.bot.sendMessage(chatId, replyText);
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   async listHandler(message: Message): Promise<void> {
@@ -87,7 +87,7 @@ export class WoltBotService implements OnModuleInit {
       });
       await Promise.all(promisesArr);
     } catch (err) {
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name }, userDetails);
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name }, userDetails);
       throw err;
     }
   }
@@ -123,9 +123,9 @@ export class WoltBotService implements OnModuleInit {
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
-      this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
-      this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.textHandler.name }, userDetails);
+      this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.textHandler.name }, userDetails);
       throw err;
     }
   }
@@ -143,7 +143,7 @@ export class WoltBotService implements OnModuleInit {
         await this.handleCallbackAddSubscription(chatId, userDetails, restaurantName, activeSubscriptions);
       }
     } catch (err) {
-      await this.notifierBotService.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: getErrorMessage(err), method: this.callbackQueryHandler.name }, userDetails);
+      await this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: getErrorMessage(err), method: this.callbackQueryHandler.name }, userDetails);
       throw err;
     }
   }
@@ -179,7 +179,7 @@ export class WoltBotService implements OnModuleInit {
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifierBotService.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
+    this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
   async handleCallbackRemoveSubscription(chatId: number, messageId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
