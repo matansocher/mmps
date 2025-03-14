@@ -15,7 +15,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   constructor(
     private readonly teacherService: TeacherService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
   ) {}
 
   onModuleInit(): void {
@@ -32,7 +32,7 @@ export class TeacherSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleCourseFirstLesson.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
+      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
     }
   }
 
@@ -48,7 +48,7 @@ export class TeacherSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       this.logger.error(`${this.handleCourseNextLesson.name} - error: ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
+      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
     }
   }
 }

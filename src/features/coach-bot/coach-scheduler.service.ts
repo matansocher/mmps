@@ -18,7 +18,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly coachService: CoachService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -45,7 +45,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     } catch (err) {
       const errorMessage = `error - ${getErrorMessage(err)}`;
       this.logger.error(`${this.handleIntervalFlow.name} - ${errorMessage}`);
-      this.notifierBotService.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: errorMessage });
+      this.notifier.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: errorMessage });
     }
   }
 }

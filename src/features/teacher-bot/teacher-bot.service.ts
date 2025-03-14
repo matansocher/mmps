@@ -19,7 +19,7 @@ export class TeacherBotService implements OnModuleInit {
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly mongoUserService: TeacherMongoUserService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -53,10 +53,11 @@ export class TeacherBotService implements OnModuleInit {
       `You can always add a course topic by sending me the topic on this format - /add <course topic>, example: /add JavaScript Heap`,
     ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async stopHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
     const replyText = [
       'OK, I will stop teaching you for now 🛑',
@@ -64,17 +65,18 @@ export class TeacherBotService implements OnModuleInit {
       `Another option for you is to start courses manually with the ${TEACHER_BOT_COMMANDS.COURSE.command} command and another lesson with the ${TEACHER_BOT_COMMANDS.LESSON.command} command`,
     ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   private async courseHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const activeCourse = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
     if (activeCourse?._id) {
       await this.mongoCourseParticipationService.markCourseParticipationLessonCompleted(activeCourse?._id);
@@ -84,19 +86,23 @@ export class TeacherBotService implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.teacherService.startNewCourse(chatId);
     });
+
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START_COURSE }, userDetails);
   }
 
   private async lessonHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.teacherService.processLesson(chatId, false);
     });
+
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START_LESSON }, userDetails);
   }
 
   private async listHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const [courses, courseParticipations] = await Promise.all([this.mongoCourseService.getAllCourses(), this.mongoCourseParticipationService.getCourseParticipations(chatId)]);
     const coursesParticipated = courseParticipations?.map((courseParticipation) => courseParticipation.courseId);
     let coursesNotParticipated = courses?.filter((course) => !coursesParticipated.includes(course._id.toString()));
@@ -113,10 +119,12 @@ export class TeacherBotService implements OnModuleInit {
     }
     const coursesStr = coursesNotParticipated.map(({ topic }) => `👨‍🏫 ${topic}`).join('\n');
     await sendStyledMessage(this.bot, chatId, `${messagePrefix}:\n\n${coursesStr}`);
+
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
   }
 
   private async addHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, userDetails } = getMessageData(message);
     const courseName = message.text.replace(TEACHER_BOT_COMMANDS.ADD.command, '').trim();
     if (!courseName?.length) {
       await this.bot.sendMessage(chatId, `Please add the course name after the add command.\n example: /add JavaScript Heap`);
@@ -124,10 +132,12 @@ export class TeacherBotService implements OnModuleInit {
     }
     await this.mongoCourseService.createCourse(chatId, courseName);
     await this.bot.sendMessage(chatId, `OK, I added \`${courseName}\` to your courses list`);
+
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.ADD, course: courseName }, userDetails);
   }
 
   async messageHandler(message: Message): Promise<void> {
-    const { chatId, text } = getMessageData(message);
+    const { chatId, text, userDetails } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(TEACHER_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
@@ -142,15 +152,18 @@ export class TeacherBotService implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.teacherService.processQuestion(chatId, text, activeCourseParticipation);
     });
+
+    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, messageId, data: response } = getCallbackQueryData(callbackQuery);
+    const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
     const [courseParticipationId, action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteCourse(chatId, messageId, courseParticipationId);
+        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.COMPLETE_COURSE }, userDetails);
         break;
       default:
         throw new Error('Invalid action');

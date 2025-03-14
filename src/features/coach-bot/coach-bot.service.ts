@@ -19,7 +19,7 @@ export class CoachBotService implements OnModuleInit {
     private readonly mongoUserService: CoachMongoUserService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly coachService: CoachService,
-    private readonly notifierBotService: NotifierBotService,
+    private readonly notifier: NotifierBotService,
     @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -53,21 +53,21 @@ export class CoachBotService implements OnModuleInit {
     ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async stopHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoSubscriptionService.updateSubscription(chatId, false);
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+    this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -89,6 +89,6 @@ export class CoachBotService implements OnModuleInit {
       await sendStyledMessage(this.bot, chatId, replyText);
     });
 
-    this.notifierBotService.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
+    this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
   }
 }
