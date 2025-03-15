@@ -4,7 +4,7 @@ import type { MessageLoaderOptions } from '../interface';
 
 const LOADER_EMOJI = '🐢';
 const MAX_EMOJIS = 5;
-const DEFAULT_CYCLE_DURATION = 3000;
+const DEFAULT_CYCLE_DURATION = 5000;
 
 interface MessageLoaderData {
   readonly cycleIterationIndex: number;
