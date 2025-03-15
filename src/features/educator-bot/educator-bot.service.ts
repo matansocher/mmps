@@ -1,23 +1,12 @@
 import { promises as fs } from 'fs';
-import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService, TopicParticipationStatus } from '@core/mongo/educator-mongo';
-import { MessageType, NotifierBotService } from '@core/notifier-bot';
+import { NotifierBotService } from '@core/notifier-bot';
 import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
-import {
-  BOT_BROADCAST_ACTIONS,
-  BOTS,
-  getCallbackQueryData,
-  getInlineKeyboardMarkup,
-  getMessageData,
-  MessageLoader,
-  removeItemFromInlineKeyboardMarkup,
-  TELEGRAM_EVENTS,
-  TelegramEventHandler,
-  TelegramMessageData,
-} from '@services/telegram';
+import { BOT_BROADCAST_ACTIONS, BOTS, getCallbackQueryData, getMessageData, MessageLoader, removeItemFromInlineKeyboardMarkup, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
@@ -184,6 +173,7 @@ export class EducatorBotService implements OnModuleInit {
 
       const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
       await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+      await deleteFile(audioFilePath);
     });
   }
 
