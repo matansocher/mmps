@@ -48,7 +48,7 @@ export class CoachBotService implements OnModuleInit {
       `שלום 👋`,
       `אני פה כדי לתת תוצאות של משחקי ספורט`,
       `כדי לראות תוצאות של משחקים מהיום נכון לעכשיו, אפשר פשוט לשלוח לי הודעה, כל הודעה`,
-      `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17 📅) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
+      `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
       `אם תרצה להפסיק לקבל ממני עדכונים, תוכל להשתמש בפקודה פה למטה`,
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
