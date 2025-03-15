@@ -14,19 +14,21 @@ export class MongoUserService {
     this.userCollection = this.database.collection(COLLECTIONS.USER);
   }
 
-  async saveUserDetails(userDetails: UserDetails): Promise<void> {
+  async saveUserDetails(userDetails: UserDetails): Promise<boolean> {
     try {
       const filter = { chatId: userDetails.chatId };
       const existingUserDetails = await this.userCollection.findOne(filter);
       if (existingUserDetails) {
         await this.userCollection.updateOne(filter, { $set: { ...userDetails } });
-        return;
+        return true;
       }
 
       const user = { ...userDetails, createdAt: new Date() } as unknown as UserModel;
       await this.userCollection.insertOne(user);
+      return false;
     } catch (err) {
       this.logger.error(`${this.saveUserDetails.name} - err: ${getErrorMessage(err)}`);
+      return false;
     }
   }
 

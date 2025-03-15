@@ -45,14 +45,15 @@ export class TeacherBotService implements OnModuleInit {
   private async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
-    await this.mongoUserService.saveUserDetails(userDetails);
-    const replyText = [
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const newUserReplyText = [
       `Hey There 👋`,
       `I am here to teach you all you need about any subject you want.`,
       `I will send you daily lessons of stuff I collect on the internet and summarize it for you in a great way that you can learn from. 😁`,
       `You can always add a course topic by sending me the topic on this format - /add <course topic>, example: /add JavaScript Heap`,
     ].join('\n\n');
-    await this.bot.sendMessage(chatId, replyText);
+    const existingUserReplyText = `All set 👨‍💻`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
     this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 

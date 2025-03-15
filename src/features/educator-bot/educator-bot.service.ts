@@ -45,21 +45,22 @@ export class EducatorBotService implements OnModuleInit {
   private async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
-    await this.mongoUserService.saveUserDetails(userDetails);
-    const replyText = [
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const newUserReplyText = [
       `שלום לך 👋`,
       `אני פה כדי ללמד אותך על כל מיני נושאים, כדי שתהיה חכם יותר 😁`,
-      `אני אשלח לך כל יום שיעורים על נושאים מעניינים`,
-      `יש עוד כמה פקודות מעניינות שהגדרו ששווה לבדוק`,
+      `לא צריך לעשות יותר כלום, אני אשלח כל יום שיעורים על נושאים מעניינים בשעות שונות של היום`,
+      `יש לי עוד כמה פקודות מעניינות ששווה לבדוק`,
     ].join('\n\n');
-    await this.bot.sendMessage(chatId, replyText);
+    const existingUserReplyText = `אין בעיה, אני אשלח כל יום שיעורים על נושאים מעניינים בשעות שונות של היום`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
     this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async stopHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
-    const replyText = [`סבבה, אני מפסיקה 🛑`, `תגיד לי מתי אתה רוצה לחזור ללמוד ונמשיך - רק תשלח לי את הפקודה`, `אתה יכול גם לבקש נושאים כשתרצה בלי תזכורות ממני, גם לזה הכנתי פקודה`].join('\n\n');
+    const replyText = [`סבבה, אני מפסיקה 🛑`, `כדי לחזור ללמוד - אפשר להשתמש בפקודה`, `אפשר גם לבקש נושאים בלי תזכורות ממני, גם לזה הכנתי פקודה`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
     this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }

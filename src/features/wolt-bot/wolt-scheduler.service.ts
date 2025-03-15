@@ -74,7 +74,7 @@ export class WoltSchedulerService implements OnModuleInit {
   async alertSubscriptions(subscriptions: SubscriptionModel[]): Promise<void> {
     const restaurantsNames = subscriptions.map((subscription: SubscriptionModel) => subscription.restaurant);
     const restaurants = await this.restaurantsService.getRestaurants();
-    const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline); // $$$$$$$$$$$$$$$$$$$$$$
+    const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
 
     for (const restaurant of onlineRestaurants) {
       const relevantSubscriptions = subscriptions.filter((subscription) => subscription.restaurant === restaurant.name);
