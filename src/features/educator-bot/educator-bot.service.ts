@@ -1,9 +1,12 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { promises as fs } from 'fs';
+import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MY_USER_NAME } from '@core/config';
+import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService, TopicParticipationStatus } from '@core/mongo/educator-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { deleteFile } from '@core/utils';
+import { OpenaiService } from '@services/openai';
+import { BOT_BROADCAST_ACTIONS, BOTS, getCallbackQueryData, getMessageData, MessageLoader, removeItemFromInlineKeyboardMarkup, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
@@ -16,6 +19,7 @@ export class EducatorBotService implements OnModuleInit {
 
   constructor(
     private readonly educatorService: EducatorService,
+    private readonly openaiService: OpenaiService,
     private readonly mongoTopicService: EducatorMongoTopicService,
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
@@ -139,10 +143,14 @@ export class EducatorBotService implements OnModuleInit {
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
+    const { chatId, userDetails, messageId, data: response, text, replyMarkup } = getCallbackQueryData(callbackQuery);
 
     const [topicParticipationId, action] = response.split(' - ');
     switch (action) {
+      case BOT_ACTIONS.TRANSCRIBE:
+        await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
+        break;
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteTopic(chatId, messageId, topicParticipationId);
         this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
@@ -150,6 +158,23 @@ export class EducatorBotService implements OnModuleInit {
       default:
         throw new Error('Invalid action');
     }
+  }
+
+  private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🎧', loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      const result = await this.openaiService.getAudioFromText(text);
+
+      const audioFilePath = `${LOCAL_FILES_PATH}/text-to-speech-${new Date().getTime()}.mp3`;
+      const buffer = Buffer.from(await result.arrayBuffer());
+      await fs.writeFile(audioFilePath, buffer);
+
+      await this.bot.sendVoice(chatId, audioFilePath);
+
+      const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
+      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+      await deleteFile(audioFilePath);
+    });
   }
 
   private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {

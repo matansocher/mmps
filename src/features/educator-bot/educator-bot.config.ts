@@ -11,6 +11,7 @@ export const EDUCATOR_BOT_COMMANDS = {
 };
 
 export enum BOT_ACTIONS {
+  TRANSCRIBE = 'transcribe',
   COMPLETE = 'complete',
 }
 
