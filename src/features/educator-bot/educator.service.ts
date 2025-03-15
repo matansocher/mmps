@@ -45,6 +45,10 @@ export class EducatorService {
 
     const inlineKeyboardButtons = [
       {
+        text: '🎧 הקראה 🎧',
+        callback_data: `${topicParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+      },
+      {
         text: '✅ סיימתי ✅',
         callback_data: `${topicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
@@ -69,6 +73,10 @@ export class EducatorService {
   async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
     const response = await this.getAssistantAnswer(activeTopicParticipation.threadId, question);
     const inlineKeyboardButtons = [
+      {
+        text: '🎧 הקראה 🎧',
+        callback_data: `${activeTopicParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+      },
       {
         text: '✅ סיימתי ✅',
         callback_data: `${activeTopicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,

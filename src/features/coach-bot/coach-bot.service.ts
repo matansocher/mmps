@@ -39,19 +39,20 @@ export class CoachBotService implements OnModuleInit {
 
   private async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    await this.mongoUserService.saveUserDetails(userDetails);
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
 
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, true) : await this.mongoSubscriptionService.addSubscription(chatId);
 
-    const replyText = [
+    const newUserReplyText = [
       `שלום 👋`,
       `אני פה כדי לתת תוצאות של משחקי ספורט`,
       `כדי לראות תוצאות של משחקים מהיום נכון לעכשיו, אפשר פשוט לשלוח לי הודעה, כל הודעה`,
-      `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17 📅) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
+      `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
       `אם תרצה להפסיק לקבל ממני עדכונים, תוכל להשתמש בפקודה פה למטה`,
     ].join('\n\n');
-    await this.bot.sendMessage(chatId, replyText);
+    const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
 
     this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }

@@ -35,9 +35,11 @@ export class VoicePalService implements OnModuleInit {
 
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
-      await this.mongoUserService.saveUserDetails(userDetails);
+      const userExists = await this.mongoUserService.saveUserDetails(userDetails);
       this.notifier.notify(BOTS.VOICE_PAL, { action: ANALYTIC_EVENT_NAMES['/start'] }, userDetails);
-      replyText = replyText.replace('{name}', userDetails.firstName || userDetails.username || '');
+      const newUserReplyText = replyText.replace('{name}', userDetails.firstName || userDetails.username || '');
+      const existingUserReplyText = `All set 💪`;
+      replyText = userExists ? existingUserReplyText : newUserReplyText;
     } else {
       this.userSelectedActionsService.setCurrentUserAction(chatId, selection);
     }

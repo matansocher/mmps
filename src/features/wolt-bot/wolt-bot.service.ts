@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage, hasHebrew } from '@core/utils';
+import { getDateNumber, getErrorMessage, hasHebrew } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
@@ -43,9 +43,9 @@ export class WoltBotService implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
-    await this.mongoUserService.saveUserDetails(userDetails);
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
 
-    const replyText = [
+    const newUserReplyText = [
       `שלום {firstName}!`,
       `אני בוט שמתריע על מסעדות שנפתחות להזמנה בוולט`,
       `פשוט תשלחו לי את שם המסעדה (באנגלית 🇺🇸), ואני אגיד לכם מתי היא נפתחת`,
@@ -53,7 +53,8 @@ export class WoltBotService implements OnModuleInit {
     ]
       .join('\n')
       .replace('{firstName}', userDetails.firstName || userDetails.username || '');
-    await this.bot.sendMessage(chatId, replyText);
+    const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
     this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
@@ -83,9 +84,11 @@ export class WoltBotService implements OnModuleInit {
           },
         ];
         const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-        return this.bot.sendMessage(chatId, subscription.restaurant, inlineKeyboardMarkup as any);
+        const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
+        return this.bot.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, inlineKeyboardMarkup as any);
       });
       await Promise.all(promisesArr);
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
     } catch (err) {
       this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name }, userDetails);
       throw err;

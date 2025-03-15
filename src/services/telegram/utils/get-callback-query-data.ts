@@ -17,5 +17,6 @@ export function getCallbackQueryData(callbackQuery: CallbackQuery): TelegramCall
     },
     text: _get(callbackQuery, 'message.text', null),
     data: _get(callbackQuery, 'data', null),
+    replyMarkup: _get(callbackQuery, 'message.reply_markup', null),
   };
 }

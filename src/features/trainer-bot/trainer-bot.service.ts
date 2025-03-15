@@ -39,9 +39,10 @@ export class TrainerBotService implements OnModuleInit {
   private async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoUserPreferencesService.createUserPreference(chatId);
-    await this.mongoUserService.saveUserDetails(userDetails);
-    const replyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
-    await this.bot.sendMessage(chatId, replyText);
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const newUserReplyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
+    const existingUserReplyText = `All set 💪`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
     this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 

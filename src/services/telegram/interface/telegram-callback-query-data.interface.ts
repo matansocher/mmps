@@ -1,3 +1,4 @@
+import { InlineKeyboardMarkup } from 'node-telegram-bot-api';
 import { UserDetails } from './telegram-message-data.interface';
 
 export interface TelegramCallbackQueryData {
@@ -8,4 +9,5 @@ export interface TelegramCallbackQueryData {
   readonly userDetails: UserDetails;
   readonly text: string;
   readonly data: string;
+  readonly replyMarkup: InlineKeyboardMarkup;
 }
