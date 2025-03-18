@@ -149,7 +149,7 @@ export class EducatorBotService implements OnModuleInit {
     switch (action) {
       case BOT_ACTIONS.TRANSCRIBE:
         await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
-        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_TOPIC }, userDetails);
         break;
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteTopic(chatId, messageId, topicParticipationId);
