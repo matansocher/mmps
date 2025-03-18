@@ -4,8 +4,7 @@ import { MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiService } from '@services/openai';
-import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
 import { getLongestStreak, getSpecialNumber, getStreak } from './utils';
 

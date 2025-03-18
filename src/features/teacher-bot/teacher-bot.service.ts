@@ -12,12 +12,12 @@ import {
   getCallbackQueryData,
   getMessageData,
   MessageLoader,
+  registerHandlers,
   removeItemFromInlineKeyboardMarkup,
   sendStyledMessage,
   TELEGRAM_EVENTS,
   TelegramEventHandler,
 } from '@services/telegram';
-import { registerHandlers } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_COMMANDS } from './teacher-bot.config';
 import { TeacherService } from './teacher.service';
 
