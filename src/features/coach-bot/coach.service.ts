@@ -22,7 +22,7 @@ export class CoachService {
       this.saveMatchesSummaryToCache(date, summaryDetails);
     }
     if (!summaryDetails?.length) {
-      return 'וואלה לא מצאתי משחקים ליום הזה, יש מצב שאין היום משחקים בכלל?';
+      return null;
     }
     return generateMatchResultsString(summaryDetails);
   }

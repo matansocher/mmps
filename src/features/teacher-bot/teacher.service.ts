@@ -5,7 +5,7 @@ import { NotifierBotService } from '@core/notifier-bot';
 import { getErrorMessage } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON } from './teacher-bot.config';
+import { BOT_ACTIONS, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher-bot.config';
 
 @Injectable()
 export class TeacherService {
@@ -68,6 +68,11 @@ export class TeacherService {
     const activeCourseParticipation = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
       !isScheduled && (await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one.`));
+      return;
+    }
+
+    if (activeCourseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS) {
+      !isScheduled && (await this.bot.sendMessage(chatId, `You completed all this course's lessons, but You can still ask questions.`));
       return;
     }
 

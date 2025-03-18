@@ -40,8 +40,8 @@ export class EducatorService {
     const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString());
     await this.mongoTopicParticipationService.startTopicParticipation(topicParticipation?._id, { threadId });
 
-    await sendStyledMessage(this.bot, chatId, [`נושא השיעור הבא שלנו:`, `\`${topic.title}\``].join('\n'));
     const response = await this.getAssistantAnswer(threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
+    await sendStyledMessage(this.bot, chatId, [`נושא השיעור הבא שלנו:`, `\`${topic.title}\``].join('\n'));
 
     const inlineKeyboardButtons = [
       {
