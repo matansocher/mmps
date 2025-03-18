@@ -1,10 +1,22 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { promises as fs } from 'fs';
+import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MY_USER_NAME } from '@core/config';
+import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { CourseParticipationStatus, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { shuffleArray } from '@core/utils';
-import { BOTS, getCallbackQueryData, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { deleteFile, shuffleArray } from '@core/utils';
+import { OpenaiService } from '@services/openai';
+import {
+  BOT_BROADCAST_ACTIONS,
+  BOTS,
+  getCallbackQueryData,
+  getMessageData,
+  MessageLoader,
+  removeItemFromInlineKeyboardMarkup,
+  sendStyledMessage,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+} from '@services/telegram';
 import { registerHandlers } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW, TEACHER_BOT_COMMANDS } from './teacher-bot.config';
 import { TeacherService } from './teacher.service';
@@ -15,6 +27,7 @@ export class TeacherBotService implements OnModuleInit {
 
   constructor(
     private readonly teacherService: TeacherService,
+    private readonly openaiService: OpenaiService,
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
@@ -158,10 +171,14 @@ export class TeacherBotService implements OnModuleInit {
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
+    const { chatId, userDetails, messageId, data: response, text, replyMarkup } = getCallbackQueryData(callbackQuery);
 
     const [courseParticipationId, action] = response.split(' - ');
     switch (action) {
+      case BOT_ACTIONS.TRANSCRIBE:
+        await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
+        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_TOPIC }, userDetails);
+        break;
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteCourse(chatId, messageId, courseParticipationId);
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.COMPLETE_COURSE }, userDetails);
@@ -169,6 +186,23 @@ export class TeacherBotService implements OnModuleInit {
       default:
         throw new Error('Invalid action');
     }
+  }
+
+  private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {
+    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫', loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      const result = await this.openaiService.getAudioFromText(text);
+
+      const audioFilePath = `${LOCAL_FILES_PATH}/text-to-speech-${new Date().getTime()}.mp3`;
+      const buffer = Buffer.from(await result.arrayBuffer());
+      await fs.writeFile(audioFilePath, buffer);
+
+      await this.bot.sendVoice(chatId, audioFilePath);
+
+      const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
+      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+      await deleteFile(audioFilePath);
+    });
   }
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {

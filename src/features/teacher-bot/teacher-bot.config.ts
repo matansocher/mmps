@@ -12,6 +12,7 @@ export const TEACHER_BOT_COMMANDS = {
 };
 
 export enum BOT_ACTIONS {
+  TRANSCRIBE = 'transcribe',
   COMPLETE = 'complete',
 }
 
@@ -34,5 +35,6 @@ export const ANALYTIC_EVENT_NAMES = {
   LIST: 'LIST',
   ADD: 'ADD',
   MESSAGE: 'MESSAGE',
+  TRANSCRIBE_TOPIC: 'TRANSCRIBE_TOPIC',
   COMPLETE_COURSE: 'COMPLETE_COURSE',
 };
