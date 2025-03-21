@@ -1,6 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { getErrorMessage, sleep } from '@core/utils';
+import { sleep } from '@core/utils';
 import { BOTS, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { isMessageValid } from './utils';
 
@@ -49,8 +49,7 @@ export class AnnouncerBotService implements OnModuleInit {
       }
       await this.bot.sendMessage(announcerChatId, `finished announcement to ${details.chatIds.length} users`);
     } catch (err) {
-      const errMessage = getErrorMessage(err);
-      await this.bot.sendMessage(announcerChatId, errMessage);
+      await this.bot.sendMessage(announcerChatId, `${err}`);
     }
   }
 
@@ -78,7 +77,7 @@ export class AnnouncerBotService implements OnModuleInit {
       await bot.sendMessage(userChatId, message);
       await this.bot.sendMessage(announcerChatId, `chatId: ${userChatId} - SENT`);
     } catch (err) {
-      await this.bot.sendMessage(announcerChatId, `chatId: ${userChatId} - ERROR, ${getErrorMessage(err)}`);
+      await this.bot.sendMessage(announcerChatId, `chatId: ${userChatId} - ERROR, ${err}`);
     }
   }
 }

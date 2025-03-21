@@ -4,7 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getDateString, getErrorMessage } from '@core/utils';
+import { getDateString } from '@core/utils';
 import { BOTS, sendStyledMessage } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES } from './coach-bot.config';
 import { CoachService } from './coach.service';
@@ -41,7 +41,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
       const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
       await Promise.all(chatIds.map((chatId) => sendStyledMessage(this.bot, chatId, replyText)));
     } catch (err) {
-      this.notifier.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: getErrorMessage(err) });
+      this.notifier.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 }

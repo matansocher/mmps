@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { promises as fs } from 'fs';
 import { Logger } from '@nestjs/common';
-import { getErrorMessage } from '@core/utils';
 
 export async function imgurUploadImage(imgurToken: string, imageLocalPath: string): Promise<string> {
   const logger = new Logger(imgurUploadImage.name);
@@ -30,7 +29,7 @@ export async function imgurUploadImage(imgurToken: string, imageLocalPath: strin
     logger.log(`${imgurUploadImage.name} - end`);
     return result['data']?.data?.link;
   } catch (err) {
-    logger.error(`${imgurUploadImage.name} - err - ${getErrorMessage(err)}`);
+    logger.error(`${imgurUploadImage.name} - err - ${err}`);
     throw err;
   }
 }

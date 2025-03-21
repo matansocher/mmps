@@ -2,7 +2,6 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CourseModel, CourseParticipationModel, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher-bot.config';
@@ -36,9 +35,8 @@ export class TeacherService {
     try {
       await this.processLesson(chatId, true);
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${this.processCourseNextLesson.name} - error: ${errorMessage}`);
-      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
+      this.logger.error(`${this.processCourseNextLesson.name} - error: ${err}`);
+      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: `${err}` });
     }
   }
 

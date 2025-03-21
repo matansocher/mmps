@@ -3,7 +3,6 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
 import { COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher-bot.config';
 import { TeacherService } from './teacher.service';
@@ -30,9 +29,8 @@ export class TeacherSchedulerService implements OnModuleInit {
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseFirstLesson(chatId)));
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${this.handleCourseFirstLesson.name} - error: ${errorMessage}`);
-      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
+      this.logger.error(`${this.handleCourseFirstLesson.name} - error: ${err}`);
+      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: `${err}` });
     }
   }
 
@@ -46,9 +44,8 @@ export class TeacherSchedulerService implements OnModuleInit {
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseNextLesson(chatId)));
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${this.handleCourseNextLesson.name} - error: ${errorMessage}`);
-      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: errorMessage });
+      this.logger.error(`${this.handleCourseNextLesson.name} - error: ${err}`);
+      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: `${err}` });
     }
   }
 }

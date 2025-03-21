@@ -1,6 +1,6 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
-import { getErrorMessage, stringify } from '@core/utils';
+import { stringify } from '@core/utils';
 import { getCallbackQueryData, getMessageData } from '.';
 import { RegisterHandlersOptions } from '.';
 
@@ -24,8 +24,7 @@ export async function handleCommand(handleCommandOptions: HandleCommandOptions):
     await handler(message);
     logger.log(`${handlerName} - ${logBody} - success`);
   } catch (err) {
-    const errorMessage = getErrorMessage(err);
-    logger.error(`${handlerName} - ${logBody} - error - ${errorMessage}`);
-    bot.sendMessage(chatId, isBlocked ? errorMessage : customErrorMessage || 'Sorry, but something went wrong');
+    logger.error(`${handlerName} - ${logBody} - error - ${err}`);
+    bot.sendMessage(chatId, isBlocked ? `${err}` : customErrorMessage || 'Sorry, but something went wrong');
   }
 }
