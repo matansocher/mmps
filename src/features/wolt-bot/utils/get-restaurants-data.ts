@@ -31,7 +31,7 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
       return { id, name, isOnline, slug, area, photo: image.url, link } as WoltRestaurant;
     });
   } catch (err) {
-    logger.error(`err - ${getErrorMessage(err)}`);
+    logger.error(`${getRestaurantsList.name} - err - ${getErrorMessage(err)}`);
     return [];
   }
 }
@@ -47,7 +47,7 @@ async function getCitiesList(): Promise<WoltCity[]> {
         return { areaSlug: slug, lon: location.coordinates[0], lat: location.coordinates[1] };
       });
   } catch (err) {
-    logger.error(`err - ${getErrorMessage(err)}`);
+    logger.error(`${getCitiesList.name} - err - ${getErrorMessage(err)}`);
     return [];
   }
 }
