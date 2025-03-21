@@ -128,7 +128,7 @@ export class WoltBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
       this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.textHandler.name }, userDetails);
+      this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: getErrorMessage(err), method: this.textHandler.name }, userDetails);
       throw err;
     }
   }

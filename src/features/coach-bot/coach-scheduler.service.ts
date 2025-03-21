@@ -1,5 +1,5 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
@@ -13,8 +13,6 @@ const HOURS_TO_NOTIFY = [12, 19, 23];
 
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {
-  private readonly logger = new Logger(CoachBotSchedulerService.name);
-
   constructor(
     private readonly coachService: CoachService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
@@ -43,9 +41,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
       const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
       await Promise.all(chatIds.map((chatId) => sendStyledMessage(this.bot, chatId, replyText)));
     } catch (err) {
-      const errorMessage = `error - ${getErrorMessage(err)}`;
-      this.logger.error(`${this.handleIntervalFlow.name} - ${errorMessage}`);
-      this.notifier.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: errorMessage });
+      this.notifier.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: getErrorMessage(err) });
     }
   }
 }
