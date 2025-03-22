@@ -4,7 +4,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
 import { MessageType, NotifierBotService } from '@core/notifier-bot';
-import { deleteFile, getErrorMessage, setFfmpegPath } from '@core/utils';
+import { deleteFile, setFfmpegPath } from '@core/utils';
 import { AiService } from '@services/ai';
 import { getTranslationToEnglish } from '@services/google-translate';
 import { BOT_BROADCAST_ACTIONS, BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, sendShortenedMessage, TelegramMessageData } from '@services/telegram';
@@ -78,9 +78,8 @@ export class VoicePalService implements OnModuleInit {
 
       this.notifier.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, userDetails);
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${this.handleAction.name} - error: ${errorMessage}`);
-      this.notifier.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: errorMessage }, userDetails);
+      this.logger.error(`${this.handleAction.name} - error: ${err}`);
+      this.notifier.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: `${err}` }, userDetails);
       throw err;
     }
   }

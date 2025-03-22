@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getDateNumber, getErrorMessage, hasHebrew } from '@core/utils';
+import { getDateNumber, hasHebrew } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { registerHandlers, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
@@ -90,7 +90,7 @@ export class WoltBotService implements OnModuleInit {
       await Promise.all(promisesArr);
       this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.listHandler.name }, userDetails);
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${err}`, method: this.listHandler.name }, userDetails);
       throw err;
     }
   }
@@ -128,7 +128,7 @@ export class WoltBotService implements OnModuleInit {
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
       this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${getErrorMessage(err)}`, method: this.textHandler.name }, userDetails);
+      this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
       throw err;
     }
   }
@@ -146,7 +146,7 @@ export class WoltBotService implements OnModuleInit {
         await this.handleCallbackAddSubscription(chatId, userDetails, restaurantName, activeSubscriptions);
       }
     } catch (err) {
-      await this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: getErrorMessage(err), method: this.callbackQueryHandler.name }, userDetails);
+      await this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
       throw err;
     }
   }

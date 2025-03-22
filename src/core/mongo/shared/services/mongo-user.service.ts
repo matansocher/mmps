@@ -1,6 +1,5 @@
 import { Collection, Db } from 'mongodb';
 import { Injectable, Logger } from '@nestjs/common';
-import { getErrorMessage } from '@core/utils';
 import { UserDetails } from '@services/telegram';
 import { UserModel } from '../models';
 import { COLLECTIONS } from '../mongo.config';
@@ -27,7 +26,7 @@ export class MongoUserService {
       await this.userCollection.insertOne(user);
       return false;
     } catch (err) {
-      this.logger.error(`${this.saveUserDetails.name} - err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.saveUserDetails.name} - err: ${err}`);
       return false;
     }
   }
@@ -36,7 +35,7 @@ export class MongoUserService {
     try {
       return this.userCollection.findOne({ chatId });
     } catch (err) {
-      this.logger.error(`${this.getUserDetails.name} - err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.getUserDetails.name} - err: ${err}`);
       return null;
     }
   }

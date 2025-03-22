@@ -3,7 +3,6 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { EducatorMongoUserPreferencesService } from '@core/mongo/educator-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
 import { BOTS } from '@services/telegram';
 import { TOPIC_START_HOURS_OF_DAY } from './educator-bot.config';
 import { EducatorService } from './educator.service';
@@ -32,9 +31,8 @@ export class EducatorSchedulerService implements OnModuleInit {
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.educatorService.processTopic(chatId)));
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${this.handleTopic.name} - error: ${errorMessage}`);
-      this.notifier.notify(BOTS.EDUCATOR, { action: 'ERROR', error: errorMessage });
+      this.logger.error(`${this.handleTopic.name} - error: ${err}`);
+      this.notifier.notify(BOTS.EDUCATOR, { action: 'ERROR', error: `${err}` });
     }
   }
 }

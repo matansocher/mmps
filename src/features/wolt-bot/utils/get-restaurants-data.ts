@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { Logger } from '@nestjs/common';
-import { getErrorMessage } from '@core/utils';
 import type { WoltRestaurant } from '../interface';
 import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANT_LINK_BASE_URL, RESTAURANTS_BASE_URL } from '../wolt-bot.config';
 
@@ -31,7 +30,7 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
       return { id, name, isOnline, slug, area, photo: image.url, link } as WoltRestaurant;
     });
   } catch (err) {
-    logger.error(`err - ${getErrorMessage(err)}`);
+    logger.error(`${getRestaurantsList.name} - err - ${err}`);
     return [];
   }
 }
@@ -47,7 +46,7 @@ async function getCitiesList(): Promise<WoltCity[]> {
         return { areaSlug: slug, lon: location.coordinates[0], lat: location.coordinates[1] };
       });
   } catch (err) {
-    logger.error(`err - ${getErrorMessage(err)}`);
+    logger.error(`${getCitiesList.name} - err - ${err}`);
     return [];
   }
 }
