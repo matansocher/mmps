@@ -20,7 +20,10 @@ export const COMPETITION_IDS_MAP = {
   SERIE_A: 17,
   SERIE_A_CUP: 20,
   WORLD_CUP: 5930,
+  WORLD_CUP_QUAL: 5421,
   EURO: 6316,
+  EURO_QUAL: 6071,
+  NATIONS_LEAGUE: 7016,
 };
 
 export const COMPETITIONS = [
@@ -37,6 +40,9 @@ export const COMPETITIONS = [
   { id: COMPETITION_IDS_MAP.SERIE_A_CUP, icon: '🇮🇹' },
   { id: COMPETITION_IDS_MAP.BUNDESLIGA, icon: '🇩🇪' },
   { id: COMPETITION_IDS_MAP.BUNDESLIGA_CUP, icon: '🇩🇪' },
-  // { id: COMPETITION_IDS_MAP.WORLD_CUP, icon: '🌍' },
-  // { id: COMPETITION_IDS_MAP.EURO, icon: '🇪🇺' },
+  { id: COMPETITION_IDS_MAP.WORLD_CUP, icon: '🌍' },
+  { id: COMPETITION_IDS_MAP.WORLD_CUP_QUAL, icon: '🌍' },
+  { id: COMPETITION_IDS_MAP.EURO, icon: '🇪🇺' },
+  { id: COMPETITION_IDS_MAP.EURO_QUAL, icon: '🇪🇺' },
+  { id: COMPETITION_IDS_MAP.NATIONS_LEAGUE, icon: '🇪🇺' },
 ];
