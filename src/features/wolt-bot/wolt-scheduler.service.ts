@@ -5,7 +5,6 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
@@ -65,9 +64,8 @@ export class WoltSchedulerService implements OnModuleInit {
       await this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant);
       await this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
-      const errMessage = getErrorMessage(err);
-      this.logger.error(`${this.alertSubscription.name} - error - ${errMessage}`);
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: errMessage });
+      this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
 
@@ -95,9 +93,8 @@ export class WoltSchedulerService implements OnModuleInit {
       }
       this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
-      const errMessage = getErrorMessage(err);
-      this.logger.error(`${this.cleanSubscription.name} - error - ${errMessage}`);
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: errMessage });
+      this.logger.error(`${this.cleanSubscription.name} - error - ${err}`);
+      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
 

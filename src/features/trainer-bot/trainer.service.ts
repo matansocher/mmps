@@ -3,7 +3,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
-import { getErrorMessage } from '@core/utils';
 import { BOTS, UserDetails } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
 import { ANALYTIC_EVENT_NAMES } from './trainer-bot.config';
@@ -35,9 +34,8 @@ export class TrainerService {
         await this.bot.sendMessage(chatId, '🦔🦔🦔🦔');
       }
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${this.processEODReminder.name} - error: ${errorMessage}`);
-      this.notifyWithUserDetails(chatId, ANALYTIC_EVENT_NAMES.DAILY_REMINDER_FAILED, errorMessage);
+      this.logger.error(`${this.processEODReminder.name} - error: ${err}`);
+      this.notifyWithUserDetails(chatId, ANALYTIC_EVENT_NAMES.DAILY_REMINDER_FAILED, `${err}`);
     }
   }
 
@@ -59,9 +57,8 @@ export class TrainerService {
       const replyText = [streaksText, exercisesDaysText].join('\n\n');
       await this.bot.sendMessage(chatId, replyText);
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
-      this.logger.error(`${this.processWeeklySummary.name} - error: ${errorMessage}`);
-      this.notifyWithUserDetails(chatId, ANALYTIC_EVENT_NAMES.WEEKLY_SUMMARY_FAILED, errorMessage);
+      this.logger.error(`${this.processWeeklySummary.name} - error: ${err}`);
+      this.notifyWithUserDetails(chatId, ANALYTIC_EVENT_NAMES.WEEKLY_SUMMARY_FAILED, `${err}`);
     }
   }
 

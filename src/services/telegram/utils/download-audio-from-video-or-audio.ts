@@ -1,6 +1,6 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
-import { extractAudioFromVideo, getErrorMessage } from '@core/utils';
+import { extractAudioFromVideo } from '@core/utils';
 
 interface ReturnType {
   readonly audioFileLocalPath: string;
@@ -20,7 +20,7 @@ export async function downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, a
     }
     return { audioFileLocalPath, videoFileLocalPath };
   } catch (err) {
-    logger.error(`${this.downloadAudioFromVideoOrAudio.name} - err: ${getErrorMessage(err)}`);
+    logger.error(`${this.downloadAudioFromVideoOrAudio.name} - err: ${err}`);
     throw err;
   }
 }

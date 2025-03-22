@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { getErrorMessage } from '@core/utils';
 import { RestaurantsList, WoltRestaurant } from './interface';
 import { getRestaurantsList } from './utils';
 import { TOO_OLD_LIST_THRESHOLD_MS } from './wolt-bot.config';
@@ -30,7 +29,7 @@ export class RestaurantsService {
         this.logger.log(`${this.refreshRestaurants.name} - Restaurants list was refreshed successfully`);
       }
     } catch (err) {
-      this.logger.error(`${this.refreshRestaurants.name} - error - ${getErrorMessage(err)}`);
+      this.logger.error(`${this.refreshRestaurants.name} - error - ${err}`);
     }
   }
 }

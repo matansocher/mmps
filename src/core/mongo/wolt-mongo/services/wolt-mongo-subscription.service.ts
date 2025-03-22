@@ -1,6 +1,5 @@
 import { Collection, Db } from 'mongodb';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { getErrorMessage } from '@core/utils';
 import { SubscriptionModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
 
@@ -19,7 +18,7 @@ export class WoltMongoSubscriptionService {
       if (chatId) filter['chatId'] = chatId;
       return this.subscriptionCollection.find(filter).toArray();
     } catch (err) {
-      this.logger.error(`${this.getActiveSubscriptions.name} - err: ${getErrorMessage(err)}`);
+      this.logger.error(`${this.getActiveSubscriptions.name} - err: ${err}`);
       return [];
     }
   }
