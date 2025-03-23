@@ -6,8 +6,17 @@ import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Educ
 import { NotifierBotService } from '@core/notifier-bot';
 import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
-import { BOT_BROADCAST_ACTIONS, BOTS, getCallbackQueryData, getMessageData, MessageLoader, removeItemFromInlineKeyboardMarkup, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram';
+import {
+  BOT_BROADCAST_ACTIONS,
+  BOTS,
+  getCallbackQueryData,
+  getMessageData,
+  MessageLoader,
+  registerHandlers,
+  removeItemFromInlineKeyboardMarkup,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+} from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 

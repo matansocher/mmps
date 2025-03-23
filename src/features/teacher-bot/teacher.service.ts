@@ -105,16 +105,16 @@ export class TeacherService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async processQuestion(chatId: number, question: string, activeParticipationCourse: CourseParticipationModel): Promise<void> {
-    const response = await this.getAssistantAnswer(activeParticipationCourse.threadId, question);
+  async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipationModel): Promise<void> {
+    const response = await this.getAssistantAnswer(activeCourseParticipation.threadId, question);
     const inlineKeyboardButtons = [
       {
         text: '🎧 Transcribe 🎧',
-        callback_data: `${activeParticipationCourse._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+        callback_data: `${activeCourseParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
       },
       {
         text: '✅ Complete Course ✅',
-        callback_data: `${activeParticipationCourse._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${activeCourseParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
