@@ -20,7 +20,7 @@ function getImports() {
     return [...commonModules, AnnouncerBotModule, CoachBotModule, DefineModule, EducatorBotModule, TeacherBotModule, TrainerBotModule, VoicePalBotModule, WoltBotModule];
   }
 
-  return [...commonModules, PlaygroundsBotModule, CoachBotModule];
+  return [...commonModules, PlaygroundsBotModule, TeacherBotModule];
 }
 
 @Module({

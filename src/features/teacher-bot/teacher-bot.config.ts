@@ -12,6 +12,7 @@ export const TEACHER_BOT_COMMANDS = {
 };
 
 export enum BOT_ACTIONS {
+  TRANSCRIBE = 'transcribe',
   COMPLETE = 'complete',
 }
 
@@ -23,7 +24,6 @@ export const THREAD_MESSAGE_NEXT_LESSON = 'I am ready for the next lesson';
 export const TOTAL_COURSE_LESSONS = 3;
 
 export const NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW = 20;
-export const NUMBER_OF_COURSES_HISTORY_TOO_BIG_TO_SHOW = 50;
 
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
@@ -34,5 +34,6 @@ export const ANALYTIC_EVENT_NAMES = {
   LIST: 'LIST',
   ADD: 'ADD',
   MESSAGE: 'MESSAGE',
+  TRANSCRIBE_LESSON: 'TRANSCRIBE_LESSON',
   COMPLETE_COURSE: 'COMPLETE_COURSE',
 };

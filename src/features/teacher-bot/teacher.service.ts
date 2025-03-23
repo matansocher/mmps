@@ -86,6 +86,10 @@ export class TeacherService {
     // const isLastLesson = courseParticipation.lessonsCompleted === TOTAL_COURSE_LESSONS - 1;
     const inlineKeyboardButtons = [
       {
+        text: '🎧 Transcribe 🎧',
+        callback_data: `${courseParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+      },
+      {
         text: '✅ Complete Course ✅',
         callback_data: `${courseParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
       },
@@ -104,6 +108,10 @@ export class TeacherService {
   async processQuestion(chatId: number, question: string, activeParticipationCourse: CourseParticipationModel): Promise<void> {
     const response = await this.getAssistantAnswer(activeParticipationCourse.threadId, question);
     const inlineKeyboardButtons = [
+      {
+        text: '🎧 Transcribe 🎧',
+        callback_data: `${activeParticipationCourse._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+      },
       {
         text: '✅ Complete Course ✅',
         callback_data: `${activeParticipationCourse._id} - ${BOT_ACTIONS.COMPLETE}`,
