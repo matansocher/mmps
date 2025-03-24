@@ -1,12 +1,14 @@
 import { promises as fs } from 'fs';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
 import { MessageType, NotifierBotService } from '@core/notifier-bot';
 import { deleteFile, setFfmpegPath } from '@core/utils';
-import { AiService } from '@services/ai';
 import { getTranslationToEnglish } from '@services/google-translate';
+import { imgurUploadImage } from '@services/imgur';
+import { OpenaiService } from '@services/openai';
 import { BOT_BROADCAST_ACTIONS, BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, sendShortenedMessage, TelegramMessageData } from '@services/telegram';
 import { VoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
@@ -20,7 +22,8 @@ export class VoicePalService implements OnModuleInit {
   constructor(
     private readonly mongoUserService: VoicePalMongoUserService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
-    private readonly aiService: AiService,
+    private readonly configService: ConfigService,
+    private readonly openaiService: OpenaiService,
     private readonly notifier: NotifierBotService,
     @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
   ) {}
@@ -95,7 +98,7 @@ export class VoicePalService implements OnModuleInit {
     );
     await this.notifier.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
     deleteFile(videoFileLocalPath);
-    const replyText = await this.aiService.getTranscriptFromAudio(audioFileLocalPath);
+    const replyText = await this.openaiService.getTranscriptFromAudio(audioFileLocalPath);
     await sendShortenedMessage(this.bot, chatId, replyText);
     await this.notifier.collect(MessageType.TEXT, replyText);
     await deleteFile(audioFileLocalPath);
@@ -118,7 +121,7 @@ export class VoicePalService implements OnModuleInit {
       );
       await this.notifier.collect(videoFileLocalPath ? MessageType.VIDEO : MessageType.AUDIO, videoFileLocalPath || audioFileLocalPath);
       deleteFile(videoFileLocalPath);
-      replyText = await this.aiService.getTranslationFromAudio(audioFileLocalPath);
+      replyText = await this.openaiService.getTranslationFromAudio(audioFileLocalPath);
       deleteFile(audioFileLocalPath);
     }
 
@@ -128,7 +131,7 @@ export class VoicePalService implements OnModuleInit {
 
   async handleTextToSpeechAction({ chatId, text }: Partial<TelegramMessageData>): Promise<void> {
     await this.notifier.collect(MessageType.TEXT, text);
-    const result = await this.aiService.getAudioFromText(text);
+    const result = await this.openaiService.getAudioFromText(text);
 
     const audioFilePath = `${LOCAL_FILES_PATH}/text-to-speech-${new Date().getTime()}.mp3`;
     const buffer = Buffer.from(await result.arrayBuffer());
@@ -142,7 +145,11 @@ export class VoicePalService implements OnModuleInit {
   async handleImageAnalyzerAction({ chatId, photo }: Partial<TelegramMessageData>): Promise<void> {
     const imageLocalPath = await this.bot.downloadFile(photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
     await this.notifier.collect(MessageType.PHOTO, imageLocalPath);
-    const imageAnalysisText = await this.aiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageLocalPath);
+
+    const imgurToken = this.configService.get('IMGUR_CLIENT_ID');
+    const imageUrl = await imgurUploadImage(imgurToken, imageLocalPath);
+    const imageAnalysisText = await this.openaiService.analyzeImage(IMAGE_ANALYSIS_PROMPT, imageUrl);
+
     await sendShortenedMessage(this.bot, chatId, imageAnalysisText);
     await this.notifier.collect(MessageType.TEXT, imageAnalysisText);
     deleteFile(imageLocalPath);
