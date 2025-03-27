@@ -148,7 +148,8 @@ export class EducatorBotService implements OnModuleInit {
       await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
     });
 
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.MESSAGE }, userDetails);
+    const topic = await this.mongoTopicService.getTopic(activeTopicParticipation.topicId);
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text, topic: topic?.title }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
