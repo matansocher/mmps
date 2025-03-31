@@ -10,6 +10,7 @@ import { TeacherBotModule } from '@features/teacher-bot';
 import { TrainerBotModule } from '@features/trainer-bot';
 import { VoicePalBotModule } from '@features/voice-pal-bot';
 import { WoltBotModule } from '@features/wolt-bot';
+import { WorldlyBotModule } from '@features/worldly-bot';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -20,7 +21,7 @@ function getImports() {
     return [...commonModules, AnnouncerBotModule, CoachBotModule, DefineModule, EducatorBotModule, TeacherBotModule, TrainerBotModule, VoicePalBotModule, WoltBotModule];
   }
 
-  return [...commonModules, PlaygroundsBotModule, EducatorBotModule];
+  return [...commonModules, PlaygroundsBotModule, WorldlyBotModule];
 }
 
 @Module({

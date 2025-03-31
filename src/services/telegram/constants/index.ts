@@ -46,6 +46,11 @@ export const BOTS = {
     name: 'Trainer Bot 🏋️‍♂️',
     token: 'TRAINER_TELEGRAM_BOT_TOKEN',
   },
+  WORLDLY: {
+    id: 'WORLDLY',
+    name: 'Worldly Bot 🌍',
+    token: 'WORLDLY_TELEGRAM_BOT_TOKEN',
+  },
   NOTIFIER: {
     id: 'NOTIFIER',
     name: 'Notifier Bot 🦔',

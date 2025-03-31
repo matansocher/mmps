@@ -20,7 +20,7 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
-export const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
+const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
 @Injectable()
 export class EducatorBotService implements OnModuleInit {

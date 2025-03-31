@@ -8,7 +8,7 @@ import { BOTS, getMessageData, MessageLoader, registerHandlers, sendStyledMessag
 import { ANALYTIC_EVENT_NAMES, COACH_BOT_COMMANDS } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
-export const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
+const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {
