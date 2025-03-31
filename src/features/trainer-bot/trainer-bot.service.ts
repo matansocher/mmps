@@ -4,10 +4,9 @@ import { MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiService } from '@services/openai';
-import { BOTS, getMessageData, MessageLoader, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer-bot.config';
-import { getLongestStreak, getSpecialNumber, getStreak } from './utils';
+import { getLastWeekDates, getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
 @Injectable()
 export class TrainerBotService implements OnModuleInit {
@@ -64,11 +63,16 @@ export class TrainerBotService implements OnModuleInit {
   private async exerciseHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
+    await this.mongoExerciseService.addExercise(chatId);
+
     const exercises = await this.mongoExerciseService.getExercises(chatId);
     const exercisesDates = exercises.map((exercise) => exercise.createdAt);
     const longestStreak = getLongestStreak(exercisesDates);
 
-    await this.mongoExerciseService.addExercise(chatId);
+    const { lastSunday, lastSaturday } = getLastWeekDates();
+    const lastWeekExercises = exercisesDates.filter((exerciseDate) => {
+      return exerciseDate.getTime() > lastSunday.getTime() && exerciseDate.getTime() < lastSaturday.getTime();
+    });
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -87,7 +91,10 @@ export class TrainerBotService implements OnModuleInit {
     }
 
     await this.bot.sendMessage(chatId, `💪🔥`);
-    await this.bot.sendMessage(chatId, [`🚀 Current Streak: ${getSpecialNumber(currentStreak)}`, `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`].join('\n'));
+    await this.bot.sendMessage(
+      chatId,
+      [`💣 This Week Trainings: ${lastWeekExercises.length}`, `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`, `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`].join('\n'),
+    );
   }
 
   private async achievementsHandler(message: Message): Promise<void> {

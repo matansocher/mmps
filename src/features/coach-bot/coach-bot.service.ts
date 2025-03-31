@@ -4,12 +4,11 @@ import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
-import { BOTS, getMessageData, MessageLoader, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram';
+import { BOTS, getMessageData, MessageLoader, registerHandlers, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, COACH_BOT_COMMANDS } from './coach-bot.config';
 import { CoachService } from './coach.service';
 
-export const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
+const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
 
 @Injectable()
 export class CoachBotService implements OnModuleInit {

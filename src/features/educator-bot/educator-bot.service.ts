@@ -6,12 +6,21 @@ import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Educ
 import { NotifierBotService } from '@core/notifier-bot';
 import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
-import { BOT_BROADCAST_ACTIONS, BOTS, getCallbackQueryData, getMessageData, MessageLoader, removeItemFromInlineKeyboardMarkup, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { registerHandlers } from '@services/telegram';
+import {
+  BOT_BROADCAST_ACTIONS,
+  BOTS,
+  getCallbackQueryData,
+  getMessageData,
+  MessageLoader,
+  registerHandlers,
+  removeItemFromInlineKeyboardMarkup,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+} from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator-bot.config';
 import { EducatorService } from './educator.service';
 
-export const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
+const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
 @Injectable()
 export class EducatorBotService implements OnModuleInit {
@@ -139,7 +148,8 @@ export class EducatorBotService implements OnModuleInit {
       await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
     });
 
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.MESSAGE }, userDetails);
+    const topic = await this.mongoTopicService.getTopic(activeTopicParticipation.topicId);
+    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text, topic: topic?.title }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
