@@ -18,7 +18,7 @@ function getImports() {
   const commonModules = [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })];
 
   if (isProd) {
-    return [...commonModules, AnnouncerBotModule, CoachBotModule, DefineModule, EducatorBotModule, TeacherBotModule, TrainerBotModule, VoicePalBotModule, WoltBotModule];
+    return [...commonModules, AnnouncerBotModule, CoachBotModule, DefineModule, EducatorBotModule, TeacherBotModule, TrainerBotModule, VoicePalBotModule, WoltBotModule, WorldlyBotModule];
   }
 
   return [...commonModules, PlaygroundsBotModule, WorldlyBotModule];
