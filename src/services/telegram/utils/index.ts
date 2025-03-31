@@ -5,6 +5,7 @@ export { getMessageData } from './get-message-data';
 export { handleCommand } from './handle-command';
 export { MessageLoader } from './message-loader';
 export { MessagesAggregator } from './messages-aggregator';
+export { reactToMessage } from './react-to-message';
 export { RegisterHandlersOptions, registerHandlers } from './register-handlers';
 export { removeItemFromInlineKeyboardMarkup } from './remove-item-from-inline-keyboard-markup';
 export { sendMessageInStyle, sendShortenedMessage, sendStyledMessage } from './send-message';
