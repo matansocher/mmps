@@ -1,5 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { MY_USER_ID } from '@core/config';
 import { BOTS, getMessageData, TELEGRAM_EVENTS, TelegramBotConfig, UserDetails } from '@services/telegram';
 import { NotifyOptions } from './interface';
 import { MessageType, NOTIFIER_CHAT_ID } from './notifier-bot.config';
@@ -20,6 +21,9 @@ export class NotifierBotService implements OnModuleInit {
   }
 
   async notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): Promise<void> {
+    if (userDetails.chatId === MY_USER_ID) {
+      return;
+    }
     const notyMessageText = this.getNotyMessageText(bot.name, options, userDetails);
     this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
