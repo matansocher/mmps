@@ -1,3 +1,4 @@
+import { shuffleArray } from '@core/utils';
 import { getCountries } from '.';
 import { Country } from '../types';
 
@@ -17,12 +18,14 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 export function getOtherOptions(correctCountry: Country): Array<Country & { distance: number }> {
   const countries = getCountries();
 
-  return countries
+  const options = countries
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .map((c) => ({
       ...c,
       distance: haversineDistance(correctCountry.lat, correctCountry.lon, c.lat, c.lon),
     }))
     .sort((a, b) => a.distance - b.distance)
-    .slice(0, 3);
+    .slice(0, 7);
+
+  return shuffleArray(options).slice(0, 3);
 }

@@ -28,9 +28,9 @@ export class WorldlyBotService implements OnModuleInit {
     this.bot.setMyCommands(Object.values(WORLDLY_BOT_COMMANDS));
 
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { RIDDLE, START, STOP, CONTACT } = WORLDLY_BOT_COMMANDS;
+    const { GAME, START, STOP, CONTACT } = WORLDLY_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: RIDDLE.command, handler: (message) => this.riddleHandler.call(this, message) },
+      { event: COMMAND, regex: GAME.command, handler: (message) => this.gameHandler.call(this, message) },
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
@@ -49,10 +49,11 @@ export class WorldlyBotService implements OnModuleInit {
     const newUserReplyText = [
       `Hi 👋`,
       `I am here to help you learn geography in a fun way`,
-      `Every day, I will send you a picture of a country and you will have to guess which country it is`,
-      `If you want me to stop sending you geography riddles, just use the stop command on the bottom`,
+      `Every day, I will send you a geography game`,
+      `You can trigger a game with the command on the bottom`,
+      `If you want me to stop sending you geography games, just use the stop command on the bottom`,
     ].join('\n\n');
-    const existingUserReplyText = `No problem, I will send you daily riddles`;
+    const existingUserReplyText = `No problem, I will send you daily games`;
     await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
 
     this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
@@ -61,7 +62,7 @@ export class WorldlyBotService implements OnModuleInit {
   private async stopHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.mongoSubscriptionService.updateSubscription(chatId, false);
-    await this.bot.sendMessage(chatId, `OK, I will stop sending you daily riddles 🛑`);
+    await this.bot.sendMessage(chatId, `OK, I will stop sending you daily games 🛑`);
     this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
   }
 
@@ -72,7 +73,7 @@ export class WorldlyBotService implements OnModuleInit {
     this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
-  async riddleHandler(message: Message): Promise<void> {
+  async gameHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     const randomCountry = getRandomCountry();
@@ -92,7 +93,7 @@ export class WorldlyBotService implements OnModuleInit {
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the country' });
 
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.RIDDLE }, userDetails);
+    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.GAME }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
