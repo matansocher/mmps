@@ -14,5 +14,6 @@ export function getCountryByName(name: string): Country {
 export function getRandomCountry(): Country {
   const countries = getCountries();
   const countriesWithCoordinates = countries.filter((c) => c.geometry);
+  // const countriesWithCoordinates = countries.filter((c) => c.name === 'Kosovo'); // $$$$$$$$$$$
   return countriesWithCoordinates[Math.floor(Math.random() * countriesWithCoordinates.length)];
 }
