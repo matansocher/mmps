@@ -1,6 +1,6 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MY_USER_NAME } from '@core/config';
+import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierBotService } from '@core/notifier-bot';
 import { OpenaiService } from '@services/openai';
@@ -89,11 +89,14 @@ export class TrainerBotService implements OnModuleInit {
       });
       return;
     }
-
     await this.bot.sendMessage(chatId, `💪🔥`);
     await this.bot.sendMessage(
       chatId,
-      [`💣 This Week Trainings: ${lastWeekExercises.length}`, `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`, `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`].join('\n'),
+      [
+        `💣 This Week Trainings: ${lastWeekExercises.length} (${lastWeekExercises.map((exerciseDate) => DAYS_OF_WEEK[exerciseDate.getDay()]).join(' ,')})`,
+        `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`,
+        `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`,
+      ].join('\n'),
     );
   }
 
