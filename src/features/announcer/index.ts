@@ -1,1 +1,1 @@
-export { AnnouncerBotModule } from './announcer-bot.module';
+export { AnnouncerModule } from './announcer.module';
