@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
-import { AnnouncerBotModule } from '@features/announcer';
-import { CoachBotModule } from '@features/coach-bot';
+import { AnnouncerModule } from '@features/announcer';
+import { CoachModule } from '@features/coach';
 import { DefineModule } from '@features/define';
-import { EducatorBotModule } from '@features/educator-bot';
-import { PlaygroundsBotModule } from '@features/playgrounds-bot';
-import { TeacherBotModule } from '@features/teacher-bot';
-import { TrainerBotModule } from '@features/trainer-bot';
-import { VoicePalBotModule } from '@features/voice-pal-bot';
-import { WoltBotModule } from '@features/wolt-bot';
-import { WorldlyBotModule } from '@features/worldly-bot';
+import { EducatorModule } from '@features/educator';
+import { PlaygroundsModule } from '@features/playgrounds';
+import { TeacherModule } from '@features/teacher';
+import { TrainerModule } from '@features/trainer';
+import { VoicePalModule } from '@features/voice-pal';
+import { WoltModule } from '@features/wolt';
+import { WorldlyModule } from '@features/worldly';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -18,10 +18,10 @@ function getImports() {
   const commonModules = [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })];
 
   if (isProd) {
-    return [...commonModules, AnnouncerBotModule, CoachBotModule, DefineModule, EducatorBotModule, TeacherBotModule, TrainerBotModule, VoicePalBotModule, WoltBotModule, WorldlyBotModule];
+    return [...commonModules, AnnouncerModule, CoachModule, DefineModule, EducatorModule, TeacherModule, TrainerModule, VoicePalModule, WoltModule, WorldlyModule];
   }
 
-  return [...commonModules, PlaygroundsBotModule, WorldlyBotModule];
+  return [...commonModules, PlaygroundsModule, WorldlyModule];
 }
 
 @Module({
