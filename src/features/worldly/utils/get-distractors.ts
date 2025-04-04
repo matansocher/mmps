@@ -15,10 +15,8 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-export function getOtherOptions(correctCountry: Country): Array<Country & { distance: number }> {
-  const countries = getCountries();
-
-  const options = countries
+export function getMapDistractors(correctCountry: Country): Array<Country & { distance: number }> {
+  const options = getCountries()
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .map((c) => ({
       ...c,
@@ -26,6 +24,19 @@ export function getOtherOptions(correctCountry: Country): Array<Country & { dist
     }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 7);
+  return shuffleArray(options).slice(0, 3);
+}
 
+export function getFlagDistractors(correctCountry: Country): Array<Country> {
+  const options = getCountries()
+    .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
+    .slice(0, 7);
+  return shuffleArray(options).slice(0, 3);
+}
+
+export function getCapitalDistractors(correctCountry: Country): Array<Country> {
+  const options = getCountries()
+    .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
+    .slice(0, 7);
   return shuffleArray(options).slice(0, 3);
 }
