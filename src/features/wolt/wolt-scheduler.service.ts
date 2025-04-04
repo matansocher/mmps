@@ -4,7 +4,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
@@ -23,7 +23,7 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly schedulerRegistry: SchedulerRegistry,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
   ) {}
 

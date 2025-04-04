@@ -2,7 +2,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { BOTS, UserDetails } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
 import { ANALYTIC_EVENT_NAMES } from './trainer.config';
@@ -17,7 +17,7 @@ export class TrainerService {
   constructor(
     private readonly mongoExerciseService: TrainerMongoExerciseService,
     private readonly mongoUserService: TrainerMongoUserService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 

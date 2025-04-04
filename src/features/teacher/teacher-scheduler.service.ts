@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { BOTS } from '@services/telegram';
 import { COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher.config';
 import { TeacherService } from './teacher.service';
@@ -14,7 +14,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   constructor(
     private readonly teacherService: TeacherService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
   ) {}
 
   onModuleInit(): void {

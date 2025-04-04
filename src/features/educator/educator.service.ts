@@ -1,7 +1,7 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, EDUCATOR_ASSISTANT_ID, IDLE_DAYS_REMINDER } from './educator.config';
@@ -12,7 +12,7 @@ export class EducatorService {
     private readonly mongoTopicService: EducatorMongoTopicService,
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
   ) {}
 

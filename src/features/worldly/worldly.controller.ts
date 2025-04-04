@@ -4,7 +4,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
 import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { getCountryByName, getCountryMap, getOtherOptions, getRandomCountry } from './utils';
@@ -19,7 +19,7 @@ export class WorldlyController implements OnModuleInit {
   constructor(
     private readonly mongoUserService: WorldlyMongoUserService,
     private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     private readonly configService: ConfigService,
     @Inject(BOTS.WORLDLY.id) private readonly bot: TelegramBot,
   ) {}

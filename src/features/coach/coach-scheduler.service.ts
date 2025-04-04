@@ -3,7 +3,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
 import { BOTS, sendStyledMessage } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES } from './coach.config';
@@ -16,7 +16,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly coachService: CoachService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
   ) {}
 
