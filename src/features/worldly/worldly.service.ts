@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
+import { Country } from './types';
 import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getRandomCountry } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS } from './worldly.config';
 
@@ -14,8 +15,20 @@ export class WorldlyService {
     @Inject(BOTS.WORLDLY.id) private readonly bot: TelegramBot,
   ) {}
 
+  async randomGameHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+    const handlers = [
+      (chatId: number, userDetails: UserDetails) => this.mapHandler(chatId, userDetails),
+      (chatId: number, userDetails: UserDetails) => this.flagHandler(chatId, userDetails),
+      (chatId: number, userDetails: UserDetails) => this.capitalHandler(chatId, userDetails),
+    ];
+
+    const randomGameIndex = Math.floor(Math.random() * handlers.length);
+    await handlers[randomGameIndex](chatId, userDetails);
+  }
+
   async mapHandler(chatId: number, userDetails: UserDetails): Promise<void> {
-    const randomCountry = getRandomCountry((c) => !!c.geometry);
+    const gameFilter = (c: Country) => !!c.geometry;
+    const randomCountry = getRandomCountry(gameFilter);
     const imagePath = getCountryMap(randomCountry.name);
 
     const otherOptions = getMapDistractors(randomCountry);
@@ -28,9 +41,10 @@ export class WorldlyService {
   }
 
   async flagHandler(chatId: number, userDetails: UserDetails): Promise<void> {
-    const randomCountry = getRandomCountry((c) => !!c.emoji);
+    const gameFilter = (c: Country) => !!c.emoji;
+    const randomCountry = getRandomCountry(gameFilter);
 
-    const otherOptions = getFlagDistractors(randomCountry);
+    const otherOptions = getFlagDistractors(randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.name, callback_data: `${BOT_ACTIONS.FLAG} - ${country.name} - ${randomCountry.name}` })));
 
@@ -40,9 +54,10 @@ export class WorldlyService {
   }
 
   async capitalHandler(chatId: number, userDetails: UserDetails): Promise<void> {
-    const randomCountry = getRandomCountry((c) => !!c.capital);
+    const gameFilter = (c: Country) => !!c.capital;
+    const randomCountry = getRandomCountry(gameFilter);
 
-    const otherOptions = getCapitalDistractors(randomCountry);
+    const otherOptions = getCapitalDistractors(randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
       options.map((country) => ({ text: country.capital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${country.capital} - ${randomCountry.capital}` })),

@@ -1,6 +1,6 @@
 import { Canvas, CanvasRenderingContext2D, createCanvas } from 'canvas';
-import { Country } from '@features/worldly/types';
 import { getCountries, simplifyCountryName } from '.';
+import { Country } from '../types';
 
 type GenerateCountryOptions = {
   readonly strokeColor: string;
