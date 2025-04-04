@@ -21,7 +21,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.handleIntervalFlow(); // for testing purposes
+    // this.handleIntervalFlow(); // for testing purposes
   }
 
   @Cron(`0 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'worldly-scheduler', timeZone: DEFAULT_TIMEZONE })
