@@ -11,8 +11,13 @@ export function getCountryByName(name: string): Country {
   return countries.find((c) => c.name === name);
 }
 
-export function getRandomCountry(): Country {
+export function getCountryByCapital(capital: string): Country {
   const countries = getCountries();
-  const countriesWithCoordinates = countries.filter((c) => c.geometry);
+  return countries.find((c) => c.capital === capital);
+}
+
+export function getRandomCountry(filter: (country: Country) => boolean): Country {
+  const countries = getCountries();
+  const countriesWithCoordinates = countries.filter(filter);
   return countriesWithCoordinates[Math.floor(Math.random() * countriesWithCoordinates.length)];
 }
