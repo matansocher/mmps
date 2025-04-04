@@ -3,7 +3,7 @@ import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { CourseParticipationStatus, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { deleteFile, shuffleArray } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import {
@@ -32,7 +32,7 @@ export class TeacherController implements OnModuleInit {
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly mongoUserService: TeacherMongoUserService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
   ) {}
 

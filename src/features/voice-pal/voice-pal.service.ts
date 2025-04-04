@@ -4,7 +4,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { VoicePalMongoUserService } from '@core/mongo/voice-pal-mongo';
-import { MessageType, NotifierBotService } from '@core/notifier-bot';
+import { MessageType, NotifierService } from '@core/notifier';
 import { deleteFile, setFfmpegPath } from '@core/utils';
 import { getTranslationToEnglish } from '@services/google-translate';
 import { imgurUploadImage } from '@services/imgur';
@@ -24,7 +24,7 @@ export class VoicePalService implements OnModuleInit {
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly configService: ConfigService,
     private readonly openaiService: OpenaiService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
   ) {}
 

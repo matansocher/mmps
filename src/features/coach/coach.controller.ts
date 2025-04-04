@@ -2,7 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
 import { BOTS, getMessageData, MessageLoader, registerHandlers, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, COACH_BOT_COMMANDS } from './coach.config';
@@ -18,7 +18,7 @@ export class CoachController implements OnModuleInit {
     private readonly mongoUserService: CoachMongoUserService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly coachService: CoachService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
   ) {}
 

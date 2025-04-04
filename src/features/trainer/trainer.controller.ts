@@ -2,7 +2,7 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
-import { NotifierBotService } from '@core/notifier-bot';
+import { NotifierService } from '@core/notifier';
 import { OpenaiService } from '@services/openai';
 import { BOTS, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer.config';
@@ -17,7 +17,7 @@ export class TrainerBotService implements OnModuleInit {
     private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
     private readonly mongoUserService: TrainerMongoUserService,
     private readonly openaiService: OpenaiService,
-    private readonly notifier: NotifierBotService,
+    private readonly notifier: NotifierService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
   ) {}
 
