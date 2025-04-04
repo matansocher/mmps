@@ -27,15 +27,17 @@ export function getMapDistractors(correctCountry: Country): Array<Country & { di
   return shuffleArray(options).slice(0, 3);
 }
 
-export function getFlagDistractors(correctCountry: Country): Array<Country> {
+export function getFlagDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
   const options = getCountries()
+    .filter(filter)
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .slice(0, 7);
   return shuffleArray(options).slice(0, 3);
 }
 
-export function getCapitalDistractors(correctCountry: Country): Array<Country> {
+export function getCapitalDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
   const options = getCountries()
+    .filter(filter)
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .slice(0, 7);
   return shuffleArray(options).slice(0, 3);

@@ -28,8 +28,9 @@ export class WorldlyController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(WORLDLY_BOT_COMMANDS));
 
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { MAP, FLAG, CAPITAL, START, STOP, CONTACT } = WORLDLY_BOT_COMMANDS;
+    const { RANDOM, MAP, FLAG, CAPITAL, START, STOP, CONTACT } = WORLDLY_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
       { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
       { event: COMMAND, regex: FLAG.command, handler: (message) => this.flagHandler.call(this, message) },
       { event: COMMAND, regex: CAPITAL.command, handler: (message) => this.capitalHandler.call(this, message) },
@@ -73,6 +74,11 @@ export class WorldlyController implements OnModuleInit {
 
     await this.bot.sendMessage(chatId, `Gladly, you can talk to the person who created me, he will probably be able to help. Its ${MY_USER_NAME}`);
     this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+  }
+
+  async randomHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    return this.worldlyService.randomGameHandler(chatId, userDetails);
   }
 
   async mapHandler(message: Message): Promise<void> {
