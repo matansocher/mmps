@@ -1,14 +1,13 @@
-import * as fs from 'fs';
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
-import { shuffleArray } from '@core/utils';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { getCountryByName, getCountryMap, getOtherOptions, getRandomCountry } from './utils';
-import { ANALYTIC_EVENT_NAMES, WORLDLY_BOT_COMMANDS } from './worldly.config';
+import { BOTS, getCallbackQueryData, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { getCountryByCapital, getCountryByName } from './utils';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, WORLDLY_BOT_COMMANDS } from './worldly.config';
+import { WorldlyService } from './worldly.service';
 
 const customErrorMessage = 'Oops, something went wrong, but you can try again later 🙁';
 
@@ -17,6 +16,7 @@ export class WorldlyController implements OnModuleInit {
   private readonly logger = new Logger(WorldlyController.name);
 
   constructor(
+    private readonly worldlyService: WorldlyService,
     private readonly mongoUserService: WorldlyMongoUserService,
     private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
     private readonly notifier: NotifierService,
@@ -28,9 +28,11 @@ export class WorldlyController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(WORLDLY_BOT_COMMANDS));
 
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { GAME, START, STOP, CONTACT } = WORLDLY_BOT_COMMANDS;
+    const { MAP, FLAG, CAPITAL, START, STOP, CONTACT } = WORLDLY_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: GAME.command, handler: (message) => this.gameHandler.call(this, message) },
+      { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
+      { event: COMMAND, regex: FLAG.command, handler: (message) => this.flagHandler.call(this, message) },
+      { event: COMMAND, regex: CAPITAL.command, handler: (message) => this.capitalHandler.call(this, message) },
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
@@ -73,39 +75,63 @@ export class WorldlyController implements OnModuleInit {
     this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
-  async gameHandler(message: Message): Promise<void> {
+  async mapHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
+    return this.worldlyService.mapHandler(chatId, userDetails);
+  }
 
-    const randomCountry = getRandomCountry();
-    const imagePath = getCountryMap(randomCountry.name);
-    if (!imagePath) {
-      await this.bot.sendMessage(chatId, 'Oops, something went wrong with this country 😅');
-      return;
-    }
+  async flagHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    return this.worldlyService.flagHandler(chatId, userDetails);
+  }
 
-    const otherOptions = getOtherOptions(randomCountry);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      shuffleArray([
-        { text: randomCountry.name, callback_data: `${randomCountry.name} - ${randomCountry.name}` },
-        ...otherOptions.map((otherOption) => ({ text: otherOption.name, callback_data: `${otherOption.name} - ${randomCountry.name}` })),
-      ]),
-    );
-
-    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the country' });
-
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.GAME }, userDetails);
+  async capitalHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    return this.worldlyService.capitalHandler(chatId, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
-    const [selectedName, correctName] = response.split(' - ');
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    const [game, selectedName, correctName] = response.split(' - ');
+    switch (game) {
+      case BOT_ACTIONS.MAP:
+        await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
+        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
+        break;
+      case BOT_ACTIONS.FLAG:
+        await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
+        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
+        break;
+      case BOT_ACTIONS.CAPITAL:
+        await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
+        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
+        break;
+      default:
+        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        throw new Error('Invalid action');
+    }
+  }
+
+  private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
     const correctCountry = getCountryByName(correctName);
-    const answer = selectedName !== correctName ? `Oops, Wrong` : `Correct!`;
-    const replyText = `${answer} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
+    const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
     await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, correct: correctName, selected: selectedName }, userDetails);
+  }
+
+  private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
+    const correctCountry = getCountryByName(correctName);
+    const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
+    await this.bot.sendMessage(chatId, replyText);
+    await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
+  }
+
+  private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
+    const correctCountry = getCountryByCapital(correctName);
+    const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctCountry.capital} ${correctCountry.emoji}`;
+    await this.bot.sendMessage(chatId, replyText);
+    await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 }
