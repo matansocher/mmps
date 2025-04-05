@@ -2,11 +2,9 @@ export const SMART_REMINDER_HOUR_OF_DAY = 19;
 export const WEEKLY_SUMMARY_HOUR_OF_DAY = 22;
 
 export const TRAINER_BOT_COMMANDS = {
-  START: { command: '/start', description: 'Start all over' },
-  STOP: { command: '/stop', description: 'Stop daily reminders' },
-  EXERCISE: { command: '/exercise', description: 'Log exercise' },
-  ACHIEVEMENTS: { command: '/achievements', description: 'Show Achievements' },
-  CONTACT: { command: '/contact', description: 'Contact' },
+  EXERCISE: { command: '/exercise', description: '🧗‍♂️ Log exercise 🧗‍♂️' },
+  ACHIEVEMENTS: { command: '/achievements', description: '💯 Show Achievements 💯' },
+  ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
 };
 
 export const BROKEN_RECORD_IMAGE_PROMPT = [
@@ -27,4 +25,11 @@ export const ANALYTIC_EVENT_NAMES = {
   DAILY_REMINDER_FAILED: 'DAILY_REMINDER_FAILED',
   WEEKLY_SUMMARY: 'WEEKLY_SUMMARY',
   WEEKLY_SUMMARY_FAILED: 'WEEKLY_SUMMARY_FAILED',
+  ERROR: 'ERROR',
 };
+
+export enum BOT_ACTIONS {
+  START = 'start',
+  STOP = 'stop',
+  CONTACT = 'contact',
+}

@@ -22,10 +22,6 @@ export class TeacherMongoCourseService {
     return course;
   }
 
-  getAllCourses(): Promise<CourseModel[]> {
-    return this.courseCollection.find().toArray();
-  }
-
   async getRandomCourse(chatId: number, excludedCourses: string[]): Promise<CourseModel | null> {
     const filter = {
       _id: { $nin: excludedCourses.map((courseId) => new ObjectId(courseId)) },

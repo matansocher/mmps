@@ -1,11 +1,22 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
-import { BOTS, getMessageData, MessageLoader, registerHandlers, sendStyledMessage, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, COACH_BOT_COMMANDS } from './coach.config';
+import {
+  BOTS,
+  getCallbackQueryData,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  MessageLoader,
+  registerHandlers,
+  sendStyledMessage,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, COACH_BOT_COMMANDS } from './coach.config';
 import { CoachService } from './coach.service';
 
 const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
@@ -25,49 +36,24 @@ export class CoachController implements OnModuleInit {
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(COACH_BOT_COMMANDS));
 
-    const { COMMAND, TEXT } = TELEGRAM_EVENTS;
-    const { START, STOP, CONTACT } = COACH_BOT_COMMANDS;
+    const { COMMAND, TEXT, CALLBACK_QUERY } = TELEGRAM_EVENTS;
+    const { ACTIONS } = COACH_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
-      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
+      { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
       { event: TEXT, handler: (message) => this.textHandler.call(this, message) },
+      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
   }
 
-  private async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
-
+  private async actionsHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, true) : await this.mongoSubscriptionService.addSubscription(chatId);
-
-    const newUserReplyText = [
-      `שלום 👋`,
-      `אני פה כדי לתת תוצאות של משחקי ספורט`,
-      `כדי לראות תוצאות של משחקים מהיום נכון לעכשיו, אפשר פשוט לשלוח לי הודעה, כל הודעה`,
-      `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
-      `אם תרצה להפסיק לקבל ממני עדכונים, תוכל להשתמש בפקודה פה למטה`,
-    ].join('\n\n');
-    const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
-    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
-
-    this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
-  }
-
-  private async stopHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoSubscriptionService.updateSubscription(chatId, false);
-    await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
-    this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
-  }
-
-  async contactHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-
-    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    const inlineKeyboardButtons = [
+      !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+    ];
+    await this.bot.sendMessage(chatId, '👨‍🏫 איך אני יכול לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -90,5 +76,57 @@ export class CoachController implements OnModuleInit {
     });
 
     this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
+  }
+
+  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
+    const { chatId, messageId, userDetails, data: response } = getCallbackQueryData(callbackQuery);
+
+    const [action] = response.split(' - ');
+    switch (action) {
+      case BOT_ACTIONS.START:
+        await this.startHandler(chatId, userDetails);
+        await this.bot.deleteMessage(chatId, messageId);
+        this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        break;
+      case BOT_ACTIONS.STOP:
+        await this.stopHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
+        this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        break;
+      case BOT_ACTIONS.CONTACT:
+        await this.contactHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
+        this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        break;
+      default:
+        this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        throw new Error('Invalid action');
+    }
+  }
+
+  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+
+    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, true) : await this.mongoSubscriptionService.addSubscription(chatId);
+
+    const newUserReplyText = [
+      `שלום 👋`,
+      `אני פה כדי לתת תוצאות של משחקי ספורט`,
+      `כדי לראות תוצאות של משחקים מהיום נכון לעכשיו, אפשר פשוט לשלוח לי הודעה, כל הודעה`,
+      `כדי לראות תוצאות מיום אחר, אפשר לשלוח לי את התאריך שרוצים בפורמט (2025-03-17) הזה ואני אשלח תוצאות רלוונטיות לאותו יום`,
+      `אם תרצה להפסיק לקבל ממני עדכונים, תוכל להשתמש בפקודה פה למטה`,
+    ].join('\n\n');
+    const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+  }
+
+  private async stopHandler(chatId: number): Promise<void> {
+    await this.mongoSubscriptionService.updateSubscription(chatId, false);
+    await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
+  }
+
+  async contactHandler(chatId: number): Promise<void> {
+    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
   }
 }

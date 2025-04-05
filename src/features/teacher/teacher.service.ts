@@ -1,6 +1,6 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CourseModel, CourseParticipationModel, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
+import { CourseModel, CourseParticipationModel, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
 import { OpenaiAssistantService } from '@services/openai';
 import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
@@ -13,7 +13,6 @@ export class TeacherService {
   constructor(
     private readonly mongoCourseService: TeacherMongoCourseService,
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
-    private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
@@ -82,21 +81,13 @@ export class TeacherService {
       return;
     }
     const response = await this.getAssistantAnswer(threadId, prompt);
-
-    // const isLastLesson = courseParticipation.lessonsCompleted === TOTAL_COURSE_LESSONS - 1;
-    const inlineKeyboardButtons = [
-      {
-        text: '🎧 Transcribe 🎧',
-        callback_data: `${courseParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
-      },
-      {
-        text: '✅ Complete Course ✅',
-        callback_data: `${courseParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
-      },
-    ];
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    await sendStyledMessage(this.bot, chatId, response, 'Markdown', inlineKeyboardMarkup);
+    await sendStyledMessage(this.bot, chatId, response, 'Markdown', this.getInlineKeyboardMarkup(courseParticipation, true));
     await this.mongoCourseParticipationService.markCourseParticipationLessonCompleted(courseParticipation._id);
+  }
+
+  async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipationModel): Promise<void> {
+    const response = await this.getAssistantAnswer(activeCourseParticipation.threadId, question);
+    await sendStyledMessage(this.bot, chatId, response, 'Markdown', this.getInlineKeyboardMarkup(activeCourseParticipation, false));
   }
 
   async getAssistantAnswer(threadId: string, prompt: string): Promise<string> {
@@ -105,19 +96,27 @@ export class TeacherService {
     return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
   }
 
-  async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipationModel): Promise<void> {
-    const response = await this.getAssistantAnswer(activeCourseParticipation.threadId, question);
+  getInlineKeyboardMarkup(courseParticipation: CourseParticipationModel, isLesson: boolean) {
+    let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
+    if (!isLesson) {
+      isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS;
+    }
     const inlineKeyboardButtons = [
       {
         text: '🎧 Transcribe 🎧',
-        callback_data: `${activeCourseParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+        callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${courseParticipation._id}`,
       },
+      !isCourseLessonsCompleted
+        ? {
+            text: '➡️ Next Lesson ➡️',
+            callback_data: `${BOT_ACTIONS.NEXT_LESSON}`,
+          }
+        : null,
       {
         text: '✅ Complete Course ✅',
-        callback_data: `${activeCourseParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${BOT_ACTIONS.COMPLETE} - ${courseParticipation._id}`,
       },
-    ];
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    await sendStyledMessage(this.bot, chatId, response, 'Markdown', inlineKeyboardMarkup);
+    ].filter(Boolean);
+    return getInlineKeyboardMarkup(inlineKeyboardButtons);
   }
 }
