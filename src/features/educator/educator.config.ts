@@ -2,9 +2,8 @@ export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
 export const IDLE_DAYS_REMINDER = 3;
 
 export const EDUCATOR_BOT_COMMANDS = {
-  TOPIC: { command: '/topic', description: 'נושא הבא' },
-  CUSTOM: { command: '/custom', description: 'נושא ספציפי עכשיו' },
-  ADD: { command: '/add', description: 'הוספת נושא' },
+  TOPIC: { command: '/topic', description: '➡️ נושא הבא ➡️' },
+  ADD: { command: '/add', description: '➕ הוספת נושא ➕' },
   ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
 };
 

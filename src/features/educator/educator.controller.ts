@@ -43,11 +43,10 @@ export class EducatorController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(EDUCATOR_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { ACTIONS, TOPIC, CUSTOM, ADD } = EDUCATOR_BOT_COMMANDS;
+    const { ACTIONS, TOPIC, ADD } = EDUCATOR_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
-      { event: COMMAND, regex: CUSTOM.command, handler: (message) => this.customTopicHandler.call(this, message) },
       { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
@@ -62,7 +61,7 @@ export class EducatorController implements OnModuleInit {
       { text: '🛑 הפסק לקבל שיעורים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, '👩🏻‍ איך אני יכול לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, '👩🏻‍ איך אני יכולה לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   private async topicHandler(message: Message): Promise<void> {
@@ -76,26 +75,6 @@ export class EducatorController implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
 
     this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
-  }
-
-  private async customTopicHandler(message: Message): Promise<void> {
-    const { chatId, userDetails, text } = getMessageData(message);
-
-    const customTopic = text.replace(EDUCATOR_BOT_COMMANDS.CUSTOM.command, '').trim();
-    if (!customTopic) {
-      await this.bot.sendMessage(chatId, 'כדי לההשתמש בפקודה ההזאת, צריך לשלוח אותו ומיד לאחריה את הנושא');
-      return;
-    }
-
-    const Participation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
-    if (Participation?._id) {
-      await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
-    }
-
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
-    await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId, customTopic));
-
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CUSTOM_TOPIC }, userDetails);
   }
 
   private async addHandler(message: Message): Promise<void> {

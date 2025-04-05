@@ -1,8 +1,8 @@
 export const WORLDLY_BOT_COMMANDS = {
-  RANDOM: { command: '/random', description: 'Random game' },
-  MAP: { command: '/map', description: 'Guess the country by map game' },
-  FLAG: { command: '/flag', description: 'Guess the country by flag game' },
-  CAPITAL: { command: '/capital', description: 'Guess the capital city of a country game' },
+  RANDOM: { command: '/random', description: '🌎 Random game 🌎' },
+  MAP: { command: '/map', description: '🗺️ Guess the country by map game 🗺️' },
+  FLAG: { command: '/flag', description: '🏁 Guess the country by flag game 🏁' },
+  CAPITAL: { command: '/capital', description: '🏛️ Guess the capital city of a country game 🏛️' },
   ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
 };
 

@@ -2,9 +2,9 @@ export const SMART_REMINDER_HOUR_OF_DAY = 19;
 export const WEEKLY_SUMMARY_HOUR_OF_DAY = 22;
 
 export const TRAINER_BOT_COMMANDS = {
-  EXERCISE: { command: '/exercise', description: 'Log exercise' },
-  ACHIEVEMENTS: { command: '/achievements', description: 'Show Achievements' },
-  ACTIONS: { command: '/actions', description: 'Actions' },
+  EXERCISE: { command: '/exercise', description: '🧗‍♂️ Log exercise 🧗‍♂️' },
+  ACHIEVEMENTS: { command: '/achievements', description: '💯 Show Achievements 💯' },
+  ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
 };
 
 export const BROKEN_RECORD_IMAGE_PROMPT = [

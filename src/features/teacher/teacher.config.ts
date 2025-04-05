@@ -2,8 +2,8 @@ export const COURSE_START_HOUR_OF_DAY = 12;
 export const COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY = [17, 22];
 
 export const TEACHER_BOT_COMMANDS = {
-  COURSE: { command: '/course', description: 'Start the next course' },
-  ADD: { command: '/add', description: 'Add a new course' },
+  COURSE: { command: '/course', description: '➡️ Start the next course ➡️' },
+  ADD: { command: '/add', description: '➕ Add a new course ➕' },
   ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
 };
 
