@@ -5,14 +5,13 @@ export const TEACHER_BOT_COMMANDS = {
   START: { command: '/start', description: 'Start learning daily' },
   STOP: { command: '/stop', description: 'Stop learning daily' },
   COURSE: { command: '/course', description: 'Start the next course' },
-  LESSON: { command: '/lesson', description: 'Start the next lesson' },
-  LIST: { command: '/list', description: 'List of all available unfinished courses' },
   ADD: { command: '/add', description: 'Add a new course' },
   CONTACT: { command: '/contact', description: 'Contact' },
 };
 
 export enum BOT_ACTIONS {
   TRANSCRIBE = 'transcribe',
+  NEXT_LESSON = 'next_lesson',
   COMPLETE = 'complete',
 }
 
@@ -23,15 +22,12 @@ export const THREAD_MESSAGE_NEXT_LESSON = 'I am ready for the next lesson';
 
 export const TOTAL_COURSE_LESSONS = 3;
 
-export const NUMBER_OF_COURSES_LIST_TOO_BIG_TO_SHOW = 20;
-
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
   STOP: 'STOP',
   CONTACT: 'CONTACT',
   START_COURSE: 'START_COURSE',
-  START_LESSON: 'START_LESSON',
-  LIST: 'LIST',
+  NEXT_LESSON: 'NEXT_LESSON',
   ADD: 'ADD',
   MESSAGE: 'MESSAGE',
   TRANSCRIBE_LESSON: 'TRANSCRIBE_LESSON',
