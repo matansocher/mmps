@@ -5,7 +5,7 @@ export const EDUCATOR_BOT_COMMANDS = {
   TOPIC: { command: '/topic', description: 'נושא הבא' },
   CUSTOM: { command: '/custom', description: 'נושא ספציפי עכשיו' },
   ADD: { command: '/add', description: 'הוספת נושא' },
-  SETTINGS: { command: '/settings', description: 'הגדרות' },
+  ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
 };
 
 export enum BOT_ACTIONS {

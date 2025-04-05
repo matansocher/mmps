@@ -43,26 +43,26 @@ export class EducatorController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(EDUCATOR_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { SETTINGS, TOPIC, CUSTOM, ADD } = EDUCATOR_BOT_COMMANDS;
+    const { ACTIONS, TOPIC, CUSTOM, ADD } = EDUCATOR_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
       { event: COMMAND, regex: CUSTOM.command, handler: (message) => this.customTopicHandler.call(this, message) },
-      { event: COMMAND, regex: SETTINGS.command, handler: (message) => this.settingsHandler.call(this, message) },
+      { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
   }
 
-  private async settingsHandler(message: Message): Promise<void> {
+  private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const inlineKeyboardButtons = [
-      { text: '👩🏻‍🏫 Start 👩🏻‍🏫', callback_data: `${BOT_ACTIONS.START}` },
+      { text: '🟢 Start 🟢', callback_data: `${BOT_ACTIONS.START}` },
       { text: '🛑 Stop 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, '👩🏻‍ How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   private async topicHandler(message: Message): Promise<void> {

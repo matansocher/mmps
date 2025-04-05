@@ -41,21 +41,21 @@ export class TeacherController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(TEACHER_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { SETTINGS, COURSE, ADD } = TEACHER_BOT_COMMANDS;
+    const { ACTIONS, COURSE, ADD } = TEACHER_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: COURSE.command, handler: (message) => this.courseHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
-      { event: COMMAND, regex: SETTINGS.command, handler: (message) => this.settingsHandler.call(this, message) },
+      { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
 
-  private async settingsHandler(message: Message): Promise<void> {
+  private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const inlineKeyboardButtons = [
-      { text: '👨‍🏫 Start 👨‍🏫', callback_data: `${BOT_ACTIONS.START}` },
+      { text: '🟢 Start 🟢', callback_data: `${BOT_ACTIONS.START}` },
       { text: '🛑 Stop 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
