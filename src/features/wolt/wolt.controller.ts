@@ -25,7 +25,7 @@ export class WoltController implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bot.setMyCommands(Object.values(WOLT_BOT_COMMANDS));
+    this.bot.setMyCommands(Object.values(WOLT_BOT_COMMANDS).filter((command) => command.command !== WOLT_BOT_COMMANDS.START.command));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, LIST, CONTACT } = WOLT_BOT_COMMANDS;

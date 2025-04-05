@@ -19,7 +19,7 @@ export class WorldlyService {
     const handlers = [
       (chatId: number, userDetails: UserDetails) => this.mapHandler(chatId, userDetails),
       (chatId: number, userDetails: UserDetails) => this.flagHandler(chatId, userDetails),
-      (chatId: number, userDetails: UserDetails) => this.capitalHandler(chatId, userDetails),
+      // (chatId: number, userDetails: UserDetails) => this.capitalHandler(chatId, userDetails),
     ];
 
     const randomGameIndex = Math.floor(Math.random() * handlers.length);

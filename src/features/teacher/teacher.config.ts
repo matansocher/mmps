@@ -2,14 +2,15 @@ export const COURSE_START_HOUR_OF_DAY = 12;
 export const COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY = [17, 22];
 
 export const TEACHER_BOT_COMMANDS = {
-  START: { command: '/start', description: 'Start learning daily' },
-  STOP: { command: '/stop', description: 'Stop learning daily' },
-  COURSE: { command: '/course', description: 'Start the next course' },
-  ADD: { command: '/add', description: 'Add a new course' },
-  CONTACT: { command: '/contact', description: 'Contact' },
+  COURSE: { command: '/course', description: '➡️ Start the next course ➡️' },
+  ADD: { command: '/add', description: '➕ Add a new course ➕' },
+  ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
 };
 
 export enum BOT_ACTIONS {
+  START = 'start',
+  STOP = 'stop',
+  CONTACT = 'contact',
   TRANSCRIBE = 'transcribe',
   NEXT_LESSON = 'next_lesson',
   COMPLETE = 'complete',
@@ -32,4 +33,5 @@ export const ANALYTIC_EVENT_NAMES = {
   MESSAGE: 'MESSAGE',
   TRANSCRIBE_LESSON: 'TRANSCRIBE_LESSON',
   COMPLETE_COURSE: 'COMPLETE_COURSE',
+  ERROR: 'ERROR',
 };

@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOTS, getCallbackQueryData, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { getCountryByCapital, getCountryByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, WORLDLY_BOT_COMMANDS } from './worldly.config';
 import { WorldlyService } from './worldly.service';
@@ -28,52 +28,28 @@ export class WorldlyController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(WORLDLY_BOT_COMMANDS));
 
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { RANDOM, MAP, FLAG, CAPITAL, START, STOP, CONTACT } = WORLDLY_BOT_COMMANDS;
+    const { RANDOM, MAP, FLAG, CAPITAL, ACTIONS } = WORLDLY_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
       { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
       { event: COMMAND, regex: FLAG.command, handler: (message) => this.flagHandler.call(this, message) },
       { event: COMMAND, regex: CAPITAL.command, handler: (message) => this.capitalHandler.call(this, message) },
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
-      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
+      { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
   }
 
-  private async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
-
+  private async actionsHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, true) : await this.mongoSubscriptionService.addSubscription(chatId);
-
-    const newUserReplyText = [
-      `Hi 👋`,
-      `I am here to help you learn geography in a fun way`,
-      `Every day, I will send you a geography game`,
-      `You can trigger a game with the command on the bottom`,
-      `If you want me to stop sending you geography games, just use the stop command on the bottom`,
-    ].join('\n\n');
-    const existingUserReplyText = `No problem, I will send you daily games`;
-    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
-
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
-  }
-
-  private async stopHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoSubscriptionService.updateSubscription(chatId, false);
-    await this.bot.sendMessage(chatId, `OK, I will stop sending you daily games 🛑`);
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
-  }
-
-  private async contactHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-
-    await this.bot.sendMessage(chatId, `Gladly, you can talk to the person who created me, he will probably be able to help. Its ${MY_USER_NAME}`);
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    const inlineKeyboardButtons = [
+      !subscription?.isActive
+        ? { text: '🟢 Start getting daily geography games 🟢', callback_data: `${BOT_ACTIONS.START}` }
+        : { text: '🛑 Stop getting daily geography games 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+    ];
+    await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   async randomHandler(message: Message): Promise<void> {
@@ -99,9 +75,23 @@ export class WorldlyController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
     const [game, selectedName, correctName] = response.split(' - ');
     switch (game) {
+      case BOT_ACTIONS.START:
+        await this.startHandler(chatId, userDetails);
+        await this.bot.deleteMessage(chatId, messageId);
+        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        break;
+      case BOT_ACTIONS.STOP:
+        await this.stopHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
+        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        break;
+      case BOT_ACTIONS.CONTACT:
+        await this.contactHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
+        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        break;
       case BOT_ACTIONS.MAP:
         await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
         this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
@@ -120,7 +110,34 @@ export class WorldlyController implements OnModuleInit {
     }
   }
 
+  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+
+    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, true) : await this.mongoSubscriptionService.addSubscription(chatId);
+
+    const newUserReplyText = [
+      `Hi 👋`,
+      `I am here to help you learn geography in a fun way`,
+      `Every day, I will send you a geography game`,
+      `You can trigger a game with the command on the bottom`,
+      `If you want me to stop sending you geography games, just use the stop command on the bottom`,
+    ].join('\n\n');
+    const existingUserReplyText = `No problem, I will send you daily games`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+  }
+
+  private async stopHandler(chatId: number): Promise<void> {
+    await this.mongoSubscriptionService.updateSubscription(chatId, false);
+    await this.bot.sendMessage(chatId, `OK, I will stop sending you daily games 🛑`);
+  }
+
+  private async contactHandler(chatId: number): Promise<void> {
+    await this.bot.sendMessage(chatId, `Gladly, you can talk to the person who created me, he will probably be able to help. Its ${MY_USER_NAME}`);
+  }
+
   private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
@@ -128,6 +145,7 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
     await this.bot.sendMessage(chatId, replyText);
@@ -135,6 +153,7 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctCountry.capital} ${correctCountry.emoji}`;
     await this.bot.sendMessage(chatId, replyText);
