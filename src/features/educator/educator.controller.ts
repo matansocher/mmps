@@ -10,12 +10,14 @@ import {
   BOT_BROADCAST_ACTIONS,
   BOTS,
   getCallbackQueryData,
+  getInlineKeyboardMarkup,
   getMessageData,
   MessageLoader,
   registerHandlers,
   removeItemFromInlineKeyboardMarkup,
   TELEGRAM_EVENTS,
   TelegramEventHandler,
+  UserDetails,
 } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator.config';
 import { EducatorService } from './educator.service';
@@ -41,48 +43,26 @@ export class EducatorController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(EDUCATOR_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, STOP, TOPIC, CUSTOM, ADD, CONTACT } = EDUCATOR_BOT_COMMANDS;
+    const { SETTINGS, TOPIC, CUSTOM, ADD } = EDUCATOR_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
       { event: COMMAND, regex: CUSTOM.command, handler: (message) => this.customTopicHandler.call(this, message) },
-      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
+      { event: COMMAND, regex: SETTINGS.command, handler: (message) => this.settingsHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
   }
 
-  private async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoUserPreferencesService.createUserPreference(chatId);
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
-    const newUserReplyText = [
-      `שלום לך 👋`,
-      `אני פה כדי ללמד אותך על כל מיני נושאים, כדי שתהיה חכם יותר 😁`,
-      `לא צריך לעשות יותר כלום, אני אשלח כל יום שיעורים על נושאים מעניינים בשעות שונות של היום`,
-      `יש לי עוד כמה פקודות מעניינות ששווה לבדוק`,
-    ].join('\n\n');
-    const existingUserReplyText = `אין בעיה, אני אשלח כל יום שיעורים על נושאים מעניינים בשעות שונות של היום`;
-    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
-  }
-
-  private async stopHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
-    const replyText = [`סבבה, אני מפסיקה 🛑`, `כדי לחזור ללמוד - אפשר להשתמש בפקודה`, `אפשר גם לבקש נושאים בלי תזכורות ממני, גם לזה הכנתי פקודה`].join('\n\n');
-    await this.bot.sendMessage(chatId, replyText);
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
-  }
-
-  async contactHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-
-    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+  private async settingsHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+    const inlineKeyboardButtons = [
+      { text: '👩🏻‍🏫 Start 👩🏻‍🏫', callback_data: `${BOT_ACTIONS.START}` },
+      { text: '🛑 Stop 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+    ];
+    await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   private async topicHandler(message: Message): Promise<void> {
@@ -155,8 +135,20 @@ export class EducatorController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response, text, replyMarkup } = getCallbackQueryData(callbackQuery);
 
-    const [topicParticipationId, action] = response.split(' - ');
+    const [action, topicParticipationId] = response.split(' - ');
     switch (action) {
+      case BOT_ACTIONS.START:
+        await this.startHandler(chatId, userDetails);
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        break;
+      case BOT_ACTIONS.STOP:
+        await this.stopHandler(chatId);
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        break;
+      case BOT_ACTIONS.CONTACT:
+        await this.contactHandler(chatId);
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        break;
       case BOT_ACTIONS.TRANSCRIBE:
         await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
         this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_TOPIC }, userDetails);
@@ -168,6 +160,29 @@ export class EducatorController implements OnModuleInit {
       default:
         throw new Error('Invalid action');
     }
+  }
+
+  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+    await this.mongoUserPreferencesService.createUserPreference(chatId);
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const newUserReplyText = [
+      `שלום לך 👋`,
+      `אני פה כדי ללמד אותך על כל מיני נושאים, כדי שתהיה חכם יותר 😁`,
+      `לא צריך לעשות יותר כלום, אני אשלח כל יום שיעורים על נושאים מעניינים בשעות שונות של היום`,
+      `יש לי עוד כמה פקודות מעניינות ששווה לבדוק`,
+    ].join('\n\n');
+    const existingUserReplyText = `אין בעיה, אני אשלח כל יום שיעורים על נושאים מעניינים בשעות שונות של היום`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+  }
+
+  private async stopHandler(chatId: number): Promise<void> {
+    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
+    const replyText = [`סבבה, אני מפסיקה 🛑`, `כדי לחזור ללמוד - אפשר להשתמש בפקודה`, `אפשר גם לבקש נושאים בלי תזכורות ממני, גם לזה הכנתי פקודה`].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
+  }
+
+  async contactHandler(chatId: number): Promise<void> {
+    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
   }
 
   private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {

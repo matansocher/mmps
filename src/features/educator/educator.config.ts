@@ -2,15 +2,16 @@ export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
 export const IDLE_DAYS_REMINDER = 3;
 
 export const EDUCATOR_BOT_COMMANDS = {
-  START: { command: '/start', description: 'רוצה להתחיל ללמוד' },
-  STOP: { command: '/stop', description: 'רוצה להפסיק ללמוד' },
   TOPIC: { command: '/topic', description: 'נושא הבא' },
   CUSTOM: { command: '/custom', description: 'נושא ספציפי עכשיו' },
   ADD: { command: '/add', description: 'הוספת נושא' },
-  CONTACT: { command: '/contact', description: 'צור קשר' },
+  SETTINGS: { command: '/settings', description: 'הגדרות' },
 };
 
 export enum BOT_ACTIONS {
+  START = 'start',
+  STOP = 'stop',
+  CONTACT = 'contact',
   TRANSCRIBE = 'transcribe',
   COMPLETE = 'complete',
 }

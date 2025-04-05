@@ -46,11 +46,11 @@ export class EducatorService {
     const inlineKeyboardButtons = [
       {
         text: '🎧 הקראה 🎧',
-        callback_data: `${topicParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+        callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${topicParticipation._id}`,
       },
       {
         text: '✅ סיימתי ✅',
-        callback_data: `${topicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${BOT_ACTIONS.COMPLETE} - ${topicParticipation._id}`,
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -75,11 +75,11 @@ export class EducatorService {
     const inlineKeyboardButtons = [
       {
         text: '🎧 הקראה 🎧',
-        callback_data: `${activeTopicParticipation._id} - ${BOT_ACTIONS.TRANSCRIBE}`,
+        callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${activeTopicParticipation._id}`,
       },
       {
         text: '✅ סיימתי ✅',
-        callback_data: `${activeTopicParticipation._id} - ${BOT_ACTIONS.COMPLETE}`,
+        callback_data: `${BOT_ACTIONS.COMPLETE} - ${activeTopicParticipation._id}`,
       },
     ];
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);

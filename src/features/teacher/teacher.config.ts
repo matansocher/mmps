@@ -2,9 +2,9 @@ export const COURSE_START_HOUR_OF_DAY = 12;
 export const COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY = [17, 22];
 
 export const TEACHER_BOT_COMMANDS = {
-  SETTINGS: { command: '/settings', description: 'Settings' },
   COURSE: { command: '/course', description: 'Start the next course' },
   ADD: { command: '/add', description: 'Add a new course' },
+  SETTINGS: { command: '/settings', description: 'Settings' },
 };
 
 export enum BOT_ACTIONS {
