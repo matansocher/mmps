@@ -55,8 +55,8 @@ export class TeacherController implements OnModuleInit {
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const inlineKeyboardButtons = [
-      { text: '🟢 Start 🟢', callback_data: `${BOT_ACTIONS.START}` },
-      { text: '🛑 Stop 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '🟢 Start getting daily courses 🟢', callback_data: `${BOT_ACTIONS.START}` },
+      { text: '🛑 Stop getting daily courses 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });

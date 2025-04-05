@@ -3,9 +3,7 @@ export const WORLDLY_BOT_COMMANDS = {
   MAP: { command: '/map', description: 'Guess the country by map game' },
   FLAG: { command: '/flag', description: 'Guess the country by flag game' },
   CAPITAL: { command: '/capital', description: 'Guess the capital city of a country game' },
-  START: { command: '/start', description: 'want to get daily geography games' },
-  STOP: { command: '/stop', description: 'want to stop getting daily geography games' },
-  CONTACT: { command: '/contact', description: 'contact' },
+  ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
 };
 
 export const ANALYTIC_EVENT_NAMES = {
@@ -21,6 +19,9 @@ export const ANALYTIC_EVENT_NAMES = {
 };
 
 export enum BOT_ACTIONS {
+  START = 'start',
+  STOP = 'stop',
+  CONTACT = 'contact',
   MAP = 'm',
   FLAG = 'f',
   CAPITAL = 'c',

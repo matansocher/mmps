@@ -21,7 +21,7 @@ function getImports() {
     return [...commonModules, AnnouncerModule, CoachModule, DefineModule, EducatorModule, TeacherModule, TrainerModule, VoicePalModule, WoltModule, WorldlyModule];
   }
 
-  return [...commonModules, PlaygroundsModule, CoachModule];
+  return [...commonModules, PlaygroundsModule, WorldlyModule];
 }
 
 @Module({
