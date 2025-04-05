@@ -10,12 +10,14 @@ import {
   BOT_BROADCAST_ACTIONS,
   BOTS,
   getCallbackQueryData,
+  getInlineKeyboardMarkup,
   getMessageData,
   MessageLoader,
   registerHandlers,
   removeItemFromInlineKeyboardMarkup,
   TELEGRAM_EVENTS,
   TelegramEventHandler,
+  UserDetails,
 } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, TEACHER_BOT_COMMANDS } from './teacher.config';
 import { TeacherService } from './teacher.service';
@@ -39,51 +41,25 @@ export class TeacherController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(TEACHER_BOT_COMMANDS));
 
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, STOP, COURSE, ADD, CONTACT } = TEACHER_BOT_COMMANDS;
+    const { SETTINGS, COURSE, ADD } = TEACHER_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: COURSE.command, handler: (message) => this.courseHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
-      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
+      { event: COMMAND, regex: SETTINGS.command, handler: (message) => this.settingsHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
 
-  private async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoUserPreferencesService.createUserPreference(chatId);
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
-    const newUserReplyText = [
-      `Hey There 👋`,
-      `I am here to teach you all you need about any subject you want.`,
-      `I will send you daily lessons of stuff I collect on the internet and summarize it for you in a great way that you can learn from. 😁`,
-      `You can always add a course topic by sending me the topic on this format - /add <course topic>, example: /add JavaScript Heap`,
-    ].join('\n\n');
-    const existingUserReplyText = `All set 👨‍💻`;
-    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
-    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
-  }
-
-  private async stopHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
-    const replyText = [
-      'OK, I will stop teaching you for now 🛑',
-      `Whenever you are ready, just send me the ${TEACHER_BOT_COMMANDS.START.command} command and we will continue learning`,
-      `Another option for you is to start courses manually with the ${TEACHER_BOT_COMMANDS.COURSE.command} command`,
-    ].join('\n\n');
-    await this.bot.sendMessage(chatId, replyText);
-    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
-  }
-
-  async contactHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-
-    await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
-    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+  private async settingsHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+    const inlineKeyboardButtons = [
+      { text: '👨‍🏫 Start 👨‍🏫', callback_data: `${BOT_ACTIONS.START}` },
+      { text: '🛑 Stop 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+    ];
+    await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   private async courseHandler(message: Message): Promise<void> {
@@ -139,6 +115,18 @@ export class TeacherController implements OnModuleInit {
 
     const [action, courseParticipationId] = response.split(' - ');
     switch (action) {
+      case BOT_ACTIONS.START:
+        await this.startHandler(chatId, userDetails);
+        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        break;
+      case BOT_ACTIONS.STOP:
+        await this.stopHandler(chatId);
+        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        break;
+      case BOT_ACTIONS.CONTACT:
+        await this.contactHandler(chatId);
+        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        break;
       case BOT_ACTIONS.NEXT_LESSON:
         await this.handleCallbackNextLesson(chatId);
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.NEXT_LESSON }, userDetails);
@@ -154,6 +142,33 @@ export class TeacherController implements OnModuleInit {
       default:
         throw new Error('Invalid action');
     }
+  }
+
+  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+    await this.mongoUserPreferencesService.createUserPreference(chatId);
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const newUserReplyText = [
+      `Hey There 👋`,
+      `I am here to teach you all you need about any subject you want.`,
+      `I will send you daily lessons of stuff I collect on the internet and summarize it for you in a great way that you can learn from. 😁`,
+      `You can always add a course topic by sending me the topic on this format - /add <course topic>, example: /add JavaScript Heap`,
+    ].join('\n\n');
+    const existingUserReplyText = `All set 👨‍💻`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+  }
+
+  private async stopHandler(chatId: number): Promise<void> {
+    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
+    const replyText = [
+      'OK, I will stop teaching you for now 🛑',
+      `Whenever you are ready, just send me the Start command and we will continue learning`,
+      `Another option for you is to start courses manually with the ${TEACHER_BOT_COMMANDS.COURSE.command} command`,
+    ].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
+  }
+
+  async contactHandler(chatId: number): Promise<void> {
+    await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
   }
 
   private async handleCallbackNextLesson(chatId: number): Promise<void> {
