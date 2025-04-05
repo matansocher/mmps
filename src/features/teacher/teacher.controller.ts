@@ -54,10 +54,12 @@ export class TeacherController implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
+    const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
     const inlineKeyboardButtons = [
-      { text: '🟢 Start getting daily courses 🟢', callback_data: `${BOT_ACTIONS.START}` },
-      { text: '🛑 Stop getting daily courses 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+      userPreferences?.isStopped
+        ? { text: '🟢 Start getting daily courses 🟢', callback_data: `${BOT_ACTIONS.START}` }
+        : { text: '🛑 Stop getting daily courses 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }, // $$$$$$$$$$$$$
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
@@ -117,14 +119,17 @@ export class TeacherController implements OnModuleInit {
     switch (action) {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.NEXT_LESSON:

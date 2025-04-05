@@ -42,10 +42,12 @@ export class WorldlyController implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
+    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     const inlineKeyboardButtons = [
-      { text: '🟢 Start getting daily geography games 🟢', callback_data: `${BOT_ACTIONS.START}` },
-      { text: '🛑 Stop getting daily geography games 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+      !subscription?.isActive
+        ? { text: '🟢 Start getting daily geography games 🟢', callback_data: `${BOT_ACTIONS.START}` }
+        : { text: '🛑 Stop getting daily geography games 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }, // $$$$$$$$$$$$$
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
@@ -77,14 +79,17 @@ export class WorldlyController implements OnModuleInit {
     switch (game) {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.MAP:

@@ -48,10 +48,10 @@ export class CoachController implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
+    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     const inlineKeyboardButtons = [
-      { text: '🟢 התחל לקבל עדכונים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` },
-      { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+      !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }, // $$$$$$$$$$$$$
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 איך אני יכול לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
@@ -79,20 +79,23 @@ export class CoachController implements OnModuleInit {
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, userDetails, data: response } = getCallbackQueryData(callbackQuery);
+    const { chatId, messageId, userDetails, data: response } = getCallbackQueryData(callbackQuery);
 
     const [action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId);
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       default:

@@ -43,7 +43,7 @@ export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-t
 // 'yokneam'
 
 export const WOLT_BOT_COMMANDS = {
-  // START: { command: '/start', description: 'התחל מהתחלה' },
+  START: { command: '/start', description: 'התחל מהתחלה' },
   LIST: { command: '/list', description: '🩵 רשימת ההתראות הפתוחות 🩵' },
   CONTACT: { command: '/contact', description: '📬 צור קשר 📬' },
 };
