@@ -59,7 +59,7 @@ export class EducatorController implements OnModuleInit {
     const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
     const inlineKeyboardButtons = [
       userPreferences?.isStopped ? { text: '🟢 התחל לקבל שיעורים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל שיעורים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }, // $$$$$$$$$$$$$
+      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '👩🏻‍ איך אני יכולה לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }

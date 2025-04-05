@@ -47,7 +47,7 @@ export class WorldlyController implements OnModuleInit {
       !subscription?.isActive
         ? { text: '🟢 Start getting daily geography games 🟢', callback_data: `${BOT_ACTIONS.START}` }
         : { text: '🛑 Stop getting daily geography games 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }, // $$$$$$$$$$$$$
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }

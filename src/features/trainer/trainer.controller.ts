@@ -40,7 +40,7 @@ export class TrainerBotService implements OnModuleInit {
     const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
     const inlineKeyboardButtons = [
       userPreferences?.isStopped ? { text: '🟢 Start daily reminders 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 Stop daily reminders 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }, // $$$$$$$$$$$$$
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '🏋️‍♂️ How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }

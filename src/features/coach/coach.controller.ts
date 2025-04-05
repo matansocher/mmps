@@ -51,7 +51,7 @@ export class CoachController implements OnModuleInit {
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     const inlineKeyboardButtons = [
       !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }, // $$$$$$$$$$$$$
+      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 איך אני יכול לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
