@@ -96,6 +96,7 @@ export class CoachController implements OnModuleInit {
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       default:
+        this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
         throw new Error('Invalid action');
     }
   }

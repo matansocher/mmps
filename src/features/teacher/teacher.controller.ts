@@ -140,6 +140,7 @@ export class TeacherController implements OnModuleInit {
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.COMPLETE_COURSE }, userDetails);
         break;
       default:
+        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
         throw new Error('Invalid action');
     }
   }

@@ -58,11 +58,11 @@ export class EducatorController implements OnModuleInit {
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     const inlineKeyboardButtons = [
-      { text: '🟢 Start getting daily lessons 🟢', callback_data: `${BOT_ACTIONS.START}` },
-      { text: '🛑 Stop getting daily lessons 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+      { text: '🟢 התחל לקבל שיעורים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` },
+      { text: '🛑 הפסק לקבל שיעורים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, '👩🏻‍ How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, '👩🏻‍ איך אני יכול לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   private async topicHandler(message: Message): Promise<void> {
@@ -158,6 +158,7 @@ export class EducatorController implements OnModuleInit {
         this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
         break;
       default:
+        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
         throw new Error('Invalid action');
     }
   }

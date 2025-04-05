@@ -1,11 +1,12 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
 import { OpenaiService } from '@services/openai';
-import { BOTS, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer.config';
+import { BOT_ACTIONS } from './trainer.config';
 import { getLastWeekDates, getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
 @Injectable()
@@ -23,41 +24,25 @@ export class TrainerBotService implements OnModuleInit {
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(TRAINER_BOT_COMMANDS));
-    const { COMMAND } = TELEGRAM_EVENTS;
-    const { START, STOP, EXERCISE, ACHIEVEMENTS, CONTACT } = TRAINER_BOT_COMMANDS;
+    const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
+    const { ACTIONS, EXERCISE, ACHIEVEMENTS } = TRAINER_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: STOP.command, handler: (message) => this.stopHandler.call(this, message) },
       { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
       { event: COMMAND, regex: ACHIEVEMENTS.command, handler: (message) => this.achievementsHandler.call(this, message) },
-      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
+      { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
+      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
 
-  private async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoUserPreferencesService.createUserPreference(chatId);
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
-    const newUserReplyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
-    const existingUserReplyText = `All set 💪`;
-    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
-    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
-  }
-
-  private async stopHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
-    const replyText = ['OK, I will stop reminding you for now 🛑', `Whenever you are ready, just send me the ${TRAINER_BOT_COMMANDS.START.command} command and we will continue training`].join('\n\n');
-    await this.bot.sendMessage(chatId, replyText);
-    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
-  }
-
-  async contactHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
-
-    await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
-    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+  private async actionsHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+    const inlineKeyboardButtons = [
+      { text: '🟢 Start daily reminders 🟢', callback_data: `${BOT_ACTIONS.START}` },
+      { text: '🛑 Stop daily reminders 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+    ];
+    await this.bot.sendMessage(chatId, '🏋️‍♂️ How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   private async exerciseHandler(message: Message): Promise<void> {
@@ -120,5 +105,46 @@ export class TrainerBotService implements OnModuleInit {
     await this.bot.sendMessage(chatId, replyText);
 
     this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.ACHIEVEMENTS }, userDetails);
+  }
+
+  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
+    const { chatId, userDetails, data: response } = getCallbackQueryData(callbackQuery);
+
+    const [action] = response.split(' - ');
+    switch (action) {
+      case BOT_ACTIONS.START:
+        await this.startHandler(chatId, userDetails);
+        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        break;
+      case BOT_ACTIONS.STOP:
+        await this.stopHandler(chatId);
+        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        break;
+      case BOT_ACTIONS.CONTACT:
+        await this.contactHandler(chatId);
+        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        break;
+      default:
+        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        throw new Error('Invalid action');
+    }
+  }
+
+  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+    await this.mongoUserPreferencesService.createUserPreference(chatId);
+    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const newUserReplyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
+    const existingUserReplyText = `All set 💪`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+  }
+
+  private async stopHandler(chatId: number): Promise<void> {
+    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
+    const replyText = ['OK, I will stop reminding you for now 🛑', `Whenever you are ready, just send me the /start command and we will continue training`].join('\n\n');
+    await this.bot.sendMessage(chatId, replyText);
+  }
+
+  async contactHandler(chatId: number): Promise<void> {
+    await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
   }
 }
