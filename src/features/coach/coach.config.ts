@@ -7,6 +7,8 @@ export const ANALYTIC_EVENT_NAMES = {
 };
 
 export const COACH_BOT_COMMANDS = {
+  TABLES: { command: '/tables', description: 'טבלאות' }, // $$$$$$$$$$$$$$$$$ emoji
+  MATCHES: { command: '/matches', description: '⚽️ משחקים 🏀' },
   ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
 };
 
@@ -14,4 +16,6 @@ export enum BOT_ACTIONS {
   START = 'start',
   STOP = 'stop',
   CONTACT = 'contact',
+  TABLE = 'table',
+  MATCHES = 'matches',
 }
