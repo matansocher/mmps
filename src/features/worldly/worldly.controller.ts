@@ -148,15 +148,15 @@ export class WorldlyController implements OnModuleInit {
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
-    await this.bot.sendMessage(chatId, replyText);
+    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
     await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByCapital(correctName);
-    const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctCountry.capital} ${correctCountry.emoji}`;
-    await this.bot.sendMessage(chatId, replyText);
+    const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - The capital city of ${correctCountry.emoji} ${correctCountry.capital} ${correctCountry.emoji} is ${correctCountry.capital}`;
+    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
     await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 }

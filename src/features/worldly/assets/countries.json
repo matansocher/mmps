@@ -681,6 +681,7 @@
     "lat": -14.270972,
     "lon": -170.132217,
     "capital": "Pago Pago",
+    "continent": "Oceania",
     "emoji": "🇦🇸"
   },
   {
@@ -15169,6 +15170,7 @@
     "lat": -17.679742,
     "lon": -149.406843,
     "capital": "Papeetē",
+    "continent": "Oceania",
     "emoji": "🇵🇫"
   },
   {
@@ -28200,6 +28202,7 @@
     "lat": -19.054445,
     "lon": -169.867233,
     "capital": "Alofi",
+    "continent": "Oceania",
     "emoji": "🇳🇺"
   },
   {

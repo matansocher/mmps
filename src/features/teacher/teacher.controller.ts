@@ -202,13 +202,13 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
-    const course = await this.mongoCourseParticipationService.getCourseParticipation(courseParticipationId);
-    if (!course) {
+    const courseParticipation = await this.mongoCourseParticipationService.getCourseParticipation(courseParticipationId);
+    if (!courseParticipation) {
       await this.bot.sendMessage(chatId, `I am sorry but I couldn't find that course`);
       return;
     }
 
-    if (course.status === CourseParticipationStatus.Completed) {
+    if (courseParticipation.status === CourseParticipationStatus.Completed) {
       await this.bot.sendMessage(chatId, 'It looks like you already completed that course');
       return;
     }
