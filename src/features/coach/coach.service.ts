@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { generateTableResultsString } from '@features/coach/utils/generate-table-result-string';
 import { getCompetitions, getMatchesForCompetition } from '@services/scores-365';
-import { CompetitionDetails } from '@services/scores-365/interface';
+import { CompetitionDetails, CompetitionTable, CompetitionTableDetails } from '@services/scores-365/interface';
+import { getCompetitionTable } from '@services/scores-365/utils/get-competition-table';
 import { generateMatchResultsString } from './utils/generate-match-details-string';
 
 const cacheValidForMinutes = 1;
 
 interface CompetitionsDetailsCache {
   readonly competitionsDetails: CompetitionDetails[];
+  // readonly competitionsDetails: CompetitionDetails[];
   readonly lastUpdated: number;
 }
 
@@ -72,4 +75,21 @@ export class CoachService {
       lastUpdated: new Date().getTime(),
     };
   }
+
+  async getCompetitionTable(competitionId: number): Promise<string> {
+    const competitionTable = await getCompetitionTable(competitionId);
+    return generateTableResultsString(competitionTable);
+  }
+
+  // async getMatchesSummaryMessage(date: string): Promise<string> {
+  //   let summaryDetails = this.getMatchesSummaryFromCache(date);
+  //   if (!summaryDetails?.length) {
+  //     summaryDetails = await this.getMatchesSummaryDetails(date);
+  //     this.saveMatchesSummaryToCache(date, summaryDetails);
+  //   }
+  //   if (!summaryDetails?.length) {
+  //     return null;
+  //   }
+  //   return generateMatchResultsString(summaryDetails);
+  // }
 }

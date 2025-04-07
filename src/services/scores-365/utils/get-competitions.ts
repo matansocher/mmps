@@ -4,14 +4,17 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import type { Competition } from '../interface';
 import { COMPETITIONS, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 
-export async function getCompetitions(): Promise<Competition[]> {
-  const competitionIds = COMPETITIONS.map((c) => c.id);
+export async function getCompetitions(): Promise<Array<Competition & { icon: string; hasTable: string }>> {
   const results = await Promise.all(
-    competitionIds.map(async (competitionId) => {
-      const queryParams = { competitions: competitionId.toString(), langId: `${LANGUAGE_ID}`, timezoneName: DEFAULT_TIMEZONE };
+    COMPETITIONS.map(async (competition) => {
+      const queryParams = { competitions: competition.id.toString(), langId: `${LANGUAGE_ID}`, timezoneName: DEFAULT_TIMEZONE };
       const result = await axios.get(`${SCORES_365_API_URL}/competitions?${new URLSearchParams(queryParams)}`);
-      const relevantCompetition = result.data?.competitions?.find((c) => c.id === competitionId);
-      return relevantCompetition ? (_pick(relevantCompetition, ['id', 'name', 'shortName', 'nameForURL']) as Competition) : undefined;
+      const relevantCompetition = result.data?.competitions?.find((c) => c.id === competition.id);
+      if (!relevantCompetition) {
+        return undefined;
+      }
+      const competitionDetails = _pick(relevantCompetition, ['id', 'name', 'nameForURL']);
+      return { ...competitionDetails, icon: competition.icon, hasTable: competition.hasTable } as unknown as Competition & { icon: string; hasTable: string };
     }),
   );
   return results.filter(Boolean);
