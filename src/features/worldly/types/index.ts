@@ -1,5 +1,6 @@
 export type Country = {
   readonly name: string;
+  readonly hebrewName: string;
   readonly alpha2: string;
   readonly alpha3: string;
   readonly ISO3: number;

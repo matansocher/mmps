@@ -21282,7 +21282,7 @@
     "lon": -2.13125,
     "capital": "St Helier",
     "continent": "Europe",
-    "emoji": "🇯🇴"
+    "emoji": "🇯🇪"
   },
   {
     "name": "Jordan",
@@ -21387,7 +21387,7 @@
     "lon": 66.923684,
     "capital": "Astana",
     "continent": "Asia",
-    "emoji": "🇰🇪",
+    "emoji": "🇰🇿",
     "geometry": {
       "type": "Polygon",
       "coordinates": [
@@ -21853,7 +21853,7 @@
     "lon": 37.906193,
     "capital": "Nairobi",
     "continent": "Africa",
-    "emoji": "🇰🇮",
+    "emoji": "🇰🇪",
     "geometry": {
       "type": "Polygon",
       "coordinates": [
