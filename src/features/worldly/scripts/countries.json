@@ -7,6 +7,7 @@
     "lon": 67.709953,
     "capital": "Kabul",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇫",
     "geometry": {
       "type": "Polygon",
@@ -290,7 +291,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אפגניסטן",
+    "hebrewCapital": "קאבול"
   },
   {
     "name": "Albania",
@@ -300,6 +303,7 @@
     "lon": 20.168331,
     "capital": "Tirana (Tirane)",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇦🇱",
     "geometry": {
       "type": "Polygon",
@@ -403,7 +407,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אלבניה",
+    "hebrewCapital": "טירנה"
   },
   {
     "name": "Algeria",
@@ -413,6 +419,7 @@
     "lon": 1.659626,
     "capital": "Algiers",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇩🇿",
     "geometry": {
       "type": "Polygon",
@@ -668,7 +675,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אלג'יריה",
+    "hebrewCapital": "אלג'יר"
   },
   {
     "name": "American Samoa",
@@ -678,7 +687,10 @@
     "lon": -170.132217,
     "capital": "Pago Pago",
     "continent": "Oceania",
-    "emoji": "🇦🇸"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇦🇸",
+    "hebrewName": "סמואה אמריקאית",
+    "hebrewCapital": "פאגו פאגו"
   },
   {
     "name": "Andorra",
@@ -688,7 +700,10 @@
     "lon": 1.601554,
     "capital": "Andorra la Vella",
     "continent": "Europe",
-    "emoji": "🇦🇩"
+    "hebrewContinent": "אירופה",
+    "emoji": "🇦🇩",
+    "hebrewName": "אנדורה",
+    "hebrewCapital": "אנדורה לה וולה"
   },
   {
     "name": "Angola",
@@ -698,6 +713,7 @@
     "lon": 17.873887,
     "capital": "Luanda",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇦🇴",
     "geometry": {
       "type": "MultiPolygon",
@@ -1011,7 +1027,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אנגולה",
+    "hebrewCapital": "לואנדה"
   },
   {
     "name": "Anguilla",
@@ -1021,7 +1039,10 @@
     "lon": -63.068615,
     "capital": "the Valley",
     "continent": "North America",
-    "emoji": "🇦🇮"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇦🇮",
+    "hebrewName": "אנגווילה",
+    "hebrewCapital": "העמק"
   },
   {
     "name": "Antigua and Barbuda",
@@ -1031,7 +1052,10 @@
     "lon": -61.796428,
     "capital": "Saint John's",
     "continent": "North America",
-    "emoji": "🇦🇬"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇦🇬",
+    "hebrewName": "אנטיגואה וברבודה",
+    "hebrewCapital": "סנט ג'ון"
   },
   {
     "name": "Argentina",
@@ -1042,6 +1066,7 @@
     "zoom": 70,
     "capital": "Buenos Aires",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇦🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -1539,7 +1564,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ארגנטינה",
+    "hebrewCapital": "בואנוס איירס"
   },
   {
     "name": "Armenia",
@@ -1549,6 +1576,7 @@
     "lon": 45.038189,
     "capital": "Yerevan",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇲",
     "geometry": {
       "type": "Polygon",
@@ -1636,7 +1664,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אַרְמֶנִיָה",
+    "hebrewCapital": "ירוואן"
   },
   {
     "name": "Aruba",
@@ -1646,7 +1676,10 @@
     "lon": -69.968338,
     "capital": "Oranjestad",
     "continent": "North America",
-    "emoji": "🇦🇼"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇦🇼",
+    "hebrewName": "ארובה",
+    "hebrewCapital": "אורנג'סטאד"
   },
   {
     "name": "Australia",
@@ -1656,6 +1689,7 @@
     "lon": 133.775136,
     "capital": "Canberra",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇦🇺",
     "geometry": {
       "type": "MultiPolygon",
@@ -2633,7 +2667,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אוֹסטְרַלִיָה",
+    "hebrewCapital": "קנברה"
   },
   {
     "name": "Austria",
@@ -2643,6 +2679,7 @@
     "lon": 14.550072,
     "capital": "Vienna",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇦🇹",
     "geometry": {
       "type": "Polygon",
@@ -2798,7 +2835,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אוֹסְטְרֵיָה",
+    "hebrewCapital": "וינה"
   },
   {
     "name": "Azerbaijan",
@@ -2808,6 +2847,7 @@
     "lon": 47.576927,
     "capital": "Baku",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇿",
     "geometry": {
       "type": "MultiPolygon",
@@ -2997,7 +3037,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אזרבייג'ן",
+    "hebrewCapital": "באקו"
   },
   {
     "name": "Bahamas",
@@ -3007,6 +3049,7 @@
     "lon": -77.39628,
     "capital": "Nassau",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇧🇸",
     "geometry": {
       "type": "MultiPolygon",
@@ -3108,7 +3151,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בהאמה",
+    "hebrewCapital": "נסאו"
   },
   {
     "name": "Bahrain",
@@ -3118,7 +3163,10 @@
     "lon": 50.637772,
     "capital": "Manama",
     "continent": "Asia",
-    "emoji": "🇧🇭"
+    "hebrewContinent": "אסיה",
+    "emoji": "🇧🇭",
+    "hebrewName": "בחריין",
+    "hebrewCapital": "מנאמה"
   },
   {
     "name": "Bangladesh",
@@ -3128,6 +3176,7 @@
     "lon": 90.356331,
     "capital": "Dhaka",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇧🇩",
     "geometry": {
       "type": "Polygon",
@@ -3279,7 +3328,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בנגלדש",
+    "hebrewCapital": "דאקה"
   },
   {
     "name": "Barbados",
@@ -3289,7 +3340,10 @@
     "lon": -59.543198,
     "capital": "Bridgetown",
     "continent": "North America",
-    "emoji": "🇧🇧"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇧🇧",
+    "hebrewName": "ברבדוס",
+    "hebrewCapital": "ברידג'טאון"
   },
   {
     "name": "Belarus",
@@ -3299,6 +3353,7 @@
     "lon": 27.953389,
     "capital": "Minsk",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇾",
     "geometry": {
       "type": "Polygon",
@@ -3486,7 +3541,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בלארוס",
+    "hebrewCapital": "מינסק"
   },
   {
     "name": "Belgium",
@@ -3496,6 +3553,7 @@
     "lon": 4.469936,
     "capital": "Brussels",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇪",
     "geometry": {
       "type": "Polygon",
@@ -3571,7 +3629,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בלגיה",
+    "hebrewCapital": "בריסל"
   },
   {
     "name": "Belize",
@@ -3581,6 +3641,7 @@
     "lon": -88.49765,
     "capital": "Belmopan",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇧🇿",
     "geometry": {
       "type": "Polygon",
@@ -3668,7 +3729,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בליז",
+    "hebrewCapital": "בלמופן"
   },
   {
     "name": "Benin",
@@ -3678,6 +3741,7 @@
     "lon": 2.315834,
     "capital": "Porto Novo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇯",
     "geometry": {
       "type": "Polygon",
@@ -3785,7 +3849,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בנין",
+    "hebrewCapital": "פורטו נובו"
   },
   {
     "name": "Bermuda",
@@ -3795,7 +3861,10 @@
     "lon": -64.75737,
     "capital": "Hamilton",
     "continent": "North America",
-    "emoji": "🇧🇲"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇧🇲",
+    "hebrewName": "ברמודה",
+    "hebrewCapital": "המילטון"
   },
   {
     "name": "Bhutan",
@@ -3805,6 +3874,7 @@
     "lon": 90.433601,
     "capital": "Thimphu",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇧🇹",
     "geometry": {
       "type": "Polygon",
@@ -3864,7 +3934,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בהוטן",
+    "hebrewCapital": "טימפו"
   },
   {
     "name": "Bolivia",
@@ -3874,6 +3946,7 @@
     "lon": -63.588653,
     "capital": "La Paz (Sucre)",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇧🇴",
     "geometry": {
       "type": "Polygon",
@@ -4121,7 +4194,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בוליביה",
+    "hebrewCapital": "לה פז (סוקרה)"
   },
   {
     "name": "Bosnia and Herzegovina",
@@ -4131,6 +4206,7 @@
     "lon": 17.679076,
     "capital": "Sarajevo",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇦",
     "geometry": {
       "type": "Polygon",
@@ -4230,7 +4306,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בוסניה והרצגובינה",
+    "hebrewCapital": "סרייבו"
   },
   {
     "name": "Botswana",
@@ -4240,6 +4318,7 @@
     "lon": 24.684866,
     "capital": "Gaborone",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇼",
     "geometry": {
       "type": "Polygon",
@@ -4407,7 +4486,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בוצואנה",
+    "hebrewCapital": "גאבורונה"
   },
   {
     "name": "Brazil",
@@ -4418,6 +4499,7 @@
     "zoom": 80,
     "capital": "Brasilia",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇧🇷",
     "geometry": {
       "type": "Polygon",
@@ -5237,7 +5319,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בְּרָזִיל",
+    "hebrewCapital": "ברזיליה"
   },
   {
     "name": "British Virgin Islands",
@@ -5247,7 +5331,10 @@
     "lon": -64.639968,
     "capital": "Road Town",
     "continent": "North America",
-    "emoji": "🇻🇬"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇻🇬",
+    "hebrewName": "איי הבתולה הבריטיים",
+    "hebrewCapital": "עיירת דרך"
   },
   {
     "name": "Brunei",
@@ -5257,6 +5344,7 @@
     "lon": 114.727669,
     "capital": "Bandar Seri Begawan",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇧🇳",
     "geometry": {
       "type": "Polygon",
@@ -5296,7 +5384,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ברוניי",
+    "hebrewCapital": "בנדר סרי בגוואן"
   },
   {
     "name": "Bulgaria",
@@ -5306,6 +5396,7 @@
     "lon": 25.48583,
     "capital": "Sofia",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇬",
     "geometry": {
       "type": "Polygon",
@@ -5425,7 +5516,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בולגריה",
+    "hebrewCapital": "סופיה"
   },
   {
     "name": "Burkina Faso",
@@ -5435,6 +5528,7 @@
     "lon": -1.561593,
     "capital": "Ouagadougou",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇫",
     "geometry": {
       "type": "Polygon",
@@ -5598,7 +5692,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בורקינה פאסו",
+    "hebrewCapital": "אואגדוגו"
   },
   {
     "name": "Burundi",
@@ -5608,6 +5704,7 @@
     "lon": 29.918886,
     "capital": "Gitega",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇮",
     "geometry": {
       "type": "Polygon",
@@ -5667,7 +5764,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בורונדי",
+    "hebrewCapital": "גיטגה"
   },
   {
     "name": "Cambodia",
@@ -5677,6 +5776,7 @@
     "lon": 104.990963,
     "capital": "Phnom Penh",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇭",
     "geometry": {
       "type": "Polygon",
@@ -5752,7 +5852,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קמבודיה",
+    "hebrewCapital": "פנום פן"
   },
   {
     "name": "Cameroon",
@@ -5762,6 +5864,7 @@
     "lon": 12.354722,
     "capital": "Yaounde",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇲",
     "geometry": {
       "type": "Polygon",
@@ -6013,7 +6116,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קמרון",
+    "hebrewCapital": "יאונדה"
   },
   {
     "name": "Canada",
@@ -6024,6 +6129,7 @@
     "zoom": 70,
     "capital": "Ottawa",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇨🇦",
     "geometry": {
       "type": "MultiPolygon",
@@ -9325,7 +9431,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קנדה",
+    "hebrewCapital": "אוטווה"
   },
   {
     "name": "Cape Verde",
@@ -9335,7 +9443,10 @@
     "lon": -24.013197,
     "capital": "Praia",
     "continent": "Africa",
-    "emoji": "🇨🇻"
+    "hebrewContinent": "אפריקה",
+    "emoji": "🇨🇻",
+    "hebrewName": "שכמייה ירוקה",
+    "hebrewCapital": "פראיה"
   },
   {
     "name": "Cayman Islands",
@@ -9345,7 +9456,10 @@
     "lon": -80.566956,
     "capital": "George Town",
     "continent": "North America",
-    "emoji": "🇰🇾"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇰🇾",
+    "hebrewName": "איי קיימן",
+    "hebrewCapital": "ג'ורג 'טאון"
   },
   {
     "name": "Central African Republic",
@@ -9355,6 +9469,7 @@
     "lon": 20.939444,
     "capital": "Bangui",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇫",
     "geometry": {
       "type": "Polygon",
@@ -9610,7 +9725,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הרפובליקה המרכז אפריקאית",
+    "hebrewCapital": "באנגוי"
   },
   {
     "name": "Chad",
@@ -9620,6 +9737,7 @@
     "lon": 18.732207,
     "capital": "N'Djamena",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇩",
     "geometry": {
       "type": "Polygon",
@@ -9859,7 +9977,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צ'אד",
+    "hebrewCapital": "נג'מנה"
   },
   {
     "name": "Chile",
@@ -9869,6 +9989,7 @@
     "lon": -71.542969,
     "capital": "Santiago",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇨🇱",
     "geometry": {
       "type": "MultiPolygon",
@@ -10338,7 +10459,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צ'ילה",
+    "hebrewCapital": "סנטיאגו"
   },
   {
     "name": "China",
@@ -10349,6 +10472,7 @@
     "zoom": 70,
     "capital": "Beijing",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇨🇳",
     "geometry": {
       "type": "MultiPolygon",
@@ -11322,7 +11446,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סִין",
+    "hebrewCapital": "בייג'ינג"
   },
   {
     "name": "Colombia",
@@ -11332,6 +11458,7 @@
     "lon": -74.297333,
     "capital": "Bogota",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇨🇴",
     "geometry": {
       "type": "Polygon",
@@ -11739,7 +11866,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קולומביה",
+    "hebrewCapital": "בוגוטה"
   },
   {
     "name": "Comoros",
@@ -11749,7 +11878,10 @@
     "lon": 43.872219,
     "capital": "Moroni",
     "continent": "Africa",
-    "emoji": "🇰🇲"
+    "hebrewContinent": "אפריקה",
+    "emoji": "🇰🇲",
+    "hebrewName": "קומורוס",
+    "hebrewCapital": "מורוני"
   },
   {
     "name": "Cook Islands",
@@ -11759,7 +11891,10 @@
     "lon": -159.777671,
     "capital": "Avarua",
     "continent": "Oceania",
-    "emoji": "🇨🇰"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇨🇰",
+    "hebrewName": "איי קוק",
+    "hebrewCapital": "אבארואה"
   },
   {
     "name": "Costa Rica",
@@ -11769,6 +11904,7 @@
     "lon": -83.753428,
     "capital": "San Jose",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇨🇷",
     "geometry": {
       "type": "Polygon",
@@ -11920,7 +12056,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קוסטה ריקה",
+    "hebrewCapital": "סן חוזה"
   },
   {
     "name": "Croatia",
@@ -11930,6 +12068,7 @@
     "lon": 15.2,
     "capital": "Zagreb",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇭🇷",
     "geometry": {
       "type": "Polygon",
@@ -12109,7 +12248,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קרואטיה",
+    "hebrewCapital": "זאגרב"
   },
   {
     "name": "Cuba",
@@ -12119,6 +12260,7 @@
     "lon": -77.781167,
     "capital": "Havana",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇨🇺",
     "geometry": {
       "type": "Polygon",
@@ -12294,7 +12436,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קובה",
+    "hebrewCapital": "הוואנה"
   },
   {
     "name": "Curacao",
@@ -12304,7 +12448,10 @@
     "lon": -68.9495816,
     "capital": "Willemstad",
     "continent": "North America",
-    "emoji": "🇨🇼"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇨🇼",
+    "hebrewName": "Curacao",
+    "hebrewCapital": "וילמסטאד"
   },
   {
     "name": "Cyprus",
@@ -12314,6 +12461,7 @@
     "lon": 33.429859,
     "capital": "Nicosia",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇨🇾",
     "geometry": {
       "type": "Polygon",
@@ -12381,7 +12529,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קַפרִיסִין",
+    "hebrewCapital": "ניקוסיה"
   },
   {
     "name": "Czech Republic",
@@ -12391,6 +12541,7 @@
     "lon": 15.472962,
     "capital": "Prague",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇨🇿",
     "geometry": {
       "type": "Polygon",
@@ -12538,7 +12689,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צ'כיה",
+    "hebrewCapital": "פראג"
   },
   {
     "name": "Denmark",
@@ -12548,6 +12701,7 @@
     "lon": 9.501785,
     "capital": "Copenhagen",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇩🇰",
     "geometry": {
       "type": "MultiPolygon",
@@ -12657,7 +12811,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "דנמרק",
+    "hebrewCapital": "קופנהגן"
   },
   {
     "name": "Djibouti",
@@ -12667,6 +12823,7 @@
     "lon": 42.590275,
     "capital": "Djibouti",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇩🇯",
     "geometry": {
       "type": "Polygon",
@@ -12734,7 +12891,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ג'יבוטי",
+    "hebrewCapital": "ג'יבוטי"
   },
   {
     "name": "Dominica",
@@ -12744,7 +12903,10 @@
     "lon": -61.370976,
     "capital": "Roseau",
     "continent": "North America",
-    "emoji": "🇩🇲"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇩🇲",
+    "hebrewName": "דומיניקה",
+    "hebrewCapital": "רוזו"
   },
   {
     "name": "Dominican Republic",
@@ -12754,6 +12916,7 @@
     "lon": -70.162651,
     "capital": "Santo Domingo",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇩🇴",
     "geometry": {
       "type": "Polygon",
@@ -12865,7 +13028,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הרפובליקה הדומיניקנית",
+    "hebrewCapital": "סנטו דומינגו"
   },
   {
     "name": "DR Congo",
@@ -12875,6 +13040,7 @@
     "lon": 21.758664,
     "capital": "Kinshasa",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇩",
     "geometry": {
       "type": "Polygon",
@@ -13378,7 +13544,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ד\"ר קונגו",
+    "hebrewCapital": "קינשאסה"
   },
   {
     "name": "Ecuador",
@@ -13388,6 +13556,7 @@
     "lon": -78.183406,
     "capital": "Quito",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇪🇨",
     "geometry": {
       "type": "Polygon",
@@ -13527,7 +13696,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אקוודור",
+    "hebrewCapital": "קיטו"
   },
   {
     "name": "Egypt",
@@ -13537,6 +13708,7 @@
     "lon": 30.802498,
     "capital": "Cairo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇬",
     "geometry": {
       "type": "Polygon",
@@ -13720,7 +13892,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מִצְרַיִם",
+    "hebrewCapital": "קהיר"
   },
   {
     "name": "El Salvador",
@@ -13730,6 +13904,7 @@
     "lon": -88.89653,
     "capital": "San Salvador",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇸🇻",
     "geometry": {
       "type": "Polygon",
@@ -13817,7 +13992,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אל סלבדור",
+    "hebrewCapital": "סן סלבדור"
   },
   {
     "name": "Equatorial Guinea",
@@ -13827,6 +14004,7 @@
     "lon": 10.267895,
     "capital": "Malabo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇶",
     "geometry": {
       "type": "Polygon",
@@ -13862,7 +14040,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גינאה המשוונית",
+    "hebrewCapital": "מלאבו"
   },
   {
     "name": "Eritrea",
@@ -13872,6 +14052,7 @@
     "lon": 39.782334,
     "capital": "Asmara",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇷",
     "geometry": {
       "type": "Polygon",
@@ -13991,7 +14172,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אריתריאה",
+    "hebrewCapital": "אסמרה"
   },
   {
     "name": "Estonia",
@@ -14001,6 +14184,7 @@
     "lon": 25.013607,
     "capital": "Tallinn",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇪🇪",
     "geometry": {
       "type": "Polygon",
@@ -14084,7 +14268,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אסטוניה",
+    "hebrewCapital": "טאלין"
   },
   {
     "name": "Eswatini",
@@ -14094,6 +14280,7 @@
     "lon": 31.4629694,
     "capital": "Mbabane",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇿",
     "geometry": {
       "type": "Polygon",
@@ -14145,7 +14332,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אסוואטיני",
+    "hebrewCapital": "מבאבאנא"
   },
   {
     "name": "Ethiopia",
@@ -14155,6 +14344,7 @@
     "lon": 40.489673,
     "capital": "Addis Ababa",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇹",
     "geometry": {
       "type": "Polygon",
@@ -14398,7 +14588,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אֶתִיוֹפִּיָה",
+    "hebrewCapital": "אדיס אבבה"
   },
   {
     "name": "Falkland Islands",
@@ -14408,6 +14600,7 @@
     "lon": -59.523613,
     "capital": "Stanley",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇫🇰",
     "geometry": {
       "type": "Polygon",
@@ -14455,7 +14648,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "איי פוקלנד",
+    "hebrewCapital": "סטנלי"
   },
   {
     "name": "Faroe Islands",
@@ -14465,7 +14660,10 @@
     "lon": -6.911806,
     "capital": "Torshavn",
     "continent": "Europe",
-    "emoji": "🇫🇴"
+    "hebrewContinent": "אירופה",
+    "emoji": "🇫🇴",
+    "hebrewName": "איי פארו",
+    "hebrewCapital": "טורסהאבן"
   },
   {
     "name": "Fiji",
@@ -14475,6 +14673,7 @@
     "lon": 179.414413,
     "capital": "Suva",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇫🇯",
     "geometry": {
       "type": "MultiPolygon",
@@ -14580,7 +14779,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פיג'י",
+    "hebrewCapital": "סובה"
   },
   {
     "name": "Finland",
@@ -14590,6 +14791,7 @@
     "lon": 25.748151,
     "capital": "Helsinki",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇫🇮",
     "geometry": {
       "type": "Polygon",
@@ -14757,7 +14959,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פינלנד",
+    "hebrewCapital": "הלסינקי"
   },
   {
     "name": "France",
@@ -14767,6 +14971,7 @@
     "lon": 2.213749,
     "capital": "Paris",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇫🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -15080,7 +15285,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צָרְפַת",
+    "hebrewCapital": "פריז"
   },
   {
     "name": "French Guiana",
@@ -15090,7 +15297,10 @@
     "lon": -53.125782,
     "capital": "Cayenne",
     "continent": "South America",
-    "emoji": "🇬🇫"
+    "hebrewContinent": "דרום אמריקה",
+    "emoji": "🇬🇫",
+    "hebrewName": "גיאנה הצרפתית",
+    "hebrewCapital": "קאיין"
   },
   {
     "name": "French Polynesia",
@@ -15100,7 +15310,10 @@
     "lon": -149.406843,
     "capital": "Papeetē",
     "continent": "Oceania",
-    "emoji": "🇵🇫"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇵🇫",
+    "hebrewName": "פולינזיה צרפתית",
+    "hebrewCapital": "פאפיט"
   },
   {
     "name": "Gabon",
@@ -15110,6 +15323,7 @@
     "lon": 11.609444,
     "capital": "Libreville",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇦",
     "geometry": {
       "type": "Polygon",
@@ -15241,7 +15455,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גבון",
+    "hebrewCapital": "ליברוויל"
   },
   {
     "name": "Gambia",
@@ -15251,6 +15467,7 @@
     "lon": -15.310139,
     "capital": "Banjul",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇲",
     "geometry": {
       "type": "Polygon",
@@ -15322,7 +15539,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גמביה",
+    "hebrewCapital": "בנג'ול"
   },
   {
     "name": "Georgia",
@@ -15332,6 +15551,7 @@
     "lon": 43.356892,
     "capital": "Tbilisi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇬🇪",
     "geometry": {
       "type": "Polygon",
@@ -15435,7 +15655,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ג'ורג'יה",
+    "hebrewCapital": "טביליסי"
   },
   {
     "name": "Germany",
@@ -15445,6 +15667,7 @@
     "lon": 10.451526,
     "capital": "Berlin",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇩🇪",
     "geometry": {
       "type": "Polygon",
@@ -15684,7 +15907,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גֶרמָנִיָה",
+    "hebrewCapital": "ברלין"
   },
   {
     "name": "Ghana",
@@ -15694,6 +15919,7 @@
     "lon": -1.023194,
     "capital": "Accra",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇭",
     "geometry": {
       "type": "Polygon",
@@ -15801,7 +16027,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גאנה",
+    "hebrewCapital": "אקרה"
   },
   {
     "name": "Gibraltar",
@@ -15811,7 +16039,10 @@
     "lon": -5.345374,
     "capital": "Gibraltar",
     "continent": "Europe",
-    "emoji": "🇬🇮"
+    "hebrewContinent": "אירופה",
+    "emoji": "🇬🇮",
+    "hebrewName": "גיברלטר",
+    "hebrewCapital": "גיברלטר"
   },
   {
     "name": "Greece",
@@ -15821,6 +16052,7 @@
     "lon": 21.824312,
     "capital": "Athens",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇬🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -16050,7 +16282,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "יָוָן",
+    "hebrewCapital": "אַתוּנָה"
   },
   {
     "name": "Greenland",
@@ -16060,6 +16294,7 @@
     "lon": -42.604303,
     "capital": "Nuuk",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇬🇱",
     "geometry": {
       "type": "Polygon",
@@ -16595,7 +16830,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גרינלנד",
+    "hebrewCapital": "נוק"
   },
   {
     "name": "Grenada",
@@ -16605,7 +16842,10 @@
     "lon": -61.604171,
     "capital": "Saint George's",
     "continent": "North America",
-    "emoji": "🇬🇩"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇬🇩",
+    "hebrewName": "גרנדה",
+    "hebrewCapital": "סנט ג'ורג'"
   },
   {
     "name": "Guadeloupe",
@@ -16615,7 +16855,10 @@
     "lon": -62.067641,
     "capital": "Basse-Terre",
     "continent": "North America",
-    "emoji": "🇬🇵"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇬🇵",
+    "hebrewName": "Guadeloupe",
+    "hebrewCapital": "באסה-טרה"
   },
   {
     "name": "Guam",
@@ -16625,7 +16868,10 @@
     "lon": 144.793731,
     "capital": "Hagåtña",
     "continent": "Oceania",
-    "emoji": "🇬🇺"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇬🇺",
+    "hebrewName": "גואם",
+    "hebrewCapital": "האגאטניה"
   },
   {
     "name": "Guatemala",
@@ -16635,6 +16881,7 @@
     "lon": -90.230759,
     "capital": "Guatemala City",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇬🇹",
     "geometry": {
       "type": "Polygon",
@@ -16782,7 +17029,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גואטמלה",
+    "hebrewCapital": "גואטמלה סיטי"
   },
   {
     "name": "Guernsey",
@@ -16792,7 +17041,10 @@
     "lon": -2.585278,
     "capital": "St. Peter Port",
     "continent": "Europe",
-    "emoji": "🇬🇬"
+    "hebrewContinent": "אירופה",
+    "emoji": "🇬🇬",
+    "hebrewName": "גרנזי",
+    "hebrewCapital": "סיינט פיטר פורט"
   },
   {
     "name": "Guinea",
@@ -16802,6 +17054,7 @@
     "lon": -9.696645,
     "capital": "Conakry",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇳",
     "geometry": {
       "type": "Polygon",
@@ -17089,7 +17342,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גינאה",
+    "hebrewCapital": "קונאקרי"
   },
   {
     "name": "Guinea Bissau",
@@ -17099,6 +17354,7 @@
     "lon": -15.180413,
     "capital": "Bissau",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇼",
     "geometry": {
       "type": "Polygon",
@@ -17182,7 +17438,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גינאה ביסאו",
+    "hebrewCapital": "ביסאו"
   },
   {
     "name": "Guyana",
@@ -17192,6 +17450,7 @@
     "lon": -58.93018,
     "capital": "Georgetown",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇬🇾",
     "geometry": {
       "type": "Polygon",
@@ -17359,7 +17618,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "גיאנה",
+    "hebrewCapital": "ג'ורג'טאון"
   },
   {
     "name": "Haiti",
@@ -17369,6 +17630,7 @@
     "lon": -72.285215,
     "capital": "Port au Prince",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇭🇹",
     "geometry": {
       "type": "Polygon",
@@ -17460,7 +17722,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "האיטי",
+    "hebrewCapital": "פורט או פרינס"
   },
   {
     "name": "Honduras",
@@ -17470,6 +17734,7 @@
     "lon": -86.241905,
     "capital": "Tegucigalpa",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇭🇳",
     "geometry": {
       "type": "Polygon",
@@ -17705,7 +17970,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הונדורס",
+    "hebrewCapital": "טגוסיגאלפה"
   },
   {
     "name": "Hong Kong",
@@ -17715,7 +17982,10 @@
     "lon": 114.109497,
     "capital": "City of Victoria",
     "continent": "Asia",
-    "emoji": "🇭🇰"
+    "hebrewContinent": "אסיה",
+    "emoji": "🇭🇰",
+    "hebrewName": "הונג קונג",
+    "hebrewCapital": "סיטי אוף ויקטוריה"
   },
   {
     "name": "Hungary",
@@ -17725,6 +17995,7 @@
     "lon": 19.503304,
     "capital": "Budapest",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇭🇺",
     "geometry": {
       "type": "Polygon",
@@ -17860,7 +18131,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הונגריה",
+    "hebrewCapital": "בודפשט"
   },
   {
     "name": "Iceland",
@@ -17870,6 +18143,7 @@
     "lon": -19.020835,
     "capital": "Reykjavik",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇮🇸",
     "geometry": {
       "type": "Polygon",
@@ -17957,7 +18231,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אִיסלַנד",
+    "hebrewCapital": "רייקיאוויק"
   },
   {
     "name": "India",
@@ -17968,6 +18244,7 @@
     "zoom": 50,
     "capital": "New Delhi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇳",
     "geometry": {
       "type": "Polygon",
@@ -18519,7 +18796,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הוֹדוּ",
+    "hebrewCapital": "ניו דלהי"
   },
   {
     "name": "Indonesia",
@@ -18529,6 +18808,7 @@
     "lon": 113.921327,
     "capital": "Jakarta",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇩",
     "geometry": {
       "type": "MultiPolygon",
@@ -19586,7 +19866,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אִינדוֹנֵזִיָה",
+    "hebrewCapital": "ג'קרטה"
   },
   {
     "name": "Iran",
@@ -19596,6 +19878,7 @@
     "lon": 53.688046,
     "capital": "Tehran",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇷",
     "geometry": {
       "type": "Polygon",
@@ -19907,7 +20190,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "איראן",
+    "hebrewCapital": "טהרן"
   },
   {
     "name": "Iraq",
@@ -19917,6 +20202,7 @@
     "lon": 43.679291,
     "capital": "Baghdad",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇶",
     "geometry": {
       "type": "Polygon",
@@ -20044,7 +20330,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "עִירַאק",
+    "hebrewCapital": "בגדאד"
   },
   {
     "name": "Ireland",
@@ -20054,6 +20342,7 @@
     "lon": -8.24389,
     "capital": "Dublin",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇮🇪",
     "geometry": {
       "type": "Polygon",
@@ -20113,7 +20402,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אירלנד",
+    "hebrewCapital": "דבלין"
   },
   {
     "name": "Isle of Man",
@@ -20123,7 +20414,10 @@
     "lon": -4.548056,
     "capital": "Douglas",
     "continent": "Europe",
-    "emoji": "🇮🇲"
+    "hebrewContinent": "אירופה",
+    "emoji": "🇮🇲",
+    "hebrewName": "האי מאדם",
+    "hebrewCapital": "דגלס"
   },
   {
     "name": "Israel",
@@ -20133,6 +20427,7 @@
     "lon": 34.851612,
     "capital": "Jerusalem",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇱",
     "geometry": {
       "type": "Polygon",
@@ -20244,7 +20539,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "יִשְׂרָאֵל",
+    "hebrewCapital": "ירושלים"
   },
   {
     "name": "Italy",
@@ -20254,6 +20551,7 @@
     "lon": 12.56738,
     "capital": "Rome",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇮🇹",
     "geometry": {
       "type": "MultiPolygon",
@@ -20619,7 +20917,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אִיטַלִיָה",
+    "hebrewCapital": "רומא"
   },
   {
     "name": "Ivory Coast",
@@ -20629,6 +20929,7 @@
     "lon": -5.54708,
     "capital": "Yamoussoukro",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇮",
     "geometry": {
       "type": "Polygon",
@@ -20820,7 +21121,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "חוף שנהב",
+    "hebrewCapital": "יאמוסוקרו"
   },
   {
     "name": "Jamaica",
@@ -20830,6 +21133,7 @@
     "lon": -77.297508,
     "capital": "Kingston",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇯🇲",
     "geometry": {
       "type": "Polygon",
@@ -20881,7 +21185,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ג'מייקה",
+    "hebrewCapital": "קינגסטון"
   },
   {
     "name": "Japan",
@@ -20891,6 +21197,7 @@
     "lon": 138.252924,
     "capital": "Tokyo",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇯🇵",
     "geometry": {
       "type": "MultiPolygon",
@@ -21168,7 +21475,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "יַפָּן",
+    "hebrewCapital": "טוקיו"
   },
   {
     "name": "Jersey",
@@ -21178,7 +21487,10 @@
     "lon": -2.13125,
     "capital": "St Helier",
     "continent": "Europe",
-    "emoji": "🇯🇪"
+    "hebrewContinent": "אירופה",
+    "emoji": "🇯🇪",
+    "hebrewName": "ג'רזי",
+    "hebrewCapital": "סיינט הלייר"
   },
   {
     "name": "Jordan",
@@ -21188,6 +21500,7 @@
     "lon": 36.238414,
     "capital": "Amman",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇯🇴",
     "geometry": {
       "type": "Polygon",
@@ -21271,7 +21584,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "יַרדֵן",
+    "hebrewCapital": "עמאן"
   },
   {
     "name": "Kazakhstan",
@@ -21281,6 +21596,7 @@
     "lon": 66.923684,
     "capital": "Astana",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇿",
     "geometry": {
       "type": "Polygon",
@@ -21736,7 +22052,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קזחסטן",
+    "hebrewCapital": "אסטנה"
   },
   {
     "name": "Kenya",
@@ -21746,6 +22064,7 @@
     "lon": 37.906193,
     "capital": "Nairobi",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇰🇪",
     "geometry": {
       "type": "Polygon",
@@ -21901,7 +22220,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קניה",
+    "hebrewCapital": "ניירובי"
   },
   {
     "name": "Kiribati",
@@ -21911,7 +22232,10 @@
     "lon": -168.734039,
     "capital": "Tarawa Atoll",
     "continent": "Oceania",
-    "emoji": "🇰🇮"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇰🇮",
+    "hebrewName": "קיריבטי",
+    "hebrewCapital": "טארוואה"
   },
   {
     "name": "Kosovo",
@@ -21920,6 +22244,7 @@
     "lon": 20.902977,
     "capital": "Prishtina",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇽🇰",
     "geometry": {
       "type": "Polygon",
@@ -22019,7 +22344,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קוסובו",
+    "hebrewCapital": "פרישטינה"
   },
   {
     "name": "Kuwait",
@@ -22029,6 +22356,7 @@
     "lon": 47.481766,
     "capital": "Kuwait City",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇼",
     "geometry": {
       "type": "Polygon",
@@ -22072,7 +22400,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "כווית",
+    "hebrewCapital": "כווית סיטי"
   },
   {
     "name": "Kyrgyzstan",
@@ -22082,6 +22412,7 @@
     "lon": 74.766098,
     "capital": "Bishkek",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇬",
     "geometry": {
       "type": "Polygon",
@@ -22229,7 +22560,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קירגיזסטן",
+    "hebrewCapital": "בישקק"
   },
   {
     "name": "Laos",
@@ -22239,6 +22572,7 @@
     "lon": 102.495496,
     "capital": "Vientiane",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇱🇦",
     "geometry": {
       "type": "Polygon",
@@ -22394,7 +22728,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "לאוס",
+    "hebrewCapital": "ויינטיאן"
   },
   {
     "name": "Latvia",
@@ -22404,6 +22740,7 @@
     "lon": 24.603189,
     "capital": "Riga",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇱🇻",
     "geometry": {
       "type": "Polygon",
@@ -22499,7 +22836,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "לטביה",
+    "hebrewCapital": "ריגה"
   },
   {
     "name": "Lebanon",
@@ -22509,6 +22848,7 @@
     "lon": 35.862285,
     "capital": "Beirut",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇱🇧",
     "geometry": {
       "type": "Polygon",
@@ -22560,7 +22900,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "לבנון",
+    "hebrewCapital": "ביירות"
   },
   {
     "name": "Lesotho",
@@ -22570,6 +22912,7 @@
     "lon": 28.233608,
     "capital": "Maseru",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇱🇸",
     "geometry": {
       "type": "Polygon",
@@ -22625,7 +22968,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "לסוטו",
+    "hebrewCapital": "מסרו"
   },
   {
     "name": "Liberia",
@@ -22635,6 +22980,7 @@
     "lon": -9.429499,
     "capital": "Monrovia",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇱🇷",
     "geometry": {
       "type": "Polygon",
@@ -22750,7 +23096,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ליבריה",
+    "hebrewCapital": "מונרוביה"
   },
   {
     "name": "Libya",
@@ -22760,6 +23108,7 @@
     "lon": 17.228331,
     "capital": "Tripoli",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇱🇾",
     "geometry": {
       "type": "Polygon",
@@ -22991,7 +23340,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "לוב",
+    "hebrewCapital": "טריפולי"
   },
   {
     "name": "Liechtenstein",
@@ -23001,7 +23352,10 @@
     "lon": 9.555373,
     "capital": "Vaduz",
     "continent": "Europe",
-    "emoji": "🇱🇮"
+    "hebrewContinent": "אירופה",
+    "emoji": "🇱🇮",
+    "hebrewName": "ליכטנשטיין",
+    "hebrewCapital": "ואדוז"
   },
   {
     "name": "Lithuania",
@@ -23011,6 +23365,7 @@
     "lon": 23.881275,
     "capital": "Vilnius",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇱🇹",
     "geometry": {
       "type": "Polygon",
@@ -23094,7 +23449,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ליטא",
+    "hebrewCapital": "וילנה"
   },
   {
     "name": "Luxembourg",
@@ -23104,6 +23461,7 @@
     "lon": 6.129583,
     "capital": "Luxembourg",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇱🇺",
     "geometry": {
       "type": "Polygon",
@@ -23139,7 +23497,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "לוקסמבורג",
+    "hebrewCapital": "לוקסמבורג סיטי"
   },
   {
     "name": "Macau",
@@ -23148,7 +23508,9 @@
     "lat": 22.198745,
     "lon": 113.543873,
     "continent": "Asia",
-    "emoji": "🇲🇴"
+    "hebrewContinent": "אסיה",
+    "emoji": "🇲🇴",
+    "hebrewName": "מקאו"
   },
   {
     "name": "Madagascar",
@@ -23158,6 +23520,7 @@
     "lon": 46.869107,
     "capital": "Antananarivo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇬",
     "geometry": {
       "type": "Polygon",
@@ -23361,7 +23724,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מדגסקר",
+    "hebrewCapital": "אנטננריבו"
   },
   {
     "name": "Malawi",
@@ -23371,6 +23736,7 @@
     "lon": 34.301525,
     "capital": "Lilongwe",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇼",
     "geometry": {
       "type": "Polygon",
@@ -23490,7 +23856,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מלאווי",
+    "hebrewCapital": "לילונגווה"
   },
   {
     "name": "Malaysia",
@@ -23500,6 +23868,7 @@
     "lon": 101.975766,
     "capital": "Kuala Lumpur",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇾",
     "geometry": {
       "type": "MultiPolygon",
@@ -23761,7 +24130,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מלזיה",
+    "hebrewCapital": "קואלה לומפור"
   },
   {
     "name": "Maldives",
@@ -23771,7 +24142,10 @@
     "lon": 73.22068,
     "capital": "Male",
     "continent": "Asia",
-    "emoji": "🇲🇻"
+    "hebrewContinent": "אסיה",
+    "emoji": "🇲🇻",
+    "hebrewName": "המלדיביים",
+    "hebrewCapital": "מאלה"
   },
   {
     "name": "Mali",
@@ -23781,6 +24155,7 @@
     "lon": -3.996166,
     "capital": "Bamako",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇱",
     "geometry": {
       "type": "Polygon",
@@ -24092,7 +24467,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מלי",
+    "hebrewCapital": "במקו"
   },
   {
     "name": "Malta",
@@ -24103,6 +24480,7 @@
     "zoom": 20,
     "capital": "Valletta",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇹",
     "geometry": {
       "type": "MultiPolygon",
@@ -24164,7 +24542,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מלטה",
+    "hebrewCapital": "ולטה"
   },
   {
     "name": "Marshall Islands",
@@ -24174,7 +24554,10 @@
     "lon": 171.184478,
     "capital": "Majuro",
     "continent": "Oceania",
-    "emoji": "🇲🇭"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇲🇭",
+    "hebrewName": "איי מרשל",
+    "hebrewCapital": "מג'ורו"
   },
   {
     "name": "Martinique",
@@ -24184,7 +24567,10 @@
     "lon": -61.024174,
     "capital": "Fort de France",
     "continent": "North America",
-    "emoji": "🇲🇶"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇲🇶",
+    "hebrewName": "מרטיניק",
+    "hebrewCapital": "פור דה פרנס"
   },
   {
     "name": "Mauritania",
@@ -24194,6 +24580,7 @@
     "lon": -10.940835,
     "capital": "Nouakchott",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇷",
     "geometry": {
       "type": "Polygon",
@@ -24357,7 +24744,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מאוריטניה",
+    "hebrewCapital": "נואקשוט"
   },
   {
     "name": "Mauritius",
@@ -24367,7 +24756,10 @@
     "lon": 57.552152,
     "capital": "Port Louis",
     "continent": "Africa",
-    "emoji": "🇲🇺"
+    "hebrewContinent": "אפריקה",
+    "emoji": "🇲🇺",
+    "hebrewName": "מאוריציוס",
+    "hebrewCapital": "פורט לואי"
   },
   {
     "name": "Mayotte",
@@ -24377,7 +24769,10 @@
     "lon": 45.166244,
     "capital": "Mamoudzou",
     "continent": "Africa",
-    "emoji": "🇾🇹"
+    "hebrewContinent": "אפריקה",
+    "emoji": "🇾🇹",
+    "hebrewName": "מיוט",
+    "hebrewCapital": "ממודזו"
   },
   {
     "name": "Mexico",
@@ -24387,6 +24782,7 @@
     "lon": -102.552784,
     "capital": "Mexico City",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇲🇽",
     "geometry": {
       "type": "Polygon",
@@ -25074,7 +25470,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מקסיקו",
+    "hebrewCapital": "מקסיקו סיטי"
   },
   {
     "name": "Micronesia",
@@ -25084,7 +25482,10 @@
     "lon": 150.550812,
     "capital": "Palikir",
     "continent": "Oceania",
-    "emoji": "🇫🇲"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇫🇲",
+    "hebrewName": "מיקרונזיה",
+    "hebrewCapital": "פליקיר"
   },
   {
     "name": "Moldova",
@@ -25094,6 +25495,7 @@
     "lon": 28.369885,
     "capital": "Chisinau",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇩",
     "geometry": {
       "type": "Polygon",
@@ -25209,7 +25611,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מולדובה",
+    "hebrewCapital": "קישינב"
   },
   {
     "name": "Monaco",
@@ -25220,6 +25624,7 @@
     "zoom": 20,
     "capital": "Monaco",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇨",
     "geometry": {
       "type": "Polygon",
@@ -25259,7 +25664,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מונאקו",
+    "hebrewCapital": "מונאקו"
   },
   {
     "name": "Mongolia",
@@ -25269,6 +25676,7 @@
     "lon": 103.846656,
     "capital": "Ulaanbaatar",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇳",
     "geometry": {
       "type": "Polygon",
@@ -25576,7 +25984,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מונגוליה",
+    "hebrewCapital": "אולאן בטור"
   },
   {
     "name": "Montenegro",
@@ -25586,6 +25996,7 @@
     "lon": 19.37439,
     "capital": "Podgorica",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇪",
     "geometry": {
       "type": "Polygon",
@@ -25665,7 +26076,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מונטנגרו",
+    "hebrewCapital": "פודגוריצה"
   },
   {
     "name": "Montserrat",
@@ -25675,7 +26088,10 @@
     "lon": -62.187366,
     "capital": "Plymouth",
     "continent": "North America",
-    "emoji": "🇲🇸"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇲🇸",
+    "hebrewName": "מונטסראט",
+    "hebrewCapital": "פלימות"
   },
   {
     "name": "Morocco",
@@ -25685,6 +26101,7 @@
     "lon": -7.09262,
     "capital": "Rabat",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇦",
     "geometry": {
       "type": "Polygon",
@@ -25944,7 +26361,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מָרוֹקוֹ",
+    "hebrewCapital": "רבאט"
   },
   {
     "name": "Mozambique",
@@ -25954,6 +26373,7 @@
     "lon": 35.529562,
     "capital": "Maputo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇿",
     "geometry": {
       "type": "Polygon",
@@ -26277,7 +26697,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מוזמביק",
+    "hebrewCapital": "מפוטו"
   },
   {
     "name": "Myanmar",
@@ -26287,6 +26709,7 @@
     "lon": 95.956223,
     "capital": "Nay Pyi Taw",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇲",
     "geometry": {
       "type": "Polygon",
@@ -26574,7 +26997,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מיאנמר",
+    "hebrewCapital": "נייפידאו"
   },
   {
     "name": "Namibia",
@@ -26584,6 +27009,7 @@
     "lon": 18.49041,
     "capital": "Windhoek",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇳🇦",
     "geometry": {
       "type": "Polygon",
@@ -26767,7 +27193,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "נמיביה",
+    "hebrewCapital": "וינדהוק"
   },
   {
     "name": "Nauru",
@@ -26776,7 +27204,9 @@
     "lat": -0.522778,
     "lon": 166.931503,
     "continent": "Oceania",
-    "emoji": "🇳🇷"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇳🇷",
+    "hebrewName": "נאורו"
   },
   {
     "name": "Nepal",
@@ -26786,6 +27216,7 @@
     "lon": 84.124008,
     "capital": "Kathmandu",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇳🇵",
     "geometry": {
       "type": "Polygon",
@@ -26885,7 +27316,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "נפאל",
+    "hebrewCapital": "קטמנדו"
   },
   {
     "name": "Netherlands",
@@ -26895,6 +27328,7 @@
     "lon": 5.291266,
     "capital": "Amsterdam",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇳🇱",
     "geometry": {
       "type": "Polygon",
@@ -26962,7 +27396,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הוֹלַנד",
+    "hebrewCapital": "אמסטרדם"
   },
   {
     "name": "New Caledonia",
@@ -26972,6 +27408,7 @@
     "lon": 165.618042,
     "capital": "Noumea",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇳🇨",
     "geometry": {
       "type": "Polygon",
@@ -27031,7 +27468,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קלדוניה החדשה",
+    "hebrewCapital": "נומיאה"
   },
   {
     "name": "New Zealand",
@@ -27041,6 +27480,7 @@
     "lon": 174.885971,
     "capital": "Wellington",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇳🇿",
     "geometry": {
       "type": "MultiPolygon",
@@ -27318,7 +27758,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניו זילנד",
+    "hebrewCapital": "ולינגטון"
   },
   {
     "name": "Nicaragua",
@@ -27328,6 +27770,7 @@
     "lon": -85.207229,
     "capital": "Managua",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇳🇮",
     "geometry": {
       "type": "Polygon",
@@ -27543,7 +27986,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניקרגואה",
+    "hebrewCapital": "מנגואה"
   },
   {
     "name": "Niger",
@@ -27553,6 +27998,7 @@
     "lon": 8.081666,
     "capital": "Niamey",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇳🇪",
     "geometry": {
       "type": "Polygon",
@@ -27792,7 +28238,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניז'ר",
+    "hebrewCapital": "ניאמיי"
   },
   {
     "name": "Nigeria",
@@ -27802,6 +28250,7 @@
     "lon": 8.675277,
     "capital": "Abuja",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇳🇬",
     "geometry": {
       "type": "Polygon",
@@ -28041,7 +28490,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניגריה",
+    "hebrewCapital": "אבוג'ה"
   },
   {
     "name": "Niue",
@@ -28051,7 +28502,10 @@
     "lon": -169.867233,
     "capital": "Alofi",
     "continent": "Oceania",
-    "emoji": "🇳🇺"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇳🇺",
+    "hebrewName": "ניואה",
+    "hebrewCapital": "אלופי"
   },
   {
     "name": "North Korea",
@@ -28061,6 +28515,7 @@
     "lon": 127.510093,
     "capital": "Pyongyang",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇵",
     "geometry": {
       "type": "MultiPolygon",
@@ -28266,7 +28721,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צפון קוריאה",
+    "hebrewCapital": "פיונגיאנג"
   },
   {
     "name": "North Macedonia",
@@ -28276,6 +28733,7 @@
     "lon": 21.743258,
     "capital": "Skopje",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇰",
     "geometry": {
       "type": "Polygon",
@@ -28355,7 +28813,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צפון מקדוניה",
+    "hebrewCapital": "סקופיה"
   },
   {
     "name": "Northern Mariana Islands",
@@ -28365,7 +28825,10 @@
     "lon": 145.38469,
     "capital": "Saipan",
     "continent": "Oceania",
-    "emoji": "🇲🇵"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇲🇵",
+    "hebrewName": "איי צפון מריאנה",
+    "hebrewCapital": "סייפן"
   },
   {
     "name": "Norway",
@@ -28375,6 +28838,7 @@
     "lon": 8.468946,
     "capital": "Oslo",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇳🇴",
     "geometry": {
       "type": "MultiPolygon",
@@ -28748,7 +29212,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "נורווגיה",
+    "hebrewCapital": "אוסלו"
   },
   {
     "name": "Oman",
@@ -28758,6 +29224,7 @@
     "lon": 55.923255,
     "capital": "Muscat",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇴🇲",
     "geometry": {
       "type": "MultiPolygon",
@@ -28959,7 +29426,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "עומאן",
+    "hebrewCapital": "מוסקט"
   },
   {
     "name": "Pakistan",
@@ -28969,6 +29438,7 @@
     "lon": 69.345116,
     "capital": "Islamabad",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇵🇰",
     "geometry": {
       "type": "Polygon",
@@ -29240,7 +29710,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פקיסטן",
+    "hebrewCapital": "איסלמבאד"
   },
   {
     "name": "Palau",
@@ -29250,7 +29722,10 @@
     "lon": 134.58252,
     "capital": "Ngerulmud",
     "continent": "Oceania",
-    "emoji": "🇵🇼"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇵🇼",
+    "hebrewName": "פאלאו",
+    "hebrewCapital": "נגרולמוד"
   },
   {
     "name": "Panama",
@@ -29260,6 +29735,7 @@
     "lon": -80.782127,
     "capital": "Panama City",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇵🇦",
     "geometry": {
       "type": "Polygon",
@@ -29475,7 +29951,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פנמה",
+    "hebrewCapital": "פנמה סיטי"
   },
   {
     "name": "Papua New Guinea",
@@ -29485,6 +29963,7 @@
     "lon": 143.95555,
     "capital": "Port Moresby",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇵🇬",
     "geometry": {
       "type": "MultiPolygon",
@@ -29830,7 +30309,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פפואה גינאה החדשה",
+    "hebrewCapital": "פורט מורסבי"
   },
   {
     "name": "Paraguay",
@@ -29840,6 +30321,7 @@
     "lon": -58.443832,
     "capital": "Asuncion",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇵🇾",
     "geometry": {
       "type": "Polygon",
@@ -29979,7 +30461,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פרגוואי",
+    "hebrewCapital": "אסונסיון"
   },
   {
     "name": "Peru",
@@ -29989,6 +30473,7 @@
     "lon": -75.015152,
     "capital": "Lima",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇵🇪",
     "geometry": {
       "type": "Polygon",
@@ -30300,7 +30785,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פרו",
+    "hebrewCapital": "לימה"
   },
   {
     "name": "Philippines",
@@ -30310,6 +30797,7 @@
     "lon": 121.774017,
     "capital": "Manila",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇵🇭",
     "geometry": {
       "type": "MultiPolygon",
@@ -30783,7 +31271,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הפיליפינים",
+    "hebrewCapital": "מנילה"
   },
   {
     "name": "Poland",
@@ -30793,6 +31283,7 @@
     "lon": 19.145136,
     "capital": "Warsaw",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇵🇱",
     "geometry": {
       "type": "Polygon",
@@ -30980,7 +31471,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פּוֹלִין",
+    "hebrewCapital": "ורשה"
   },
   {
     "name": "Portugal",
@@ -30990,6 +31483,7 @@
     "lon": -8.224454,
     "capital": "Lisbon",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇵🇹",
     "geometry": {
       "type": "Polygon",
@@ -31129,7 +31623,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פּוֹרטוּגָל",
+    "hebrewCapital": "ליסבון"
   },
   {
     "name": "Puerto Rico",
@@ -31139,6 +31635,7 @@
     "lon": -66.590149,
     "capital": "San Juan",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇵🇷",
     "geometry": {
       "type": "Polygon",
@@ -31182,7 +31679,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פוארטו ריקו",
+    "hebrewCapital": "סן חואן"
   },
   {
     "name": "Qatar",
@@ -31192,6 +31691,7 @@
     "lon": 51.183884,
     "capital": "Doha",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇶🇦",
     "geometry": {
       "type": "Polygon",
@@ -31235,7 +31735,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קטאר",
+    "hebrewCapital": "דוחה"
   },
   {
     "name": "Republic of the Congo",
@@ -31245,6 +31747,7 @@
     "lon": 15.827659,
     "capital": "Brazzaville",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇬",
     "geometry": {
       "type": "Polygon",
@@ -31448,7 +31951,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הרפובליקה של קונגו",
+    "hebrewCapital": "ברזוויל"
   },
   {
     "name": "Reunion",
@@ -31458,7 +31963,10 @@
     "lon": 55.536384,
     "capital": "Saint-Denis",
     "continent": "Africa",
-    "emoji": "🇫🇷"
+    "hebrewContinent": "אפריקה",
+    "emoji": "🇫🇷",
+    "hebrewName": "ראוניון",
+    "hebrewCapital": "סיינט דניס"
   },
   {
     "name": "Romania",
@@ -31468,6 +31976,7 @@
     "lon": 24.96676,
     "capital": "Bucharest",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇷🇴",
     "geometry": {
       "type": "Polygon",
@@ -31651,7 +32160,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "רומניה",
+    "hebrewCapital": "בוקרשט"
   },
   {
     "name": "Russia",
@@ -31662,6 +32173,7 @@
     "zoom": 70,
     "capital": "Moscow",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇷🇺",
     "geometry": {
       "type": "MultiPolygon",
@@ -34223,7 +34735,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "רוּסִיָה",
+    "hebrewCapital": "מוסקבה"
   },
   {
     "name": "Rwanda",
@@ -34233,6 +34747,7 @@
     "lon": 29.873888,
     "capital": "Kigali",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇷🇼",
     "geometry": {
       "type": "Polygon",
@@ -34296,7 +34811,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "רואנדה",
+    "hebrewCapital": "קיגאלי"
   },
   {
     "name": "Saint Barthelemy",
@@ -34306,7 +34823,10 @@
     "lon": -62.8338521,
     "capital": "Gustavia",
     "continent": "North America",
-    "emoji": "🇧🇱"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇧🇱",
+    "hebrewName": "סנט ברטלמי",
+    "hebrewCapital": "גוסטביה"
   },
   {
     "name": "Saint Kitts and Nevis",
@@ -34316,7 +34836,10 @@
     "lon": -62.782998,
     "capital": "Basseterre",
     "continent": "North America",
-    "emoji": "🇰🇳"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇰🇳",
+    "hebrewName": "סנט קיטס ונביס",
+    "hebrewCapital": "בסטר"
   },
   {
     "name": "Saint Lucia",
@@ -34326,7 +34849,10 @@
     "lon": -60.978893,
     "capital": "Castries",
     "continent": "North America",
-    "emoji": "🇱🇨"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇱🇨",
+    "hebrewName": "סנט לוסיה",
+    "hebrewCapital": "קסטריז"
   },
   {
     "name": "Saint Martin",
@@ -34336,7 +34862,10 @@
     "lon": -63.0618597,
     "capital": "Marigot",
     "continent": "North America",
-    "emoji": "🇫🇷"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇫🇷",
+    "hebrewName": "סנט מרטין",
+    "hebrewCapital": "מריגוט"
   },
   {
     "name": "Saint Pierre and Miquelon",
@@ -34346,7 +34875,10 @@
     "lon": -56.27111,
     "capital": "Saint-Pierre",
     "continent": "North America",
-    "emoji": "🇵🇲"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇵🇲",
+    "hebrewName": "סנט פייר ומיקלון",
+    "hebrewCapital": "סנט פייר"
   },
   {
     "name": "Saint Vincent and the Grenadines",
@@ -34356,7 +34888,10 @@
     "lon": -61.287228,
     "capital": "Kingstown",
     "continent": "North America",
-    "emoji": "🇻🇨"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇻🇨",
+    "hebrewName": "סנט וינסנט והגרנדינים",
+    "hebrewCapital": "קינגסטאון"
   },
   {
     "name": "Samoa",
@@ -34366,7 +34901,10 @@
     "lon": -172.104629,
     "capital": "Apia",
     "continent": "Oceania",
-    "emoji": "🇼🇸"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇼🇸",
+    "hebrewName": "סמואה",
+    "hebrewCapital": "אפיה"
   },
   {
     "name": "San Marino",
@@ -34377,6 +34915,7 @@
     "zoom": 20,
     "capital": "San Marino",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇲",
     "geometry": {
       "type": "Polygon",
@@ -34432,7 +34971,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סן מרינו",
+    "hebrewCapital": "סן מרינו"
   },
   {
     "name": "Sao Tome and Principe",
@@ -34442,7 +34983,10 @@
     "lon": 6.613081,
     "capital": "Sao Tome",
     "continent": "Africa",
-    "emoji": "🇸🇹"
+    "hebrewContinent": "אפריקה",
+    "emoji": "🇸🇹",
+    "hebrewName": "סאו טומה ופרינסיפה",
+    "hebrewCapital": "סאו טומה"
   },
   {
     "name": "Saudi Arabia",
@@ -34452,6 +34996,7 @@
     "lon": 45.079162,
     "capital": "Riyadh",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇸🇦",
     "geometry": {
       "type": "Polygon",
@@ -34763,7 +35308,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סעודיה",
+    "hebrewCapital": "ריאד"
   },
   {
     "name": "Senegal",
@@ -34773,6 +35320,7 @@
     "lon": -14.452362,
     "capital": "Dakar",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇳",
     "geometry": {
       "type": "Polygon",
@@ -34956,7 +35504,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סנגל",
+    "hebrewCapital": "דקר"
   },
   {
     "name": "Serbia",
@@ -34966,6 +35516,7 @@
     "lon": 21.005859,
     "capital": "Belgrade",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇷🇸",
     "geometry": {
       "type": "Polygon",
@@ -35165,7 +35716,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סרביה",
+    "hebrewCapital": "בלגרד"
   },
   {
     "name": "Seychelles",
@@ -35175,6 +35728,7 @@
     "lon": 55.491977,
     "capital": "Victoria",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇨",
     "geometry": {
       "type": "MultiPolygon",
@@ -35256,7 +35810,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סיישל",
+    "hebrewCapital": "ויקטוריה"
   },
   {
     "name": "Sierra Leone",
@@ -35266,6 +35822,7 @@
     "lon": -11.779889,
     "capital": "Freetown",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇱",
     "geometry": {
       "type": "Polygon",
@@ -35361,7 +35918,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סיירה לאונה",
+    "hebrewCapital": "פריטאון"
   },
   {
     "name": "Singapore",
@@ -35372,6 +35931,7 @@
     "zoom": 40,
     "capital": "Singapore",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇸🇬",
     "geometry": {
       "type": "Polygon",
@@ -35427,7 +35987,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סינגפור",
+    "hebrewCapital": "סינגפור"
   },
   {
     "name": "Sint Maarten",
@@ -35437,7 +35999,10 @@
     "lon": -63.0681114,
     "capital": "Philipsburg",
     "continent": "North America",
-    "emoji": "🇸🇽"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇸🇽",
+    "hebrewName": "סינט מרטן",
+    "hebrewCapital": "פיליפסבורג"
   },
   {
     "name": "Slovakia",
@@ -35447,6 +36012,7 @@
     "lon": 19.699024,
     "capital": "Bratislava",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇰",
     "geometry": {
       "type": "Polygon",
@@ -35586,7 +36152,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סלובקיה",
+    "hebrewCapital": "ברטיסלבה"
   },
   {
     "name": "Slovenia",
@@ -35596,6 +36164,7 @@
     "lon": 14.995463,
     "capital": "Ljubljana",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇮",
     "geometry": {
       "type": "Polygon",
@@ -35675,7 +36244,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סלובניה",
+    "hebrewCapital": "לובליאנה"
   },
   {
     "name": "Solomon Islands",
@@ -35685,6 +36256,7 @@
     "lon": 160.156194,
     "capital": "Honiara",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇸🇧",
     "geometry": {
       "type": "MultiPolygon",
@@ -35858,7 +36430,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "איי סולומון",
+    "hebrewCapital": "הוניארה"
   },
   {
     "name": "Somalia",
@@ -35868,6 +36442,7 @@
     "lon": 46.199616,
     "capital": "Mogadishu",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇴",
     "geometry": {
       "type": "Polygon",
@@ -36023,7 +36598,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סומליה",
+    "hebrewCapital": "מוגדישו"
   },
   {
     "name": "South Africa",
@@ -36033,6 +36610,7 @@
     "lon": 22.937506,
     "capital": "Pretoria, Bloemfontein, Cape Town",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇿🇦",
     "geometry": {
       "type": "Polygon",
@@ -36418,7 +36996,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "דרום אפריקה",
+    "hebrewCapital": "קייפטאון, פרטוריה, בלומפונטיין"
   },
   {
     "name": "South Korea",
@@ -36428,6 +37008,7 @@
     "lon": 127.766922,
     "capital": "Seoul",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇷",
     "geometry": {
       "type": "Polygon",
@@ -36511,7 +37092,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "דרום קוריאה",
+    "hebrewCapital": "סיאול"
   },
   {
     "name": "South Sudan",
@@ -36521,6 +37104,7 @@
     "lon": 29.6949232,
     "capital": "Juba",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇸",
     "geometry": {
       "type": "Polygon",
@@ -36780,7 +37364,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "דרום סודן",
+    "hebrewCapital": "ג'ובה"
   },
   {
     "name": "Spain",
@@ -36790,6 +37376,7 @@
     "lon": -3.74922,
     "capital": "Madrid",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇪🇸",
     "geometry": {
       "type": "Polygon",
@@ -37001,7 +37588,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סְפָרַד",
+    "hebrewCapital": "מדריד"
   },
   {
     "name": "Sri Lanka",
@@ -37011,6 +37600,7 @@
     "lon": 80.771797,
     "capital": "Sri Jayawardenapura Kotte[21]",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇱🇰",
     "geometry": {
       "type": "Polygon",
@@ -37058,7 +37648,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סרי לנקה",
+    "hebrewCapital": "קולומבו"
   },
   {
     "name": "Sudan",
@@ -37068,6 +37660,7 @@
     "lon": 30.217636,
     "capital": "Khartoum",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇩",
     "geometry": {
       "type": "Polygon",
@@ -37399,7 +37992,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סודן",
+    "hebrewCapital": "חרטום"
   },
   {
     "name": "Suriname",
@@ -37409,6 +38004,7 @@
     "lon": -56.027783,
     "capital": "Paramaribo",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇸🇷",
     "geometry": {
       "type": "Polygon",
@@ -37520,7 +38116,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סורינאם",
+    "hebrewCapital": "פרמריבו"
   },
   {
     "name": "Sweden",
@@ -37530,6 +38128,7 @@
     "lon": 18.643501,
     "capital": "Stockholm",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇪",
     "geometry": {
       "type": "Polygon",
@@ -37697,7 +38296,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "שוודיה",
+    "hebrewCapital": "שטוקהולם"
   },
   {
     "name": "Switzerland",
@@ -37709,6 +38310,7 @@
     "lon": 9.5430965,
     "capital": "Bern",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇨🇭",
     "geometry": {
       "type": "Polygon",
@@ -37812,7 +38414,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "שוויץ",
+    "hebrewCapital": "ברן"
   },
   {
     "name": "Syria",
@@ -37822,6 +38426,7 @@
     "lon": 38.996815,
     "capital": "Damascus",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇸🇾",
     "geometry": {
       "type": "Polygon",
@@ -37937,7 +38542,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "סוּריָה",
+    "hebrewCapital": "דמשק"
   },
   {
     "name": "Taiwan",
@@ -37947,6 +38554,7 @@
     "lon": 120.960515,
     "capital": "Taipei",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇼",
     "geometry": {
       "type": "Polygon",
@@ -37990,7 +38598,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טייוואן",
+    "hebrewCapital": "טאיפיי"
   },
   {
     "name": "Tajikistan",
@@ -38000,6 +38610,7 @@
     "lon": 71.276093,
     "capital": "Dushanbe",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇯",
     "geometry": {
       "type": "Polygon",
@@ -38171,7 +38782,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טג'יקיסטן",
+    "hebrewCapital": "דושנבה"
   },
   {
     "name": "Tanzania",
@@ -38181,6 +38794,7 @@
     "lon": 34.888822,
     "capital": "Dodoma",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇿",
     "geometry": {
       "type": "Polygon",
@@ -38396,7 +39010,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טנזניה",
+    "hebrewCapital": "דודומה"
   },
   {
     "name": "Thailand",
@@ -38406,6 +39022,7 @@
     "lon": 100.992541,
     "capital": "Bangkok",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇭",
     "geometry": {
       "type": "Polygon",
@@ -38669,7 +39286,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "תאילנד",
+    "hebrewCapital": "בנגקוק"
   },
   {
     "name": "Timor Leste",
@@ -38679,6 +39298,7 @@
     "lon": 125.727539,
     "capital": "Dili",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇱",
     "geometry": {
       "type": "Polygon",
@@ -38730,7 +39350,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קריאת טימור",
+    "hebrewCapital": "דילי"
   },
   {
     "name": "Togo",
@@ -38740,6 +39362,7 @@
     "lon": 0.824782,
     "capital": "Lome",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇬",
     "geometry": {
       "type": "Polygon",
@@ -38823,7 +39446,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טוגו",
+    "hebrewCapital": "לומה"
   },
   {
     "name": "Tokelau",
@@ -38833,7 +39458,10 @@
     "lon": -171.855881,
     "capital": "Fakaofo, Nukunonu, Atafu",
     "continent": "Oceania",
-    "emoji": "🇹🇰"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇹🇰",
+    "hebrewName": "טוקלאו",
+    "hebrewCapital": "פאקאופו, נוקונונו, אטפו"
   },
   {
     "name": "Tonga",
@@ -38843,7 +39471,10 @@
     "lon": -175.198242,
     "capital": "Nuku'alofa",
     "continent": "Oceania",
-    "emoji": "🇹🇴"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇹🇴",
+    "hebrewName": "טונגה",
+    "hebrewCapital": "נוקואלופה"
   },
   {
     "name": "Trinidad and Tobago",
@@ -38853,6 +39484,7 @@
     "lon": -61.222503,
     "capital": "Port of Spain",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇹🇹",
     "geometry": {
       "type": "Polygon",
@@ -38892,7 +39524,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טרינידד וטובגו",
+    "hebrewCapital": "פורט אוף ספיין"
   },
   {
     "name": "Tunisia",
@@ -38902,6 +39536,7 @@
     "lon": 9.537499,
     "capital": "Tunis",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇳",
     "geometry": {
       "type": "Polygon",
@@ -39033,7 +39668,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "תוניסיה",
+    "hebrewCapital": "תוניס"
   },
   {
     "name": "Turkey",
@@ -39043,6 +39680,7 @@
     "lon": 35.243322,
     "capital": "Ankara",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -39328,7 +39966,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טוּרְקִיָה",
+    "hebrewCapital": "אנקרה"
   },
   {
     "name": "Turkmenistan",
@@ -39338,6 +39978,7 @@
     "lon": 59.556278,
     "capital": "Ashgabat",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇲",
     "geometry": {
       "type": "Polygon",
@@ -39561,7 +40202,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טורקמניסטן",
+    "hebrewCapital": "אשגבט"
   },
   {
     "name": "Turks and Caicos Islands",
@@ -39571,7 +40214,10 @@
     "lon": -71.797928,
     "capital": "Cockburn Town",
     "continent": "North America",
-    "emoji": "🇹🇨"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇹🇨",
+    "hebrewName": "איי טורקים וקייקוס",
+    "hebrewCapital": "קוקבורן טאון"
   },
   {
     "name": "Tuvalu",
@@ -39581,7 +40227,10 @@
     "lon": 177.64933,
     "capital": "Funafuti",
     "continent": "Oceania",
-    "emoji": "🇹🇻"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇹🇻",
+    "hebrewName": "טובלו",
+    "hebrewCapital": "פונפוטי"
   },
   {
     "name": "Uganda",
@@ -39591,6 +40240,7 @@
     "lon": 32.290275,
     "capital": "Kampala",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇺🇬",
     "geometry": {
       "type": "Polygon",
@@ -39710,7 +40360,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אוגנדה",
+    "hebrewCapital": "קמפלה"
   },
   {
     "name": "Ukraine",
@@ -39720,6 +40372,7 @@
     "lon": 31.16558,
     "capital": "Kyiv or Kiev",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇺🇦",
     "geometry": {
       "type": "Polygon",
@@ -40099,7 +40752,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אוקראינה",
+    "hebrewCapital": "קייב"
   },
   {
     "name": "United Arab Emirates",
@@ -40109,6 +40764,7 @@
     "lon": 53.847818,
     "capital": "Abu Dhabi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇪",
     "geometry": {
       "type": "Polygon",
@@ -40204,7 +40860,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "איחוד האמירויות",
+    "hebrewCapital": "אבו דאבי"
   },
   {
     "name": "United Kingdom",
@@ -40214,6 +40872,7 @@
     "lon": -3.435973,
     "capital": "London",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇬🇧",
     "geometry": {
       "type": "MultiPolygon",
@@ -40451,7 +41110,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "בְּרִיטַנִיָה",
+    "hebrewCapital": "לונדון"
   },
   {
     "name": "United States",
@@ -40462,6 +41123,7 @@
     "zoom": 70,
     "capital": "Washington D.C.",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇺🇸",
     "geometry": {
       "type": "MultiPolygon",
@@ -42295,7 +42957,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אַרצוֹת הַבְּרִית",
+    "hebrewCapital": "וושינגטון די.סי."
   },
   {
     "name": "United States Virgin Islands",
@@ -42305,7 +42969,10 @@
     "lon": -64.896335,
     "capital": "Charlotte Amalie",
     "continent": "North America",
-    "emoji": "🇻🇮"
+    "hebrewContinent": "צפון אמריקה",
+    "emoji": "🇻🇮",
+    "hebrewName": "איי הבתולה של ארצות הברית",
+    "hebrewCapital": "שרלוט אמלי"
   },
   {
     "name": "Uruguay",
@@ -42315,6 +42982,7 @@
     "lon": -55.765835,
     "capital": "Montevideo",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇺🇾",
     "geometry": {
       "type": "Polygon",
@@ -42406,7 +43074,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אורוגוואי",
+    "hebrewCapital": "מונטווידאו"
   },
   {
     "name": "Uzbekistan",
@@ -42416,6 +43086,7 @@
     "lon": 64.585262,
     "capital": "Tashkent",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇺🇿",
     "geometry": {
       "type": "Polygon",
@@ -42639,7 +43310,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אוזבקיסטן",
+    "hebrewCapital": "טשקנט"
   },
   {
     "name": "Vanuatu",
@@ -42649,6 +43322,7 @@
     "lon": 166.959158,
     "capital": "Port Vila",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇻🇺",
     "geometry": {
       "type": "MultiPolygon",
@@ -42710,7 +43384,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ונואטו",
+    "hebrewCapital": "פורט וילה"
   },
   {
     "name": "Vatican City",
@@ -42720,6 +43396,7 @@
     "lon": 12.453389,
     "capital": "Vatican City",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇻🇦",
     "geometry": {
       "type": "Polygon",
@@ -42911,7 +43588,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "עיר הוותיקן",
+    "hebrewCapital": "עיר הוותיקן"
   },
   {
     "name": "Venezuela",
@@ -42921,6 +43600,7 @@
     "lon": -66.58973,
     "capital": "Caracas",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇻🇪",
     "geometry": {
       "type": "Polygon",
@@ -43296,7 +43976,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ונצואלה",
+    "hebrewCapital": "קראקס"
   },
   {
     "name": "Vietnam",
@@ -43306,6 +43988,7 @@
     "lon": 108.277199,
     "capital": "Hanoi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇻🇳",
     "geometry": {
       "type": "Polygon",
@@ -43489,7 +44172,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "וייטנאם",
+    "hebrewCapital": "האנוי"
   },
   {
     "name": "Wallis and Futuna",
@@ -43499,7 +44184,10 @@
     "lon": -177.156097,
     "capital": "Mata-Utu",
     "continent": "Oceania",
-    "emoji": "🇼🇫"
+    "hebrewContinent": "אוקיאניה",
+    "emoji": "🇼🇫",
+    "hebrewName": "וואליס ופוטונה",
+    "hebrewCapital": "מטה-אוטו"
   },
   {
     "name": "Western Sahara",
@@ -43509,6 +44197,7 @@
     "lon": -12.885834,
     "capital": "Laayoune",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇭",
     "geometry": {
       "type": "Polygon",
@@ -43628,7 +44317,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מערב סהרה",
+    "hebrewCapital": "אל עיון"
   },
   {
     "name": "Yemen",
@@ -43638,6 +44329,7 @@
     "lon": 48.516388,
     "capital": "Sana'a",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇾🇪",
     "geometry": {
       "type": "Polygon",
@@ -43821,7 +44513,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "תֵימָן",
+    "hebrewCapital": "צנעא"
   },
   {
     "name": "Zambia",
@@ -43831,6 +44525,7 @@
     "lon": 27.849332,
     "capital": "Lusaka",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇿🇲",
     "geometry": {
       "type": "Polygon",
@@ -44082,7 +44777,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "זמביה",
+    "hebrewCapital": "לוסקה"
   },
   {
     "name": "Zimbabwe",
@@ -44092,6 +44789,7 @@
     "lon": 29.154857,
     "capital": "Harare",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇿🇼",
     "geometry": {
       "type": "Polygon",
@@ -44247,6 +44945,8 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "זימבבואה",
+    "hebrewCapital": "הרארה"
   }
 ]

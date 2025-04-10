@@ -8,22 +8,25 @@ export const telegramBaseUrl = 'https://api.telegram.org';
 @Controller('define')
 export class DefineController {
   private readonly logger = new Logger(DefineController.name);
+  private readonly telegramBotToken: string;
+  private readonly telegramChatId: string;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {
+    this.telegramBotToken = this.configService.get('DEFINE_TELEGRAM_BOT_TOKEN');
+    this.telegramChatId = this.configService.get('DEFINE_TELEGRAM_CHAT_ID');
+  }
 
   @Post('contact')
   async contact(@Body() body: ContactRequestDTO): Promise<ContactResponseDTO> {
+    const { email } = body;
     try {
-      const { email } = body;
-      this.logger.log(`A new user contacted from the Define website`, `Email: ${email}`);
-      const messageText = [`A new user contacted from the Define website`, `Email: ${email}`].join('\n');
-      const telegramBotToken = this.configService.get('DEFINE_TELEGRAM_BOT_TOKEN');
-      const telegramChatId = this.configService.get('DEFINE_TELEGRAM_CHAT_ID');
-      const telegramApiUrl = `${telegramBaseUrl}/bot${telegramBotToken}/sendMessage?chat_id=${telegramChatId}&text=${messageText}`;
+      this.logger.log(`A new user contacted from the Define website: ${email}`);
+      const messageText = `A new user contacted from the Define website\nEmail: ${email}`;
+      const telegramApiUrl = `${telegramBaseUrl}/bot${this.telegramBotToken}/sendMessage?chat_id=${this.telegramChatId}&text=${messageText}`;
       const result = await axios.get(telegramApiUrl);
       return { success: result.status === 200 };
     } catch (err) {
-      this.logger.error(`Failed to send contact form, error: ${err}`);
+      this.logger.error(`Failed to send contact form for ${email}, error: ${err}`);
       return { success: false };
     }
   }
