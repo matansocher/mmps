@@ -19867,7 +19867,8 @@
         ]
       ]
     },
-    "hebrewName": "אִינדוֹנֵזִיָה"
+    "hebrewName": "אִינדוֹנֵזִיָה",
+    "hebrewCapital": "ג'קרטה"
   },
   {
     "name": "Iran",
@@ -20190,7 +20191,8 @@
         ]
       ]
     },
-    "hebrewName": "איראן"
+    "hebrewName": "איראן",
+    "hebrewCapital": "טהרן"
   },
   {
     "name": "Iraq",
@@ -20329,7 +20331,8 @@
         ]
       ]
     },
-    "hebrewName": "עִירַאק"
+    "hebrewName": "עִירַאק",
+    "hebrewCapital": "בגדאד"
   },
   {
     "name": "Ireland",
@@ -20400,7 +20403,8 @@
         ]
       ]
     },
-    "hebrewName": "אירלנד"
+    "hebrewName": "אירלנד",
+    "hebrewCapital": "דבלין"
   },
   {
     "name": "Isle of Man",
@@ -20412,7 +20416,8 @@
     "capital": "Douglas",
     "continent": "Europe",
     "emoji": "🇮🇲",
-    "hebrewName": "האי מאדם"
+    "hebrewName": "האי מאדם",
+    "hebrewCapital": "דגלס"
   },
   {
     "name": "Israel",
@@ -20535,7 +20540,8 @@
         ]
       ]
     },
-    "hebrewName": "יִשְׂרָאֵל"
+    "hebrewName": "יִשְׂרָאֵל",
+    "hebrewCapital": "ירושלים"
   },
   {
     "name": "Italy",
@@ -20912,7 +20918,8 @@
         ]
       ]
     },
-    "hebrewName": "אִיטַלִיָה"
+    "hebrewName": "אִיטַלִיָה",
+    "hebrewCapital": "רומא"
   },
   {
     "name": "Ivory Coast",
@@ -21115,7 +21122,8 @@
         ]
       ]
     },
-    "hebrewName": "חוף שנהב"
+    "hebrewName": "חוף שנהב",
+    "hebrewCapital": "יאמוסוקרו"
   },
   {
     "name": "Jamaica",
@@ -21178,7 +21186,8 @@
         ]
       ]
     },
-    "hebrewName": "ג'מייקה"
+    "hebrewName": "ג'מייקה",
+    "hebrewCapital": "קינגסטון"
   },
   {
     "name": "Japan",
@@ -21467,7 +21476,8 @@
         ]
       ]
     },
-    "hebrewName": "יַפָּן"
+    "hebrewName": "יַפָּן",
+    "hebrewCapital": "טוקיו"
   },
   {
     "name": "Jersey",
@@ -21479,7 +21489,8 @@
     "capital": "St Helier",
     "continent": "Europe",
     "emoji": "🇯🇪",
-    "hebrewName": "ג'רזי"
+    "hebrewName": "ג'רזי",
+    "hebrewCapital": "סיינט הלייר"
   },
   {
     "name": "Jordan",
@@ -21574,7 +21585,8 @@
         ]
       ]
     },
-    "hebrewName": "יַרדֵן"
+    "hebrewName": "יַרדֵן",
+    "hebrewCapital": "עמאן"
   },
   {
     "name": "Kazakhstan",
@@ -22041,7 +22053,8 @@
         ]
       ]
     },
-    "hebrewName": "קזחסטן"
+    "hebrewName": "קזחסטן",
+    "hebrewCapital": "אסטנה"
   },
   {
     "name": "Kenya",
@@ -22208,7 +22221,8 @@
         ]
       ]
     },
-    "hebrewName": "קניה"
+    "hebrewName": "קניה",
+    "hebrewCapital": "ניירובי"
   },
   {
     "name": "Kiribati",
@@ -22220,7 +22234,8 @@
     "capital": "Tarawa Atoll",
     "continent": "Oceania",
     "emoji": "🇰🇮",
-    "hebrewName": "קיריבטי"
+    "hebrewName": "קיריבטי",
+    "hebrewCapital": "טארוואה"
   },
   {
     "name": "Kosovo",
@@ -22329,7 +22344,8 @@
         ]
       ]
     },
-    "hebrewName": "קוסובו"
+    "hebrewName": "קוסובו",
+    "hebrewCapital": "פרישטינה"
   },
   {
     "name": "Kuwait",
@@ -22384,7 +22400,8 @@
         ]
       ]
     },
-    "hebrewName": "כווית"
+    "hebrewName": "כווית",
+    "hebrewCapital": "כווית סיטי"
   },
   {
     "name": "Kyrgyzstan",
@@ -22543,7 +22560,8 @@
         ]
       ]
     },
-    "hebrewName": "קירגיזסטן"
+    "hebrewName": "קירגיזסטן",
+    "hebrewCapital": "בישקק"
   },
   {
     "name": "Laos",
@@ -22710,7 +22728,8 @@
         ]
       ]
     },
-    "hebrewName": "לאוס"
+    "hebrewName": "לאוס",
+    "hebrewCapital": "ויינטיאן"
   },
   {
     "name": "Latvia",
@@ -22817,7 +22836,8 @@
         ]
       ]
     },
-    "hebrewName": "לטביה"
+    "hebrewName": "לטביה",
+    "hebrewCapital": "ריגה"
   },
   {
     "name": "Lebanon",
@@ -22880,7 +22900,8 @@
         ]
       ]
     },
-    "hebrewName": "לבנון"
+    "hebrewName": "לבנון",
+    "hebrewCapital": "ביירות"
   },
   {
     "name": "Lesotho",
@@ -22947,7 +22968,8 @@
         ]
       ]
     },
-    "hebrewName": "לסוטו"
+    "hebrewName": "לסוטו",
+    "hebrewCapital": "מסרו"
   },
   {
     "name": "Liberia",
@@ -23074,7 +23096,8 @@
         ]
       ]
     },
-    "hebrewName": "ליבריה"
+    "hebrewName": "ליבריה",
+    "hebrewCapital": "מונרוביה"
   },
   {
     "name": "Libya",
@@ -23317,7 +23340,8 @@
         ]
       ]
     },
-    "hebrewName": "לוב"
+    "hebrewName": "לוב",
+    "hebrewCapital": "טריפולי"
   },
   {
     "name": "Liechtenstein",
@@ -23329,7 +23353,8 @@
     "capital": "Vaduz",
     "continent": "Europe",
     "emoji": "🇱🇮",
-    "hebrewName": "ליכטנשטיין"
+    "hebrewName": "ליכטנשטיין",
+    "hebrewCapital": "ואדוז"
   },
   {
     "name": "Lithuania",
@@ -23424,7 +23449,8 @@
         ]
       ]
     },
-    "hebrewName": "ליטא"
+    "hebrewName": "ליטא",
+    "hebrewCapital": "וילנה"
   },
   {
     "name": "Luxembourg",
@@ -23471,7 +23497,8 @@
         ]
       ]
     },
-    "hebrewName": "לוקסמבורג"
+    "hebrewName": "לוקסמבורג",
+    "hebrewCapital": "לוקסמבורג סיטי"
   },
   {
     "name": "Macau",
@@ -23480,7 +23507,6 @@
     "ISO3": 446,
     "lat": 22.198745,
     "lon": 113.543873,
-    "capital": "",
     "continent": "Asia",
     "emoji": "🇲🇴",
     "hebrewName": "מקאו"
@@ -23698,7 +23724,8 @@
         ]
       ]
     },
-    "hebrewName": "מדגסקר"
+    "hebrewName": "מדגסקר",
+    "hebrewCapital": "אנטננריבו"
   },
   {
     "name": "Malawi",
@@ -23829,7 +23856,8 @@
         ]
       ]
     },
-    "hebrewName": "מלאווי"
+    "hebrewName": "מלאווי",
+    "hebrewCapital": "לילונגווה"
   },
   {
     "name": "Malaysia",
@@ -24102,7 +24130,8 @@
         ]
       ]
     },
-    "hebrewName": "מלזיה"
+    "hebrewName": "מלזיה",
+    "hebrewCapital": "קואלה לומפור"
   },
   {
     "name": "Maldives",
@@ -24114,7 +24143,8 @@
     "capital": "Male",
     "continent": "Asia",
     "emoji": "🇲🇻",
-    "hebrewName": "המלדיביים"
+    "hebrewName": "המלדיביים",
+    "hebrewCapital": "מאלה"
   },
   {
     "name": "Mali",
@@ -24437,7 +24467,8 @@
         ]
       ]
     },
-    "hebrewName": "מלי"
+    "hebrewName": "מלי",
+    "hebrewCapital": "במקו"
   },
   {
     "name": "Malta",
@@ -24511,7 +24542,8 @@
         ]
       ]
     },
-    "hebrewName": "מלטה"
+    "hebrewName": "מלטה",
+    "hebrewCapital": "ולטה"
   },
   {
     "name": "Marshall Islands",
@@ -24523,7 +24555,8 @@
     "capital": "Majuro",
     "continent": "Oceania",
     "emoji": "🇲🇭",
-    "hebrewName": "איי מרשל"
+    "hebrewName": "איי מרשל",
+    "hebrewCapital": "מג'ורו"
   },
   {
     "name": "Martinique",
@@ -24535,7 +24568,8 @@
     "capital": "Fort de France",
     "continent": "North America",
     "emoji": "🇲🇶",
-    "hebrewName": "מרטיניק"
+    "hebrewName": "מרטיניק",
+    "hebrewCapital": "פור דה פרנס"
   },
   {
     "name": "Mauritania",
@@ -24710,7 +24744,8 @@
         ]
       ]
     },
-    "hebrewName": "מאוריטניה"
+    "hebrewName": "מאוריטניה",
+    "hebrewCapital": "נואקשוט"
   },
   {
     "name": "Mauritius",
@@ -24722,7 +24757,8 @@
     "capital": "Port Louis",
     "continent": "Africa",
     "emoji": "🇲🇺",
-    "hebrewName": "מאוריציוס"
+    "hebrewName": "מאוריציוס",
+    "hebrewCapital": "פורט לואי"
   },
   {
     "name": "Mayotte",
@@ -24734,7 +24770,8 @@
     "capital": "Mamoudzou",
     "continent": "Africa",
     "emoji": "🇾🇹",
-    "hebrewName": "מיוט"
+    "hebrewName": "מיוט",
+    "hebrewCapital": "ממודזו"
   },
   {
     "name": "Mexico",
@@ -25433,7 +25470,8 @@
         ]
       ]
     },
-    "hebrewName": "מקסיקו"
+    "hebrewName": "מקסיקו",
+    "hebrewCapital": "מקסיקו סיטי"
   },
   {
     "name": "Micronesia",
@@ -25445,7 +25483,8 @@
     "capital": "Palikir",
     "continent": "Oceania",
     "emoji": "🇫🇲",
-    "hebrewName": "מיקרונזיה"
+    "hebrewName": "מיקרונזיה",
+    "hebrewCapital": "פליקיר"
   },
   {
     "name": "Moldova",
@@ -25572,7 +25611,8 @@
         ]
       ]
     },
-    "hebrewName": "מולדובה"
+    "hebrewName": "מולדובה",
+    "hebrewCapital": "קישינב"
   },
   {
     "name": "Monaco",
@@ -25624,7 +25664,8 @@
         ]
       ]
     },
-    "hebrewName": "מונאקו"
+    "hebrewName": "מונאקו",
+    "hebrewCapital": "מונאקו"
   },
   {
     "name": "Mongolia",
@@ -25943,7 +25984,8 @@
         ]
       ]
     },
-    "hebrewName": "מונגוליה"
+    "hebrewName": "מונגוליה",
+    "hebrewCapital": "אולאן בטור"
   },
   {
     "name": "Montenegro",
@@ -26034,7 +26076,8 @@
         ]
       ]
     },
-    "hebrewName": "מונטנגרו"
+    "hebrewName": "מונטנגרו",
+    "hebrewCapital": "פודגוריצה"
   },
   {
     "name": "Montserrat",
@@ -26046,7 +26089,8 @@
     "capital": "Plymouth",
     "continent": "North America",
     "emoji": "🇲🇸",
-    "hebrewName": "מונטסראט"
+    "hebrewName": "מונטסראט",
+    "hebrewCapital": "פלימות"
   },
   {
     "name": "Morocco",
@@ -26317,7 +26361,8 @@
         ]
       ]
     },
-    "hebrewName": "מָרוֹקוֹ"
+    "hebrewName": "מָרוֹקוֹ",
+    "hebrewCapital": "רבאט"
   },
   {
     "name": "Mozambique",
@@ -26652,7 +26697,8 @@
         ]
       ]
     },
-    "hebrewName": "מוזמביק"
+    "hebrewName": "מוזמביק",
+    "hebrewCapital": "מפוטו"
   },
   {
     "name": "Myanmar",
@@ -26951,7 +26997,8 @@
         ]
       ]
     },
-    "hebrewName": "מיאנמר"
+    "hebrewName": "מיאנמר",
+    "hebrewCapital": "נייפידאו"
   },
   {
     "name": "Namibia",
@@ -27146,7 +27193,8 @@
         ]
       ]
     },
-    "hebrewName": "נמיביה"
+    "hebrewName": "נמיביה",
+    "hebrewCapital": "וינדהוק"
   },
   {
     "name": "Nauru",
@@ -27268,7 +27316,8 @@
         ]
       ]
     },
-    "hebrewName": "נפאל"
+    "hebrewName": "נפאל",
+    "hebrewCapital": "קטמנדו"
   },
   {
     "name": "Netherlands",
@@ -27347,7 +27396,8 @@
         ]
       ]
     },
-    "hebrewName": "הוֹלַנד"
+    "hebrewName": "הוֹלַנד",
+    "hebrewCapital": "אמסטרדם"
   },
   {
     "name": "New Caledonia",
@@ -27418,7 +27468,8 @@
         ]
       ]
     },
-    "hebrewName": "קלדוניה החדשה"
+    "hebrewName": "קלדוניה החדשה",
+    "hebrewCapital": "נומיאה"
   },
   {
     "name": "New Zealand",
@@ -27707,7 +27758,8 @@
         ]
       ]
     },
-    "hebrewName": "ניו זילנד"
+    "hebrewName": "ניו זילנד",
+    "hebrewCapital": "ולינגטון"
   },
   {
     "name": "Nicaragua",
@@ -27934,7 +27986,8 @@
         ]
       ]
     },
-    "hebrewName": "ניקרגואה"
+    "hebrewName": "ניקרגואה",
+    "hebrewCapital": "מנגואה"
   },
   {
     "name": "Niger",
@@ -28185,7 +28238,8 @@
         ]
       ]
     },
-    "hebrewName": "ניז'ר"
+    "hebrewName": "ניז'ר",
+    "hebrewCapital": "ניאמיי"
   },
   {
     "name": "Nigeria",
@@ -28436,7 +28490,8 @@
         ]
       ]
     },
-    "hebrewName": "ניגריה"
+    "hebrewName": "ניגריה",
+    "hebrewCapital": "אבוג'ה"
   },
   {
     "name": "Niue",
@@ -28448,7 +28503,8 @@
     "capital": "Alofi",
     "continent": "Oceania",
     "emoji": "🇳🇺",
-    "hebrewName": "Niue"
+    "hebrewName": "ניואה",
+    "hebrewCapital": "אלופי"
   },
   {
     "name": "North Korea",
@@ -28665,7 +28721,8 @@
         ]
       ]
     },
-    "hebrewName": "צפון קוריאה"
+    "hebrewName": "צפון קוריאה",
+    "hebrewCapital": "פיונגיאנג"
   },
   {
     "name": "North Macedonia",
@@ -28756,7 +28813,8 @@
         ]
       ]
     },
-    "hebrewName": "צפון מקדוניה"
+    "hebrewName": "צפון מקדוניה",
+    "hebrewCapital": "סקופיה"
   },
   {
     "name": "Northern Mariana Islands",
@@ -28768,7 +28826,8 @@
     "capital": "Saipan",
     "continent": "Oceania",
     "emoji": "🇲🇵",
-    "hebrewName": "איי צפון מריאנה"
+    "hebrewName": "איי צפון מריאנה",
+    "hebrewCapital": "סייפן"
   },
   {
     "name": "Norway",
@@ -29153,7 +29212,8 @@
         ]
       ]
     },
-    "hebrewName": "נורווגיה"
+    "hebrewName": "נורווגיה",
+    "hebrewCapital": "אוסלו"
   },
   {
     "name": "Oman",
@@ -29366,7 +29426,8 @@
         ]
       ]
     },
-    "hebrewName": "עומאן"
+    "hebrewName": "עומאן",
+    "hebrewCapital": "מוסקט"
   },
   {
     "name": "Pakistan",
@@ -29649,7 +29710,8 @@
         ]
       ]
     },
-    "hebrewName": "פקיסטן"
+    "hebrewName": "פקיסטן",
+    "hebrewCapital": "איסלמבאד"
   },
   {
     "name": "Palau",
@@ -29658,10 +29720,11 @@
     "ISO3": 585,
     "lat": 7.51498,
     "lon": 134.58252,
-    "capital": "Melekeok",
+    "capital": "Ngerulmud",
     "continent": "Oceania",
     "emoji": "🇵🇼",
-    "hebrewName": "פאלאו"
+    "hebrewName": "פאלאו",
+    "hebrewCapital": "נגרולמוד"
   },
   {
     "name": "Panama",
@@ -29888,7 +29951,8 @@
         ]
       ]
     },
-    "hebrewName": "פנמה"
+    "hebrewName": "פנמה",
+    "hebrewCapital": "פנמה סיטי"
   },
   {
     "name": "Papua New Guinea",
@@ -30245,7 +30309,8 @@
         ]
       ]
     },
-    "hebrewName": "פפואה גינאה החדשה"
+    "hebrewName": "פפואה גינאה החדשה",
+    "hebrewCapital": "פורט מורסבי"
   },
   {
     "name": "Paraguay",
@@ -30396,7 +30461,8 @@
         ]
       ]
     },
-    "hebrewName": "פרגוואי"
+    "hebrewName": "פרגוואי",
+    "hebrewCapital": "אסונסיון"
   },
   {
     "name": "Peru",
@@ -30719,7 +30785,8 @@
         ]
       ]
     },
-    "hebrewName": "פרו"
+    "hebrewName": "פרו",
+    "hebrewCapital": "לימה"
   },
   {
     "name": "Philippines",
@@ -31204,7 +31271,8 @@
         ]
       ]
     },
-    "hebrewName": "הפיליפינים"
+    "hebrewName": "הפיליפינים",
+    "hebrewCapital": "מנילה"
   },
   {
     "name": "Poland",
@@ -31403,7 +31471,8 @@
         ]
       ]
     },
-    "hebrewName": "פּוֹלִין"
+    "hebrewName": "פּוֹלִין",
+    "hebrewCapital": "ורשה"
   },
   {
     "name": "Portugal",
@@ -31554,7 +31623,8 @@
         ]
       ]
     },
-    "hebrewName": "פּוֹרטוּגָל"
+    "hebrewName": "פּוֹרטוּגָל",
+    "hebrewCapital": "ליסבון"
   },
   {
     "name": "Puerto Rico",
@@ -31609,7 +31679,8 @@
         ]
       ]
     },
-    "hebrewName": "פוארטו ריקו"
+    "hebrewName": "פוארטו ריקו",
+    "hebrewCapital": "סן חואן"
   },
   {
     "name": "Qatar",
@@ -31664,7 +31735,8 @@
         ]
       ]
     },
-    "hebrewName": "קטאר"
+    "hebrewName": "קטאר",
+    "hebrewCapital": "דוחה"
   },
   {
     "name": "Republic of the Congo",
@@ -31879,7 +31951,8 @@
         ]
       ]
     },
-    "hebrewName": "הרפובליקה של קונגו"
+    "hebrewName": "הרפובליקה של קונגו",
+    "hebrewCapital": "ברזוויל"
   },
   {
     "name": "Reunion",
@@ -31891,7 +31964,8 @@
     "capital": "Saint-Denis",
     "continent": "Africa",
     "emoji": "🇫🇷",
-    "hebrewName": "פְּגִישַׁת מַחזוֹר"
+    "hebrewName": "ראוניון",
+    "hebrewCapital": "סיינט דניס"
   },
   {
     "name": "Romania",
@@ -32086,7 +32160,8 @@
         ]
       ]
     },
-    "hebrewName": "רומניה"
+    "hebrewName": "רומניה",
+    "hebrewCapital": "בוקרשט"
   },
   {
     "name": "Russia",
@@ -34660,7 +34735,8 @@
         ]
       ]
     },
-    "hebrewName": "רוּסִיָה"
+    "hebrewName": "רוּסִיָה",
+    "hebrewCapital": "מוסקבה"
   },
   {
     "name": "Rwanda",
@@ -34735,7 +34811,8 @@
         ]
       ]
     },
-    "hebrewName": "רואנדה"
+    "hebrewName": "רואנדה",
+    "hebrewCapital": "קיגאלי"
   },
   {
     "name": "Saint Barthelemy",
@@ -34747,7 +34824,8 @@
     "capital": "Gustavia",
     "continent": "North America",
     "emoji": "🇧🇱",
-    "hebrewName": "סנט ברטלמי"
+    "hebrewName": "סנט ברטלמי",
+    "hebrewCapital": "גוסטביה"
   },
   {
     "name": "Saint Kitts and Nevis",
@@ -34759,7 +34837,8 @@
     "capital": "Basseterre",
     "continent": "North America",
     "emoji": "🇰🇳",
-    "hebrewName": "סנט קיטס ונביס"
+    "hebrewName": "סנט קיטס ונביס",
+    "hebrewCapital": "בסטר"
   },
   {
     "name": "Saint Lucia",
@@ -34771,7 +34850,8 @@
     "capital": "Castries",
     "continent": "North America",
     "emoji": "🇱🇨",
-    "hebrewName": "סנט לוסיה"
+    "hebrewName": "סנט לוסיה",
+    "hebrewCapital": "קסטריז"
   },
   {
     "name": "Saint Martin",
@@ -34783,7 +34863,8 @@
     "capital": "Marigot",
     "continent": "North America",
     "emoji": "🇫🇷",
-    "hebrewName": "סנט מרטין"
+    "hebrewName": "סנט מרטין",
+    "hebrewCapital": "מריגוט"
   },
   {
     "name": "Saint Pierre and Miquelon",
@@ -34795,7 +34876,8 @@
     "capital": "Saint-Pierre",
     "continent": "North America",
     "emoji": "🇵🇲",
-    "hebrewName": "סנט פייר ומיקלון"
+    "hebrewName": "סנט פייר ומיקלון",
+    "hebrewCapital": "סנט פייר"
   },
   {
     "name": "Saint Vincent and the Grenadines",
@@ -34807,7 +34889,8 @@
     "capital": "Kingstown",
     "continent": "North America",
     "emoji": "🇻🇨",
-    "hebrewName": "סנט וינסנט והגרנדינים"
+    "hebrewName": "סנט וינסנט והגרנדינים",
+    "hebrewCapital": "קינגסטאון"
   },
   {
     "name": "Samoa",
@@ -34819,7 +34902,8 @@
     "capital": "Apia",
     "continent": "Oceania",
     "emoji": "🇼🇸",
-    "hebrewName": "סמואה"
+    "hebrewName": "סמואה",
+    "hebrewCapital": "אפיה"
   },
   {
     "name": "San Marino",
@@ -34887,7 +34971,8 @@
         ]
       ]
     },
-    "hebrewName": "סן מרינו"
+    "hebrewName": "סן מרינו",
+    "hebrewCapital": "סן מרינו"
   },
   {
     "name": "Sao Tome and Principe",
@@ -34899,7 +34984,8 @@
     "capital": "Sao Tome",
     "continent": "Africa",
     "emoji": "🇸🇹",
-    "hebrewName": "סאו טומה ופרינסיפה"
+    "hebrewName": "סאו טומה ופרינסיפה",
+    "hebrewCapital": "סאו טומה"
   },
   {
     "name": "Saudi Arabia",
@@ -35222,7 +35308,8 @@
         ]
       ]
     },
-    "hebrewName": "סעודיה"
+    "hebrewName": "סעודיה",
+    "hebrewCapital": "ריאד"
   },
   {
     "name": "Senegal",
@@ -35417,7 +35504,8 @@
         ]
       ]
     },
-    "hebrewName": "סנגל"
+    "hebrewName": "סנגל",
+    "hebrewCapital": "דקר"
   },
   {
     "name": "Serbia",
@@ -35628,7 +35716,8 @@
         ]
       ]
     },
-    "hebrewName": "סרביה"
+    "hebrewName": "סרביה",
+    "hebrewCapital": "בלגרד"
   },
   {
     "name": "Seychelles",
@@ -35721,7 +35810,8 @@
         ]
       ]
     },
-    "hebrewName": "סיישל"
+    "hebrewName": "סיישל",
+    "hebrewCapital": "ויקטוריה"
   },
   {
     "name": "Sierra Leone",
@@ -35828,7 +35918,8 @@
         ]
       ]
     },
-    "hebrewName": "סיירה לאונה"
+    "hebrewName": "סיירה לאונה",
+    "hebrewCapital": "פריטאון"
   },
   {
     "name": "Singapore",
@@ -35896,7 +35987,8 @@
         ]
       ]
     },
-    "hebrewName": "סינגפור"
+    "hebrewName": "סינגפור",
+    "hebrewCapital": "סינגפור"
   },
   {
     "name": "Sint Maarten",
@@ -35908,7 +36000,8 @@
     "capital": "Philipsburg",
     "continent": "North America",
     "emoji": "🇸🇽",
-    "hebrewName": "סינט מרטן"
+    "hebrewName": "סינט מרטן",
+    "hebrewCapital": "פיליפסבורג"
   },
   {
     "name": "Slovakia",
@@ -36059,7 +36152,8 @@
         ]
       ]
     },
-    "hebrewName": "סלובקיה"
+    "hebrewName": "סלובקיה",
+    "hebrewCapital": "ברטיסלבה"
   },
   {
     "name": "Slovenia",
@@ -36150,7 +36244,8 @@
         ]
       ]
     },
-    "hebrewName": "סלובניה"
+    "hebrewName": "סלובניה",
+    "hebrewCapital": "לובליאנה"
   },
   {
     "name": "Solomon Islands",
@@ -36335,7 +36430,8 @@
         ]
       ]
     },
-    "hebrewName": "איי סולומון"
+    "hebrewName": "איי סולומון",
+    "hebrewCapital": "הוניארה"
   },
   {
     "name": "Somalia",
@@ -36502,7 +36598,8 @@
         ]
       ]
     },
-    "hebrewName": "סומליה"
+    "hebrewName": "סומליה",
+    "hebrewCapital": "מוגדישו"
   },
   {
     "name": "South Africa",
@@ -36511,7 +36608,7 @@
     "ISO3": 710,
     "lat": -30.559482,
     "lon": 22.937506,
-    "capital": "Pretoria, Bloemfontein, Cape Town[20]",
+    "capital": "Pretoria, Bloemfontein, Cape Town",
     "continent": "Africa",
     "emoji": "🇿🇦",
     "geometry": {
@@ -36899,7 +36996,8 @@
         ]
       ]
     },
-    "hebrewName": "דרום אפריקה"
+    "hebrewName": "דרום אפריקה",
+    "hebrewCapital": "קייפטאון, פרטוריה, בלומפונטיין"
   },
   {
     "name": "South Korea",
@@ -36994,7 +37092,8 @@
         ]
       ]
     },
-    "hebrewName": "דרום קוריאה"
+    "hebrewName": "דרום קוריאה",
+    "hebrewCapital": "סיאול"
   },
   {
     "name": "South Sudan",
@@ -37265,7 +37364,8 @@
         ]
       ]
     },
-    "hebrewName": "דרום סודן"
+    "hebrewName": "דרום סודן",
+    "hebrewCapital": "ג'ובה"
   },
   {
     "name": "Spain",
@@ -37488,7 +37588,8 @@
         ]
       ]
     },
-    "hebrewName": "סְפָרַד"
+    "hebrewName": "סְפָרַד",
+    "hebrewCapital": "מדריד"
   },
   {
     "name": "Sri Lanka",
@@ -37547,7 +37648,8 @@
         ]
       ]
     },
-    "hebrewName": "סרי לנקה"
+    "hebrewName": "סרי לנקה",
+    "hebrewCapital": "קולומבו"
   },
   {
     "name": "Sudan",
@@ -37890,7 +37992,8 @@
         ]
       ]
     },
-    "hebrewName": "סודן"
+    "hebrewName": "סודן",
+    "hebrewCapital": "חרטום"
   },
   {
     "name": "Suriname",
@@ -38013,7 +38116,8 @@
         ]
       ]
     },
-    "hebrewName": "סורינאם"
+    "hebrewName": "סורינאם",
+    "hebrewCapital": "פרמריבו"
   },
   {
     "name": "Sweden",
@@ -38192,7 +38296,8 @@
         ]
       ]
     },
-    "hebrewName": "שוודיה"
+    "hebrewName": "שוודיה",
+    "hebrewCapital": "שטוקהולם"
   },
   {
     "name": "Switzerland",
@@ -38309,7 +38414,8 @@
         ]
       ]
     },
-    "hebrewName": "שוויץ"
+    "hebrewName": "שוויץ",
+    "hebrewCapital": "ברן"
   },
   {
     "name": "Syria",
@@ -38436,7 +38542,8 @@
         ]
       ]
     },
-    "hebrewName": "סוּריָה"
+    "hebrewName": "סוּריָה",
+    "hebrewCapital": "דמשק"
   },
   {
     "name": "Taiwan",
@@ -38491,7 +38598,8 @@
         ]
       ]
     },
-    "hebrewName": "טייוואן"
+    "hebrewName": "טייוואן",
+    "hebrewCapital": "טאיפיי"
   },
   {
     "name": "Tajikistan",
@@ -38674,7 +38782,8 @@
         ]
       ]
     },
-    "hebrewName": "טג'יקיסטן"
+    "hebrewName": "טג'יקיסטן",
+    "hebrewCapital": "דושנבה"
   },
   {
     "name": "Tanzania",
@@ -38901,7 +39010,8 @@
         ]
       ]
     },
-    "hebrewName": "טנזניה"
+    "hebrewName": "טנזניה",
+    "hebrewCapital": "דודומה"
   },
   {
     "name": "Thailand",
@@ -39176,7 +39286,8 @@
         ]
       ]
     },
-    "hebrewName": "תאילנד"
+    "hebrewName": "תאילנד",
+    "hebrewCapital": "בנגקוק"
   },
   {
     "name": "Timor Leste",
@@ -39239,7 +39350,8 @@
         ]
       ]
     },
-    "hebrewName": "קריאת טימור"
+    "hebrewName": "קריאת טימור",
+    "hebrewCapital": "דילי"
   },
   {
     "name": "Togo",
@@ -39334,7 +39446,8 @@
         ]
       ]
     },
-    "hebrewName": "טוגו"
+    "hebrewName": "טוגו",
+    "hebrewCapital": "לומה"
   },
   {
     "name": "Tokelau",
@@ -39343,10 +39456,11 @@
     "ISO3": 772,
     "lat": -8.967363,
     "lon": -171.855881,
-    "capital": "Fakaofo",
+    "capital": "Fakaofo, Nukunonu, Atafu",
     "continent": "Oceania",
     "emoji": "🇹🇰",
-    "hebrewName": "טוקלאו"
+    "hebrewName": "טוקלאו",
+    "hebrewCapital": "פאקאופו, נוקונונו, אטפו"
   },
   {
     "name": "Tonga",
@@ -39358,7 +39472,8 @@
     "capital": "Nuku'alofa",
     "continent": "Oceania",
     "emoji": "🇹🇴",
-    "hebrewName": "טונגה"
+    "hebrewName": "טונגה",
+    "hebrewCapital": "נוקואלופה"
   },
   {
     "name": "Trinidad and Tobago",
@@ -39409,7 +39524,8 @@
         ]
       ]
     },
-    "hebrewName": "טרינידד וטובגו"
+    "hebrewName": "טרינידד וטובגו",
+    "hebrewCapital": "פורט אוף ספיין"
   },
   {
     "name": "Tunisia",
@@ -39552,7 +39668,8 @@
         ]
       ]
     },
-    "hebrewName": "תוניסיה"
+    "hebrewName": "תוניסיה",
+    "hebrewCapital": "תוניס"
   },
   {
     "name": "Turkey",
@@ -39849,7 +39966,8 @@
         ]
       ]
     },
-    "hebrewName": "טוּרְקִיָה"
+    "hebrewName": "טוּרְקִיָה",
+    "hebrewCapital": "אנקרה"
   },
   {
     "name": "Turkmenistan",
@@ -40084,7 +40202,8 @@
         ]
       ]
     },
-    "hebrewName": "טורקמניסטן"
+    "hebrewName": "טורקמניסטן",
+    "hebrewCapital": "אשגבט"
   },
   {
     "name": "Turks and Caicos Islands",
@@ -40096,7 +40215,8 @@
     "capital": "Cockburn Town",
     "continent": "North America",
     "emoji": "🇹🇨",
-    "hebrewName": "איי טורקים וקייקוס"
+    "hebrewName": "איי טורקים וקייקוס",
+    "hebrewCapital": "קוקבורן טאון"
   },
   {
     "name": "Tuvalu",
@@ -40108,7 +40228,8 @@
     "capital": "Funafuti",
     "continent": "Oceania",
     "emoji": "🇹🇻",
-    "hebrewName": "טובלו"
+    "hebrewName": "טובלו",
+    "hebrewCapital": "פונפוטי"
   },
   {
     "name": "Uganda",
@@ -40239,7 +40360,8 @@
         ]
       ]
     },
-    "hebrewName": "אוגנדה"
+    "hebrewName": "אוגנדה",
+    "hebrewCapital": "קמפלה"
   },
   {
     "name": "Ukraine",
@@ -40630,7 +40752,8 @@
         ]
       ]
     },
-    "hebrewName": "אוקראינה"
+    "hebrewName": "אוקראינה",
+    "hebrewCapital": "קייב"
   },
   {
     "name": "United Arab Emirates",
@@ -40737,7 +40860,8 @@
         ]
       ]
     },
-    "hebrewName": "איחוד האמירויות"
+    "hebrewName": "איחוד האמירויות",
+    "hebrewCapital": "אבו דאבי"
   },
   {
     "name": "United Kingdom",
@@ -40986,7 +41110,8 @@
         ]
       ]
     },
-    "hebrewName": "בְּרִיטַנִיָה"
+    "hebrewName": "בְּרִיטַנִיָה",
+    "hebrewCapital": "לונדון"
   },
   {
     "name": "United States",
@@ -42832,7 +42957,8 @@
         ]
       ]
     },
-    "hebrewName": "אַרצוֹת הַבְּרִית"
+    "hebrewName": "אַרצוֹת הַבְּרִית",
+    "hebrewCapital": "וושינגטון די.סי."
   },
   {
     "name": "United States Virgin Islands",
@@ -42844,7 +42970,8 @@
     "capital": "Charlotte Amalie",
     "continent": "North America",
     "emoji": "🇻🇮",
-    "hebrewName": "איי הבתולה של ארצות הברית"
+    "hebrewName": "איי הבתולה של ארצות הברית",
+    "hebrewCapital": "שרלוט אמלי"
   },
   {
     "name": "Uruguay",
@@ -42947,7 +43074,8 @@
         ]
       ]
     },
-    "hebrewName": "אורוגוואי"
+    "hebrewName": "אורוגוואי",
+    "hebrewCapital": "מונטווידאו"
   },
   {
     "name": "Uzbekistan",
@@ -43182,7 +43310,8 @@
         ]
       ]
     },
-    "hebrewName": "אוזבקיסטן"
+    "hebrewName": "אוזבקיסטן",
+    "hebrewCapital": "טשקנט"
   },
   {
     "name": "Vanuatu",
@@ -43255,7 +43384,8 @@
         ]
       ]
     },
-    "hebrewName": "ונואטו"
+    "hebrewName": "ונואטו",
+    "hebrewCapital": "פורט וילה"
   },
   {
     "name": "Vatican City",
@@ -43458,7 +43588,8 @@
         ]
       ]
     },
-    "hebrewName": "עיר הוותיקן"
+    "hebrewName": "עיר הוותיקן",
+    "hebrewCapital": "עיר הוותיקן"
   },
   {
     "name": "Venezuela",
@@ -43845,7 +43976,8 @@
         ]
       ]
     },
-    "hebrewName": "ונצואלה"
+    "hebrewName": "ונצואלה",
+    "hebrewCapital": "קראקס"
   },
   {
     "name": "Vietnam",
@@ -44040,7 +44172,8 @@
         ]
       ]
     },
-    "hebrewName": "וייטנאם"
+    "hebrewName": "וייטנאם",
+    "hebrewCapital": "האנוי"
   },
   {
     "name": "Wallis and Futuna",
@@ -44052,7 +44185,8 @@
     "capital": "Mata-Utu",
     "continent": "Oceania",
     "emoji": "🇼🇫",
-    "hebrewName": "וואליס ופוטונה"
+    "hebrewName": "וואליס ופוטונה",
+    "hebrewCapital": "מטה-אוטו"
   },
   {
     "name": "Western Sahara",
@@ -44183,7 +44317,8 @@
         ]
       ]
     },
-    "hebrewName": "מערב סהרה"
+    "hebrewName": "מערב סהרה",
+    "hebrewCapital": "אל עיון"
   },
   {
     "name": "Yemen",
@@ -44378,7 +44513,8 @@
         ]
       ]
     },
-    "hebrewName": "תֵימָן"
+    "hebrewName": "תֵימָן",
+    "hebrewCapital": "צנעא"
   },
   {
     "name": "Zambia",
@@ -44641,7 +44777,8 @@
         ]
       ]
     },
-    "hebrewName": "זמביה"
+    "hebrewName": "זמביה",
+    "hebrewCapital": "לוסקה"
   },
   {
     "name": "Zimbabwe",
@@ -44808,6 +44945,7 @@
         ]
       ]
     },
-    "hebrewName": "זימבבואה"
+    "hebrewName": "זימבבואה",
+    "hebrewCapital": "הרארה"
   }
 ]
