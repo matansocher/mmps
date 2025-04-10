@@ -21,7 +21,7 @@ export class DefineController {
     const { email } = body;
     try {
       this.logger.log(`A new user contacted from the Define website: ${email}`);
-      const messageText = `A new user contacted from the Define website\n${email}`;
+      const messageText = `A new user contacted from the Define website\nEmail: ${email}`;
       const telegramApiUrl = `${telegramBaseUrl}/bot${this.telegramBotToken}/sendMessage?chat_id=${this.telegramChatId}&text=${messageText}`;
       const result = await axios.get(telegramApiUrl);
       return { success: result.status === 200 };
