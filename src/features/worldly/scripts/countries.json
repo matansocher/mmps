@@ -7,6 +7,7 @@
     "lon": 67.709953,
     "capital": "Kabul",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇫",
     "geometry": {
       "type": "Polygon",
@@ -302,6 +303,7 @@
     "lon": 20.168331,
     "capital": "Tirana (Tirane)",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇦🇱",
     "geometry": {
       "type": "Polygon",
@@ -417,6 +419,7 @@
     "lon": 1.659626,
     "capital": "Algiers",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇩🇿",
     "geometry": {
       "type": "Polygon",
@@ -684,6 +687,7 @@
     "lon": -170.132217,
     "capital": "Pago Pago",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇦🇸",
     "hebrewName": "סמואה אמריקאית",
     "hebrewCapital": "פאגו פאגו"
@@ -696,6 +700,7 @@
     "lon": 1.601554,
     "capital": "Andorra la Vella",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇦🇩",
     "hebrewName": "אנדורה",
     "hebrewCapital": "אנדורה לה וולה"
@@ -708,6 +713,7 @@
     "lon": 17.873887,
     "capital": "Luanda",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇦🇴",
     "geometry": {
       "type": "MultiPolygon",
@@ -1033,6 +1039,7 @@
     "lon": -63.068615,
     "capital": "the Valley",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇦🇮",
     "hebrewName": "אנגווילה",
     "hebrewCapital": "העמק"
@@ -1045,6 +1052,7 @@
     "lon": -61.796428,
     "capital": "Saint John's",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇦🇬",
     "hebrewName": "אנטיגואה וברבודה",
     "hebrewCapital": "סנט ג'ון"
@@ -1058,6 +1066,7 @@
     "zoom": 70,
     "capital": "Buenos Aires",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇦🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -1567,6 +1576,7 @@
     "lon": 45.038189,
     "capital": "Yerevan",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇲",
     "geometry": {
       "type": "Polygon",
@@ -1666,6 +1676,7 @@
     "lon": -69.968338,
     "capital": "Oranjestad",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇦🇼",
     "hebrewName": "ארובה",
     "hebrewCapital": "אורנג'סטאד"
@@ -1678,6 +1689,7 @@
     "lon": 133.775136,
     "capital": "Canberra",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇦🇺",
     "geometry": {
       "type": "MultiPolygon",
@@ -2667,6 +2679,7 @@
     "lon": 14.550072,
     "capital": "Vienna",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇦🇹",
     "geometry": {
       "type": "Polygon",
@@ -2834,6 +2847,7 @@
     "lon": 47.576927,
     "capital": "Baku",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇿",
     "geometry": {
       "type": "MultiPolygon",
@@ -3035,6 +3049,7 @@
     "lon": -77.39628,
     "capital": "Nassau",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇧🇸",
     "geometry": {
       "type": "MultiPolygon",
@@ -3148,6 +3163,7 @@
     "lon": 50.637772,
     "capital": "Manama",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇧🇭",
     "hebrewName": "בחריין",
     "hebrewCapital": "מנאמה"
@@ -3160,6 +3176,7 @@
     "lon": 90.356331,
     "capital": "Dhaka",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇧🇩",
     "geometry": {
       "type": "Polygon",
@@ -3323,6 +3340,7 @@
     "lon": -59.543198,
     "capital": "Bridgetown",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇧🇧",
     "hebrewName": "ברבדוס",
     "hebrewCapital": "ברידג'טאון"
@@ -3335,6 +3353,7 @@
     "lon": 27.953389,
     "capital": "Minsk",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇾",
     "geometry": {
       "type": "Polygon",
@@ -3534,6 +3553,7 @@
     "lon": 4.469936,
     "capital": "Brussels",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇪",
     "geometry": {
       "type": "Polygon",
@@ -3621,6 +3641,7 @@
     "lon": -88.49765,
     "capital": "Belmopan",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇧🇿",
     "geometry": {
       "type": "Polygon",
@@ -3720,6 +3741,7 @@
     "lon": 2.315834,
     "capital": "Porto Novo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇯",
     "geometry": {
       "type": "Polygon",
@@ -3839,6 +3861,7 @@
     "lon": -64.75737,
     "capital": "Hamilton",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇧🇲",
     "hebrewName": "ברמודה",
     "hebrewCapital": "המילטון"
@@ -3851,6 +3874,7 @@
     "lon": 90.433601,
     "capital": "Thimphu",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇧🇹",
     "geometry": {
       "type": "Polygon",
@@ -3922,6 +3946,7 @@
     "lon": -63.588653,
     "capital": "La Paz (Sucre)",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇧🇴",
     "geometry": {
       "type": "Polygon",
@@ -4181,6 +4206,7 @@
     "lon": 17.679076,
     "capital": "Sarajevo",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇦",
     "geometry": {
       "type": "Polygon",
@@ -4292,6 +4318,7 @@
     "lon": 24.684866,
     "capital": "Gaborone",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇼",
     "geometry": {
       "type": "Polygon",
@@ -4472,6 +4499,7 @@
     "zoom": 80,
     "capital": "Brasilia",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇧🇷",
     "geometry": {
       "type": "Polygon",
@@ -5303,6 +5331,7 @@
     "lon": -64.639968,
     "capital": "Road Town",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇻🇬",
     "hebrewName": "איי הבתולה הבריטיים",
     "hebrewCapital": "עיירת דרך"
@@ -5315,6 +5344,7 @@
     "lon": 114.727669,
     "capital": "Bandar Seri Begawan",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇧🇳",
     "geometry": {
       "type": "Polygon",
@@ -5366,6 +5396,7 @@
     "lon": 25.48583,
     "capital": "Sofia",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇧🇬",
     "geometry": {
       "type": "Polygon",
@@ -5497,6 +5528,7 @@
     "lon": -1.561593,
     "capital": "Ouagadougou",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇫",
     "geometry": {
       "type": "Polygon",
@@ -5672,6 +5704,7 @@
     "lon": 29.918886,
     "capital": "Gitega",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇧🇮",
     "geometry": {
       "type": "Polygon",
@@ -5743,6 +5776,7 @@
     "lon": 104.990963,
     "capital": "Phnom Penh",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇭",
     "geometry": {
       "type": "Polygon",
@@ -5830,6 +5864,7 @@
     "lon": 12.354722,
     "capital": "Yaounde",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇲",
     "geometry": {
       "type": "Polygon",
@@ -6094,6 +6129,7 @@
     "zoom": 70,
     "capital": "Ottawa",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇨🇦",
     "geometry": {
       "type": "MultiPolygon",
@@ -9407,6 +9443,7 @@
     "lon": -24.013197,
     "capital": "Praia",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇻",
     "hebrewName": "שכמייה ירוקה",
     "hebrewCapital": "פראיה"
@@ -9419,6 +9456,7 @@
     "lon": -80.566956,
     "capital": "George Town",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇰🇾",
     "hebrewName": "איי קיימן",
     "hebrewCapital": "ג'ורג 'טאון"
@@ -9431,6 +9469,7 @@
     "lon": 20.939444,
     "capital": "Bangui",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇫",
     "geometry": {
       "type": "Polygon",
@@ -9698,6 +9737,7 @@
     "lon": 18.732207,
     "capital": "N'Djamena",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇩",
     "geometry": {
       "type": "Polygon",
@@ -9949,6 +9989,7 @@
     "lon": -71.542969,
     "capital": "Santiago",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇨🇱",
     "geometry": {
       "type": "MultiPolygon",
@@ -10431,6 +10472,7 @@
     "zoom": 70,
     "capital": "Beijing",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇨🇳",
     "geometry": {
       "type": "MultiPolygon",
@@ -11416,6 +11458,7 @@
     "lon": -74.297333,
     "capital": "Bogota",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇨🇴",
     "geometry": {
       "type": "Polygon",
@@ -11835,6 +11878,7 @@
     "lon": 43.872219,
     "capital": "Moroni",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇰🇲",
     "hebrewName": "קומורוס",
     "hebrewCapital": "מורוני"
@@ -11847,6 +11891,7 @@
     "lon": -159.777671,
     "capital": "Avarua",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇨🇰",
     "hebrewName": "איי קוק",
     "hebrewCapital": "אבארואה"
@@ -11859,6 +11904,7 @@
     "lon": -83.753428,
     "capital": "San Jose",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇨🇷",
     "geometry": {
       "type": "Polygon",
@@ -12022,6 +12068,7 @@
     "lon": 15.2,
     "capital": "Zagreb",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇭🇷",
     "geometry": {
       "type": "Polygon",
@@ -12213,6 +12260,7 @@
     "lon": -77.781167,
     "capital": "Havana",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇨🇺",
     "geometry": {
       "type": "Polygon",
@@ -12400,6 +12448,7 @@
     "lon": -68.9495816,
     "capital": "Willemstad",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇨🇼",
     "hebrewName": "Curacao",
     "hebrewCapital": "וילמסטאד"
@@ -12412,6 +12461,7 @@
     "lon": 33.429859,
     "capital": "Nicosia",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇨🇾",
     "geometry": {
       "type": "Polygon",
@@ -12491,6 +12541,7 @@
     "lon": 15.472962,
     "capital": "Prague",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇨🇿",
     "geometry": {
       "type": "Polygon",
@@ -12650,6 +12701,7 @@
     "lon": 9.501785,
     "capital": "Copenhagen",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇩🇰",
     "geometry": {
       "type": "MultiPolygon",
@@ -12771,6 +12823,7 @@
     "lon": 42.590275,
     "capital": "Djibouti",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇩🇯",
     "geometry": {
       "type": "Polygon",
@@ -12850,6 +12903,7 @@
     "lon": -61.370976,
     "capital": "Roseau",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇩🇲",
     "hebrewName": "דומיניקה",
     "hebrewCapital": "רוזו"
@@ -12862,6 +12916,7 @@
     "lon": -70.162651,
     "capital": "Santo Domingo",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇩🇴",
     "geometry": {
       "type": "Polygon",
@@ -12985,6 +13040,7 @@
     "lon": 21.758664,
     "capital": "Kinshasa",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇩",
     "geometry": {
       "type": "Polygon",
@@ -13500,6 +13556,7 @@
     "lon": -78.183406,
     "capital": "Quito",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇪🇨",
     "geometry": {
       "type": "Polygon",
@@ -13651,6 +13708,7 @@
     "lon": 30.802498,
     "capital": "Cairo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇬",
     "geometry": {
       "type": "Polygon",
@@ -13846,6 +13904,7 @@
     "lon": -88.89653,
     "capital": "San Salvador",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇸🇻",
     "geometry": {
       "type": "Polygon",
@@ -13945,6 +14004,7 @@
     "lon": 10.267895,
     "capital": "Malabo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇶",
     "geometry": {
       "type": "Polygon",
@@ -13992,6 +14052,7 @@
     "lon": 39.782334,
     "capital": "Asmara",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇷",
     "geometry": {
       "type": "Polygon",
@@ -14123,6 +14184,7 @@
     "lon": 25.013607,
     "capital": "Tallinn",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇪🇪",
     "geometry": {
       "type": "Polygon",
@@ -14218,6 +14280,7 @@
     "lon": 31.4629694,
     "capital": "Mbabane",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇿",
     "geometry": {
       "type": "Polygon",
@@ -14281,6 +14344,7 @@
     "lon": 40.489673,
     "capital": "Addis Ababa",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇹",
     "geometry": {
       "type": "Polygon",
@@ -14536,6 +14600,7 @@
     "lon": -59.523613,
     "capital": "Stanley",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇫🇰",
     "geometry": {
       "type": "Polygon",
@@ -14595,6 +14660,7 @@
     "lon": -6.911806,
     "capital": "Torshavn",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇫🇴",
     "hebrewName": "איי פארו",
     "hebrewCapital": "טורסהאבן"
@@ -14607,6 +14673,7 @@
     "lon": 179.414413,
     "capital": "Suva",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇫🇯",
     "geometry": {
       "type": "MultiPolygon",
@@ -14724,6 +14791,7 @@
     "lon": 25.748151,
     "capital": "Helsinki",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇫🇮",
     "geometry": {
       "type": "Polygon",
@@ -14903,6 +14971,7 @@
     "lon": 2.213749,
     "capital": "Paris",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇫🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -15228,6 +15297,7 @@
     "lon": -53.125782,
     "capital": "Cayenne",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇬🇫",
     "hebrewName": "גיאנה הצרפתית",
     "hebrewCapital": "קאיין"
@@ -15240,6 +15310,7 @@
     "lon": -149.406843,
     "capital": "Papeetē",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇵🇫",
     "hebrewName": "פולינזיה צרפתית",
     "hebrewCapital": "פאפיט"
@@ -15252,6 +15323,7 @@
     "lon": 11.609444,
     "capital": "Libreville",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇦",
     "geometry": {
       "type": "Polygon",
@@ -15395,6 +15467,7 @@
     "lon": -15.310139,
     "capital": "Banjul",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇲",
     "geometry": {
       "type": "Polygon",
@@ -15478,6 +15551,7 @@
     "lon": 43.356892,
     "capital": "Tbilisi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇬🇪",
     "geometry": {
       "type": "Polygon",
@@ -15593,6 +15667,7 @@
     "lon": 10.451526,
     "capital": "Berlin",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇩🇪",
     "geometry": {
       "type": "Polygon",
@@ -15844,6 +15919,7 @@
     "lon": -1.023194,
     "capital": "Accra",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇭",
     "geometry": {
       "type": "Polygon",
@@ -15963,6 +16039,7 @@
     "lon": -5.345374,
     "capital": "Gibraltar",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇬🇮",
     "hebrewName": "גיברלטר",
     "hebrewCapital": "גיברלטר"
@@ -15975,6 +16052,7 @@
     "lon": 21.824312,
     "capital": "Athens",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇬🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -16216,6 +16294,7 @@
     "lon": -42.604303,
     "capital": "Nuuk",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇬🇱",
     "geometry": {
       "type": "Polygon",
@@ -16763,6 +16842,7 @@
     "lon": -61.604171,
     "capital": "Saint George's",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇬🇩",
     "hebrewName": "גרנדה",
     "hebrewCapital": "סנט ג'ורג'"
@@ -16775,6 +16855,7 @@
     "lon": -62.067641,
     "capital": "Basse-Terre",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇬🇵",
     "hebrewName": "Guadeloupe",
     "hebrewCapital": "באסה-טרה"
@@ -16787,6 +16868,7 @@
     "lon": 144.793731,
     "capital": "Hagåtña",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇬🇺",
     "hebrewName": "גואם",
     "hebrewCapital": "האגאטניה"
@@ -16799,6 +16881,7 @@
     "lon": -90.230759,
     "capital": "Guatemala City",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇬🇹",
     "geometry": {
       "type": "Polygon",
@@ -16958,6 +17041,7 @@
     "lon": -2.585278,
     "capital": "St. Peter Port",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇬🇬",
     "hebrewName": "גרנזי",
     "hebrewCapital": "סיינט פיטר פורט"
@@ -16970,6 +17054,7 @@
     "lon": -9.696645,
     "capital": "Conakry",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇳",
     "geometry": {
       "type": "Polygon",
@@ -17269,6 +17354,7 @@
     "lon": -15.180413,
     "capital": "Bissau",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇬🇼",
     "geometry": {
       "type": "Polygon",
@@ -17364,6 +17450,7 @@
     "lon": -58.93018,
     "capital": "Georgetown",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇬🇾",
     "geometry": {
       "type": "Polygon",
@@ -17543,6 +17630,7 @@
     "lon": -72.285215,
     "capital": "Port au Prince",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇭🇹",
     "geometry": {
       "type": "Polygon",
@@ -17646,6 +17734,7 @@
     "lon": -86.241905,
     "capital": "Tegucigalpa",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇭🇳",
     "geometry": {
       "type": "Polygon",
@@ -17893,6 +17982,7 @@
     "lon": 114.109497,
     "capital": "City of Victoria",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇭🇰",
     "hebrewName": "הונג קונג",
     "hebrewCapital": "סיטי אוף ויקטוריה"
@@ -17905,6 +17995,7 @@
     "lon": 19.503304,
     "capital": "Budapest",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇭🇺",
     "geometry": {
       "type": "Polygon",
@@ -18052,6 +18143,7 @@
     "lon": -19.020835,
     "capital": "Reykjavik",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇮🇸",
     "geometry": {
       "type": "Polygon",
@@ -18152,6 +18244,7 @@
     "zoom": 50,
     "capital": "New Delhi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇳",
     "geometry": {
       "type": "Polygon",
@@ -18715,6 +18808,7 @@
     "lon": 113.921327,
     "capital": "Jakarta",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇩",
     "geometry": {
       "type": "MultiPolygon",
@@ -19784,6 +19878,7 @@
     "lon": 53.688046,
     "capital": "Tehran",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇷",
     "geometry": {
       "type": "Polygon",
@@ -20107,6 +20202,7 @@
     "lon": 43.679291,
     "capital": "Baghdad",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇶",
     "geometry": {
       "type": "Polygon",
@@ -20246,6 +20342,7 @@
     "lon": -8.24389,
     "capital": "Dublin",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇮🇪",
     "geometry": {
       "type": "Polygon",
@@ -20317,6 +20414,7 @@
     "lon": -4.548056,
     "capital": "Douglas",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇮🇲",
     "hebrewName": "האי מאדם",
     "hebrewCapital": "דגלס"
@@ -20329,6 +20427,7 @@
     "lon": 34.851612,
     "capital": "Jerusalem",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇮🇱",
     "geometry": {
       "type": "Polygon",
@@ -20452,6 +20551,7 @@
     "lon": 12.56738,
     "capital": "Rome",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇮🇹",
     "geometry": {
       "type": "MultiPolygon",
@@ -20829,6 +20929,7 @@
     "lon": -5.54708,
     "capital": "Yamoussoukro",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇮",
     "geometry": {
       "type": "Polygon",
@@ -21032,6 +21133,7 @@
     "lon": -77.297508,
     "capital": "Kingston",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇯🇲",
     "geometry": {
       "type": "Polygon",
@@ -21095,6 +21197,7 @@
     "lon": 138.252924,
     "capital": "Tokyo",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇯🇵",
     "geometry": {
       "type": "MultiPolygon",
@@ -21384,6 +21487,7 @@
     "lon": -2.13125,
     "capital": "St Helier",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇯🇪",
     "hebrewName": "ג'רזי",
     "hebrewCapital": "סיינט הלייר"
@@ -21396,6 +21500,7 @@
     "lon": 36.238414,
     "capital": "Amman",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇯🇴",
     "geometry": {
       "type": "Polygon",
@@ -21491,6 +21596,7 @@
     "lon": 66.923684,
     "capital": "Astana",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇿",
     "geometry": {
       "type": "Polygon",
@@ -21958,6 +22064,7 @@
     "lon": 37.906193,
     "capital": "Nairobi",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇰🇪",
     "geometry": {
       "type": "Polygon",
@@ -22125,6 +22232,7 @@
     "lon": -168.734039,
     "capital": "Tarawa Atoll",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇰🇮",
     "hebrewName": "קיריבטי",
     "hebrewCapital": "טארוואה"
@@ -22136,6 +22244,7 @@
     "lon": 20.902977,
     "capital": "Prishtina",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇽🇰",
     "geometry": {
       "type": "Polygon",
@@ -22247,6 +22356,7 @@
     "lon": 47.481766,
     "capital": "Kuwait City",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇼",
     "geometry": {
       "type": "Polygon",
@@ -22302,6 +22412,7 @@
     "lon": 74.766098,
     "capital": "Bishkek",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇬",
     "geometry": {
       "type": "Polygon",
@@ -22461,6 +22572,7 @@
     "lon": 102.495496,
     "capital": "Vientiane",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇱🇦",
     "geometry": {
       "type": "Polygon",
@@ -22628,6 +22740,7 @@
     "lon": 24.603189,
     "capital": "Riga",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇱🇻",
     "geometry": {
       "type": "Polygon",
@@ -22735,6 +22848,7 @@
     "lon": 35.862285,
     "capital": "Beirut",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇱🇧",
     "geometry": {
       "type": "Polygon",
@@ -22798,6 +22912,7 @@
     "lon": 28.233608,
     "capital": "Maseru",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇱🇸",
     "geometry": {
       "type": "Polygon",
@@ -22865,6 +22980,7 @@
     "lon": -9.429499,
     "capital": "Monrovia",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇱🇷",
     "geometry": {
       "type": "Polygon",
@@ -22992,6 +23108,7 @@
     "lon": 17.228331,
     "capital": "Tripoli",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇱🇾",
     "geometry": {
       "type": "Polygon",
@@ -23235,6 +23352,7 @@
     "lon": 9.555373,
     "capital": "Vaduz",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇱🇮",
     "hebrewName": "ליכטנשטיין",
     "hebrewCapital": "ואדוז"
@@ -23247,6 +23365,7 @@
     "lon": 23.881275,
     "capital": "Vilnius",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇱🇹",
     "geometry": {
       "type": "Polygon",
@@ -23342,6 +23461,7 @@
     "lon": 6.129583,
     "capital": "Luxembourg",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇱🇺",
     "geometry": {
       "type": "Polygon",
@@ -23388,6 +23508,7 @@
     "lat": 22.198745,
     "lon": 113.543873,
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇴",
     "hebrewName": "מקאו"
   },
@@ -23399,6 +23520,7 @@
     "lon": 46.869107,
     "capital": "Antananarivo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇬",
     "geometry": {
       "type": "Polygon",
@@ -23614,6 +23736,7 @@
     "lon": 34.301525,
     "capital": "Lilongwe",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇼",
     "geometry": {
       "type": "Polygon",
@@ -23745,6 +23868,7 @@
     "lon": 101.975766,
     "capital": "Kuala Lumpur",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇾",
     "geometry": {
       "type": "MultiPolygon",
@@ -24018,6 +24142,7 @@
     "lon": 73.22068,
     "capital": "Male",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇻",
     "hebrewName": "המלדיביים",
     "hebrewCapital": "מאלה"
@@ -24030,6 +24155,7 @@
     "lon": -3.996166,
     "capital": "Bamako",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇱",
     "geometry": {
       "type": "Polygon",
@@ -24354,6 +24480,7 @@
     "zoom": 20,
     "capital": "Valletta",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇹",
     "geometry": {
       "type": "MultiPolygon",
@@ -24427,6 +24554,7 @@
     "lon": 171.184478,
     "capital": "Majuro",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇲🇭",
     "hebrewName": "איי מרשל",
     "hebrewCapital": "מג'ורו"
@@ -24439,6 +24567,7 @@
     "lon": -61.024174,
     "capital": "Fort de France",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇲🇶",
     "hebrewName": "מרטיניק",
     "hebrewCapital": "פור דה פרנס"
@@ -24451,6 +24580,7 @@
     "lon": -10.940835,
     "capital": "Nouakchott",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇷",
     "geometry": {
       "type": "Polygon",
@@ -24626,6 +24756,7 @@
     "lon": 57.552152,
     "capital": "Port Louis",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇺",
     "hebrewName": "מאוריציוס",
     "hebrewCapital": "פורט לואי"
@@ -24638,6 +24769,7 @@
     "lon": 45.166244,
     "capital": "Mamoudzou",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇾🇹",
     "hebrewName": "מיוט",
     "hebrewCapital": "ממודזו"
@@ -24650,6 +24782,7 @@
     "lon": -102.552784,
     "capital": "Mexico City",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇲🇽",
     "geometry": {
       "type": "Polygon",
@@ -25349,6 +25482,7 @@
     "lon": 150.550812,
     "capital": "Palikir",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇫🇲",
     "hebrewName": "מיקרונזיה",
     "hebrewCapital": "פליקיר"
@@ -25361,6 +25495,7 @@
     "lon": 28.369885,
     "capital": "Chisinau",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇩",
     "geometry": {
       "type": "Polygon",
@@ -25489,6 +25624,7 @@
     "zoom": 20,
     "capital": "Monaco",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇨",
     "geometry": {
       "type": "Polygon",
@@ -25540,6 +25676,7 @@
     "lon": 103.846656,
     "capital": "Ulaanbaatar",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇳",
     "geometry": {
       "type": "Polygon",
@@ -25859,6 +25996,7 @@
     "lon": 19.37439,
     "capital": "Podgorica",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇪",
     "geometry": {
       "type": "Polygon",
@@ -25950,6 +26088,7 @@
     "lon": -62.187366,
     "capital": "Plymouth",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇲🇸",
     "hebrewName": "מונטסראט",
     "hebrewCapital": "פלימות"
@@ -25962,6 +26101,7 @@
     "lon": -7.09262,
     "capital": "Rabat",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇦",
     "geometry": {
       "type": "Polygon",
@@ -26233,6 +26373,7 @@
     "lon": 35.529562,
     "capital": "Maputo",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇲🇿",
     "geometry": {
       "type": "Polygon",
@@ -26568,6 +26709,7 @@
     "lon": 95.956223,
     "capital": "Nay Pyi Taw",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇲🇲",
     "geometry": {
       "type": "Polygon",
@@ -26867,6 +27009,7 @@
     "lon": 18.49041,
     "capital": "Windhoek",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇳🇦",
     "geometry": {
       "type": "Polygon",
@@ -27061,6 +27204,7 @@
     "lat": -0.522778,
     "lon": 166.931503,
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇳🇷",
     "hebrewName": "נאורו"
   },
@@ -27072,6 +27216,7 @@
     "lon": 84.124008,
     "capital": "Kathmandu",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇳🇵",
     "geometry": {
       "type": "Polygon",
@@ -27183,6 +27328,7 @@
     "lon": 5.291266,
     "capital": "Amsterdam",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇳🇱",
     "geometry": {
       "type": "Polygon",
@@ -27262,6 +27408,7 @@
     "lon": 165.618042,
     "capital": "Noumea",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇳🇨",
     "geometry": {
       "type": "Polygon",
@@ -27333,6 +27480,7 @@
     "lon": 174.885971,
     "capital": "Wellington",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇳🇿",
     "geometry": {
       "type": "MultiPolygon",
@@ -27622,6 +27770,7 @@
     "lon": -85.207229,
     "capital": "Managua",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇳🇮",
     "geometry": {
       "type": "Polygon",
@@ -27849,6 +27998,7 @@
     "lon": 8.081666,
     "capital": "Niamey",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇳🇪",
     "geometry": {
       "type": "Polygon",
@@ -28100,6 +28250,7 @@
     "lon": 8.675277,
     "capital": "Abuja",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇳🇬",
     "geometry": {
       "type": "Polygon",
@@ -28351,6 +28502,7 @@
     "lon": -169.867233,
     "capital": "Alofi",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇳🇺",
     "hebrewName": "ניואה",
     "hebrewCapital": "אלופי"
@@ -28363,6 +28515,7 @@
     "lon": 127.510093,
     "capital": "Pyongyang",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇵",
     "geometry": {
       "type": "MultiPolygon",
@@ -28580,6 +28733,7 @@
     "lon": 21.743258,
     "capital": "Skopje",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇲🇰",
     "geometry": {
       "type": "Polygon",
@@ -28671,6 +28825,7 @@
     "lon": 145.38469,
     "capital": "Saipan",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇲🇵",
     "hebrewName": "איי צפון מריאנה",
     "hebrewCapital": "סייפן"
@@ -28683,6 +28838,7 @@
     "lon": 8.468946,
     "capital": "Oslo",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇳🇴",
     "geometry": {
       "type": "MultiPolygon",
@@ -29068,6 +29224,7 @@
     "lon": 55.923255,
     "capital": "Muscat",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇴🇲",
     "geometry": {
       "type": "MultiPolygon",
@@ -29281,6 +29438,7 @@
     "lon": 69.345116,
     "capital": "Islamabad",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇵🇰",
     "geometry": {
       "type": "Polygon",
@@ -29564,6 +29722,7 @@
     "lon": 134.58252,
     "capital": "Ngerulmud",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇵🇼",
     "hebrewName": "פאלאו",
     "hebrewCapital": "נגרולמוד"
@@ -29576,6 +29735,7 @@
     "lon": -80.782127,
     "capital": "Panama City",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇵🇦",
     "geometry": {
       "type": "Polygon",
@@ -29803,6 +29963,7 @@
     "lon": 143.95555,
     "capital": "Port Moresby",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇵🇬",
     "geometry": {
       "type": "MultiPolygon",
@@ -30160,6 +30321,7 @@
     "lon": -58.443832,
     "capital": "Asuncion",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇵🇾",
     "geometry": {
       "type": "Polygon",
@@ -30311,6 +30473,7 @@
     "lon": -75.015152,
     "capital": "Lima",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇵🇪",
     "geometry": {
       "type": "Polygon",
@@ -30634,6 +30797,7 @@
     "lon": 121.774017,
     "capital": "Manila",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇵🇭",
     "geometry": {
       "type": "MultiPolygon",
@@ -31119,6 +31283,7 @@
     "lon": 19.145136,
     "capital": "Warsaw",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇵🇱",
     "geometry": {
       "type": "Polygon",
@@ -31318,6 +31483,7 @@
     "lon": -8.224454,
     "capital": "Lisbon",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇵🇹",
     "geometry": {
       "type": "Polygon",
@@ -31469,6 +31635,7 @@
     "lon": -66.590149,
     "capital": "San Juan",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇵🇷",
     "geometry": {
       "type": "Polygon",
@@ -31524,6 +31691,7 @@
     "lon": 51.183884,
     "capital": "Doha",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇶🇦",
     "geometry": {
       "type": "Polygon",
@@ -31579,6 +31747,7 @@
     "lon": 15.827659,
     "capital": "Brazzaville",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇨🇬",
     "geometry": {
       "type": "Polygon",
@@ -31794,6 +31963,7 @@
     "lon": 55.536384,
     "capital": "Saint-Denis",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇫🇷",
     "hebrewName": "ראוניון",
     "hebrewCapital": "סיינט דניס"
@@ -31806,6 +31976,7 @@
     "lon": 24.96676,
     "capital": "Bucharest",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇷🇴",
     "geometry": {
       "type": "Polygon",
@@ -32002,6 +32173,7 @@
     "zoom": 70,
     "capital": "Moscow",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇷🇺",
     "geometry": {
       "type": "MultiPolygon",
@@ -34575,6 +34747,7 @@
     "lon": 29.873888,
     "capital": "Kigali",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇷🇼",
     "geometry": {
       "type": "Polygon",
@@ -34650,6 +34823,7 @@
     "lon": -62.8338521,
     "capital": "Gustavia",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇧🇱",
     "hebrewName": "סנט ברטלמי",
     "hebrewCapital": "גוסטביה"
@@ -34662,6 +34836,7 @@
     "lon": -62.782998,
     "capital": "Basseterre",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇰🇳",
     "hebrewName": "סנט קיטס ונביס",
     "hebrewCapital": "בסטר"
@@ -34674,6 +34849,7 @@
     "lon": -60.978893,
     "capital": "Castries",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇱🇨",
     "hebrewName": "סנט לוסיה",
     "hebrewCapital": "קסטריז"
@@ -34686,6 +34862,7 @@
     "lon": -63.0618597,
     "capital": "Marigot",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇫🇷",
     "hebrewName": "סנט מרטין",
     "hebrewCapital": "מריגוט"
@@ -34698,6 +34875,7 @@
     "lon": -56.27111,
     "capital": "Saint-Pierre",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇵🇲",
     "hebrewName": "סנט פייר ומיקלון",
     "hebrewCapital": "סנט פייר"
@@ -34710,6 +34888,7 @@
     "lon": -61.287228,
     "capital": "Kingstown",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇻🇨",
     "hebrewName": "סנט וינסנט והגרנדינים",
     "hebrewCapital": "קינגסטאון"
@@ -34722,6 +34901,7 @@
     "lon": -172.104629,
     "capital": "Apia",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇼🇸",
     "hebrewName": "סמואה",
     "hebrewCapital": "אפיה"
@@ -34735,6 +34915,7 @@
     "zoom": 20,
     "capital": "San Marino",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇲",
     "geometry": {
       "type": "Polygon",
@@ -34802,6 +34983,7 @@
     "lon": 6.613081,
     "capital": "Sao Tome",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇹",
     "hebrewName": "סאו טומה ופרינסיפה",
     "hebrewCapital": "סאו טומה"
@@ -34814,6 +34996,7 @@
     "lon": 45.079162,
     "capital": "Riyadh",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇸🇦",
     "geometry": {
       "type": "Polygon",
@@ -35137,6 +35320,7 @@
     "lon": -14.452362,
     "capital": "Dakar",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇳",
     "geometry": {
       "type": "Polygon",
@@ -35332,6 +35516,7 @@
     "lon": 21.005859,
     "capital": "Belgrade",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇷🇸",
     "geometry": {
       "type": "Polygon",
@@ -35543,6 +35728,7 @@
     "lon": 55.491977,
     "capital": "Victoria",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇨",
     "geometry": {
       "type": "MultiPolygon",
@@ -35636,6 +35822,7 @@
     "lon": -11.779889,
     "capital": "Freetown",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇱",
     "geometry": {
       "type": "Polygon",
@@ -35744,6 +35931,7 @@
     "zoom": 40,
     "capital": "Singapore",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇸🇬",
     "geometry": {
       "type": "Polygon",
@@ -35811,6 +35999,7 @@
     "lon": -63.0681114,
     "capital": "Philipsburg",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇸🇽",
     "hebrewName": "סינט מרטן",
     "hebrewCapital": "פיליפסבורג"
@@ -35823,6 +36012,7 @@
     "lon": 19.699024,
     "capital": "Bratislava",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇰",
     "geometry": {
       "type": "Polygon",
@@ -35974,6 +36164,7 @@
     "lon": 14.995463,
     "capital": "Ljubljana",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇮",
     "geometry": {
       "type": "Polygon",
@@ -36065,6 +36256,7 @@
     "lon": 160.156194,
     "capital": "Honiara",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇸🇧",
     "geometry": {
       "type": "MultiPolygon",
@@ -36250,6 +36442,7 @@
     "lon": 46.199616,
     "capital": "Mogadishu",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇴",
     "geometry": {
       "type": "Polygon",
@@ -36417,6 +36610,7 @@
     "lon": 22.937506,
     "capital": "Pretoria, Bloemfontein, Cape Town",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇿🇦",
     "geometry": {
       "type": "Polygon",
@@ -36814,6 +37008,7 @@
     "lon": 127.766922,
     "capital": "Seoul",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇰🇷",
     "geometry": {
       "type": "Polygon",
@@ -36909,6 +37104,7 @@
     "lon": 29.6949232,
     "capital": "Juba",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇸",
     "geometry": {
       "type": "Polygon",
@@ -37180,6 +37376,7 @@
     "lon": -3.74922,
     "capital": "Madrid",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇪🇸",
     "geometry": {
       "type": "Polygon",
@@ -37403,6 +37600,7 @@
     "lon": 80.771797,
     "capital": "Sri Jayawardenapura Kotte[21]",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇱🇰",
     "geometry": {
       "type": "Polygon",
@@ -37462,6 +37660,7 @@
     "lon": 30.217636,
     "capital": "Khartoum",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇸🇩",
     "geometry": {
       "type": "Polygon",
@@ -37805,6 +38004,7 @@
     "lon": -56.027783,
     "capital": "Paramaribo",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇸🇷",
     "geometry": {
       "type": "Polygon",
@@ -37928,6 +38128,7 @@
     "lon": 18.643501,
     "capital": "Stockholm",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇸🇪",
     "geometry": {
       "type": "Polygon",
@@ -38109,6 +38310,7 @@
     "lon": 9.5430965,
     "capital": "Bern",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇨🇭",
     "geometry": {
       "type": "Polygon",
@@ -38224,6 +38426,7 @@
     "lon": 38.996815,
     "capital": "Damascus",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇸🇾",
     "geometry": {
       "type": "Polygon",
@@ -38351,6 +38554,7 @@
     "lon": 120.960515,
     "capital": "Taipei",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇼",
     "geometry": {
       "type": "Polygon",
@@ -38406,6 +38610,7 @@
     "lon": 71.276093,
     "capital": "Dushanbe",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇯",
     "geometry": {
       "type": "Polygon",
@@ -38589,6 +38794,7 @@
     "lon": 34.888822,
     "capital": "Dodoma",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇿",
     "geometry": {
       "type": "Polygon",
@@ -38816,6 +39022,7 @@
     "lon": 100.992541,
     "capital": "Bangkok",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇭",
     "geometry": {
       "type": "Polygon",
@@ -39091,6 +39298,7 @@
     "lon": 125.727539,
     "capital": "Dili",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇱",
     "geometry": {
       "type": "Polygon",
@@ -39154,6 +39362,7 @@
     "lon": 0.824782,
     "capital": "Lome",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇬",
     "geometry": {
       "type": "Polygon",
@@ -39249,6 +39458,7 @@
     "lon": -171.855881,
     "capital": "Fakaofo, Nukunonu, Atafu",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇹🇰",
     "hebrewName": "טוקלאו",
     "hebrewCapital": "פאקאופו, נוקונונו, אטפו"
@@ -39261,6 +39471,7 @@
     "lon": -175.198242,
     "capital": "Nuku'alofa",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇹🇴",
     "hebrewName": "טונגה",
     "hebrewCapital": "נוקואלופה"
@@ -39273,6 +39484,7 @@
     "lon": -61.222503,
     "capital": "Port of Spain",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇹🇹",
     "geometry": {
       "type": "Polygon",
@@ -39324,6 +39536,7 @@
     "lon": 9.537499,
     "capital": "Tunis",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇹🇳",
     "geometry": {
       "type": "Polygon",
@@ -39467,6 +39680,7 @@
     "lon": 35.243322,
     "capital": "Ankara",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇷",
     "geometry": {
       "type": "MultiPolygon",
@@ -39764,6 +39978,7 @@
     "lon": 59.556278,
     "capital": "Ashgabat",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇹🇲",
     "geometry": {
       "type": "Polygon",
@@ -39999,6 +40214,7 @@
     "lon": -71.797928,
     "capital": "Cockburn Town",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇹🇨",
     "hebrewName": "איי טורקים וקייקוס",
     "hebrewCapital": "קוקבורן טאון"
@@ -40011,6 +40227,7 @@
     "lon": 177.64933,
     "capital": "Funafuti",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇹🇻",
     "hebrewName": "טובלו",
     "hebrewCapital": "פונפוטי"
@@ -40023,6 +40240,7 @@
     "lon": 32.290275,
     "capital": "Kampala",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇺🇬",
     "geometry": {
       "type": "Polygon",
@@ -40154,6 +40372,7 @@
     "lon": 31.16558,
     "capital": "Kyiv or Kiev",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇺🇦",
     "geometry": {
       "type": "Polygon",
@@ -40545,6 +40764,7 @@
     "lon": 53.847818,
     "capital": "Abu Dhabi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇦🇪",
     "geometry": {
       "type": "Polygon",
@@ -40652,6 +40872,7 @@
     "lon": -3.435973,
     "capital": "London",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇬🇧",
     "geometry": {
       "type": "MultiPolygon",
@@ -40902,6 +41123,7 @@
     "zoom": 70,
     "capital": "Washington D.C.",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇺🇸",
     "geometry": {
       "type": "MultiPolygon",
@@ -42747,6 +42969,7 @@
     "lon": -64.896335,
     "capital": "Charlotte Amalie",
     "continent": "North America",
+    "hebrewContinent": "צפון אמריקה",
     "emoji": "🇻🇮",
     "hebrewName": "איי הבתולה של ארצות הברית",
     "hebrewCapital": "שרלוט אמלי"
@@ -42759,6 +42982,7 @@
     "lon": -55.765835,
     "capital": "Montevideo",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇺🇾",
     "geometry": {
       "type": "Polygon",
@@ -42862,6 +43086,7 @@
     "lon": 64.585262,
     "capital": "Tashkent",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇺🇿",
     "geometry": {
       "type": "Polygon",
@@ -43097,6 +43322,7 @@
     "lon": 166.959158,
     "capital": "Port Vila",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇻🇺",
     "geometry": {
       "type": "MultiPolygon",
@@ -43170,6 +43396,7 @@
     "lon": 12.453389,
     "capital": "Vatican City",
     "continent": "Europe",
+    "hebrewContinent": "אירופה",
     "emoji": "🇻🇦",
     "geometry": {
       "type": "Polygon",
@@ -43373,6 +43600,7 @@
     "lon": -66.58973,
     "capital": "Caracas",
     "continent": "South America",
+    "hebrewContinent": "דרום אמריקה",
     "emoji": "🇻🇪",
     "geometry": {
       "type": "Polygon",
@@ -43760,6 +43988,7 @@
     "lon": 108.277199,
     "capital": "Hanoi",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇻🇳",
     "geometry": {
       "type": "Polygon",
@@ -43955,6 +44184,7 @@
     "lon": -177.156097,
     "capital": "Mata-Utu",
     "continent": "Oceania",
+    "hebrewContinent": "אוקיאניה",
     "emoji": "🇼🇫",
     "hebrewName": "וואליס ופוטונה",
     "hebrewCapital": "מטה-אוטו"
@@ -43967,6 +44197,7 @@
     "lon": -12.885834,
     "capital": "Laayoune",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇪🇭",
     "geometry": {
       "type": "Polygon",
@@ -44098,6 +44329,7 @@
     "lon": 48.516388,
     "capital": "Sana'a",
     "continent": "Asia",
+    "hebrewContinent": "אסיה",
     "emoji": "🇾🇪",
     "geometry": {
       "type": "Polygon",
@@ -44293,6 +44525,7 @@
     "lon": 27.849332,
     "capital": "Lusaka",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇿🇲",
     "geometry": {
       "type": "Polygon",
@@ -44556,6 +44789,7 @@
     "lon": 29.154857,
     "capital": "Harare",
     "continent": "Africa",
+    "hebrewContinent": "אפריקה",
     "emoji": "🇿🇼",
     "geometry": {
       "type": "Polygon",
