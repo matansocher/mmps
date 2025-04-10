@@ -29,6 +29,7 @@ export interface ExpectedMatch {
   readonly startTime: string;
   readonly statusText: string;
   readonly gameTime: number;
+  readonly stageName: string;
   readonly venue: {
     readonly id: number;
     readonly name: string;
@@ -54,6 +55,7 @@ export interface MatchDetails {
   readonly statusText: string;
   readonly gameTime: number;
   readonly venue: string;
+  readonly stage: string;
   readonly homeCompetitor: Team;
   readonly awayCompetitor: Team;
   readonly channel: string;

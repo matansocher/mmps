@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { isProd } from '@core/config';
 import { AnnouncerModule } from '@features/announcer';
 import { CoachModule } from '@features/coach';
 import { DefineModule } from '@features/define';
@@ -14,18 +13,20 @@ import { WorldlyModule } from '@features/worldly';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-function getImports() {
-  const commonModules = [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })];
-
-  if (isProd) {
-    return [...commonModules, AnnouncerModule, CoachModule, DefineModule, EducatorModule, TeacherModule, TrainerModule, VoicePalModule, WoltModule, WorldlyModule];
-  }
-
-  return [...commonModules, PlaygroundsModule, TeacherModule];
-}
-
 @Module({
-  imports: getImports(),
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    AnnouncerModule,
+    CoachModule,
+    DefineModule,
+    EducatorModule,
+    PlaygroundsModule,
+    TeacherModule,
+    TrainerModule,
+    VoicePalModule,
+    WoltModule,
+    WorldlyModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
