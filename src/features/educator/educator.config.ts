@@ -1,5 +1,4 @@
 export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
-export const IDLE_DAYS_REMINDER = 3;
 
 export const EDUCATOR_BOT_COMMANDS = {
   TOPIC: { command: '/topic', description: '➡️ נושא הבא ➡️' },

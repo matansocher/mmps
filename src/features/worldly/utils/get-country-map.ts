@@ -25,11 +25,11 @@ function saveCountryMapLocally(countryName: string, canvas: Canvas): string {
   return filePath;
 }
 
-export function getCountryMap(countryName: string): string {
-  const localCountryMap = getLocalCountryMap(countryName);
+export function getCountryMap(name: string, isState = false): string {
+  const localCountryMap = getLocalCountryMap(name);
   if (localCountryMap) {
     return localCountryMap;
   }
-  const canvas = generateCountryMap(countryName);
-  return saveCountryMapLocally(countryName, canvas);
+  const canvas = generateCountryMap(name, isState);
+  return saveCountryMapLocally(name, canvas);
 }

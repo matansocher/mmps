@@ -21,13 +21,14 @@ export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
 }
 
 function parseExpectedMatch(match: ExpectedMatch): MatchDetails {
-  const { id, startTime, statusText, gameTime, venue, homeCompetitor, awayCompetitor, tvNetworks = [] } = match;
+  const { id, startTime, statusText, gameTime, venue, stageName: stage, homeCompetitor, awayCompetitor, tvNetworks = [] } = match;
   const channel = tvNetworks[0]?.name;
   return {
     id,
     startTime,
     statusText,
     gameTime,
+    stage,
     venue: venue?.name,
     homeCompetitor: _pick(homeCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,
     awayCompetitor: _pick(awayCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,

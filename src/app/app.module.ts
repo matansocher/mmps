@@ -16,12 +16,13 @@ import { AppService } from './app.service';
 
 function getImports() {
   const commonModules = [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })];
+  const features = [AnnouncerModule, CoachModule, DefineModule, EducatorModule, TeacherModule, TrainerModule, VoicePalModule, WoltModule, WorldlyModule];
 
   if (isProd) {
-    return [...commonModules, AnnouncerModule, CoachModule, DefineModule, EducatorModule, TeacherModule, TrainerModule, VoicePalModule, WoltModule, WorldlyModule];
+    return [...commonModules, ...features];
   }
 
-  return [...commonModules, PlaygroundsModule, TeacherModule];
+  return [...commonModules, ...features, PlaygroundsModule];
 }
 
 @Module({

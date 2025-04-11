@@ -5,7 +5,7 @@ import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
 import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { Country } from './types';
-import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getRandomCountry } from './utils';
+import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCountry, getRandomState } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS } from './worldly.config';
 
 @Injectable()
@@ -18,6 +18,7 @@ export class WorldlyService {
   async randomGameHandler(chatId: number, userDetails: UserDetails): Promise<void> {
     const handlers = [
       (chatId: number, userDetails: UserDetails) => this.mapHandler(chatId, userDetails),
+      // (chatId: number, userDetails: UserDetails) => this.USMapHandler(chatId, userDetails),
       (chatId: number, userDetails: UserDetails) => this.flagHandler(chatId, userDetails),
       // (chatId: number, userDetails: UserDetails) => this.capitalHandler(chatId, userDetails),
     ];
@@ -38,6 +39,19 @@ export class WorldlyService {
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the country' });
 
     this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
+  }
+
+  async USMapHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+    const randomState = getRandomState();
+    const imagePath = getCountryMap(randomState.name, true);
+
+    const otherOptions = getMapStateDistractors(randomState);
+    const options = shuffleArray([randomState, ...otherOptions]);
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((state) => ({ text: state.name, callback_data: `${BOT_ACTIONS.US_MAP} - ${state.name} - ${randomState.name}` })));
+
+    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the state' });
+
+    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
   }
 
   async flagHandler(chatId: number, userDetails: UserDetails): Promise<void> {

@@ -10,11 +10,11 @@ const countriesToHandle = countries.filter((c) => !c.geometry);
 geojson.features.forEach((feature) => {
   const { geometry, properties } = feature;
   const { iso_n3: alpha3 } = properties;
-  const relevantCountry = countriesToHandle.find((c) => c?.ISO3 === Number(alpha3));
+  const relevantCountry = countriesToHandle.find((c) => c?.alpha3 === Number(alpha3));
   if (!relevantCountry) {
     return;
   }
-  const relevantCountryIndex = countries.findIndex((c) => c?.ISO3 === Number(alpha3));
+  const relevantCountryIndex = countries.findIndex((c) => c?.alpha3 === Number(alpha3));
   countries[relevantCountryIndex] = { ...relevantCountry, geometry };
 });
 
