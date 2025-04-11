@@ -2,12 +2,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Country, State } from '../types';
 
+const countries = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/countries.json'), 'utf8'));
+const states = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/states.json'), 'utf8'));
+
 export function getCountries(): Country[] {
-  return JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/countries.json'), 'utf8'));
+  return [...countries];
 }
 
 export function getStates(): State[] {
-  return JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/states.json'), 'utf8'));
+  return [...states];
 }
 
 export function getCountryByName(name: string): Country {
