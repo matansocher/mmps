@@ -21,9 +21,6 @@ export class TeacherService {
   async processCourseFirstLesson(chatId: number): Promise<void> {
     const activeCourseParticipation = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
     if (activeCourseParticipation) {
-      if (activeCourseParticipation.assignedAt.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000) {
-        await this.bot.sendMessage(chatId, `It has been too long since you last studied. Let me know if you want to start a new course 😁`);
-      }
       return;
     }
 
