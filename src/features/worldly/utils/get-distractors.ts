@@ -1,6 +1,6 @@
 import { shuffleArray } from '@core/utils';
-import { getCountries } from '.';
-import { Country } from '../types';
+import { getCountries, getStates } from '.';
+import { Country, State } from '../types';
 
 const R = 6371; // Earth's radius in km
 
@@ -21,6 +21,18 @@ export function getMapDistractors(correctCountry: Country): Array<Country & { di
     .map((c) => ({
       ...c,
       distance: haversineDistance(correctCountry.lat, correctCountry.lon, c.lat, c.lon),
+    }))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, 7);
+  return shuffleArray(options).slice(0, 3);
+}
+
+export function getMapStateDistractors(correctState: State): Array<State & { distance: number }> {
+  const options = getStates()
+    .filter((state) => state.alpha2 !== correctState.alpha2)
+    .map((state) => ({
+      ...state,
+      distance: haversineDistance(correctState.lat, correctState.lon, state.lat, state.lon),
     }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 7);
