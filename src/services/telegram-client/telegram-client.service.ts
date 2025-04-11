@@ -8,7 +8,7 @@ import { getConversationDetails, getMessageData } from './utils';
 export class TelegramClientService {
   private readonly logger = new Logger(TelegramClientService.name);
 
-  listenToMessages(telegramClient: TelegramClient, listenerOptions: ListenerOptions, callback) {
+  listen(telegramClient: TelegramClient, listenerOptions: ListenerOptions, callback) {
     telegramClient.addEventHandler(async (event) => {
       if (!LISTEN_TO_EVENTS.includes(event.className)) {
         return;

@@ -10,6 +10,7 @@ export type Country = {
   readonly capital?: string;
   readonly hebrewCapital?: string;
   readonly continent?: string;
+  readonly hebrewContinent?: string;
   readonly emoji: string;
   readonly geometry?: {
     readonly type: string;

@@ -1688,8 +1688,8 @@
     "lat": -25.274398,
     "lon": 133.775136,
     "capital": "Canberra",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
+    "continent": "Australia",
+    "hebrewContinent": "אוֹסטְרַלִיָה",
     "emoji": "🇦🇺",
     "geometry": {
       "type": "MultiPolygon",
@@ -23502,7 +23502,7 @@
     "hebrewCapital": "לוקסמבורג סיטי"
   },
   {
-    "name": "Macau",
+    "name": "Macao",
     "alpha2": "MO",
     "alpha3": "MAC",
     "lat": 22.198745,
@@ -29962,8 +29962,8 @@
     "lat": -6.314993,
     "lon": 143.95555,
     "capital": "Port Moresby",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
+    "continent": "Australia",
+    "hebrewContinent": "אוֹסטְרַלִיָה",
     "emoji": "🇵🇬",
     "geometry": {
       "type": "MultiPolygon",
