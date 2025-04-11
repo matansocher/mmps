@@ -1,6 +1,6 @@
 import { Canvas, CanvasRenderingContext2D, createCanvas } from 'canvas';
-import { getCountries, simplifyCountryName } from '.';
-import { Country } from '../types';
+import { getCountries, getStates, simplifyCountryName } from '.';
+import { Country, State } from '../types';
 
 type GenerateCountryOptions = {
   readonly strokeColor: string;
@@ -9,9 +9,14 @@ type GenerateCountryOptions = {
   readonly shouldFill?: boolean;
 };
 
+type Area = Country | State;
+
 const WIDTH = 800;
 const HEIGHT = 800;
 const ZOOM = 60;
+
+const US_CENTER_LON = -96.726486;
+const US_CENTER_LAT = 38.5266;
 
 const COLORS = {
   COUNTRY_BORDER_HIGHLIGHTED: '#FF0000',
@@ -21,13 +26,15 @@ const COLORS = {
 };
 
 // Function to project lon/lat to canvas coordinates
-function project(lon: number, lat: number, zoom = ZOOM, centerLon: number, centerLat: number): [number, number] {
-  const x = (lon - centerLon) * (WIDTH / zoom) + WIDTH / 2;
-  const y = (centerLat - lat) * (HEIGHT / zoom) + HEIGHT / 2; // Invert y-axis
+function project(lon: number, lat: number, zoom = ZOOM, centerLon: number, centerLat: number, isState: boolean): [number, number] {
+  const finalCenterLon = isState ? US_CENTER_LON : centerLon;
+  const finalCenterLat = isState ? US_CENTER_LAT : centerLat;
+  const x = (lon - finalCenterLon) * (WIDTH / zoom) + WIDTH / 2;
+  const y = (finalCenterLat - lat) * (HEIGHT / zoom) + HEIGHT / 2; // Invert y-axis
   return [x, y];
 }
 
-function drawCountry(ctx: CanvasRenderingContext2D, country: Country, coordsCountry: Country, { strokeColor, fillColor, shouldFill = false, lineWidth = 1 }: GenerateCountryOptions) {
+function drawCountry(ctx: CanvasRenderingContext2D, country: Area, coordsCountry: Area, isState: boolean, { strokeColor, fillColor, shouldFill = false, lineWidth = 1 }: GenerateCountryOptions) {
   const { zoom, lon: centerLon, lat: centerLat } = country;
 
   ctx.beginPath();
@@ -41,7 +48,7 @@ function drawCountry(ctx: CanvasRenderingContext2D, country: Country, coordsCoun
   coords.forEach((polygon) => {
     polygon.forEach((ring: number[][], ringIdx: number) => {
       ring.forEach(([lon, lat], i) => {
-        const [x, y] = project(lon, lat, zoom, centerLon, centerLat);
+        const [x, y] = project(lon, lat, zoom, centerLon, centerLat, isState);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
@@ -53,8 +60,8 @@ function drawCountry(ctx: CanvasRenderingContext2D, country: Country, coordsCoun
   ctx.stroke();
 }
 
-export function generateCountryMap(countryName: string): Canvas {
-  const countries = getCountries();
+export function generateCountryMap(countryName: string, isState = false): Canvas {
+  const countries = isState ? getStates() : getCountries();
   const country = countries.find((c) => simplifyCountryName(c.name) === simplifyCountryName(countryName));
   if (!country) {
     return undefined;
@@ -71,11 +78,11 @@ export function generateCountryMap(countryName: string): Canvas {
     if (!currentCountry.geometry) {
       return;
     }
-    drawCountry(ctx, country, currentCountry, { shouldFill: true, fillColor: COLORS.COUNTRY_LAND, strokeColor: COLORS.COUNTRY_BORDER });
+    drawCountry(ctx, country, currentCountry, isState, { shouldFill: true, fillColor: COLORS.COUNTRY_LAND, strokeColor: COLORS.COUNTRY_BORDER });
   });
 
   // Draw the selected country
-  drawCountry(ctx, country, country, { lineWidth: 2, strokeColor: COLORS.COUNTRY_BORDER_HIGHLIGHTED });
+  drawCountry(ctx, country, country, isState, { lineWidth: 2, strokeColor: COLORS.COUNTRY_BORDER_HIGHLIGHTED });
 
   return canvas;
 }
