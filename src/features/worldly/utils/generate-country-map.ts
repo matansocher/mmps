@@ -82,7 +82,7 @@ export function generateCountryMap(countryName: string, isState = false): Canvas
   });
 
   // Draw the selected country
-  drawCountry(ctx, country, country, isState, { lineWidth: 2, strokeColor: COLORS.COUNTRY_BORDER_HIGHLIGHTED });
+  drawCountry(ctx, country, country, isState, { lineWidth: 3, strokeColor: COLORS.COUNTRY_BORDER_HIGHLIGHTED });
 
   return canvas;
 }
