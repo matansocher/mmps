@@ -55,68 +55,98 @@ export class WorldlyController implements OnModuleInit {
 
   async randomHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    return this.worldlyService.randomGameHandler(chatId, userDetails);
+    try {
+      return this.worldlyService.randomGameHandler(chatId, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOTS.WORLDLY, { action: 'RANDOM', error: `${err}` }, userDetails);
+      throw err;
+    }
   }
 
   async mapHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    return this.worldlyService.mapHandler(chatId, userDetails);
+    try {
+      return this.worldlyService.mapHandler(chatId, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.MAP, error: `${err}` }, userDetails);
+      throw err;
+    }
   }
 
   async USMapHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    return this.worldlyService.USMapHandler(chatId, userDetails);
+    try {
+      return this.worldlyService.USMapHandler(chatId, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.US_MAP, error: `${err}` }, userDetails);
+      throw err;
+    }
   }
 
   async flagHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    return this.worldlyService.flagHandler(chatId, userDetails);
+    try {
+      return this.worldlyService.flagHandler(chatId, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.FLAG, error: `${err}` }, userDetails);
+      throw err;
+    }
   }
 
   async capitalHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    return this.worldlyService.capitalHandler(chatId, userDetails);
+    try {
+      return this.worldlyService.capitalHandler(chatId, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.CAPITAL, error: `${err}` }, userDetails);
+      throw err;
+    }
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
     const [game, selectedName, correctName] = response.split(' - ');
-    switch (game) {
-      case BOT_ACTIONS.START:
-        await this.startHandler(chatId, userDetails);
-        await this.bot.deleteMessage(chatId, messageId);
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
-        break;
-      case BOT_ACTIONS.STOP:
-        await this.stopHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId);
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
-        break;
-      case BOT_ACTIONS.CONTACT:
-        await this.contactHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId);
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
-        break;
-      case BOT_ACTIONS.MAP:
-        await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
-        break;
-      case BOT_ACTIONS.US_MAP:
-        await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', correct: correctName, selected: selectedName }, userDetails);
-        break;
-      case BOT_ACTIONS.FLAG:
-        await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
-        break;
-      case BOT_ACTIONS.CAPITAL:
-        await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
-        break;
-      default:
-        this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
-        throw new Error('Invalid action');
+    try {
+      switch (game) {
+        case BOT_ACTIONS.START:
+          await this.startHandler(chatId, userDetails);
+          await this.bot.deleteMessage(chatId, messageId);
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+          break;
+        case BOT_ACTIONS.STOP:
+          await this.stopHandler(chatId);
+          await this.bot.deleteMessage(chatId, messageId);
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+          break;
+        case BOT_ACTIONS.CONTACT:
+          await this.contactHandler(chatId);
+          await this.bot.deleteMessage(chatId, messageId);
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+          break;
+        case BOT_ACTIONS.MAP:
+          await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
+          break;
+        case BOT_ACTIONS.US_MAP:
+          await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', correct: correctName, selected: selectedName }, userDetails);
+          break;
+        case BOT_ACTIONS.FLAG:
+          await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
+          break;
+        case BOT_ACTIONS.CAPITAL:
+          await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
+          break;
+        default:
+          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+          throw new Error('Invalid action');
+      }
+    } catch (err) {
+      this.notifier.notify(BOTS.WORLDLY, { action: `${game} answer`, error: `${err}` }, userDetails);
+      throw err;
     }
   }
 
