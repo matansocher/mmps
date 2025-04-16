@@ -8,7 +8,6 @@ const countries = JSON.parse(fs.readFileSync(path.join(__dirname, './countries.j
 
 const print = (missingKey) => {
   const relevantCountries = countries.filter((country) => !country[missingKey]);
-  console.log(`$$$$$$$$$ ${missingKey} $$$$$$$$$`);
   console.log('Countries missing\n', relevantCountries.map((c) => c.name).join('\n'));
   console.log('\n');
 };
