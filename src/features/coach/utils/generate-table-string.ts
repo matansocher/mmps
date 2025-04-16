@@ -1,4 +1,4 @@
-import type { CompetitionTableDetails } from '@services/scores-365/interface';
+import type { CompetitionTableDetails } from '@services/scores-365';
 
 export function generateTableString(competitionTableDetails: CompetitionTableDetails): string {
   const rows = competitionTableDetails.competitionTable
