@@ -1,7 +1,6 @@
 import { toZonedTime } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { CompetitionDetails, type MatchDetails } from '@services/scores-365';
-import { COMPETITIONS } from '@services/scores-365/scores-365.config';
+import { type CompetitionDetails, COMPETITIONS, type MatchDetails } from '@services/scores-365';
 
 export function generateCompetitionMatchesString({ competition, matches }: CompetitionDetails): string {
   const leagueName = competition.name;
