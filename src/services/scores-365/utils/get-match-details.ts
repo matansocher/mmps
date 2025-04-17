@@ -23,6 +23,7 @@ export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
 function parseExpectedMatch(match: ExpectedMatch): MatchDetails {
   const { id, startTime, statusText, gameTime, venue, stageName: stage, homeCompetitor, awayCompetitor, tvNetworks = [] } = match;
   const channel = tvNetworks[0]?.name;
+  const fields = ['id', 'name', 'symbolicName', 'score', 'color'];
   return {
     id,
     startTime,
@@ -30,8 +31,8 @@ function parseExpectedMatch(match: ExpectedMatch): MatchDetails {
     gameTime,
     stage,
     venue: venue?.name,
-    homeCompetitor: _pick(homeCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,
-    awayCompetitor: _pick(awayCompetitor, ['id', 'name', 'symbolicName', 'score', 'nameForURL', 'color']) as Team,
+    homeCompetitor: _pick(homeCompetitor, fields) as Team,
+    awayCompetitor: _pick(awayCompetitor, fields) as Team,
     ...(channel ? { channel } : {}),
   } as MatchDetails;
 }

@@ -6,8 +6,11 @@ export interface CompetitionDetails {
 export interface Competition {
   readonly id: number;
   readonly name: string;
-  readonly shortName: string;
-  readonly nameForURL: string;
+}
+
+export interface Competitor {
+  readonly id: number;
+  readonly name: string;
 }
 
 export interface ExpectedTeam {
@@ -15,7 +18,6 @@ export interface ExpectedTeam {
   readonly name: string;
   readonly symbolicName: string;
   readonly score: number;
-  readonly nameForURL: string;
   readonly color: string;
 }
 
@@ -45,7 +47,6 @@ export interface Team {
   readonly name: string;
   readonly symbolicName: string;
   readonly score: number;
-  readonly nameForURL: string;
   readonly color: string;
 }
 
@@ -59,4 +60,14 @@ export interface MatchDetails {
   readonly homeCompetitor: Team;
   readonly awayCompetitor: Team;
   readonly channel: string;
+}
+
+export interface CompetitionTableDetails {
+  readonly competition: Competition & { icon: string };
+  readonly competitionTable: CompetitionTableRow[];
+}
+
+export interface CompetitionTableRow {
+  readonly competitor: Competitor;
+  readonly points: number;
 }
