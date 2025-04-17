@@ -124,7 +124,7 @@ export class MessageLoader {
     }
     const { timeoutId, loaderMessageId } = messageCache;
     timeoutId && clearTimeout(timeoutId);
-    loaderMessageId && (await this.bot.deleteMessage(this.chatId, loaderMessageId));
+    loaderMessageId && (await this.bot.deleteMessage(this.chatId, loaderMessageId).catch());
     this.deleteMessageCache();
   }
 }

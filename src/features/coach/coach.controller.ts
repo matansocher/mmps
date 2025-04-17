@@ -4,6 +4,7 @@ import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
+import { getCompetitions } from '@services/scores-365';
 import {
   BOTS,
   getCallbackQueryData,
@@ -37,13 +38,36 @@ export class CoachController implements OnModuleInit {
     this.bot.setMyCommands(Object.values(COACH_BOT_COMMANDS));
 
     const { COMMAND, TEXT, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { ACTIONS } = COACH_BOT_COMMANDS;
+    const { TABLES, MATCHES, ACTIONS } = COACH_BOT_COMMANDS;
     const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: TABLES.command, handler: (message) => this.tablesHandler.call(this, message) },
+      { event: COMMAND, regex: MATCHES.command, handler: (message) => this.matchesHandler.call(this, message) },
       { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
       { event: TEXT, handler: (message) => this.textHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
+  }
+
+  private async tablesHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+    const competitions = await getCompetitions();
+    const competitionsWithTables = competitions.filter((competition) => competition.hasTable);
+    const inlineKeyboardButtons = competitionsWithTables.map((competition) => {
+      const { id, name, icon } = competition;
+      return { text: `${icon} ${name} ${icon}`, callback_data: `${BOT_ACTIONS.TABLE} - ${id}` };
+    });
+    await this.bot.sendMessage(chatId, 'לאיזה ליגה?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons, 2) as any) });
+  }
+
+  private async matchesHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+    const competitions = await getCompetitions();
+    const inlineKeyboardButtons = competitions.map((competition) => {
+      const { id, name, icon } = competition;
+      return { text: `${icon} ${name} ${icon}`, callback_data: `${BOT_ACTIONS.MATCH} - ${id}` };
+    });
+    await this.bot.sendMessage(chatId, 'לאיזה ליגה?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons, 2) as any) });
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -81,22 +105,32 @@ export class CoachController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, messageId, userDetails, data: response } = getCallbackQueryData(callbackQuery);
 
-    const [action] = response.split(' - ');
+    const [action, resource] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
-        await this.bot.deleteMessage(chatId, messageId);
+        await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId);
+        await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId);
+        await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        break;
+      case BOT_ACTIONS.TABLE:
+        await this.tableHandler(chatId, Number(resource));
+        await this.bot.deleteMessage(chatId, messageId).catch();
+        this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
+        break;
+      case BOT_ACTIONS.MATCH:
+        await this.competitionMatchesHandler(chatId, Number(resource));
+        await this.bot.deleteMessage(chatId, messageId).catch();
+        this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.MATCH }, userDetails);
         break;
       default:
         this.notifier.notify(BOTS.COACH, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
@@ -128,5 +162,15 @@ export class CoachController implements OnModuleInit {
 
   async contactHandler(chatId: number): Promise<void> {
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
+  }
+
+  async tableHandler(chatId: number, competitionId: number): Promise<void> {
+    const resultText = await this.coachService.getCompetitionTableMessage(competitionId);
+    await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown' });
+  }
+
+  async competitionMatchesHandler(chatId: number, competitionId: number): Promise<void> {
+    const resultText = await this.coachService.getCompetitionMatchesMessage(competitionId);
+    await sendStyledMessage(this.bot, chatId, resultText);
   }
 }
