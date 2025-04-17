@@ -114,17 +114,17 @@ export class TrainerBotService implements OnModuleInit {
     switch (action) {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
-        await this.bot.deleteMessage(chatId, messageId);
+        await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId);
+        await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId);
+        await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       default:
