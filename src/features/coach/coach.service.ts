@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { getCompetitionMatches, getCompetitionTable, getMatchesSummaryDetails } from '@services/scores-365';
+import { getTableTemplate } from '@services/telegram';
 import { CompetitionMatchesCacheService, CompetitionTableCacheService, MatchesSummaryCacheService } from './cache';
-import { generateCompetitionMatchesString, generateMatchResultsString, generateTableString } from './utils';
+import { generateCompetitionMatchesString, generateMatchResultsString } from './utils';
 
 @Injectable()
 export class CoachService {
@@ -32,7 +33,9 @@ export class CoachService {
     if (!competitionTableDetails) {
       return null;
     }
-    return generateTableString(competitionTableDetails);
+
+    const tableData = competitionTableDetails.competitionTable.map(({ competitor, points }) => ({ name: competitor.name, value: points }));
+    return getTableTemplate(tableData);
   }
 
   async getCompetitionMatchesMessage(competitionId: number): Promise<string> {

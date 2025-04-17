@@ -166,7 +166,7 @@ export class CoachController implements OnModuleInit {
 
   async tableHandler(chatId: number, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionTableMessage(competitionId);
-    await this.bot.sendMessage(chatId, resultText);
+    await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown' });
   }
 
   async competitionMatchesHandler(chatId: number, competitionId: number): Promise<void> {
