@@ -1,33 +1,35 @@
 import type TelegramBot from 'node-telegram-bot-api';
+import { reactToMessage } from '@services/telegram';
 import { BOT_BROADCAST_ACTIONS } from '../constants';
 import type { MessageLoaderOptions } from '../interface';
 
-const LOADER_EMOJI = '🐢';
-const MAX_EMOJIS = 5;
-const DEFAULT_CYCLE_DURATION = 5000;
+const LOADER_MESSAGE = 'Loading...';
+const SHOW_AFTER_MS = 3000;
+const DELETE_AFTER_NO_RESPONSE_MS = 15000;
 
 export class MessageLoader {
   private readonly bot: TelegramBot;
+  private readonly botToken: string;
   private readonly chatId: number;
-  private readonly loaderEmoji: string;
-  private readonly maxEmojis: number;
-  private readonly cycleDuration: number;
+  private readonly messageId: number;
+  private readonly loaderMessage: string;
+  private readonly reactionEmoji: string;
   private readonly loadingAction: BOT_BROADCAST_ACTIONS;
 
-  private cycleIterationIndex: number = 0;
   private timeoutId?: NodeJS.Timeout;
   private loaderMessageId?: number;
 
-  constructor(bot: TelegramBot, chatId: number, options: MessageLoaderOptions) {
+  constructor(bot: TelegramBot, botToken: string, chatId: number, messageId: number, options: MessageLoaderOptions) {
     this.bot = bot;
+    this.botToken = botToken;
     this.chatId = chatId;
-    this.maxEmojis = options.maxEmojis || MAX_EMOJIS;
-    this.loaderEmoji = options.loaderEmoji || LOADER_EMOJI;
+    this.messageId = messageId;
+    this.loaderMessage = options.loaderMessage || LOADER_MESSAGE;
+    this.reactionEmoji = options.reactionEmoji;
     this.loadingAction = options.loadingAction || BOT_BROADCAST_ACTIONS.TYPING;
-    this.cycleDuration = options.cycleDuration || DEFAULT_CYCLE_DURATION;
   }
 
-  async handleMessageWithLoader(action: () => Promise<void>) {
+  async handleMessageWithLoader(action: () => Promise<void>): Promise<void> {
     try {
       await this.#startLoader();
       await action();
@@ -38,43 +40,24 @@ export class MessageLoader {
     }
   }
 
-  async #startLoader() {
-    await this.bot.sendChatAction(this.chatId, this.loadingAction);
-    this.cycleIterationIndex = 0;
-    await this.#cycle();
-  }
-
-  async #cycle(): Promise<void> {
-    if (this.cycleIterationIndex >= this.maxEmojis) {
-      await this.#stopLoader();
-      return;
+  async #startLoader(): Promise<void> {
+    if (this.reactionEmoji) {
+      await reactToMessage(this.botToken, this.chatId, this.messageId, this.reactionEmoji);
     }
+    await this.bot.sendChatAction(this.chatId, this.loadingAction);
 
     this.timeoutId = setTimeout(async () => {
-      try {
-        await this.#updateLoaderMessage();
-        await this.#cycle();
-      } catch {
-        await this.#stopLoader();
-      }
-    }, this.cycleDuration);
+      await this.#sendLoaderMessage();
+    }, SHOW_AFTER_MS);
   }
 
-  async #updateLoaderMessage(): Promise<void> {
-    const loaderEmojis = this.loaderEmoji.repeat(this.cycleIterationIndex + 1);
+  async #sendLoaderMessage(): Promise<void> {
+    const messageRes = await this.bot.sendMessage(this.chatId, this.loaderMessage);
+    this.loaderMessageId = messageRes.message_id;
 
-    if (this.cycleIterationIndex === 0) {
-      const messageRes = await this.bot.sendMessage(this.chatId, loaderEmojis);
-      this.loaderMessageId = messageRes.message_id;
-    } else if (this.loaderMessageId) {
-      await this.bot.editMessageText(loaderEmojis, {
-        chat_id: this.chatId,
-        message_id: this.loaderMessageId,
-      });
-    }
-
-    await this.bot.sendChatAction(this.chatId, this.loadingAction);
-    this.cycleIterationIndex++;
+    this.timeoutId = setTimeout(async () => {
+      await this.#stopLoader();
+    }, DELETE_AFTER_NO_RESPONSE_MS);
   }
 
   async #stopLoader(): Promise<void> {
@@ -86,6 +69,5 @@ export class MessageLoader {
       await this.bot.deleteMessage(this.chatId, this.loaderMessageId).catch();
       this.loaderMessageId = undefined;
     }
-    this.cycleIterationIndex = 0;
   }
 }

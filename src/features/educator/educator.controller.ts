@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService, TopicParticipationStatus } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
@@ -22,13 +23,17 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator.config';
 import { EducatorService } from './educator.service';
 
+const loaderMessage = '👩‍🏫 תן לי כמה שניות לחשוב על זה ואני איתך, שניה אחת...';
+const transcribeLoaderMessage = '👩‍🏫 תן לי כמה שניות ואני מתמללת לך את זה, שניה אחת...';
 const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
 @Injectable()
 export class EducatorController implements OnModuleInit {
   private readonly logger = new Logger(EducatorController.name);
+  private readonly botToken: string;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly educatorService: EducatorService,
     private readonly openaiService: OpenaiService,
     private readonly mongoTopicService: EducatorMongoTopicService,
@@ -37,7 +42,9 @@ export class EducatorController implements OnModuleInit {
     private readonly mongoUserService: EducatorMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
-  ) {}
+  ) {
+    this.botToken = this.configService.get(BOTS.EDUCATOR.token);
+  }
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(EDUCATOR_BOT_COMMANDS));
@@ -65,13 +72,13 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async topicHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+    const { chatId, messageId, userDetails } = getMessageData(message);
     const Participation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
     if (Participation?._id) {
       await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
 
     this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
@@ -91,7 +98,7 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async messageHandler(message: Message): Promise<void> {
-    const { chatId, userDetails, text } = getMessageData(message);
+    const { chatId, messageId, userDetails, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(EDUCATOR_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
@@ -102,7 +109,7 @@ export class EducatorController implements OnModuleInit {
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🤔' });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
     });
@@ -169,7 +176,7 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🎧', loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE, loaderMessage: transcribeLoaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const result = await this.openaiService.getAudioFromText(text);
 
