@@ -67,11 +67,7 @@ export class VoicePalService implements OnModuleInit {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction?.showLoader) {
-        const messageLoaderService = new MessageLoader(this.bot, chatId, {
-          cycleDuration: 3000,
-          loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING,
-          loaderEmoji: '🤔',
-        });
+        const messageLoaderService = new MessageLoader(this.bot, chatId, { loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING, loaderEmoji: '🤔' });
         await messageLoaderService.handleMessageWithLoader(async (): Promise<void> => {
           await this[userAction.handler]({ chatId, text, audio, video, photo, file });
         });
