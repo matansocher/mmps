@@ -9,24 +9,29 @@ import { deleteFile, setFfmpegPath } from '@core/utils';
 import { getTranslationToEnglish } from '@services/google-translate';
 import { imgurUploadImage } from '@services/imgur';
 import { OpenaiService } from '@services/openai';
-import { BOT_BROADCAST_ACTIONS, BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, sendShortenedMessage, TelegramMessageData } from '@services/telegram';
+import { BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, sendShortenedMessage, TelegramMessageData } from '@services/telegram';
 import { VoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { getKeyboardOptions, validateActionWithMessage } from './utils';
 import { ANALYTIC_EVENT_NAMES, ANALYTIC_EVENT_STATES, IMAGE_ANALYSIS_PROMPT, VOICE_PAL_OPTIONS } from './voice-pal.config';
 
+const loaderMessage = 'On it, One Second...';
+
 @Injectable()
 export class VoicePalService implements OnModuleInit {
   private readonly logger = new Logger(VoicePalService.name);
+  private readonly botToken: string;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly mongoUserService: VoicePalMongoUserService,
     private readonly userSelectedActionsService: UserSelectedActionsService,
-    private readonly configService: ConfigService,
     private readonly openaiService: OpenaiService,
     private readonly notifier: NotifierService,
     @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
-  ) {}
+  ) {
+    this.botToken = this.configService.get(BOTS.VOICE_PAL.token);
+  }
 
   onModuleInit(): void {
     setFfmpegPath();
@@ -51,7 +56,7 @@ export class VoicePalService implements OnModuleInit {
   }
 
   async handleAction(message: Message, userAction: VoicePalOption): Promise<void> {
-    const { chatId, userDetails, text, audio, video, photo, file } = getMessageData(message);
+    const { chatId, messageId, userDetails, text, audio, video, photo, file } = getMessageData(message);
 
     if (!userAction) {
       await this.bot.sendMessage(chatId, `Please select an action first.`);
@@ -67,7 +72,7 @@ export class VoicePalService implements OnModuleInit {
     const analyticAction = ANALYTIC_EVENT_NAMES[userAction.displayName];
     try {
       if (userAction?.showLoader) {
-        const messageLoaderService = new MessageLoader(this.bot, chatId, { loadingAction: userAction.loaderType || BOT_BROADCAST_ACTIONS.TYPING, loaderEmoji: '🤔' });
+        const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: userAction.loaderType, reactionEmoji: '🤔', loaderMessage });
         await messageLoaderService.handleMessageWithLoader(async (): Promise<void> => {
           await this[userAction.handler]({ chatId, text, audio, video, photo, file });
         });
@@ -101,7 +106,7 @@ export class VoicePalService implements OnModuleInit {
   }
 
   async handleTranslateAction({ chatId, text, video, audio }: Partial<TelegramMessageData>): Promise<void> {
-    let replyText = '';
+    let replyText: string;
 
     if (text) {
       await this.notifier.collect(MessageType.TEXT, text);

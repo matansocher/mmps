@@ -1,5 +1,6 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
@@ -9,18 +10,24 @@ import { ANALYTIC_EVENT_NAMES, BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS 
 import { BOT_ACTIONS } from './trainer.config';
 import { getLastWeekDates, getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
+const loaderMessage = '🏋️‍♂️ נראה לי עשית פה משהו גדול, שניה אחת';
+
 @Injectable()
 export class TrainerBotService implements OnModuleInit {
   private readonly logger = new Logger(TrainerBotService.name);
+  private readonly botToken: string;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly mongoExerciseService: TrainerMongoExerciseService,
     private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
     private readonly mongoUserService: TrainerMongoUserService,
     private readonly openaiService: OpenaiService,
     private readonly notifier: NotifierService,
     @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
-  ) {}
+  ) {
+    this.botToken = this.configService.get(BOTS.TRAINER.token);
+  }
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(TRAINER_BOT_COMMANDS));
@@ -46,7 +53,7 @@ export class TrainerBotService implements OnModuleInit {
   }
 
   private async exerciseHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+    const { chatId, messageId, userDetails } = getMessageData(message);
 
     await this.mongoExerciseService.addExercise(chatId);
 
@@ -67,7 +74,7 @@ export class TrainerBotService implements OnModuleInit {
 
     // Check if the user broke their longest streak
     if (currentStreak > 1 && currentStreak > longestStreak) {
-      await new MessageLoader(this.bot, chatId, { loaderEmoji: '🏋️‍♂️' }).handleMessageWithLoader(async () => {
+      await new MessageLoader(this.bot, this.botToken, chatId, messageId, { loaderMessage }).handleMessageWithLoader(async () => {
         const caption = `🎉 Incredible! You've just broken your record and set a new streak - ${currentStreak} days in a row! 🏆🔥`;
         const generatedImage = await this.openaiService.createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
         await this.bot.sendPhoto(chatId, generatedImage, { caption });
