@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { CourseParticipationStatus, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
@@ -22,11 +23,16 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, TEACHER_BOT_COMMANDS } from './teacher.config';
 import { TeacherService } from './teacher.service';
 
+const loaderMessage = '👨‍🏫 Give me a few moments to think about it, one sec...';
+const transcribeLoaderMessage = 'Give me a few moments to transcribe it, one sec...';
+
 @Injectable()
 export class TeacherController implements OnModuleInit {
   private readonly logger = new Logger(TeacherController.name);
+  private readonly botToken: string;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly openaiService: OpenaiService,
     private readonly teacherService: TeacherService,
     private readonly mongoCourseService: TeacherMongoCourseService,
@@ -35,7 +41,9 @@ export class TeacherController implements OnModuleInit {
     private readonly mongoUserService: TeacherMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
-  ) {}
+  ) {
+    this.botToken = this.configService.get(BOTS.PROGRAMMING_TEACHER.token);
+  }
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(TEACHER_BOT_COMMANDS));
@@ -65,13 +73,13 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async courseHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+    const { chatId, messageId, userDetails } = getMessageData(message);
     const activeCourse = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
     if (activeCourse?._id) {
       await this.mongoCourseParticipationService.markCourseParticipationCompleted(activeCourse._id.toString());
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.teacherService.startNewCourse(chatId);
     });
@@ -93,7 +101,7 @@ export class TeacherController implements OnModuleInit {
   }
 
   async messageHandler(message: Message): Promise<void> {
-    const { chatId, text, userDetails } = getMessageData(message);
+    const { chatId, messageId, text, userDetails } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(TEACHER_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
@@ -104,7 +112,7 @@ export class TeacherController implements OnModuleInit {
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.teacherService.processQuestion(chatId, text, activeCourseParticipation);
     });
@@ -133,7 +141,7 @@ export class TeacherController implements OnModuleInit {
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.NEXT_LESSON:
-        await this.handleCallbackNextLesson(chatId);
+        await this.handleCallbackNextLesson(chatId, messageId);
         this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.NEXT_LESSON }, userDetails);
         break;
       case BOT_ACTIONS.TRANSCRIBE:
@@ -177,15 +185,15 @@ export class TeacherController implements OnModuleInit {
     await this.bot.sendMessage(chatId, [`Off course!, you can talk to the person who created me, he might be able to help 📬`, MY_USER_NAME].join('\n'));
   }
 
-  private async handleCallbackNextLesson(chatId: number): Promise<void> {
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '👨‍🏫' });
+  private async handleCallbackNextLesson(chatId: number, messageId: number): Promise<void> {
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.teacherService.processLesson(chatId, false);
     });
   }
 
   private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '🎧', loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE, loaderMessage: transcribeLoaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const result = await this.openaiService.getAudioFromText(text);
 

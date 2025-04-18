@@ -12,8 +12,11 @@ export class PlaygroundsController implements OnModuleInit {
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(PLAYGROUNDS_BOT_COMMANDS));
     const { COMMAND } = TELEGRAM_EVENTS;
-    const { START } = PLAYGROUNDS_BOT_COMMANDS;
-    const handlers: TelegramEventHandler[] = [{ event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) }];
+    const { START, POLL } = PLAYGROUNDS_BOT_COMMANDS;
+    const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: POLL.command, handler: (message) => this.pollHandler.call(this, message) },
+    ];
     registerHandlers({ bot: this.bot, logger: this.logger, isBlocked: true, handlers });
   }
 
@@ -63,11 +66,16 @@ export class PlaygroundsController implements OnModuleInit {
     await this.bot.sendMessage(chatId, `🇮🇱 ליגת העל 🇮🇱\n${replyTextTwo}`, { parse_mode: 'Markdown' });
   }
 
+  // private async pollHandler(message: Message): Promise<void> {
+  //   const { chatId } = getMessageData(message);
+  //   // allows_multiple_answers: boolean
+  //   // is_anonymous: boolean
+  //   this.bot.sendPoll(chatId, 'what do you think about me as a bot?', ['1', '2', '3', '4', '5'], { allows_multiple_answers: true });
+  //   this.bot.sendPoll(chatId, 'what do you think about me as a bot?', ['1', '2', '3', '4', '5'], { allows_multiple_answers: false });
+  // }
+
   private async pollHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    // allows_multiple_answers: boolean
-    // is_anonymous: boolean
-    this.bot.sendPoll(chatId, 'what do you think about me as a bot?', ['1', '2', '3', '4', '5'], { allows_multiple_answers: true });
-    this.bot.sendPoll(chatId, 'what do you think about me as a bot?', ['1', '2', '3', '4', '5'], { allows_multiple_answers: false });
+    this.bot.sendMessage(chatId, '⚽️');
   }
 }

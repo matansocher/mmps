@@ -1,7 +1,7 @@
 import type { BOT_BROADCAST_ACTIONS } from '../constants';
 
 export interface MessageLoaderOptions {
-  readonly loaderEmoji?: string;
-  readonly cycleDuration?: number;
+  readonly loaderMessage?: string;
+  readonly reactionEmoji?: string;
   readonly loadingAction?: BOT_BROADCAST_ACTIONS;
 }

@@ -1,5 +1,6 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
@@ -20,19 +21,24 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, COACH_BOT_COMMANDS } from './coach.config';
 import { CoachService } from './coach.service';
 
+const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';
 const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
 
 @Injectable()
 export class CoachController implements OnModuleInit {
   private readonly logger = new Logger(CoachController.name);
+  private readonly botToken: string;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly mongoUserService: CoachMongoUserService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly coachService: CoachService,
     private readonly notifier: NotifierService,
     @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
-  ) {}
+  ) {
+    this.botToken = this.configService.get(BOTS.COACH.token);
+  }
 
   onModuleInit(): void {
     this.bot.setMyCommands(Object.values(COACH_BOT_COMMANDS));
@@ -81,12 +87,12 @@ export class CoachController implements OnModuleInit {
   }
 
   async textHandler(message: Message): Promise<void> {
-    const { chatId, userDetails, text } = getMessageData(message);
+    const { chatId, messageId, userDetails, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(COACH_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, { loaderEmoji: '⚽️' });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const date = isDateStringFormat(text) ? text : getDateString();
       const resultText = await this.coachService.getMatchesSummaryMessage(date);
