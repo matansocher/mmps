@@ -21,7 +21,7 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, COACH_BOT_COMMANDS } from './coach.config';
 import { CoachService } from './coach.service';
 
-const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת... ⚽️';
+const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';
 const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
 
 @Injectable()
