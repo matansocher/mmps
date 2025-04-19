@@ -9,11 +9,11 @@ import { deleteFile, setFfmpegPath } from '@core/utils';
 import { getTranslationToEnglish } from '@services/google-translate';
 import { imgurUploadImage } from '@services/imgur';
 import { OpenaiService } from '@services/openai';
-import { BOTS, downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, sendShortenedMessage, TelegramMessageData } from '@services/telegram';
+import { downloadAudioFromVideoOrAudio, getMessageData, MessageLoader, sendShortenedMessage, TelegramMessageData } from '@services/telegram';
 import { VoicePalOption } from './interface';
 import { UserSelectedActionsService } from './user-selected-actions.service';
 import { getKeyboardOptions, validateActionWithMessage } from './utils';
-import { ANALYTIC_EVENT_NAMES, ANALYTIC_EVENT_STATES, IMAGE_ANALYSIS_PROMPT, VOICE_PAL_OPTIONS } from './voice-pal.config';
+import { ANALYTIC_EVENT_NAMES, ANALYTIC_EVENT_STATES, BOT_CONFIG, IMAGE_ANALYSIS_PROMPT, VOICE_PAL_OPTIONS } from './voice-pal.config';
 
 const loaderMessage = 'On it, One Second...';
 
@@ -28,9 +28,9 @@ export class VoicePalService implements OnModuleInit {
     private readonly userSelectedActionsService: UserSelectedActionsService,
     private readonly openaiService: OpenaiService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.VOICE_PAL.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOTS.VOICE_PAL.token);
+    this.botToken = this.configService.get(BOT_CONFIG.token);
   }
 
   onModuleInit(): void {
@@ -44,7 +44,7 @@ export class VoicePalService implements OnModuleInit {
     let replyText = VOICE_PAL_OPTIONS[relevantAction].selectedActionResponse;
     if (selection === VOICE_PAL_OPTIONS.START.displayName) {
       const userExists = await this.mongoUserService.saveUserDetails(userDetails);
-      this.notifier.notify(BOTS.VOICE_PAL, { action: ANALYTIC_EVENT_NAMES['/start'] }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES['/start'] }, userDetails);
       const newUserReplyText = replyText.replace('{name}', userDetails.firstName || userDetails.username || '');
       const existingUserReplyText = `All set 💪`;
       replyText = userExists ? existingUserReplyText : newUserReplyText;
@@ -80,10 +80,10 @@ export class VoicePalService implements OnModuleInit {
         await this[userAction.handler]({ chatId, text, audio, video, photo, file });
       }
 
-      this.notifier.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.FULFILLED }, userDetails);
     } catch (err) {
       this.logger.error(`${this.handleAction.name} - error: ${err}`);
-      this.notifier.notify(BOTS.VOICE_PAL, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { handler: analyticAction, action: ANALYTIC_EVENT_STATES.ERROR, error: `${err}` }, userDetails);
       throw err;
     }
   }

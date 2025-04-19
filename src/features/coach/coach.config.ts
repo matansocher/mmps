@@ -1,3 +1,16 @@
+import { TelegramBotConfig } from '@services/telegram';
+
+export const BOT_CONFIG: TelegramBotConfig = {
+  id: 'COACH',
+  name: 'Coach Bot ⚽️',
+  token: 'COACH_TELEGRAM_BOT_TOKEN',
+  commands: {
+    TABLES: { command: '/tables', description: '📊 טבלאות 📊' },
+    MATCHES: { command: '/matches', description: '🎱 מחזור הבא 🎱' },
+    ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
+  },
+};
+
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
   STOP: 'STOP',
@@ -6,12 +19,6 @@ export const ANALYTIC_EVENT_NAMES = {
   TABLE: 'TABLE',
   MATCH: 'MATCH',
   ERROR: 'ERROR',
-};
-
-export const COACH_BOT_COMMANDS = {
-  TABLES: { command: '/tables', description: '📊 טבלאות 📊' },
-  MATCHES: { command: '/matches', description: '🎱 מחזור הבא 🎱' },
-  ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
 };
 
 export enum BOT_ACTIONS {

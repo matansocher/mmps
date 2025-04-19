@@ -3,9 +3,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOTS, UserDetails } from '@services/telegram';
+import { UserDetails } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
-import { ANALYTIC_EVENT_NAMES } from './trainer.config';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './trainer.config';
 import { getLastWeekDates, getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
@@ -18,7 +18,7 @@ export class TrainerService {
     private readonly mongoExerciseService: TrainerMongoExerciseService,
     private readonly mongoUserService: TrainerMongoUserService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async processEODReminder(chatId: number): Promise<void> {
@@ -64,6 +64,6 @@ export class TrainerService {
 
   async notifyWithUserDetails(chatId: number, action: AnalyticEventValue, error?: string): Promise<void> {
     const userDetails = (await this.mongoUserService.getUserDetails({ chatId })) as unknown as UserDetails;
-    this.notifier.notify(BOTS.TRAINER, { action, error }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action, error }, userDetails);
   }
 }

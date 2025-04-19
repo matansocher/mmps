@@ -5,10 +5,10 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
+import { getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
-import { ANALYTIC_EVENT_NAMES, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
 
@@ -24,7 +24,7 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -65,7 +65,7 @@ export class WoltSchedulerService implements OnModuleInit {
       await this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
       this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
 
@@ -94,7 +94,7 @@ export class WoltSchedulerService implements OnModuleInit {
       this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
       this.logger.error(`${this.cleanSubscription.name} - error - ${err}`);
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
 
@@ -105,6 +105,6 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async notifyWithUserDetails(chatId: number, restaurant: string, action: AnalyticEventValue) {
     const userDetails = (await this.mongoUserService.getUserDetails({ chatId })) as unknown as UserDetails;
-    this.notifier.notify(BOTS.WOLT, { restaurant, action }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { restaurant, action }, userDetails);
   }
 }

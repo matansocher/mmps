@@ -3,8 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOTS } from '@services/telegram';
-import { COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher.config';
+import { BOT_CONFIG, COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher.config';
 import { TeacherService } from './teacher.service';
 
 @Injectable()
@@ -30,7 +29,7 @@ export class TeacherSchedulerService implements OnModuleInit {
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseFirstLesson(chatId)));
     } catch (err) {
       this.logger.error(`${this.handleCourseFirstLesson.name} - error: ${err}`);
-      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: `${err}` });
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
     }
   }
 
@@ -45,7 +44,7 @@ export class TeacherSchedulerService implements OnModuleInit {
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseNextLesson(chatId)));
     } catch (err) {
       this.logger.error(`${this.handleCourseNextLesson.name} - error: ${err}`);
-      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: `${err}` });
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
     }
   }
 }

@@ -1,10 +1,17 @@
-export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
+import { TelegramBotConfig } from '@services/telegram';
 
-export const EDUCATOR_BOT_COMMANDS = {
-  TOPIC: { command: '/topic', description: '➡️ נושא הבא ➡️' },
-  ADD: { command: '/add', description: '➕ הוספת נושא ➕' },
-  ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
+export const BOT_CONFIG: TelegramBotConfig = {
+  id: 'EDUCATOR',
+  name: 'Educator Bot 📚',
+  token: 'EDUCATOR_TELEGRAM_BOT_TOKEN',
+  commands: {
+    TOPIC: { command: '/topic', description: '➡️ נושא הבא ➡️' },
+    ADD: { command: '/add', description: '➕ הוספת נושא ➕' },
+    ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
+  },
 };
+
+export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
 
 export enum BOT_ACTIONS {
   START = 'start',

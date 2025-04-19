@@ -4,8 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOTS } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
 const HOURS_TO_NOTIFY = [12, 15, 17, 19, 21, 23];
@@ -17,7 +16,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
     private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
     private readonly mongoUserService: WorldlyMongoUserService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.WORLDLY.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -40,7 +39,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
         }),
       );
     } catch (err) {
-      this.notifier.notify(BOTS.WORLDLY, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+      this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 }
