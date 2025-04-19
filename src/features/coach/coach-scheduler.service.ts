@@ -5,8 +5,8 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
-import { BOTS, sendStyledMessage } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES } from './coach.config';
+import { sendStyledMessage } from '@services/telegram';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
 const HOURS_TO_NOTIFY = [12, 19, 23];
@@ -17,7 +17,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     private readonly coachService: CoachService,
     private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.COACH.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -41,7 +41,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
       const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
       await Promise.all(chatIds.map((chatId) => sendStyledMessage(this.bot, chatId, replyText)));
     } catch (err) {
-      this.notifier.notify(BOTS.COACH, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+      this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 }

@@ -1,10 +1,17 @@
-export const WORLDLY_BOT_COMMANDS = {
-  RANDOM: { command: '/random', description: '🌎 Random game 🌎' },
-  MAP: { command: '/map', description: '🗺️ Map 🗺️' },
-  FLAG: { command: '/flag', description: '🏁 Flag 🏁' },
-  CAPITAL: { command: '/capital', description: '🏛️ Capital City 🏛️' },
-  US_MAP: { command: '/usmap', description: '🇺🇸 USA Map 🇺🇸' },
-  ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
+import { TelegramBotConfig } from '@services/telegram';
+
+export const BOT_CONFIG: TelegramBotConfig = {
+  id: 'WORLDLY',
+  name: 'Worldly Bot 🌍',
+  token: 'WORLDLY_TELEGRAM_BOT_TOKEN',
+  commands: {
+    RANDOM: { command: '/random', description: '🌎 Random game 🌎' },
+    MAP: { command: '/map', description: '🗺️ Map 🗺️' },
+    FLAG: { command: '/flag', description: '🏁 Flag 🏁' },
+    CAPITAL: { command: '/capital', description: '🏛️ Capital City 🏛️' },
+    US_MAP: { command: '/usmap', description: '🇺🇸 USA Map 🇺🇸' },
+    ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
+  },
 };
 
 export const ANALYTIC_EVENT_NAMES = {

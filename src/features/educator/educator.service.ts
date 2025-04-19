@@ -3,8 +3,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
 import { OpenaiAssistantService } from '@services/openai';
-import { BOTS, getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, EDUCATOR_ASSISTANT_ID } from './educator.config';
+import { getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
+import { BOT_ACTIONS, BOT_CONFIG, EDUCATOR_ASSISTANT_ID } from './educator.config';
 
 @Injectable()
 export class EducatorService {
@@ -13,7 +13,7 @@ export class EducatorService {
     private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async processTopic(chatId: number): Promise<void> {
@@ -28,7 +28,7 @@ export class EducatorService {
   async startNewTopic(chatId: number, customTopic?: string): Promise<void> {
     const topic = await this.getNewTopic(chatId, customTopic);
     if (!topic) {
-      this.notifier.notify(BOTS.EDUCATOR, { action: 'ERROR', error: 'No new topics found', chatId });
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new topics found', chatId });
       // await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
       return;
     }

@@ -1,3 +1,16 @@
+import { TelegramBotConfig } from '@services/telegram';
+
+export const BOT_CONFIG: TelegramBotConfig = {
+  id: 'WOLT',
+  name: 'Wolt Bot 🍔',
+  token: 'WOLT_TELEGRAM_BOT_TOKEN',
+  commands: {
+    START: { command: '/start', description: 'התחל מהתחלה' },
+    LIST: { command: '/list', description: '🩵 רשימת ההתראות הפתוחות 🩵' },
+    CONTACT: { command: '/contact', description: '📬 צור קשר 📬' },
+  },
+};
+
 export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 6;
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 8;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
@@ -41,12 +54,6 @@ export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-t
 // 'rosh-pinna---zefat-area'
 // 'tel-aviv'
 // 'yokneam'
-
-export const WOLT_BOT_COMMANDS = {
-  START: { command: '/start', description: 'התחל מהתחלה' },
-  LIST: { command: '/list', description: '🩵 רשימת ההתראות הפתוחות 🩵' },
-  CONTACT: { command: '/contact', description: '📬 צור קשר 📬' },
-};
 
 export const HOUR_OF_DAY_TO_REFRESH_MAP = {
   0: SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS.SLOW,

@@ -9,7 +9,6 @@ import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import {
   BOT_BROADCAST_ACTIONS,
-  BOTS,
   getCallbackQueryData,
   getInlineKeyboardMarkup,
   getMessageData,
@@ -20,7 +19,7 @@ import {
   TelegramEventHandler,
   UserDetails,
 } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, TEACHER_BOT_COMMANDS } from './teacher.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './teacher.config';
 import { TeacherService } from './teacher.service';
 
 const loaderMessage = '👨‍🏫 Give me a few moments to think about it, one sec...';
@@ -40,16 +39,14 @@ export class TeacherController implements OnModuleInit {
     private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
     private readonly mongoUserService: TeacherMongoUserService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOTS.PROGRAMMING_TEACHER.token);
+    this.botToken = this.configService.get(BOT_CONFIG.token);
   }
 
   onModuleInit(): void {
-    this.bot.setMyCommands(Object.values(TEACHER_BOT_COMMANDS));
-
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { ACTIONS, COURSE, ADD } = TEACHER_BOT_COMMANDS;
+    const { ACTIONS, COURSE, ADD } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: COURSE.command, handler: (message) => this.courseHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
@@ -84,12 +81,12 @@ export class TeacherController implements OnModuleInit {
       await this.teacherService.startNewCourse(chatId);
     });
 
-    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START_COURSE }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START_COURSE }, userDetails);
   }
 
   private async addHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    const courseName = message.text.replace(TEACHER_BOT_COMMANDS.ADD.command, '').trim();
+    const courseName = message.text.replace(BOT_CONFIG.commands.ADD.command, '').trim();
     if (!courseName?.length) {
       await this.bot.sendMessage(chatId, `Please add the course name after the add command.\n example: /add JavaScript Heap`);
       return;
@@ -97,18 +94,18 @@ export class TeacherController implements OnModuleInit {
     await this.mongoCourseService.createCourse(chatId, courseName);
     await this.bot.sendMessage(chatId, `OK, I added \`${courseName}\` to your courses list`);
 
-    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.ADD, course: courseName }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD, course: courseName }, userDetails);
   }
 
   async messageHandler(message: Message): Promise<void> {
     const { chatId, messageId, text, userDetails } = getMessageData(message);
 
     // prevent built in options to be processed also here
-    if (Object.values(TEACHER_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
+    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
     const activeCourseParticipation = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
-      await this.bot.sendMessage(chatId, `I see you dont have an active course\nIf you want to start a new one, just use the ${TEACHER_BOT_COMMANDS.COURSE.command} command`);
+      await this.bot.sendMessage(chatId, `I see you dont have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);
       return;
     }
 
@@ -117,7 +114,7 @@ export class TeacherController implements OnModuleInit {
       await this.teacherService.processQuestion(chatId, text, activeCourseParticipation);
     });
 
-    this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
@@ -128,32 +125,32 @@ export class TeacherController implements OnModuleInit {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.NEXT_LESSON:
         await this.handleCallbackNextLesson(chatId, messageId);
-        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.NEXT_LESSON }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.NEXT_LESSON }, userDetails);
         break;
       case BOT_ACTIONS.TRANSCRIBE:
         await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
-        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_LESSON }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_LESSON }, userDetails);
         break;
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteCourse(chatId, messageId, courseParticipationId);
-        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.COMPLETE_COURSE }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.COMPLETE_COURSE }, userDetails);
         break;
       default:
-        this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
         throw new Error('Invalid action');
     }
   }
@@ -176,7 +173,7 @@ export class TeacherController implements OnModuleInit {
     const replyText = [
       'OK, I will stop teaching you for now 🛑',
       `Whenever you are ready, just send me the Start command and we will continue learning`,
-      `Another option for you is to start courses manually with the ${TEACHER_BOT_COMMANDS.COURSE.command} command`,
+      `Another option for you is to start courses manually with the ${BOT_CONFIG.commands.COURSE.command} command`,
     ].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
   }
