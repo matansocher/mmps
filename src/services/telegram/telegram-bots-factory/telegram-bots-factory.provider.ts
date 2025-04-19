@@ -11,8 +11,9 @@ function createErrorEventListeners(bot: TelegramBot, botName: string): void {
     logger.log(`${botName} - ${handlerName} - code: ${code}, message: ${message}`);
   };
 
-  bot.on(TELEGRAM_EVENTS.POLLING_ERROR, async (error) => botErrorHandler(botName, TELEGRAM_EVENTS.POLLING_ERROR, error));
-  bot.on(TELEGRAM_EVENTS.ERROR, async (error) => botErrorHandler(botName, TELEGRAM_EVENTS.ERROR, error));
+  const { POLLING_ERROR, ERROR } = TELEGRAM_EVENTS;
+  bot.on(POLLING_ERROR, async (error) => botErrorHandler(botName, POLLING_ERROR, error));
+  bot.on(ERROR, async (error) => botErrorHandler(botName, ERROR, error));
 }
 
 export const TelegramBotsFactoryProvider = (botConfig: TelegramBotConfig): Provider => {

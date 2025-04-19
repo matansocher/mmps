@@ -1,7 +1,7 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { BOT_CONFIG } from '@features/playgrounds/playgrounds.config';
 import { getMessageData, getTableTemplate, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { BOT_CONFIG } from './playgrounds.config';
 
 @Injectable()
 export class PlaygroundsController implements OnModuleInit {
