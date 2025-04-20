@@ -4,9 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { getCountryByCapital, getCountryByName } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, WORLDLY_BOT_COMMANDS } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
 const customErrorMessage = 'Oops, something went wrong, but you can try again later 🙁';
@@ -14,6 +14,7 @@ const customErrorMessage = 'Oops, something went wrong, but you can try again la
 @Injectable()
 export class WorldlyController implements OnModuleInit {
   private readonly logger = new Logger(WorldlyController.name);
+  private readonly botToken: string;
 
   constructor(
     private readonly worldlyService: WorldlyService,
@@ -21,14 +22,14 @@ export class WorldlyController implements OnModuleInit {
     private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
     private readonly notifier: NotifierService,
     private readonly configService: ConfigService,
-    @Inject(BOTS.WORLDLY.id) private readonly bot: TelegramBot,
-  ) {}
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
+  ) {
+    this.botToken = this.configService.get(BOT_CONFIG.token);
+  }
 
   onModuleInit(): void {
-    this.bot.setMyCommands(Object.values(WORLDLY_BOT_COMMANDS));
-
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = WORLDLY_BOT_COMMANDS;
+    const { RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
       { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
@@ -58,7 +59,7 @@ export class WorldlyController implements OnModuleInit {
     try {
       return this.worldlyService.randomGameHandler(chatId, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WORLDLY, { action: 'RANDOM', error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: 'RANDOM', error: `${err}` }, userDetails);
       throw err;
     }
   }
@@ -68,7 +69,7 @@ export class WorldlyController implements OnModuleInit {
     try {
       return this.worldlyService.mapHandler(chatId, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.MAP, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.MAP, error: `${err}` }, userDetails);
       throw err;
     }
   }
@@ -78,7 +79,7 @@ export class WorldlyController implements OnModuleInit {
     try {
       return this.worldlyService.USMapHandler(chatId, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.US_MAP, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.US_MAP, error: `${err}` }, userDetails);
       throw err;
     }
   }
@@ -88,7 +89,7 @@ export class WorldlyController implements OnModuleInit {
     try {
       return this.worldlyService.flagHandler(chatId, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.FLAG, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.FLAG, error: `${err}` }, userDetails);
       throw err;
     }
   }
@@ -98,7 +99,7 @@ export class WorldlyController implements OnModuleInit {
     try {
       return this.worldlyService.capitalHandler(chatId, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WORLDLY, { action: BOT_ACTIONS.CAPITAL, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.CAPITAL, error: `${err}` }, userDetails);
       throw err;
     }
   }
@@ -112,40 +113,40 @@ export class WorldlyController implements OnModuleInit {
         case BOT_ACTIONS.START:
           await this.startHandler(chatId, userDetails);
           await this.bot.deleteMessage(chatId, messageId).catch();
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
         case BOT_ACTIONS.STOP:
           await this.stopHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch();
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
           break;
         case BOT_ACTIONS.CONTACT:
           await this.contactHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch();
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.MAP:
           await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.US_MAP:
           await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.FLAG:
           await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.CAPITAL:
           await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
           break;
         default:
-          this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
           throw new Error('Invalid action');
       }
     } catch (err) {
-      this.notifier.notify(BOTS.WORLDLY, { action: `${game} answer`, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: `${game} answer`, error: `${err}` }, userDetails);
       throw err;
     }
   }
@@ -181,14 +182,14 @@ export class WorldlyController implements OnModuleInit {
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
-    await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
+    await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async USMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctName}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
-    await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
+    await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
@@ -196,7 +197,7 @@ export class WorldlyController implements OnModuleInit {
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - ${correctCountry.emoji} ${correctName} ${correctCountry.emoji}`;
     await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
-    await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
+    await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
@@ -204,6 +205,6 @@ export class WorldlyController implements OnModuleInit {
     const correctCountry = getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `Oops, Wrong` : `Correct!`} - The capital city of ${correctCountry.emoji} ${correctCountry.name} ${correctCountry.emoji} is ${correctCountry.capital}`;
     await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
-    await reactToMessage(this.configService.get(BOTS.WORLDLY.token), chatId, messageId, selectedName !== correctName ? '👎' : '👍');
+    await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 }

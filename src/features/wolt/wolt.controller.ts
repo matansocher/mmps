@@ -4,11 +4,11 @@ import { MY_USER_NAME } from '@core/config';
 import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateNumber, hasHebrew } from '@core/utils';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, WOLT_BOT_COMMANDS } from './wolt.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
 const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר לנסות מאוחר יותר 😥`;
 
@@ -21,14 +21,12 @@ export class WoltController implements OnModuleInit {
     private readonly mongoUserService: WoltMongoUserService,
     private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.WOLT.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
-    this.bot.setMyCommands(Object.values(WOLT_BOT_COMMANDS).filter((command) => command.command !== WOLT_BOT_COMMANDS.START.command));
-
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, LIST, CONTACT } = WOLT_BOT_COMMANDS;
+    const { START, LIST, CONTACT } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: LIST.command, handler: (message) => this.listHandler.call(this, message) },
@@ -54,14 +52,14 @@ export class WoltController implements OnModuleInit {
       .replace('{firstName}', userDetails.firstName || userDetails.username || '');
     const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
     await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
-    this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   async listHandler(message: Message): Promise<void> {
@@ -87,9 +85,9 @@ export class WoltController implements OnModuleInit {
         return this.bot.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, inlineKeyboardMarkup as any);
       });
       await Promise.all(promisesArr);
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${err}`, method: this.listHandler.name }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${err}`, method: this.listHandler.name }, userDetails);
       throw err;
     }
   }
@@ -99,7 +97,7 @@ export class WoltController implements OnModuleInit {
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     // prevent built in options to be processed also here
-    if (Object.values(WOLT_BOT_COMMANDS).some((command: BotCommand) => restaurant.includes(command.command))) return;
+    if (Object.values(BOT_CONFIG.commands).some((command: BotCommand) => restaurant.includes(command.command))) return;
 
     try {
       if (hasHebrew(restaurant)) {
@@ -125,9 +123,9 @@ export class WoltController implements OnModuleInit {
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
-      this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
       throw err;
     }
   }
@@ -145,7 +143,7 @@ export class WoltController implements OnModuleInit {
         await this.handleCallbackAddSubscription(chatId, userDetails, restaurantName, activeSubscriptions);
       }
     } catch (err) {
-      await this.notifier.notify(BOTS.WOLT, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
+      await this.notifier.notify(BOT_CONFIG, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
       throw err;
     }
   }
@@ -181,7 +179,7 @@ export class WoltController implements OnModuleInit {
     await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifier.notify(BOTS.WOLT, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
   async handleCallbackRemoveSubscription(chatId: number, messageId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {

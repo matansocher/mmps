@@ -1,5 +1,12 @@
 import { BOT_BROADCAST_ACTIONS, POSSIBLE_INPUTS } from '@services/telegram';
+import { TelegramBotConfig } from '@services/telegram';
 import type { VoicePalOption } from './interface';
+
+export const BOT_CONFIG: TelegramBotConfig = {
+  id: 'VOICE_PAL',
+  name: 'Voice Pal Bot 🎧',
+  token: 'VOICE_PAL_TELEGRAM_BOT_TOKEN',
+};
 
 export const VOICE_PAL_OPTIONS: Record<string, VoicePalOption> = {
   START: {

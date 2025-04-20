@@ -5,8 +5,8 @@ import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
 import { OpenaiService } from '@services/openai';
-import { BOTS, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BROKEN_RECORD_IMAGE_PROMPT, TRAINER_BOT_COMMANDS } from './trainer.config';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { BOT_ACTIONS } from './trainer.config';
 import { getLastWeekDates, getLongestStreak, getSpecialNumber, getStreak } from './utils';
 
@@ -24,15 +24,14 @@ export class TrainerBotService implements OnModuleInit {
     private readonly mongoUserService: TrainerMongoUserService,
     private readonly openaiService: OpenaiService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.TRAINER.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOTS.TRAINER.token);
+    this.botToken = this.configService.get(BOT_CONFIG.token);
   }
 
   onModuleInit(): void {
-    this.bot.setMyCommands(Object.values(TRAINER_BOT_COMMANDS));
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { ACTIONS, EXERCISE, ACHIEVEMENTS } = TRAINER_BOT_COMMANDS;
+    const { ACTIONS, EXERCISE, ACHIEVEMENTS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
       { event: COMMAND, regex: ACHIEVEMENTS.command, handler: (message) => this.achievementsHandler.call(this, message) },
@@ -70,7 +69,7 @@ export class TrainerBotService implements OnModuleInit {
     today.setHours(0, 0, 0, 0);
     const currentStreak = getStreak([...exercisesDates, today]);
 
-    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.EXERCISE }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.EXERCISE }, userDetails);
 
     // Check if the user broke their longest streak
     if (currentStreak > 1 && currentStreak > longestStreak) {
@@ -111,7 +110,7 @@ export class TrainerBotService implements OnModuleInit {
     ].join('\n');
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.ACHIEVEMENTS }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ACHIEVEMENTS }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
@@ -122,20 +121,20 @@ export class TrainerBotService implements OnModuleInit {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       default:
-        this.notifier.notify(BOTS.TRAINER, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
         throw new Error('Invalid action');
     }
   }

@@ -3,16 +3,16 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
-import { BOTS, getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
+import { getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { Country } from './types';
 import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCountry, getRandomState } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 
 @Injectable()
 export class WorldlyService {
   constructor(
     private readonly notifier: NotifierService,
-    @Inject(BOTS.WORLDLY.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async randomGameHandler(chatId: number, userDetails: UserDetails): Promise<void> {
@@ -38,7 +38,7 @@ export class WorldlyService {
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the country' });
 
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
   }
 
   async USMapHandler(chatId: number, userDetails: UserDetails): Promise<void> {
@@ -51,7 +51,7 @@ export class WorldlyService {
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the state' });
 
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
   }
 
   async flagHandler(chatId: number, userDetails: UserDetails): Promise<void> {
@@ -64,7 +64,7 @@ export class WorldlyService {
 
     await this.bot.sendMessage(chatId, randomCountry.emoji, { ...(inlineKeyboardMarkup as any) });
 
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.FLAG }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG }, userDetails);
   }
 
   async capitalHandler(chatId: number, userDetails: UserDetails): Promise<void> {
@@ -80,6 +80,6 @@ export class WorldlyService {
     const replyText = `Guess the capital city of ${randomCountry.emoji} ${randomCountry.name} ${randomCountry.emoji}`;
     await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
 
-    this.notifier.notify(BOTS.WORLDLY, { action: ANALYTIC_EVENT_NAMES.CAPITAL }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL }, userDetails);
   }
 }

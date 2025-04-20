@@ -1,18 +1,17 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { BOTS, getMessageData, getTableTemplate, registerHandlers, sendMessageInStyle, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { PLAYGROUNDS_BOT_COMMANDS } from './playgrounds.config';
+import { getMessageData, getTableTemplate, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { BOT_CONFIG } from './playgrounds.config';
 
 @Injectable()
 export class PlaygroundsController implements OnModuleInit {
   private readonly logger = new Logger(PlaygroundsController.name);
 
-  constructor(@Inject(BOTS.PLAYGROUNDS.id) private readonly bot: TelegramBot) {}
+  constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
 
   onModuleInit(): void {
-    this.bot.setMyCommands(Object.values(PLAYGROUNDS_BOT_COMMANDS));
     const { COMMAND } = TELEGRAM_EVENTS;
-    const { START, POLL } = PLAYGROUNDS_BOT_COMMANDS;
+    const { START, POLL } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: POLL.command, handler: (message) => this.pollHandler.call(this, message) },
@@ -22,7 +21,7 @@ export class PlaygroundsController implements OnModuleInit {
 
   private async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const replyMessage = 'this is a very long message and we want to send each word separately so it looks like it is being written live';
+    // const replyMessage = 'this is a very long message and we want to send each word separately so it looks like it is being written live';
     // await sendMessageInStyle(this.bot, chatId, replyMessage);
 
     const items = [

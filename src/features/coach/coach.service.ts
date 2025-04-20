@@ -34,7 +34,7 @@ export class CoachService {
       return null;
     }
 
-    const tableData = competitionTableDetails.competitionTable.map(({ competitor, points }) => ({ name: competitor.name, value: points }));
+    const tableData = competitionTableDetails.competitionTable.map(({ competitor, points, gamesPlayed }) => ({ name: competitor.name, midValue: gamesPlayed, value: points }));
     return getTableTemplate(tableData);
   }
 

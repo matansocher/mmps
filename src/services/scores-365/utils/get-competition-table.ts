@@ -20,7 +20,11 @@ export async function getCompetitionTable(competitionId: number): Promise<Compet
   if (!relevantCompetitionData || !relevantCompetitionTableData) {
     return undefined;
   }
-  const competitionTable = relevantCompetitionTableData.rows.map(({ competitor, points }) => ({ competitor: { id: competitor.id, name: competitor.name }, points }));
+  const competitionTable = relevantCompetitionTableData.rows.map(({ competitor, points, gamePlayed }) => ({
+    competitor: { id: competitor.id, name: competitor.name },
+    points,
+    gamesPlayed: gamePlayed,
+  }));
   const competitionRawDetails = COMPETITIONS.find((c) => c.id === competitionId);
   const competition = { ..._pick(relevantCompetitionData, ['id', 'name']), icon: competitionRawDetails.icon };
   return { competition, competitionTable } as CompetitionTableDetails;

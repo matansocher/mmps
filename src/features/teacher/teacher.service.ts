@@ -3,8 +3,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CourseModel, CourseParticipationModel, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
 import { OpenaiAssistantService } from '@services/openai';
-import { BOTS, getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
+import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
+import { BOT_ACTIONS, BOT_CONFIG, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
 
 @Injectable()
 export class TeacherService {
@@ -15,7 +15,7 @@ export class TeacherService {
     private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.PROGRAMMING_TEACHER.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async processCourseFirstLesson(chatId: number): Promise<void> {
@@ -32,7 +32,7 @@ export class TeacherService {
       await this.processLesson(chatId, true);
     } catch (err) {
       this.logger.error(`${this.processCourseNextLesson.name} - error: ${err}`);
-      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: `${err}` });
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
     }
   }
 
@@ -47,7 +47,7 @@ export class TeacherService {
 
     const course = await this.mongoCourseService.getRandomCourse(chatId, coursesParticipated);
     if (!course) {
-      this.notifier.notify(BOTS.PROGRAMMING_TEACHER, { action: 'ERROR', error: 'No new courses found' });
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new courses found' });
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();

@@ -1,5 +1,5 @@
 import { InlineKeyboardMarkup } from 'node-telegram-bot-api';
-import { UserDetails } from './telegram-message-data.interface';
+import { UserDetails } from './telegram-message-data';
 
 export interface TelegramCallbackQueryData {
   readonly messageId: number;

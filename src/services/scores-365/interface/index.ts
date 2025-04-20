@@ -70,4 +70,5 @@ export interface CompetitionTableDetails {
 export interface CompetitionTableRow {
   readonly competitor: Competitor;
   readonly points: number;
+  readonly gamesPlayed: number;
 }

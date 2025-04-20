@@ -9,7 +9,6 @@ import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import {
   BOT_BROADCAST_ACTIONS,
-  BOTS,
   getCallbackQueryData,
   getInlineKeyboardMarkup,
   getMessageData,
@@ -20,7 +19,7 @@ import {
   TelegramEventHandler,
   UserDetails,
 } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, EDUCATOR_BOT_COMMANDS } from './educator.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './educator.config';
 import { EducatorService } from './educator.service';
 
 const loaderMessage = '👩‍🏫 תן לי כמה שניות לחשוב על זה ואני איתך, שניה אחת...';
@@ -41,16 +40,14 @@ export class EducatorController implements OnModuleInit {
     private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
     private readonly mongoUserService: EducatorMongoUserService,
     private readonly notifier: NotifierService,
-    @Inject(BOTS.EDUCATOR.id) private readonly bot: TelegramBot,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOTS.EDUCATOR.token);
+    this.botToken = this.configService.get(BOT_CONFIG.token);
   }
 
   onModuleInit(): void {
-    this.bot.setMyCommands(Object.values(EDUCATOR_BOT_COMMANDS));
-
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { ACTIONS, TOPIC, ADD } = EDUCATOR_BOT_COMMANDS;
+    const { ACTIONS, TOPIC, ADD } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
@@ -81,12 +78,12 @@ export class EducatorController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
 
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
   }
 
   private async addHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    const topic = message.text.replace(EDUCATOR_BOT_COMMANDS.ADD.command, '').trim();
+    const topic = message.text.replace(BOT_CONFIG.commands.ADD.command, '').trim();
     if (!topic?.length) {
       await this.bot.sendMessage(chatId, `אין בעיה אני אוסיף מה שתגיד לי רק תרשום לי בנוסף לפקודה את הנושא`);
       return;
@@ -94,14 +91,14 @@ export class EducatorController implements OnModuleInit {
     await this.mongoTopicService.createTopic(chatId, topic);
     await this.bot.sendMessage(chatId, `סבבה, הוספתי את זה כנושא, ונלמד על זה בשיעורים הבאים`);
 
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.ADD_TOPIC }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD_TOPIC }, userDetails);
   }
 
   private async messageHandler(message: Message): Promise<void> {
     const { chatId, messageId, userDetails, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
-    if (Object.values(EDUCATOR_BOT_COMMANDS).some((command) => text.includes(command.command))) return;
+    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
     const activeTopicParticipation = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
     if (!activeTopicParticipation) {
@@ -115,7 +112,7 @@ export class EducatorController implements OnModuleInit {
     });
 
     const topic = await this.mongoTopicService.getTopic(activeTopicParticipation.topicId);
-    this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text, topic: topic?.title }, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text, topic: topic?.title }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
@@ -126,28 +123,28 @@ export class EducatorController implements OnModuleInit {
       case BOT_ACTIONS.START:
         await this.startHandler(chatId, userDetails);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.TRANSCRIBE:
         await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
-        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_TOPIC }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_TOPIC }, userDetails);
         break;
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteTopic(chatId, messageId, topicParticipationId);
-        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
         break;
       default:
-        this.notifier.notify(BOTS.EDUCATOR, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
         throw new Error('Invalid action');
     }
   }

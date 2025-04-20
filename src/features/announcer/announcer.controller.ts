@@ -1,24 +1,15 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { sleep } from '@core/utils';
-import { BOTS, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { BOT_CONFIG } from './announcer.config';
 import { isMessageValid } from './utils';
-
-// const message = [
-//   `👋 היי! לאחרונה שמנו לב שחלק מהמשתמשים לא קיבלו התראות כראוי.`,
-//   `הבעיה טופלה, ועכשיו הכל אמור לעבוד כרגיל. תודה על הסבלנות!`,
-//   `אם תיתקלו בבעיה נוספת או שיש לכם רעיונות לשיפור – אתם מוזמנים להשתמש בפקודת "צור קשר" ולשלוח לנו פידבק. 💙`,
-//   `תודה שאתם כאן! 🚀`,
-// ].join('\n\n');
 
 @Injectable()
 export class AnnouncerController implements OnModuleInit {
   private readonly logger = new Logger(AnnouncerController.name);
 
-  constructor(
-    @Inject(BOTS.ANNOUNCER.id) private readonly bot: TelegramBot,
-    @Inject(BOTS.WOLT.id) private readonly woltBot: TelegramBot,
-  ) {}
+  constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
 
   onModuleInit(): void {
     const handlers: TelegramEventHandler[] = [{ event: TELEGRAM_EVENTS.MESSAGE, handler: (message) => this.textHandler.call(this, message) }];
@@ -48,8 +39,6 @@ export class AnnouncerController implements OnModuleInit {
 
   getRelevantBot(botName: string): TelegramBot {
     switch (botName) {
-      case BOTS.WOLT.id:
-        return this.woltBot;
       default:
         return null;
     }
