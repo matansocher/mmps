@@ -36,3 +36,12 @@ export enum BOT_ACTIONS {
   FLAG = 'f',
   CAPITAL = 'c',
 }
+
+export const CONTINENTS_MAPPING = {
+  Africa: 'אפריקה',
+  Asia: 'אסיה',
+  Europe: 'אירופה',
+  North_America: 'צפון אמריקה',
+  Oceania: 'אוקיאניה',
+  South_America: 'דרום אמריקה',
+};
