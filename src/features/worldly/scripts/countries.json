@@ -680,19 +680,6 @@
     "hebrewCapital": "אלג'יר"
   },
   {
-    "name": "American Samoa",
-    "alpha2": "AS",
-    "alpha3": "ASM",
-    "lat": -14.270972,
-    "lon": -170.132217,
-    "capital": "Pago Pago",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇦🇸",
-    "hebrewName": "סמואה אמריקאית",
-    "hebrewCapital": "פאגו פאגו"
-  },
-  {
     "name": "Andorra",
     "alpha2": "AD",
     "alpha3": "AND",
@@ -1030,19 +1017,6 @@
     },
     "hebrewName": "אנגולה",
     "hebrewCapital": "לואנדה"
-  },
-  {
-    "name": "Anguilla",
-    "alpha2": "AI",
-    "alpha3": "AIA",
-    "lat": 18.220554,
-    "lon": -63.068615,
-    "capital": "the Valley",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇦🇮",
-    "hebrewName": "אנגווילה",
-    "hebrewCapital": "העמק"
   },
   {
     "name": "Antigua and Barbuda",
@@ -1667,19 +1641,6 @@
     },
     "hebrewName": "אַרְמֶנִיָה",
     "hebrewCapital": "ירוואן"
-  },
-  {
-    "name": "Aruba",
-    "alpha2": "AW",
-    "alpha3": "ABW",
-    "lat": 12.52111,
-    "lon": -69.968338,
-    "capital": "Oranjestad",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇦🇼",
-    "hebrewName": "ארובה",
-    "hebrewCapital": "אורנג'סטאד"
   },
   {
     "name": "Australia",
@@ -3854,19 +3815,6 @@
     "hebrewCapital": "פורטו נובו"
   },
   {
-    "name": "Bermuda",
-    "alpha2": "BM",
-    "alpha3": "BMU",
-    "lat": 32.321384,
-    "lon": -64.75737,
-    "capital": "Hamilton",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇧🇲",
-    "hebrewName": "ברמודה",
-    "hebrewCapital": "המילטון"
-  },
-  {
     "name": "Bhutan",
     "alpha2": "BT",
     "alpha3": "BTN",
@@ -5322,19 +5270,6 @@
     },
     "hebrewName": "בְּרָזִיל",
     "hebrewCapital": "ברזיליה"
-  },
-  {
-    "name": "British Virgin Islands",
-    "alpha2": "VG",
-    "alpha3": "VGB",
-    "lat": 18.420695,
-    "lon": -64.639968,
-    "capital": "Road Town",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇻🇬",
-    "hebrewName": "איי הבתולה הבריטיים",
-    "hebrewCapital": "עיירת דרך"
   },
   {
     "name": "Brunei",
@@ -9449,19 +9384,6 @@
     "hebrewCapital": "פראיה"
   },
   {
-    "name": "Cayman Islands",
-    "alpha2": "KY",
-    "alpha3": "CYM",
-    "lat": 19.513469,
-    "lon": -80.566956,
-    "capital": "George Town",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇰🇾",
-    "hebrewName": "איי קיימן",
-    "hebrewCapital": "ג'ורג 'טאון"
-  },
-  {
     "name": "Central African Republic",
     "alpha2": "CF",
     "alpha3": "CAF",
@@ -11884,19 +11806,6 @@
     "hebrewCapital": "מורוני"
   },
   {
-    "name": "Cook Islands",
-    "alpha2": "CK",
-    "alpha3": "COK",
-    "lat": -21.236736,
-    "lon": -159.777671,
-    "capital": "Avarua",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇨🇰",
-    "hebrewName": "איי קוק",
-    "hebrewCapital": "אבארואה"
-  },
-  {
     "name": "Costa Rica",
     "alpha2": "CR",
     "alpha3": "CRI",
@@ -12439,19 +12348,6 @@
     },
     "hebrewName": "קובה",
     "hebrewCapital": "הוואנה"
-  },
-  {
-    "name": "Curacao",
-    "alpha2": "CW",
-    "alpha3": "CUW",
-    "lat": 12.2135221,
-    "lon": -68.9495816,
-    "capital": "Willemstad",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇨🇼",
-    "hebrewName": "Curacao",
-    "hebrewCapital": "וילמסטאד"
   },
   {
     "name": "Cyprus",
@@ -14593,79 +14489,6 @@
     "hebrewCapital": "אדיס אבבה"
   },
   {
-    "name": "Falkland Islands",
-    "alpha2": "FK",
-    "alpha3": "FLK",
-    "lat": -51.796253,
-    "lon": -59.523613,
-    "capital": "Stanley",
-    "continent": "South America",
-    "hebrewContinent": "דרום אמריקה",
-    "emoji": "🇫🇰",
-    "geometry": {
-      "type": "Polygon",
-      "coordinates": [
-        [
-          [
-            -61.2,
-            -51.85
-          ],
-          [
-            -60,
-            -51.25
-          ],
-          [
-            -59.15,
-            -51.5
-          ],
-          [
-            -58.55,
-            -51.1
-          ],
-          [
-            -57.75,
-            -51.55
-          ],
-          [
-            -58.05,
-            -51.9
-          ],
-          [
-            -59.4,
-            -52.2
-          ],
-          [
-            -59.85,
-            -51.85
-          ],
-          [
-            -60.7,
-            -52.3
-          ],
-          [
-            -61.2,
-            -51.85
-          ]
-        ]
-      ]
-    },
-    "hebrewName": "איי פוקלנד",
-    "hebrewCapital": "סטנלי"
-  },
-  {
-    "name": "Faroe Islands",
-    "alpha2": "FO",
-    "alpha3": "FRO",
-    "lat": 61.892635,
-    "lon": -6.911806,
-    "capital": "Torshavn",
-    "continent": "Europe",
-    "hebrewContinent": "אירופה",
-    "emoji": "🇫🇴",
-    "hebrewName": "איי פארו",
-    "hebrewCapital": "טורסהאבן"
-  },
-  {
     "name": "Fiji",
     "alpha2": "FJ",
     "alpha3": "FJI",
@@ -15301,19 +15124,6 @@
     "emoji": "🇬🇫",
     "hebrewName": "גיאנה הצרפתית",
     "hebrewCapital": "קאיין"
-  },
-  {
-    "name": "French Polynesia",
-    "alpha2": "PF",
-    "alpha3": "PYF",
-    "lat": -17.679742,
-    "lon": -149.406843,
-    "capital": "Papeetē",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇵🇫",
-    "hebrewName": "פולינזיה צרפתית",
-    "hebrewCapital": "פאפיט"
   },
   {
     "name": "Gabon",
@@ -16030,19 +15840,6 @@
     },
     "hebrewName": "גאנה",
     "hebrewCapital": "אקרה"
-  },
-  {
-    "name": "Gibraltar",
-    "alpha2": "GI",
-    "alpha3": "GIB",
-    "lat": 36.137741,
-    "lon": -5.345374,
-    "capital": "Gibraltar",
-    "continent": "Europe",
-    "hebrewContinent": "אירופה",
-    "emoji": "🇬🇮",
-    "hebrewName": "גיברלטר",
-    "hebrewCapital": "גיברלטר"
   },
   {
     "name": "Greece",
@@ -16848,32 +16645,6 @@
     "hebrewCapital": "סנט ג'ורג'"
   },
   {
-    "name": "Guadeloupe",
-    "alpha2": "GP",
-    "alpha3": "GLP",
-    "lat": 16.995971,
-    "lon": -62.067641,
-    "capital": "Basse-Terre",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇬🇵",
-    "hebrewName": "Guadeloupe",
-    "hebrewCapital": "באסה-טרה"
-  },
-  {
-    "name": "Guam",
-    "alpha2": "GU",
-    "alpha3": "GUM",
-    "lat": 13.444304,
-    "lon": 144.793731,
-    "capital": "Hagåtña",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇬🇺",
-    "hebrewName": "גואם",
-    "hebrewCapital": "האגאטניה"
-  },
-  {
     "name": "Guatemala",
     "alpha2": "GT",
     "alpha3": "GTM",
@@ -17032,19 +16803,6 @@
     },
     "hebrewName": "גואטמלה",
     "hebrewCapital": "גואטמלה סיטי"
-  },
-  {
-    "name": "Guernsey",
-    "alpha2": "GG",
-    "alpha3": "GGY",
-    "lat": 49.465691,
-    "lon": -2.585278,
-    "capital": "St. Peter Port",
-    "continent": "Europe",
-    "hebrewContinent": "אירופה",
-    "emoji": "🇬🇬",
-    "hebrewName": "גרנזי",
-    "hebrewCapital": "סיינט פיטר פורט"
   },
   {
     "name": "Guinea",
@@ -20407,19 +20165,6 @@
     "hebrewCapital": "דבלין"
   },
   {
-    "name": "Isle of Man",
-    "alpha2": "IM",
-    "alpha3": "IMN",
-    "lat": 54.236107,
-    "lon": -4.548056,
-    "capital": "Douglas",
-    "continent": "Europe",
-    "hebrewContinent": "אירופה",
-    "emoji": "🇮🇲",
-    "hebrewName": "האי מאדם",
-    "hebrewCapital": "דגלס"
-  },
-  {
     "name": "Israel",
     "alpha2": "IL",
     "alpha3": "ISR",
@@ -21478,19 +21223,6 @@
     },
     "hebrewName": "יַפָּן",
     "hebrewCapital": "טוקיו"
-  },
-  {
-    "name": "Jersey",
-    "alpha2": "JE",
-    "alpha3": "JEY",
-    "lat": 49.214439,
-    "lon": -2.13125,
-    "capital": "St Helier",
-    "continent": "Europe",
-    "hebrewContinent": "אירופה",
-    "emoji": "🇯🇪",
-    "hebrewName": "ג'רזי",
-    "hebrewCapital": "סיינט הלייר"
   },
   {
     "name": "Jordan",
@@ -23502,17 +23234,6 @@
     "hebrewCapital": "לוקסמבורג סיטי"
   },
   {
-    "name": "Macao",
-    "alpha2": "MO",
-    "alpha3": "MAC",
-    "lat": 22.198745,
-    "lon": 113.543873,
-    "continent": "Asia",
-    "hebrewContinent": "אסיה",
-    "emoji": "🇲🇴",
-    "hebrewName": "מקאו"
-  },
-  {
     "name": "Madagascar",
     "alpha2": "MG",
     "alpha3": "MDG",
@@ -24560,19 +24281,6 @@
     "hebrewCapital": "מג'ורו"
   },
   {
-    "name": "Martinique",
-    "alpha2": "MQ",
-    "alpha3": "MTQ",
-    "lat": 14.641528,
-    "lon": -61.024174,
-    "capital": "Fort de France",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇲🇶",
-    "hebrewName": "מרטיניק",
-    "hebrewCapital": "פור דה פרנס"
-  },
-  {
     "name": "Mauritania",
     "alpha2": "MR",
     "alpha3": "MRT",
@@ -24760,19 +24468,6 @@
     "emoji": "🇲🇺",
     "hebrewName": "מאוריציוס",
     "hebrewCapital": "פורט לואי"
-  },
-  {
-    "name": "Mayotte",
-    "alpha2": "YT",
-    "alpha3": "MYT",
-    "lat": -12.8275,
-    "lon": 45.166244,
-    "capital": "Mamoudzou",
-    "continent": "Africa",
-    "hebrewContinent": "אפריקה",
-    "emoji": "🇾🇹",
-    "hebrewName": "מיוט",
-    "hebrewCapital": "ממודזו"
   },
   {
     "name": "Mexico",
@@ -26079,19 +25774,6 @@
     },
     "hebrewName": "מונטנגרו",
     "hebrewCapital": "פודגוריצה"
-  },
-  {
-    "name": "Montserrat",
-    "alpha2": "MS",
-    "alpha3": "MSR",
-    "lat": 16.742498,
-    "lon": -62.187366,
-    "capital": "Plymouth",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇲🇸",
-    "hebrewName": "מונטסראט",
-    "hebrewCapital": "פלימות"
   },
   {
     "name": "Morocco",
@@ -27401,78 +27083,6 @@
     "hebrewCapital": "אמסטרדם"
   },
   {
-    "name": "New Caledonia",
-    "alpha2": "NC",
-    "alpha3": "NCL",
-    "lat": -20.904305,
-    "lon": 165.618042,
-    "capital": "Noumea",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇳🇨",
-    "geometry": {
-      "type": "Polygon",
-      "coordinates": [
-        [
-          [
-            165.77999,
-            -21.080005
-          ],
-          [
-            166.599991,
-            -21.700019
-          ],
-          [
-            167.120011,
-            -22.159991
-          ],
-          [
-            166.740035,
-            -22.399976
-          ],
-          [
-            166.189732,
-            -22.129708
-          ],
-          [
-            165.474375,
-            -21.679607
-          ],
-          [
-            164.829815,
-            -21.14982
-          ],
-          [
-            164.167995,
-            -20.444747
-          ],
-          [
-            164.029606,
-            -20.105646
-          ],
-          [
-            164.459967,
-            -20.120012
-          ],
-          [
-            165.020036,
-            -20.459991
-          ],
-          [
-            165.460009,
-            -20.800022
-          ],
-          [
-            165.77999,
-            -21.080005
-          ]
-        ]
-      ]
-    },
-    "hebrewName": "קלדוניה החדשה",
-    "hebrewCapital": "נומיאה"
-  },
-  {
     "name": "New Zealand",
     "alpha2": "NZ",
     "alpha3": "NZL",
@@ -28495,19 +28105,6 @@
     "hebrewCapital": "אבוג'ה"
   },
   {
-    "name": "Niue",
-    "alpha2": "NU",
-    "alpha3": "NIU",
-    "lat": -19.054445,
-    "lon": -169.867233,
-    "capital": "Alofi",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇳🇺",
-    "hebrewName": "ניואה",
-    "hebrewCapital": "אלופי"
-  },
-  {
     "name": "North Korea",
     "alpha2": "KP",
     "alpha3": "PRK",
@@ -28816,19 +28413,6 @@
     },
     "hebrewName": "צפון מקדוניה",
     "hebrewCapital": "סקופיה"
-  },
-  {
-    "name": "Northern Mariana Islands",
-    "alpha2": "MP",
-    "alpha3": "MNP",
-    "lat": 17.33083,
-    "lon": 145.38469,
-    "capital": "Saipan",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇲🇵",
-    "hebrewName": "איי צפון מריאנה",
-    "hebrewCapital": "סייפן"
   },
   {
     "name": "Norway",
@@ -31956,19 +31540,6 @@
     "hebrewCapital": "ברזוויל"
   },
   {
-    "name": "Reunion",
-    "alpha2": "RE",
-    "alpha3": "REU",
-    "lat": -21.115141,
-    "lon": 55.536384,
-    "capital": "Saint-Denis",
-    "continent": "Africa",
-    "hebrewContinent": "אפריקה",
-    "emoji": "🇫🇷",
-    "hebrewName": "ראוניון",
-    "hebrewCapital": "סיינט דניס"
-  },
-  {
     "name": "Romania",
     "alpha2": "RO",
     "alpha3": "ROU",
@@ -34816,19 +34387,6 @@
     "hebrewCapital": "קיגאלי"
   },
   {
-    "name": "Saint Barthelemy",
-    "alpha2": "BL",
-    "alpha3": "BLM",
-    "lat": 17.9139222,
-    "lon": -62.8338521,
-    "capital": "Gustavia",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇧🇱",
-    "hebrewName": "סנט ברטלמי",
-    "hebrewCapital": "גוסטביה"
-  },
-  {
     "name": "Saint Kitts and Nevis",
     "alpha2": "KN",
     "alpha3": "KNA",
@@ -34853,19 +34411,6 @@
     "emoji": "🇱🇨",
     "hebrewName": "סנט לוסיה",
     "hebrewCapital": "קסטריז"
-  },
-  {
-    "name": "Saint Martin",
-    "alpha2": "MF",
-    "alpha3": "MAF",
-    "lat": 18.0858547,
-    "lon": -63.0618597,
-    "capital": "Marigot",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇫🇷",
-    "hebrewName": "סנט מרטין",
-    "hebrewCapital": "מריגוט"
   },
   {
     "name": "Saint Pierre and Miquelon",
@@ -35990,19 +35535,6 @@
     },
     "hebrewName": "סינגפור",
     "hebrewCapital": "סינגפור"
-  },
-  {
-    "name": "Sint Maarten",
-    "alpha2": "SX",
-    "alpha3": "SXM",
-    "lat": 18.0347188,
-    "lon": -63.0681114,
-    "capital": "Philipsburg",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇸🇽",
-    "hebrewName": "סינט מרטן",
-    "hebrewCapital": "פיליפסבורג"
   },
   {
     "name": "Slovakia",
@@ -39451,19 +38983,6 @@
     "hebrewCapital": "לומה"
   },
   {
-    "name": "Tokelau",
-    "alpha2": "TK",
-    "alpha3": "TKL",
-    "lat": -8.967363,
-    "lon": -171.855881,
-    "capital": "Fakaofo, Nukunonu, Atafu",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇹🇰",
-    "hebrewName": "טוקלאו",
-    "hebrewCapital": "פאקאופו, נוקונונו, אטפו"
-  },
-  {
     "name": "Tonga",
     "alpha2": "TO",
     "alpha3": "TON",
@@ -40205,19 +39724,6 @@
     },
     "hebrewName": "טורקמניסטן",
     "hebrewCapital": "אשגבט"
-  },
-  {
-    "name": "Turks and Caicos Islands",
-    "alpha2": "TC",
-    "alpha3": "TCA",
-    "lat": 21.694025,
-    "lon": -71.797928,
-    "capital": "Cockburn Town",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇹🇨",
-    "hebrewName": "איי טורקים וקייקוס",
-    "hebrewCapital": "קוקבורן טאון"
   },
   {
     "name": "Tuvalu",
@@ -42962,19 +42468,6 @@
     "hebrewCapital": "וושינגטון די.סי."
   },
   {
-    "name": "United States Virgin Islands",
-    "alpha2": "VI",
-    "alpha3": "VIR",
-    "lat": 18.335765,
-    "lon": -64.896335,
-    "capital": "Charlotte Amalie",
-    "continent": "North America",
-    "hebrewContinent": "צפון אמריקה",
-    "emoji": "🇻🇮",
-    "hebrewName": "איי הבתולה של ארצות הברית",
-    "hebrewCapital": "שרלוט אמלי"
-  },
-  {
     "name": "Uruguay",
     "alpha2": "UY",
     "alpha3": "URY",
@@ -44175,19 +43668,6 @@
     },
     "hebrewName": "וייטנאם",
     "hebrewCapital": "האנוי"
-  },
-  {
-    "name": "Wallis and Futuna",
-    "alpha2": "WF",
-    "alpha3": "WLF",
-    "lat": -13.768752,
-    "lon": -177.156097,
-    "capital": "Mata-Utu",
-    "continent": "Oceania",
-    "hebrewContinent": "אוקיאניה",
-    "emoji": "🇼🇫",
-    "hebrewName": "וואליס ופוטונה",
-    "hebrewCapital": "מטה-אוטו"
   },
   {
     "name": "Western Sahara",
