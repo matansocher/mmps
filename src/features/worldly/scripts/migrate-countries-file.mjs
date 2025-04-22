@@ -1,4 +1,3 @@
-import { translate } from '@vitalets/google-translate-api';
 import * as fs from 'fs';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
