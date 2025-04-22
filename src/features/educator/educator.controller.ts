@@ -22,8 +22,8 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './educator.config';
 import { EducatorService } from './educator.service';
 
-const loaderMessage = '👩‍🏫 תן לי כמה שניות לחשוב על זה ואני איתך, שניה אחת...';
-const transcribeLoaderMessage = '👩‍🏫 תן לי כמה שניות ואני מתמללת לך את זה, שניה אחת...';
+const loaderMessage = '👩‍🏫 כמה שניות לחשוב על זה ואני איתך, שניה אחת...';
+const transcribeLoaderMessage = '👩‍🏫 כמה שניות ואני מתמללת לך את זה, שניה אחת...';
 const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
 @Injectable()

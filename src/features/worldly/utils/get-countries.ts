@@ -18,6 +18,11 @@ export function getCountryByName(name: string): Country {
   return countries.find((c) => c.name === name);
 }
 
+export function getStateByName(state: string): State {
+  const states = getStates();
+  return states.find((c) => c.name === state);
+}
+
 export function getCountryByCapital(capital: string): Country {
   const countries = getCountries();
   return countries.find((c) => c.capital === capital);

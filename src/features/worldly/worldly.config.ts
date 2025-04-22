@@ -5,12 +5,12 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Worldly Bot 🌍',
   token: 'WORLDLY_TELEGRAM_BOT_TOKEN',
   commands: {
-    RANDOM: { command: '/random', description: '🌎 Random game 🌎' },
-    MAP: { command: '/map', description: '🗺️ Map 🗺️' },
-    FLAG: { command: '/flag', description: '🏁 Flag 🏁' },
-    CAPITAL: { command: '/capital', description: '🏛️ Capital City 🏛️' },
-    US_MAP: { command: '/usmap', description: '🇺🇸 USA Map 🇺🇸' },
-    ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
+    RANDOM: { command: '/random', description: '🌎 משחק אקראי 🌎' },
+    MAP: { command: '/map', description: '🗺️ מפה 🗺️' },
+    FLAG: { command: '/flag', description: '🏁 דגל 🏁' },
+    CAPITAL: { command: '/capital', description: '🏛️ עיר בירה 🏛️' },
+    US_MAP: { command: '/usmap', description: '🇺🇸 מפת ארצות הברית 🇺🇸' },
+    ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
   },
 };
 
@@ -36,3 +36,12 @@ export enum BOT_ACTIONS {
   FLAG = 'f',
   CAPITAL = 'c',
 }
+
+export const CONTINENTS = {
+  AFRICA: { name: 'Africa', hebrewName: 'אפריקה' },
+  ASIA: { name: 'Asia', hebrewName: 'אסיה' },
+  EUROPE: { name: 'Europe', hebrewName: 'אירופה' },
+  NORTH_AMERICA: { name: 'North America', hebrewName: 'צפון אמריקה' },
+  OCEANIA: { name: 'Oceania', hebrewName: 'אוקיאניה' },
+  SOUTH_AMERICA: { name: 'South America', hebrewName: 'דרום אמריקה' },
+};
