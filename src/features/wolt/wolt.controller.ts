@@ -10,7 +10,7 @@ import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
-const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר לנסות מאוחר יותר 😥`;
+const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר לנסות שוב מאוחר יותר 😥`;
 
 @Injectable()
 export class WoltController implements OnModuleInit {
