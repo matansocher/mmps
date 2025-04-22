@@ -9,7 +9,7 @@ import { getCountryByCapital, getCountryByName, getStateByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
-const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות מאוחר יותר 🙁';
+const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
 
 @Injectable()
 export class WorldlyController implements OnModuleInit {
