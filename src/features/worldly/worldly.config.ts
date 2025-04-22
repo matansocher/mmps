@@ -37,11 +37,11 @@ export enum BOT_ACTIONS {
   CAPITAL = 'c',
 }
 
-export const CONTINENTS_MAPPING = {
-  AFRICA: 'אפריקה',
-  ASIA: 'אסיה',
-  EUROPE: 'אירופה',
-  NORTH_AMERICA: 'צפון אמריקה',
-  OCEANIA: 'אוקיאניה',
-  SOUTH_AMERICA: 'דרום אמריקה',
+export const CONTINENTS = {
+  AFRICA: { name: 'Africa', hebrewName: 'אפריקה' },
+  ASIA: { name: 'Asia', hebrewName: 'אסיה' },
+  EUROPE: { name: 'Europe', hebrewName: 'אירופה' },
+  NORTH_AMERICA: { name: 'North America', hebrewName: 'צפון אמריקה' },
+  OCEANIA: { name: 'Oceania', hebrewName: 'אוקיאניה' },
+  SOUTH_AMERICA: { name: 'South America', hebrewName: 'דרום אמריקה' },
 };
