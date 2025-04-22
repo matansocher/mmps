@@ -1470,16 +1470,6 @@
     "hebrewCapital": "וינדהוק"
   },
   {
-    "name": "Nauru",
-    "alpha2": "NR",
-    "alpha3": "NRU",
-    "lat": -0.522778,
-    "lon": 166.931503,
-    "continent": "Oceania",
-    "emoji": "🇳🇷",
-    "hebrewName": "נאורו"
-  },
-  {
     "name": "Nepal",
     "alpha2": "NP",
     "alpha3": "NPL",
@@ -1803,18 +1793,6 @@
     "emoji": "🇱🇨",
     "hebrewName": "סנט לוסיה",
     "hebrewCapital": "קסטריז"
-  },
-  {
-    "name": "Saint Pierre and Miquelon",
-    "alpha2": "PM",
-    "alpha3": "SPM",
-    "lat": 46.941936,
-    "lon": -56.27111,
-    "capital": "Saint-Pierre",
-    "continent": "North America",
-    "emoji": "🇵🇲",
-    "hebrewName": "סנט פייר ומיקלון",
-    "hebrewCapital": "סנט פייר"
   },
   {
     "name": "Saint Vincent and the Grenadines",

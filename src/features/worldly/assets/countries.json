@@ -26626,15 +26626,6 @@
     }
   },
   {
-    "name": "Nauru",
-    "alpha2": "NR",
-    "alpha3": "NRU",
-    "lat": -0.522778,
-    "lon": 166.931503,
-    "continent": "Oceania",
-    "emoji": "🇳🇷"
-  },
-  {
     "name": "Nepal",
     "alpha2": "NP",
     "alpha3": "NPL",
