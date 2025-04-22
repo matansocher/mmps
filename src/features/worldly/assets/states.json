@@ -3,7 +3,7 @@
     "name": "Alabama",
     "alpha2": "AL",
     "lat": 32.806671,
-    "lon": -86.791130,
+    "lon": -86.79113,
     "capital": "Montgomery",
     "geometry": {
       "type": "Polygon",
@@ -143,7 +143,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אלבמה",
+    "hebrewCapital": "מונטגומרי"
   },
   {
     "name": "Alaska",
@@ -4607,7 +4609,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אלסקה",
+    "hebrewCapital": "ג'ונו"
   },
   {
     "name": "Arizona",
@@ -4749,7 +4753,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אריזונה",
+    "hebrewCapital": "פֶנִיקס"
   },
   {
     "name": "Arkansas",
@@ -4911,7 +4917,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ארקנזו",
+    "hebrewCapital": "ליטל רוק"
   },
   {
     "name": "California",
@@ -5297,7 +5305,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קליפורניה",
+    "hebrewCapital": "סקרמנטו"
   },
   {
     "name": "Colorado",
@@ -5375,7 +5385,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קולורדו",
+    "hebrewCapital": "דנבר"
   },
   {
     "name": "Connecticut",
@@ -5453,7 +5465,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קונטיקט",
+    "hebrewCapital": "הרטפורד"
   },
   {
     "name": "Delaware",
@@ -5519,7 +5533,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "דלאוור",
+    "hebrewCapital": "דובר"
   },
   {
     "name": "Florida",
@@ -5845,7 +5861,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פלורידה",
+    "hebrewCapital": "טלהאסי"
   },
   {
     "name": "Georgia",
@@ -6063,7 +6081,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ג'ורג'יה",
+    "hebrewCapital": "אטלנטה"
   },
   {
     "name": "Hawaii",
@@ -6291,7 +6311,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "הוואי",
+    "hebrewCapital": "הונולולו"
   },
   {
     "name": "Idaho",
@@ -6569,7 +6591,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "איידהו",
+    "hebrewCapital": "בויס"
   },
   {
     "name": "Illinois",
@@ -6851,7 +6875,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אילינוי",
+    "hebrewCapital": "ספרינגפילד"
   },
   {
     "name": "Indiana",
@@ -7049,7 +7075,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אינדיאנה",
+    "hebrewCapital": "אינדיאנפוליס"
   },
   {
     "name": "Iowa",
@@ -7263,12 +7291,14 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "איווה",
+    "hebrewCapital": "דה מוין"
   },
   {
     "name": "Kansas",
     "alpha2": "KS",
-    "lat": 38.526600,
+    "lat": 38.5266,
     "lon": -96.726486,
     "capital": "Topeka",
     "geometry": {
@@ -7329,12 +7359,14 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קנזס",
+    "hebrewCapital": "טופיקה"
   },
   {
     "name": "Kentucky",
     "alpha2": "KY",
-    "lat": 37.668140,
+    "lat": 37.66814,
     "lon": -84.670067,
     "capital": "Frankfort",
     "geometry": {
@@ -7643,7 +7675,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "קנטאקי",
+    "hebrewCapital": "פרנקפורט"
   },
   {
     "name": "Louisiana",
@@ -7961,7 +7995,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "לואיזיאנה",
+    "hebrewCapital": "באטון רוז'"
   },
   {
     "name": "Maine",
@@ -8239,7 +8275,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מיין",
+    "hebrewCapital": "אוגוסטה"
   },
   {
     "name": "Maryland",
@@ -8515,7 +8553,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מרילנד",
+    "hebrewCapital": "אנאפוליס"
   },
   {
     "name": "Massachusetts",
@@ -8669,7 +8709,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מסצ'וסטס",
+    "hebrewCapital": "בוסטון"
   },
   {
     "name": "Michigan",
@@ -9305,7 +9347,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מישיגן",
+    "hebrewCapital": "לנסינג"
   },
   {
     "name": "Minnesota",
@@ -9651,7 +9695,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מינסוטה",
+    "hebrewCapital": "סנט פול"
   },
   {
     "name": "Mississippi",
@@ -9849,7 +9895,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מיסיסיפי",
+    "hebrewCapital": "ג'קסון"
   },
   {
     "name": "Missouri",
@@ -10075,7 +10123,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מיזורי",
+    "hebrewCapital": "ג'פרסון סיטי"
   },
   {
     "name": "Montana",
@@ -10297,12 +10347,14 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מונטנה",
+    "hebrewCapital": "הלנה"
   },
   {
     "name": "Nebraska",
     "alpha2": "NE",
-    "lat": 41.125370,
+    "lat": 41.12537,
     "lon": -98.268082,
     "capital": "Lincoln",
     "geometry": {
@@ -10427,7 +10479,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "נברסקה",
+    "hebrewCapital": "לינקולן"
   },
   {
     "name": "Nevada",
@@ -10525,7 +10579,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "נבדה",
+    "hebrewCapital": "קרסון סיטי"
   },
   {
     "name": "New Hampshire",
@@ -10651,7 +10707,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניו המפשייר",
+    "hebrewCapital": "קונקורד"
   },
   {
     "name": "New Jersey",
@@ -10793,7 +10851,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניו ג'רזי",
+    "hebrewCapital": "טרנטון"
   },
   {
     "name": "New Mexico",
@@ -10875,7 +10935,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניו מקסיקו",
+    "hebrewCapital": "סנטה פה"
   },
   {
     "name": "New York",
@@ -11161,7 +11223,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ניו יורק",
+    "hebrewCapital": "אלבני"
   },
   {
     "name": "North Carolina",
@@ -11419,7 +11483,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צפון קרוליינה",
+    "hebrewCapital": "ראלי"
   },
   {
     "name": "North Dakota",
@@ -11497,7 +11563,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "צפון דקוטה",
+    "hebrewCapital": "ביסמרק"
   },
   {
     "name": "Ohio",
@@ -11699,7 +11767,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אוהיו",
+    "hebrewCapital": "קולומבוס"
   },
   {
     "name": "Oklahoma",
@@ -11893,7 +11963,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אוקלהומה",
+    "hebrewCapital": "אוקלהומה סיטי"
   },
   {
     "name": "Oregon",
@@ -12131,7 +12203,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "אורגון",
+    "hebrewCapital": "סאלם"
   },
   {
     "name": "Pennsylvania",
@@ -12277,13 +12351,15 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "פנסילבניה",
+    "hebrewCapital": "הריסבורג"
   },
   {
     "name": "Rhode Island",
     "alpha2": "RI",
     "lat": 41.680893,
-    "lon": -71.511780,
+    "lon": -71.51178,
     "capital": "Providence",
     "geometry": {
       "type": "MultiPolygon",
@@ -12357,7 +12433,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "רוד איילנד",
+    "hebrewCapital": "פרובידנס"
   },
   {
     "name": "South Carolina",
@@ -12547,7 +12625,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "דרום קרוליינה",
+    "hebrewCapital": "קולומביה"
   },
   {
     "name": "South Dakota",
@@ -12677,7 +12757,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "דרום דקוטה",
+    "hebrewCapital": "פייר"
   },
   {
     "name": "Tennessee",
@@ -12863,7 +12945,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טנסי",
+    "hebrewCapital": "נשוויל"
   },
   {
     "name": "Texas",
@@ -13485,7 +13569,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "טקסס",
+    "hebrewCapital": "אוסטין"
   },
   {
     "name": "Utah",
@@ -13547,7 +13633,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "יוטה",
+    "hebrewCapital": "סולט לייק סיטי"
   },
   {
     "name": "Vermont",
@@ -13673,7 +13761,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ורמונט",
+    "hebrewCapital": "מונפלייה"
   },
   {
     "name": "Virginia",
@@ -14017,7 +14107,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "וירג׳יניה",
+    "hebrewCapital": "ריצ׳מונד"
   },
   {
     "name": "Washington",
@@ -14329,7 +14421,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "וושינגטון",
+    "hebrewCapital": "אולימפיה"
   },
   {
     "name": "West Virginia",
@@ -14603,7 +14697,9 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "מערב וירג'יניה",
+    "hebrewCapital": "צ'רלסטון"
   },
   {
     "name": "Wisconsin",
@@ -14917,13 +15013,15 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ויסקונסין",
+    "hebrewCapital": "מדיסון"
   },
   {
     "name": "Wyoming",
     "alpha2": "WY",
     "lat": 42.755966,
-    "lon": -107.302490,
+    "lon": -107.30249,
     "capital": "Cheyenne",
     "geometry": {
       "type": "Polygon",
@@ -14983,6 +15081,8 @@
           ]
         ]
       ]
-    }
+    },
+    "hebrewName": "ויומינג",
+    "hebrewCapital": "צ'יין"
   }
 ]

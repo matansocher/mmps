@@ -4,10 +4,11 @@ import { fileURLToPath } from 'node:url';
 import path from 'path';
 import { dirname } from 'path';
 
+const filePath = '../assets/states.json';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const countries = JSON.parse(fs.readFileSync(path.join(__dirname, './countries.json'), 'utf8'));
-const relevantCountries = countries.filter((country) => !country.hebrewCapital);
+const states = JSON.parse(fs.readFileSync(path.join(__dirname, filePath), 'utf8'));
+const relevantStates = states.filter((state) => !state.hebrewName);
 
 const translateToHe = async (englishName) => {
   try {
@@ -20,18 +21,27 @@ const translateToHe = async (englishName) => {
 };
 
 async function main() {
-  for (const country of relevantCountries) {
-    const index = countries.findIndex((c) => c.alpha2 === country.alpha2);
-    const hebrewCapital = await translateToHe(country.capital);
-    if (!hebrewCapital) {
-      console.log(`Failed to translate ${country.capital}`);
+  for (const state of relevantStates) {
+    const index = states.findIndex((c) => c.alpha2 === state.alpha2);
+
+    const hebrewName = await translateToHe(state.name);
+    if (!hebrewName) {
+      console.log(`Failed to translate ${state.name}`);
       continue;
     }
-    countries[index].hebrewCapital = hebrewCapital;
-    console.log(`Translated ${country.capital} to ${hebrewCapital}`);
+    states[index].hebrewName = hebrewName;
+
+    const hebrewCapital = await translateToHe(state.capital);
+    if (!hebrewCapital) {
+      console.log(`Failed to translate ${state.capital}`);
+      continue;
+    }
+    states[index].hebrewCapital = hebrewCapital;
+
+    console.log(`Translated ${state.name}`);
   }
 
-  fs.writeFileSync(path.join(__dirname, './countries.json'), JSON.stringify(countries, null, 2));
+  fs.writeFileSync(path.join(__dirname, filePath), JSON.stringify(states, null, 2));
 }
 
 main().catch(console.error);
