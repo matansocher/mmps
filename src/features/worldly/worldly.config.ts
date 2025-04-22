@@ -38,10 +38,10 @@ export enum BOT_ACTIONS {
 }
 
 export const CONTINENTS_MAPPING = {
-  Africa: 'אפריקה',
-  Asia: 'אסיה',
-  Europe: 'אירופה',
-  North_America: 'צפון אמריקה',
-  Oceania: 'אוקיאניה',
-  South_America: 'דרום אמריקה',
+  AFRICA: 'אפריקה',
+  ASIA: 'אסיה',
+  EUROPE: 'אירופה',
+  NORTH_AMERICA: 'צפון אמריקה',
+  OCEANIA: 'אוקיאניה',
+  SOUTH_AMERICA: 'דרום אמריקה',
 };
