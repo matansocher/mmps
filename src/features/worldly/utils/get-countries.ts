@@ -25,8 +25,9 @@ export function getCountryByCapital(capital: string): Country {
 
 export function getRandomCountry(filter: (country: Country) => boolean): Country {
   const countries = getCountries();
-  const countriesWithCoordinates = countries.filter(filter);
-  return countriesWithCoordinates[Math.floor(Math.random() * countriesWithCoordinates.length)];
+  return countries.find((country) => country.name === 'Canada');
+  // const countriesWithCoordinates = countries.filter(filter);
+  // return countriesWithCoordinates[Math.floor(Math.random() * countriesWithCoordinates.length)];
 }
 
 export function getRandomState(): State {
