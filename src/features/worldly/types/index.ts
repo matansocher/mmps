@@ -8,8 +8,7 @@ export type Country = {
   readonly zoom?: number;
   readonly capital?: string;
   readonly hebrewCapital?: string;
-  readonly continent?: string;
-  readonly hebrewContinent?: string;
+  readonly continent: string;
   readonly emoji: string;
   readonly geometry?: {
     readonly type: string;
