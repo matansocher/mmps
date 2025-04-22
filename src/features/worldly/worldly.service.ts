@@ -34,9 +34,9 @@ export class WorldlyService {
 
     const otherOptions = getMapDistractors(randomCountry);
     const options = shuffleArray([randomCountry, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.name, callback_data: `${BOT_ACTIONS.MAP} - ${country.name} - ${randomCountry.name}` })));
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.MAP} - ${country.name} - ${randomCountry.name}` })));
 
-    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the country' });
+    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'נחשו את המדינה' });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
   }
@@ -47,9 +47,9 @@ export class WorldlyService {
 
     const otherOptions = getMapStateDistractors(randomState);
     const options = shuffleArray([randomState, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((state) => ({ text: state.name, callback_data: `${BOT_ACTIONS.US_MAP} - ${state.name} - ${randomState.name}` })));
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((state) => ({ text: state.hebrewName, callback_data: `${BOT_ACTIONS.US_MAP} - ${state.name} - ${randomState.name}` })));
 
-    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'Guess the state' });
+    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'נחשו את המדינה בארצות הברית' });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
   }
@@ -60,7 +60,7 @@ export class WorldlyService {
 
     const otherOptions = getFlagDistractors(randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.name, callback_data: `${BOT_ACTIONS.FLAG} - ${country.name} - ${randomCountry.name}` })));
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.FLAG} - ${country.name} - ${randomCountry.name}` })));
 
     await this.bot.sendMessage(chatId, randomCountry.emoji, { ...(inlineKeyboardMarkup as any) });
 
@@ -74,10 +74,10 @@ export class WorldlyService {
     const otherOptions = getCapitalDistractors(randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.capital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${country.capital} - ${randomCountry.capital}` })),
+      options.map((country) => ({ text: country.hebrewCapital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${country.capital} - ${randomCountry.capital}` })),
     );
 
-    const replyText = `Guess the capital city of ${randomCountry.emoji} ${randomCountry.name} ${randomCountry.emoji}`;
+    const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
     await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL }, userDetails);
