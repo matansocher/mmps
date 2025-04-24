@@ -4,4 +4,5 @@ export interface MessageLoaderOptions {
   readonly loaderMessage?: string;
   readonly reactionEmoji?: string;
   readonly loadingAction?: BOT_BROADCAST_ACTIONS;
+  readonly noMessage?: boolean;
 }

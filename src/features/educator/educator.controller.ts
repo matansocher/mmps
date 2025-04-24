@@ -75,8 +75,8 @@ export class EducatorController implements OnModuleInit {
       await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
-    await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage, noMessage: true });
+    await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId, true));
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
   }
@@ -106,7 +106,7 @@ export class EducatorController implements OnModuleInit {
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage, noMessage: true });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
     });

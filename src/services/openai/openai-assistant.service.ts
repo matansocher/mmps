@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { get as _get } from 'lodash';
 import { OpenAI } from 'openai';
+import { AssistantStream } from 'openai/lib/AssistantStream';
 import { FileObject } from 'openai/resources';
 import { Message, MessageCreateParams, Run, Thread } from 'openai/resources/beta/threads';
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -16,12 +17,22 @@ export class OpenaiAssistantService {
     return this.openai.beta.threads.create();
   }
 
+  async getAssistantAnswer(assistantId: string, threadId: string, prompt: string): Promise<string> {
+    await this.addMessageToThread(threadId, prompt, 'user');
+    const { thread_id } = await this.runThread(assistantId, threadId);
+    return this.getThreadResponse(thread_id);
+  }
+
   addMessageToThread(threadId: string, messageText: string, role = 'user', fileId?: string): Promise<Message> {
     return this.openai.beta.threads.messages.create(threadId, <MessageCreateParams>{
       role,
       content: messageText,
       ...(fileId ? { attachments: [{ file_id: fileId, tools: [{ type: 'file_search' }] }] } : {}),
     });
+  }
+
+  async getThreadRunStream(assistantId: string, threadId: string): Promise<AssistantStream> {
+    return this.openai.beta.threads.runs.stream(threadId, { assistant_id: assistantId });
   }
 
   async runThread(assistantId: string, threadId: string): Promise<Run> {
