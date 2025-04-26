@@ -29,8 +29,9 @@ export class WorldlyController implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
+    const { START, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
       { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
       { event: COMMAND, regex: US_MAP.command, handler: (message) => this.USMapHandler.call(this, message) },
@@ -40,6 +41,11 @@ export class WorldlyController implements OnModuleInit {
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
+  }
+
+  async startHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    this.userStart(chatId, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -111,7 +117,7 @@ export class WorldlyController implements OnModuleInit {
     try {
       switch (game) {
         case BOT_ACTIONS.START:
-          await this.startHandler(chatId, userDetails);
+          await this.userStart(chatId, userDetails);
           await this.bot.deleteMessage(chatId, messageId).catch();
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
@@ -151,7 +157,7 @@ export class WorldlyController implements OnModuleInit {
     }
   }
 
-  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+  private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
     const userExists = await this.mongoUserService.saveUserDetails(userDetails);
 
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);

@@ -5,6 +5,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Trainer Bot 🏋️‍♂️',
   token: 'TRAINER_TELEGRAM_BOT_TOKEN',
   commands: {
+    START: { command: '/start', description: 'התחל מהתחלה', hide: true },
     EXERCISE: { command: '/exercise', description: '🧗‍♂️ Log exercise 🧗‍♂️' },
     ACHIEVEMENTS: { command: '/achievements', description: '💯 Show Achievements 💯' },
     ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },

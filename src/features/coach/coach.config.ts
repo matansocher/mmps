@@ -5,6 +5,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Coach Bot ⚽️',
   token: 'COACH_TELEGRAM_BOT_TOKEN',
   commands: {
+    START: { command: '/start', description: 'התחל מהתחלה', hide: true },
     TABLES: { command: '/tables', description: '📊 טבלאות 📊' },
     MATCHES: { command: '/matches', description: '🎱 מחזור הבא 🎱' },
     ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
