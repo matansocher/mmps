@@ -7,7 +7,7 @@ import { NotifierService } from '@core/notifier';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
-const HOURS_TO_NOTIFY = [12, 15, 17, 19, 21, 23];
+const HOURS_TO_NOTIFY = [12, 17, 21];
 
 @Injectable()
 export class WorldlyBotSchedulerService implements OnModuleInit {
