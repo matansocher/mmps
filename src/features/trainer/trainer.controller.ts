@@ -103,10 +103,16 @@ export class TrainerBotService implements OnModuleInit {
     const currentStreak = getStreak(exercisesDates);
     const longestStreak = getLongestStreak(exercisesDates);
 
+    const { lastSunday, lastSaturday } = getLastWeekDates();
+    const lastWeekExercises = exercisesDates.filter((exerciseDate) => {
+      return exerciseDate.getTime() > lastSunday.getTime() && exerciseDate.getTime() < lastSaturday.getTime();
+    });
+
     const replyText = [
       `🤾 Whole Life Total Exercises: ${getSpecialNumber(exercises.length)}`,
       `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`,
       `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`,
+      `💣 This Week Trainings: ${lastWeekExercises.length} (${lastWeekExercises.map((exerciseDate) => DAYS_OF_WEEK[exerciseDate.getDay()]).join(' ,')})`,
     ].join('\n');
     await this.bot.sendMessage(chatId, replyText);
 
