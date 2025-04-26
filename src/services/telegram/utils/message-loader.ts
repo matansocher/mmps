@@ -15,6 +15,7 @@ export class MessageLoader {
   private readonly loaderMessage: string;
   private readonly reactionEmoji: string;
   private readonly loadingAction: BOT_BROADCAST_ACTIONS;
+  private readonly noMessage: boolean;
 
   private timeoutId?: NodeJS.Timeout;
   private loaderMessageId?: number;
@@ -27,6 +28,7 @@ export class MessageLoader {
     this.loaderMessage = options.loaderMessage || LOADER_MESSAGE;
     this.reactionEmoji = options.reactionEmoji;
     this.loadingAction = options.loadingAction || BOT_BROADCAST_ACTIONS.TYPING;
+    this.noMessage = options.noMessage;
   }
 
   async handleMessageWithLoader(action: () => Promise<void>): Promise<void> {
@@ -47,17 +49,15 @@ export class MessageLoader {
     await this.bot.sendChatAction(this.chatId, this.loadingAction);
 
     this.timeoutId = setTimeout(async () => {
-      await this.#sendLoaderMessage();
+      if (!this.noMessage) {
+        const messageRes = await this.bot.sendMessage(this.chatId, this.loaderMessage);
+        this.loaderMessageId = messageRes.message_id;
+      }
+
+      this.timeoutId = setTimeout(async () => {
+        await this.#stopLoader();
+      }, DELETE_AFTER_NO_RESPONSE_MS);
     }, SHOW_AFTER_MS);
-  }
-
-  async #sendLoaderMessage(): Promise<void> {
-    const messageRes = await this.bot.sendMessage(this.chatId, this.loaderMessage);
-    this.loaderMessageId = messageRes.message_id;
-
-    this.timeoutId = setTimeout(async () => {
-      await this.#stopLoader();
-    }, DELETE_AFTER_NO_RESPONSE_MS);
   }
 
   async #stopLoader(): Promise<void> {

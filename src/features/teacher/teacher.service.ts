@@ -6,6 +6,30 @@ import { OpenaiAssistantService } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
 
+const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipationModel, isLesson: boolean) => {
+  let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
+  if (!isLesson) {
+    isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS;
+  }
+  const inlineKeyboardButtons = [
+    {
+      text: '🎧 Transcribe 🎧',
+      callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${courseParticipation._id}`,
+    },
+    !isCourseLessonsCompleted
+      ? {
+          text: '➡️ Next Lesson ➡️',
+          callback_data: `${BOT_ACTIONS.NEXT_LESSON}`,
+        }
+      : null,
+    {
+      text: '✅ Complete Course ✅',
+      callback_data: `${BOT_ACTIONS.COMPLETE} - ${courseParticipation._id}`,
+    },
+  ].filter(Boolean);
+  return getInlineKeyboardMarkup(inlineKeyboardButtons);
+};
+
 @Injectable()
 export class TeacherService {
   private readonly logger = new Logger(TeacherService.name);
@@ -38,6 +62,7 @@ export class TeacherService {
 
   async startNewCourse(chatId: number): Promise<void> {
     const { course, courseParticipation } = await this.getNewCourse(chatId);
+    await this.bot.sendMessage(chatId, `Course started: ${course.topic}`);
     await this.processCourseLesson(chatId, courseParticipation, courseParticipation.threadId, `${THREAD_MESSAGE_FIRST_LESSON}. this course's topic is ${course.topic}`);
   }
 
@@ -51,10 +76,8 @@ export class TeacherService {
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
-    const courseParticipation = await this.mongoCourseParticipationService.createCourseParticipation(chatId, course._id.toString());
+    const courseParticipation = await this.mongoCourseParticipationService.createCourseParticipation(chatId, course._id.toString(), threadId);
     courseParticipation.threadId = threadId;
-    await this.mongoCourseParticipationService.startCourseParticipation(courseParticipation?._id, { threadId });
-    await sendStyledMessage(this.bot, chatId, `Course started: \`${course.topic}\``);
     return { course, courseParticipation };
   }
 
@@ -77,43 +100,13 @@ export class TeacherService {
     if (!courseParticipation) {
       return;
     }
-    const response = await this.getAssistantAnswer(threadId, prompt);
-    await sendStyledMessage(this.bot, chatId, response, 'Markdown', this.getInlineKeyboardMarkup(courseParticipation, true));
+    const response = await this.openaiAssistantService.getAssistantAnswer(TEACHER_ASSISTANT_ID, threadId, prompt);
+    await sendStyledMessage(this.bot, chatId, response, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, true));
     await this.mongoCourseParticipationService.markCourseParticipationLessonCompleted(courseParticipation._id);
   }
 
   async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipationModel): Promise<void> {
-    const response = await this.getAssistantAnswer(activeCourseParticipation.threadId, question);
-    await sendStyledMessage(this.bot, chatId, response, 'Markdown', this.getInlineKeyboardMarkup(activeCourseParticipation, false));
-  }
-
-  async getAssistantAnswer(threadId: string, prompt: string): Promise<string> {
-    await this.openaiAssistantService.addMessageToThread(threadId, prompt, 'user');
-    const threadRun = await this.openaiAssistantService.runThread(TEACHER_ASSISTANT_ID, threadId);
-    return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
-  }
-
-  getInlineKeyboardMarkup(courseParticipation: CourseParticipationModel, isLesson: boolean) {
-    let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
-    if (!isLesson) {
-      isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS;
-    }
-    const inlineKeyboardButtons = [
-      {
-        text: '🎧 Transcribe 🎧',
-        callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${courseParticipation._id}`,
-      },
-      !isCourseLessonsCompleted
-        ? {
-            text: '➡️ Next Lesson ➡️',
-            callback_data: `${BOT_ACTIONS.NEXT_LESSON}`,
-          }
-        : null,
-      {
-        text: '✅ Complete Course ✅',
-        callback_data: `${BOT_ACTIONS.COMPLETE} - ${courseParticipation._id}`,
-      },
-    ].filter(Boolean);
-    return getInlineKeyboardMarkup(inlineKeyboardButtons);
+    const response = await this.openaiAssistantService.getAssistantAnswer(TEACHER_ASSISTANT_ID, activeCourseParticipation.threadId, question);
+    await sendStyledMessage(this.bot, chatId, response, 'Markdown', getBotInlineKeyboardMarkup(activeCourseParticipation, false));
   }
 }

@@ -2,9 +2,23 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
-import { OpenaiAssistantService } from '@services/openai';
-import { getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
+import { OpenaiAssistantService, streamResponse } from '@services/openai';
+import { getInlineKeyboardMarkup, sendShortenedMessage, StreamingHandler } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, EDUCATOR_ASSISTANT_ID } from './educator.config';
+
+const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipationModel) => {
+  const inlineKeyboardButtons = [
+    {
+      text: '🎧 הקראה 🎧',
+      callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${topicParticipation._id}`,
+    },
+    {
+      text: '✅ סיימתי ✅',
+      callback_data: `${BOT_ACTIONS.COMPLETE} - ${topicParticipation._id}`,
+    },
+  ];
+  return getInlineKeyboardMarkup(inlineKeyboardButtons);
+};
 
 @Injectable()
 export class EducatorService {
@@ -25,8 +39,15 @@ export class EducatorService {
     await this.startNewTopic(chatId);
   }
 
-  async startNewTopic(chatId: number, customTopic?: string): Promise<void> {
-    const topic = await this.getNewTopic(chatId, customTopic);
+  async getNewTopic(chatId: number): Promise<TopicModel> {
+    const topicParticipations = await this.mongoTopicParticipationService.getTopicParticipations(chatId);
+    const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
+
+    return this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
+  }
+
+  async startNewTopic(chatId: number, onDemand?: boolean): Promise<void> {
+    const topic = await this.getNewTopic(chatId);
     if (!topic) {
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new topics found', chatId });
       // await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
@@ -34,52 +55,44 @@ export class EducatorService {
     }
 
     const { id: threadId } = await this.openaiAssistantService.createThread();
-    const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString());
-    await this.mongoTopicParticipationService.startTopicParticipation(topicParticipation?._id, { threadId });
+    const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString(), threadId);
 
-    const response = await this.getAssistantAnswer(threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
-    await sendStyledMessage(this.bot, chatId, [`נושא השיעור הבא שלנו:`, `\`${topic.title}\``].join('\n'));
-
-    const inlineKeyboardButtons = [
-      {
-        text: '🎧 הקראה 🎧',
-        callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${topicParticipation._id}`,
-      },
-      {
-        text: '✅ סיימתי ✅',
-        callback_data: `${BOT_ACTIONS.COMPLETE} - ${topicParticipation._id}`,
-      },
-    ];
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    await sendShortenedMessage(this.bot, chatId, response, inlineKeyboardMarkup);
+    await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
+    if (onDemand) {
+      await this.streamAssistantResponse(topicParticipation, [`הנושא של היום הוא`, `${topic.title}`].join(' '), chatId);
+    } else {
+      const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
+      await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
+    }
   }
 
-  async getNewTopic(chatId: number, customTopic?: string): Promise<TopicModel> {
-    const topicParticipations = await this.mongoTopicParticipationService.getTopicParticipations(chatId);
-    const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
-
-    return customTopic ? await this.mongoTopicService.createTopic(chatId, customTopic) : await this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
+  processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
+    return this.streamAssistantResponse(activeTopicParticipation, question, chatId);
   }
 
-  async getAssistantAnswer(threadId: string, prompt: string): Promise<string> {
+  async streamAssistantResponse(topicParticipation: TopicParticipationModel, prompt: string, chatId: number): Promise<void> {
+    const { threadId } = topicParticipation;
     await this.openaiAssistantService.addMessageToThread(threadId, prompt, 'user');
-    const threadRun = await this.openaiAssistantService.runThread(EDUCATOR_ASSISTANT_ID, threadId);
-    return this.openaiAssistantService.getThreadResponse(threadRun.thread_id);
-  }
+    const stream = await this.openaiAssistantService.getThreadRunStream(EDUCATOR_ASSISTANT_ID, threadId);
+    let messageId: number;
 
-  async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
-    const response = await this.getAssistantAnswer(activeTopicParticipation.threadId, question);
-    const inlineKeyboardButtons = [
-      {
-        text: '🎧 הקראה 🎧',
-        callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${activeTopicParticipation._id}`,
-      },
-      {
-        text: '✅ סיימתי ✅',
-        callback_data: `${BOT_ACTIONS.COMPLETE} - ${activeTopicParticipation._id}`,
-      },
-    ];
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    await sendShortenedMessage(this.bot, chatId, response, inlineKeyboardMarkup);
+    const streamingHandler = new StreamingHandler(async (content) => {
+      if (!messageId) {
+        const sentMessage = await this.bot.sendMessage(chatId, content || '...');
+        messageId = sentMessage.message_id;
+      } else {
+        await this.bot.editMessageText(content, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
+      }
+    });
+
+    const finalContent = await streamResponse(threadId, stream, (content) => {
+      streamingHandler.addContent(content);
+    });
+
+    await streamingHandler.flushFinalContent();
+
+    if (messageId && finalContent) {
+      await this.bot.editMessageText(finalContent, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
+    }
   }
 }

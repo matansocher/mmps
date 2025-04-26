@@ -5,7 +5,6 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
-import { sendStyledMessage } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
@@ -39,7 +38,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
 
       const chatIds = subscriptions.map((subscription) => subscription.chatId);
       const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
-      await Promise.all(chatIds.map((chatId) => sendStyledMessage(this.bot, chatId, replyText)));
+      await Promise.all(chatIds.map((chatId) => this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' })));
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
