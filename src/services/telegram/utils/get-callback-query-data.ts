@@ -1,6 +1,6 @@
 import { get as _get } from 'lodash';
 import type { CallbackQuery } from 'node-telegram-bot-api';
-import type { TelegramCallbackQueryData } from '../interface';
+import type { TelegramCallbackQueryData } from '../types';
 
 export function getCallbackQueryData(callbackQuery: CallbackQuery): TelegramCallbackQueryData {
   return {
@@ -9,7 +9,7 @@ export function getCallbackQueryData(callbackQuery: CallbackQuery): TelegramCall
     chatId: _get(callbackQuery, 'from.id', null),
     date: _get(callbackQuery, 'message.date', null),
     userDetails: {
-      chatId: _get(callbackQuery, 'chat.id', null),
+      chatId: _get(callbackQuery, 'from.id', null),
       telegramUserId: _get(callbackQuery, 'from.id', null),
       firstName: _get(callbackQuery, 'from.first_name', null),
       lastName: _get(callbackQuery, 'from.last_name', null),

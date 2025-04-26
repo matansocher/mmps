@@ -11,12 +11,14 @@ export class TeacherMongoCourseParticipationService {
     this.courseParticipationCollection = this.db.collection(COLLECTIONS.COURSE_PARTICIPATION);
   }
 
-  async createCourseParticipation(chatId: number, courseId: string): Promise<CourseParticipationModel> {
+  async createCourseParticipation(chatId: number, courseId: string, threadId: string): Promise<CourseParticipationModel> {
     const courseParticipation: CourseParticipationModel = {
       _id: new ObjectId(),
       courseId,
       chatId,
-      status: CourseParticipationStatus.Pending,
+      threadId,
+      status: CourseParticipationStatus.Assigned,
+      assignedAt: new Date(),
       createdAt: new Date(),
     };
     await this.courseParticipationCollection.insertOne(courseParticipation);
@@ -36,13 +38,6 @@ export class TeacherMongoCourseParticipationService {
   getActiveCourseParticipation(chatId: number): Promise<CourseParticipationModel> {
     const filter = { chatId, status: CourseParticipationStatus.Assigned };
     return this.courseParticipationCollection.findOne(filter);
-  }
-
-  async startCourseParticipation(id: ObjectId, additionalData: Partial<CourseParticipationModel>): Promise<void> {
-    const filter = { _id: id };
-    const updateObj = { $set: { status: CourseParticipationStatus.Assigned, assignedAt: new Date(), ...additionalData } };
-    await this.courseParticipationCollection.updateOne(filter, updateObj);
-    return;
   }
 
   async markCourseParticipationLessonCompleted(id: ObjectId): Promise<void> {

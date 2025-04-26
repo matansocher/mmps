@@ -2,9 +2,12 @@ export { downloadAudioFromVideoOrAudio } from './download-audio-from-video-or-au
 export { getCallbackQueryData } from './get-callback-query-data';
 export { getInlineKeyboardMarkup } from './get-inline-keyboard-markup';
 export { getMessageData } from './get-message-data';
+export { getTableTemplate } from './get-table-template';
 export { handleCommand } from './handle-command';
 export { MessageLoader } from './message-loader';
 export { MessagesAggregator } from './messages-aggregator';
+export { reactToMessage } from './react-to-message';
 export { RegisterHandlersOptions, registerHandlers } from './register-handlers';
 export { removeItemFromInlineKeyboardMarkup } from './remove-item-from-inline-keyboard-markup';
 export { sendMessageInStyle, sendShortenedMessage, sendStyledMessage } from './send-message';
+export { StreamingHandler } from './streaming-handler';

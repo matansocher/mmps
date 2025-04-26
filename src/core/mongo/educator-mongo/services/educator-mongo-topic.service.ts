@@ -38,4 +38,9 @@ export class EducatorMongoTopicService {
       .toArray();
     return results[0] || null;
   }
+
+  getTopic(id: string): Promise<TopicModel> {
+    const filter = { _id: new ObjectId(id) };
+    return this.topicCollection.findOne(filter);
+  }
 }

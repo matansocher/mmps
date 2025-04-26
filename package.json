@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -36,6 +39,7 @@
     "@nestjs/swagger": "^8.1.1",
     "@vitalets/google-translate-api": "^9.2.0",
     "body-parser": "^1.20.2",
+    "canvas": "^2.11.2",
     "cheerio": "^1.0.0",
     "class-validator": "^0.14.1",
     "date-fns": "^4.1.0",
