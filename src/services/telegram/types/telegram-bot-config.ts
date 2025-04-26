@@ -9,5 +9,4 @@ export type TelegramBotConfig = {
       hide?: boolean;
     };
   };
-  readonly hideStartCommand?: boolean;
 };
