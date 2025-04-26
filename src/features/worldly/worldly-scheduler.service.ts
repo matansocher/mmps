@@ -1,5 +1,4 @@
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
@@ -7,7 +6,7 @@ import { NotifierService } from '@core/notifier';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
-const HOURS_TO_NOTIFY = [12, 15, 17, 19, 21, 23];
+const HOURS_TO_NOTIFY = [12, 17, 21];
 
 @Injectable()
 export class WorldlyBotSchedulerService implements OnModuleInit {
@@ -16,7 +15,6 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
     private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
     private readonly mongoUserService: WorldlyMongoUserService,
     private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
