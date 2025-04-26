@@ -1,5 +1,7 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 
+export const TELEGRAM_MAX_MESSAGE_LENGTH = 4096;
+
 export enum BOT_BROADCAST_ACTIONS {
   TYPING = 'typing',
   UPLOADING_VOICE = 'upload_voice',

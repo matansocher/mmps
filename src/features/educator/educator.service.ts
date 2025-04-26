@@ -59,7 +59,7 @@ export class EducatorService {
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
     if (onDemand) {
-      await this.streamAssistantResponse(threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '), chatId, topicParticipation);
+      await this.streamAssistantResponse(topicParticipation, [`הנושא של היום הוא`, `${topic.title}`].join(' '), chatId);
     } else {
       const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
       await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
@@ -67,25 +67,32 @@ export class EducatorService {
   }
 
   processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
-    return this.streamAssistantResponse(activeTopicParticipation.threadId, question, chatId, activeTopicParticipation);
+    return this.streamAssistantResponse(activeTopicParticipation, question, chatId);
   }
 
-  async streamAssistantResponse(threadId: string, prompt: string, chatId: number, topicParticipation: TopicParticipationModel): Promise<void> {
+  async streamAssistantResponse(topicParticipation: TopicParticipationModel, prompt: string, chatId: number): Promise<void> {
+    const { threadId } = topicParticipation;
     await this.openaiAssistantService.addMessageToThread(threadId, prompt, 'user');
     const stream = await this.openaiAssistantService.getThreadRunStream(EDUCATOR_ASSISTANT_ID, threadId);
-
-    const streamingHandler = new StreamingHandler();
     let messageId: number;
 
-    const sendMessage = streamingHandler.start(async (content, isFirstUpdate) => {
-      if (isFirstUpdate && !messageId) {
-        const sentMessage = await this.bot.sendMessage(chatId, content, { ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
+    const streamingHandler = new StreamingHandler(async (content) => {
+      if (!messageId) {
+        const sentMessage = await this.bot.sendMessage(chatId, content || '...');
         messageId = sentMessage.message_id;
-      } else if (messageId) {
-        await this.bot.editMessageText(content, { chat_id: chatId, message_id: messageId, ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
+      } else {
+        await this.bot.editMessageText(content, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
       }
     });
 
-    await streamResponse(threadId, stream, (chunk) => sendMessage(chunk)).finally(() => streamingHandler.stop());
+    const finalContent = await streamResponse(threadId, stream, (content) => {
+      streamingHandler.addContent(content);
+    });
+
+    await streamingHandler.flushFinalContent();
+
+    if (messageId && finalContent) {
+      await this.bot.editMessageText(finalContent, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
+    }
   }
 }

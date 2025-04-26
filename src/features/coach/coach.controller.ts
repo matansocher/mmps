@@ -6,17 +6,7 @@ import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mong
 import { NotifierService } from '@core/notifier';
 import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
 import { getCompetitions } from '@services/scores-365';
-import {
-  getCallbackQueryData,
-  getInlineKeyboardMarkup,
-  getMessageData,
-  MessageLoader,
-  registerHandlers,
-  sendStyledMessage,
-  TELEGRAM_EVENTS,
-  TelegramEventHandler,
-  UserDetails,
-} from '@services/telegram';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
@@ -99,7 +89,7 @@ export class CoachController implements OnModuleInit {
       }
       const datePrefix = `זה המצב הנוכחי של המשחקים בתאריך: ${getDateDescription(new Date(date))}`;
       const replyText = [datePrefix, resultText].join('\n\n');
-      await sendStyledMessage(this.bot, chatId, replyText);
+      await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
     });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
@@ -133,7 +123,7 @@ export class CoachController implements OnModuleInit {
       case BOT_ACTIONS.MATCH:
         await this.competitionMatchesHandler(chatId, Number(resource));
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: resource }, userDetails);
         break;
       default:
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
@@ -174,6 +164,6 @@ export class CoachController implements OnModuleInit {
 
   async competitionMatchesHandler(chatId: number, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionMatchesMessage(competitionId);
-    await sendStyledMessage(this.bot, chatId, resultText);
+    await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown' });
   }
 }

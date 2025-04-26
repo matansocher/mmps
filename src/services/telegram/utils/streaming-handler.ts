@@ -1,56 +1,43 @@
+import { throttle } from 'lodash';
+import { TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
+
+type StreamCallback = (content: string) => Promise<void> | void;
+
+const updateIntervalMs = 2000;
+
 export class StreamingHandler {
-  private readonly updateIntervalMs: number = 2000;
+  private content = '';
+  private lastSentContent = '';
+  private readonly onUpdate: StreamCallback;
+  private readonly throttledUpdate: ReturnType<typeof throttle>;
 
-  private timer?: NodeJS.Timeout;
-  private isFirstUpdate: boolean = true;
-  private accumulatedContent: string = '';
-  private lastSentContent: string = '';
-  private pendingUpdate: Promise<void> | null = null;
-
-  private onUpdate?: (content: string, isFirstUpdate: boolean) => Promise<void>;
-
-  constructor() {
-    this.start = this.start.bind(this);
-    this.stop = this.stop.bind(this);
-  }
-
-  start(onUpdate: (content: string, isFirstUpdate: boolean) => Promise<void>): (message: string) => void {
+  constructor(onUpdate: StreamCallback) {
     this.onUpdate = onUpdate;
-    this.timer = setInterval(async () => {
-      if (!this.accumulatedContent || this.accumulatedContent === this.lastSentContent) {
-        return;
-      }
-      try {
-        this.pendingUpdate = onUpdate(this.accumulatedContent, this.isFirstUpdate);
-        await this.pendingUpdate;
-        this.lastSentContent = this.accumulatedContent;
-        this.isFirstUpdate = false;
-      } catch (error) {
-      } finally {
-        this.pendingUpdate = null;
-      }
-    }, this.updateIntervalMs);
 
-    return (message: string) => {
-      this.accumulatedContent = message;
-    };
+    this.throttledUpdate = throttle(
+      () => {
+        if (this.content !== this.lastSentContent) {
+          this.lastSentContent = this.content;
+          const truncatedContent = this.content.slice(0, TELEGRAM_MAX_MESSAGE_LENGTH);
+          this.onUpdate(truncatedContent);
+        }
+      },
+      updateIntervalMs,
+      { leading: true, trailing: true },
+    );
   }
 
-  async stop(): Promise<void> {
-    if (this.pendingUpdate) {
-      await this.pendingUpdate;
-    }
+  addContent(newContent: string) {
+    this.content = newContent;
+    this.throttledUpdate();
+  }
 
-    if (this.accumulatedContent && this.accumulatedContent !== this.lastSentContent && this.onUpdate) {
-      try {
-        await this.onUpdate(this.accumulatedContent, this.isFirstUpdate);
-        this.lastSentContent = this.accumulatedContent;
-      } catch (error) {}
-    }
-
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = undefined;
+  async flushFinalContent() {
+    this.throttledUpdate.cancel(); // Cancel any pending throttle
+    if (this.content !== this.lastSentContent) {
+      this.lastSentContent = this.content;
+      const truncatedContent = this.content.slice(0, TELEGRAM_MAX_MESSAGE_LENGTH);
+      await this.onUpdate(truncatedContent);
     }
   }
 }

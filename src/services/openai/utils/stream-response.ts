@@ -3,33 +3,34 @@ import { Logger } from '@nestjs/common';
 
 export async function streamResponse(threadId: string, stream: AssistantStream, onStreamData: (data: string) => void): Promise<string> {
   const logger = new Logger(streamResponse.name);
-  let accumulatedContent = '';
+  let content = '';
 
   try {
     for await (const { event, data } of stream) {
-      if (event === 'thread.message.delta' && data.delta.content) {
-        const deltaContent = data.delta.content
-          .filter((content) => content.type === 'text')
-          .map((content) => content.text?.value)
-          .join('');
-        if (deltaContent) {
-          accumulatedContent += deltaContent;
-          onStreamData(accumulatedContent);
+      if (event === 'thread.message.delta') {
+        const delta =
+          data.delta?.content
+            ?.filter((content) => content.type === 'text')
+            .map((content) => content?.text?.value ?? '')
+            .join('') || '';
+
+        if (delta) {
+          content += delta;
+          onStreamData(content);
         }
-      } else if (event === 'thread.run.completed') {
-        onStreamData(accumulatedContent);
-        return accumulatedContent;
-      } else if (event === 'thread.run.failed' || event === 'thread.run.cancelled') {
+      }
+
+      if (event === 'thread.run.completed') break;
+
+      if (event === 'thread.run.failed' || event === 'thread.run.cancelled') {
         const { last_error, status } = data || {};
-        logger.error(`Error running thread ${threadId} with error: ${last_error?.message}, code: ${last_error?.code}, status: ${status}`);
-        return accumulatedContent;
+        logger.error(`Thread ${threadId} failed: ${last_error?.message} (code: ${last_error?.code}), status: ${status}`);
+        break;
       }
     }
-
-    logger.error(`Stream ended unexpectedly for thread ${threadId}`);
-    return accumulatedContent;
   } catch (error) {
-    logger.error(`Exception running thread ${threadId}: ${error.message}`);
-    return accumulatedContent;
+    logger.error(`Exception in thread ${threadId}: ${(error as Error).message}`);
   }
+
+  return content;
 }
