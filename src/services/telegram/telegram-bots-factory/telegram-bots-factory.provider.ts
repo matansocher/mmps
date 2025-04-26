@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { TELEGRAM_EVENTS } from '@services/telegram';
 import type { TelegramBotConfig } from '../types';
 
-function createErrorEventListeners(bot: TelegramBot, botName: string): void {
+const createErrorEventListeners = (bot: TelegramBot, botName: string): void => {
   const botErrorHandler = (botName: string, handlerName: string, error): void => {
     const logger = new Logger(createErrorEventListeners.name);
     const { code, message } = error;
@@ -14,7 +14,7 @@ function createErrorEventListeners(bot: TelegramBot, botName: string): void {
   const { POLLING_ERROR, ERROR } = TELEGRAM_EVENTS;
   bot.on(POLLING_ERROR, async (error) => botErrorHandler(botName, POLLING_ERROR, error));
   bot.on(ERROR, async (error) => botErrorHandler(botName, ERROR, error));
-}
+};
 
 export const TelegramBotsFactoryProvider = (botConfig: TelegramBotConfig): Provider => {
   return {
