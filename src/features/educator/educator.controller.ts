@@ -47,8 +47,9 @@ export class EducatorController implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { ACTIONS, TOPIC, ADD } = BOT_CONFIG.commands;
+    const { START, ACTIONS, TOPIC, ADD } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: TOPIC.command, handler: (message) => this.topicHandler.call(this, message) },
       { event: COMMAND, regex: ADD.command, handler: (message) => this.addHandler.call(this, message) },
       { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
@@ -56,6 +57,11 @@ export class EducatorController implements OnModuleInit {
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
+  }
+
+  async startHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    this.userStart(chatId, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -121,7 +127,7 @@ export class EducatorController implements OnModuleInit {
     const [action, topicParticipationId] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.START:
-        await this.startHandler(chatId, userDetails);
+        await this.userStart(chatId, userDetails);
         await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
@@ -149,7 +155,7 @@ export class EducatorController implements OnModuleInit {
     }
   }
 
-  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+  private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
     await this.mongoUserPreferencesService.createUserPreference(chatId);
     const userExists = await this.mongoUserService.saveUserDetails(userDetails);
     const newUserReplyText = [

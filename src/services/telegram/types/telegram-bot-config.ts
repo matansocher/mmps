@@ -6,6 +6,8 @@ export type TelegramBotConfig = {
     [key: string]: {
       command: string;
       description: string;
+      hide?: boolean;
     };
   };
+  readonly hideStartCommand?: boolean;
 };
