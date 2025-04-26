@@ -25,7 +25,7 @@ export const TelegramBotsFactoryProvider = (botConfig: TelegramBotConfig): Provi
       const bot = new TelegramBot(token, { polling: true });
       createErrorEventListeners(bot, botConfig.name);
       if (botConfig.commands) {
-        bot.setMyCommands(Object.values(botConfig.commands));
+        bot.setMyCommands(Object.values(botConfig.commands).filter((command) => !command.hide));
       }
       return bot;
     },

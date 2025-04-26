@@ -78,7 +78,7 @@ export class EducatorService {
 
     const streamingHandler = new StreamingHandler(async (content) => {
       if (!messageId) {
-        const sentMessage = await this.bot.sendMessage(chatId, content || '...');
+        const sentMessage = await this.bot.sendMessage(chatId, content || '...', { parse_mode: 'Markdown' });
         messageId = sentMessage.message_id;
       } else {
         await this.bot.editMessageText(content, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });

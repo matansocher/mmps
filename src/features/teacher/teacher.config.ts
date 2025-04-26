@@ -5,6 +5,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Programming Teacher Bot 👨‍🏫',
   token: 'PROGRAMMING_TEACHER_TELEGRAM_BOT_TOKEN',
   commands: {
+    START: { command: '/start', description: 'התחל מהתחלה', hide: true },
     COURSE: { command: '/course', description: '➡️ Start the next course ➡️' },
     ADD: { command: '/add', description: '➕ Add a new course ➕' },
     ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },

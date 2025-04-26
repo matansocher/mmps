@@ -31,14 +31,20 @@ export class TrainerBotService implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { ACTIONS, EXERCISE, ACHIEVEMENTS } = BOT_CONFIG.commands;
+    const { START, ACTIONS, EXERCISE, ACHIEVEMENTS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
       { event: COMMAND, regex: ACHIEVEMENTS.command, handler: (message) => this.achievementsHandler.call(this, message) },
       { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers });
+  }
+
+  async startHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    this.userStart(chatId, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -125,7 +131,7 @@ export class TrainerBotService implements OnModuleInit {
     const [action] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.START:
-        await this.startHandler(chatId, userDetails);
+        await this.userStart(chatId, userDetails);
         await this.bot.deleteMessage(chatId, messageId).catch();
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
@@ -145,7 +151,7 @@ export class TrainerBotService implements OnModuleInit {
     }
   }
 
-  private async startHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+  private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
     await this.mongoUserPreferencesService.createUserPreference(chatId);
     const userExists = await this.mongoUserService.saveUserDetails(userDetails);
     const newUserReplyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
