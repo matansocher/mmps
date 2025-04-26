@@ -55,7 +55,7 @@ export class WorldlyController implements OnModuleInit {
       !subscription?.isActive
         ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` }
         : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '🔢 רוצה לערו את כמות המשחקים היומיים 🔢', callback_data: `${BOT_ACTIONS.DAILY_AMOUNT}` },
+      { text: '🔢 רוצה לערוך את כמות המשחקים היומיים 🔢', callback_data: `${BOT_ACTIONS.DAILY_AMOUNT}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
