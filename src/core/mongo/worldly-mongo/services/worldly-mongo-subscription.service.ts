@@ -30,9 +30,9 @@ export class WorldlyMongoSubscriptionService {
     return this.subscriptionCollection.insertOne(subscription);
   }
 
-  async updateSubscription(chatId: number, isActive: boolean): Promise<void> {
+  async updateSubscription(chatId: number, toUpdate: Partial<SubscriptionModel>): Promise<void> {
     const filter = { chatId };
-    const updateObj = { $set: { isActive } };
+    const updateObj = { $set: { ...toUpdate } };
     await this.subscriptionCollection.updateOne(filter, updateObj);
   }
 }
