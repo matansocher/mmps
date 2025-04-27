@@ -1,13 +1,12 @@
-import { INTERVAL_HOURS_BY_PRIORITY } from '../worldly.config';
+import { DEFAULT_DAILY_AMOUNT, INTERVAL_HOURS_BY_PRIORITY } from '../worldly.config';
 
 export const filterSubscriptions = (dailyAmount: number) => {
-  return false;
-  // if (!dailyAmount) {
-  //   return true;
-  // }
-  // const indexOfCurrentHour = INTERVAL_HOURS_BY_PRIORITY.findIndex((hour) => hour === new Date().getUTCHours());
-  // if (indexOfCurrentHour === -1) {
-  //   return false;
-  // }
-  // return dailyAmount >= indexOfCurrentHour;
+  const indexOfCurrentHour = INTERVAL_HOURS_BY_PRIORITY.findIndex((hour) => hour === new Date().getUTCHours());
+  if (indexOfCurrentHour === -1 || dailyAmount === 0) {
+    return false;
+  }
+  if (!dailyAmount) {
+    dailyAmount = DEFAULT_DAILY_AMOUNT;
+  }
+  return indexOfCurrentHour < dailyAmount;
 };
