@@ -55,7 +55,6 @@ export class WorldlyController implements OnModuleInit {
       !subscription?.isActive
         ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` }
         : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '🔢 רוצה לערוך את כמות המשחקים היומיים 🔢', callback_data: `${BOT_ACTIONS.DAILY_AMOUNT}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
@@ -127,16 +126,6 @@ export class WorldlyController implements OnModuleInit {
           await this.bot.deleteMessage(chatId, messageId).catch();
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
           break;
-        case BOT_ACTIONS.DAILY_AMOUNT:
-          await this.dailyAmountHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch();
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.DAILY_AMOUNT }, userDetails);
-          break;
-        case BOT_ACTIONS.SET_DAILY_AMOUNT:
-          await this.setDailyAmountHandler(chatId, selectedName);
-          await this.bot.deleteMessage(chatId, messageId).catch();
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SET_DAILY_AMOUNT }, userDetails);
-          break;
         case BOT_ACTIONS.CONTACT:
           await this.contactHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch();
@@ -188,16 +177,6 @@ export class WorldlyController implements OnModuleInit {
   private async stopHandler(chatId: number): Promise<void> {
     await this.mongoSubscriptionService.updateSubscription(chatId, { isActive: false });
     await this.bot.sendMessage(chatId, `אין בעיה, אני אפסיק לשלוח משחקים בכל יום 🛑`);
-  }
-
-  private async dailyAmountHandler(chatId: number): Promise<void> {
-    const inlineKeyboardButtons = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => ({ text: num, callback_data: `${BOT_ACTIONS.SET_DAILY_AMOUNT} - ${num}` }));
-    await this.bot.sendMessage(chatId, '🌍 כמה משחקים ביום?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons, 3) as any) });
-  }
-
-  private async setDailyAmountHandler(chatId: number, amount: string): Promise<void> {
-    await this.mongoSubscriptionService.updateSubscription(chatId, { dailyAmount: parseInt(amount) });
-    await this.bot.sendMessage(chatId, ['אין בעיה, שיניתי את ההעדפה שלך', amount].join(' - '));
   }
 
   private async contactHandler(chatId: number): Promise<void> {
