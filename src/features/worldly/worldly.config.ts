@@ -44,6 +44,8 @@ export enum BOT_ACTIONS {
 
 export const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20, 13, 16, 19, 14, 15, 18];
 
+export const DEFAULT_DAILY_AMOUNT = 3;
+
 export const CONTINENTS = {
   AFRICA: { name: 'Africa', hebrewName: 'אפריקה' },
   ASIA: { name: 'Asia', hebrewName: 'אסיה' },
