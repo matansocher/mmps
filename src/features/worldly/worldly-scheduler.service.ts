@@ -1,11 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { DEFAULT_TIMEZONE } from '@core/config';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
-import { filterSubscriptions } from './utils/filter-subscriptions';
-import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, INTERVAL_HOURS_BY_PRIORITY } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
+
+const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20];
 
 @Injectable()
 export class WorldlyBotSchedulerService implements OnModuleInit {
@@ -20,7 +21,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
     // this.handleIntervalFlow(); // for testing purposes
   }
 
-  @Cron(`0 ${INTERVAL_HOURS_BY_PRIORITY.sort().join(',')} * * *`, { name: 'worldly-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 ${INTERVAL_HOURS_BY_PRIORITY.join(',')} * * *`, { name: 'worldly-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
       const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
@@ -28,8 +29,8 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
         return;
       }
 
-      // const chatIds = subscriptions.filter(({ dailyAmount }) => filterSubscriptions(dailyAmount)).map(({ chatId }) => chatId);
-      const chatIds = subscriptions.map(({ chatId }) => chatId);
+      const currentHour = new Date().getUTCHours();
+      const chatIds = subscriptions.filter(({ chatId }) => currentHour === INTERVAL_HOURS_BY_PRIORITY[0] || chatId === MY_USER_ID).map(({ chatId }) => chatId);
       await Promise.all(
         chatIds.map(async (chatId) => {
           const userDetails = await this.mongoUserService.getUserDetails({ chatId });
