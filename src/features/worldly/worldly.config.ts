@@ -24,8 +24,6 @@ export const ANALYTIC_EVENT_NAMES = {
   FLAG: 'FLAG',
   CAPITAL: 'CAPITAL',
   ANSWERED: 'ANSWERED',
-  DAILY_AMOUNT: 'DAILY_AMOUNT',
-  SET_DAILY_AMOUNT: 'SET_DAILY_AMOUNT',
   CONTACT: 'CONTACT',
   ERROR: 'ERROR',
 };
@@ -33,19 +31,12 @@ export const ANALYTIC_EVENT_NAMES = {
 export enum BOT_ACTIONS {
   START = 'start',
   STOP = 'stop',
-  SET_DAILY_AMOUNT = 'set_daily__amount',
-  DAILY_AMOUNT = 'daily_amount',
   CONTACT = 'contact',
   MAP = 'm',
   US_MAP = 'us_m',
   FLAG = 'f',
   CAPITAL = 'c',
 }
-
-// export const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20, 13, 16, 19, 14, 15, 18];
-export const INTERVAL_HOURS_BY_PRIORITY = [12];
-
-export const DEFAULT_DAILY_AMOUNT = 2;
 
 export const CONTINENTS = {
   AFRICA: { name: 'Africa', hebrewName: 'אפריקה' },
