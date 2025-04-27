@@ -28,7 +28,8 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
         return;
       }
 
-      const chatIds = subscriptions.filter(({ dailyAmount }) => filterSubscriptions(dailyAmount)).map(({ chatId }) => chatId);
+      // const chatIds = subscriptions.filter(({ dailyAmount }) => filterSubscriptions(dailyAmount)).map(({ chatId }) => chatId);
+      const chatIds = subscriptions.map(({ chatId }) => chatId);
       await Promise.all(
         chatIds.map(async (chatId) => {
           const userDetails = await this.mongoUserService.getUserDetails({ chatId });

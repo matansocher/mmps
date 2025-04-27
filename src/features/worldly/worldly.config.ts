@@ -42,7 +42,8 @@ export enum BOT_ACTIONS {
   CAPITAL = 'c',
 }
 
-export const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20, 13, 16, 19, 14, 15, 18];
+// export const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20, 13, 16, 19, 14, 15, 18];
+export const INTERVAL_HOURS_BY_PRIORITY = [12];
 
 export const DEFAULT_DAILY_AMOUNT = 2;
 
