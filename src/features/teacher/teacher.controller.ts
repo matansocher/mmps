@@ -3,7 +3,7 @@ import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
-import { CourseParticipationStatus, TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
+import { TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
@@ -60,7 +60,7 @@ export class TeacherController implements OnModuleInit {
 
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    this.userStart(chatId, userDetails);
+    await this.userStart(chatId, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -200,7 +200,7 @@ export class TeacherController implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => {
       const result = await this.openaiService.getAudioFromText(text);
 
-      const audioFilePath = `${LOCAL_FILES_PATH}/text-to-speech-${new Date().getTime()}.mp3`;
+      const audioFilePath = `${LOCAL_FILES_PATH}/teacher-text-to-speech-${new Date().getTime()}.mp3`;
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
 
@@ -213,19 +213,7 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
-    const courseParticipation = await this.mongoCourseParticipationService.getCourseParticipation(courseParticipationId);
-    if (!courseParticipation) {
-      await this.bot.sendMessage(chatId, `I am sorry but I couldn't find that course`);
-      return;
-    }
-
-    if (courseParticipation.status === CourseParticipationStatus.Completed) {
-      await this.bot.sendMessage(chatId, 'It looks like you already completed that course');
-      return;
-    }
-
     await this.mongoCourseParticipationService.markCourseParticipationCompleted(courseParticipationId);
-    await this.bot.sendMessage(chatId, '👏');
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
   }
 }

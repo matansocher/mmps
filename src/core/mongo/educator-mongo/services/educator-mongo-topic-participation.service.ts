@@ -25,11 +25,6 @@ export class EducatorMongoTopicParticipationService {
     return topicParticipation;
   }
 
-  getTopicParticipation(topicParticipationId: string): Promise<TopicParticipationModel> {
-    const filter = { _id: new ObjectId(topicParticipationId) };
-    return this.topicParticipationCollection.findOne(filter);
-  }
-
   getTopicParticipations(chatId: number): Promise<TopicParticipationModel[]> {
     const filter = { chatId };
     return this.topicParticipationCollection.find(filter).toArray();

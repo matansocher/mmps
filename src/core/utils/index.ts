@@ -3,6 +3,7 @@ export { extractAudioFromVideo } from './extract-audio-from-video';
 export { getDateDescription } from './get-date-description';
 export { getDateNumber } from './get-date-number';
 export { getDateString } from './get-date-string';
+export { getHourInTimezone } from './get-hour-in-timezone';
 export { getQueryParams } from './get-query-params';
 export { hasHebrew } from './has-hebrew';
 export { isDateStringFormat } from './is-date-string-format';

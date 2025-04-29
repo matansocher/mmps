@@ -50,7 +50,6 @@ export class EducatorService {
     const topic = await this.getNewTopic(chatId);
     if (!topic) {
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new topics found', chatId });
-      // await this.bot.sendMessage(chatId, 'וואלה יש מצב שנגמרו כל הנושאים, אבל תמיד אפשר להוסיף עוד 👏');
       return;
     }
 

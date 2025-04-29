@@ -1,7 +1,7 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { reactToMessage } from '@services/telegram';
 import { BOT_BROADCAST_ACTIONS } from '../constants';
 import type { MessageLoaderOptions } from '../types';
+import { reactToMessage } from '../utils';
 
 const LOADER_MESSAGE = 'Loading...';
 const SHOW_AFTER_MS = 3000;

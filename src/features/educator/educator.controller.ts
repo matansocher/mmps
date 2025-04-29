@@ -3,7 +3,7 @@ import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
-import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService, TopicParticipationStatus } from '@core/mongo/educator-mongo';
+import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
@@ -61,7 +61,7 @@ export class EducatorController implements OnModuleInit {
 
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    this.userStart(chatId, userDetails);
+    await this.userStart(chatId, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -183,7 +183,7 @@ export class EducatorController implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => {
       const result = await this.openaiService.getAudioFromText(text);
 
-      const audioFilePath = `${LOCAL_FILES_PATH}/text-to-speech-${new Date().getTime()}.mp3`;
+      const audioFilePath = `${LOCAL_FILES_PATH}/educator-text-to-speech-${new Date().getTime()}.mp3`;
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
 
@@ -196,19 +196,7 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
-    const topic = await this.mongoTopicParticipationService.getTopicParticipation(topicParticipationId);
-    if (!topic) {
-      await this.bot.sendMessage(chatId, `נראה לי שסיימת את הנושא הזה, הכל טוב`);
-      return;
-    }
-
-    if (topic.status === TopicParticipationStatus.Completed) {
-      await this.bot.sendMessage(chatId, 'וואלה נראה שסיימת כבר את הנושא הזה');
-      return;
-    }
-
     await this.mongoTopicParticipationService.markTopicParticipationCompleted(topicParticipationId);
-    await this.bot.sendMessage(chatId, '🔥');
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
   }
 }
