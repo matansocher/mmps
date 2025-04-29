@@ -13,6 +13,7 @@ import {
   getInlineKeyboardMarkup,
   getMessageData,
   MessageLoader,
+  reactToMessage,
   registerHandlers,
   removeItemFromInlineKeyboardMarkup,
   TELEGRAM_EVENTS,
@@ -198,5 +199,6 @@ export class EducatorController implements OnModuleInit {
   private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
     await this.mongoTopicParticipationService.markTopicParticipationCompleted(topicParticipationId);
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await reactToMessage(this.botToken, chatId, messageId, '😎');
   }
 }

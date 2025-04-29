@@ -13,6 +13,7 @@ import {
   getInlineKeyboardMarkup,
   getMessageData,
   MessageLoader,
+  reactToMessage,
   registerHandlers,
   removeItemFromInlineKeyboardMarkup,
   TELEGRAM_EVENTS,
@@ -23,7 +24,7 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './teacher.config'
 import { TeacherService } from './teacher.service';
 
 const loaderMessage = '👨‍🏫 Give me a few moments to think about it, one sec...';
-const transcribeLoaderMessage = 'Give me a few moments to transcribe it, one sec...';
+const transcribeLoaderMessage = '👨‍🏫 Give me a few moments to transcribe it, one sec...';
 
 @Injectable()
 export class TeacherController implements OnModuleInit {
@@ -215,5 +216,6 @@ export class TeacherController implements OnModuleInit {
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
     await this.mongoCourseParticipationService.markCourseParticipationCompleted(courseParticipationId);
     await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await reactToMessage(this.botToken, chatId, messageId, '😎');
   }
 }
