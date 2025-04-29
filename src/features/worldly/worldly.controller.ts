@@ -152,7 +152,7 @@ export class WorldlyController implements OnModuleInit {
           throw new Error('Invalid action');
       }
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, chatId, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `${err}` }, userDetails);
       throw err;
     }
   }
