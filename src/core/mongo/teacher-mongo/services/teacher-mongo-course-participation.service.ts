@@ -25,11 +25,6 @@ export class TeacherMongoCourseParticipationService {
     return courseParticipation;
   }
 
-  getCourseParticipation(id: string): Promise<CourseParticipationModel> {
-    const filter = { _id: new ObjectId(id) };
-    return this.courseParticipationCollection.findOne(filter);
-  }
-
   getCourseParticipations(chatId: number): Promise<CourseParticipationModel[]> {
     const filter = { chatId };
     return this.courseParticipationCollection.find(filter).toArray();

@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
+import { getHourInTimezone } from '@core/utils';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
@@ -29,8 +30,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
         return;
       }
 
-      const currentHour = new Date().getUTCHours();
-      const chatIds = subscriptions.filter(({ chatId }) => currentHour === INTERVAL_HOURS_BY_PRIORITY[0] || chatId === MY_USER_ID).map(({ chatId }) => chatId);
+      const chatIds = subscriptions.filter(({ chatId }) => getHourInTimezone(DEFAULT_TIMEZONE) === INTERVAL_HOURS_BY_PRIORITY[0] || chatId === MY_USER_ID).map(({ chatId }) => chatId);
       await Promise.all(
         chatIds.map(async (chatId) => {
           const userDetails = await this.mongoUserService.getUserDetails({ chatId });

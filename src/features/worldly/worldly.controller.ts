@@ -45,7 +45,7 @@ export class WorldlyController implements OnModuleInit {
 
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    this.userStart(chatId, userDetails);
+    await this.userStart(chatId, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -152,7 +152,7 @@ export class WorldlyController implements OnModuleInit {
           throw new Error('Invalid action');
       }
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, chatId, error: `${err}` }, userDetails);
       throw err;
     }
   }
