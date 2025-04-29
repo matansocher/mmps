@@ -45,7 +45,7 @@ export class WorldlyController implements OnModuleInit {
 
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    this.userStart(chatId, userDetails);
+    await this.userStart(chatId, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {

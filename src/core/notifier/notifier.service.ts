@@ -20,7 +20,7 @@ export class NotifierService implements OnModuleInit {
     await this.bot.sendMessage(chatId, 'I am here');
   }
 
-  async notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): Promise<void> {
+  notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): void {
     if (userDetails.chatId === MY_USER_ID) {
       return;
     }

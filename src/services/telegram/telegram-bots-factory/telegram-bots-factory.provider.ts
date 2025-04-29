@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Logger, Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TELEGRAM_EVENTS } from '@services/telegram';
+import { TELEGRAM_EVENTS } from '../constants';
 import type { TelegramBotConfig } from '../types';
 
 const createErrorEventListeners = (bot: TelegramBot, botName: string): void => {
