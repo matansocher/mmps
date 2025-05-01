@@ -28,11 +28,12 @@ export class OpenaiService {
     return result.text;
   }
 
-  async getAudioFromText(text: string): Promise<APIPromise<Response>> {
+  async getAudioFromText(text: string, instructions?: string): Promise<APIPromise<Response>> {
     return this.openai.audio.speech.create({
       model: TEXT_TO_SPEECH_MODEL,
       voice: TEXT_TO_SPEECH_VOICE,
       input: text,
+      instructions,
     });
   }
 
