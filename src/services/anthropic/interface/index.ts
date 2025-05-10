@@ -1,5 +1,3 @@
-import type { GenerativeModel } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 
-export interface GeminiClientProvider {
-  readonly flashModel: GenerativeModel;
-}
+export type Tool = Anthropic.Messages.Tool;
