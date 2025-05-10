@@ -61,8 +61,6 @@ export class WorldlyService {
     const gameFilter = (c: Country) => !!c.emoji;
     const randomCountry = getRandomCountry(gameFilter);
 
-    // const otherOptions = getFlagDistractors(randomCountry, gameFilter);
-
     const countries = getCountries();
     const otherCountryOptions = await this.anthropicService.executeTool<CountriesResult>(
       flagDistractorTool,
@@ -112,8 +110,6 @@ export class WorldlyService {
     otherOptions = shuffleArray(otherOptions).slice(0, 3);
 
     const options = shuffleArray([randomCountry.hebrewCapital, ...shuffleArray(otherOptions).slice(0, 3)]);
-
-    // const options = shuffleArray([randomCountry, ...otherOptions]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((capital) => ({ text: capital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${capital} - ${randomCountry.hebrewCapital}` })));
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
