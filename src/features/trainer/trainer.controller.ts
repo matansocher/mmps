@@ -92,7 +92,6 @@ export class TrainerBotService implements OnModuleInit {
       [
         `💣 This Week Trainings: ${lastWeekExercises.length} (${lastWeekExercises.map((exerciseDate) => DAYS_OF_WEEK[exerciseDate.getDay()]).join(' ,')})`,
         `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`,
-        `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`,
       ].join('\n'),
     );
   }

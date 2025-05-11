@@ -2,8 +2,8 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
-import { OpenaiAssistantService, streamResponse } from '@services/openai';
-import { getInlineKeyboardMarkup, sendShortenedMessage, StreamingHandler } from '@services/telegram';
+import { OpenaiAssistantService } from '@services/openai';
+import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, EDUCATOR_ASSISTANT_ID } from './educator.config';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipationModel) => {
@@ -46,7 +46,7 @@ export class EducatorService {
     return this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
   }
 
-  async startNewTopic(chatId: number, onDemand?: boolean): Promise<void> {
+  async startNewTopic(chatId: number): Promise<void> {
     const topic = await this.getNewTopic(chatId);
     if (!topic) {
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new topics found', chatId });
@@ -57,41 +57,12 @@ export class EducatorService {
     const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString(), threadId);
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
-    if (onDemand) {
-      await this.streamAssistantResponse(topicParticipation, [`הנושא של היום הוא`, `${topic.title}`].join(' '), chatId);
-    } else {
-      const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
-      await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
-    }
+    const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
+    await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
   }
 
-  processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
-    return this.streamAssistantResponse(activeTopicParticipation, question, chatId);
-  }
-
-  async streamAssistantResponse(topicParticipation: TopicParticipationModel, prompt: string, chatId: number): Promise<void> {
-    const { threadId } = topicParticipation;
-    await this.openaiAssistantService.addMessageToThread(threadId, prompt, 'user');
-    const stream = await this.openaiAssistantService.getThreadRunStream(EDUCATOR_ASSISTANT_ID, threadId);
-    let messageId: number;
-
-    const streamingHandler = new StreamingHandler(async (content) => {
-      if (!messageId) {
-        const sentMessage = await this.bot.sendMessage(chatId, content || '...', { parse_mode: 'Markdown' });
-        messageId = sentMessage.message_id;
-      } else {
-        await this.bot.editMessageText(content, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
-      }
-    });
-
-    const finalContent = await streamResponse(threadId, stream, (content) => {
-      streamingHandler.addContent(content);
-    });
-
-    await streamingHandler.flushFinalContent();
-
-    if (messageId && finalContent) {
-      await this.bot.editMessageText(finalContent, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
-    }
+  async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
+    const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, activeTopicParticipation.threadId, question);
+    await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(activeTopicParticipation) as any) });
   }
 }

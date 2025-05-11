@@ -83,7 +83,7 @@ export class EducatorController implements OnModuleInit {
     }
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage, noMessage: true });
-    await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId, true));
+    await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
   }
