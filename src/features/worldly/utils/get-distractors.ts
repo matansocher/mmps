@@ -1,4 +1,5 @@
 import { shuffleArray } from '@core/utils';
+import { CitiesResult, CountriesResult } from '@services/anthropic/tools';
 import { getCountries, getStates } from '.';
 import { Country, State } from '../types';
 
@@ -39,7 +40,7 @@ export function getMapStateDistractors(correctState: State): Array<State & { dis
   return shuffleArray(options).slice(0, 3);
 }
 
-export function getFlagDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
+function getRawFlagDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
   const options = getCountries()
     .filter(filter)
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
@@ -47,10 +48,45 @@ export function getFlagDistractors(correctCountry: Country, filter: (country: Co
   return shuffleArray(options).slice(0, 3);
 }
 
-export function getCapitalDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
+export function getFlagDistractors(correctCountry: Country, filter: (country: Country) => boolean, otherCountryOptions: CountriesResult): Array<Country> {
+  const countries = getCountries();
+  let otherOptions = !otherCountryOptions?.countries?.length
+    ? []
+    : otherCountryOptions.countries
+        .map((country) =>
+          countries.find((c) => {
+            const countryName = c.name.toLowerCase();
+            const otherCountryName = country?.name?.toLowerCase();
+            return countryName === otherCountryName || countryName.includes(otherCountryName) || otherCountryName.includes(countryName);
+          }),
+        )
+        .filter((country) => country?.name !== correctCountry.name)
+        .filter(Boolean);
+
+  if (otherOptions?.length < 3) {
+    const moreOptions = getRawFlagDistractors(correctCountry, filter);
+    otherOptions.push(...moreOptions);
+  }
+  otherOptions = shuffleArray(otherOptions).slice(0, 3);
+
+  return shuffleArray([correctCountry, ...otherOptions]);
+}
+
+function getRawCapitalDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
   const options = getCountries()
     .filter(filter)
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .slice(0, 7);
   return shuffleArray(options).slice(0, 3);
+}
+
+export function getCapitalDistractors(correctCountry: Country, filter: (country: Country) => boolean, otherCitiesOptions: CitiesResult): Array<string> {
+  let otherOptions: string[] = otherCitiesOptions.cities?.length ? otherCitiesOptions.cities?.map((c) => c.hebrewCapital) : [];
+  if (otherOptions?.length < 3) {
+    const moreOptions = getRawCapitalDistractors(correctCountry, filter);
+    otherOptions.push(...moreOptions.map((c) => c.hebrewCapital));
+  }
+  otherOptions = shuffleArray(otherOptions).slice(0, 3);
+
+  return shuffleArray([correctCountry.hebrewCapital, ...shuffleArray(otherOptions).slice(0, 3)]);
 }

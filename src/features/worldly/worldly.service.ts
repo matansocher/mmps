@@ -3,6 +3,8 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
+import { AnthropicService } from '@services/anthropic';
+import { capitalDistractorTool, CitiesResult, CountriesResult, flagDistractorTool } from '@services/anthropic/tools';
 import { getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { Country } from './types';
 import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCountry, getRandomState } from './utils';
@@ -12,6 +14,7 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config'
 export class WorldlyService {
   constructor(
     private readonly notifier: NotifierService,
+    private readonly anthropicService: AnthropicService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -58,8 +61,12 @@ export class WorldlyService {
     const gameFilter = (c: Country) => !!c.emoji;
     const randomCountry = getRandomCountry(gameFilter);
 
-    const otherOptions = getFlagDistractors(randomCountry, gameFilter);
-    const options = shuffleArray([randomCountry, ...otherOptions]);
+    const otherCountryOptions = await this.anthropicService.executeTool<CountriesResult>(
+      flagDistractorTool,
+      `Get a list of 6 countries that their flag is the most similar to the flag of the country: ${randomCountry.name}`,
+    );
+
+    const options = getFlagDistractors(randomCountry, gameFilter, otherCountryOptions);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.FLAG} - ${country.name} - ${randomCountry.name}` })));
 
     await this.bot.sendMessage(chatId, randomCountry.emoji, { ...(inlineKeyboardMarkup as any) });
@@ -71,11 +78,13 @@ export class WorldlyService {
     const gameFilter = (c: Country) => !!c.capital;
     const randomCountry = getRandomCountry(gameFilter);
 
-    const otherOptions = getCapitalDistractors(randomCountry, gameFilter);
-    const options = shuffleArray([randomCountry, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.hebrewCapital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${country.capital} - ${randomCountry.capital}` })),
+    const otherCitiesOptions = await this.anthropicService.executeTool<CitiesResult>(
+      capitalDistractorTool,
+      `The capital city of ${randomCountry.name} is ${randomCountry.capital}. Get a list of 6 cities that can distract the user from the correct answer. Can be capitals from other close by similar countries and also other cities from the same countries. Exclude the input country and city.`,
     );
+
+    const options = getCapitalDistractors(randomCountry, gameFilter, otherCitiesOptions);
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((capital) => ({ text: capital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${capital} - ${randomCountry.hebrewCapital}` })));
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
     await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
