@@ -23,8 +23,8 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './educator.config';
 import { EducatorService } from './educator.service';
 
-const loaderMessage = '👩‍🏫 כמה שניות לחשוב על זה ואני איתך, שניה אחת...';
-const transcribeLoaderMessage = '👩‍🏫 כמה שניות ואני מתמללת לך את זה, שניה אחת...';
+const loaderMessage = '👩‍🏫 אני אחשוב על זה כמה שניות ואני איתך, שניה אחת...';
+const transcribeLoaderMessage = '👩‍🏫 כמה שניות ואני מתמללת לך את זה...';
 const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
 @Injectable()
@@ -82,7 +82,7 @@ export class EducatorController implements OnModuleInit {
       await this.mongoTopicParticipationService.markTopicParticipationCompleted(Participation._id.toString());
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage, noMessage: true });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
@@ -113,7 +113,7 @@ export class EducatorController implements OnModuleInit {
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage, noMessage: true });
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
     });
@@ -182,6 +182,9 @@ export class EducatorController implements OnModuleInit {
   private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE, loaderMessage: transcribeLoaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
+      const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
+      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+
       const result = await this.openaiService.getAudioFromText(text);
 
       const audioFilePath = `${LOCAL_FILES_PATH}/educator-text-to-speech-${new Date().getTime()}.mp3`;
@@ -189,9 +192,6 @@ export class EducatorController implements OnModuleInit {
       await fs.writeFile(audioFilePath, buffer);
 
       await this.bot.sendVoice(chatId, audioFilePath);
-
-      const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
       await deleteFile(audioFilePath);
     });
   }
