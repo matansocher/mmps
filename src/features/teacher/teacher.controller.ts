@@ -199,6 +199,9 @@ export class TeacherController implements OnModuleInit {
   private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE, loaderMessage: transcribeLoaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
+      const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
+      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+
       const result = await this.openaiService.getAudioFromText(text);
 
       const audioFilePath = `${LOCAL_FILES_PATH}/teacher-text-to-speech-${new Date().getTime()}.mp3`;
@@ -206,9 +209,6 @@ export class TeacherController implements OnModuleInit {
       await fs.writeFile(audioFilePath, buffer);
 
       await this.bot.sendVoice(chatId, audioFilePath);
-
-      const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
       await deleteFile(audioFilePath);
     });
   }
