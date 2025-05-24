@@ -10,6 +10,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
     MATCHES: { command: '/matches', description: '🎱 מחזור הבא 🎱' },
     ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
   },
+  keyboardOptions: ['היום', 'מחר', 'מחרתיים', 'אתמול'],
 };
 
 export const ANALYTIC_EVENT_NAMES = {
