@@ -10,6 +10,7 @@ export function getDateDescription(date: Date): string {
 
   if (diff === 0) return 'היום';
   if (diff === 1) return 'מחר';
+  if (diff === 2) return 'מחרתיים';
   if (diff === -1) return 'אתמול';
 
   return getDateString(date);
