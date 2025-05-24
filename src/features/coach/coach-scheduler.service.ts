@@ -8,7 +8,7 @@ import { getDateString } from '@core/utils';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
-const HOURS_TO_NOTIFY = [12, 19, 23];
+const HOURS_TO_NOTIFY = [12, 23];
 
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {

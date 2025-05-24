@@ -15,6 +15,9 @@ export async function getCompetitionMatches(competitionId: number): Promise<Comp
   };
   const result = await axios.get(`${SCORES_365_API_URL}/games/current?${new URLSearchParams(queryParams)}`);
   const matchesRes = result?.data?.games || [];
+  if (!matchesRes?.length) {
+    return { competition: null, matches: [] };
+  }
   const enrichedMatches = await Promise.all(matchesRes.map((matchRes: MatchDetails) => getMatchDetails(matchRes.id)));
   const competitionRes = result.data?.competitions[0];
   const competition: Competition = _pick(competitionRes, ['id', 'name']);

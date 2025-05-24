@@ -5,7 +5,7 @@ import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
-import { getCompetitions } from '@services/scores-365';
+import { COMPETITION_IDS_MAP, getCompetitions } from '@services/scores-365';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -129,10 +129,13 @@ export class CoachController implements OnModuleInit {
       case BOT_ACTIONS.MATCH:
         await this.competitionMatchesHandler(chatId, Number(resource));
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: resource }, userDetails);
+        const leagueName = Object.entries(COMPETITION_IDS_MAP)
+          .filter(([_, value]) => value === parseInt(resource))
+          .map(([key]) => key)[0];
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
         break;
       default:
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, reason: 'invalid action', response }, userDetails);
         throw new Error('Invalid action');
     }
   }
@@ -170,6 +173,10 @@ export class CoachController implements OnModuleInit {
 
   async competitionMatchesHandler(chatId: number, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionMatchesMessage(competitionId);
+    if (!resultText) {
+      await this.bot.sendMessage(chatId, 'לא מצאתי משחקים בליגה הזאת 😔');
+      return;
+    }
     await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown' });
   }
 }
