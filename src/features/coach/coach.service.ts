@@ -44,7 +44,7 @@ export class CoachService {
       competitionMatches = await getCompetitionMatches(competitionId);
       this.matchesCache.saveCompetitionMatches(competitionId, competitionMatches);
     }
-    if (!competitionMatches) {
+    if (!competitionMatches?.matches?.length) {
       return null;
     }
     return generateCompetitionMatchesString(competitionMatches);
