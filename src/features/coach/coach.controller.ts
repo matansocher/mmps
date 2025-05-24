@@ -4,14 +4,26 @@ import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
-import { getDateDescription, getDateString, isDateStringFormat } from '@core/utils';
-import { getCompetitions } from '@services/scores-365';
+import { getDateDescription } from '@core/utils';
+import { getDateFromUserInput } from '@features/coach/utils/get-date-from-user-input';
+import { COMPETITION_IDS_MAP, getCompetitions } from '@services/scores-365';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
 const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';
 const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
+
+const getKeyboardOptions = () => {
+  return {
+    reply_markup: {
+      keyboard: BOT_CONFIG.keyboardOptions.map((option) => {
+        return [{ text: option }];
+      }),
+      resize_keyboard: true,
+    },
+  };
+};
 
 @Injectable()
 export class CoachController implements OnModuleInit {
@@ -87,15 +99,15 @@ export class CoachController implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const date = isDateStringFormat(text) ? text : getDateString();
+      const date = getDateFromUserInput(text);
       const resultText = await this.coachService.getMatchesSummaryMessage(date);
       if (!resultText) {
-        await this.bot.sendMessage(chatId, `וואלה לא מצאתי אף משחק בתאריך הזה 😔`);
+        await this.bot.sendMessage(chatId, `וואלה לא מצאתי אף משחק בתאריך הזה 😔`, { ...getKeyboardOptions() });
         return;
       }
       const datePrefix = `זה המצב הנוכחי של המשחקים בתאריך: ${getDateDescription(new Date(date))}`;
       const replyText = [datePrefix, resultText].join('\n\n');
-      await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+      await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown', ...getKeyboardOptions() });
     });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
@@ -129,10 +141,13 @@ export class CoachController implements OnModuleInit {
       case BOT_ACTIONS.MATCH:
         await this.competitionMatchesHandler(chatId, Number(resource));
         await this.bot.deleteMessage(chatId, messageId).catch();
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: resource }, userDetails);
+        const leagueName = Object.entries(COMPETITION_IDS_MAP)
+          .filter(([_, value]) => value === parseInt(resource))
+          .map(([key]) => key)[0];
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
         break;
       default:
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, reason: 'invalid action', response }, userDetails);
         throw new Error('Invalid action');
     }
   }
@@ -151,7 +166,7 @@ export class CoachController implements OnModuleInit {
       `אם תרצה להפסיק לקבל ממני עדכונים, תוכל להשתמש בפקודה פה למטה`,
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
-    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
   }
 
   private async stopHandler(chatId: number): Promise<void> {
@@ -165,11 +180,15 @@ export class CoachController implements OnModuleInit {
 
   async tableHandler(chatId: number, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionTableMessage(competitionId);
-    await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown' });
+    await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown', ...getKeyboardOptions() });
   }
 
   async competitionMatchesHandler(chatId: number, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionMatchesMessage(competitionId);
-    await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown' });
+    if (!resultText) {
+      await this.bot.sendMessage(chatId, 'לא מצאתי משחקים בליגה הזאת 😔', { ...getKeyboardOptions() });
+      return;
+    }
+    await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown', ...getKeyboardOptions() });
   }
 }

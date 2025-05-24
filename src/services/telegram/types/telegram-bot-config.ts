@@ -9,4 +9,5 @@ export type TelegramBotConfig = {
       hide?: boolean;
     };
   };
+  readonly keyboardOptions?: string[];
 };
