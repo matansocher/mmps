@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongoDatabaseFactoryModule } from '@core/mongo/shared';
-import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from './services';
+import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from './services';
 import { CONNECTION_NAME, DB_NAME } from './worldly-mongo.config';
 
 @Module({
@@ -10,7 +10,7 @@ import { CONNECTION_NAME, DB_NAME } from './worldly-mongo.config';
       dbName: DB_NAME,
     }),
   ],
-  providers: [WorldlyMongoSubscriptionService, WorldlyMongoUserService],
-  exports: [WorldlyMongoSubscriptionService, WorldlyMongoUserService],
+  providers: [WorldlyMongoSubscriptionService, WorldlyMongoUserService, WorldlyMongoGameLogService],
+  exports: [WorldlyMongoSubscriptionService, WorldlyMongoUserService, WorldlyMongoGameLogService],
 })
 export class WorldlyMongoModule {}
