@@ -2,7 +2,7 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
-import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
+import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { getCountryByCapital, getCountryByName, getStateByName } from './utils';
@@ -20,6 +20,7 @@ export class WorldlyController implements OnModuleInit {
     private readonly worldlyService: WorldlyService,
     private readonly mongoUserService: WorldlyMongoUserService,
     private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
+    private readonly mongoGameLogService: WorldlyMongoGameLogService,
     private readonly notifier: NotifierService,
     private readonly configService: ConfigService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -133,18 +134,22 @@ export class WorldlyController implements OnModuleInit {
           break;
         case BOT_ACTIONS.MAP:
           await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.MAP, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.US_MAP:
           await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.US_MAP, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.FLAG:
           await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.FLAG, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.CAPITAL:
           await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.CAPITAL, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
           break;
         default:
