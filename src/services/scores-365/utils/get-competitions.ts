@@ -4,7 +4,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import type { Competition } from '../interface';
 import { COMPETITIONS, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 
-export async function getCompetitions(): Promise<Array<Competition & { icon: string; hasTable: string }>> {
+export async function getCompetitions(): Promise<Competition[]> {
   const results = await Promise.all(
     COMPETITIONS.map(async (competition) => {
       const queryParams = { competitions: competition.id.toString(), langId: `${LANGUAGE_ID}`, timezoneName: DEFAULT_TIMEZONE };
@@ -14,7 +14,7 @@ export async function getCompetitions(): Promise<Array<Competition & { icon: str
         return undefined;
       }
       const competitionDetails = _pick(relevantCompetition, ['id', 'name']);
-      return { ...competitionDetails, icon: competition.icon, hasTable: competition.hasTable } as unknown as Competition & { icon: string; hasTable: string };
+      return { ...competitionDetails, icon: competition.icon, hasTable: competition.hasTable } as unknown as Competition;
     }),
   );
   return results.filter(Boolean);

@@ -20,6 +20,8 @@ export const ANALYTIC_EVENT_NAMES = {
   CONTACT: 'CONTACT',
   TABLE: 'TABLE',
   MATCH: 'MATCH',
+  CUSTOM_LEAGUES: 'CUSTOM_LEAGUES',
+  CUSTOM_LEAGUES_SELECT: 'CUSTOM_LEAGUES_SELECT',
   ERROR: 'ERROR',
 };
 
@@ -29,4 +31,6 @@ export enum BOT_ACTIONS {
   CONTACT = 'contact',
   TABLE = 'table',
   MATCH = 'match',
+  CUSTOM_LEAGUES = 'cust_leag',
+  CUSTOM_LEAGUES_SELECT = 'cust_leag_select',
 }
