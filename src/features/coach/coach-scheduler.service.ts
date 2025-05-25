@@ -20,7 +20,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    // this.handleIntervalFlow(null); // for testing purposes
+    // this.handleIntervalFlow(); // for testing purposes
   }
 
   @Cron(`59 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
@@ -31,14 +31,19 @@ export class CoachBotSchedulerService implements OnModuleInit {
         return;
       }
 
-      const responseText = await this.coachService.getMatchesSummaryMessage(getDateString());
-      if (!responseText) {
-        return;
+      const relevantSubscriptions = subscriptions.filter((chatId) => !!chatId);
+      for (const { chatId, customLeagues } of relevantSubscriptions) {
+        try {
+          const responseText = await this.coachService.getMatchesSummaryMessage(getDateString(), customLeagues);
+          if (!responseText) {
+            continue;
+          }
+          const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
+          await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+        } catch (err) {
+          this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, chatId, error: err });
+        }
       }
-
-      const chatIds = subscriptions.map((subscription) => subscription.chatId);
-      const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
-      await Promise.all(chatIds.map((chatId) => this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' })));
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }

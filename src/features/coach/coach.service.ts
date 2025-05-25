@@ -26,12 +26,13 @@ export class CoachService {
     return summaryDetails;
   }
 
-  async getMatchesSummaryMessage(date: string): Promise<string> {
+  async getMatchesSummaryMessage(date: string, competitionIds: number[] = []): Promise<string> {
     const summaryDetails = await this.getMatchesSummary(date);
     if (!summaryDetails) {
       return null;
     }
-    return generateMatchResultsString(summaryDetails);
+    const filteredSummaryDetails = !competitionIds.length ? summaryDetails : summaryDetails.filter((summary) => competitionIds.includes(summary.competition.id));
+    return generateMatchResultsString(filteredSummaryDetails);
   }
 
   async getCompetitionTable(competitionId: number): Promise<Array<{ name: string; midValue: number; value: number }>> {

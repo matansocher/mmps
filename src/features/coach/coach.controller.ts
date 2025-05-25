@@ -101,7 +101,8 @@ export class CoachController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const date = getDateFromUserInput(text);
-      const resultText = await this.coachService.getMatchesSummaryMessage(date);
+      const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+      const resultText = await this.coachService.getMatchesSummaryMessage(date, subscription.customLeagues);
       if (!resultText) {
         await this.bot.sendMessage(chatId, `וואלה לא מצאתי אף משחק בתאריך הזה 😔`, { ...getKeyboardOptions() });
         return;
