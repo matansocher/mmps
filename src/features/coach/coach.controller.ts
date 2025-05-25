@@ -6,7 +6,7 @@ import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mong
 import { NotifierService } from '@core/notifier';
 import { getDateDescription } from '@core/utils';
 import { getDateFromUserInput } from '@features/coach/utils/get-date-from-user-input';
-import { COMPETITION_IDS_MAP, getCompetitions } from '@services/scores-365';
+import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -62,7 +62,7 @@ export class CoachController implements OnModuleInit {
 
   private async tablesHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const competitions = await getCompetitions();
+    const competitions = await this.coachService.getCompetitions();
     const competitionsWithTables = competitions.filter((competition) => competition.hasTable);
     const inlineKeyboardButtons = competitionsWithTables.map((competition) => {
       const { id, name, icon } = competition;
@@ -73,7 +73,7 @@ export class CoachController implements OnModuleInit {
 
   private async matchesHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const competitions = await getCompetitions();
+    const competitions = await this.coachService.getCompetitions();
     const inlineKeyboardButtons = competitions.map((competition) => {
       const { id, name, icon } = competition;
       return { text: `${icon} ${name} ${icon}`, callback_data: `${BOT_ACTIONS.MATCH} - ${id}` };
@@ -204,7 +204,7 @@ export class CoachController implements OnModuleInit {
   }
 
   async customLeaguesHandler(chatId: number): Promise<void> {
-    const [subscription, competitions] = await Promise.all([this.mongoSubscriptionService.getSubscription(chatId), getCompetitions()]);
+    const [subscription, competitions] = await Promise.all([this.mongoSubscriptionService.getSubscription(chatId), this.coachService.getCompetitions()]);
     const userCustomLeagues = subscription?.customLeagues || [];
 
     const inlineKeyboardButtons = competitions.map((competition) => {

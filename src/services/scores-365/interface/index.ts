@@ -6,6 +6,8 @@ export interface CompetitionDetails {
 export interface Competition {
   readonly id: number;
   readonly name: string;
+  readonly icon?: string;
+  readonly hasTable?: boolean;
 }
 
 export interface Competitor {

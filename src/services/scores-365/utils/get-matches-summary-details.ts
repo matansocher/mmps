@@ -1,8 +1,7 @@
-import { getCompetitions, getMatchesForCompetition } from '.';
-import { CompetitionDetails } from '../interface';
+import { getMatchesForCompetition } from '.';
+import { Competition, CompetitionDetails } from '../interface';
 
-export async function getMatchesSummaryDetails(dateString: string): Promise<CompetitionDetails[]> {
-  const competitions = await getCompetitions();
+export async function getMatchesSummaryDetails(competitions: Competition[], dateString: string): Promise<CompetitionDetails[]> {
   if (!competitions?.length) {
     return;
   }
