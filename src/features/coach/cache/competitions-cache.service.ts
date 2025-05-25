@@ -5,7 +5,7 @@ import { BaseCacheService } from './base-cache.service';
 const validForMinutes = 200;
 
 @Injectable()
-export class CompetitionCacheService extends BaseCacheService<Competition[]> {
+export class CompetitionsCacheService extends BaseCacheService<Competition[]> {
   private readonly key = 'competitions';
 
   constructor() {

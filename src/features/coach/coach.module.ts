@@ -3,7 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CoachMongoModule } from '@core/mongo/coach-mongo';
 import { NotifierModule } from '@core/notifier';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
-import { CompetitionCacheService, CompetitionMatchesCacheService, CompetitionTableCacheService, MatchesSummaryCacheService } from './cache';
+import { CompetitionMatchesCacheService, CompetitionsCacheService, CompetitionTableCacheService, MatchesSummaryCacheService } from './cache';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';
@@ -15,7 +15,7 @@ import { CoachService } from './coach.service';
     CoachController,
     CoachBotSchedulerService,
     CoachService,
-    CompetitionCacheService,
+    CompetitionsCacheService,
     CompetitionMatchesCacheService,
     CompetitionTableCacheService,
     MatchesSummaryCacheService,

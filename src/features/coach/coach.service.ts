@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Competition, CompetitionDetails, getCompetitionMatches, getCompetitions, getCompetitionTable, getMatchesSummaryDetails } from '@services/scores-365';
 import { getTableTemplate } from '@services/telegram';
-import { CompetitionCacheService, CompetitionMatchesCacheService, CompetitionTableCacheService, MatchesSummaryCacheService } from './cache';
+import { CompetitionMatchesCacheService, CompetitionsCacheService, CompetitionTableCacheService, MatchesSummaryCacheService } from './cache';
 import { generateCompetitionMatchesString, generateMatchResultsString } from './utils';
 
 @Injectable()
 export class CoachService {
   constructor(
-    private readonly competitionsCache: CompetitionCacheService,
+    private readonly competitionsCache: CompetitionsCacheService,
     private readonly summaryCache: MatchesSummaryCacheService,
     private readonly tablesCache: CompetitionTableCacheService,
     private readonly matchesCache: CompetitionMatchesCacheService,
