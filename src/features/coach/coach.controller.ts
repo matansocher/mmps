@@ -85,6 +85,7 @@ export class CoachController implements OnModuleInit {
     const { chatId } = getMessageData(message);
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
     const inlineKeyboardButtons = [
+      { text: '⚽️ הגדרת ליגות למעקב ⚽️', callback_data: `${BOT_ACTIONS.CUSTOM_LEAGUES}` },
       !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
@@ -116,7 +117,7 @@ export class CoachController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, messageId, userDetails, data: response } = getCallbackQueryData(callbackQuery);
 
-    const [action, resource] = response.split(' - ');
+    const [action, resource, subAction] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.START:
         await this.userStart(chatId, userDetails);
@@ -142,9 +143,19 @@ export class CoachController implements OnModuleInit {
         await this.competitionMatchesHandler(chatId, Number(resource));
         await this.bot.deleteMessage(chatId, messageId).catch();
         const leagueName = Object.entries(COMPETITION_IDS_MAP)
-          .filter(([_, value]) => value === parseInt(resource))
+          .filter(([_, value]) => value === Number(resource))
           .map(([key]) => key)[0];
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
+        break;
+      case BOT_ACTIONS.CUSTOM_LEAGUES:
+        await this.customLeaguesHandler(chatId);
+        await this.bot.deleteMessage(chatId, messageId).catch();
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES }, userDetails);
+        break;
+      case BOT_ACTIONS.CUSTOM_LEAGUES_SELECT:
+        await this.customLeaguesSelectHandler(chatId, Number(resource), Number(subAction));
+        await this.bot.deleteMessage(chatId, messageId).catch();
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES_SELECT }, userDetails);
         break;
       default:
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, reason: 'invalid action', response }, userDetails);
@@ -156,7 +167,7 @@ export class CoachController implements OnModuleInit {
     const userExists = await this.mongoUserService.saveUserDetails(userDetails);
 
     const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, true) : await this.mongoSubscriptionService.addSubscription(chatId);
+    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, { isActive: true }) : await this.mongoSubscriptionService.addSubscription(chatId);
 
     const newUserReplyText = [
       `שלום 👋`,
@@ -170,7 +181,7 @@ export class CoachController implements OnModuleInit {
   }
 
   private async stopHandler(chatId: number): Promise<void> {
-    await this.mongoSubscriptionService.updateSubscription(chatId, false);
+    await this.mongoSubscriptionService.updateSubscription(chatId, { isActive: false });
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
   }
 
@@ -190,5 +201,45 @@ export class CoachController implements OnModuleInit {
       return;
     }
     await this.bot.sendMessage(chatId, resultText, { parse_mode: 'Markdown', ...getKeyboardOptions() });
+  }
+
+  async customLeaguesHandler(chatId: number): Promise<void> {
+    const [subscription, competitions] = await Promise.all([this.mongoSubscriptionService.getSubscription(chatId), getCompetitions()]);
+    const userCustomLeagues = subscription?.customLeagues || [];
+
+    const inlineKeyboardButtons = competitions.map((competition) => {
+      const { id, name } = competition;
+      const isFollowing = userCustomLeagues.includes(id) || userCustomLeagues.length === 0;
+      const actionIcon = isFollowing ? 'הסר ✅' : 'עקוב ❌';
+      const subAction = isFollowing ? 0 : 1; // 1 for follow, 0 for unfollow
+      return { text: `${name} - ${actionIcon}`, callback_data: `${BOT_ACTIONS.CUSTOM_LEAGUES_SELECT} - ${id} - ${subAction}` };
+    });
+
+    await this.bot.sendMessage(chatId, 'כאן אפשר להגדיר אחרי איזה ליגות לעקוב', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+  }
+
+  async customLeaguesSelectHandler(chatId: number, competitionId: number, subAction: number): Promise<void> {
+    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+    const userCustomLeagues = subscription?.customLeagues || [];
+
+    if (!userCustomLeagues.length) {
+      userCustomLeagues.push(...Object.values(COMPETITION_IDS_MAP));
+    }
+
+    if (subAction) {
+      // Follow league
+      if (!userCustomLeagues.includes(competitionId)) {
+        userCustomLeagues.push(competitionId);
+      }
+    } else {
+      // Unfollow league
+      const index = userCustomLeagues.indexOf(competitionId);
+      if (index > -1) {
+        userCustomLeagues.splice(index, 1);
+      }
+    }
+    await this.mongoSubscriptionService.updateSubscription(chatId, { customLeagues: [...new Set(userCustomLeagues)] });
+
+    await this.bot.sendMessage(chatId, 'מעולה, עדכנתי את הליגות שלך 💪\nאפשר להוסיף או להסיר ליגות נוספות');
   }
 }
