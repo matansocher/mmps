@@ -30,7 +30,7 @@ export class WorldlyController implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
+    const { START, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS, CONTINENT_MAP } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
@@ -39,6 +39,7 @@ export class WorldlyController implements OnModuleInit {
       { event: COMMAND, regex: FLAG.command, handler: (message) => this.flagHandler.call(this, message) },
       { event: COMMAND, regex: CAPITAL.command, handler: (message) => this.capitalHandler.call(this, message) },
       { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
+      { event: COMMAND, regex: CONTINENT_MAP.command, handler: (message) => this.continentMapHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
@@ -111,6 +112,16 @@ export class WorldlyController implements OnModuleInit {
     }
   }
 
+  async continentMapHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    try {
+      return this.worldlyService.continentMapHandler(chatId, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.CONTINENT_MAP, error: `${err}` }, userDetails);
+      throw err;
+    }
+  }
+
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
@@ -151,6 +162,11 @@ export class WorldlyController implements OnModuleInit {
           await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
           await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.CAPITAL, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
+          break;
+        case BOT_ACTIONS.CONTINENT_MAP:
+          await this.continentMapAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.CONTINENT_MAP, correctName, selectedName);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🌍', correct: correctName, selected: selectedName }, userDetails);
           break;
         default:
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
@@ -217,6 +233,13 @@ export class WorldlyController implements OnModuleInit {
     const correctCountry = getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
     await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
+    await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
+  }
+
+  private async continentMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctName}`;
+    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 }

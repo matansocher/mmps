@@ -1,5 +1,16 @@
-export { generateCountryMap } from './generate-country-map';
+export { generateAreaMap } from './generate-area-map';
 export { getCapitalDistractors, getMapStateDistractors, getFlagDistractors, getMapDistractors } from './get-distractors';
-export { getCountries, getStates, getRandomState, getCountryByCapital, getCountryByName, getRandomCountry, getStateByName } from './get-countries';
-export { getCountryMap } from './get-country-map';
-export { simplifyCountryName } from './simplify-country-name';
+export {
+  getContinentByName,
+  getContinents,
+  getCountries,
+  getCountryByCapital,
+  getCountryByName,
+  getRandomContinent,
+  getRandomCountry,
+  getRandomState,
+  getStateByName,
+  getStates,
+} from './get-countries';
+export { getAreaMap } from './get-area-map';
+export { simplifyAreaName } from './simplify-area-name';

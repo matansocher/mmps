@@ -11,6 +11,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
     FLAG: { command: '/flag', description: '🏁 דגל 🏁' },
     CAPITAL: { command: '/capital', description: '🏛️ עיר בירה 🏛️' },
     US_MAP: { command: '/usmap', description: '🇺🇸 מפת ארצות הברית 🇺🇸' },
+    CONTINENT_MAP: { command: '/contmap', description: '🇺🇸 מפת יבשות 🇺🇸' },
     ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
   },
 };
@@ -26,6 +27,7 @@ export const ANALYTIC_EVENT_NAMES = {
   ANSWERED: 'ANSWERED',
   CONTACT: 'CONTACT',
   ERROR: 'ERROR',
+  CONTINENT_MAP: 'CONTINENT_MAP',
 };
 
 export enum BOT_ACTIONS {
@@ -36,6 +38,7 @@ export enum BOT_ACTIONS {
   US_MAP = 'us_m',
   FLAG = 'f',
   CAPITAL = 'c',
+  CONTINENT_MAP = 'cont',
 }
 
 export const CONTINENTS = {

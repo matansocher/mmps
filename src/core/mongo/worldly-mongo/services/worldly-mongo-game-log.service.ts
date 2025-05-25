@@ -1,4 +1,4 @@
-import { Collection, Db, ObjectId } from 'mongodb';
+import { Collection, Db } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { GameLogModel } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../worldly-mongo.config';

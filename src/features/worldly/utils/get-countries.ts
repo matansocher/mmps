@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Country, State } from '../types';
+import { Continent, Country, State } from '../types';
 
 const countries = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/countries.json'), 'utf8'));
 const states = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/states.json'), 'utf8'));
+const continents: Continent[] = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/continents.json'), 'utf8'));
 
 export function getCountries(): Country[] {
   return [...countries];
@@ -11,6 +12,10 @@ export function getCountries(): Country[] {
 
 export function getStates(): State[] {
   return [...states];
+}
+
+export function getContinents(): Continent[] {
+  return [...continents];
 }
 
 export function getCountryByName(name: string): Country {
@@ -37,4 +42,13 @@ export function getRandomCountry(filter: (country: Country) => boolean): Country
 export function getRandomState(): State {
   const countries = getStates();
   return countries[Math.floor(Math.random() * countries.length)];
+}
+
+export function getContinentByName(name: string): Continent | undefined {
+  return getContinents().find((c) => c.name === name);
+}
+
+export function getRandomContinent(): Continent {
+  const all = getContinents();
+  return all[Math.floor(Math.random() * all.length)];
 }
