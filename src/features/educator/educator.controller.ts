@@ -23,7 +23,7 @@ import {
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './educator.config';
 import { EducatorService } from './educator.service';
 
-const loaderMessage = '👩‍🏫 אני אחשוב על זה כמה שניות ואני איתך, שניה אחת...';
+const loaderMessage = '👩‍🏫 אני אחשוב על זה כמה שניות ואני איתך...';
 const transcribeLoaderMessage = '👩‍🏫 כמה שניות ואני מתמללת לך את זה...';
 const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה. אפשר לנסות שוב מאוחר יותר`;
 
