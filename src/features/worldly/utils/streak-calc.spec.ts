@@ -1,5 +1,5 @@
 import { subDays } from 'date-fns';
-import { getLongestStreak, getStreak } from './streak-calc';
+import { getStreak } from './streak-calc';
 
 const getDateAgo = (daysAgo: number): Date => {
   const today = new Date();
@@ -45,25 +45,6 @@ describe('getStreak()', () => {
   it('should return 3 for a triple exercises', () => {
     const dates = [getDateAgo(1), getDateAgo(2), getDateAgo(3)];
     const actualResult = getStreak(dates);
-    expect(actualResult).toEqual(3);
-  });
-});
-
-describe('getLongestStreak()', () => {
-  it('should return 0 for empty array', () => {
-    const actualResult = getLongestStreak([]);
-    expect(actualResult).toEqual(0);
-  });
-
-  it('should return 3 for a current 3 streak', () => {
-    const dates = [getDateAgo(1), getDateAgo(2), getDateAgo(3), getDateAgo(5), getDateAgo(6)];
-    const actualResult = getLongestStreak(dates);
-    expect(actualResult).toEqual(3);
-  });
-
-  it('should return 3 for a past 3 streak', () => {
-    const dates = [getDateAgo(1), getDateAgo(2), getDateAgo(4), getDateAgo(5), getDateAgo(6)];
-    const actualResult = getLongestStreak(dates);
     expect(actualResult).toEqual(3);
   });
 });
