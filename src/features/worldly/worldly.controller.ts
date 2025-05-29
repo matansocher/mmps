@@ -5,7 +5,7 @@ import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { getCountryByCapital, getCountryByName, getStateByName } from './utils';
+import { generateSpecialMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
@@ -155,6 +155,12 @@ export class WorldlyController implements OnModuleInit {
         default:
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
           throw new Error('Invalid action');
+      }
+
+      const userGameLogs = await this.mongoGameLogService.getUserGameLogs(chatId);
+      const specialMessage = generateSpecialMessage(chatId, userGameLogs);
+      if (specialMessage) {
+        await this.bot.sendMessage(chatId, specialMessage);
       }
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `${err}` }, userDetails);

@@ -4,11 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
+import { getSpecialNumber } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { BOT_ACTIONS } from './trainer.config';
-import { getLastWeekDates, getLongestStreak, getSpecialNumber, getStreak } from './utils';
+import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
 
 const loaderMessage = '🏋️‍♂️ נראה לי עשית פה משהו גדול, שניה אחת';
 
