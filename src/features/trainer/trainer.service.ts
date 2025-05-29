@@ -3,10 +3,11 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
+import { getSpecialNumber } from '@core/utils';
 import { UserDetails } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './trainer.config';
-import { getLastWeekDates, getLongestStreak, getSpecialNumber, getStreak } from './utils';
+import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
 

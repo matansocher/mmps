@@ -21,4 +21,9 @@ export class WorldlyMongoGameLogService {
     } as GameLogModel;
     await this.gameLogCollection.insertOne(gameLog);
   }
+
+  async getUserGameLogs(chatId: number): Promise<GameLogModel[]> {
+    const filter = { chatId };
+    return this.gameLogCollection.find(filter).toArray();
+  }
 }
