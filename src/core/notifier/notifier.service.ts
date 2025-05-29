@@ -21,9 +21,6 @@ export class NotifierService implements OnModuleInit {
   }
 
   notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): void {
-    if (userDetails?.chatId === MY_USER_ID) {
-      return;
-    }
     const notyMessageText = this.getNotyMessageText(bot.name, options, userDetails);
     this.bot.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
   }
