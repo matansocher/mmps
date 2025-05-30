@@ -3,7 +3,7 @@ import { getSpecialNumber } from '@core/utils';
 import { getStreak } from '../utils';
 
 export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
-export const SPECIAL_CORRECT_ANSWERS_STREAKS = [7, 20, 30];
+export const SPECIAL_CORRECT_ANSWERS_STREAKS = [4, 7, 10, 15, 20, 30];
 export const SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED = [10, 50, 100, 200, 300, 500, 600, 700, 800, 900, 1000];
 
 function getStreakOfCorrectMessages(userGameLogs: GameLogModel[]): string {
