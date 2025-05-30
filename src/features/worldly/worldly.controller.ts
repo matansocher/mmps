@@ -158,7 +158,7 @@ export class WorldlyController implements OnModuleInit {
       }
 
       const userGameLogs = await this.mongoGameLogService.getUserGameLogs(chatId);
-      const specialMessage = generateSpecialMessage(chatId, userGameLogs);
+      const specialMessage = generateSpecialMessage(userGameLogs);
       if (specialMessage) {
         await this.bot.sendMessage(chatId, specialMessage);
       }
