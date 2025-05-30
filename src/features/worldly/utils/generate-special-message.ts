@@ -1,5 +1,5 @@
 import { GameLogModel } from '@core/mongo/worldly-mongo';
-import { getSpecialNumber } from '@core/utils';
+import { getDateString, getSpecialNumber } from '@core/utils';
 import { getStreak } from '../utils';
 
 export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
@@ -8,9 +8,8 @@ export const SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED = [10, 50, 100, 200, 300, 500,
 
 function getStreakOfCorrectMessages(userGameLogs: GameLogModel[]): string {
   let streak = 0;
-  const sortedLogs = userGameLogs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  for (let i = 0; i < sortedLogs.length; i++) {
-    if (sortedLogs[i].correct === sortedLogs[i].selected) {
+  for (let i = 0; i < userGameLogs.length; i++) {
+    if (userGameLogs[i].correct === userGameLogs[i].selected) {
       streak++;
     } else {
       break;
@@ -28,6 +27,10 @@ function getStreakOfCorrectMessages(userGameLogs: GameLogModel[]): string {
 }
 
 function getStreakOfDaysPlayed(userGameLogs: GameLogModel[]): string {
+  const todayGames = userGameLogs.filter((log) => getDateString(new Date(log.createdAt)) === getDateString());
+  if (todayGames?.length > 1) {
+    return null;
+  }
   const dates = userGameLogs.map((log) => new Date(log.createdAt));
   const streak = getStreak(dates);
   if (streak < SPECIAL_STREAK_OF_DAYS_MIN) {
@@ -55,14 +58,16 @@ function getTotalGamesPlayedMessages(userGameLogs: GameLogModel[]): string {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function generateSpecialMessage(chatId: number, userGameLogs: GameLogModel[]): string {
-  const correctStreakMsg = getStreakOfCorrectMessages(userGameLogs);
+export function generateSpecialMessage(userGameLogs: GameLogModel[]): string {
+  const sorted = userGameLogs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const correctStreakMsg = getStreakOfCorrectMessages(sorted);
   if (correctStreakMsg) return correctStreakMsg;
 
-  const daysStreakMsg = getStreakOfDaysPlayed(userGameLogs);
+  const daysStreakMsg = getStreakOfDaysPlayed(sorted);
   if (daysStreakMsg) return daysStreakMsg;
 
-  const totalGamesMsg = getTotalGamesPlayedMessages(userGameLogs);
+  const totalGamesMsg = getTotalGamesPlayedMessages(sorted);
   if (totalGamesMsg) return totalGamesMsg;
 
   return null;
