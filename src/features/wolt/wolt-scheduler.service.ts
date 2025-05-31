@@ -20,8 +20,8 @@ export class WoltSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly restaurantsService: RestaurantsService,
-    private readonly mongoUserService: WoltMongoUserService,
-    private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
+    private readonly userDB: WoltMongoUserService,
+    private readonly subscriptionDB: WoltMongoSubscriptionService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -50,7 +50,7 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async handleIntervalFlow(): Promise<void> {
     await this.cleanExpiredSubscriptions();
-    const subscriptions = (await this.mongoSubscriptionService.getActiveSubscriptions()) as SubscriptionModel[];
+    const subscriptions = (await this.subscriptionDB.getActiveSubscriptions()) as SubscriptionModel[];
     if (subscriptions?.length) {
       await this.alertSubscriptions(subscriptions);
     }
@@ -61,7 +61,7 @@ export class WoltSchedulerService implements OnModuleInit {
       const inlineKeyboardMarkup = getInlineKeyboardMarkup([{ text: `🍽️ ${restaurant.name} 🍽️`, url: restaurant.link }]);
       const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', restaurant.name, 'אפשר להזמין עכשיו! 📱'].join('\n');
       await this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText } as any);
-      await this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant);
+      await this.subscriptionDB.archiveSubscription(subscription.chatId, subscription.restaurant);
       await this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
       this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
@@ -84,7 +84,7 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async cleanSubscription(subscription: SubscriptionModel): Promise<void> {
     try {
-      await this.mongoSubscriptionService.archiveSubscription(subscription.chatId, subscription.restaurant);
+      await this.subscriptionDB.archiveSubscription(subscription.chatId, subscription.restaurant);
       const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
       if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
         // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER
@@ -99,12 +99,12 @@ export class WoltSchedulerService implements OnModuleInit {
   }
 
   async cleanExpiredSubscriptions(): Promise<void> {
-    const expiredSubscriptions = await this.mongoSubscriptionService.getExpiredSubscriptions(SUBSCRIPTION_EXPIRATION_HOURS);
+    const expiredSubscriptions = await this.subscriptionDB.getExpiredSubscriptions(SUBSCRIPTION_EXPIRATION_HOURS);
     await Promise.all(expiredSubscriptions.map((subscription: SubscriptionModel) => this.cleanSubscription(subscription)));
   }
 
   async notifyWithUserDetails(chatId: number, restaurant: string, action: AnalyticEventValue) {
-    const userDetails = (await this.mongoUserService.getUserDetails({ chatId })) as unknown as UserDetails;
+    const userDetails = (await this.userDB.getUserDetails({ chatId })) as unknown as UserDetails;
     this.notifier.notify(BOT_CONFIG, { restaurant, action }, userDetails);
   }
 }

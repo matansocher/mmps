@@ -16,15 +16,15 @@ export class TrainerService {
   private readonly logger = new Logger(TrainerService.name);
 
   constructor(
-    private readonly mongoExerciseService: TrainerMongoExerciseService,
-    private readonly mongoUserService: TrainerMongoUserService,
+    private readonly exerciseDB: TrainerMongoExerciseService,
+    private readonly userDB: TrainerMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async processEODReminder(chatId: number): Promise<void> {
     try {
-      const todayExercise = await this.mongoExerciseService.getTodayExercise(chatId);
+      const todayExercise = await this.exerciseDB.getTodayExercise(chatId);
       if (todayExercise) {
         return;
       }
@@ -44,7 +44,7 @@ export class TrainerService {
     try {
       const { lastSunday, lastSaturday } = getLastWeekDates();
 
-      const exercises = await this.mongoExerciseService.getExercises(chatId);
+      const exercises = await this.exerciseDB.getExercises(chatId);
       const exercisesDates = exercises.map((exercise) => exercise.createdAt);
       const lastWeekExercises = exercisesDates.filter((exerciseDate) => {
         return exerciseDate.getTime() > lastSunday.getTime() && exerciseDate.getTime() < lastSaturday.getTime();
@@ -64,7 +64,7 @@ export class TrainerService {
   }
 
   async notifyWithUserDetails(chatId: number, action: AnalyticEventValue, error?: string): Promise<void> {
-    const userDetails = (await this.mongoUserService.getUserDetails({ chatId })) as unknown as UserDetails;
+    const userDetails = (await this.userDB.getUserDetails({ chatId })) as unknown as UserDetails;
     this.notifier.notify(BOT_CONFIG, { action, error }, userDetails);
   }
 }

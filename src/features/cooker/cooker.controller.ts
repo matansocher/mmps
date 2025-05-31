@@ -10,7 +10,7 @@ export class CookerController implements OnModuleInit {
   private readonly logger = new Logger(CookerController.name);
 
   constructor(
-    private readonly mongoRecipeService: CookerMongoRecipeService,
+    private readonly recipeDB: CookerMongoRecipeService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -33,7 +33,7 @@ export class CookerController implements OnModuleInit {
 
   async recipesHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const recipes = await this.mongoRecipeService.getRecipes(chatId);
+    const recipes = await this.recipeDB.getRecipes(chatId);
     const inlineKeyboardButtons = recipes.map((recipe) => {
       const { _id, emoji, title } = recipe;
       return { text: `${title} ${emoji}`, callback_data: `${BOT_ACTIONS.SHOW} - ${_id}` };
@@ -56,7 +56,7 @@ export class CookerController implements OnModuleInit {
   }
 
   async showHandler(chatId: number, recipeId: string): Promise<void> {
-    const recipe = await this.mongoRecipeService.getRecipe(chatId, recipeId);
+    const recipe = await this.recipeDB.getRecipe(chatId, recipeId);
     if (!recipe) {
       await this.bot.sendMessage(chatId, 'מתכון לא נמצא');
       return;

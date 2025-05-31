@@ -18,8 +18,8 @@ export class WoltController implements OnModuleInit {
 
   constructor(
     private readonly restaurantsService: RestaurantsService,
-    private readonly mongoUserService: WoltMongoUserService,
-    private readonly mongoSubscriptionService: WoltMongoSubscriptionService,
+    private readonly userDB: WoltMongoUserService,
+    private readonly subscriptionDB: WoltMongoSubscriptionService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -40,7 +40,7 @@ export class WoltController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const userExists = await this.userDB.saveUserDetails(userDetails);
 
     const newUserReplyText = [
       `שלום {firstName}!`,
@@ -66,7 +66,7 @@ export class WoltController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
 
     try {
-      const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
+      const subscriptions = await this.subscriptionDB.getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = `אין לך התראות פתוחות`;
         await this.bot.sendMessage(chatId, replyText);
@@ -135,7 +135,7 @@ export class WoltController implements OnModuleInit {
 
     try {
       const restaurantName = restaurant.replace(`${BOT_ACTIONS.REMOVE} - `, '');
-      const activeSubscriptions = await this.mongoSubscriptionService.getActiveSubscriptions(chatId);
+      const activeSubscriptions = await this.subscriptionDB.getActiveSubscriptions(chatId);
 
       if (restaurant.startsWith(`${BOT_ACTIONS.REMOVE} - `)) {
         await this.handleCallbackRemoveSubscription(chatId, messageId, restaurantName, activeSubscriptions);
@@ -176,7 +176,7 @@ export class WoltController implements OnModuleInit {
     }
 
     const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await this.mongoSubscriptionService.addSubscription(chatId, restaurant, restaurantDetails?.photo);
+    await this.subscriptionDB.addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
@@ -186,7 +186,7 @@ export class WoltController implements OnModuleInit {
     let replyText;
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
-      await this.mongoSubscriptionService.archiveSubscription(chatId, restaurant);
+      await this.subscriptionDB.archiveSubscription(chatId, restaurant);
       replyText = [`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n');
     } else {
       replyText = [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n');

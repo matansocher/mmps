@@ -14,7 +14,7 @@ const HOURS_TO_NOTIFY = [12, 23];
 export class CoachBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly coachService: CoachService,
-    private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
+    private readonly subscriptionDB: CoachMongoSubscriptionService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -26,7 +26,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   @Cron(`59 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
-      const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
+      const subscriptions = await this.subscriptionDB.getActiveSubscriptions();
       if (!subscriptions?.length) {
         return;
       }

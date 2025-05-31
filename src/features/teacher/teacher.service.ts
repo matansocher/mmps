@@ -35,15 +35,15 @@ export class TeacherService {
   private readonly logger = new Logger(TeacherService.name);
 
   constructor(
-    private readonly mongoCourseService: TeacherMongoCourseService,
-    private readonly mongoCourseParticipationService: TeacherMongoCourseParticipationService,
+    private readonly courseDB: TeacherMongoCourseService,
+    private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async processCourseFirstLesson(chatId: number): Promise<void> {
-    const activeCourseParticipation = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
+    const activeCourseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
     if (activeCourseParticipation) {
       return;
     }
@@ -67,22 +67,22 @@ export class TeacherService {
   }
 
   async getNewCourse(chatId: number): Promise<{ course: CourseModel; courseParticipation: CourseParticipationModel }> {
-    const courseParticipations = await this.mongoCourseParticipationService.getCourseParticipations(chatId);
+    const courseParticipations = await this.courseParticipationDB.getCourseParticipations(chatId);
     const coursesParticipated = courseParticipations.map((courseParticipation) => courseParticipation.courseId);
 
-    const course = await this.mongoCourseService.getRandomCourse(chatId, coursesParticipated);
+    const course = await this.courseDB.getRandomCourse(chatId, coursesParticipated);
     if (!course) {
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new courses found' });
       return null;
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
-    const courseParticipation = await this.mongoCourseParticipationService.createCourseParticipation(chatId, course._id.toString(), threadId);
+    const courseParticipation = await this.courseParticipationDB.createCourseParticipation(chatId, course._id.toString(), threadId);
     courseParticipation.threadId = threadId;
     return { course, courseParticipation };
   }
 
   async processLesson(chatId: number, isScheduled = false): Promise<void> {
-    const activeCourseParticipation = await this.mongoCourseParticipationService.getActiveCourseParticipation(chatId);
+    const activeCourseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
       !isScheduled && (await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one.`));
       return;
@@ -102,7 +102,7 @@ export class TeacherService {
     }
     const response = await this.openaiAssistantService.getAssistantAnswer(TEACHER_ASSISTANT_ID, threadId, prompt);
     await sendStyledMessage(this.bot, chatId, response, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, true));
-    await this.mongoCourseParticipationService.markCourseParticipationLessonCompleted(courseParticipation._id);
+    await this.courseParticipationDB.markCourseParticipationLessonCompleted(courseParticipation._id);
   }
 
   async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipationModel): Promise<void> {
