@@ -10,7 +10,7 @@ import { TeacherController } from './teacher.controller';
 import { TeacherService } from './teacher.service';
 
 @Module({
-  imports: [NotifierModule, OpenaiModule, TeacherMongoModule, NotifierModule, ScheduleModule.forRoot()],
+  imports: [NotifierModule, OpenaiModule, TeacherMongoModule, ScheduleModule.forRoot()],
   providers: [TeacherController, TeacherSchedulerService, TeacherService, TelegramBotsFactoryProvider(BOT_CONFIG)],
 })
 export class TeacherModule {}

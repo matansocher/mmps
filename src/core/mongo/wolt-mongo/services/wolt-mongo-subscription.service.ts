@@ -48,6 +48,6 @@ export class WoltMongoSubscriptionService {
   async getExpiredSubscriptions(subscriptionExpirationHours: number) {
     const validLimitTimestamp = new Date(Date.now() - subscriptionExpirationHours * 60 * 60 * 1000); // Ensure it is a Date object
     const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
-    return this.subscriptionCollection.find(filter as any).toArray();
+    return this.subscriptionCollection.find(filter).toArray();
   }
 }
