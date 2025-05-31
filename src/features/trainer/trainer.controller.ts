@@ -7,15 +7,14 @@ import { NotifierService } from '@core/notifier';
 import { getSpecialNumber } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
-import { BOT_ACTIONS } from './trainer.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
 
 const loaderMessage = '🏋️‍♂️ נראה לי עשית פה משהו גדול, שניה אחת';
 
 @Injectable()
-export class TrainerBotService implements OnModuleInit {
-  private readonly logger = new Logger(TrainerBotService.name);
+export class TrainerController implements OnModuleInit {
+  private readonly logger = new Logger(TrainerController.name);
   private readonly botToken: string;
 
   constructor(

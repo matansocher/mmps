@@ -3,6 +3,7 @@ import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
 import { AnnouncerModule } from '@features/announcer';
 import { CoachModule } from '@features/coach';
+import { CookerModule } from '@features/cooker';
 import { DefineModule } from '@features/define';
 import { EducatorModule } from '@features/educator';
 import { PlaygroundsModule } from '@features/playgrounds';
@@ -18,6 +19,7 @@ import { AppService } from './app.service';
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     AnnouncerModule,
     CoachModule,
+    CookerModule,
     DefineModule,
     EducatorModule,
     TeacherModule,
