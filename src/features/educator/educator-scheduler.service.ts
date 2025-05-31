@@ -12,7 +12,7 @@ export class EducatorSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly educatorService: EducatorService,
-    private readonly mongoUserPreferencesService: EducatorMongoUserPreferencesService,
+    private readonly userPreferencesDB: EducatorMongoUserPreferencesService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -26,7 +26,7 @@ export class EducatorSchedulerService implements OnModuleInit {
   })
   async handleTopic(): Promise<void> {
     try {
-      const users = await this.mongoUserPreferencesService.getActiveUsers();
+      const users = await this.userPreferencesDB.getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.educatorService.processTopic(chatId)));
     } catch (err) {

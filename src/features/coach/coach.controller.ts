@@ -32,8 +32,8 @@ export class CoachController implements OnModuleInit {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly mongoUserService: CoachMongoUserService,
-    private readonly mongoSubscriptionService: CoachMongoSubscriptionService,
+    private readonly userDB: CoachMongoUserService,
+    private readonly subscriptionDB: CoachMongoSubscriptionService,
     private readonly coachService: CoachService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -83,7 +83,7 @@ export class CoachController implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+    const subscription = await this.subscriptionDB.getSubscription(chatId);
     const inlineKeyboardButtons = [
       { text: '⚽️ הגדרת ליגות למעקב ⚽️', callback_data: `${BOT_ACTIONS.CUSTOM_LEAGUES}` },
       !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
@@ -101,7 +101,7 @@ export class CoachController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const date = getDateFromUserInput(text);
-      const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+      const subscription = await this.subscriptionDB.getSubscription(chatId);
       const resultText = await this.coachService.getMatchesSummaryMessage(date, subscription.customLeagues);
       if (!resultText) {
         await this.bot.sendMessage(chatId, `וואלה לא מצאתי אף משחק בתאריך הזה 😔`, { ...getKeyboardOptions() });
@@ -165,10 +165,10 @@ export class CoachController implements OnModuleInit {
   }
 
   private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const userExists = await this.userDB.saveUserDetails(userDetails);
 
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, { isActive: true }) : await this.mongoSubscriptionService.addSubscription(chatId);
+    const subscription = await this.subscriptionDB.getSubscription(chatId);
+    subscription ? await this.subscriptionDB.updateSubscription(chatId, { isActive: true }) : await this.subscriptionDB.addSubscription(chatId);
 
     const newUserReplyText = [
       `שלום 👋`,
@@ -182,7 +182,7 @@ export class CoachController implements OnModuleInit {
   }
 
   private async stopHandler(chatId: number): Promise<void> {
-    await this.mongoSubscriptionService.updateSubscription(chatId, { isActive: false });
+    await this.subscriptionDB.updateSubscription(chatId, { isActive: false });
     await this.bot.sendMessage(chatId, `סבבה, אני מפסיק לשלוח לך עדכונים יומיים 🛑`);
   }
 
@@ -205,7 +205,7 @@ export class CoachController implements OnModuleInit {
   }
 
   async customLeaguesHandler(chatId: number): Promise<void> {
-    const [subscription, competitions] = await Promise.all([this.mongoSubscriptionService.getSubscription(chatId), this.coachService.getCompetitions()]);
+    const [subscription, competitions] = await Promise.all([this.subscriptionDB.getSubscription(chatId), this.coachService.getCompetitions()]);
     const userCustomLeagues = subscription?.customLeagues || [];
 
     const inlineKeyboardButtons = competitions.map((competition) => {
@@ -220,7 +220,7 @@ export class CoachController implements OnModuleInit {
   }
 
   async customLeaguesSelectHandler(chatId: number, competitionId: number, subAction: number): Promise<void> {
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+    const subscription = await this.subscriptionDB.getSubscription(chatId);
     const userCustomLeagues = subscription?.customLeagues || [];
 
     if (!userCustomLeagues.length) {
@@ -239,7 +239,7 @@ export class CoachController implements OnModuleInit {
         userCustomLeagues.splice(index, 1);
       }
     }
-    await this.mongoSubscriptionService.updateSubscription(chatId, { customLeagues: [...new Set(userCustomLeagues)] });
+    await this.subscriptionDB.updateSubscription(chatId, { customLeagues: [...new Set(userCustomLeagues)] });
 
     await this.bot.sendMessage(chatId, 'מעולה, עדכנתי את הליגות שלך 💪\nאפשר להוסיף או להסיר ליגות נוספות');
   }

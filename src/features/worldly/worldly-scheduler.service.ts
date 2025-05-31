@@ -13,8 +13,8 @@ const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20];
 export class WorldlyBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly worldlyService: WorldlyService,
-    private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
-    private readonly mongoUserService: WorldlyMongoUserService,
+    private readonly subscriptionDB: WorldlyMongoSubscriptionService,
+    private readonly userDB: WorldlyMongoUserService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -25,7 +25,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
   @Cron(`0 ${INTERVAL_HOURS_BY_PRIORITY.join(',')} * * *`, { name: 'worldly-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
-      const subscriptions = await this.mongoSubscriptionService.getActiveSubscriptions();
+      const subscriptions = await this.subscriptionDB.getActiveSubscriptions();
       if (!subscriptions?.length) {
         return;
       }
@@ -33,7 +33,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
       const chatIds = subscriptions.filter(({ chatId }) => getHourInTimezone(DEFAULT_TIMEZONE) === INTERVAL_HOURS_BY_PRIORITY[0] || chatId === MY_USER_ID).map(({ chatId }) => chatId);
       await Promise.all(
         chatIds.map(async (chatId) => {
-          const userDetails = await this.mongoUserService.getUserDetails({ chatId });
+          const userDetails = await this.userDB.getUserDetails({ chatId });
           return this.worldlyService.randomGameHandler(chatId, userDetails);
         }),
       );

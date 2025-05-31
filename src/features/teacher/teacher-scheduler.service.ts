@@ -12,7 +12,7 @@ export class TeacherSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly teacherService: TeacherService,
-    private readonly mongoUserPreferencesService: TeacherMongoUserPreferencesService,
+    private readonly userPreferencesDB: TeacherMongoUserPreferencesService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -24,7 +24,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleCourseFirstLesson(): Promise<void> {
     try {
-      const users = await this.mongoUserPreferencesService.getActiveUsers();
+      const users = await this.userPreferencesDB.getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseFirstLesson(chatId)));
     } catch (err) {
@@ -39,7 +39,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   })
   async handleCourseNextLesson(): Promise<void> {
     try {
-      const users = await this.mongoUserPreferencesService.getActiveUsers();
+      const users = await this.userPreferencesDB.getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseNextLesson(chatId)));
     } catch (err) {

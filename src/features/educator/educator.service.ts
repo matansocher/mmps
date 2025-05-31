@@ -23,15 +23,15 @@ const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipationModel)
 @Injectable()
 export class EducatorService {
   constructor(
-    private readonly mongoTopicService: EducatorMongoTopicService,
-    private readonly mongoTopicParticipationService: EducatorMongoTopicParticipationService,
+    private readonly topicDB: EducatorMongoTopicService,
+    private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async processTopic(chatId: number): Promise<void> {
-    const activeTopic = await this.mongoTopicParticipationService.getActiveTopicParticipation(chatId);
+    const activeTopic = await this.topicParticipationDB.getActiveTopicParticipation(chatId);
     if (activeTopic) {
       return;
     }
@@ -40,10 +40,10 @@ export class EducatorService {
   }
 
   async getNewTopic(chatId: number): Promise<TopicModel> {
-    const topicParticipations = await this.mongoTopicParticipationService.getTopicParticipations(chatId);
+    const topicParticipations = await this.topicParticipationDB.getTopicParticipations(chatId);
     const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
 
-    return this.mongoTopicService.getRandomTopic(chatId, topicsParticipated);
+    return this.topicDB.getRandomTopic(chatId, topicsParticipated);
   }
 
   async startNewTopic(chatId: number): Promise<void> {
@@ -54,7 +54,7 @@ export class EducatorService {
     }
 
     const { id: threadId } = await this.openaiAssistantService.createThread();
-    const topicParticipation = await this.mongoTopicParticipationService.createTopicParticipation(chatId, topic._id.toString(), threadId);
+    const topicParticipation = await this.topicParticipationDB.createTopicParticipation(chatId, topic._id.toString(), threadId);
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
     const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));

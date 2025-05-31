@@ -24,6 +24,7 @@ async function main() {
         const { title, ingredients, instructions, tags, link, emoji } = recipe;
         const newRecipe = {
           _id: new ObjectId(),
+          chatId: 862305226,
           title,
           ingredients,
           instructions,
