@@ -18,9 +18,9 @@ export class WorldlyController implements OnModuleInit {
 
   constructor(
     private readonly worldlyService: WorldlyService,
-    private readonly mongoUserService: WorldlyMongoUserService,
-    private readonly mongoSubscriptionService: WorldlyMongoSubscriptionService,
-    private readonly mongoGameLogService: WorldlyMongoGameLogService,
+    private readonly userDB: WorldlyMongoUserService,
+    private readonly subscriptionDB: WorldlyMongoSubscriptionService,
+    private readonly gameLogDB: WorldlyMongoGameLogService,
     private readonly notifier: NotifierService,
     private readonly configService: ConfigService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -51,7 +51,7 @@ export class WorldlyController implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
+    const subscription = await this.subscriptionDB.getSubscription(chatId);
     const inlineKeyboardButtons = [
       !subscription?.isActive
         ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` }
@@ -134,22 +134,22 @@ export class WorldlyController implements OnModuleInit {
           break;
         case BOT_ACTIONS.MAP:
           await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.MAP, correctName, selectedName);
+          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.MAP, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.US_MAP:
           await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.US_MAP, correctName, selectedName);
+          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.US_MAP, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.FLAG:
           await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.FLAG, correctName, selectedName);
+          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.FLAG, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.CAPITAL:
           await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.mongoGameLogService.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.CAPITAL, correctName, selectedName);
+          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.CAPITAL, correctName, selectedName);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
           break;
         default:
@@ -157,7 +157,7 @@ export class WorldlyController implements OnModuleInit {
           throw new Error('Invalid action');
       }
 
-      const userGameLogs = await this.mongoGameLogService.getUserGameLogs(chatId);
+      const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
       const specialMessage = generateSpecialMessage(userGameLogs);
       if (specialMessage) {
         await this.bot.sendMessage(chatId, specialMessage);
@@ -169,10 +169,10 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    const userExists = await this.userDB.saveUserDetails(userDetails);
 
-    const subscription = await this.mongoSubscriptionService.getSubscription(chatId);
-    subscription ? await this.mongoSubscriptionService.updateSubscription(chatId, { isActive: true }) : await this.mongoSubscriptionService.addSubscription(chatId);
+    const subscription = await this.subscriptionDB.getSubscription(chatId);
+    subscription ? await this.subscriptionDB.updateSubscription(chatId, { isActive: true }) : await this.subscriptionDB.addSubscription(chatId);
 
     const newUserReplyText = [
       `היי 👋`,
@@ -186,7 +186,7 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async stopHandler(chatId: number): Promise<void> {
-    await this.mongoSubscriptionService.updateSubscription(chatId, { isActive: false });
+    await this.subscriptionDB.updateSubscription(chatId, { isActive: false });
     await this.bot.sendMessage(chatId, `אין בעיה, אני אפסיק לשלוח משחקים בכל יום 🛑`);
   }
 

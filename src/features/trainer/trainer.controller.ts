@@ -7,22 +7,21 @@ import { NotifierService } from '@core/notifier';
 import { getSpecialNumber } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
-import { BOT_ACTIONS } from './trainer.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
 
 const loaderMessage = '🏋️‍♂️ נראה לי עשית פה משהו גדול, שניה אחת';
 
 @Injectable()
-export class TrainerBotService implements OnModuleInit {
-  private readonly logger = new Logger(TrainerBotService.name);
+export class TrainerController implements OnModuleInit {
+  private readonly logger = new Logger(TrainerController.name);
   private readonly botToken: string;
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly mongoExerciseService: TrainerMongoExerciseService,
-    private readonly mongoUserPreferencesService: TrainerMongoUserPreferencesService,
-    private readonly mongoUserService: TrainerMongoUserService,
+    private readonly exerciseDB: TrainerMongoExerciseService,
+    private readonly userPreferencesDB: TrainerMongoUserPreferencesService,
+    private readonly userDB: TrainerMongoUserService,
     private readonly openaiService: OpenaiService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -50,7 +49,7 @@ export class TrainerBotService implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const userPreferences = await this.mongoUserPreferencesService.getUserPreference(chatId);
+    const userPreferences = await this.userPreferencesDB.getUserPreference(chatId);
     const inlineKeyboardButtons = [
       userPreferences?.isStopped ? { text: '🟢 Start daily reminders 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 Stop daily reminders 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
@@ -61,9 +60,9 @@ export class TrainerBotService implements OnModuleInit {
   private async exerciseHandler(message: Message): Promise<void> {
     const { chatId, messageId, userDetails } = getMessageData(message);
 
-    await this.mongoExerciseService.addExercise(chatId);
+    await this.exerciseDB.addExercise(chatId);
 
-    const exercises = await this.mongoExerciseService.getExercises(chatId);
+    const exercises = await this.exerciseDB.getExercises(chatId);
     const exercisesDates = exercises.map((exercise) => exercise.createdAt);
     const longestStreak = getLongestStreak(exercisesDates);
 
@@ -99,7 +98,7 @@ export class TrainerBotService implements OnModuleInit {
 
   private async achievementsHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
-    const exercises = await this.mongoExerciseService.getExercises(chatId);
+    const exercises = await this.exerciseDB.getExercises(chatId);
     if (!exercises?.length) {
       await this.bot.sendMessage(chatId, 'I see you still did not exercise.\nGet going! 🤾');
       return;
@@ -152,15 +151,15 @@ export class TrainerBotService implements OnModuleInit {
   }
 
   private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
-    await this.mongoUserPreferencesService.createUserPreference(chatId);
-    const userExists = await this.mongoUserService.saveUserDetails(userDetails);
+    await this.userPreferencesDB.createUserPreference(chatId);
+    const userExists = await this.userDB.saveUserDetails(userDetails);
     const newUserReplyText = [`Hey There 👋`, `I am here to help you stay motivated with your exercises 🏋️‍♂️`].join('\n\n');
     const existingUserReplyText = `All set 💪`;
     await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
   }
 
   private async stopHandler(chatId: number): Promise<void> {
-    await this.mongoUserPreferencesService.updateUserPreference(chatId, { isStopped: true });
+    await this.userPreferencesDB.updateUserPreference(chatId, { isStopped: true });
     const replyText = ['OK, I will stop reminding you for now 🛑', `Whenever you are ready, just send me the /start command and we will continue training`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
   }
