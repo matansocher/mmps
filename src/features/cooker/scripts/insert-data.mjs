@@ -36,7 +36,7 @@ async function main() {
         const result = await recipeCollection.insertOne(newRecipe);
         console.log(`Inserted recipe with ID: ${result.insertedId} and title: "${recipe.title}"`);
       } catch (error) {
-        console.error(`Failed to insert title "${title}":`, error);
+        console.error(`Failed to insert title "${recipe.title}":`, error);
       }
     }
 
