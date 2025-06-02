@@ -85,7 +85,7 @@ export class TeacherController implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.teacherService.startNewCourse(chatId);
+      await this.teacherService.startNewCourse(chatId, true);
     });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START_COURSE }, userDetails);
