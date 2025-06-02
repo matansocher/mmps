@@ -32,6 +32,7 @@ export enum BOT_ACTIONS {
   START = 'start',
   STOP = 'stop',
   CONTACT = 'contact',
+  RANDOM = 'rand',
   MAP = 'm',
   US_MAP = 'us_m',
   FLAG = 'f',

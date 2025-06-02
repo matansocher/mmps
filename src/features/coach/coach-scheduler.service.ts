@@ -2,9 +2,10 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { CoachMongoSubscriptionService } from '@core/mongo/coach-mongo';
+import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
+import { BLOCKED_ERROR } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
@@ -15,6 +16,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly coachService: CoachService,
     private readonly subscriptionDB: CoachMongoSubscriptionService,
+    private readonly userDB: CoachMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -41,7 +43,13 @@ export class CoachBotSchedulerService implements OnModuleInit {
           const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
           await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
         } catch (err) {
-          this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, chatId, error: err });
+          const userDetails = await this.userDB.getUserDetails({ chatId });
+          if (err.message.includes(BLOCKED_ERROR)) {
+            await this.subscriptionDB.updateSubscription(chatId, { isActive: false });
+            this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+          } else {
+            this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+          }
         }
       }
     } catch (err) {
