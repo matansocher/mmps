@@ -64,7 +64,8 @@ export class WorldlyController implements OnModuleInit {
   async randomHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     try {
-      return this.worldlyService.randomGameHandler(chatId, userDetails);
+      await this.worldlyService.randomGameHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.RANDOM }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: 'RANDOM', error: `${err}` }, userDetails);
       throw err;
@@ -74,7 +75,8 @@ export class WorldlyController implements OnModuleInit {
   async mapHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     try {
-      return this.worldlyService.mapHandler(chatId, userDetails);
+      await this.worldlyService.mapHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.MAP, error: `${err}` }, userDetails);
       throw err;
@@ -84,7 +86,8 @@ export class WorldlyController implements OnModuleInit {
   async USMapHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     try {
-      return this.worldlyService.USMapHandler(chatId, userDetails);
+      await this.worldlyService.USMapHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.US_MAP, error: `${err}` }, userDetails);
       throw err;
@@ -94,7 +97,8 @@ export class WorldlyController implements OnModuleInit {
   async flagHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     try {
-      return this.worldlyService.flagHandler(chatId, userDetails);
+      await this.worldlyService.flagHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.FLAG, error: `${err}` }, userDetails);
       throw err;
@@ -104,7 +108,8 @@ export class WorldlyController implements OnModuleInit {
   async capitalHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     try {
-      return this.worldlyService.capitalHandler(chatId, userDetails);
+      await this.worldlyService.capitalHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.CAPITAL, error: `${err}` }, userDetails);
       throw err;

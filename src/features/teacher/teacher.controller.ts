@@ -202,6 +202,8 @@ export class TeacherController implements OnModuleInit {
       const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
       await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
 
+      await reactToMessage(this.botToken, chatId, messageId, '🤯');
+
       const result = await this.openaiService.getAudioFromText(text);
 
       const audioFilePath = `${LOCAL_FILES_PATH}/teacher-text-to-speech-${new Date().getTime()}.mp3`;
