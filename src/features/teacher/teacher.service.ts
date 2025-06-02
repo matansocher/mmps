@@ -48,7 +48,7 @@ export class TeacherService {
       return;
     }
 
-    await this.startNewCourse(chatId);
+    await this.startNewCourse(chatId, false);
   }
 
   async processCourseNextLesson(chatId: number): Promise<void> {
@@ -60,9 +60,13 @@ export class TeacherService {
     }
   }
 
-  async startNewCourse(chatId: number): Promise<void> {
+  async startNewCourse(chatId: number, onDemand: boolean): Promise<void> {
     const { course, courseParticipation } = await this.getNewCourse(chatId);
     if (!course || !courseParticipation) {
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new courses found' });
+      if (onDemand) {
+        await this.bot.sendMessage(chatId, `I see no courses available for You. Please try again later or contact us.`);
+      }
       return;
     }
     await this.bot.sendMessage(chatId, `Course started: ${course.topic}`);
@@ -75,7 +79,6 @@ export class TeacherService {
 
     const course = await this.courseDB.getRandomCourse(chatId, coursesParticipated);
     if (!course) {
-      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new courses found' });
       return { course: null, courseParticipation: null };
     }
     const { id: threadId } = await this.openaiAssistantService.createThread();
