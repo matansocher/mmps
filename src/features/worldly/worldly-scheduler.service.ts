@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
+import { WorldlyMongoSubscriptionService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { getHourInTimezone } from '@core/utils';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
@@ -14,7 +14,6 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly worldlyService: WorldlyService,
     private readonly subscriptionDB: WorldlyMongoSubscriptionService,
-    private readonly userDB: WorldlyMongoUserService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -31,12 +30,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
       }
 
       const chatIds = subscriptions.filter(({ chatId }) => getHourInTimezone(DEFAULT_TIMEZONE) === INTERVAL_HOURS_BY_PRIORITY[0] || chatId === MY_USER_ID).map(({ chatId }) => chatId);
-      await Promise.all(
-        chatIds.map(async (chatId) => {
-          const userDetails = await this.userDB.getUserDetails({ chatId });
-          return this.worldlyService.randomGameHandler(chatId, userDetails);
-        }),
-      );
+      await Promise.all(chatIds.map(async (chatId) => this.worldlyService.randomGameHandler(chatId)));
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }

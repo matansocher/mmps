@@ -29,3 +29,5 @@ export interface TelegramEventHandler {
   readonly regex?: string;
   readonly handler: (payload: Message | CallbackQuery) => Promise<void> | void;
 }
+
+export const BLOCKED_ERROR = 'bot was blocked by the user';

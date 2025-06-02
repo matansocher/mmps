@@ -85,7 +85,7 @@ export class TeacherController implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.teacherService.startNewCourse(chatId);
+      await this.teacherService.startNewCourse(chatId, true);
     });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START_COURSE }, userDetails);
@@ -201,6 +201,8 @@ export class TeacherController implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => {
       const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
       await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+
+      await reactToMessage(this.botToken, chatId, messageId, '🤯');
 
       const result = await this.openaiService.getAudioFromText(text);
 
