@@ -1,16 +1,16 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Controller, Inject, Logger, OnModuleInit } from '@nestjs/common';
-import { CookerMongoRecipeService } from '@core/mongo/cooker-mongo';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG } from './cooker.config';
+import { CookerService } from './cooker.service';
 import { generateRecipeString } from './utils';
 
-@Controller('cooker')
+@Injectable()
 export class CookerController implements OnModuleInit {
   private readonly logger = new Logger(CookerController.name);
 
   constructor(
-    private readonly recipeDB: CookerMongoRecipeService,
+    private readonly cookerService: CookerService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -33,7 +33,7 @@ export class CookerController implements OnModuleInit {
 
   async recipesHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const recipes = await this.recipeDB.getRecipes(chatId);
+    const recipes = await this.cookerService.getRecipes(chatId);
     const inlineKeyboardButtons = recipes.map((recipe) => {
       const { _id, emoji, title } = recipe;
       return { text: `${title} ${emoji}`, callback_data: `${BOT_ACTIONS.SHOW} - ${_id}` };
@@ -56,7 +56,7 @@ export class CookerController implements OnModuleInit {
   }
 
   async showHandler(chatId: number, recipeId: string): Promise<void> {
-    const recipe = await this.recipeDB.getRecipe(chatId, recipeId);
+    const recipe = await this.cookerService.getRecipe(chatId, recipeId);
     if (!recipe) {
       await this.bot.sendMessage(chatId, 'מתכון לא נמצא');
       return;

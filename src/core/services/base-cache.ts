@@ -3,7 +3,7 @@ export interface CacheEntry<T> {
   readonly data: T;
 }
 
-export class BaseCacheService<T> {
+export class BaseCache<T> {
   private cache: Record<string, CacheEntry<T>> = {};
   private readonly validForMs: number;
 
