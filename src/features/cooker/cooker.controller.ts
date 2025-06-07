@@ -22,7 +22,7 @@ export class CookerController implements OnModuleInit {
       { event: COMMAND, regex: RECIPES.command, handler: (message) => this.recipesHandler.call(this, message) },
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
-    registerHandlers({ bot: this.bot, logger: this.logger, handlers, isBlocked: true });
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
 
   async startHandler(message: Message): Promise<void> {
