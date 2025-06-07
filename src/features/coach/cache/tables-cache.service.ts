@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { BaseCache } from '@core/services';
 import { CompetitionTableDetails } from '@services/scores-365';
-import { BaseCacheService } from './base-cache.service';
 
 const validForMinutes = 30;
 
 @Injectable()
-export class CompetitionTableCacheService extends BaseCacheService<CompetitionTableDetails> {
+export class CompetitionTableCacheService extends BaseCache<CompetitionTableDetails> {
   constructor() {
     super(validForMinutes);
   }
