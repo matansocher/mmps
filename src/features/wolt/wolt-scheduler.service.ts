@@ -58,11 +58,21 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async alertSubscription(restaurant: WoltRestaurant, subscription: SubscriptionModel): Promise<void> {
     try {
-      const inlineKeyboardMarkup = getInlineKeyboardMarkup([{ text: `🍽️ ${restaurant.name} 🍽️`, url: restaurant.link }]);
-      const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', restaurant.name, 'אפשר להזמין עכשיו! 📱'].join('\n');
-      await this.bot.sendPhoto(subscription.chatId, subscription.restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText } as any);
-      await this.subscriptionDB.archiveSubscription(subscription.chatId, subscription.restaurant);
-      await this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
+      const { name, link } = restaurant;
+      const { chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
+      const inlineKeyboardMarkup = getInlineKeyboardMarkup([{ text: `🍽️ ${name} 🍽️`, url: link }]);
+      const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, 'אפשר להזמין עכשיו! 📱'].join('\n');
+
+      try {
+        await this.bot.sendPhoto(chatId, restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText } as any);
+      } catch (err) {
+        this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
+        await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
+      }
+
+      await this.subscriptionDB.archiveSubscription(chatId, restaurantName);
+      await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
       this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
@@ -84,14 +94,15 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async cleanSubscription(subscription: SubscriptionModel): Promise<void> {
     try {
-      await this.subscriptionDB.archiveSubscription(subscription.chatId, subscription.restaurant);
+      const { chatId, restaurant } = subscription;
+      await this.subscriptionDB.archiveSubscription(chatId, restaurant);
       const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
       if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
         // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER
-        const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, subscription.restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n');
-        await this.bot.sendMessage(subscription.chatId, messageText);
+        const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n');
+        await this.bot.sendMessage(chatId, messageText);
       }
-      this.notifyWithUserDetails(subscription.chatId, subscription.restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
+      this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
       this.logger.error(`${this.cleanSubscription.name} - error - ${err}`);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
