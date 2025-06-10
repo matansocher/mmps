@@ -24,6 +24,7 @@ export const COMPETITION_IDS_MAP = {
   EURO: 6316,
   EURO_QUAL: 6071,
   NATIONS_LEAGUE: 7016,
+  CLUB_WORLD_CUP: 5096,
 };
 
 export const COMPETITIONS = [
@@ -45,4 +46,5 @@ export const COMPETITIONS = [
   { id: COMPETITION_IDS_MAP.EURO, icon: '🇪🇺' },
   { id: COMPETITION_IDS_MAP.EURO_QUAL, icon: '🇪🇺' },
   { id: COMPETITION_IDS_MAP.NATIONS_LEAGUE, icon: '🇪🇺' },
+  { id: COMPETITION_IDS_MAP.CLUB_WORLD_CUP, icon: '🌍' },
 ];
