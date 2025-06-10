@@ -5,7 +5,7 @@ import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
-import { Country } from './types';
+import { Country, State } from './types';
 import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCountry, getRandomState } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 
@@ -52,7 +52,8 @@ export class WorldlyService {
   }
 
   async USMapHandler(chatId: number): Promise<void> {
-    const randomState = getRandomState();
+    const gameFilter = (c: State) => !!c.geometry;
+    const randomState = getRandomState(gameFilter);
     const imagePath = getCountryMap(randomState.name, true);
 
     const otherOptions = getMapStateDistractors(randomState);
