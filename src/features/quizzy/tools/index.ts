@@ -1,0 +1,1 @@
+export { triviaTool } from './trivia';

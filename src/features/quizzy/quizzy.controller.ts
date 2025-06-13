@@ -1,0 +1,145 @@
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { MY_USER_NAME } from '@core/config';
+import { QuizzyMongoGameLogService, QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
+import { NotifierService } from '@core/notifier';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './quizzy.config';
+import { QuizzyService } from './quizzy.service';
+
+const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
+
+@Injectable()
+export class QuizzyController implements OnModuleInit {
+  private readonly logger = new Logger(QuizzyController.name);
+  private readonly botToken: string;
+
+  constructor(
+    private readonly quizzyService: QuizzyService,
+    private readonly userDB: QuizzyMongoUserService,
+    private readonly subscriptionDB: QuizzyMongoSubscriptionService,
+    private readonly gameLogDB: QuizzyMongoGameLogService,
+    private readonly notifier: NotifierService,
+    private readonly configService: ConfigService,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
+  ) {
+    this.botToken = this.configService.get(BOT_CONFIG.token);
+  }
+
+  onModuleInit(): void {
+    const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
+    const { START, GAME, ACTIONS } = BOT_CONFIG.commands;
+    const handlers: TelegramEventHandler[] = [
+      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: GAME.command, handler: (message) => this.gameHandler.call(this, message) },
+      { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
+      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
+    ];
+    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
+  }
+
+  async startHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    await this.userStart(chatId, userDetails);
+  }
+
+  private async actionsHandler(message: Message): Promise<void> {
+    const { chatId } = getMessageData(message);
+    const subscription = await this.subscriptionDB.getSubscription(chatId);
+    const inlineKeyboardButtons = [
+      !subscription?.isActive
+        ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` }
+        : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+    ];
+    await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+  }
+
+  async gameHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    try {
+      await this.quizzyService.gameHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.GAME }, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.GAME, error: `${err}` }, userDetails);
+      throw err;
+    }
+  }
+
+  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
+    const { chatId, userDetails, messageId, data: response, text } = getCallbackQueryData(callbackQuery);
+
+    const [action, selectedAnswer, correctAnswer] = response.split(' - ');
+    try {
+      switch (action) {
+        case BOT_ACTIONS.START:
+          await this.userStart(chatId, userDetails);
+          await this.bot.deleteMessage(chatId, messageId).catch();
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+          break;
+        case BOT_ACTIONS.STOP:
+          await this.stopHandler(chatId);
+          await this.bot.deleteMessage(chatId, messageId).catch();
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+          break;
+        case BOT_ACTIONS.CONTACT:
+          await this.contactHandler(chatId);
+          await this.bot.deleteMessage(chatId, messageId).catch();
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+          break;
+        case BOT_ACTIONS.GAME:
+          await this.gameAnswerHandler(chatId, messageId, selectedAnswer, correctAnswer);
+          await this.gameLogDB.saveGameLog(chatId, text, correctAnswer, selectedAnswer);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, correct: correctAnswer, selected: selectedAnswer }, userDetails);
+          break;
+        default:
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+          throw new Error('Invalid action');
+      }
+
+      // const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
+      // const specialMessage = generateSpecialMessage(userGameLogs);
+      // if (specialMessage) {
+      //   await this.bot.sendMessage(chatId, specialMessage);
+      // }
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `${err}` }, userDetails);
+      throw err;
+    }
+  }
+
+  private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
+    const userExists = await this.userDB.saveUserDetails(userDetails);
+
+    const subscription = await this.subscriptionDB.getSubscription(chatId);
+    subscription ? await this.subscriptionDB.updateSubscription(chatId, { isActive: true }) : await this.subscriptionDB.addSubscription(chatId);
+
+    const newUserReplyText = [
+      `היי 👋`,
+      'אני בוט שבא לשאול שאלות טריוויה 😁',
+      'כל יום אני אשלח לכם שאלה 🌎',
+      'אפשר גם לשחק מתי שרוצים בפקודות שלי, פה למטה 👇',
+      `אם אתם רוצים שאני אפסיק לשלוח שאלות בכל יום, אפשר פשוט לבקש ממני בפקודה ׳פעולות׳, פה למטה 👇`,
+    ].join('\n\n');
+    const existingUserReplyText = `אין בעיה, אני אשלח שאלות בכל יום 🟢`;
+    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+  }
+
+  private async stopHandler(chatId: number): Promise<void> {
+    await this.subscriptionDB.updateSubscription(chatId, { isActive: false });
+    await this.bot.sendMessage(chatId, `אין בעיה, אני אפסיק לשלוח שאלות בכל יום 🛑`);
+  }
+
+  private async contactHandler(chatId: number): Promise<void> {
+    await this.bot.sendMessage(chatId, ['אשמח לעזור', 'אפשר לדבר עם מי שיצר אותי, הוא בטח ידע לעזור', MY_USER_NAME].join('\n'));
+  }
+
+  private async gameAnswerHandler(chatId: number, messageId: number, selectedAnswer: string, correctAnswer: string): Promise<void> {
+    const isCorrect = selectedAnswer === correctAnswer;
+    const replyText = `${!isCorrect ? `אופס, טעות. התשובה הנכונה היא:` : `נכון, יפה מאוד!`} ${correctAnswer}`;
+    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
+    await reactToMessage(this.botToken, chatId, messageId, selectedAnswer !== correctAnswer ? '👎' : '👍');
+    // explain the user why he is wrong or right
+  }
+}
