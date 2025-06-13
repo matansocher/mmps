@@ -2,8 +2,14 @@ import { getDateString, isDateStringFormat } from '@core/utils';
 import { BOT_CONFIG } from '@features/coach/coach.config';
 
 export function getDateFromUserInput(text: string): string {
-  if (!text || (!isDateStringFormat(text) && !BOT_CONFIG.keyboardOptions.includes(text))) {
+  if (!text) {
     return getDateString();
+  }
+  if (!isDateStringFormat(text) && !BOT_CONFIG.keyboardOptions.includes(text)) {
+    return getDateString();
+  }
+  if (isDateStringFormat(text)) {
+    return getDateString(new Date(text));
   }
 
   const date = new Date();

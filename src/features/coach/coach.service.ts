@@ -18,7 +18,7 @@ export class CoachService {
     if (!summaryDetails?.length) {
       const competitions = await this.getCompetitions();
       summaryDetails = await getMatchesSummaryDetails(competitions, date);
-      this.summaryCache.saveMatchesSummary(date, summaryDetails);
+      summaryDetails?.length && this.summaryCache.saveMatchesSummary(date, summaryDetails);
     }
     if (!summaryDetails?.length) {
       return null;
