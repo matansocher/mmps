@@ -3,18 +3,19 @@ import { Inject, Injectable } from '@nestjs/common';
 import { QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
-import { triviaTool } from '@features/quizzy/tools';
-import { TriviaQuestionResult, triviaToolInstructions } from '@features/quizzy/tools/trivia';
-import { AnthropicService } from '@services/anthropic';
-import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './quizzy.config';
+import { OpenaiAssistantService } from '@services/openai';
+import { BLOCKED_ERROR, getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
+import { ThreadsCacheService } from './cache';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, QUIZZY_ASSISTANT_ID, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START } from './quizzy.config';
+import { triviaSchema } from './types';
 
 @Injectable()
 export class QuizzyService {
   constructor(
     private readonly subscriptionDB: QuizzyMongoSubscriptionService,
     private readonly userDB: QuizzyMongoUserService,
-    private readonly anthropic: AnthropicService,
+    private readonly threadsCache: ThreadsCacheService,
+    private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -31,10 +32,24 @@ export class QuizzyService {
     }
   }
 
-  async gameHandler(chatId: number): Promise<void> {
-    const { question, correctAnswer, distractorAnswers } = await this.anthropic.executeTool<TriviaQuestionResult>(triviaTool, triviaToolInstructions);
+  async gameHandler(chatId: number) {
+    const { question, correctAnswer, distractorAnswers } = await this.openaiAssistantService.getStructuredOutput(triviaSchema, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START);
     const options = shuffleArray([...distractorAnswers, correctAnswer]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((option) => ({ text: option, callback_data: `${BOT_ACTIONS.GAME} - ${option} - ${correctAnswer}` })));
     await this.bot.sendMessage(chatId, question, { ...(inlineKeyboardMarkup as any) });
+    return { question, correctAnswer, distractorAnswers };
+  }
+
+  async processQuestion(chatId: number, content: string): Promise<void> {
+    const threadData = this.threadsCache.getThreadData(chatId);
+    let threadId = threadData?.threadId;
+    if (!threadId) {
+      const { id } = await this.openaiAssistantService.createThread();
+      threadId = id;
+      this.threadsCache.saveThreadData(chatId, { ...threadData, threadId });
+    }
+
+    const response = await this.openaiAssistantService.getAssistantAnswer(QUIZZY_ASSISTANT_ID, threadId, content);
+    await sendShortenedMessage(this.bot, chatId, response);
   }
 }
