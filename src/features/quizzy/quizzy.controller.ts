@@ -4,11 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { QuizzyMongoGameLogService, QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { NotifierService } from '@core/notifier';
-import { getCallbackQueryData, getMessageData, MessageLoader, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ThreadsCacheService } from './cache';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './quizzy.config';
 import { QuizzyService } from './quizzy.service';
-import { generateInitialExplanationPrompt, getInlineKeyboardMarkup } from './utils';
+import { generateInitialExplanationPrompt } from './utils';
 
 const loaderMessage = 'אני שניה חושב ונותן הסבר 🤔';
 const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
