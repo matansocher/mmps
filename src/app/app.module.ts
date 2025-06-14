@@ -7,6 +7,7 @@ import { CookerModule } from '@features/cooker';
 import { DefineModule } from '@features/define';
 import { EducatorModule } from '@features/educator';
 import { PlaygroundsModule } from '@features/playgrounds';
+import { QuizzyModule } from '@features/quizzy';
 import { TeacherModule } from '@features/teacher';
 import { TrainerModule } from '@features/trainer';
 import { WoltModule } from '@features/wolt';
@@ -22,11 +23,12 @@ import { AppService } from './app.service';
     CookerModule,
     DefineModule,
     EducatorModule,
+    QuizzyModule,
     TeacherModule,
     TrainerModule,
     WoltModule,
     WorldlyModule,
-    ConditionalModule.registerWhen(PlaygroundsModule, () => !isProd),
+    // ConditionalModule.registerWhen(PlaygroundsModule, () => !isProd),
   ],
   controllers: [AppController],
   providers: [AppService],

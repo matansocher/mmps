@@ -22,13 +22,13 @@ export async function sendMessageInStyle(bot: TelegramBot, chatId: number, messa
 
   await bot.sendChatAction(chatId, BOT_BROADCAST_ACTIONS.TYPING);
   const words = message.split(' ');
-  let str = words[0];
-  const messageRes = await bot.sendMessage(chatId, str, form);
+  let replyText = words[0];
+  const messageRes = await bot.sendMessage(chatId, replyText, form);
   const messageId = messageRes.message_id;
 
   for (const word of words.slice(1)) {
     await bot.sendChatAction(chatId, BOT_BROADCAST_ACTIONS.TYPING);
-    str += ` ${word}`;
-    await bot.editMessageText(str, { chat_id: chatId, message_id: messageId });
+    replyText += ` ${word}`;
+    await bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
   }
 }

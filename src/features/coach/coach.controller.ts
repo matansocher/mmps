@@ -5,11 +5,11 @@ import { MY_USER_NAME } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateDescription } from '@core/utils';
-import { getDateFromUserInput } from '@features/coach/utils/get-date-from-user-input';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
+import { getDateFromUserInput } from './utils/get-date-from-user-input';
 
 const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';
 const customErrorMessage = 'וואלה מצטער לא יודע מה קרה, אבל קרתה לי בעיה. אפשר לנסות קצת יותר מאוחר 🙁';
