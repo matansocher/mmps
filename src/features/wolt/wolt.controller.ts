@@ -110,6 +110,7 @@ export class WoltController implements OnModuleInit {
       if (!matchedRestaurants.length) {
         const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
         await this.bot.sendMessage(chatId, replyText);
+        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
         return;
       }
       const inlineKeyboardButtons = matchedRestaurants.map((restaurant) => {

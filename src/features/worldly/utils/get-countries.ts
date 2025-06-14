@@ -30,11 +30,12 @@ export function getCountryByCapital(capital: string): Country {
 
 export function getRandomCountry(filter: (country: Country) => boolean): Country {
   const countries = getCountries();
-  const countriesWithCoordinates = countries.filter(filter);
-  return countriesWithCoordinates[Math.floor(Math.random() * countriesWithCoordinates.length)];
+  const filteredCountries = countries.filter(filter);
+  return filteredCountries[Math.floor(Math.random() * filteredCountries.length)];
 }
 
-export function getRandomState(): State {
+export function getRandomState(filter: (country: State) => boolean): State {
   const countries = getStates();
-  return countries[Math.floor(Math.random() * countries.length)];
+  const filteredStates = countries.filter(filter);
+  return filteredStates[Math.floor(Math.random() * filteredStates.length)];
 }
