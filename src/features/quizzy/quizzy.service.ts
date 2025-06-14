@@ -4,10 +4,11 @@ import { QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mo
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
-import { BLOCKED_ERROR, getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
+import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
 import { ThreadsCacheService } from './cache';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, QUIZZY_ASSISTANT_ID, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START } from './quizzy.config';
 import { triviaSchema } from './types';
+import { getInlineKeyboardMarkup } from './utils';
 
 @Injectable()
 export class QuizzyService {

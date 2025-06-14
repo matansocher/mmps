@@ -25,7 +25,7 @@ export enum BOT_ACTIONS {
   START = 'start',
   STOP = 'stop',
   CONTACT = 'contact',
-  GAME = 'game',
+  GAME = 'g',
 }
 
 export const QUIZZY_ASSISTANT_ID = 'asst_QcNCuLWYO5QctyFeacTa79dA';

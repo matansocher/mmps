@@ -4,11 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { QuizzyMongoGameLogService, QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { NotifierService } from '@core/notifier';
-import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getCallbackQueryData, getMessageData, MessageLoader, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ThreadsCacheService } from './cache';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './quizzy.config';
 import { QuizzyService } from './quizzy.service';
-import { generateInitialExplanationPrompt } from './utils';
+import { generateInitialExplanationPrompt, getInlineKeyboardMarkup } from './utils';
 
 const loaderMessage = 'אני שניה חושב ונותן הסבר 🤔';
 const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
@@ -42,9 +42,6 @@ export class QuizzyController implements OnModuleInit {
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
-
-    // const inlineKeyboardButtons = [{ text: '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28', callback_data: `${BOT_ACTIONS.CONTACT}` }];
-    // this.bot.sendMessage(862305226, 'איך אני יכול לעזור? 👨‍🏫', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
   }
 
   async startHandler(message: Message): Promise<void> {
