@@ -8,7 +8,7 @@ import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageL
 import { ThreadsCacheService } from './cache';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './quizzy.config';
 import { QuizzyService } from './quizzy.service';
-import { generateInitialExplanationPrompt } from './utils';
+import { generateInitialExplanationPrompt, generateSpecialMessage } from './utils';
 
 const loaderMessage = 'אני שניה חושב ונותן הסבר 🤔';
 const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
@@ -124,11 +124,11 @@ export class QuizzyController implements OnModuleInit {
           throw new Error('Invalid action');
       }
 
-      // const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
-      // const specialMessage = generateSpecialMessage(userGameLogs);
-      // if (specialMessage) {
-      //   await this.bot.sendMessage(chatId, specialMessage);
-      // }
+      const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
+      const specialMessage = generateSpecialMessage(userGameLogs);
+      if (specialMessage) {
+        await this.bot.sendMessage(chatId, specialMessage);
+      }
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `${err}` }, userDetails);
       throw err;
@@ -167,9 +167,6 @@ export class QuizzyController implements OnModuleInit {
     const replyText = `${!isCorrect ? `אופס, טעות. התשובה הנכונה היא:` : `נכון, יפה מאוד!`} ${correctAnswer}`;
     await this.bot.sendMessage(chatId, replyText);
     await reactToMessage(this.botToken, chatId, messageId, selectedAnswer !== correctAnswer ? '👎' : '👍');
-
-    // explain the user why he is wrong or right
-    // this.threadsCache.saveThreadData(chatId, { threadId, question, correctAnswer, distractorAnswers });
 
     const threadData = this.threadsCache.getThreadData(chatId);
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
