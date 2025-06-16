@@ -6,7 +6,7 @@ import { QuizzyMongoGameLogService, QuizzyMongoSubscriptionService, QuizzyMongoU
 import { NotifierService } from '@core/notifier';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ThreadsCacheService } from './cache';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './quizzy.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './quizzy.config';
 import { QuizzyService } from './quizzy.service';
 import { generateInitialExplanationPrompt, generateSpecialMessage } from './utils';
 
@@ -42,6 +42,30 @@ export class QuizzyController implements OnModuleInit {
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
+
+    // this.testHebrewKeyboard();
+  }
+
+  async testHebrewKeyboard(): Promise<void> {
+    const question = 'מהי ההמצאה הישראלית שמאפשרת שמירה על רהיטים ובגדים מפני נזק מים תוך כדי שהיא משמשת כמגן נגד פטריות ועובש?';
+    const correct = 'סופג לחות אקולוגי';
+    const answers = [
+      // br
+      // 'ננו-טכנולוגיה למניעת נזק מים',
+      // 'סיליקון לשימוש חוזר',
+      // 'חומר דוחה חרקים',
+      'סופג לחות אקולוגי',
+      'סופג לחות אקולוגי',
+      'סופג לחות אקולוגי',
+      'סופג לחות אקולוגי',
+    ];
+    // const inlineKeyboardButtons = [{ text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` }];
+    const inlineKeyboardButtons = answers.map((answer) => {
+      return { text: answer, callback_data: `${BOT_ACTIONS.GAME}${INLINE_KEYBOARD_SEPARATOR}${answer}${INLINE_KEYBOARD_SEPARATOR}${correct}` };
+    });
+    this.bot.sendMessage(862305226, question, { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) }).catch((err) => {
+      this.logger.error(`Failed to send test message: ${err.message}`);
+    });
   }
 
   async startHandler(message: Message): Promise<void> {
@@ -96,7 +120,7 @@ export class QuizzyController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response, text } = getCallbackQueryData(callbackQuery);
 
-    const [action, selectedAnswer, correctAnswer] = response.split(' - ');
+    const [action, selectedAnswer, correctAnswer] = response.split(INLINE_KEYBOARD_SEPARATOR);
     try {
       switch (action) {
         case BOT_ACTIONS.START:

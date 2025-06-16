@@ -6,7 +6,7 @@ import { shuffleArray } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { ThreadsCacheService } from './cache';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, QUIZZY_ASSISTANT_ID, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START } from './quizzy.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, QUIZZY_ASSISTANT_ID, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START } from './quizzy.config';
 import { triviaSchema } from './types';
 
 @Injectable()
@@ -35,7 +35,9 @@ export class QuizzyService {
   async gameHandler(chatId: number) {
     const { question, correctAnswer, distractorAnswers } = await this.openaiAssistantService.getStructuredOutput(triviaSchema, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START);
     const options = shuffleArray([...distractorAnswers, correctAnswer]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((option) => ({ text: option, callback_data: `${BOT_ACTIONS.GAME} - ${option} - ${correctAnswer}` })));
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(
+      options.map((option) => ({ text: option, callback_data: `${BOT_ACTIONS.GAME}${INLINE_KEYBOARD_SEPARATOR}${option}${INLINE_KEYBOARD_SEPARATOR}${correctAnswer}` })),
+    );
     await this.bot.sendMessage(chatId, question, { ...(inlineKeyboardMarkup as any) });
     return { question, correctAnswer, distractorAnswers };
   }

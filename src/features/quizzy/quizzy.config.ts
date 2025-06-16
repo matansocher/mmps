@@ -28,6 +28,8 @@ export enum BOT_ACTIONS {
   GAME = 'g',
 }
 
+export const INLINE_KEYBOARD_SEPARATOR = '|';
+
 export const QUIZZY_ASSISTANT_ID = 'asst_QcNCuLWYO5QctyFeacTa79dA';
 export const QUIZZY_STRUCTURED_RES_START = 'create a question for the user';
 export const QUIZZY_STRUCTURED_RES_INSTRUCTIONS = `
