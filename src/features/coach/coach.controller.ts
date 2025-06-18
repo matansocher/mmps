@@ -8,6 +8,7 @@ import { getDateDescription } from '@core/utils';
 import { getDateFromUserInput } from '@features/coach/utils/get-date-from-user-input';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getBotToken } from '@services/telegram/telegram-bots-factory/get-bot-token';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
@@ -38,7 +39,7 @@ export class CoachController implements OnModuleInit {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOT_CONFIG.token);
+    this.botToken = getBotToken(process.env, BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
   }
 
   onModuleInit(): void {

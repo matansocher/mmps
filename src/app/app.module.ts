@@ -1,32 +1,39 @@
+import * as process from 'node:process';
 import { Module } from '@nestjs/common';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
-import { AnnouncerModule } from '@features/announcer';
-import { CoachModule } from '@features/coach';
-import { CookerModule } from '@features/cooker';
+import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
+import { BOT_CONFIG as cookerBotConfig, CookerModule } from '@features/cooker';
 import { DefineModule } from '@features/define';
-import { EducatorModule } from '@features/educator';
-import { PlaygroundsModule } from '@features/playgrounds';
-import { TeacherModule } from '@features/teacher';
-import { TrainerModule } from '@features/trainer';
-import { WoltModule } from '@features/wolt';
-import { WorldlyModule } from '@features/worldly';
+import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educator';
+import { BOT_CONFIG as teacherBotConfig, TeacherModule } from '@features/teacher';
+import { BOT_CONFIG as trainerBotConfig, TrainerModule } from '@features/trainer';
+import { BOT_CONFIG as woltBotConfig, WoltModule } from '@features/wolt';
+import { BOT_CONFIG as worldlyBotConfig, WorldlyModule } from '@features/worldly';
+import { TelegramBotConfig } from '@services/telegram';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+const shouldRegisterBot = (botConfig: TelegramBotConfig): boolean => {
+  if (isProd) {
+    return true;
+  }
+  const localActiveBotId = process.env['LOCAL_ACTIVE_BOT_ID'];
+  return localActiveBotId === botConfig.id;
+};
+
 @Module({
   imports: [
+    // br
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-    AnnouncerModule,
-    CoachModule,
-    CookerModule,
     DefineModule,
-    EducatorModule,
-    TeacherModule,
-    TrainerModule,
-    WoltModule,
-    WorldlyModule,
-    ConditionalModule.registerWhen(PlaygroundsModule, () => !isProd),
+    ConditionalModule.registerWhen(CoachModule, () => shouldRegisterBot(coachBotConfig)),
+    ConditionalModule.registerWhen(CookerModule, () => shouldRegisterBot(cookerBotConfig)),
+    ConditionalModule.registerWhen(EducatorModule, () => shouldRegisterBot(educatorBotConfig)),
+    ConditionalModule.registerWhen(TeacherModule, () => shouldRegisterBot(teacherBotConfig)),
+    ConditionalModule.registerWhen(TrainerModule, () => shouldRegisterBot(trainerBotConfig)),
+    ConditionalModule.registerWhen(WoltModule, () => shouldRegisterBot(woltBotConfig)),
+    ConditionalModule.registerWhen(WorldlyModule, () => shouldRegisterBot(worldlyBotConfig)),
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,6 +5,7 @@ import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getBotToken } from '@services/telegram/telegram-bots-factory/get-bot-token';
 import { generateSpecialMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
@@ -25,7 +26,7 @@ export class WorldlyController implements OnModuleInit {
     private readonly configService: ConfigService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOT_CONFIG.token);
+    this.botToken = getBotToken(process.env, BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
   }
 
   onModuleInit(): void {

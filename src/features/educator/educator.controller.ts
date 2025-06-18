@@ -20,6 +20,7 @@ import {
   TelegramEventHandler,
   UserDetails,
 } from '@services/telegram';
+import { getBotToken } from '@services/telegram/telegram-bots-factory/get-bot-token';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './educator.config';
 import { EducatorService } from './educator.service';
 
@@ -43,7 +44,7 @@ export class EducatorController implements OnModuleInit {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOT_CONFIG.token);
+    this.botToken = getBotToken(process.env, BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
   }
 
   onModuleInit(): void {
