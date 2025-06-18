@@ -10,30 +10,28 @@ import { BOT_CONFIG as teacherBotConfig, TeacherModule } from '@features/teacher
 import { BOT_CONFIG as trainerBotConfig, TrainerModule } from '@features/trainer';
 import { BOT_CONFIG as woltBotConfig, WoltModule } from '@features/wolt';
 import { BOT_CONFIG as worldlyBotConfig, WorldlyModule } from '@features/worldly';
-import { TelegramBotConfig } from '@services/telegram';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-const shouldRegisterBot = (botConfig: TelegramBotConfig): boolean => {
+const shouldRegisterBot = (botId: string): boolean => {
   if (isProd) {
     return true;
   }
   const localActiveBotId = process.env['LOCAL_ACTIVE_BOT_ID'];
-  return localActiveBotId === botConfig.id;
+  return localActiveBotId === botId;
 };
 
 @Module({
   imports: [
-    // br
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     DefineModule,
-    ConditionalModule.registerWhen(CoachModule, () => shouldRegisterBot(coachBotConfig)),
-    ConditionalModule.registerWhen(CookerModule, () => shouldRegisterBot(cookerBotConfig)),
-    ConditionalModule.registerWhen(EducatorModule, () => shouldRegisterBot(educatorBotConfig)),
-    ConditionalModule.registerWhen(TeacherModule, () => shouldRegisterBot(teacherBotConfig)),
-    ConditionalModule.registerWhen(TrainerModule, () => shouldRegisterBot(trainerBotConfig)),
-    ConditionalModule.registerWhen(WoltModule, () => shouldRegisterBot(woltBotConfig)),
-    ConditionalModule.registerWhen(WorldlyModule, () => shouldRegisterBot(worldlyBotConfig)),
+    ConditionalModule.registerWhen(CoachModule, () => shouldRegisterBot(coachBotConfig.id)),
+    ConditionalModule.registerWhen(CookerModule, () => shouldRegisterBot(cookerBotConfig.id)),
+    ConditionalModule.registerWhen(EducatorModule, () => shouldRegisterBot(educatorBotConfig.id)),
+    ConditionalModule.registerWhen(TeacherModule, () => shouldRegisterBot(teacherBotConfig.id)),
+    ConditionalModule.registerWhen(TrainerModule, () => shouldRegisterBot(trainerBotConfig.id)),
+    ConditionalModule.registerWhen(WoltModule, () => shouldRegisterBot(woltBotConfig.id)),
+    ConditionalModule.registerWhen(WorldlyModule, () => shouldRegisterBot(worldlyBotConfig.id)),
   ],
   controllers: [AppController],
   providers: [AppService],
