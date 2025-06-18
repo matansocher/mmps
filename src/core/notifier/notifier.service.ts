@@ -1,6 +1,5 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { MY_USER_ID } from '@core/config';
 import { getMessageData, TELEGRAM_EVENTS, TelegramBotConfig, UserDetails } from '@services/telegram';
 import { NotifyOptions } from './interface';
 import { BOT_CONFIG, MessageType, NOTIFIER_CHAT_ID } from './notifier.config';
