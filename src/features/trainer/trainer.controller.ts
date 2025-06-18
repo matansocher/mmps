@@ -6,7 +6,7 @@ import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, Traine
 import { NotifierService } from '@core/notifier';
 import { getSpecialNumber } from '@core/utils';
 import { OpenaiService } from '@services/openai';
-import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { getLastWeekDates, getLongestStreak, getStreak } from './utils';
 
@@ -26,7 +26,7 @@ export class TrainerController implements OnModuleInit {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOT_CONFIG.token);
+    this.botToken = getBotToken(BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
   }
 
   onModuleInit(): void {
