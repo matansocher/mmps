@@ -89,7 +89,7 @@ export class QuizzyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       const { question, correctAnswer, distractorAnswers } = await this.quizzyService.gameHandler(chatId);
-      this.threadsCache.saveThreadData(chatId, { question, correctAnswer, distractorAnswers });
+      this.threadsCache.saveThreadData(chatId, { question, correctAnswer, distractorAnswers }); // $$$$$$$$$ do we need it in the scheduler flow as well?
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.GAME, question }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.GAME, error: `${err}` }, userDetails);

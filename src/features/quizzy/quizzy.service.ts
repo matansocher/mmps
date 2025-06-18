@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
+import { QuizzyMongoQuestionService, QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
@@ -15,6 +15,7 @@ export class QuizzyService {
     private readonly subscriptionDB: QuizzyMongoSubscriptionService,
     private readonly userDB: QuizzyMongoUserService,
     private readonly threadsCache: ThreadsCacheService,
+    private readonly questionDB: QuizzyMongoQuestionService,
     private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -34,6 +35,10 @@ export class QuizzyService {
 
   async gameHandler(chatId: number) {
     const { question, correctAnswer, distractorAnswers } = await this.openaiAssistantService.getStructuredOutput(triviaSchema, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START);
+
+    // $$$$$$$$$$$$$$$$$
+    const result = await this.questionDB.saveQuestion(question, []);
+
     const options = shuffleArray([...distractorAnswers, correctAnswer]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
       options.map((option) => ({ text: option, callback_data: `${BOT_ACTIONS.GAME}${INLINE_KEYBOARD_SEPARATOR}${option}${INLINE_KEYBOARD_SEPARATOR}${correctAnswer}` })),
