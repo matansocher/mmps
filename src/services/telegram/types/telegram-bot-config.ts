@@ -2,7 +2,7 @@ export type TelegramBotConfig = {
   readonly id: string;
   readonly name: string;
   readonly token: string;
-  readonly overrideLocally?: boolean;
+  readonly forceLocal?: boolean;
   readonly commands?: {
     [key: string]: {
       command: string;

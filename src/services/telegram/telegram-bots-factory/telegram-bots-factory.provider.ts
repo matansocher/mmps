@@ -23,7 +23,7 @@ export const TelegramBotsFactoryProvider = (botConfig: TelegramBotConfig): Provi
     provide: botConfig.id,
     useFactory: (configService: ConfigService): TelegramBot => {
       const botToken = configService.get(botConfig.token);
-      const token = getBotToken(process.env, botConfig.id, botToken, botConfig.overrideLocally);
+      const token = getBotToken(botConfig.id, botToken, botConfig.forceLocal);
       if (!token) {
         throw new Error(`No token found for bot ${botConfig.id}`);
       }
