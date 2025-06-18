@@ -9,6 +9,7 @@ import { deleteFile } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import {
   BOT_BROADCAST_ACTIONS,
+  getBotToken,
   getCallbackQueryData,
   getInlineKeyboardMarkup,
   getMessageData,
@@ -42,7 +43,7 @@ export class TeacherController implements OnModuleInit {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = this.configService.get(BOT_CONFIG.token);
+    this.botToken = getBotToken(BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
   }
 
   onModuleInit(): void {
