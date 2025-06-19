@@ -69,27 +69,6 @@ export class OpenaiAssistantService {
     return _get(result, 'data[0].content[0].text.value', null);
   }
 
-  async runThreadWithTool(assistantId: string, threadId: string): Promise<Run> {
-    const run: Run = await this.openai.beta.threads.runs.createAndPoll(threadId, { assistant_id: assistantId }); // instructions: ''
-    if (run.status === ASSISTANT_RUN_STATUSES.REQUIRES_ACTION) {
-      return run;
-    }
-    if (ERROR_STATUSES.includes(run.status as ASSISTANT_RUN_STATUSES)) {
-      this.logger.error(`${this.runThread.name} - Error running thread ${run.thread_id} with error: ${run.last_error?.message}, code: ${run.last_error.code}, status: ${run.status}`);
-      return null;
-    }
-
-    this.logger.error(`${this.runThread.name} - Error running thread ${run.thread_id}. run object: ${JSON.stringify(run)}`);
-    return null;
-  }
-
-  async getToolResponse<T>(run: Run): Promise<T> {
-    if (run.required_action.type === 'submit_tool_outputs') {
-      const result = _get(run, 'required_action.submit_tool_outputs.tool_calls[0].function.arguments', null);
-      return result ? JSON.parse(result) : undefined;
-    }
-  }
-
   async uploadFile(filePath: string): Promise<FileObject> {
     const fileContent = fs.createReadStream(filePath);
     const response = await this.openai.files.create({

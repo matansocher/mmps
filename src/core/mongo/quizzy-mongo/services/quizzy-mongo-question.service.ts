@@ -59,6 +59,6 @@ export class QuizzyMongoQuestionService {
         answeredAt: new Date(),
       },
     };
-    await this.questionCollection.updateOne(filter, updateObj);
+    await this.questionCollection.updateMany(filter, updateObj);
   }
 }
