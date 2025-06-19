@@ -3,7 +3,7 @@ import { TelegramBotConfig } from '@services/telegram';
 export const BOT_CONFIG: TelegramBotConfig = {
   id: 'QUIZZY',
   name: 'Quizzy Bot 🤓',
-  token: 'PLAYGROUNDS_TELEGRAM_BOT_TOKEN',
+  token: 'QUIZZY_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: 'התחל מהתחלה', hide: true },
     GAME: { command: '/game', description: '🕹️ משחק 🕹️' },
