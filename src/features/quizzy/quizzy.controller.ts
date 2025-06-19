@@ -130,7 +130,6 @@ export class QuizzyController implements OnModuleInit {
           break;
         case BOT_ACTIONS.EXPLAIN:
           await this.explainAnswerHandler(chatId, messageId, questionId, selectedAnswerId);
-          await this.gameLogDB.saveGameLog(chatId, text, correctAnswerId, selectedAnswerId);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.EXPLAINED }, userDetails);
           break;
         default:
