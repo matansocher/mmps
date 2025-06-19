@@ -195,7 +195,7 @@ export class QuizzyController implements OnModuleInit {
       .join('\n');
     const inlineKeyboardMarkup = getInlineKeyboardMarkup([
       {
-        text: 'הסבר',
+        text: '📝 הסבר 📝',
         callback_data: [BOT_ACTIONS.EXPLAIN, questionId, selectedAnswerId].join(INLINE_KEYBOARD_SEPARATOR),
       },
     ]);
