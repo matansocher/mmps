@@ -1,5 +1,5 @@
 import { getDateString, isDateStringFormat } from '@core/utils';
-import { BOT_CONFIG } from '@features/coach/coach.config';
+import { BOT_CONFIG } from '../coach.config';
 
 export function getDateFromUserInput(text: string): string {
   if (!text) {
