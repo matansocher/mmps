@@ -29,7 +29,7 @@ export class QuizzyMongoQuestionService {
   }
 
   async updateQuestion({ questionId, chatId }: QuestionFilterOptions, toUpdate: Partial<QuestionModel>): Promise<void> {
-    const filter = {};
+    const filter = { status: QuestionStatus.Assigned };
     if (questionId) {
       filter['_id'] = new ObjectId(questionId);
     }

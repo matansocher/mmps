@@ -128,6 +128,10 @@ export class QuizzyController implements OnModuleInit {
           await this.gameLogDB.saveGameLog(chatId, text, correctAnswerId, selectedAnswerId);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, question, correct: correctAnswer, selected: selectedAnswer }, userDetails);
           break;
+        case BOT_ACTIONS.EXPLAIN:
+          await this.explainAnswerHandler(chatId, messageId, questionId, selectedAnswerId);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.EXPLAINED }, userDetails);
+          break;
         default:
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
           throw new Error('Invalid action');
@@ -186,16 +190,36 @@ export class QuizzyController implements OnModuleInit {
     const { question, answers } = questionObj;
     const selectedAnswer = answers.find((ans) => ans.id === selectedAnswerId);
     const correctAnswer = answers.find((ans) => ans.id === correctAnswerId);
-    const replyText = `${!selectedAnswer.isCorrect ? `אופס, טעות. התשובה הנכונה היא:` : `נכון, יפה מאוד!`} ${correctAnswer.text}`;
-    await this.bot.sendMessage(chatId, replyText);
+    const replyText = [!selectedAnswer.isCorrect ? `אופס, טעות` : `נכון, יפה מאוד!`, `ענית: ${selectedAnswer.text}`, !selectedAnswer.isCorrect ? `התשובה הנכונה: ${correctAnswer.text}` : null]
+      .filter(Boolean)
+      .join('\n');
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup([
+      {
+        text: 'הסבר',
+        callback_data: [BOT_ACTIONS.EXPLAIN, questionId, selectedAnswerId].join(INLINE_KEYBOARD_SEPARATOR),
+      },
+    ]);
+    await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
     await reactToMessage(this.botToken, chatId, messageId, selectedAnswerId !== correctAnswerId ? '👎' : '👍');
+
+    return { question, correctAnswer: correctAnswer.text, selectedAnswer: selectedAnswer.text };
+  }
+
+  private async explainAnswerHandler(chatId: number, messageId: number, questionId: string, selectedAnswerId: string): Promise<void> {
+    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    const questionObj = await this.questionDB.getQuestion({ questionId });
+    if (!questionObj) {
+      await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
+      return;
+    }
+    const { question, answers } = questionObj;
+    const selectedAnswer = answers.find((ans) => ans.id === selectedAnswerId);
+    const correctAnswer = answers.find((ans) => ans.isCorrect);
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const distractorAnswers = answers.filter((ans) => ans.id !== correctAnswerId).map((ans) => ans.text);
+      const distractorAnswers = answers.filter((ans) => !ans.isCorrect).map((ans) => ans.text);
       await this.quizzyService.processQuestion(chatId, generateInitialExplanationPrompt({ question, correctAnswer: correctAnswer.text, distractorAnswers }, selectedAnswer.text));
     });
-
-    return { question, correctAnswer: correctAnswer.text, selectedAnswer: selectedAnswer.text };
   }
 }
