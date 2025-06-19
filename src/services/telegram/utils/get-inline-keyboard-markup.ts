@@ -1,8 +1,28 @@
 import { chunk as _chunk } from 'lodash';
 
-export function getInlineKeyboardMarkup(inlineKeyboardButtons: any[], numberOfColumnsPerRow: number = 1): { reply_markup: string } {
-  const inlineKeyboard = { inline_keyboard: [] };
-  inlineKeyboardButtons.forEach((button) => inlineKeyboard.inline_keyboard.push(button));
-  inlineKeyboard.inline_keyboard = _chunk(inlineKeyboard.inline_keyboard, numberOfColumnsPerRow);
+const MAXIMUM_CHARS_FOR_INLINE_KEYBOARD_BUTTON = 64;
+
+type InlineKeyboardButton =
+  | {
+      readonly text: string;
+      readonly callback_data: string;
+    }
+  | {
+      readonly text: string;
+      readonly url: string;
+    };
+
+export function getInlineKeyboardMarkup(inlineKeyboardButtons: InlineKeyboardButton[], numberOfColumnsPerRow: number = 1): { readonly reply_markup: string } {
+  const processedButtons = inlineKeyboardButtons.map((button) => {
+    if ('callback_data' in button) {
+      return {
+        text: button.text,
+        callback_data: button.callback_data.slice(0, MAXIMUM_CHARS_FOR_INLINE_KEYBOARD_BUTTON),
+      };
+    }
+    return button;
+  });
+
+  const inlineKeyboard = { inline_keyboard: _chunk(processedButtons, numberOfColumnsPerRow) };
   return { reply_markup: JSON.stringify(inlineKeyboard) };
 }
