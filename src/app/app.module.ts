@@ -6,6 +6,7 @@ import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
 import { BOT_CONFIG as cookerBotConfig, CookerModule } from '@features/cooker';
 import { DefineModule } from '@features/define';
 import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educator';
+import { BOT_CONFIG as quizzyBotConfig, QuizzyModule } from '@features/quizzy';
 import { BOT_CONFIG as teacherBotConfig, TeacherModule } from '@features/teacher';
 import { BOT_CONFIG as trainerBotConfig, TrainerModule } from '@features/trainer';
 import { BOT_CONFIG as woltBotConfig, WoltModule } from '@features/wolt';
@@ -28,6 +29,7 @@ const shouldRegisterBot = (botId: string): boolean => {
     ConditionalModule.registerWhen(CoachModule, () => shouldRegisterBot(coachBotConfig.id)),
     ConditionalModule.registerWhen(CookerModule, () => shouldRegisterBot(cookerBotConfig.id)),
     ConditionalModule.registerWhen(EducatorModule, () => shouldRegisterBot(educatorBotConfig.id)),
+    ConditionalModule.registerWhen(QuizzyModule, () => shouldRegisterBot(quizzyBotConfig.id)),
     ConditionalModule.registerWhen(TeacherModule, () => shouldRegisterBot(teacherBotConfig.id)),
     ConditionalModule.registerWhen(TrainerModule, () => shouldRegisterBot(trainerBotConfig.id)),
     ConditionalModule.registerWhen(WoltModule, () => shouldRegisterBot(woltBotConfig.id)),
