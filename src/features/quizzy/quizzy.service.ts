@@ -48,7 +48,7 @@ export class QuizzyService {
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
       answers.map((answer) => ({
         text: answer.text,
-        callback_data: `${BOT_ACTIONS.GAME}${INLINE_KEYBOARD_SEPARATOR}${questionId}${INLINE_KEYBOARD_SEPARATOR}${answer.id}${INLINE_KEYBOARD_SEPARATOR}${correctAnswerModel.id}`,
+        callback_data: [BOT_ACTIONS.GAME, questionId, answer.id, correctAnswerModel.id].join(INLINE_KEYBOARD_SEPARATOR),
       })),
     );
     await this.bot.sendMessage(chatId, question, { ...(inlineKeyboardMarkup as any) });
