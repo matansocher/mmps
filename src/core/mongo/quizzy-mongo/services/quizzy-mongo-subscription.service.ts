@@ -11,9 +11,25 @@ export class QuizzyMongoSubscriptionService {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }
 
-  getActiveSubscriptions(): Promise<SubscriptionModel[]> {
-    const filter = { isActive: true };
-    return this.subscriptionCollection.find(filter).toArray();
+  // return only active subscriptions that do no have an open question (status = assigned)
+  getActiveSubscriptions() {
+    return this.subscriptionCollection
+      .aggregate<{ chatId: number }>([
+        { $match: { isActive: true } },
+        { $lookup: { from: COLLECTIONS.QUESTION, localField: 'chatId', foreignField: 'chatId', as: 'relatedRecords' } },
+        {
+          $addFields: {
+            hasAssigned: {
+              $anyElementTrue: {
+                $map: { input: '$relatedRecords', as: 'rec', in: { $eq: ['$$rec.status', 'assigned'] } },
+              },
+            },
+          },
+        },
+        { $match: { hasAssigned: false } },
+        { $project: { _id: 0, chatId: 1 } },
+      ])
+      .toArray();
   }
 
   getSubscription(chatId: number): Promise<SubscriptionModel> {
