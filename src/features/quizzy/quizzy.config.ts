@@ -34,7 +34,7 @@ export const QUIZZY_ASSISTANT_ID = 'asst_QcNCuLWYO5QctyFeacTa79dA';
 export const QUIZZY_STRUCTURED_RES_START = 'create a question for the user';
 export const QUIZZY_STRUCTURED_RES_INSTRUCTIONS = `
 You are generating trivia questions for a Telegram bot that aims to help users expand their knowledge in a fun, enriching, and engaging way.
-Each question should be a multiple-choice question with 1 correct answer and 3 plausible but incorrect answers.
+Each question should be a multiple-choice question with 1 correct answer and 3 plausible but incorrect answers. Please make your best so that each answer is not more than 40 chars.
 Your goal is to create questions that spark curiosity, invite follow-up explanations, and make users look forward to coming back every day.
 Think of questions users might talk about with friends, say “Wait, really?” — and want to know why.
 Guidelines:
