@@ -1,7 +1,7 @@
 import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
-import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
+import { Subscription, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
@@ -73,7 +73,7 @@ export class WoltController implements OnModuleInit {
         return;
       }
 
-      const promisesArr = subscriptions.map((subscription: SubscriptionModel) => {
+      const promisesArr = subscriptions.map((subscription: Subscription) => {
         const inlineKeyboardButtons = [
           {
             text: '⛔️ הסרה ⛔️',
@@ -149,7 +149,7 @@ export class WoltController implements OnModuleInit {
     }
   }
 
-  async handleCallbackAddSubscription(chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
+  async handleCallbackAddSubscription(chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
@@ -183,7 +183,7 @@ export class WoltController implements OnModuleInit {
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
-  async handleCallbackRemoveSubscription(chatId: number, messageId: number, restaurant: string, activeSubscriptions: SubscriptionModel[]): Promise<void> {
+  async handleCallbackRemoveSubscription(chatId: number, messageId: number, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
     let replyText;
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {

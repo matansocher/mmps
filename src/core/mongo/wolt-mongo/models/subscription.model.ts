@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface SubscriptionModel {
+export interface Subscription {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly restaurant: string;

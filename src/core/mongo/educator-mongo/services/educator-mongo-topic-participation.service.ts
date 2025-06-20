@@ -1,18 +1,18 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
-import { TopicParticipationModel, TopicParticipationStatus } from '../models';
+import { TopicParticipation, TopicParticipationStatus } from '../models';
 
 @Injectable()
 export class EducatorMongoTopicParticipationService {
-  private readonly topicParticipationCollection: Collection<TopicParticipationModel>;
+  private readonly topicParticipationCollection: Collection<TopicParticipation>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.topicParticipationCollection = this.db.collection(COLLECTIONS.TOPIC_PARTICIPATION);
   }
 
-  async createTopicParticipation(chatId: number, topicId: string, threadId: string): Promise<TopicParticipationModel> {
-    const topicParticipation: TopicParticipationModel = {
+  async createTopicParticipation(chatId: number, topicId: string, threadId: string): Promise<TopicParticipation> {
+    const topicParticipation: TopicParticipation = {
       _id: new ObjectId(),
       topicId,
       chatId,
@@ -25,12 +25,12 @@ export class EducatorMongoTopicParticipationService {
     return topicParticipation;
   }
 
-  getTopicParticipations(chatId: number): Promise<TopicParticipationModel[]> {
+  getTopicParticipations(chatId: number): Promise<TopicParticipation[]> {
     const filter = { chatId };
     return this.topicParticipationCollection.find(filter).toArray();
   }
 
-  getActiveTopicParticipation(chatId: number): Promise<TopicParticipationModel> {
+  getActiveTopicParticipation(chatId: number): Promise<TopicParticipation> {
     const filter = { chatId, status: TopicParticipationStatus.Assigned };
     return this.topicParticipationCollection.findOne(filter);
   }

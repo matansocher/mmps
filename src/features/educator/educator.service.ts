@@ -1,12 +1,12 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, TopicModel, TopicParticipationModel } from '@core/mongo/educator-mongo';
+import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
 import { OpenaiAssistantService } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, EDUCATOR_ASSISTANT_ID } from './educator.config';
 
-const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipationModel) => {
+const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
     {
       text: '🎧 הקראה 🎧',
@@ -39,7 +39,7 @@ export class EducatorService {
     await this.startNewTopic(chatId);
   }
 
-  async getNewTopic(chatId: number): Promise<TopicModel> {
+  async getNewTopic(chatId: number): Promise<Topic> {
     const topicParticipations = await this.topicParticipationDB.getTopicParticipations(chatId);
     const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
 
@@ -61,7 +61,7 @@ export class EducatorService {
     await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
   }
 
-  async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipationModel): Promise<void> {
+  async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipation): Promise<void> {
     const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, activeTopicParticipation.threadId, question);
     await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(activeTopicParticipation) as any) });
   }

@@ -1,4 +1,4 @@
-import { GameLogModel } from '@core/mongo/quizzy-mongo';
+import { GameLog } from '@core/mongo/quizzy-mongo';
 import { getDateString } from '@core/utils';
 import { getStreak } from '../utils';
 
@@ -6,7 +6,7 @@ export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
 export const SPECIAL_CORRECT_ANSWERS_STREAKS = [4, 7, 10, 15, 20, 30];
 export const SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED = [10, 50, 100, 200, 300, 500, 600, 700, 800, 900, 1000];
 
-function getStreakOfCorrectMessages(userGameLogs: GameLogModel[]): string {
+function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
   let streak = 0;
   for (let i = 0; i < userGameLogs.length; i++) {
     if (userGameLogs[i].correct === userGameLogs[i].selected) {
@@ -26,7 +26,7 @@ function getStreakOfCorrectMessages(userGameLogs: GameLogModel[]): string {
   return null;
 }
 
-function getStreakOfDaysPlayed(userGameLogs: GameLogModel[]): string {
+function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
   const todayGames = userGameLogs.filter((log) => getDateString(new Date(log.createdAt)) === getDateString());
   if (todayGames?.length > 1) {
     return null;
@@ -44,7 +44,7 @@ function getStreakOfDaysPlayed(userGameLogs: GameLogModel[]): string {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-function getTotalGamesPlayedMessages(userGameLogs: GameLogModel[]): string {
+function getTotalGamesPlayedMessages(userGameLogs: GameLog[]): string {
   const indexOfSpecialStreak = SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED.indexOf(userGameLogs.length);
   if (indexOfSpecialStreak === -1) {
     return null;
@@ -57,7 +57,7 @@ function getTotalGamesPlayedMessages(userGameLogs: GameLogModel[]): string {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function generateSpecialMessage(userGameLogs: GameLogModel[]): string {
+export function generateSpecialMessage(userGameLogs: GameLog[]): string {
   const sorted = userGameLogs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const correctStreakMsg = getStreakOfCorrectMessages(sorted);

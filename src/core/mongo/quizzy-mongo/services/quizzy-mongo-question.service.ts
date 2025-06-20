@@ -1,7 +1,7 @@
 import { Collection, Db, InsertOneResult, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { QuestionModel } from '../models';
-import { AnswerModel, QuestionStatus } from '../models/question.model';
+import { Question } from '../models';
+import { Answer, QuestionStatus } from '../models/question.model';
 import { COLLECTIONS, CONNECTION_NAME } from '../quizzy-mongo.config';
 
 type QuestionFilterOptions = {
@@ -11,13 +11,13 @@ type QuestionFilterOptions = {
 
 @Injectable()
 export class QuizzyMongoQuestionService {
-  private readonly questionCollection: Collection<QuestionModel>;
+  private readonly questionCollection: Collection<Question>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.questionCollection = this.db.collection(COLLECTIONS.QUESTION);
   }
 
-  getQuestion({ questionId, chatId }: QuestionFilterOptions): Promise<QuestionModel> {
+  getQuestion({ questionId, chatId }: QuestionFilterOptions): Promise<Question> {
     const filter = { status: QuestionStatus.Assigned };
     if (questionId) {
       filter['_id'] = new ObjectId(questionId);
@@ -28,7 +28,7 @@ export class QuizzyMongoQuestionService {
     return this.questionCollection.findOne(filter);
   }
 
-  async updateQuestion({ questionId, chatId }: QuestionFilterOptions, toUpdate: Partial<QuestionModel>): Promise<void> {
+  async updateQuestion({ questionId, chatId }: QuestionFilterOptions, toUpdate: Partial<Question>): Promise<void> {
     const filter = { status: QuestionStatus.Assigned };
     if (questionId) {
       filter['_id'] = new ObjectId(questionId);
@@ -40,15 +40,15 @@ export class QuizzyMongoQuestionService {
     await this.questionCollection.updateOne(filter, updateObj);
   }
 
-  saveQuestion(chatId: number, question: string, answers: AnswerModel[]): Promise<InsertOneResult<QuestionModel>> {
-    const questionModel = {
+  saveQuestion(chatId: number, question: string, answers: Answer[]): Promise<InsertOneResult<Question>> {
+    const questionDoc = {
       chatId,
       question,
       answers,
       status: QuestionStatus.Assigned,
       createdAt: new Date(),
-    } as QuestionModel;
-    return this.questionCollection.insertOne(questionModel);
+    } as Question;
+    return this.questionCollection.insertOne(questionDoc);
   }
 
   async markQuestionsCompleted(chatId: number): Promise<void> {

@@ -1,1 +1,1 @@
-export type { SubscriptionModel } from './subscription.model';
+export type { Subscription } from './subscription.model';

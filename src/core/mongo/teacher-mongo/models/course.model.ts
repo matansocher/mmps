@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface CourseModel {
+export interface Course {
   readonly _id: ObjectId;
   readonly topic: string;
   readonly createdBy?: number;

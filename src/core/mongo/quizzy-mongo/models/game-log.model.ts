@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface GameLogModel {
+export interface GameLog {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly question: string;
