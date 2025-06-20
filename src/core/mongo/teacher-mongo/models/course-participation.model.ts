@@ -6,7 +6,7 @@ export enum CourseParticipationStatus {
   Completed = 'completed',
 }
 
-export interface CourseParticipationModel {
+export interface CourseParticipation {
   readonly _id: ObjectId;
   readonly courseId: string;
   readonly chatId: number;

@@ -6,7 +6,7 @@ export enum TopicParticipationStatus {
   Completed = 'completed',
 }
 
-export interface TopicParticipationModel {
+export interface TopicParticipation {
   readonly _id: ObjectId;
   readonly topicId: string;
   readonly chatId: number;

@@ -1,1 +1,1 @@
-export type { RecipeModel } from './recipe.model';
+export type { Recipe } from './recipe.model';

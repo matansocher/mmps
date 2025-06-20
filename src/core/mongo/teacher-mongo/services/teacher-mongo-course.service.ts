@@ -1,18 +1,18 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { CourseModel } from '../models';
+import { Course } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
 
 @Injectable()
 export class TeacherMongoCourseService {
-  private readonly courseCollection: Collection<CourseModel>;
+  private readonly courseCollection: Collection<Course>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.courseCollection = this.db.collection(COLLECTIONS.COURSE);
   }
 
-  async createCourse(chatId: number, topic: string): Promise<CourseModel> {
-    const course: CourseModel = {
+  async createCourse(chatId: number, topic: string): Promise<Course> {
+    const course: Course = {
       _id: new ObjectId(),
       topic,
       createdBy: chatId,
@@ -22,7 +22,7 @@ export class TeacherMongoCourseService {
     return course;
   }
 
-  async getRandomCourse(chatId: number, excludedCourses: string[]): Promise<CourseModel | null> {
+  async getRandomCourse(chatId: number, excludedCourses: string[]): Promise<Course | null> {
     const filter = {
       _id: { $nin: excludedCourses.map((courseId) => new ObjectId(courseId)) },
       $or: [
@@ -31,7 +31,7 @@ export class TeacherMongoCourseService {
       ],
     };
     const results = await this.courseCollection
-      .aggregate<CourseModel>([
+      .aggregate<Course>([
         { $match: filter },
         { $sample: { size: 1 } }, // Get a random course
       ])

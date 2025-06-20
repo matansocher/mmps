@@ -11,13 +11,20 @@ function normalize(str: string): string {
 
 // sort by the order of areas in CITIES_SLUGS_SUPPORTED
 export function getRestaurantsByName(restaurants: WoltRestaurant[], searchInput: string): WoltRestaurant[] {
-  const normalizedSearch = normalize(searchInput);
+  if (!searchInput || searchInput.trim() === '') {
+    return [];
+  }
 
-  return (
-    restaurants
-      // .filter((restaurant: WoltRestaurant) => restaurant.name.toLowerCase().includes(searchInput.toLowerCase()))
-      .filter((restaurant: WoltRestaurant) => normalize(restaurant.name).includes(normalizedSearch))
-      .sort((a: WoltRestaurant, b: WoltRestaurant) => CITIES_SLUGS_SUPPORTED.indexOf(a.area) - CITIES_SLUGS_SUPPORTED.indexOf(b.area))
-      .slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW)
-  );
+  const searchWords = searchInput
+    .split(/\s+/) // split by whitespace
+    .map(normalize)
+    .filter(Boolean); // remove empty strings
+
+  return restaurants
+    .filter((restaurant: WoltRestaurant) => {
+      const normalizedName = normalize(restaurant.name);
+      return searchWords.some((word) => normalizedName.includes(word));
+    })
+    .sort((a: WoltRestaurant, b: WoltRestaurant) => CITIES_SLUGS_SUPPORTED.indexOf(a.area) - CITIES_SLUGS_SUPPORTED.indexOf(b.area))
+    .slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
 }

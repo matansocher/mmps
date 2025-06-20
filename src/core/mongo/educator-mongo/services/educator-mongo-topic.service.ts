@@ -1,18 +1,18 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
-import { TopicModel } from '../models';
+import { Topic } from '../models';
 
 @Injectable()
 export class EducatorMongoTopicService {
-  private readonly topicCollection: Collection<TopicModel>;
+  private readonly topicCollection: Collection<Topic>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.topicCollection = this.db.collection(COLLECTIONS.TOPIC);
   }
 
-  async createTopic(chatId: number, title: string): Promise<TopicModel> {
-    const topic: TopicModel = {
+  async createTopic(chatId: number, title: string): Promise<Topic> {
+    const topic: Topic = {
       _id: new ObjectId(),
       title,
       createdBy: chatId,
@@ -22,7 +22,7 @@ export class EducatorMongoTopicService {
     return topic;
   }
 
-  async getRandomTopic(chatId: number, excludedTopics: string[]): Promise<TopicModel | null> {
+  async getRandomTopic(chatId: number, excludedTopics: string[]): Promise<Topic | null> {
     const filter = {
       _id: { $nin: excludedTopics.map((topicId) => new ObjectId(topicId)) },
       $or: [
@@ -31,7 +31,7 @@ export class EducatorMongoTopicService {
       ],
     };
     const results = await this.topicCollection
-      .aggregate<TopicModel>([
+      .aggregate<Topic>([
         { $match: filter },
         { $sample: { size: 1 } }, // Get a random topic
       ])
@@ -39,7 +39,7 @@ export class EducatorMongoTopicService {
     return results[0] || null;
   }
 
-  getTopic(id: string): Promise<TopicModel> {
+  getTopic(id: string): Promise<Topic> {
     const filter = { _id: new ObjectId(id) };
     return this.topicCollection.findOne(filter);
   }

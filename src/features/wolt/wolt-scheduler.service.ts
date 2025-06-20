@@ -3,7 +3,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { SubscriptionModel, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
+import { Subscription, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierService } from '@core/notifier';
 import { getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
@@ -50,13 +50,13 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async handleIntervalFlow(): Promise<void> {
     await this.cleanExpiredSubscriptions();
-    const subscriptions = (await this.subscriptionDB.getActiveSubscriptions()) as SubscriptionModel[];
+    const subscriptions = (await this.subscriptionDB.getActiveSubscriptions()) as Subscription[];
     if (subscriptions?.length) {
       await this.alertSubscriptions(subscriptions);
     }
   }
 
-  async alertSubscription(restaurant: WoltRestaurant, subscription: SubscriptionModel): Promise<void> {
+  async alertSubscription(restaurant: WoltRestaurant, subscription: Subscription): Promise<void> {
     try {
       const { name, link } = restaurant;
       const { chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
@@ -79,8 +79,8 @@ export class WoltSchedulerService implements OnModuleInit {
     }
   }
 
-  async alertSubscriptions(subscriptions: SubscriptionModel[]): Promise<void> {
-    const restaurantsNames = subscriptions.map((subscription: SubscriptionModel) => subscription.restaurant);
+  async alertSubscriptions(subscriptions: Subscription[]): Promise<void> {
+    const restaurantsNames = subscriptions.map((subscription: Subscription) => subscription.restaurant);
     const restaurants = await this.restaurantsService.getRestaurants();
     const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
 
@@ -92,7 +92,7 @@ export class WoltSchedulerService implements OnModuleInit {
     }
   }
 
-  async cleanSubscription(subscription: SubscriptionModel): Promise<void> {
+  async cleanSubscription(subscription: Subscription): Promise<void> {
     try {
       const { chatId, restaurant } = subscription;
       await this.subscriptionDB.archiveSubscription(chatId, restaurant);
@@ -111,7 +111,7 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async cleanExpiredSubscriptions(): Promise<void> {
     const expiredSubscriptions = await this.subscriptionDB.getExpiredSubscriptions(SUBSCRIPTION_EXPIRATION_HOURS);
-    await Promise.all(expiredSubscriptions.map((subscription: SubscriptionModel) => this.cleanSubscription(subscription)));
+    await Promise.all(expiredSubscriptions.map((subscription: Subscription) => this.cleanSubscription(subscription)));
   }
 
   async notifyWithUserDetails(chatId: number, restaurant: string, action: AnalyticEventValue) {

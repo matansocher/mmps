@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CookerMongoRecipeService, RecipeModel } from '@core/mongo/cooker-mongo';
+import { CookerMongoRecipeService, Recipe } from '@core/mongo/cooker-mongo';
 import { RecipesCacheService } from './cache';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class CookerService {
     private readonly recipeDB: CookerMongoRecipeService,
   ) {}
 
-  async getRecipes(chatId: number): Promise<RecipeModel[]> {
+  async getRecipes(chatId: number): Promise<Recipe[]> {
     let recipes = this.cache.getRecipes();
     if (!recipes?.length) {
       recipes = (await this.recipeDB.getRecipes(chatId)) || [];
@@ -18,7 +18,7 @@ export class CookerService {
     return recipes;
   }
 
-  async getRecipe(chatId: number, recipeId: string): Promise<RecipeModel> {
+  async getRecipe(chatId: number, recipeId: string): Promise<Recipe> {
     let recipe = this.cache.getRecipe(recipeId);
     if (!recipe) {
       recipe = (await this.recipeDB.getRecipe(chatId, recipeId)) || null;

@@ -1,4 +1,4 @@
-export type { TopicModel } from './topic.model';
+export type { Topic } from './topic.model';
 export { TopicParticipationStatus } from './topic-participation.model';
-export type { TopicParticipationModel } from './topic-participation.model';
-export type { UserPreferencesModel } from './user-preferences.model';
+export type { TopicParticipation } from './topic-participation.model';
+export type { UserPreferences } from './user-preferences.model';
