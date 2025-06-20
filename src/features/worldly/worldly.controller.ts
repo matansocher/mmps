@@ -140,22 +140,38 @@ export class WorldlyController implements OnModuleInit {
         case BOT_ACTIONS.MAP:
           await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
           await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.MAP, correctName, selectedName);
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(
+            BOT_CONFIG,
+            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
+            userDetails,
+          );
           break;
         case BOT_ACTIONS.US_MAP:
           await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
           await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.US_MAP, correctName, selectedName);
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(
+            BOT_CONFIG,
+            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
+            userDetails,
+          );
           break;
         case BOT_ACTIONS.FLAG:
           await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
           await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.FLAG, correctName, selectedName);
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(
+            BOT_CONFIG,
+            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
+            userDetails,
+          );
           break;
         case BOT_ACTIONS.CAPITAL:
           await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
           await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.CAPITAL, correctName, selectedName);
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', correct: correctName, selected: selectedName }, userDetails);
+          this.notifier.notify(
+            BOT_CONFIG,
+            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
+            userDetails,
+          );
           break;
         default:
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
