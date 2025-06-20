@@ -12,7 +12,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
 };
 
 export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 6;
-export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 8;
+export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 10;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
 
 export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number> = {
