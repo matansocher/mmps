@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
-import { SubscriptionModel } from '@core/mongo/wolt-mongo';
+import { Subscription } from '@core/mongo/wolt-mongo';
 import { COLLECTIONS, DB_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
 import { getRestaurantsList } from '../utils/get-restaurants-data';
 
@@ -20,7 +20,7 @@ async function main() {
     const restaurantsCount: Record<string, number> = {};
     const areasCount: Record<string, number> = {};
 
-    for (const subscription of subscriptions as SubscriptionModel[]) {
+    for (const subscription of subscriptions as Subscription[]) {
       if (restaurantsCount[subscription.restaurant]) {
         restaurantsCount[subscription.restaurant] += 1;
       } else {

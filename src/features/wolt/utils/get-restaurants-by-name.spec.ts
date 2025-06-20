@@ -1,19 +1,6 @@
-import { WoltRestaurant } from '@features/wolt/interface';
+import { WoltRestaurant } from '../interface';
 import { MAX_NUM_OF_RESTAURANTS_TO_SHOW } from '../wolt.config';
 import { getRestaurantsByName } from './get-restaurants-by-name';
-
-// const mockRestaurants = [
-//   { name: 'Pizza Place', area: 'hasharon' },
-//   { name: 'Pizza Palace', area: 'hasharon' },
-//   { name: 'Burger Bar', area: 'tel-aviv' },
-//   { name: 'Burger Joint', area: 'hasharon' },
-//   { name: 'Burger King', area: 'hasharon' },
-//   { name: 'Sushi Spot', area: 'tel-aviv' },
-//   { name: 'Sushi Place', area: 'tel-aviv' },
-//   { name: 'Taco Truck', area: 'hasharon' },
-//   { name: 'Mcdonalds Sarona', area: 'tel-aviv' },
-//   { name: 'Mcdonalds Tayelet', area: 'tel-aviv' },
-// ] as WoltRestaurant[];
 
 const mockRestaurants = [
   { name: 'Burger Bar', area: 'tel-aviv' },
@@ -25,7 +12,6 @@ const mockRestaurants = [
 
 describe('getRestaurantsByName()', () => {
   it('should return no values when search input is empty', () => {
-    // expect(actualResult).toEqual(expectedResult);
     expect(getRestaurantsByName(mockRestaurants, '')).toEqual([]);
     expect(getRestaurantsByName(mockRestaurants, '   ')).toEqual([]);
   });

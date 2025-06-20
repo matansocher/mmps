@@ -1,13 +1,13 @@
 import { Collection, Db } from 'mongodb';
 import { Injectable, Logger } from '@nestjs/common';
 import { UserDetails } from '@services/telegram';
-import { UserModel } from '../models';
+import { User } from '../models';
 import { COLLECTIONS } from '../mongo.config';
 
 @Injectable()
 export class MongoUserService {
   private readonly logger = new Logger(MongoUserService.name);
-  private readonly userCollection: Collection<UserModel>;
+  private readonly userCollection: Collection<User>;
 
   constructor(private readonly database: Db) {
     this.userCollection = this.database.collection(COLLECTIONS.USER);
@@ -22,7 +22,7 @@ export class MongoUserService {
         return true;
       }
 
-      const user = { ...userDetails, createdAt: new Date() } as unknown as UserModel;
+      const user = { ...userDetails, createdAt: new Date() } as unknown as User;
       await this.userCollection.insertOne(user);
       return false;
     } catch (err) {
@@ -31,7 +31,7 @@ export class MongoUserService {
     }
   }
 
-  async getUserDetails({ chatId }): Promise<UserModel> {
+  async getUserDetails({ chatId }): Promise<User> {
     try {
       return this.userCollection.findOne({ chatId });
     } catch (err) {

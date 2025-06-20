@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface UserPreferencesModel {
+export interface UserPreferences {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly isStopped: boolean;

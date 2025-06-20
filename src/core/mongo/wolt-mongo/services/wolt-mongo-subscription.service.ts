@@ -1,12 +1,12 @@
 import { Collection, Db } from 'mongodb';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { SubscriptionModel } from '../models';
+import { Subscription } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../wolt-mongo.config';
 
 @Injectable()
 export class WoltMongoSubscriptionService {
   private readonly logger = new Logger(WoltMongoSubscriptionService.name);
-  private readonly subscriptionCollection: Collection<SubscriptionModel>;
+  private readonly subscriptionCollection: Collection<Subscription>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
@@ -35,7 +35,7 @@ export class WoltMongoSubscriptionService {
       restaurantPhoto,
       isActive: true,
       createdAt: new Date(),
-    } as SubscriptionModel;
+    } as Subscription;
     return this.subscriptionCollection.insertOne(subscription);
   }
 

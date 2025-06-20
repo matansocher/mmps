@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface UserModel {
+export interface User {
   readonly _id?: ObjectId;
   readonly telegramUserId: number;
   readonly chatId: number;

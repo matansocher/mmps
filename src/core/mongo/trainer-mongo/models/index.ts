@@ -1,2 +1,2 @@
-export type { ExerciseModel } from './exercise.model';
-export type { UserPreferencesModel } from './user-preferences.model';
+export type { Exercise } from './exercise.model';
+export type { UserPreferences } from './user-preferences.model';

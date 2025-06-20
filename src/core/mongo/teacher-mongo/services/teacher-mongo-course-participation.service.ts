@@ -1,18 +1,18 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { CourseParticipationModel, CourseParticipationStatus } from '../models';
+import { CourseParticipation, CourseParticipationStatus } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
 
 @Injectable()
 export class TeacherMongoCourseParticipationService {
-  private readonly courseParticipationCollection: Collection<CourseParticipationModel>;
+  private readonly courseParticipationCollection: Collection<CourseParticipation>;
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.courseParticipationCollection = this.db.collection(COLLECTIONS.COURSE_PARTICIPATION);
   }
 
-  async createCourseParticipation(chatId: number, courseId: string, threadId: string): Promise<CourseParticipationModel> {
-    const courseParticipation: CourseParticipationModel = {
+  async createCourseParticipation(chatId: number, courseId: string, threadId: string): Promise<CourseParticipation> {
+    const courseParticipation: CourseParticipation = {
       _id: new ObjectId(),
       courseId,
       chatId,
@@ -25,12 +25,12 @@ export class TeacherMongoCourseParticipationService {
     return courseParticipation;
   }
 
-  getCourseParticipations(chatId: number): Promise<CourseParticipationModel[]> {
+  getCourseParticipations(chatId: number): Promise<CourseParticipation[]> {
     const filter = { chatId };
     return this.courseParticipationCollection.find(filter).toArray();
   }
 
-  getActiveCourseParticipation(chatId: number): Promise<CourseParticipationModel> {
+  getActiveCourseParticipation(chatId: number): Promise<CourseParticipation> {
     const filter = { chatId, status: CourseParticipationStatus.Assigned };
     return this.courseParticipationCollection.findOne(filter);
   }

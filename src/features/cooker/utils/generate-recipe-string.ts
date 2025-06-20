@@ -1,6 +1,6 @@
-import { RecipeModel } from '@core/mongo/cooker-mongo';
+import { Recipe } from '@core/mongo/cooker-mongo';
 
-export function generateRecipeString(recipe: RecipeModel): string {
+export function generateRecipeString(recipe: Recipe): string {
   const { emoji, title, ingredients, instructions, tags, link } = recipe;
   return [
     // br

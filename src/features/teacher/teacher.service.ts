@@ -1,12 +1,12 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CourseModel, CourseParticipationModel, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
+import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
 import { OpenaiAssistantService } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
 
-const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipationModel, isLesson: boolean) => {
+const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation, isLesson: boolean) => {
   let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
   if (!isLesson) {
     isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS;
@@ -73,7 +73,7 @@ export class TeacherService {
     await this.processCourseLesson(chatId, courseParticipation, courseParticipation.threadId, `${THREAD_MESSAGE_FIRST_LESSON}. this course's topic is ${course.topic}`);
   }
 
-  async getNewCourse(chatId: number): Promise<{ course: CourseModel; courseParticipation: CourseParticipationModel }> {
+  async getNewCourse(chatId: number): Promise<{ course: Course; courseParticipation: CourseParticipation }> {
     const courseParticipations = await this.courseParticipationDB.getCourseParticipations(chatId);
     const coursesParticipated = courseParticipations.map((courseParticipation) => courseParticipation.courseId);
 
@@ -102,7 +102,7 @@ export class TeacherService {
     await this.processCourseLesson(chatId, activeCourseParticipation, activeCourseParticipation.threadId, THREAD_MESSAGE_NEXT_LESSON);
   }
 
-  async processCourseLesson(chatId: number, courseParticipation: CourseParticipationModel, threadId: string, prompt: string): Promise<void> {
+  async processCourseLesson(chatId: number, courseParticipation: CourseParticipation, threadId: string, prompt: string): Promise<void> {
     if (!courseParticipation) {
       return;
     }
@@ -111,7 +111,7 @@ export class TeacherService {
     await this.courseParticipationDB.markCourseParticipationLessonCompleted(courseParticipation._id);
   }
 
-  async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipationModel): Promise<void> {
+  async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipation): Promise<void> {
     const response = await this.openaiAssistantService.getAssistantAnswer(TEACHER_ASSISTANT_ID, activeCourseParticipation.threadId, question);
     await sendStyledMessage(this.bot, chatId, response, 'Markdown', getBotInlineKeyboardMarkup(activeCourseParticipation, false));
   }
