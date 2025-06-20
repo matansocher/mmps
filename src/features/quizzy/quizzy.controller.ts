@@ -126,7 +126,11 @@ export class QuizzyController implements OnModuleInit {
         case BOT_ACTIONS.GAME:
           const { question, correctAnswer, selectedAnswer } = await this.gameAnswerHandler(chatId, messageId, questionId, selectedAnswerId, correctAnswerId);
           await this.gameLogDB.saveGameLog(chatId, text, correctAnswerId, selectedAnswerId);
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, question, correct: correctAnswer, selected: selectedAnswer }, userDetails);
+          this.notifier.notify(
+            BOT_CONFIG,
+            { action: ANALYTIC_EVENT_NAMES.ANSWERED, question, isCorrect: correctAnswer === selectedAnswer ? '🟢' : '🔴', correct: correctAnswer, selected: selectedAnswer },
+            userDetails,
+          );
           break;
         case BOT_ACTIONS.EXPLAIN:
           await this.explainAnswerHandler(chatId, messageId, questionId, selectedAnswerId);
