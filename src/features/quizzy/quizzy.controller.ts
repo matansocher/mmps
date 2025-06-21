@@ -1,4 +1,4 @@
-import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
@@ -185,7 +185,7 @@ export class QuizzyController implements OnModuleInit {
     selectedAnswerId: string,
     correctAnswerId: string,
   ): Promise<{ question: string; correctAnswer: string; selectedAnswer: string }> {
-    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const questionObj = await this.questionDB.getQuestion({ questionId });
     if (!questionObj) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
@@ -211,7 +211,7 @@ export class QuizzyController implements OnModuleInit {
   }
 
   private async explainAnswerHandler(chatId: number, messageId: number, questionId: string, selectedAnswerId: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const questionObj = await this.questionDB.getQuestion({ questionId });
     if (!questionObj) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
