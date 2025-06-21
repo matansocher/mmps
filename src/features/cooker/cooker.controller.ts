@@ -38,7 +38,7 @@ export class CookerController implements OnModuleInit {
       const { _id, emoji, title } = recipe;
       return { text: `${title} ${emoji}`, callback_data: `${BOT_ACTIONS.SHOW} - ${_id}` };
     });
-    await this.bot.sendMessage(chatId, 'איזה מתכון בא לך?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons, 2) as any) });
+    await this.bot.sendMessage(chatId, 'איזה מתכון בא לך?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons, 2) });
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {

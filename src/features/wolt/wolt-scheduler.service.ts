@@ -64,11 +64,11 @@ export class WoltSchedulerService implements OnModuleInit {
       const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, 'אפשר להזמין עכשיו! 📱'].join('\n');
 
       try {
-        await this.bot.sendPhoto(chatId, restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText } as any);
+        await this.bot.sendPhoto(chatId, restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText });
       } catch (err) {
         this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
-        await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
+        await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
       }
 
       await this.subscriptionDB.archiveSubscription(chatId, restaurantName);

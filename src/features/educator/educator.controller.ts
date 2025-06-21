@@ -73,7 +73,7 @@ export class EducatorController implements OnModuleInit {
       userPreferences?.isStopped ? { text: '🟢 התחל לקבל שיעורים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל שיעורים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, '👩🏻‍ איך אני יכולה לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, '👩🏻‍ איך אני יכולה לעזור?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
   }
 
   private async topicHandler(message: Message): Promise<void> {
@@ -184,7 +184,7 @@ export class EducatorController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE, loaderMessage: transcribeLoaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
 
       await reactToMessage(this.botToken, chatId, messageId, '🤯');
 
@@ -201,7 +201,7 @@ export class EducatorController implements OnModuleInit {
 
   private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
     await this.topicParticipationDB.markTopicParticipationCompleted(topicParticipationId);
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     await reactToMessage(this.botToken, chatId, messageId, '😎');
   }
 }

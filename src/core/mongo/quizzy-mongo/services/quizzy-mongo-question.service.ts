@@ -1,4 +1,4 @@
-import { Collection, Db, InsertOneResult, ObjectId } from 'mongodb';
+import { Collection, Db, InsertOneResult, ObjectId, WithId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { Question } from '../models';
 import { Answer, QuestionStatus } from '../models/question.model';
@@ -51,8 +51,9 @@ export class QuizzyMongoQuestionService {
     return this.questionCollection.insertOne(questionDoc);
   }
 
-  async markQuestionsCompleted(chatId: number): Promise<void> {
+  async markQuestionsCompleted(chatId: number): Promise<WithId<Question>[]> {
     const filter = { chatId, status: QuestionStatus.Assigned };
+    const notCompletedQuestions = await this.questionCollection.find(filter).toArray();
     const updateObj = {
       $set: {
         status: QuestionStatus.Completed,
@@ -60,5 +61,6 @@ export class QuizzyMongoQuestionService {
       },
     };
     await this.questionCollection.updateMany(filter, updateObj);
+    return notCompletedQuestions;
   }
 }

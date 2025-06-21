@@ -58,11 +58,11 @@ export class EducatorService {
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
     const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
-    await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(topicParticipation) as any) });
+    await sendShortenedMessage(this.bot, chatId, response, { ...getBotInlineKeyboardMarkup(topicParticipation) });
   }
 
   async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipation): Promise<void> {
     const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, activeTopicParticipation.threadId, question);
-    await sendShortenedMessage(this.bot, chatId, response, { ...(getBotInlineKeyboardMarkup(activeTopicParticipation) as any) });
+    await sendShortenedMessage(this.bot, chatId, response, { ...getBotInlineKeyboardMarkup(activeTopicParticipation) });
   }
 }

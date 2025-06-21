@@ -68,7 +68,7 @@ export class CoachController implements OnModuleInit {
       const { id, name, icon } = competition;
       return { text: `${icon} ${name} ${icon}`, callback_data: `${BOT_ACTIONS.TABLE} - ${id}` };
     });
-    await this.bot.sendMessage(chatId, 'לאיזה ליגה?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons, 2) as any) });
+    await this.bot.sendMessage(chatId, 'לאיזה ליגה?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons, 2) });
   }
 
   private async matchesHandler(message: Message): Promise<void> {
@@ -78,7 +78,7 @@ export class CoachController implements OnModuleInit {
       const { id, name, icon } = competition;
       return { text: `${icon} ${name} ${icon}`, callback_data: `${BOT_ACTIONS.MATCH} - ${id}` };
     });
-    await this.bot.sendMessage(chatId, 'לאיזה ליגה?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons, 2) as any) });
+    await this.bot.sendMessage(chatId, 'לאיזה ליגה?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons, 2) });
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -89,7 +89,7 @@ export class CoachController implements OnModuleInit {
       !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, '👨‍🏫 איך אני יכול לעזור?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, '👨‍🏫 איך אני יכול לעזור?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -216,7 +216,7 @@ export class CoachController implements OnModuleInit {
       return { text: `${name} - ${actionIcon}`, callback_data: `${BOT_ACTIONS.CUSTOM_LEAGUES_SELECT} - ${id} - ${subAction}` };
     });
 
-    await this.bot.sendMessage(chatId, 'כאן אפשר להגדיר אחרי איזה ליגות לעקוב', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, 'כאן אפשר להגדיר אחרי איזה ליגות לעקוב', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
   }
 
   async customLeaguesSelectHandler(chatId: number, competitionId: number, subAction: number): Promise<void> {

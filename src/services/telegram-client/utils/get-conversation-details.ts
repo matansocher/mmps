@@ -3,7 +3,7 @@ import { TelegramClient } from 'telegram';
 import { ConversationDetails } from '../interface';
 
 export async function getConversationDetails(telegramClient: TelegramClient, entityId: string): Promise<ConversationDetails> {
-  const channelDetails = (await telegramClient.getEntity(entityId)) as any;
+  const channelDetails = await telegramClient.getEntity(entityId);
   return {
     id: _get(channelDetails, 'id', null).toString(),
     createdDate: _get(channelDetails, 'date', null),

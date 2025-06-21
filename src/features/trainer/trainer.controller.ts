@@ -54,7 +54,7 @@ export class TrainerController implements OnModuleInit {
       userPreferences?.isStopped ? { text: '🟢 Start daily reminders 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 Stop daily reminders 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, '🏋️‍♂️ How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, '🏋️‍♂️ How can I help?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
   }
 
   private async exerciseHandler(message: Message): Promise<void> {
