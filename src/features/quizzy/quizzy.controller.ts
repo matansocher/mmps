@@ -68,7 +68,7 @@ export class QuizzyController implements OnModuleInit {
         : { text: '🛑 רוצה להפסיק לקבל שאלות יומיות 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
   }
 
   async gameHandler(message: Message): Promise<void> {
@@ -203,7 +203,7 @@ export class QuizzyController implements OnModuleInit {
         callback_data: [BOT_ACTIONS.EXPLAIN, questionId, selectedAnswerId].join(INLINE_KEYBOARD_SEPARATOR),
       },
     ]);
-    const { message_id } = await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
+    const { message_id } = await this.bot.sendMessage(chatId, replyText, { ...inlineKeyboardMarkup });
     this.questionDB.updateQuestion({ chatId }, { revealMessageId: message_id });
     await reactToMessage(this.botToken, chatId, messageId, selectedAnswerId !== correctAnswerId ? '👎' : '👍');
 

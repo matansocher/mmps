@@ -51,7 +51,7 @@ export class WorldlyService {
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.MAP} - ${country.name} - ${randomCountry.name}` })));
 
-    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'נחשו את המדינה' });
+    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה' });
   }
 
   async USMapHandler(chatId: number): Promise<void> {
@@ -63,7 +63,7 @@ export class WorldlyService {
     const options = shuffleArray([randomState, ...otherOptions]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((state) => ({ text: state.hebrewName, callback_data: `${BOT_ACTIONS.US_MAP} - ${state.name} - ${randomState.name}` })));
 
-    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...(inlineKeyboardMarkup as any), caption: 'נחשו את המדינה בארצות הברית' });
+    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה בארצות הברית' });
   }
 
   async flagHandler(chatId: number): Promise<void> {
@@ -78,7 +78,7 @@ export class WorldlyService {
     const options = getFlagDistractors(randomCountry, gameFilter, otherCountryOptions);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.FLAG} - ${country.name} - ${randomCountry.name}` })));
 
-    await this.bot.sendMessage(chatId, randomCountry.emoji, { ...(inlineKeyboardMarkup as any) });
+    await this.bot.sendMessage(chatId, randomCountry.emoji, { ...inlineKeyboardMarkup });
   }
 
   async capitalHandler(chatId: number): Promise<void> {
@@ -94,6 +94,6 @@ export class WorldlyService {
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((capital) => ({ text: capital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${capital} - ${randomCountry.hebrewCapital}` })));
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
-    await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
+    await this.bot.sendMessage(chatId, replyText, { ...inlineKeyboardMarkup });
   }
 }

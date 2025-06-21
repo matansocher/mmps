@@ -82,7 +82,7 @@ export class WoltController implements OnModuleInit {
         ];
         const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
         const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
-        return this.bot.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, inlineKeyboardMarkup as any);
+        return this.bot.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
@@ -123,7 +123,7 @@ export class WoltController implements OnModuleInit {
       });
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
-      await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup as any);
+      await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
@@ -172,7 +172,7 @@ export class WoltController implements OnModuleInit {
       const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
       const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantDetails.link }];
       const form = getInlineKeyboardMarkup(inlineKeyboardButtons);
-      await this.bot.sendMessage(chatId, replyText, form as any);
+      await this.bot.sendMessage(chatId, replyText, form);
       return;
     }
 
