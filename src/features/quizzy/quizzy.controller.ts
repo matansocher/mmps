@@ -68,7 +68,7 @@ export class QuizzyController implements OnModuleInit {
         : { text: '🛑 רוצה להפסיק לקבל שאלות יומיות 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
   }
 
   async gameHandler(message: Message): Promise<void> {
@@ -185,7 +185,7 @@ export class QuizzyController implements OnModuleInit {
     selectedAnswerId: string,
     correctAnswerId: string,
   ): Promise<{ question: string; correctAnswer: string; selectedAnswer: string }> {
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const questionObj = await this.questionDB.getQuestion({ questionId });
     if (!questionObj) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
@@ -203,14 +203,15 @@ export class QuizzyController implements OnModuleInit {
         callback_data: [BOT_ACTIONS.EXPLAIN, questionId, selectedAnswerId].join(INLINE_KEYBOARD_SEPARATOR),
       },
     ]);
-    await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
+    const { message_id } = await this.bot.sendMessage(chatId, replyText, { ...inlineKeyboardMarkup });
+    this.questionDB.updateQuestion({ chatId }, { revealMessageId: message_id });
     await reactToMessage(this.botToken, chatId, messageId, selectedAnswerId !== correctAnswerId ? '👎' : '👍');
 
     return { question, correctAnswer: correctAnswer.text, selectedAnswer: selectedAnswer.text };
   }
 
   private async explainAnswerHandler(chatId: number, messageId: number, questionId: string, selectedAnswerId: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const questionObj = await this.questionDB.getQuestion({ questionId });
     if (!questionObj) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
