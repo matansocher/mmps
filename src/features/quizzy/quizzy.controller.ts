@@ -1,4 +1,4 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
@@ -185,7 +185,7 @@ export class QuizzyController implements OnModuleInit {
     selectedAnswerId: string,
     correctAnswerId: string,
   ): Promise<{ question: string; correctAnswer: string; selectedAnswer: string }> {
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
     const questionObj = await this.questionDB.getQuestion({ questionId });
     if (!questionObj) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
@@ -203,14 +203,15 @@ export class QuizzyController implements OnModuleInit {
         callback_data: [BOT_ACTIONS.EXPLAIN, questionId, selectedAnswerId].join(INLINE_KEYBOARD_SEPARATOR),
       },
     ]);
-    await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
+    const { message_id } = await this.bot.sendMessage(chatId, replyText, { ...(inlineKeyboardMarkup as any) });
+    this.questionDB.updateQuestion({ chatId }, { revealMessageId: message_id });
     await reactToMessage(this.botToken, chatId, messageId, selectedAnswerId !== correctAnswerId ? '👎' : '👍');
 
     return { question, correctAnswer: correctAnswer.text, selectedAnswer: selectedAnswer.text };
   }
 
   private async explainAnswerHandler(chatId: number, messageId: number, questionId: string, selectedAnswerId: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
     const questionObj = await this.questionDB.getQuestion({ questionId });
     if (!questionObj) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);

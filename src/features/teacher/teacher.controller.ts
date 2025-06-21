@@ -218,7 +218,7 @@ export class TeacherController implements OnModuleInit {
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
     await this.courseParticipationDB.markCourseParticipationCompleted(courseParticipationId);
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
     await reactToMessage(this.botToken, chatId, messageId, '😎');
   }
 }

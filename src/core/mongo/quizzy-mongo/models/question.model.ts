@@ -16,8 +16,9 @@ export interface Question {
   readonly chatId: number;
   readonly question: string;
   readonly answers: Answer[];
-  threadId?: string;
-  status?: QuestionStatus;
+  readonly threadId?: string;
+  readonly status?: QuestionStatus;
+  readonly revealMessageId?: number;
   readonly answeredAt?: Date;
   readonly createdAt: Date;
 }
