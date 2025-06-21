@@ -1,4 +1,4 @@
-import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
+import TelegramBot, { BotCommand, CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { Subscription, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
@@ -193,6 +193,6 @@ export class WoltController implements OnModuleInit {
       replyText = [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n');
     }
     await this.bot.sendMessage(chatId, replyText);
-    await this.bot.editMessageReplyMarkup({} as any, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
   }
 }
