@@ -18,6 +18,6 @@ export class CookerMongoRecipeService {
 
   getRecipe(chatId: number, recipeId: string): Promise<Recipe> {
     const filter = { chatId, _id: new ObjectId(recipeId) };
-    return this.recipeCollection.findOne(filter as any);
+    return this.recipeCollection.findOne(filter);
   }
 }
