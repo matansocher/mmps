@@ -19,7 +19,7 @@ export class QuizzyService {
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
-  async randomGameHandler(chatId: number): Promise<void> {
+  async scheduledGameHandler(chatId: number): Promise<void> {
     try {
       await this.gameHandler(chatId);
     } catch (err) {
@@ -32,12 +32,7 @@ export class QuizzyService {
   }
 
   async gameHandler(chatId: number) {
-    const questions = await this.questionDB.markQuestionsCompleted(chatId); // marks all questions for the user as completed
-    await Promise.all(
-      questions.map(({ revealMessageId }) => {
-        revealMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch();
-      }),
-    );
+    await this.markAssignedQuestionsCompleted(chatId);
     const { question, correctAnswer, distractorAnswers } = await this.openaiAssistantService.getStructuredOutput(triviaSchema, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START);
 
     const correctAnswerObj: Answer = { id: `ans_${generateRandomString(5)}`, text: correctAnswer, isCorrect: true };
@@ -59,15 +54,24 @@ export class QuizzyService {
   }
 
   async processQuestion(chatId: number, content: string): Promise<void> {
-    const questionObj = await this.questionDB.getQuestion({ questionId: null, chatId });
-    let threadId = questionObj?.threadId;
+    const activeQuestion = await this.questionDB.getActiveQuestion({ questionId: null, chatId });
+    let threadId = activeQuestion?.threadId;
     if (!threadId) {
       const { id } = await this.openaiAssistantService.createThread();
       threadId = id;
-      await this.questionDB.updateQuestion({ chatId, questionId: questionObj._id.toString() }, { threadId });
+      await this.questionDB.updateQuestion({ chatId, questionId: activeQuestion._id.toString() }, { threadId });
     }
 
     const response = await this.openaiAssistantService.getAssistantAnswer(QUIZZY_ASSISTANT_ID, threadId, content);
     await sendShortenedMessage(this.bot, chatId, response);
+  }
+
+  async markAssignedQuestionsCompleted(chatId: number): Promise<void> {
+    const questions = await this.questionDB.markQuestionsCompleted(chatId); // marks all questions for the user as completed
+    await Promise.all(
+      questions.map(({ revealMessageId }) => {
+        revealMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch();
+      }),
+    );
   }
 }

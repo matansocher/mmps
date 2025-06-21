@@ -30,7 +30,7 @@ export class QuizzySchedulerService implements OnModuleInit {
       }
 
       const chatIds = subscriptions.filter(({ chatId }) => getHourInTimezone(DEFAULT_TIMEZONE) === INTERVAL_HOURS_BY_PRIORITY[0] || chatId === MY_USER_ID).map(({ chatId }) => chatId);
-      await Promise.all(chatIds.map(async (chatId) => this.quizzyService.randomGameHandler(chatId)));
+      await Promise.all(chatIds.map(async (chatId) => this.quizzyService.scheduledGameHandler(chatId)));
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }

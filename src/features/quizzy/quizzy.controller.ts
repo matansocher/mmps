@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { QuizzyMongoGameLogService, QuizzyMongoQuestionService, QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
+import { QuestionStatus } from '@core/mongo/quizzy-mongo/models/question.model';
 import { NotifierService } from '@core/notifier';
 import {
   getBotToken,
@@ -88,7 +89,7 @@ export class QuizzyController implements OnModuleInit {
     // prevent built in options to be processed also here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
-    const { threadId } = await this.questionDB.getQuestion({ chatId });
+    const { threadId } = await this.questionDB.getActiveQuestion({ chatId });
     if (!threadId) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
       return;
@@ -186,12 +187,13 @@ export class QuizzyController implements OnModuleInit {
     correctAnswerId: string,
   ): Promise<{ question: string; correctAnswer: string; selectedAnswer: string }> {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
-    const questionObj = await this.questionDB.getQuestion({ questionId });
-    if (!questionObj) {
+    const activeQuestion = await this.questionDB.getActiveQuestion({ questionId });
+    if (!activeQuestion) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
       return;
     }
-    const { question, answers } = questionObj;
+    this.questionDB.updateQuestion({ questionId }, { status: QuestionStatus.Answered });
+    const { question, answers } = activeQuestion;
     const selectedAnswer = answers.find((ans) => ans.id === selectedAnswerId);
     const correctAnswer = answers.find((ans) => ans.id === correctAnswerId);
     const replyText = [!selectedAnswer.isCorrect ? `אופס, טעות` : `נכון, יפה מאוד!`, `ענית: ${selectedAnswer.text}`, !selectedAnswer.isCorrect ? `התשובה הנכונה: ${correctAnswer.text}` : null]
@@ -212,12 +214,12 @@ export class QuizzyController implements OnModuleInit {
 
   private async explainAnswerHandler(chatId: number, messageId: number, questionId: string, selectedAnswerId: string): Promise<void> {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
-    const questionObj = await this.questionDB.getQuestion({ questionId });
-    if (!questionObj) {
+    const activeQuestion = await this.questionDB.getActiveQuestion({ questionId });
+    if (!activeQuestion) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
       return;
     }
-    const { question, answers } = questionObj;
+    const { question, answers } = activeQuestion;
     const selectedAnswer = answers.find((ans) => ans.id === selectedAnswerId);
     const correctAnswer = answers.find((ans) => ans.isCorrect);
 

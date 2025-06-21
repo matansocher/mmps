@@ -17,8 +17,8 @@ export class QuizzyMongoQuestionService {
     this.questionCollection = this.db.collection(COLLECTIONS.QUESTION);
   }
 
-  getQuestion({ questionId, chatId }: QuestionFilterOptions): Promise<Question> {
-    const filter = { status: QuestionStatus.Assigned };
+  getActiveQuestion({ questionId, chatId }: QuestionFilterOptions): Promise<Question> {
+    const filter = { status: { $ne: QuestionStatus.Completed } };
     if (questionId) {
       filter['_id'] = new ObjectId(questionId);
     }
@@ -29,7 +29,7 @@ export class QuizzyMongoQuestionService {
   }
 
   async updateQuestion({ questionId, chatId }: QuestionFilterOptions, toUpdate: Partial<Question>): Promise<void> {
-    const filter = { status: QuestionStatus.Assigned };
+    const filter = { status: { $ne: QuestionStatus.Completed } };
     if (questionId) {
       filter['_id'] = new ObjectId(questionId);
     }
@@ -52,7 +52,7 @@ export class QuizzyMongoQuestionService {
   }
 
   async markQuestionsCompleted(chatId: number): Promise<WithId<Question>[]> {
-    const filter = { chatId, status: QuestionStatus.Assigned };
+    const filter = { chatId, status: { $ne: QuestionStatus.Completed } };
     const notCompletedQuestions = await this.questionCollection.find(filter).toArray();
     const updateObj = {
       $set: {
