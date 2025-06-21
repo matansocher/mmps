@@ -1,4 +1,4 @@
-import TelegramBot, { InlineKeyboardMarkup } from 'node-telegram-bot-api';
+import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { Answer, QuizzyMongoQuestionService, QuizzyMongoSubscriptionService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { NotifierService } from '@core/notifier';
@@ -35,7 +35,7 @@ export class QuizzyService {
     const questions = await this.questionDB.markQuestionsCompleted(chatId); // marks all questions for the user as completed
     await Promise.all(
       questions.map(({ revealMessageId }) => {
-        revealMessageId && this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: revealMessageId, chat_id: chatId }).catch();
+        revealMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch();
       }),
     );
     const { question, correctAnswer, distractorAnswers } = await this.openaiAssistantService.getStructuredOutput(triviaSchema, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START);

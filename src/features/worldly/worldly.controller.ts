@@ -1,4 +1,4 @@
-import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
+import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
@@ -216,7 +216,7 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
@@ -224,7 +224,7 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async USMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const correctCountry = getStateByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.hebrewName}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
@@ -232,7 +232,7 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
     await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
@@ -240,7 +240,7 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup({} as InlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
     await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
