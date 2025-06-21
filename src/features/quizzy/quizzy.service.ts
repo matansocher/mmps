@@ -54,7 +54,7 @@ export class QuizzyService {
         callback_data: [BOT_ACTIONS.GAME, questionId, answer.id, correctAnswerObj.id].join(INLINE_KEYBOARD_SEPARATOR),
       })),
     );
-    await this.bot.sendMessage(chatId, question, { ...(inlineKeyboardMarkup as any) });
+    await this.bot.sendMessage(chatId, question, { ...inlineKeyboardMarkup });
     return { question, correctAnswer, distractorAnswers };
   }
 

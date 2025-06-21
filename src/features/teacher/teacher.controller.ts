@@ -74,7 +74,7 @@ export class TeacherController implements OnModuleInit {
         : { text: '🛑 Stop getting daily courses 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 Contact 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...(getInlineKeyboardMarkup(inlineKeyboardButtons) as any) });
+    await this.bot.sendMessage(chatId, '👨‍🏫 How can I help?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
   }
 
   private async courseHandler(message: Message): Promise<void> {
@@ -201,7 +201,7 @@ export class TeacherController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE, loaderMessage: transcribeLoaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup as any, { message_id: messageId, chat_id: chatId });
+      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
 
       await reactToMessage(this.botToken, chatId, messageId, '🤯');
 
