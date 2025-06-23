@@ -71,7 +71,7 @@ export class WoltSchedulerService implements OnModuleInit {
         await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
       }
 
-      await this.subscriptionDB.archiveSubscription(chatId, restaurantName);
+      await this.subscriptionDB.archiveSubscription(chatId, restaurantName, true);
       await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
       this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
@@ -95,7 +95,7 @@ export class WoltSchedulerService implements OnModuleInit {
   async cleanSubscription(subscription: Subscription): Promise<void> {
     try {
       const { chatId, restaurant } = subscription;
-      await this.subscriptionDB.archiveSubscription(chatId, restaurant);
+      await this.subscriptionDB.archiveSubscription(chatId, restaurant, false);
       const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
       if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
         // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER

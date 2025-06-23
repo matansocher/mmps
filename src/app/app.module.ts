@@ -14,26 +14,22 @@ import { BOT_CONFIG as worldlyBotConfig, WorldlyModule } from '@features/worldly
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-const shouldRegisterBot = (botId: string): boolean => {
-  if (isProd) {
-    return true;
-  }
-  const localActiveBotId = process.env['LOCAL_ACTIVE_BOT_ID'];
-  return localActiveBotId === botId;
+const registerBotModule = (module: any, config: { id: string }) => {
+  return ConditionalModule.registerWhen(module, () => isProd || process.env['LOCAL_ACTIVE_BOT_ID'] === config.id);
 };
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     DefineModule,
-    ConditionalModule.registerWhen(CoachModule, () => shouldRegisterBot(coachBotConfig.id)),
-    ConditionalModule.registerWhen(CookerModule, () => shouldRegisterBot(cookerBotConfig.id)),
-    ConditionalModule.registerWhen(EducatorModule, () => shouldRegisterBot(educatorBotConfig.id)),
-    ConditionalModule.registerWhen(QuizzyModule, () => shouldRegisterBot(quizzyBotConfig.id)),
-    ConditionalModule.registerWhen(TeacherModule, () => shouldRegisterBot(teacherBotConfig.id)),
-    ConditionalModule.registerWhen(TrainerModule, () => shouldRegisterBot(trainerBotConfig.id)),
-    ConditionalModule.registerWhen(WoltModule, () => shouldRegisterBot(woltBotConfig.id)),
-    ConditionalModule.registerWhen(WorldlyModule, () => shouldRegisterBot(worldlyBotConfig.id)),
+    registerBotModule(CoachModule, coachBotConfig),
+    registerBotModule(CookerModule, cookerBotConfig),
+    registerBotModule(EducatorModule, educatorBotConfig),
+    registerBotModule(QuizzyModule, quizzyBotConfig),
+    registerBotModule(TeacherModule, teacherBotConfig),
+    registerBotModule(TrainerModule, trainerBotConfig),
+    registerBotModule(WoltModule, woltBotConfig),
+    registerBotModule(WorldlyModule, worldlyBotConfig),
   ],
   controllers: [AppController],
   providers: [AppService],
