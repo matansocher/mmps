@@ -63,7 +63,7 @@ export class TeacherService {
   async startNewCourse(chatId: number, onDemand: boolean): Promise<void> {
     const { course, courseParticipation } = await this.getNewCourse(chatId);
     if (!course || !courseParticipation) {
-      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new courses found' });
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', chatId, error: 'No new courses found' });
       if (onDemand) {
         await this.bot.sendMessage(chatId, `I see no courses available for You. Please try again later or contact us.`);
       }
