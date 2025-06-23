@@ -39,9 +39,9 @@ export class WoltMongoSubscriptionService {
     return this.subscriptionCollection.insertOne(subscription);
   }
 
-  archiveSubscription(chatId: number, restaurant: string) {
+  archiveSubscription(chatId: number, restaurant: string, isSuccess: boolean) {
     const filter = { chatId, restaurant, isActive: true };
-    const updateObj = { $set: { isActive: false } };
+    const updateObj = { $set: { isActive: false, isSuccess, finishedAt: new Date() } } as Partial<Subscription>;
     return this.subscriptionCollection.updateOne(filter, updateObj);
   }
 
