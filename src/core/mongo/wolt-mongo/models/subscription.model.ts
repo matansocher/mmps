@@ -6,5 +6,7 @@ export interface Subscription {
   readonly restaurant: string;
   readonly restaurantPhoto: string;
   readonly isActive: boolean;
+  readonly isSuccess: boolean;
+  readonly finishedAt: Date;
   readonly createdAt: Date;
 }

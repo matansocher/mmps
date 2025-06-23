@@ -187,7 +187,7 @@ export class WoltController implements OnModuleInit {
     let replyText;
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
-      await this.subscriptionDB.archiveSubscription(chatId, restaurant);
+      await this.subscriptionDB.archiveSubscription(chatId, restaurant, false);
       replyText = [`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n');
     } else {
       replyText = [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n');
