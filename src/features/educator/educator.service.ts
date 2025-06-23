@@ -49,7 +49,7 @@ export class EducatorService {
   async startNewTopic(chatId: number): Promise<void> {
     const topic = await this.getNewTopic(chatId);
     if (!topic) {
-      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: 'No new topics found', chatId });
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', chatId, error: 'No new topics found', chatId });
       return;
     }
 
