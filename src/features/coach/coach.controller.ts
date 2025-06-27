@@ -82,7 +82,7 @@ export class CoachController implements OnModuleInit {
   }
 
   private async actionsHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, messageId } = getMessageData(message);
     const subscription = await this.subscriptionDB.getSubscription(chatId);
     const inlineKeyboardButtons = [
       { text: '⚽️ הגדרת ליגות למעקב ⚽️', callback_data: `${BOT_ACTIONS.CUSTOM_LEAGUES}` },
@@ -90,6 +90,7 @@ export class CoachController implements OnModuleInit {
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 איך אני יכול לעזור?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
+    await this.bot.deleteMessage(chatId, messageId).catch();
   }
 
   async textHandler(message: Message): Promise<void> {

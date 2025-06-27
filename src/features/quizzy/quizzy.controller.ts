@@ -61,7 +61,7 @@ export class QuizzyController implements OnModuleInit {
   }
 
   private async actionsHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, messageId } = getMessageData(message);
     const subscription = await this.subscriptionDB.getSubscription(chatId);
     const inlineKeyboardButtons = [
       !subscription?.isActive
@@ -70,6 +70,7 @@ export class QuizzyController implements OnModuleInit {
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
+    await this.bot.deleteMessage(chatId, messageId).catch();
   }
 
   async gameHandler(message: Message): Promise<void> {
@@ -142,6 +143,9 @@ export class QuizzyController implements OnModuleInit {
           throw new Error('Invalid action');
       }
 
+      if (![BOT_ACTIONS.GAME].includes(action)) {
+        return;
+      }
       const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
       const specialMessage = generateSpecialMessage(userGameLogs);
       if (specialMessage) {
