@@ -6,6 +6,7 @@ import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
 import { BOT_CONFIG as cookerBotConfig, CookerModule } from '@features/cooker';
 import { DefineModule } from '@features/define';
 import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educator';
+import { BOT_CONFIG as israelyBotConfig, IsraelyModule } from '@features/israely';
 import { BOT_CONFIG as quizzyBotConfig, QuizzyModule } from '@features/quizzy';
 import { BOT_CONFIG as teacherBotConfig, TeacherModule } from '@features/teacher';
 import { BOT_CONFIG as trainerBotConfig, TrainerModule } from '@features/trainer';
@@ -25,6 +26,7 @@ const registerBotModule = (module: any, config: { id: string }) => {
     registerBotModule(CoachModule, coachBotConfig),
     registerBotModule(CookerModule, cookerBotConfig),
     registerBotModule(EducatorModule, educatorBotConfig),
+    registerBotModule(IsraelyModule, israelyBotConfig),
     registerBotModule(QuizzyModule, quizzyBotConfig),
     registerBotModule(TeacherModule, teacherBotConfig),
     registerBotModule(TrainerModule, trainerBotConfig),

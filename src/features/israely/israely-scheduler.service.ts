@@ -1,0 +1,38 @@
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
+import { IsraelyMongoSubscriptionService } from '@core/mongo/israely-mongo';
+import { NotifierService } from '@core/notifier';
+import { getHourInTimezone } from '@core/utils';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './israely.config';
+import { IsraelyService } from './israely.service';
+
+const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20];
+
+@Injectable()
+export class IsraelyBotSchedulerService implements OnModuleInit {
+  constructor(
+    private readonly israelyService: IsraelyService,
+    private readonly subscriptionDB: IsraelyMongoSubscriptionService,
+    private readonly notifier: NotifierService,
+  ) {}
+
+  onModuleInit(): void {
+    // this.handleIntervalFlow(); // for testing purposes
+  }
+
+  @Cron(`0 ${INTERVAL_HOURS_BY_PRIORITY.join(',')} * * *`, { name: 'israely-scheduler', timeZone: DEFAULT_TIMEZONE })
+  async handleIntervalFlow(): Promise<void> {
+    try {
+      const subscriptions = await this.subscriptionDB.getActiveSubscriptions();
+      if (!subscriptions?.length) {
+        return;
+      }
+
+      const chatIds = subscriptions.filter(({ chatId }) => getHourInTimezone(DEFAULT_TIMEZONE) === INTERVAL_HOURS_BY_PRIORITY[0] || chatId === MY_USER_ID).map(({ chatId }) => chatId);
+      await Promise.all(chatIds.map(async (chatId) => this.israelyService.randomGameHandler(chatId)));
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+    }
+  }
+}
