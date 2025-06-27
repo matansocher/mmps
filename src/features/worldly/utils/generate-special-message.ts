@@ -1,7 +1,6 @@
 import { GameLog } from '@core/mongo/worldly-mongo';
 import { getDateString } from '@core/utils';
-import { getLongestStreak, getStreak } from '../utils';
-import { getStreakOfCorrectAnswers } from '../utils/streak-calc';
+import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '../utils';
 
 export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
 export const SPECIAL_CORRECT_ANSWERS_STREAKS = [4, 7, 10, 15, 20, 30];

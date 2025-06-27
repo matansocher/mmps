@@ -4,4 +4,4 @@ export { getCapitalDistractors, getMapStateDistractors, getFlagDistractors, getM
 export { getCountries, getStates, getRandomState, getCountryByCapital, getCountryByName, getRandomCountry, getStateByName } from './get-countries';
 export { getCountryMap } from './get-country-map';
 export { simplifyCountryName } from './simplify-country-name';
-export { getLongestStreak, getStreak } from './streak-calc';
+export { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from './streak-calc';
