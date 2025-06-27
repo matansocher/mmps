@@ -67,13 +67,14 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async actionsHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, messageId } = getMessageData(message);
     const userPreferences = await this.userPreferencesDB.getUserPreference(chatId);
     const inlineKeyboardButtons = [
       userPreferences?.isStopped ? { text: '🟢 התחל לקבל שיעורים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל שיעורים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '👩🏻‍ איך אני יכולה לעזור?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
+    await this.bot.deleteMessage(chatId, messageId).catch();
   }
 
   private async topicHandler(message: Message): Promise<void> {

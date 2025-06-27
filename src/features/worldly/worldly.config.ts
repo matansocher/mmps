@@ -25,6 +25,7 @@ export const ANALYTIC_EVENT_NAMES = {
   CAPITAL: 'CAPITAL',
   ANSWERED: 'ANSWERED',
   CONTACT: 'CONTACT',
+  STATISTICS: 'STATISTICS',
   ERROR: 'ERROR',
 };
 
@@ -32,6 +33,7 @@ export enum BOT_ACTIONS {
   START = 'start',
   STOP = 'stop',
   CONTACT = 'contact',
+  STATISTICS = 'statistics',
   RANDOM = 'rand',
   MAP = 'm',
   US_MAP = 'us_m',

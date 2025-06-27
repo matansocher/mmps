@@ -1,6 +1,6 @@
 import { GameLog } from '@core/mongo/worldly-mongo';
 import { getDateString } from '@core/utils';
-import { getStreak } from '../utils';
+import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '../utils';
 
 export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
 export const SPECIAL_CORRECT_ANSWERS_STREAKS = [4, 7, 10, 15, 20, 30];
@@ -70,4 +70,22 @@ export function generateSpecialMessage(userGameLogs: GameLog[]): string {
   if (totalGamesMsg) return totalGamesMsg;
 
   return null;
+}
+
+export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
+  const currentStreak = getStreak(userGameLogs.map((game) => game.createdAt));
+  const longestStreak = getLongestStreak(userGameLogs.map((game) => game.createdAt));
+  const todayGameLogs = userGameLogs.filter(
+    ({ createdAt }) => createdAt.getDate() === new Date().getDate() && createdAt.getMonth() === new Date().getMonth() && createdAt.getFullYear() === new Date().getFullYear(),
+  );
+  const todayCorrectGames = todayGameLogs.filter((log) => log.selected === log.correct);
+  const { currentStreak: currentCorrectAnsweredStreak, longestStreak: longestCorrectAnsweredStreak } = getStreakOfCorrectAnswers(userGameLogs);
+
+  return [
+    [`💣`, `היום:`, `${todayCorrectGames.length}/${todayGameLogs.length}`, `-`, `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%`].join(' '),
+    [`🤓`, 'רצף התשובות הנכונות הנוכחי:', `${currentCorrectAnsweredStreak}`].join(' '),
+    [`🚀`, 'רצף התשובות הנכונות הכי ארוך:', `${longestCorrectAnsweredStreak}`].join(' '),
+    [`💯`, 'רצף הימים הנוכחי:', `${currentStreak}`].join(' '),
+    [`🚀`, 'רצף הימים הכי ארוך:', `${longestStreak}`].join(' '),
+  ].join('\n');
 }

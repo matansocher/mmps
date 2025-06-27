@@ -5,7 +5,7 @@ import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { generateSpecialMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
+import { generateSpecialMessage, generateStatisticsMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
@@ -50,15 +50,17 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async actionsHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+    const { chatId, messageId } = getMessageData(message);
     const subscription = await this.subscriptionDB.getSubscription(chatId);
     const inlineKeyboardButtons = [
+      { text: '📊 סטטיסטיקות 📊', callback_data: `${BOT_ACTIONS.STATISTICS}` },
       !subscription?.isActive
         ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` }
         : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
+    await this.bot.deleteMessage(chatId, messageId).catch();
   }
 
   async randomHandler(message: Message): Promise<void> {
@@ -137,6 +139,11 @@ export class WorldlyController implements OnModuleInit {
           await this.bot.deleteMessage(chatId, messageId).catch();
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
+        case BOT_ACTIONS.STATISTICS:
+          await this.statisticsHandler(chatId);
+          await this.bot.deleteMessage(chatId, messageId).catch();
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STATISTICS }, userDetails);
+          break;
         case BOT_ACTIONS.MAP:
           await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
           await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.MAP, correctName, selectedName);
@@ -178,6 +185,9 @@ export class WorldlyController implements OnModuleInit {
           throw new Error('Invalid action');
       }
 
+      if (![BOT_ACTIONS.MAP, BOT_ACTIONS.US_MAP, BOT_ACTIONS.FLAG, BOT_ACTIONS.CAPITAL].includes(action)) {
+        return;
+      }
       const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
       const specialMessage = generateSpecialMessage(userGameLogs);
       if (specialMessage) {
@@ -213,6 +223,17 @@ export class WorldlyController implements OnModuleInit {
 
   private async contactHandler(chatId: number): Promise<void> {
     await this.bot.sendMessage(chatId, ['אשמח לעזור', 'אפשר לדבר עם מי שיצר אותי, הוא בטח ידע לעזור', MY_USER_NAME].join('\n'));
+  }
+
+  private async statisticsHandler(chatId: number): Promise<void> {
+    const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
+    if (!userGameLogs?.length) {
+      await this.bot.sendMessage(chatId, 'אני רואה שעדיין לא שיחנו ביחד משחקים, אפשר להתחיל משחק חדש בפקודה ׳משחק אקראי׳ או בפקודה ׳מפה׳');
+      return;
+    }
+
+    const replyText = generateStatisticsMessage(userGameLogs);
+    await this.bot.sendMessage(chatId, replyText);
   }
 
   private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
