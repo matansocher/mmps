@@ -49,7 +49,8 @@ export class QuizzyService {
         callback_data: [BOT_ACTIONS.GAME, questionId, answer.id, correctAnswerObj.id].join(INLINE_KEYBOARD_SEPARATOR),
       })),
     );
-    await this.bot.sendMessage(chatId, question, { ...inlineKeyboardMarkup });
+    const { message_id } = await this.bot.sendMessage(chatId, question, { ...inlineKeyboardMarkup });
+    this.questionDB.updateQuestion({ chatId }, { originalMessageId: message_id });
     return { question, correctAnswer, distractorAnswers };
   }
 
@@ -69,7 +70,8 @@ export class QuizzyService {
   async markAssignedQuestionsCompleted(chatId: number): Promise<void> {
     const questions = await this.questionDB.markQuestionsCompleted(chatId); // marks all questions for the user as completed
     await Promise.all(
-      questions.map(({ revealMessageId }) => {
+      questions.map(({ originalMessageId, revealMessageId }) => {
+        originalMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: originalMessageId, chat_id: chatId }).catch();
         revealMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch();
       }),
     );
