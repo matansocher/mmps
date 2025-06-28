@@ -4,9 +4,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { shuffleArray } from '@core/utils';
+import { getIsraelMapDistractors } from '@features/worldly/utils/get-distractors';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
-import { Country, State } from './types';
-import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCountry, getRandomState } from './utils';
+import { City, Country, State } from './types';
+import { getCapitalDistractors, getCityMap, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCity, getRandomCountry, getRandomState } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 
 @Injectable()
@@ -47,6 +48,18 @@ export class WorldlyService {
     const otherOptions = getMapDistractors(randomCountry);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.MAP} - ${country.name} - ${randomCountry.name}` })));
+
+    await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה' });
+  }
+
+  async israelMapHandler(chatId: number): Promise<void> {
+    const gameFilter = (c: City) => !!c.geometry;
+    const randomCity = getRandomCity(gameFilter);
+    const imagePath = getCityMap(randomCity.name);
+
+    const otherOptions = getIsraelMapDistractors(randomCity);
+    const options = shuffleArray([randomCity, ...otherOptions]);
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((city) => ({ text: city.hebrewName, callback_data: `${BOT_ACTIONS.MAP} - ${city.name} - ${randomCity.name}` })));
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה' });
   }

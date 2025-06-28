@@ -1,5 +1,5 @@
 import { Canvas, CanvasRenderingContext2D, createCanvas } from 'canvas';
-import { getCountries, getStates, simplifyCountryName } from '.';
+import { getCountries, getStates, simplifyAreaName } from '.';
 import { Country, State } from '../types';
 
 type GenerateCountryOptions = {
@@ -62,7 +62,7 @@ function drawCountry(ctx: CanvasRenderingContext2D, country: Area, coordsCountry
 
 export function generateCountryMap(countryName: string, isState = false): Canvas {
   const countries = isState ? getStates() : getCountries();
-  const country = countries.find((c) => simplifyCountryName(c.name) === simplifyCountryName(countryName));
+  const country = countries.find((c) => simplifyAreaName(c.name) === simplifyAreaName(countryName));
   if (!country) {
     return undefined;
   }

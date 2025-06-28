@@ -5,7 +5,7 @@ import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { generateSpecialMessage, generateStatisticsMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
+import { generateSpecialMessage, generateStatisticsMessage, getCityByName, getCountryByCapital, getCountryByName, getStateByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
@@ -30,11 +30,12 @@ export class WorldlyController implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
+    const { START, RANDOM, MAP, ISR_MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
       { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
       { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
+      { event: COMMAND, regex: ISR_MAP.command, handler: (message) => this.israelMapHandler.call(this, message) },
       { event: COMMAND, regex: US_MAP.command, handler: (message) => this.USMapHandler.call(this, message) },
       { event: COMMAND, regex: FLAG.command, handler: (message) => this.flagHandler.call(this, message) },
       { event: COMMAND, regex: CAPITAL.command, handler: (message) => this.capitalHandler.call(this, message) },
@@ -82,6 +83,17 @@ export class WorldlyController implements OnModuleInit {
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.MAP, error: `${err}` }, userDetails);
+      throw err;
+    }
+  }
+
+  async israelMapHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    try {
+      await this.worldlyService.israelMapHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ISR_MAP }, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.ISR_MAP, error: `${err}` }, userDetails);
       throw err;
     }
   }
@@ -163,6 +175,15 @@ export class WorldlyController implements OnModuleInit {
             userDetails,
           );
           break;
+        case BOT_ACTIONS.ISR_MAP:
+          await this.israelMapAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.ISR_MAP, correctName, selectedName);
+          this.notifier.notify(
+            BOT_CONFIG,
+            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇮🇱', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
+            userDetails,
+          );
+          break;
         case BOT_ACTIONS.FLAG:
           await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
           await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.FLAG, correctName, selectedName);
@@ -241,6 +262,14 @@ export class WorldlyController implements OnModuleInit {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
+    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
+    await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
+  }
+
+  private async israelMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    const correctCity = getCityByName(correctName);
+    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCity.hebrewName}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }

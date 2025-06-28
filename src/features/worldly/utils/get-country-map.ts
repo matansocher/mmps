@@ -1,12 +1,12 @@
 import { Canvas } from 'canvas';
 import * as fs from 'fs';
 import * as path from 'path';
-import { generateCountryMap, simplifyCountryName } from '.';
+import { generateCountryMap, simplifyAreaName } from '.';
 
 function getLocalCountryMap(countryName: string): string {
   try {
-    fs.readFileSync(path.join(__dirname, `../assets/images/${simplifyCountryName(countryName)}.png`), 'utf8');
-    return path.join(__dirname, `../assets/images/${simplifyCountryName(countryName)}.png`);
+    fs.readFileSync(path.join(__dirname, `../assets/images/${simplifyAreaName(countryName)}.png`), 'utf8');
+    return path.join(__dirname, `../assets/images/${simplifyAreaName(countryName)}.png`);
   } catch (err) {
     return undefined;
   }
@@ -18,7 +18,7 @@ function saveCountryMapLocally(countryName: string, canvas: Canvas): string {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const filePath = path.join(outputDir, `${simplifyCountryName(countryName)}.png`);
+  const filePath = path.join(outputDir, `${simplifyAreaName(countryName)}.png`);
   const buffer = canvas.toBuffer('image/png');
   fs.writeFileSync(filePath, buffer);
 
