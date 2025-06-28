@@ -16,6 +16,8 @@ const getGameType = (emoji) => {
     case '🗺️':
       return 'MAP';
     case '🇺🇸 🗺️':
+      return 'ISR_MAP';
+    case '🇮🇱':
       return 'US_MAP';
     case '🏁':
       return 'FLAG';
