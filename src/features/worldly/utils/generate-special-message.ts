@@ -6,7 +6,7 @@ export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
 export const SPECIAL_CORRECT_ANSWERS_STREAKS = [4, 7, 10, 15, 20, 30];
 export const SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED = [10, 50];
 
-export function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
+function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
   let streak = 0;
   for (let i = 0; i < userGameLogs.length; i++) {
     if (userGameLogs[i].correct === userGameLogs[i].selected) {
@@ -26,7 +26,7 @@ export function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
+function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
   const todayGames = userGameLogs.filter((log) => getDateString(new Date(log.createdAt)) === getDateString());
   if (todayGames?.length > 1) {
     return null;
@@ -44,7 +44,7 @@ export function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function getTotalGamesPlayedMessages(userGameLogs: GameLog[]): string {
+function getTotalGamesPlayedMessages(userGameLogs: GameLog[]): string {
   const indexOfSpecialStreak = SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED.indexOf(userGameLogs.length);
   const isHundredth = userGameLogs.length % 100 === 0;
   if (indexOfSpecialStreak === -1 && !isHundredth) {
