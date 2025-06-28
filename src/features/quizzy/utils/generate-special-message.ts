@@ -15,15 +15,15 @@ function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
       break;
     }
   }
-  if (SPECIAL_CORRECT_ANSWERS_STREAKS.includes(streak)) {
-    const messages = [
-      ['בונא מישהו פה נותן בראש! 🎉', `${streak} תשובות נכונות ברצף! 🔥`, 'תמשיך ככה! 💪'].join('\n'),
-      ['איזה תותח! 👏', `ענית נכון ${streak} פעמים ברצף!`, 'המשך כך, אתה בדרך הנכונה! 🚀'].join('\n'),
-      ['וואו! 🏅', `${streak} תשובות נכונות ברצף!`, 'אלוף! 🦸‍♂️'].join('\n'),
-    ];
-    return messages[Math.floor(Math.random() * messages.length)];
+  if (!SPECIAL_CORRECT_ANSWERS_STREAKS.includes(streak)) {
+    return null;
   }
-  return null;
+  const messages = [
+    ['בונא מישהו פה נותן בראש! 🎉', `${streak} תשובות נכונות ברצף! 🔥`, 'תמשיך ככה! 💪'].join('\n'),
+    ['איזה תותח! 👏', `ענית נכון ${streak} פעמים ברצף!`, 'המשך כך, אתה בדרך הנכונה! 🚀'].join('\n'),
+    ['וואו! 🏅', `${streak} תשובות נכונות ברצף!`, 'אלוף! 🦸‍♂️'].join('\n'),
+  ];
+  return messages[Math.floor(Math.random() * messages.length)];
 }
 
 function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
