@@ -1,8 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { City } from '../types';
+import { City, Country } from '../types';
 
 const cities = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/cities.json'), 'utf8'));
+const country = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/country.json'), 'utf8'));
+
+export function getCountry(): Country {
+  return country;
+}
 
 export function getCities(): City[] {
   return [...cities];

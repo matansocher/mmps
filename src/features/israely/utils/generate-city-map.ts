@@ -1,6 +1,6 @@
 import { Canvas, CanvasRenderingContext2D, createCanvas } from 'canvas';
-import { getCities, simplifyCityName } from '.';
-import { City } from '../types';
+import { getCities, getCountry, simplifyCityName } from '.';
+import { City, Country } from '../types';
 
 type GenerateCityOptions = {
   readonly strokeColor: string;
@@ -9,11 +9,11 @@ type GenerateCityOptions = {
   readonly shouldFill?: boolean;
 };
 
-type Area = City;
+type Area = City | Country;
 
 const WIDTH = 800;
 const HEIGHT = 800;
-const ZOOM = 0.75;
+const ZOOM = 1;
 
 const COLORS = {
   AREA_BORDER_HIGHLIGHTED: '#FF0000',
@@ -69,6 +69,13 @@ export function generateCityMap(cityName: string): Canvas {
   // Background (gray land, ocean)
   ctx.fillStyle = COLORS.OCEAN;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // Draw whole country
+  const country = getCountry();
+  if (!country.geometry) {
+    return;
+  }
+  drawArea(ctx, city, country, { shouldFill: true, fillColor: COLORS.AREA_LAND, strokeColor: COLORS.AREA_BORDER });
 
   // Draw all cities (land and boundaries)
   cities.forEach((currentCity) => {
