@@ -1,3 +1,3 @@
 export { generateInitialExplanationPrompt } from './generate-initial-explanation-prompt';
-export { generateSpecialMessage } from './generate-special-message';
-export { getStreak } from './streak-calc';
+export { generateSpecialMessage, generateStatisticsMessage } from './generate-special-message';
+export { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from './streak-calc';
