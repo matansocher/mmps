@@ -1,5 +1,5 @@
 import { shuffleArray } from '@core/utils';
-import { getCities, getCountries, getStates } from '.';
+import { getAreas, getCities, getStates } from '.';
 import { City, Country, State } from '../types';
 
 const R = 6371; // Earth's radius in km
@@ -16,7 +16,7 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export function getMapDistractors(correctCountry: Country): Array<Country & { distance: number }> {
-  const options = getCountries()
+  const options = getAreas()
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .map((c) => ({
       ...c,
@@ -52,7 +52,7 @@ export function getMapStateDistractors(correctState: State): Array<State & { dis
 }
 
 export function getFlagDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
-  const options = getCountries()
+  const options = getAreas()
     .filter(filter)
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .slice(0, 7);
@@ -60,7 +60,7 @@ export function getFlagDistractors(correctCountry: Country, filter: (country: Co
 }
 
 export function getCapitalDistractors(correctCountry: Country, filter: (country: Country) => boolean): Array<Country> {
-  const options = getCountries()
+  const options = getAreas()
     .filter(filter)
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .slice(0, 7);

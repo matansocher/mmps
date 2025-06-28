@@ -59,7 +59,7 @@ export class WorldlyService {
 
     const otherOptions = getIsraelMapDistractors(randomCity);
     const options = shuffleArray([randomCity, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((city) => ({ text: city.hebrewName, callback_data: `${BOT_ACTIONS.MAP} - ${city.name} - ${randomCity.name}` })));
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((city) => ({ text: city.hebrewName, callback_data: `${BOT_ACTIONS.ISR_MAP} - ${city.name} - ${randomCity.name}` })));
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה' });
   }

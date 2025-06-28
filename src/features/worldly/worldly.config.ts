@@ -10,7 +10,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
     MAP: { command: '/map', description: '🗺️ מפה 🗺️' },
     FLAG: { command: '/flag', description: '🏁 דגל 🏁' },
     CAPITAL: { command: '/capital', description: '🏛️ עיר בירה 🏛️' },
-    ISR_MAP: { command: '/isrmap', description: '🇺🇸 מפת ישראל 🇺🇸' },
+    ISR_MAP: { command: '/isrmap', description: '🇮🇱 מפת ישראל 🇮🇱' },
     US_MAP: { command: '/usmap', description: '🇺🇸 מפת ארצות הברית 🇺🇸' },
     ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
   },
