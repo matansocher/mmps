@@ -82,7 +82,13 @@ export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   const { currentStreak: currentCorrectAnsweredStreak, longestStreak: longestCorrectAnsweredStreak } = getStreakOfCorrectAnswers(userGameLogs);
 
   return [
-    [`💣`, `היום:`, `${todayCorrectGames.length}/${todayGameLogs.length}`, `-`, `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%`].join(' '),
+    [
+      `💣`,
+      `היום:`,
+      `${todayCorrectGames.length}/${todayGameLogs.length}`,
+      todayCorrectGames.length ? `-` : '',
+      todayCorrectGames.length ? `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%` : '',
+    ].join(' '),
     [`🤓`, 'רצף התשובות הנכונות הנוכחי:', `${currentCorrectAnsweredStreak}`].join(' '),
     [`🚀`, 'רצף התשובות הנכונות הכי ארוך:', `${longestCorrectAnsweredStreak}`].join(' '),
     [`💯`, 'רצף הימים הנוכחי:', `${currentStreak}`].join(' '),
