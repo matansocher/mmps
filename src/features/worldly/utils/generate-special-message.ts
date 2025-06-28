@@ -4,7 +4,7 @@ import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '../utils
 
 export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
 export const SPECIAL_CORRECT_ANSWERS_STREAKS = [4, 7, 10, 15, 20, 30];
-export const SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED = [10, 50, 100, 200, 300, 500, 600, 700, 800, 900, 1000];
+export const SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED = [10, 50];
 
 function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
   let streak = 0;
@@ -15,15 +15,15 @@ function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
       break;
     }
   }
-  if (SPECIAL_CORRECT_ANSWERS_STREAKS.includes(streak)) {
-    const messages = [
-      ['בונא מישהו פה נותן בראש! 🎉', `${streak} תשובות נכונות ברצף! 🔥`, 'תמשיך ככה! 💪'].join('\n'),
-      ['איזה תותח! 👏', `ענית נכון ${streak} פעמים ברצף!`, 'המשך כך, אתה בדרך הנכונה! 🚀'].join('\n'),
-      ['וואו! 🏅', `${streak} תשובות נכונות ברצף!`, 'אלוף! 🦸‍♂️'].join('\n'),
-    ];
-    return messages[Math.floor(Math.random() * messages.length)];
+  if (!SPECIAL_CORRECT_ANSWERS_STREAKS.includes(streak)) {
+    return null;
   }
-  return null;
+  const messages = [
+    ['בונא מישהו פה נותן בראש! 🎉', `${streak} תשובות נכונות ברצף! 🔥`, 'תמשיך ככה! 💪'].join('\n'),
+    ['איזה תותח! 👏', `ענית נכון ${streak} פעמים ברצף!`, 'המשך כך, אתה בדרך הנכונה! 🚀'].join('\n'),
+    ['וואו! 🏅', `${streak} תשובות נכונות ברצף!`, 'אלוף! 🦸‍♂️'].join('\n'),
+  ];
+  return messages[Math.floor(Math.random() * messages.length)];
 }
 
 function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
@@ -46,7 +46,8 @@ function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
 
 function getTotalGamesPlayedMessages(userGameLogs: GameLog[]): string {
   const indexOfSpecialStreak = SPECIAL_AMOUNT_OF_TOTAL_GAMES_PLAYED.indexOf(userGameLogs.length);
-  if (indexOfSpecialStreak === -1) {
+  const isHundredth = userGameLogs.length % 100 === 0;
+  if (indexOfSpecialStreak === -1 && !isHundredth) {
     return null;
   }
   const messages = [
@@ -82,7 +83,13 @@ export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   const { currentStreak: currentCorrectAnsweredStreak, longestStreak: longestCorrectAnsweredStreak } = getStreakOfCorrectAnswers(userGameLogs);
 
   return [
-    [`💣`, `היום:`, `${todayCorrectGames.length}/${todayGameLogs.length}`, `-`, `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%`].join(' '),
+    [
+      `💣`,
+      `היום:`,
+      `${todayCorrectGames.length}/${todayGameLogs.length}`,
+      todayCorrectGames.length ? `-` : '',
+      todayCorrectGames.length ? `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%` : '',
+    ].join(' '),
     [`🤓`, 'רצף התשובות הנכונות הנוכחי:', `${currentCorrectAnsweredStreak}`].join(' '),
     [`🚀`, 'רצף התשובות הנכונות הכי ארוך:', `${longestCorrectAnsweredStreak}`].join(' '),
     [`💯`, 'רצף הימים הנוכחי:', `${currentStreak}`].join(' '),

@@ -19,6 +19,7 @@ export interface Question {
   readonly answers: Answer[];
   readonly threadId?: string;
   readonly status?: QuestionStatus;
+  readonly originalMessageId?: number;
   readonly revealMessageId?: number;
   readonly answeredAt?: Date;
   readonly createdAt: Date;

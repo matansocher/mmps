@@ -19,7 +19,7 @@ import {
 } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './quizzy.config';
 import { QuizzyService } from './quizzy.service';
-import { generateInitialExplanationPrompt, generateSpecialMessage } from './utils';
+import { generateInitialExplanationPrompt, generateSpecialMessage, generateStatisticsMessage } from './utils';
 
 const loaderMessage = 'אני שניה חושב ונותן הסבר 🤔';
 const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
@@ -58,12 +58,14 @@ export class QuizzyController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.userStart(chatId, userDetails);
+    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId, messageId } = getMessageData(message);
     const subscription = await this.subscriptionDB.getSubscription(chatId);
     const inlineKeyboardButtons = [
+      { text: '📊 סטטיסטיקות 📊', callback_data: `${BOT_ACTIONS.STATISTICS}` },
       !subscription?.isActive
         ? { text: '🟢 רוצה להתחיל לקבל שאלות יומיות 🟢', callback_data: `${BOT_ACTIONS.START}` }
         : { text: '🛑 רוצה להפסיק לקבל שאלות יומיות 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
@@ -125,6 +127,11 @@ export class QuizzyController implements OnModuleInit {
           await this.bot.deleteMessage(chatId, messageId).catch();
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
+        case BOT_ACTIONS.STATISTICS:
+          await this.statisticsHandler(chatId);
+          await this.bot.deleteMessage(chatId, messageId).catch();
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STATISTICS }, userDetails);
+          break;
         case BOT_ACTIONS.GAME:
           const { question, correctAnswer, selectedAnswer } = await this.gameAnswerHandler(chatId, messageId, questionId, selectedAnswerId, correctAnswerId);
           await this.gameLogDB.saveGameLog(chatId, text, correctAnswerId, selectedAnswerId);
@@ -181,6 +188,17 @@ export class QuizzyController implements OnModuleInit {
 
   private async contactHandler(chatId: number): Promise<void> {
     await this.bot.sendMessage(chatId, ['אשמח לעזור', 'אפשר לדבר עם מי שיצר אותי, הוא בטח ידע לעזור', MY_USER_NAME].join('\n'));
+  }
+
+  private async statisticsHandler(chatId: number): Promise<void> {
+    const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
+    if (!userGameLogs?.length) {
+      await this.bot.sendMessage(chatId, 'אני רואה שעדיין לא שיחנו ביחד משחקים, אפשר להתחיל משחק חדש בפקודה ׳משחק אקראי׳ או בפקודה ׳מפה׳');
+      return;
+    }
+
+    const replyText = generateStatisticsMessage(userGameLogs);
+    await this.bot.sendMessage(chatId, replyText);
   }
 
   private async gameAnswerHandler(
