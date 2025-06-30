@@ -6,7 +6,7 @@ import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMon
 import { NotifierService } from '@core/notifier';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { generateSpecialMessage, generateStatisticsMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
 const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
@@ -122,7 +122,7 @@ export class WorldlyController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
-    const [action, selectedName, correctName] = response.split(' - ');
+    const [action, gameId, selectedName, correctName] = response.split(INLINE_KEYBOARD_SEPARATOR);
     try {
       switch (action) {
         case BOT_ACTIONS.START:
@@ -147,7 +147,7 @@ export class WorldlyController implements OnModuleInit {
           break;
         case BOT_ACTIONS.MAP:
           await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.MAP, correctName, selectedName);
+          await this.gameLogDB.updateGameLog({ chatId, gameId, selected: selectedName });
           this.notifier.notify(
             BOT_CONFIG,
             { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
@@ -156,7 +156,7 @@ export class WorldlyController implements OnModuleInit {
           break;
         case BOT_ACTIONS.US_MAP:
           await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.US_MAP, correctName, selectedName);
+          await this.gameLogDB.updateGameLog({ chatId, gameId, selected: selectedName });
           this.notifier.notify(
             BOT_CONFIG,
             { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
@@ -165,7 +165,7 @@ export class WorldlyController implements OnModuleInit {
           break;
         case BOT_ACTIONS.FLAG:
           await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.FLAG, correctName, selectedName);
+          await this.gameLogDB.updateGameLog({ chatId, gameId, selected: selectedName });
           this.notifier.notify(
             BOT_CONFIG,
             { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
@@ -174,7 +174,7 @@ export class WorldlyController implements OnModuleInit {
           break;
         case BOT_ACTIONS.CAPITAL:
           await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
-          await this.gameLogDB.saveGameLog(chatId, ANALYTIC_EVENT_NAMES.CAPITAL, correctName, selectedName);
+          await this.gameLogDB.updateGameLog({ chatId, gameId, selected: selectedName });
           this.notifier.notify(
             BOT_CONFIG,
             { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },

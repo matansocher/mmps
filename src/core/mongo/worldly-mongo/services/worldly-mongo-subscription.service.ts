@@ -11,9 +11,36 @@ export class WorldlyMongoSubscriptionService {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }
 
-  getActiveSubscriptions(): Promise<Subscription[]> {
-    const filter = { isActive: true };
-    return this.subscriptionCollection.find(filter).toArray();
+  // return only active subscriptions that do not have an open game (selected field exists in GameLog collection)
+  getActiveSubscriptions(): Promise<{ chatId: number }[]> {
+    return this.subscriptionCollection
+      .aggregate<{ chatId: number }>([
+        { $match: { isActive: true } },
+        {
+          $lookup: {
+            from: COLLECTIONS.GAME_LOG,
+            let: { subChatId: '$chatId' },
+            pipeline: [{ $match: { $expr: { $eq: ['$chatId', '$$subChatId'] } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }],
+            as: 'latestGameLog',
+          },
+        },
+        {
+          $addFields: {
+            answeredLastMessage: {
+              $cond: {
+                if: { $gt: [{ $size: '$latestGameLog' }, 0] },
+                then: {
+                  $ne: [{ $type: { $arrayElemAt: ['$latestGameLog.selected', 0] } }, 'missing'],
+                },
+                else: false,
+              },
+            },
+          },
+        },
+        { $match: { answeredLastMessage: true } },
+        { $project: { _id: 0, chatId: 1 } },
+      ])
+      .toArray();
   }
 
   getSubscription(chatId: number): Promise<Subscription> {
