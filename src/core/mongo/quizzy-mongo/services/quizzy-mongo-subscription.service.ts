@@ -11,8 +11,8 @@ export class QuizzyMongoSubscriptionService {
     this.subscriptionCollection = this.db.collection(COLLECTIONS.SUBSCRIPTION);
   }
 
-  // return only active subscriptions that do no have an open question (status = assigned)
-  getActiveSubscriptions() {
+  // return only active subscriptions that do not have an open question (status = assigned)
+  getActiveSubscriptions(): Promise<{ chatId: number }[]> {
     return this.subscriptionCollection
       .aggregate<{ chatId: number }>([
         { $match: { isActive: true } },

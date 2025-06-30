@@ -1,18 +1,19 @@
 import * as fs from 'fs';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
+import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
-import { shuffleArray } from '@core/utils';
+import { generateRandomString, shuffleArray } from '@core/utils';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
 import { Country, State } from './types';
 import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCountry, getRandomState } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 
 @Injectable()
 export class WorldlyService {
   constructor(
     private readonly subscriptionDB: WorldlyMongoSubscriptionService,
+    private readonly gameLogDB: WorldlyMongoGameLogService,
     private readonly userDB: WorldlyMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -46,9 +47,14 @@ export class WorldlyService {
 
     const otherOptions = getMapDistractors(randomCountry);
     const options = shuffleArray([randomCountry, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.MAP} - ${country.name} - ${randomCountry.name}` })));
+    const gameId = generateRandomString(5);
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(
+      options.map((country) => ({ text: country.hebrewName, callback_data: [BOT_ACTIONS.MAP, gameId, country.name, randomCountry.name].join(INLINE_KEYBOARD_SEPARATOR) })),
+    );
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה' });
+
+    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.MAP, correct: randomCountry.name });
   }
 
   async USMapHandler(chatId: number): Promise<void> {
@@ -58,9 +64,14 @@ export class WorldlyService {
 
     const otherOptions = getMapStateDistractors(randomState);
     const options = shuffleArray([randomState, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((state) => ({ text: state.hebrewName, callback_data: `${BOT_ACTIONS.US_MAP} - ${state.name} - ${randomState.name}` })));
+    const gameId = generateRandomString(5);
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(
+      options.map((state) => ({ text: state.hebrewName, callback_data: [BOT_ACTIONS.US_MAP, gameId, state.name, randomState.name].join(INLINE_KEYBOARD_SEPARATOR) })),
+    );
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה בארצות הברית' });
+
+    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.US_MAP, correct: randomState.name });
   }
 
   async flagHandler(chatId: number): Promise<void> {
@@ -69,9 +80,14 @@ export class WorldlyService {
 
     const otherOptions = getFlagDistractors(randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(options.map((country) => ({ text: country.hebrewName, callback_data: `${BOT_ACTIONS.FLAG} - ${country.name} - ${randomCountry.name}` })));
+    const gameId = generateRandomString(5);
+    const inlineKeyboardMarkup = getInlineKeyboardMarkup(
+      options.map((country) => ({ text: country.hebrewName, callback_data: [BOT_ACTIONS.FLAG, gameId, country.name, randomCountry.name].join(INLINE_KEYBOARD_SEPARATOR) })),
+    );
 
     await this.bot.sendMessage(chatId, randomCountry.emoji, { ...inlineKeyboardMarkup });
+
+    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.FLAG, correct: randomCountry.name });
   }
 
   async capitalHandler(chatId: number): Promise<void> {
@@ -80,11 +96,14 @@ export class WorldlyService {
 
     const otherOptions = getCapitalDistractors(randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
+    const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.hebrewCapital, callback_data: `${BOT_ACTIONS.CAPITAL} - ${country.capital} - ${randomCountry.capital}` })),
+      options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, gameId, country.capital, randomCountry.capital].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
     await this.bot.sendMessage(chatId, replyText, { ...inlineKeyboardMarkup });
+
+    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.CAPITAL, correct: randomCountry.name });
   }
 }

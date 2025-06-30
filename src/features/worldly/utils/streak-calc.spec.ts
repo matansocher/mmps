@@ -55,6 +55,7 @@ describe('getStreakOfCorrectAnswers()', () => {
   const baseGameLog: GameLog = {
     _id: new ObjectId(),
     chatId: 123456789,
+    gameId: 'jd73c',
     type: 'map',
     createdAt: new Date(),
     selected: null,
