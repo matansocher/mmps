@@ -122,7 +122,7 @@ export class WorldlyController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(callbackQuery);
 
-    const [action, gameId, selectedName, correctName] = response.split(INLINE_KEYBOARD_SEPARATOR);
+    const [action, selectedName, correctName, gameId] = response.split(INLINE_KEYBOARD_SEPARATOR);
     try {
       switch (action) {
         case BOT_ACTIONS.START:

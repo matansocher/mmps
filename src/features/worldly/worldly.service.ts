@@ -49,7 +49,7 @@ export class WorldlyService {
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.hebrewName, callback_data: [BOT_ACTIONS.MAP, gameId, country.name, randomCountry.name].join(INLINE_KEYBOARD_SEPARATOR) })),
+      options.map((country) => ({ text: country.hebrewName, callback_data: [BOT_ACTIONS.MAP, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה' });
@@ -66,7 +66,7 @@ export class WorldlyService {
     const options = shuffleArray([randomState, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((state) => ({ text: state.hebrewName, callback_data: [BOT_ACTIONS.US_MAP, gameId, state.name, randomState.name].join(INLINE_KEYBOARD_SEPARATOR) })),
+      options.map((state) => ({ text: state.hebrewName, callback_data: [BOT_ACTIONS.US_MAP, state.name, randomState.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה בארצות הברית' });
@@ -82,7 +82,7 @@ export class WorldlyService {
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.hebrewName, callback_data: [BOT_ACTIONS.FLAG, gameId, country.name, randomCountry.name].join(INLINE_KEYBOARD_SEPARATOR) })),
+      options.map((country) => ({ text: country.hebrewName, callback_data: [BOT_ACTIONS.FLAG, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 
     await this.bot.sendMessage(chatId, randomCountry.emoji, { ...inlineKeyboardMarkup });
@@ -98,7 +98,7 @@ export class WorldlyService {
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, gameId, country.capital, randomCountry.capital].join(INLINE_KEYBOARD_SEPARATOR) })),
+      options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, country.capital, randomCountry.capital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
