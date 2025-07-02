@@ -35,11 +35,15 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
   }
 }
 
+export async function getAllCities() {
+  const result = await axios.get(CITIES_BASE_URL);
+  return result?.data?.results || [];
+}
+
 async function getCitiesList(): Promise<WoltCity[]> {
   const logger = new Logger(getCitiesList.name);
   try {
-    const result = await axios.get(CITIES_BASE_URL);
-    const rawCities = result['data'].results;
+    const rawCities = await getAllCities();
     return rawCities
       .filter(({ slug }) => CITIES_SLUGS_SUPPORTED.includes(slug))
       .map(({ slug, location }) => {

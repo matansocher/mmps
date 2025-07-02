@@ -5,6 +5,11 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Notifier Bot 🦔',
   token: 'NOTIFIER_TELEGRAM_BOT_TOKEN',
   forceLocal: true,
+  commands: {
+    QUIZZY: { command: '/quizzy', description: '🤓 Quizzy Summary 🤓' },
+    WOLT: { command: '/wolt', description: '🩵️ Wolt Summary 🩵' },
+    WORLDLY: { command: '/worldly', description: '🌎 Worldly Summary 🌎' },
+  },
 };
 
 export const NOTIFIER_CHAT_ID = 862305226;

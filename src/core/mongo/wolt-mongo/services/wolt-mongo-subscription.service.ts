@@ -50,4 +50,8 @@ export class WoltMongoSubscriptionService {
     const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
     return this.subscriptionCollection.find(filter).toArray();
   }
+
+  async getTopBy(topBy: 'restaurant' | 'chatId') {
+    return this.subscriptionCollection.aggregate([{ $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
+  }
 }

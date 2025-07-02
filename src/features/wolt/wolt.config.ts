@@ -46,7 +46,6 @@ export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-t
 // 'mevaseret-zion-area'
 // 'modiin'
 // 'nazareth---nof-hagalil-area'
-// 'netanya'
 // 'netivot-sderot-area'
 // 'pardes-hanna'
 // 'petah-tikva'
