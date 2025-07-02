@@ -45,4 +45,28 @@ export class WorldlyMongoGameLogService {
     const filter = { chatId };
     return this.gameLogCollection.find(filter).toArray();
   }
+
+  async getTopByChatId(total: number) {
+    return this.gameLogCollection
+      .aggregate([
+        {
+          $group: {
+            _id: '$chatId',
+            count: { $sum: 1 },
+            records: { $push: '$$ROOT' }, // Push full documents
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: total },
+        {
+          $project: {
+            _id: 0,
+            chatId: '$_id',
+            count: 1,
+            records: 1,
+          },
+        },
+      ])
+      .toArray();
+  }
 }
