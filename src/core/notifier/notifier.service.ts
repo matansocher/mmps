@@ -1,24 +1,15 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import TelegramBot from 'node-telegram-bot-api';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
-import { getMessageData, TELEGRAM_EVENTS, TelegramBotConfig, UserDetails } from '@services/telegram';
+import { TelegramBotConfig, UserDetails } from '@services/telegram';
 import { NotifyOptions } from './interface';
 import { BOT_CONFIG, MessageType, NOTIFIER_CHAT_ID } from './notifier.config';
 
 @Injectable()
-export class NotifierService implements OnModuleInit {
+export class NotifierService {
   private readonly logger = new Logger(NotifierService.name);
 
   constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
-
-  onModuleInit(): void {
-    this.bot.on(TELEGRAM_EVENTS.MESSAGE, (message: Message) => this.messageHandler(message));
-  }
-
-  async messageHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
-    await this.bot.sendMessage(chatId, 'I am here');
-  }
 
   notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): void {
     if (userDetails?.chatId === MY_USER_ID) {
