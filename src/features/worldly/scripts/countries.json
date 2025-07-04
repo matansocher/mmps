@@ -1795,18 +1795,6 @@
     "hebrewCapital": "קסטריז"
   },
   {
-    "name": "Saint Vincent and the Grenadines",
-    "alpha2": "VC",
-    "alpha3": "VCT",
-    "lat": 12.984305,
-    "lon": -61.287228,
-    "capital": "Kingstown",
-    "continent": "North America",
-    "emoji": "🇻🇨",
-    "hebrewName": "סנט וינסנט והגרנדינים",
-    "hebrewCapital": "קינגסטאון"
-  },
-  {
     "name": "Samoa",
     "alpha2": "WS",
     "alpha3": "WSM",
@@ -1970,7 +1958,7 @@
     "alpha3": "ZAF",
     "lat": -30.559482,
     "lon": 22.937506,
-    "capital": "Pretoria, Bloemfontein, Cape Town",
+    "capital": "Cape Town",
     "continent": "Africa",
     "emoji": "🇿🇦",
     "hebrewName": "דרום אפריקה",
@@ -2018,7 +2006,7 @@
     "alpha3": "LKA",
     "lat": 7.873054,
     "lon": 80.771797,
-    "capital": "Sri Jayawardenapura Kotte[21]",
+    "capital": "Colombo",
     "continent": "Asia",
     "emoji": "🇱🇰",
     "hebrewName": "סרי לנקה",
