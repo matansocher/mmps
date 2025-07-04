@@ -27,6 +27,8 @@ async function bootstrap() {
   logger.log(`NODE_VERSION: ${process.versions.node}`);
 
   await app.listen(env.PORT || 3000);
+
+  logger.log(`MMPS service is running on http://localhost:${env.PORT || 3000}/api - NODE_VERSION: ${process.versions.node}`);
 }
 
 bootstrap();
