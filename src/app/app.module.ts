@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import { Module } from '@nestjs/common';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
+import { CallerModule } from '@features/caller';
 import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
 import { BOT_CONFIG as cookerBotConfig, CookerModule } from '@features/cooker';
 import { DefineModule } from '@features/define';
@@ -21,6 +22,7 @@ const registerBotModule = (module: any, config: { id: string }) => {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    CallerModule,
     DefineModule,
     registerBotModule(CoachModule, coachBotConfig),
     registerBotModule(CookerModule, cookerBotConfig),
