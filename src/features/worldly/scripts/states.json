@@ -1,0 +1,452 @@
+[
+  {
+    "name": "Alabama",
+    "alpha2": "AL",
+    "lat": 32.806671,
+    "lon": -86.79113,
+    "capital": "Montgomery",
+    "hebrewName": "אלבמה",
+    "hebrewCapital": "מונטגומרי"
+  },
+  {
+    "name": "Alaska",
+    "alpha2": "AK",
+    "lat": 61.370716,
+    "lon": -152.404419,
+    "capital": "Juneau",
+    "hebrewName": "אלסקה",
+    "hebrewCapital": "ג'ונו"
+  },
+  {
+    "name": "Arizona",
+    "alpha2": "AZ",
+    "lat": 33.729759,
+    "lon": -111.431221,
+    "capital": "Phoenix",
+    "hebrewName": "אריזונה",
+    "hebrewCapital": "פֶנִיקס"
+  },
+  {
+    "name": "Arkansas",
+    "alpha2": "AR",
+    "lat": 34.969704,
+    "lon": -92.373123,
+    "capital": "Little Rock",
+    "hebrewName": "ארקנזו",
+    "hebrewCapital": "ליטל רוק"
+  },
+  {
+    "name": "California",
+    "alpha2": "CA",
+    "lat": 36.116203,
+    "lon": -119.681564,
+    "capital": "Sacramento",
+    "hebrewName": "קליפורניה",
+    "hebrewCapital": "סקרמנטו"
+  },
+  {
+    "name": "Colorado",
+    "alpha2": "CO",
+    "lat": 39.059811,
+    "lon": -105.311104,
+    "capital": "Denver",
+    "hebrewName": "קולורדו",
+    "hebrewCapital": "דנבר"
+  },
+  {
+    "name": "Connecticut",
+    "alpha2": "CT",
+    "lat": 41.597782,
+    "lon": -72.755371,
+    "capital": "Hartford",
+    "hebrewName": "קונטיקט",
+    "hebrewCapital": "הרטפורד"
+  },
+  {
+    "name": "Delaware",
+    "alpha2": "DE",
+    "lat": 39.318523,
+    "lon": -75.507141,
+    "capital": "Dover",
+    "hebrewName": "דלאוור",
+    "hebrewCapital": "דובר"
+  },
+  {
+    "name": "Florida",
+    "alpha2": "FL",
+    "lat": 27.766279,
+    "lon": -81.686783,
+    "capital": "Tallahassee",
+    "hebrewName": "פלורידה",
+    "hebrewCapital": "טלהאסי"
+  },
+  {
+    "name": "Georgia",
+    "alpha2": "GA",
+    "lat": 33.040619,
+    "lon": -83.643074,
+    "capital": "Atlanta",
+    "hebrewName": "ג'ורג'יה",
+    "hebrewCapital": "אטלנטה"
+  },
+  {
+    "name": "Hawaii",
+    "alpha2": "HI",
+    "lat": 21.094318,
+    "lon": -157.498337,
+    "capital": "Honolulu",
+    "hebrewName": "הוואי",
+    "hebrewCapital": "הונולולו"
+  },
+  {
+    "name": "Idaho",
+    "alpha2": "ID",
+    "lat": 44.240459,
+    "lon": -114.478828,
+    "capital": "Boise",
+    "hebrewName": "איידהו",
+    "hebrewCapital": "בויס"
+  },
+  {
+    "name": "Illinois",
+    "alpha2": "IL",
+    "lat": 40.349457,
+    "lon": -88.986137,
+    "capital": "Springfield",
+    "hebrewName": "אילינוי",
+    "hebrewCapital": "ספרינגפילד"
+  },
+  {
+    "name": "Indiana",
+    "alpha2": "IN",
+    "lat": 39.849426,
+    "lon": -86.258278,
+    "capital": "Indianapolis",
+    "hebrewName": "אינדיאנה",
+    "hebrewCapital": "אינדיאנפוליס"
+  },
+  {
+    "name": "Iowa",
+    "alpha2": "IA",
+    "lat": 42.011539,
+    "lon": -93.210526,
+    "capital": "Des Moines",
+    "hebrewName": "איווה",
+    "hebrewCapital": "דה מוין"
+  },
+  {
+    "name": "Kansas",
+    "alpha2": "KS",
+    "lat": 38.5266,
+    "lon": -96.726486,
+    "capital": "Topeka",
+    "hebrewName": "קנזס",
+    "hebrewCapital": "טופיקה"
+  },
+  {
+    "name": "Kentucky",
+    "alpha2": "KY",
+    "lat": 37.66814,
+    "lon": -84.670067,
+    "capital": "Frankfort",
+    "hebrewName": "קנטאקי",
+    "hebrewCapital": "פרנקפורט"
+  },
+  {
+    "name": "Louisiana",
+    "alpha2": "LA",
+    "lat": 31.169546,
+    "lon": -91.867805,
+    "capital": "Baton Rouge",
+    "hebrewName": "לואיזיאנה",
+    "hebrewCapital": "באטון רוז'"
+  },
+  {
+    "name": "Maine",
+    "alpha2": "ME",
+    "lat": 44.693947,
+    "lon": -69.381927,
+    "capital": "Augusta",
+    "hebrewName": "מיין",
+    "hebrewCapital": "אוגוסטה"
+  },
+  {
+    "name": "Maryland",
+    "alpha2": "MD",
+    "lat": 39.063946,
+    "lon": -76.802101,
+    "capital": "Annapolis",
+    "hebrewName": "מרילנד",
+    "hebrewCapital": "אנאפוליס"
+  },
+  {
+    "name": "Massachusetts",
+    "alpha2": "MA",
+    "lat": 42.230171,
+    "lon": -71.530106,
+    "capital": "Boston",
+    "hebrewName": "מסצ'וסטס",
+    "hebrewCapital": "בוסטון"
+  },
+  {
+    "name": "Michigan",
+    "alpha2": "MI",
+    "lat": 43.326618,
+    "lon": -84.536095,
+    "capital": "Lansing",
+    "hebrewName": "מישיגן",
+    "hebrewCapital": "לנסינג"
+  },
+  {
+    "name": "Minnesota",
+    "alpha2": "MN",
+    "lat": 45.694454,
+    "lon": -93.900192,
+    "capital": "Saint Paul",
+    "hebrewName": "מינסוטה",
+    "hebrewCapital": "סנט פול"
+  },
+  {
+    "name": "Mississippi",
+    "alpha2": "MS",
+    "lat": 32.741646,
+    "lon": -89.678696,
+    "capital": "Jackson",
+    "hebrewName": "מיסיסיפי",
+    "hebrewCapital": "ג'קסון"
+  },
+  {
+    "name": "Missouri",
+    "alpha2": "MO",
+    "lat": 38.456085,
+    "lon": -92.288368,
+    "capital": "Jefferson City",
+    "hebrewName": "מיזורי",
+    "hebrewCapital": "ג'פרסון סיטי"
+  },
+  {
+    "name": "Montana",
+    "alpha2": "MT",
+    "lat": 46.921925,
+    "lon": -110.454353,
+    "capital": "Helena",
+    "hebrewName": "מונטנה",
+    "hebrewCapital": "הלנה"
+  },
+  {
+    "name": "Nebraska",
+    "alpha2": "NE",
+    "lat": 41.12537,
+    "lon": -98.268082,
+    "capital": "Lincoln",
+    "hebrewName": "נברסקה",
+    "hebrewCapital": "לינקולן"
+  },
+  {
+    "name": "Nevada",
+    "alpha2": "NV",
+    "lat": 38.313515,
+    "lon": -117.055374,
+    "capital": "Carson City",
+    "hebrewName": "נבדה",
+    "hebrewCapital": "קרסון סיטי"
+  },
+  {
+    "name": "New Hampshire",
+    "alpha2": "NH",
+    "lat": 43.452492,
+    "lon": -71.563896,
+    "capital": "Concord",
+    "hebrewName": "ניו המפשייר",
+    "hebrewCapital": "קונקורד"
+  },
+  {
+    "name": "New Jersey",
+    "alpha2": "NJ",
+    "lat": 40.298904,
+    "lon": -74.521011,
+    "capital": "Trenton",
+    "hebrewName": "ניו ג'רזי",
+    "hebrewCapital": "טרנטון"
+  },
+  {
+    "name": "New Mexico",
+    "alpha2": "NM",
+    "lat": 34.840515,
+    "lon": -106.248482,
+    "capital": "Santa Fe",
+    "hebrewName": "ניו מקסיקו",
+    "hebrewCapital": "סנטה פה"
+  },
+  {
+    "name": "New York",
+    "alpha2": "NY",
+    "lat": 42.165726,
+    "lon": -74.948051,
+    "capital": "Albany",
+    "hebrewName": "ניו יורק",
+    "hebrewCapital": "אלבני"
+  },
+  {
+    "name": "North Carolina",
+    "alpha2": "NC",
+    "lat": 35.630066,
+    "lon": -79.806419,
+    "capital": "Raleigh",
+    "hebrewName": "צפון קרוליינה",
+    "hebrewCapital": "ראלי"
+  },
+  {
+    "name": "North Dakota",
+    "alpha2": "ND",
+    "lat": 47.528912,
+    "lon": -99.784012,
+    "capital": "Bismarck",
+    "hebrewName": "צפון דקוטה",
+    "hebrewCapital": "ביסמרק"
+  },
+  {
+    "name": "Ohio",
+    "alpha2": "OH",
+    "lat": 40.388783,
+    "lon": -82.764915,
+    "capital": "Columbus",
+    "hebrewName": "אוהיו",
+    "hebrewCapital": "קולומבוס"
+  },
+  {
+    "name": "Oklahoma",
+    "alpha2": "OK",
+    "lat": 35.565342,
+    "lon": -96.928917,
+    "capital": "Oklahoma City",
+    "hebrewName": "אוקלהומה",
+    "hebrewCapital": "אוקלהומה סיטי"
+  },
+  {
+    "name": "Oregon",
+    "alpha2": "OR",
+    "lat": 44.572021,
+    "lon": -122.070938,
+    "capital": "Salem",
+    "hebrewName": "אורגון",
+    "hebrewCapital": "סאלם"
+  },
+  {
+    "name": "Pennsylvania",
+    "alpha2": "PA",
+    "lat": 40.590752,
+    "lon": -77.209755,
+    "capital": "Harrisburg",
+    "hebrewName": "פנסילבניה",
+    "hebrewCapital": "הריסבורג"
+  },
+  {
+    "name": "Rhode Island",
+    "alpha2": "RI",
+    "lat": 41.680893,
+    "lon": -71.51178,
+    "capital": "Providence",
+    "hebrewName": "רוד איילנד",
+    "hebrewCapital": "פרובידנס"
+  },
+  {
+    "name": "South Carolina",
+    "alpha2": "SC",
+    "lat": 33.856892,
+    "lon": -80.945007,
+    "capital": "Columbia",
+    "hebrewName": "דרום קרוליינה",
+    "hebrewCapital": "קולומביה"
+  },
+  {
+    "name": "South Dakota",
+    "alpha2": "SD",
+    "lat": 44.299782,
+    "lon": -99.438828,
+    "capital": "Pierre",
+    "hebrewName": "דרום דקוטה",
+    "hebrewCapital": "פייר"
+  },
+  {
+    "name": "Tennessee",
+    "alpha2": "TN",
+    "lat": 35.747845,
+    "lon": -86.692345,
+    "capital": "Nashville",
+    "hebrewName": "טנסי",
+    "hebrewCapital": "נשוויל"
+  },
+  {
+    "name": "Texas",
+    "alpha2": "TX",
+    "lat": 31.054487,
+    "lon": -97.563461,
+    "capital": "Austin",
+    "hebrewName": "טקסס",
+    "hebrewCapital": "אוסטין"
+  },
+  {
+    "name": "Utah",
+    "alpha2": "UT",
+    "lat": 40.150032,
+    "lon": -111.862434,
+    "capital": "Salt Lake City",
+    "hebrewName": "יוטה",
+    "hebrewCapital": "סולט לייק סיטי"
+  },
+  {
+    "name": "Vermont",
+    "alpha2": "VT",
+    "lat": 44.045876,
+    "lon": -72.710686,
+    "capital": "Montpelier",
+    "hebrewName": "ורמונט",
+    "hebrewCapital": "מונפלייה"
+  },
+  {
+    "name": "Virginia",
+    "alpha2": "VA",
+    "lat": 37.769337,
+    "lon": -78.169968,
+    "capital": "Richmond",
+    "hebrewName": "וירג׳יניה",
+    "hebrewCapital": "ריצ׳מונד"
+  },
+  {
+    "name": "Washington",
+    "alpha2": "WA",
+    "lat": 47.400902,
+    "lon": -121.490494,
+    "capital": "Olympia",
+    "hebrewName": "וושינגטון",
+    "hebrewCapital": "אולימפיה"
+  },
+  {
+    "name": "West Virginia",
+    "alpha2": "WV",
+    "lat": 38.491226,
+    "lon": -80.954453,
+    "capital": "Charleston",
+    "hebrewName": "מערב וירג'יניה",
+    "hebrewCapital": "צ'רלסטון"
+  },
+  {
+    "name": "Wisconsin",
+    "alpha2": "WI",
+    "lat": 44.268543,
+    "lon": -89.616508,
+    "capital": "Madison",
+    "hebrewName": "ויסקונסין",
+    "hebrewCapital": "מדיסון"
+  },
+  {
+    "name": "Wyoming",
+    "alpha2": "WY",
+    "lat": 42.755966,
+    "lon": -107.30249,
+    "capital": "Cheyenne",
+    "hebrewName": "ויומינג",
+    "hebrewCapital": "צ'יין"
+  }
+]

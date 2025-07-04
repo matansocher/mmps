@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
+import { UserPreferencesCacheService } from '@features/worldly/cache';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { generateSpecialMessage, generateStatisticsMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
@@ -21,6 +22,7 @@ export class WorldlyController implements OnModuleInit {
     private readonly userDB: WorldlyMongoUserService,
     private readonly subscriptionDB: WorldlyMongoSubscriptionService,
     private readonly gameLogDB: WorldlyMongoGameLogService,
+    private readonly userPreferences: UserPreferencesCacheService,
     private readonly notifier: NotifierService,
     private readonly configService: ConfigService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -30,9 +32,10 @@ export class WorldlyController implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { START, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
+    const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: FIRE_MODE.command, handler: (message) => this.fireModeHandler.call(this, message) }, // $$$$$$$$$$$$$$$$$ new command
       { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
       { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
       { event: COMMAND, regex: US_MAP.command, handler: (message) => this.USMapHandler.call(this, message) },
@@ -64,13 +67,27 @@ export class WorldlyController implements OnModuleInit {
     await this.bot.deleteMessage(chatId, messageId).catch();
   }
 
+  async fireModeHandler(message: Message): Promise<void> {
+    const { chatId, userDetails } = getMessageData(message);
+    try {
+      await this.bot.sendMessage(chatId, 'מצוין! עכשיו נשחק ברצף 🔥');
+      const userPreferences = this.userPreferences.getUserPreferences(chatId) || {};
+      this.userPreferences.saveUserPreferences(chatId, { ...userPreferences, onFireMode: true });
+      await this.worldlyService.randomGameHandler(chatId);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE }, userDetails);
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE, error: `❗️ ${err}` }, userDetails);
+      throw err;
+    }
+  }
+
   async randomHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.worldlyService.randomGameHandler(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.RANDOM }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.RANDOM }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: 'RANDOM', error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.RANDOM, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -81,7 +98,7 @@ export class WorldlyController implements OnModuleInit {
       await this.worldlyService.mapHandler(chatId);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.MAP, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -92,7 +109,7 @@ export class WorldlyController implements OnModuleInit {
       await this.worldlyService.USMapHandler(chatId);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.US_MAP, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -103,7 +120,7 @@ export class WorldlyController implements OnModuleInit {
       await this.worldlyService.flagHandler(chatId);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.FLAG, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -114,7 +131,7 @@ export class WorldlyController implements OnModuleInit {
       await this.worldlyService.capitalHandler(chatId);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: BOT_ACTIONS.CAPITAL, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -194,8 +211,13 @@ export class WorldlyController implements OnModuleInit {
       if (specialMessage) {
         await this.bot.sendMessage(chatId, specialMessage);
       }
+      // If the user is in fire mode, send a new game immediately
+      const userPreferences = this.userPreferences.getUserPreferences(chatId);
+      if (userPreferences?.onFireMode) {
+        await this.worldlyService.randomGameHandler(chatId);
+      }
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `${err}` }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -238,34 +260,34 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
+    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch();
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async USMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
     const correctCountry = getStateByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.hebrewName}`;
-    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId });
+    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch();
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
+    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch();
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
     const correctCountry = getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
-    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId });
+    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch();
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 }
