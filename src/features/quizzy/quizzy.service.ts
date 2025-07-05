@@ -4,9 +4,20 @@ import { Answer, QuizzyMongoQuestionService, QuizzyMongoSubscriptionService, Qui
 import { NotifierService } from '@core/notifier';
 import { generateRandomString, shuffleArray } from '@core/utils';
 import { OpenaiAssistantService } from '@services/openai';
+import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/openai.config';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, QUIZZY_ASSISTANT_ID, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START } from './quizzy.config';
-import { triviaSchema } from './types';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_ACTIONS,
+  BOT_CONFIG,
+  FREE_TEXT_CHECK_INSTRUCTIONS,
+  FREE_TEXT_CHECK_THRESHOLD,
+  INLINE_KEYBOARD_SEPARATOR,
+  NEW_QUESTION_INSTRUCTIONS,
+  NEW_QUESTION_USER_MESSAGE,
+  QUIZZY_ASSISTANT_ID,
+} from './quizzy.config';
+import { messageEvaluationSchema, triviaQuestionSchema } from './types';
 
 @Injectable()
 export class QuizzyService {
@@ -33,7 +44,7 @@ export class QuizzyService {
 
   async gameHandler(chatId: number) {
     await this.markAssignedQuestionsCompleted(chatId);
-    const { question, correctAnswer, distractorAnswers } = await this.openaiAssistantService.getStructuredOutput(triviaSchema, QUIZZY_STRUCTURED_RES_INSTRUCTIONS, QUIZZY_STRUCTURED_RES_START);
+    const { question, correctAnswer, distractorAnswers } = await this.openaiAssistantService.getStructuredOutput(triviaQuestionSchema, NEW_QUESTION_INSTRUCTIONS, NEW_QUESTION_USER_MESSAGE);
 
     const correctAnswerObj: Answer = { id: `ans_${generateRandomString(5)}`, text: correctAnswer, isCorrect: true };
     const answers: Array<Answer> = shuffleArray([
@@ -63,6 +74,14 @@ export class QuizzyService {
       await this.questionDB.updateQuestion({ chatId, questionId: activeQuestion._id.toString() }, { threadId });
     }
 
+    const { userWantsNewQuestion } = await this.openaiAssistantService.getStructuredOutput(messageEvaluationSchema, FREE_TEXT_CHECK_INSTRUCTIONS, content, CHAT_COMPLETIONS_MINI_MODEL);
+    if (userWantsNewQuestion > FREE_TEXT_CHECK_THRESHOLD) {
+      const { question, correctAnswer, distractorAnswers } = await this.gameHandler(chatId);
+      const userDetails = await this.userDB.getUserDetails({ chatId });
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.GAME, question, correct: correctAnswer, distractors: distractorAnswers.join(', ') }, userDetails);
+      return;
+    }
+
     const response = await this.openaiAssistantService.getAssistantAnswer(QUIZZY_ASSISTANT_ID, threadId, content);
     await sendShortenedMessage(this.bot, chatId, response);
   }
@@ -71,8 +90,8 @@ export class QuizzyService {
     const questions = await this.questionDB.markQuestionsCompleted(chatId); // marks all questions for the user as completed
     await Promise.all(
       questions.map(({ originalMessageId, revealMessageId }) => {
-        originalMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: originalMessageId, chat_id: chatId }).catch();
-        revealMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch();
+        originalMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: originalMessageId, chat_id: chatId }).catch(() => {});
+        revealMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch(() => {});
       }),
     );
   }

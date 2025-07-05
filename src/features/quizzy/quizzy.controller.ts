@@ -72,7 +72,7 @@ export class QuizzyController implements OnModuleInit {
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
-    await this.bot.deleteMessage(chatId, messageId).catch();
+    await this.bot.deleteMessage(chatId, messageId).catch(() => {});
   }
 
   async gameHandler(message: Message): Promise<void> {
@@ -114,22 +114,22 @@ export class QuizzyController implements OnModuleInit {
       switch (action) {
         case BOT_ACTIONS.START:
           await this.userStart(chatId, userDetails);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
         case BOT_ACTIONS.STOP:
           await this.stopHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
           break;
         case BOT_ACTIONS.CONTACT:
           await this.contactHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.STATISTICS:
           await this.statisticsHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STATISTICS }, userDetails);
           break;
         case BOT_ACTIONS.GAME:
