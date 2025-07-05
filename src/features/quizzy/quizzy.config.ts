@@ -33,8 +33,8 @@ export enum BOT_ACTIONS {
 }
 
 export const QUIZZY_ASSISTANT_ID = 'asst_QcNCuLWYO5QctyFeacTa79dA';
-export const QUIZZY_STRUCTURED_RES_START = 'create a question for the user';
-export const QUIZZY_STRUCTURED_RES_INSTRUCTIONS = `
+export const NEW_QUESTION_USER_MESSAGE = 'create a question for the user';
+export const NEW_QUESTION_INSTRUCTIONS = `
 You are generating trivia questions for a Telegram bot that aims to help users expand their knowledge in a fun, enriching, and engaging way.
 Each question should be a multiple-choice question with 1 correct answer and 3 plausible but incorrect answers. Please make your best so that each answer is not more than 40 chars.
 Your goal is to create questions that spark curiosity, invite follow-up explanations, and make users look forward to coming back every day.
@@ -50,5 +50,14 @@ Incorrect answers must be plausible and relevant — don’t make them silly or 
 It’s OK to add a subtle hint to context (e.g. “This happened in the 1960s”).
 Every question should teach something interesting, not just test memory.
 `;
+
+export const FREE_TEXT_CHECK_INSTRUCTIONS = `
+You are a lightweight classifier in a Telegram trivia bot.
+Your task is to analyze a user's message and determine whether they are likely asking for a new trivia question, and not a regular question regarding the current topic.
+The bot is in the hebrew language so if the message is clearly asking for another question (e.g., “הבאה”, “הבא”, “שאל אותי”, “עוד אחת”, etc.), return high confidence.
+Focus only on whether the user intends to request a new question.
+If the message is unrelated or unclear, return low confidence.
+`;
+export const FREE_TEXT_CHECK_THRESHOLD = 0.85;
 
 export const INLINE_KEYBOARD_SEPARATOR = ' - ';

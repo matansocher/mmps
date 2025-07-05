@@ -48,7 +48,7 @@ export class CookerController implements OnModuleInit {
     switch (action) {
       case BOT_ACTIONS.SHOW:
         await this.showHandler(chatId, resource);
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         break;
       default:
         throw new Error('Invalid action');

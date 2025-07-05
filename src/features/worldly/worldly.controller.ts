@@ -65,7 +65,7 @@ export class WorldlyController implements OnModuleInit {
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
-    await this.bot.deleteMessage(chatId, messageId).catch();
+    await this.bot.deleteMessage(chatId, messageId).catch(() => {});
   }
 
   async fireModeHandler(message: Message): Promise<void> {
@@ -144,22 +144,22 @@ export class WorldlyController implements OnModuleInit {
       switch (action) {
         case BOT_ACTIONS.START:
           await this.userStart(chatId, userDetails);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
         case BOT_ACTIONS.STOP:
           await this.stopHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
           break;
         case BOT_ACTIONS.CONTACT:
           await this.contactHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.STATISTICS:
           await this.statisticsHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch();
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STATISTICS }, userDetails);
           break;
         case BOT_ACTIONS.MAP:
@@ -261,34 +261,34 @@ export class WorldlyController implements OnModuleInit {
   }
 
   private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch();
+    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async USMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const correctCountry = getStateByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.hebrewName}`;
-    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch();
+    await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const correctCountry = getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch();
+    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch();
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const correctCountry = getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
-    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch();
+    await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 }
