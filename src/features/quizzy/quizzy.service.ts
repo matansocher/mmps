@@ -74,7 +74,6 @@ export class QuizzyService {
       await this.questionDB.updateQuestion({ chatId, questionId: activeQuestion._id.toString() }, { threadId });
     }
 
-    // here ask a tool to check if user asked for a specific action
     const { userWantsNewQuestion } = await this.openaiAssistantService.getStructuredOutput(messageEvaluationSchema, FREE_TEXT_CHECK_INSTRUCTIONS, content, CHAT_COMPLETIONS_MINI_MODEL);
     if (userWantsNewQuestion > FREE_TEXT_CHECK_THRESHOLD) {
       const { question, correctAnswer, distractorAnswers } = await this.gameHandler(chatId);
@@ -90,9 +89,9 @@ export class QuizzyService {
   async markAssignedQuestionsCompleted(chatId: number): Promise<void> {
     const questions = await this.questionDB.markQuestionsCompleted(chatId); // marks all questions for the user as completed
     await Promise.all(
-      questions.map(async ({ originalMessageId, revealMessageId }) => {
-        originalMessageId && (await this.bot.editMessageReplyMarkup(undefined, { message_id: originalMessageId, chat_id: chatId }).catch(() => {}));
-        revealMessageId && (await this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch(() => {}));
+      questions.map(({ originalMessageId, revealMessageId }) => {
+        originalMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: originalMessageId, chat_id: chatId }).catch(() => {});
+        revealMessageId && this.bot.editMessageReplyMarkup(undefined, { message_id: revealMessageId, chat_id: chatId }).catch(() => {});
       }),
     );
   }
