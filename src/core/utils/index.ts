@@ -15,5 +15,6 @@ export { saveVideoBytesArray } from './save-video-bytes-array';
 export { setFfmpegPath } from './set-ffmpeg-path';
 export { shuffleArray } from './shuffle-array';
 export { sleep } from './sleep';
+export { getStreak, getStreakOfCorrectAnswers, getLongestStreak } from './streak-calc';
 export { stringify } from './stringify';
 export { writeFile } from './write-file';

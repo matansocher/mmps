@@ -16,6 +16,12 @@ type UpdateGameLogOptions = {
   readonly selected: string;
 };
 
+type TopChatRecord = {
+  readonly chatId: number;
+  readonly count: number;
+  readonly records: GameLog[];
+};
+
 @Injectable()
 export class WorldlyMongoGameLogService {
   private readonly gameLogCollection: Collection<GameLog>;
@@ -46,8 +52,8 @@ export class WorldlyMongoGameLogService {
     return this.gameLogCollection.find(filter).toArray();
   }
 
-  async getTopByChatId(total: number) {
-    return this.gameLogCollection
+  async getTopByChatId(total: number): Promise<TopChatRecord[]> {
+    const result = await this.gameLogCollection
       .aggregate([
         {
           $group: {
@@ -68,5 +74,30 @@ export class WorldlyMongoGameLogService {
         },
       ])
       .toArray();
+    return result as TopChatRecord[];
+  }
+
+  async getGameLogsByUsers(): Promise<Record<string, GameLog[]>> {
+    const logsByUsers = await this.gameLogCollection
+      .aggregate([
+        { $sort: { chatId: 1, createdAt: 1 } },
+        {
+          $group: {
+            _id: '$chatId',
+            logs: {
+              $push: {
+                correct: '$correct',
+                selected: '$selected',
+                createdAt: '$createdAt',
+              },
+            },
+          },
+        },
+      ])
+      .toArray();
+
+    const gameLogsByUsers = {};
+    logsByUsers.forEach(({ _id, logs }) => (gameLogsByUsers[_id] = logs));
+    return gameLogsByUsers;
   }
 }
