@@ -4,8 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
-import { UserPreferencesCacheService } from '@features/worldly/cache';
+import { sleep } from '@core/utils';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { UserPreferencesCacheService } from './cache';
 import { generateSpecialMessage, generateStatisticsMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
@@ -213,6 +214,7 @@ export class WorldlyController implements OnModuleInit {
       // If the user is in fire mode, send a new game immediately
       const userPreferences = this.userPreferences.getUserPreferences(chatId);
       if (userPreferences?.onFireMode) {
+        await sleep(1000);
         await this.worldlyService.randomGameHandler(chatId);
       }
     } catch (err) {
