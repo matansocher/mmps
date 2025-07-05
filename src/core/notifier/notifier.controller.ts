@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { QuizzyMongoGameLogService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { GameLog, WorldlyMongoGameLogService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
-import { getStreakOfCorrectAnswers } from '@core/utils/streak-calc';
+import { getStreakOfCorrectAnswers } from '@core/utils';
 import { getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { BOT_CONFIG } from './notifier.config';
 

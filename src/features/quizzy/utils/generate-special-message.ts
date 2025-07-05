@@ -1,6 +1,6 @@
 import { GameLog } from '@core/mongo/quizzy-mongo';
 import { getDateString } from '@core/utils';
-import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '../utils';
+import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '@core/utils';
 
 export const SPECIAL_STREAK_OF_DAYS_MIN = 4;
 export const SPECIAL_CORRECT_ANSWERS_STREAKS = [4, 7, 10, 15, 20, 30];

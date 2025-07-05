@@ -1,5 +1,14 @@
 import { isSameDay } from 'date-fns';
-import { GameLog } from '@core/mongo/worldly-mongo';
+
+type StreakReturnType = {
+  readonly currentStreak: number;
+  readonly longestStreak: number;
+};
+
+type GameLog = {
+  readonly selected: string;
+  readonly correct: string;
+};
 
 export function getStreak(dates: Date[]): number {
   if (dates.length === 0) return 0;
@@ -17,7 +26,7 @@ export function getLongestStreak(dates: Date[]): number {
   return calculateStreak(dates).longestStreak;
 }
 
-function calculateStreak(dates: Date[]): { currentStreak: number; longestStreak: number } {
+function calculateStreak(dates: Date[]): StreakReturnType {
   if (dates.length === 0) return { currentStreak: 0, longestStreak: 0 };
 
   // Sort dates in ascending order
@@ -63,7 +72,7 @@ function calculateStreak(dates: Date[]): { currentStreak: number; longestStreak:
   return { currentStreak, longestStreak };
 }
 
-export function getStreakOfCorrectAnswers(entries: GameLog[]): { currentStreak: number; longestStreak: number } {
+export function getStreakOfCorrectAnswers(entries: GameLog[]): StreakReturnType {
   let currentStreak = 0;
   let longestStreak = 0;
   let tempStreak = 0;
