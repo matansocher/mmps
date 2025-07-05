@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const triviaSchema = z
+export const triviaQuestionSchema = z
   .object({
     question: z.string(),
     correctAnswer: z.string(),
@@ -8,4 +8,10 @@ export const triviaSchema = z
   })
   .required();
 
-export type Trivia = z.infer<typeof triviaSchema>;
+export type TriviaQuestion = z.infer<typeof triviaQuestionSchema>;
+
+export const messageEvaluationSchema = z
+  .object({
+    userWantsNewQuestion: z.number().min(0).max(1),
+  })
+  .required();

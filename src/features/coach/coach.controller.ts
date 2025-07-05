@@ -91,7 +91,7 @@ export class CoachController implements OnModuleInit {
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
     await this.bot.sendMessage(chatId, '👨‍🏫 איך אני יכול לעזור?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
-    await this.bot.deleteMessage(chatId, messageId).catch();
+    await this.bot.deleteMessage(chatId, messageId).catch(() => {});
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -124,27 +124,27 @@ export class CoachController implements OnModuleInit {
     switch (action) {
       case BOT_ACTIONS.START:
         await this.userStart(chatId, userDetails);
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.TABLE:
         await this.tableHandler(chatId, Number(resource));
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
         break;
       case BOT_ACTIONS.MATCH:
         await this.competitionMatchesHandler(chatId, Number(resource));
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         const leagueName = Object.entries(COMPETITION_IDS_MAP)
           .filter(([_, value]) => value === Number(resource))
           .map(([key]) => key)[0];
@@ -152,12 +152,12 @@ export class CoachController implements OnModuleInit {
         break;
       case BOT_ACTIONS.CUSTOM_LEAGUES:
         await this.customLeaguesHandler(chatId);
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES }, userDetails);
         break;
       case BOT_ACTIONS.CUSTOM_LEAGUES_SELECT:
         await this.customLeaguesSelectHandler(chatId, Number(resource), Number(subAction));
-        await this.bot.deleteMessage(chatId, messageId).catch();
+        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES_SELECT }, userDetails);
         break;
       default:

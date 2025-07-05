@@ -1,6 +1,6 @@
-import { Trivia } from '../types';
+import { TriviaQuestion } from '../types';
 
-export function generateInitialExplanationPrompt({ question, correctAnswer, distractorAnswers }: Trivia, selectedAnswer: string) {
+export function generateInitialExplanationPrompt({ question, correctAnswer, distractorAnswers }: TriviaQuestion, selectedAnswer: string) {
   return [
     `The question was ${question}, and I answered ${selectedAnswer}, And all the options were: ${[...distractorAnswers, correctAnswer].join(', ')}.`,
     `The bot told me that the correct answer is: ${correctAnswer}.`,

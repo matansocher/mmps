@@ -66,7 +66,7 @@ export class MessageLoader {
       this.timeoutId = undefined;
     }
     if (this.loaderMessageId) {
-      await this.bot.deleteMessage(this.chatId, this.loaderMessageId).catch();
+      await this.bot.deleteMessage(this.chatId, this.loaderMessageId).catch(() => {});
       this.loaderMessageId = undefined;
     }
   }
