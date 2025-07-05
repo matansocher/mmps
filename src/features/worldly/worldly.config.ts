@@ -6,6 +6,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   token: 'WORLDLY_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: 'התחל מהתחלה', hide: true },
+    FIRE_MODE: { command: '/fire_mode', description: '🔥 משחק רצוף 🔥' },
     RANDOM: { command: '/random', description: '🌎 משחק אקראי 🌎' },
     MAP: { command: '/map', description: '🗺️ מפה 🗺️' },
     FLAG: { command: '/flag', description: '🏁 דגל 🏁' },
@@ -18,6 +19,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
   STOP: 'STOP',
+  FIRE: 'FIRE',
   RANDOM: 'RANDOM',
   MAP: 'MAP',
   US_MAP: 'US_MAP',
@@ -34,6 +36,7 @@ export enum BOT_ACTIONS {
   STOP = 'stop',
   CONTACT = 'contact',
   STATISTICS = 'statistics',
+  FIRE = 'fire',
   RANDOM = 'rand',
   MAP = 'm',
   US_MAP = 'us_m',
@@ -41,4 +44,4 @@ export enum BOT_ACTIONS {
   CAPITAL = 'c',
 }
 
-export const INLINE_KEYBOARD_SEPARATOR = ' - ';
+export const INLINE_KEYBOARD_SEPARATOR = '|';

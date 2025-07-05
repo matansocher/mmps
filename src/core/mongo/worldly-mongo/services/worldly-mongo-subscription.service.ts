@@ -20,24 +20,33 @@ export class WorldlyMongoSubscriptionService {
           $lookup: {
             from: COLLECTIONS.GAME_LOG,
             let: { subChatId: '$chatId' },
-            pipeline: [{ $match: { $expr: { $eq: ['$chatId', '$$subChatId'] } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }],
-            as: 'latestGameLog',
+            pipeline: [
+              // br
+              { $match: { $expr: { $eq: ['$chatId', '$$subChatId'] } } },
+              { $sort: { createdAt: -1 } },
+              { $limit: 2 },
+            ],
+            as: 'latestGameLogs',
           },
         },
         {
           $addFields: {
-            answeredLastMessage: {
+            hasAnsweredOneOfLastTwo: {
               $cond: {
-                if: { $gt: [{ $size: '$latestGameLog' }, 0] },
+                if: { $gt: [{ $size: '$latestGameLogs' }, 0] },
                 then: {
-                  $ne: [{ $type: { $arrayElemAt: ['$latestGameLog.selected', 0] } }, 'missing'],
+                  $or: [
+                    // br
+                    { $ne: [{ $type: { $arrayElemAt: ['$latestGameLogs.selected', 0] } }, 'missing'] },
+                    { $ne: [{ $type: { $arrayElemAt: ['$latestGameLogs.selected', 1] } }, 'missing'] },
+                  ],
                 },
                 else: false,
               },
             },
           },
         },
-        { $match: { answeredLastMessage: true } },
+        { $match: { hasAnsweredOneOfLastTwo: true } },
         { $project: { _id: 0, chatId: 1 } },
       ])
       .toArray();
