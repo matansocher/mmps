@@ -1,5 +1,15 @@
 import { isSameDay } from 'date-fns';
 
+type StreakReturnType = {
+  readonly currentStreak: number;
+  readonly longestStreak: number;
+};
+
+type GameLog = {
+  readonly selected: string;
+  readonly correct: string;
+};
+
 export function getStreak(dates: Date[]): number {
   if (dates.length === 0) return 0;
 
@@ -16,7 +26,7 @@ export function getLongestStreak(dates: Date[]): number {
   return calculateStreak(dates).longestStreak;
 }
 
-function calculateStreak(dates: Date[]): { currentStreak: number; longestStreak: number } {
+function calculateStreak(dates: Date[]): StreakReturnType {
   if (dates.length === 0) return { currentStreak: 0, longestStreak: 0 };
 
   // Sort dates in ascending order
@@ -58,6 +68,31 @@ function calculateStreak(dates: Date[]): { currentStreak: number; longestStreak:
   const lastExerciseDiff = Math.round((today.getTime() - lastExercise.getTime()) / (1000 * 60 * 60 * 24));
 
   currentStreak = lastExerciseDiff <= 1 ? streak : 0; // If last exercise was today or yesterday, keep streak, else reset
+
+  return { currentStreak, longestStreak };
+}
+
+export function getStreakOfCorrectAnswers(entries: GameLog[]): StreakReturnType {
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let tempStreak = 0;
+
+  for (let i = 0; i < entries.length; i++) {
+    if (entries[i].selected === entries[i].correct) {
+      tempStreak++;
+      longestStreak = Math.max(longestStreak, tempStreak);
+    } else {
+      tempStreak = 0;
+    }
+  }
+
+  for (let i = entries.length - 1; i >= 0; i--) {
+    if (entries[i].selected === entries[i].correct) {
+      currentStreak++;
+    } else {
+      break;
+    }
+  }
 
   return { currentStreak, longestStreak };
 }
