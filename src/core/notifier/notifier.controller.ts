@@ -3,8 +3,16 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { QuizzyMongoGameLogService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { GameLog, WorldlyMongoGameLogService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
+import { getStreakOfCorrectAnswers } from '@core/utils/streak-calc';
 import { getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { BOT_CONFIG } from './notifier.config';
+
+type LightUser = {
+  readonly chatId: number;
+  readonly correctCount: number;
+  readonly records: GameLog[];
+  readonly user: string;
+};
 
 @Injectable()
 export class NotifierController implements OnModuleInit {
@@ -51,7 +59,7 @@ export class NotifierController implements OnModuleInit {
         const user = await this.quizzyUserDB.getUserDetails({ chatId });
         const userName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''} ${user.username ?? ''}`.replace('  ', ' ').replace('  ', ' ') : 'Unknown User';
         const correctCount = records.filter((record: GameLog) => record.selected === record.correct).length;
-        return { chatId, correctCount, records, user: userName };
+        return { chatId, correctCount, records, user: userName } as LightUser;
       }),
     );
 
@@ -90,19 +98,59 @@ Top restaurants this week:\n${topRestaurants.map(({ _id, count }, index) => `${i
 
     const topChatIds = await this.worldlyGameLogDB.getTopByChatId(10);
 
-    const topUsers = await Promise.all(
+    const topUsers: LightUser[] = await Promise.all(
       topChatIds.map(async ({ chatId, records }) => {
-        const user = await this.worldlyUserDB.getUserDetails({ chatId });
-        const userName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''} ${user.username ?? ''}`.replace('  ', ' ').replace('  ', ' ') : 'Unknown User';
-        const correctCount = records.filter((record: GameLog) => record.selected === record.correct).length;
-        return { chatId, correctCount, records, user: userName };
+        const { user } = await this.getUser([], chatId);
+        const correctCount = records.filter((r) => r.selected === r.correct).length;
+        return { chatId, user, correctCount, records };
       }),
     );
 
+    const gameLogsByUsers = await this.worldlyGameLogDB.getGameLogsByUsers();
+    const today = new Date();
+    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+
+    const streaks = Object.entries(gameLogsByUsers).map(([chatId, logs]) => {
+      const fullStreak = getStreakOfCorrectAnswers(logs).longestStreak;
+      const weekLogs = logs.filter((log) => new Date(log.createdAt) >= startOfWeek);
+      const weeklyStreak = getStreakOfCorrectAnswers(weekLogs).longestStreak;
+      return { chatId: Number(chatId), fullStreak, weeklyStreak };
+    });
+
+    const longestOverall = this.getMaxStreak(streaks, 'fullStreak');
+    const longestThisWeek = this.getMaxStreak(streaks, 'weeklyStreak');
+
+    const greatestStreakUser = await this.getUser(topUsers, longestOverall?.chatId);
+    const greatestWeekUser = await this.getUser(topUsers, longestThisWeek?.chatId);
+
+    const summaryLines = topUsers.map(({ user, correctCount, records }, i) => {
+      const percentage = ((correctCount / records.length) * 100).toFixed(2);
+      return `${i + 1}. ${user}: ${correctCount}/${records.length} - ${percentage}%`;
+    });
+
     const replyText = `
-Top users this week:
-${topUsers.map(({ user, correctCount, records }, index) => `${index + 1}. ${user}: ${correctCount}/${records.length} - ${((correctCount / records.length) * 100).toFixed(2)}%`).join('\n')}
-    `;
-    await this.bot.sendMessage(chatId, replyText);
+🏆 Greatest Streak Ever: ${greatestStreakUser ? `${greatestStreakUser.user} (${longestOverall.fullStreak})` : 'No record'}
+📅 Greatest Streak This Week: ${greatestWeekUser ? `${greatestWeekUser.user} (${longestThisWeek.weeklyStreak})` : 'No record'}
+
+🔥 Top Users This Week:
+${summaryLines.join('\n')}
+  `;
+
+    await this.bot.sendMessage(chatId, replyText.trim());
+  }
+
+  private getMaxStreak<T extends { [key: string]: any }>(records: T[], key: string): T {
+    return records.reduce((max, curr) => (curr[key] > max[key] ? curr : max), { [key]: 0 } as T);
+  }
+
+  async getUser(existingUsers: { chatId: number; user: string }[], chatId: number): Promise<{ chatId: number; user: string } | null> {
+    if (!chatId) return null;
+
+    const cached = existingUsers.find((u) => u.chatId === chatId);
+    if (cached) return { chatId, user: cached.user };
+
+    const user = await this.worldlyUserDB.getUserDetails({ chatId });
+    const userName = [user?.firstName, user?.lastName, user?.username].filter(Boolean).join(' ') || 'Unknown User';
+    return { chatId, user: userName };
   }
 }
