@@ -35,7 +35,7 @@ export class WorldlyController implements OnModuleInit {
     const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: FIRE_MODE.command, handler: (message) => this.fireModeHandler.call(this, message) }, // $$$$$$$$$$$$$$$$$ new command
+      { event: COMMAND, regex: FIRE_MODE.command, handler: (message) => this.fireModeHandler.call(this, message) },
       { event: COMMAND, regex: RANDOM.command, handler: (message) => this.randomHandler.call(this, message) },
       { event: COMMAND, regex: MAP.command, handler: (message) => this.mapHandler.call(this, message) },
       { event: COMMAND, regex: US_MAP.command, handler: (message) => this.USMapHandler.call(this, message) },
@@ -71,8 +71,7 @@ export class WorldlyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.bot.sendMessage(chatId, 'מצוין! עכשיו נשחק ברצף 🔥');
-      const userPreferences = this.userPreferences.getUserPreferences(chatId) || {};
-      this.userPreferences.saveUserPreferences(chatId, { ...userPreferences, onFireMode: true });
+      this.userPreferences.saveUserPreferences(chatId, { onFireMode: true });
       await this.worldlyService.randomGameHandler(chatId);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE }, userDetails);
     } catch (err) {
