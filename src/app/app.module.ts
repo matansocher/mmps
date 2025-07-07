@@ -1,4 +1,5 @@
 import * as process from 'node:process';
+import { BOT_CONFIG as callerBotConfig, CallerModule } from 'src/features/caller';
 import { Module } from '@nestjs/common';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
@@ -22,6 +23,7 @@ const registerBotModule = (module: any, config: { id: string }) => {
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     DefineModule,
+    registerBotModule(CallerModule, callerBotConfig),
     registerBotModule(CoachModule, coachBotConfig),
     registerBotModule(CookerModule, cookerBotConfig),
     registerBotModule(EducatorModule, educatorBotConfig),

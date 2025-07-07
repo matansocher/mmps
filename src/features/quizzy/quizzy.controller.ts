@@ -208,7 +208,7 @@ export class QuizzyController implements OnModuleInit {
     selectedAnswerId: string,
     correctAnswerId: string,
   ): Promise<{ question: string; correctAnswer: string; selectedAnswer: string }> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const activeQuestion = await this.questionDB.getActiveQuestion({ questionId });
     if (!activeQuestion) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
@@ -235,7 +235,7 @@ export class QuizzyController implements OnModuleInit {
   }
 
   private async explainAnswerHandler(chatId: number, messageId: number, questionId: string, selectedAnswerId: string): Promise<void> {
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const activeQuestion = await this.questionDB.getActiveQuestion({ questionId });
     if (!activeQuestion) {
       await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);

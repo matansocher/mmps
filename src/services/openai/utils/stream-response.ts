@@ -28,8 +28,8 @@ export async function streamResponse(threadId: string, stream: AssistantStream, 
         break;
       }
     }
-  } catch (error) {
-    logger.error(`Exception in thread ${threadId}: ${(error as Error).message}`);
+  } catch (err) {
+    logger.error(`Exception in thread ${threadId}: ${(err as Error).message}`);
   }
 
   return content;
