@@ -203,7 +203,7 @@ export class TeacherController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE, loaderMessage: transcribeLoaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup, { message_id: messageId, chat_id: chatId });
+      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup, { message_id: messageId, chat_id: chatId }).catch(() => {});
 
       await reactToMessage(this.botToken, chatId, messageId, '🤯');
 
@@ -220,7 +220,7 @@ export class TeacherController implements OnModuleInit {
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
     await this.courseParticipationDB.markCourseParticipationCompleted(courseParticipationId);
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, '😎');
   }
 }

@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
-export async function deleteFile(audioFileLocalPath: string): Promise<void> {
+export async function deleteFile(filePath: string): Promise<void> {
   try {
-    await fs.unlink(audioFileLocalPath);
+    await fs.unlink(filePath);
   } catch {}
 }

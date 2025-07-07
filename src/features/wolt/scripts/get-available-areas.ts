@@ -9,8 +9,8 @@ async function main() {
     const slugs = israelCities.map((city) => city.slug);
     console.log('slugs');
     console.log(slugs);
-  } catch (error) {
-    console.error('Error during insertion:', error);
+  } catch (err) {
+    console.error('Error during insertion:', err);
   }
 }
 
