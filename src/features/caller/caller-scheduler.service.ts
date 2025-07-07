@@ -19,7 +19,7 @@ export class CallerSchedulerService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.handleSchedule(); // for testing purposes
+    // this.handleSchedule(); // for testing purposes
   }
 
   @Cron(`* * * * *`, { name: 'caller-daily-scheduler-start', timeZone: DEFAULT_TIMEZONE })
