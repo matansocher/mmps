@@ -33,17 +33,15 @@ export class CallerSchedulerService implements OnModuleInit {
       return;
     }
 
-    const chatIds = subscriptions
-      .filter(({ time }) => {
-        const hour = parseInt(time.slice(0, 2), 10);
-        const minute = parseInt(time.slice(2, 4), 10);
-        return currentHour === hour && currentMinute === minute;
-      })
-      .map(({ chatId }) => chatId);
-    await Promise.all(chatIds.map(async (chatId) => this.handleSubscription(chatId)));
+    const subs = subscriptions.filter(({ time }) => {
+      const hour = parseInt(time.slice(0, 2), 10);
+      const minute = parseInt(time.slice(2, 4), 10);
+      return currentHour === hour && currentMinute === minute;
+    });
+    await Promise.all(subs.map(async ({ chatId, time }) => this.handleSubscription(chatId, time)));
   }
 
-  async handleSubscription(chatId: number): Promise<void> {
+  async handleSubscription(chatId: number, time: string): Promise<void> {
     try {
       const twilioPhoneNumber = this.configService.get('TWILIO_PHONE_NUMBER');
       const myPhoneNumber = this.configService.get('MY_PHONE_NUMBER');
@@ -51,6 +49,8 @@ export class CallerSchedulerService implements OnModuleInit {
     } catch (err) {
       this.logger.error('Error handling subscription:', err);
       this.bot.sendMessage(chatId, `An error occurred while processing your subscription. Please try again later. ${err.message || err.toString()}`);
+    } finally {
+      this.subscriptionDB.archiveSubscription(chatId, time);
     }
   }
 }
