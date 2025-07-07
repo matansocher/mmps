@@ -1,5 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CallerMongoSubscriptionService } from '@core/mongo/caller-mongo';
@@ -13,6 +14,7 @@ export class CallerSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly subscriptionDB: CallerMongoSubscriptionService,
+    private readonly configService: ConfigService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -43,7 +45,9 @@ export class CallerSchedulerService implements OnModuleInit {
 
   async handleSubscription(chatId: number): Promise<void> {
     try {
-      await phoneCall();
+      const twilioPhoneNumber = this.configService.get('TWILIO_PHONE_NUMBER');
+      const myPhoneNumber = this.configService.get('MY_PHONE_NUMBER');
+      await phoneCall(twilioPhoneNumber, myPhoneNumber);
     } catch (err) {
       this.logger.error('Error handling subscription:', err);
       this.bot.sendMessage(chatId, `An error occurred while processing your subscription. Please try again later. ${err.message || err.toString()}`);
