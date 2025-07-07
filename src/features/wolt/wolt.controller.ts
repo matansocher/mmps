@@ -193,6 +193,6 @@ export class WoltController implements OnModuleInit {
       replyText = [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n');
     }
     await this.bot.sendMessage(chatId, replyText);
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId });
+    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
   }
 }

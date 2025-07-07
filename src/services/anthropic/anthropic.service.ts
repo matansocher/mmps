@@ -34,8 +34,8 @@ export class AnthropicService {
       }
 
       throw new Error('No tool output found in the response');
-    } catch (error) {
-      console.error(`Error executing tool ${tool.name}:`, error);
+    } catch (err) {
+      console.error(`Error executing tool ${tool.name}:`, err);
       return null;
     }
   }
