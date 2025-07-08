@@ -5,7 +5,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Caller Bot 🔔',
   token: 'CALLER_TELEGRAM_BOT_TOKEN',
   commands: {
-    START: { command: '/start', description: 'התחל מהתחלה' },
+    START: { command: '/start', description: 'התחל מהתחלה', hide: true },
     LIST: { command: '/list', description: '⏰ רשימת ההתראות הפתוחות ⏰' },
   },
 };
