@@ -1,17 +1,18 @@
 import * as fs from 'fs';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
+import { Country, State, WorldlyMongoCountryService, WorldlyMongoGameLogService, WorldlyMongoStateService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { generateRandomString, shuffleArray } from '@core/utils';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
-import { Country, State } from './types';
-import { getCapitalDistractors, getCountryMap, getFlagDistractors, getMapDistractors, getMapStateDistractors, getRandomCountry, getRandomState } from './utils';
+import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 
 @Injectable()
 export class WorldlyService {
   constructor(
+    private readonly countryDB: WorldlyMongoCountryService,
+    private readonly stateDB: WorldlyMongoStateService,
     private readonly subscriptionDB: WorldlyMongoSubscriptionService,
     private readonly gameLogDB: WorldlyMongoGameLogService,
     private readonly userDB: WorldlyMongoUserService,
@@ -42,10 +43,11 @@ export class WorldlyService {
 
   async mapHandler(chatId: number): Promise<void> {
     const gameFilter = (c: Country) => !!c.geometry;
-    const randomCountry = getRandomCountry(gameFilter);
-    const imagePath = getCountryMap(randomCountry.name);
+    const allCountries = this.countryDB.getAllCountries();
+    const randomCountry = this.countryDB.getRandomCountry(gameFilter);
+    const imagePath = getAreaMap(allCountries, randomCountry.name);
 
-    const otherOptions = getMapDistractors(randomCountry);
+    const otherOptions = getMapDistractors(allCountries, randomCountry);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
@@ -59,10 +61,11 @@ export class WorldlyService {
 
   async USMapHandler(chatId: number): Promise<void> {
     const gameFilter = (c: State) => !!c.geometry;
-    const randomState = getRandomState(gameFilter);
-    const imagePath = getCountryMap(randomState.name, true);
+    const allStates = this.stateDB.getAllStates();
+    const randomState = this.stateDB.getRandomState(gameFilter);
+    const imagePath = getAreaMap(allStates, randomState.name, true);
 
-    const otherOptions = getMapStateDistractors(randomState);
+    const otherOptions = getMapStateDistractors(allStates, randomState);
     const options = shuffleArray([randomState, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
@@ -76,9 +79,10 @@ export class WorldlyService {
 
   async flagHandler(chatId: number): Promise<void> {
     const gameFilter = (c: Country) => !!c.emoji;
-    const randomCountry = getRandomCountry(gameFilter);
+    const allCountries = this.countryDB.getAllCountries();
+    const randomCountry = this.countryDB.getRandomCountry(gameFilter);
 
-    const otherOptions = getFlagDistractors(randomCountry, gameFilter);
+    const otherOptions = getFlagDistractors(allCountries, randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
@@ -92,13 +96,14 @@ export class WorldlyService {
 
   async capitalHandler(chatId: number): Promise<void> {
     const gameFilter = (c: Country) => !!c.capital;
-    const randomCountry = getRandomCountry(gameFilter);
+    const allCountries = this.countryDB.getAllCountries();
+    const randomCountry = this.countryDB.getRandomCountry(gameFilter);
 
-    const otherOptions = getCapitalDistractors(randomCountry, gameFilter);
+    const otherOptions = getCapitalDistractors(allCountries, randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, country.capital, randomCountry.capital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
+      options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, country.hebrewCapital, randomCountry.capital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');

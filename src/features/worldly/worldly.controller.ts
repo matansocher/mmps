@@ -2,12 +2,12 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
-import { WorldlyMongoGameLogService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
+import { WorldlyMongoCountryService, WorldlyMongoGameLogService, WorldlyMongoStateService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { sleep } from '@core/utils';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { UserPreferencesCacheService } from './cache';
-import { generateSpecialMessage, generateStatisticsMessage, getCountryByCapital, getCountryByName, getStateByName } from './utils';
+import { generateSpecialMessage, generateStatisticsMessage } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
@@ -20,6 +20,8 @@ export class WorldlyController implements OnModuleInit {
 
   constructor(
     private readonly worldlyService: WorldlyService,
+    private readonly countryDB: WorldlyMongoCountryService,
+    private readonly stateDB: WorldlyMongoStateService,
     private readonly userDB: WorldlyMongoUserService,
     private readonly subscriptionDB: WorldlyMongoSubscriptionService,
     private readonly gameLogDB: WorldlyMongoGameLogService,
@@ -262,7 +264,7 @@ export class WorldlyController implements OnModuleInit {
 
   private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
-    const correctCountry = getCountryByName(correctName);
+    const correctCountry = await this.countryDB.getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
@@ -270,15 +272,15 @@ export class WorldlyController implements OnModuleInit {
 
   private async USMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
-    const correctCountry = getStateByName(correctName);
-    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.hebrewName}`;
+    const correctState = await this.stateDB.getStateByName(correctName);
+    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctState.hebrewName}`;
     await this.bot.editMessageCaption(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
   }
 
   private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
-    const correctCountry = getCountryByName(correctName);
+    const correctCountry = await this.countryDB.getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
     await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
@@ -286,7 +288,7 @@ export class WorldlyController implements OnModuleInit {
 
   private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
-    const correctCountry = getCountryByCapital(correctName);
+    const correctCountry = await this.countryDB.getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
     await this.bot.editMessageText(replyText, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, selectedName !== correctName ? '👎' : '👍');
