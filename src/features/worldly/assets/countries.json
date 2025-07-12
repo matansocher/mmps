@@ -292,7 +292,21 @@
       ]
     },
     "hebrewName": "אפגניסטן",
-    "hebrewCapital": "קאבול"
+    "hebrewCapital": "קאבול",
+    "capitalsDistractors": [
+      "Kandahar",
+      "Herat",
+      "Mazar-i-Sharif",
+      "Jalalabad",
+      "Kunduz"
+    ],
+    "hebrewCapitalsDistractors": [
+      "קנדהאר",
+      "הראת",
+      "מזאר-י-שריף",
+      "ג'לאלאבאד",
+      "קונדוז"
+    ]
   },
   {
     "name": "Albania",
@@ -407,7 +421,21 @@
       ]
     },
     "hebrewName": "אלבניה",
-    "hebrewCapital": "טירנה"
+    "hebrewCapital": "טירנה",
+    "capitalsDistractors": [
+      "Durrës",
+      "Vlorë",
+      "Shkodër",
+      "Elbasan",
+      "Korçë"
+    ],
+    "hebrewCapitalsDistractors": [
+      "דורס",
+      "ולורה",
+      "שקודר",
+      "אלבסן",
+      "קורצה"
+    ]
   },
   {
     "name": "Algeria",
@@ -674,7 +702,21 @@
       ]
     },
     "hebrewName": "אלג'יריה",
-    "hebrewCapital": "אלג'יר"
+    "hebrewCapital": "אלג'יר",
+    "capitalsDistractors": [
+      "Oran",
+      "Constantine",
+      "Annaba",
+      "Batna",
+      "Blida"
+    ],
+    "hebrewCapitalsDistractors": [
+      "אוראן",
+      "קונסטנטין",
+      "ענאבה",
+      "בטנה",
+      "בלידה"
+    ]
   },
   {
     "name": "Andorra",
@@ -738,7 +780,7 @@
             42.60631
           ],
           [
-            1.53140,
+            1.5314,
             42.63209
           ],
           [
@@ -747,7 +789,7 @@
           ],
           [
             1.44272,
-            42.63600
+            42.636
           ],
           [
             1.41982,
@@ -785,7 +827,21 @@
       ]
     },
     "hebrewName": "אנדורה",
-    "hebrewCapital": "אנדורה לה וולה"
+    "hebrewCapital": "אנדורה לה וולה",
+    "capitalsDistractors": [
+      "Escaldes-Engordany",
+      "Encamp",
+      "Sant Julià de Lòria",
+      "La Massana",
+      "Canillo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "אסקלדס-אנגורדני",
+      "קאמפ",
+      "סנט ג'וליה דה לוריה",
+      "לה מאסאנה",
+      "קנילו"
+    ]
   },
   {
     "name": "Angola",
@@ -1110,7 +1166,21 @@
       ]
     },
     "hebrewName": "אנגולה",
-    "hebrewCapital": "לואנדה"
+    "hebrewCapital": "לואנדה",
+    "capitalsDistractors": [
+      "Huambo",
+      "Lobito",
+      "Benguela",
+      "Lubango",
+      "Namibe"
+    ],
+    "hebrewCapitalsDistractors": [
+      "הואמבו",
+      "לוביטו",
+      "בנגלה",
+      "לובנגו",
+      "נמיבה"
+    ]
   },
   {
     "name": "Antigua and Barbuda",
@@ -1122,7 +1192,21 @@
     "continent": "North America",
     "emoji": "🇦🇬",
     "hebrewName": "אנטיגואה וברבודה",
-    "hebrewCapital": "סנט ג'ון"
+    "hebrewCapital": "סנט ג'ון",
+    "capitalsDistractors": [
+      "All Saints",
+      "Liberta",
+      "Potter's Village",
+      "Bolans",
+      "Codrington"
+    ],
+    "hebrewCapitalsDistractors": [
+      "All Saints",
+      "Liberta",
+      "Potter's Village",
+      "Bolans",
+      "Codrington"
+    ]
   },
   {
     "name": "Argentina",
@@ -1632,7 +1716,21 @@
       ]
     },
     "hebrewName": "ארגנטינה",
-    "hebrewCapital": "בואנוס איירס"
+    "hebrewCapital": "בואנוס איירס",
+    "capitalsDistractors": [
+      "Córdoba",
+      "Rosario",
+      "Mendoza",
+      "La Plata",
+      "San Miguel de Tucumán"
+    ],
+    "hebrewCapitalsDistractors": [
+      "קורדובה",
+      "רוסריו",
+      "מנדוסה",
+      "לה פלאטה",
+      "סן מיגל דה טוקומן"
+    ]
   },
   {
     "name": "Armenia",
@@ -1731,7 +1829,21 @@
       ]
     },
     "hebrewName": "ארמניה",
-    "hebrewCapital": "ירוואן"
+    "hebrewCapital": "ירוואן",
+    "capitalsDistractors": [
+      "Gyumri",
+      "Vanadzor",
+      "Vagharshapat",
+      "Abovyan",
+      "Kapan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Gyumri",
+      "Vanadzor",
+      "Vagharshapat",
+      "Abovyan",
+      "Kapan"
+    ]
   },
   {
     "name": "Australia",
@@ -2720,7 +2832,21 @@
       ]
     },
     "hebrewName": "אוסטרליה",
-    "hebrewCapital": "קנברה"
+    "hebrewCapital": "קנברה",
+    "capitalsDistractors": [
+      "Sydney",
+      "Melbourne",
+      "Brisbane",
+      "Perth",
+      "Adelaide"
+    ],
+    "hebrewCapitalsDistractors": [
+      "סידני",
+      "מלבורן",
+      "בריזבן",
+      "פרת",
+      "אדלייד"
+    ]
   },
   {
     "name": "Austria",
@@ -2887,7 +3013,21 @@
       ]
     },
     "hebrewName": "אוסטריה",
-    "hebrewCapital": "וינה"
+    "hebrewCapital": "וינה",
+    "capitalsDistractors": [
+      "Graz",
+      "Linz",
+      "Salzburg",
+      "Innsbruck",
+      "Klagenfurt"
+    ],
+    "hebrewCapitalsDistractors": [
+      "גראץ",
+      "לינץ",
+      "זלצבורג",
+      "אינסברוק",
+      "קלגנפורט"
+    ]
   },
   {
     "name": "Azerbaijan",
@@ -3088,7 +3228,21 @@
       ]
     },
     "hebrewName": "אזרבייג'ן",
-    "hebrewCapital": "באקו"
+    "hebrewCapital": "באקו",
+    "capitalsDistractors": [
+      "Ganja",
+      "Sumqayıt",
+      "Mingachevir",
+      "Qaraçuxur",
+      "Şirvan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Ganja",
+      "Sumqayıt",
+      "Mingachevir",
+      "Qaraçuxur",
+      "Şirvan"
+    ]
   },
   {
     "name": "Bahamas",
@@ -3201,7 +3355,21 @@
       ]
     },
     "hebrewName": "בהאמה",
-    "hebrewCapital": "נסאו"
+    "hebrewCapital": "נסאו",
+    "capitalsDistractors": [
+      "Freeport",
+      "Nassau",
+      "West End",
+      "Coopers Town",
+      "Marsh Harbour"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Freeport",
+      "Nassau",
+      "West End",
+      "Coopers Town",
+      "Marsh Harbour"
+    ]
   },
   {
     "name": "Bahrain",
@@ -3264,7 +3432,21 @@
       ]
     },
     "hebrewName": "בחריין",
-    "hebrewCapital": "מנאמה"
+    "hebrewCapital": "מנאמה",
+    "capitalsDistractors": [
+      "Manama",
+      "Muharraq",
+      "Riffa",
+      "Hamad Town",
+      "A'ali"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Manama",
+      "Muharraq",
+      "Riffa",
+      "Hamad Town",
+      "A'ali"
+    ]
   },
   {
     "name": "Bangladesh",
@@ -3427,7 +3609,21 @@
       ]
     },
     "hebrewName": "בנגלדש",
-    "hebrewCapital": "דאקה"
+    "hebrewCapital": "דאקה",
+    "capitalsDistractors": [
+      "Chittagong",
+      "Khulna",
+      "Rajshahi",
+      "Barisal",
+      "Sylhet"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Chittagong",
+      "Khulna",
+      "Rajshahi",
+      "Barisal",
+      "Sylhet"
+    ]
   },
   {
     "name": "Barbados",
@@ -3439,7 +3635,21 @@
     "continent": "North America",
     "emoji": "🇧🇧",
     "hebrewName": "ברבדוס",
-    "hebrewCapital": "ברידג'טאון"
+    "hebrewCapital": "ברידג'טאון",
+    "capitalsDistractors": [
+      "Bridgetown",
+      "Speightstown",
+      "Oistins",
+      "Bathsheba",
+      "Holetown"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bridgetown",
+      "Speightstown",
+      "Oistins",
+      "Bathsheba",
+      "Holetown"
+    ]
   },
   {
     "name": "Belarus",
@@ -3638,7 +3848,21 @@
       ]
     },
     "hebrewName": "בלארוס",
-    "hebrewCapital": "מינסק"
+    "hebrewCapital": "מינסק",
+    "capitalsDistractors": [
+      "Gomel",
+      "Mogilev",
+      "Vitebsk",
+      "Grodno",
+      "Brest"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Gomel",
+      "Mogilev",
+      "Vitebsk",
+      "Grodno",
+      "Brest"
+    ]
   },
   {
     "name": "Belgium",
@@ -3725,7 +3949,21 @@
       ]
     },
     "hebrewName": "בלגיה",
-    "hebrewCapital": "בריסל"
+    "hebrewCapital": "בריסל",
+    "capitalsDistractors": [
+      "Antwerp",
+      "Ghent",
+      "Charleroi",
+      "Liège",
+      "Bruges"
+    ],
+    "hebrewCapitalsDistractors": [
+      "אנטוורפן",
+      "גנט",
+      "שרלרואה",
+      "לייז'",
+      "ברוז'"
+    ]
   },
   {
     "name": "Belize",
@@ -3824,7 +4062,21 @@
       ]
     },
     "hebrewName": "בליז",
-    "hebrewCapital": "בלמופן"
+    "hebrewCapital": "בלמופן",
+    "capitalsDistractors": [
+      "Belize City",
+      "San Ignacio",
+      "Orange Walk",
+      "San Pedro",
+      "Corozal"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Belize City",
+      "San Ignacio",
+      "Orange Walk",
+      "San Pedro",
+      "Corozal"
+    ]
   },
   {
     "name": "Benin",
@@ -3943,7 +4195,21 @@
       ]
     },
     "hebrewName": "בנין",
-    "hebrewCapital": "פורטו נובו"
+    "hebrewCapital": "פורטו נובו",
+    "capitalsDistractors": [
+      "Cotonou",
+      "Parakou",
+      "Djougou",
+      "Porto-Novo",
+      "Bohicon"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Cotonou",
+      "Parakou",
+      "Djougou",
+      "Porto-Novo",
+      "Bohicon"
+    ]
   },
   {
     "name": "Bhutan",
@@ -4014,7 +4280,21 @@
       ]
     },
     "hebrewName": "בהוטן",
-    "hebrewCapital": "טימפו"
+    "hebrewCapital": "טימפו",
+    "capitalsDistractors": [
+      "Phuntsholing",
+      "Paro",
+      "Gelephu",
+      "Samdrup Jongkhar",
+      "Punakha"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Phuntsholing",
+      "Paro",
+      "Gelephu",
+      "Samdrup Jongkhar",
+      "Punakha"
+    ]
   },
   {
     "name": "Bolivia",
@@ -4273,7 +4553,21 @@
       ]
     },
     "hebrewName": "בוליביה",
-    "hebrewCapital": "לה פז (סוקרה)"
+    "hebrewCapital": "לה פז (סוקרה)",
+    "capitalsDistractors": [
+      "Santa Cruz",
+      "El Alto",
+      "La Paz",
+      "Cochabamba",
+      "Oruro"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Santa Cruz",
+      "El Alto",
+      "La Paz",
+      "Cochabamba",
+      "Oruro"
+    ]
   },
   {
     "name": "Bosnia and Herzegovina",
@@ -4384,7 +4678,21 @@
       ]
     },
     "hebrewName": "בוסניה והרצגובינה",
-    "hebrewCapital": "סרייבו"
+    "hebrewCapital": "סרייבו",
+    "capitalsDistractors": [
+      "Banja Luka",
+      "Tuzla",
+      "Zenica",
+      "Mostar",
+      "Bijeljina"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Banja Luka",
+      "Tuzla",
+      "Zenica",
+      "Mostar",
+      "Bijeljina"
+    ]
   },
   {
     "name": "Botswana",
@@ -4563,7 +4871,21 @@
       ]
     },
     "hebrewName": "בוצואנה",
-    "hebrewCapital": "גאבורונה"
+    "hebrewCapital": "גאבורונה",
+    "capitalsDistractors": [
+      "Francistown",
+      "Gaborone",
+      "Molepolole",
+      "Serowe",
+      "Maun"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Francistown",
+      "Gaborone",
+      "Molepolole",
+      "Serowe",
+      "Maun"
+    ]
   },
   {
     "name": "Brazil",
@@ -5395,7 +5717,21 @@
       ]
     },
     "hebrewName": "ברזיל",
-    "hebrewCapital": "ברזיליה"
+    "hebrewCapital": "ברזיליה",
+    "capitalsDistractors": [
+      "São Paulo",
+      "Rio de Janeiro",
+      "Salvador",
+      "Brasília",
+      "Fortaleza"
+    ],
+    "hebrewCapitalsDistractors": [
+      "סאו פאולו",
+      "ריו דה ז'ניירו",
+      "סלבדור",
+      "ברזיליה",
+      "פורטלזה"
+    ]
   },
   {
     "name": "Brunei",
@@ -5446,7 +5782,21 @@
       ]
     },
     "hebrewName": "ברוניי",
-    "hebrewCapital": "בנדר סרי בגוואן"
+    "hebrewCapital": "בנדר סרי בגוואן",
+    "capitalsDistractors": [
+      "Bandar Seri Begawan",
+      "Kuala Belait",
+      "Seria",
+      "Tutong",
+      "Bangar"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bandar Seri Begawan",
+      "Kuala Belait",
+      "Seria",
+      "Tutong",
+      "Bangar"
+    ]
   },
   {
     "name": "Bulgaria",
@@ -5577,7 +5927,21 @@
       ]
     },
     "hebrewName": "בולגריה",
-    "hebrewCapital": "סופיה"
+    "hebrewCapital": "סופיה",
+    "capitalsDistractors": [
+      "Plovdiv",
+      "Varna",
+      "Burgas",
+      "Ruse",
+      "Stara Zagora"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Plovdiv",
+      "Varna",
+      "Burgas",
+      "Ruse",
+      "Stara Zagora"
+    ]
   },
   {
     "name": "Burkina Faso",
@@ -5752,7 +6116,21 @@
       ]
     },
     "hebrewName": "בורקינה פאסו",
-    "hebrewCapital": "אואגדוגו"
+    "hebrewCapital": "אואגדוגו",
+    "capitalsDistractors": [
+      "Bobo-Dioulasso",
+      "Ouagadougou",
+      "Koudougou",
+      "Ouahigouya",
+      "Banfora"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bobo-Dioulasso",
+      "Ouagadougou",
+      "Koudougou",
+      "Ouahigouya",
+      "Banfora"
+    ]
   },
   {
     "name": "Burundi",
@@ -5823,7 +6201,21 @@
       ]
     },
     "hebrewName": "בורונדי",
-    "hebrewCapital": "גיטגה"
+    "hebrewCapital": "גיטגה",
+    "capitalsDistractors": [
+      "Bujumbura",
+      "Gitega",
+      "Ngozi",
+      "Rumonge",
+      "Cibitoke"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bujumbura",
+      "Gitega",
+      "Ngozi",
+      "Rumonge",
+      "Cibitoke"
+    ]
   },
   {
     "name": "Cambodia",
@@ -5910,7 +6302,21 @@
       ]
     },
     "hebrewName": "קמבודיה",
-    "hebrewCapital": "פנום פן"
+    "hebrewCapital": "פנום פן",
+    "capitalsDistractors": [
+      "Battambang",
+      "Siem Reap",
+      "Sihanoukville",
+      "Phnom Penh",
+      "Kampong Cham"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Battambang",
+      "Siem Reap",
+      "Sihanoukville",
+      "Phnom Penh",
+      "Kampong Cham"
+    ]
   },
   {
     "name": "Cameroon",
@@ -6173,7 +6579,21 @@
       ]
     },
     "hebrewName": "קמרון",
-    "hebrewCapital": "יאונדה"
+    "hebrewCapital": "יאונדה",
+    "capitalsDistractors": [
+      "Douala",
+      "Yaoundé",
+      "Bamenda",
+      "Bafoussam",
+      "Garoua"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Douala",
+      "Yaoundé",
+      "Bamenda",
+      "Bafoussam",
+      "Garoua"
+    ]
   },
   {
     "name": "Canada",
@@ -9487,7 +9907,21 @@
       ]
     },
     "hebrewName": "קנדה",
-    "hebrewCapital": "אוטווה"
+    "hebrewCapital": "אוטווה",
+    "capitalsDistractors": [
+      "Toronto",
+      "Montreal",
+      "Vancouver",
+      "Calgary",
+      "Edmonton"
+    ],
+    "hebrewCapitalsDistractors": [
+      "טורונטו",
+      "מונטריאול",
+      "ונקובר",
+      "קלגרי",
+      "אדמונטון"
+    ]
   },
   {
     "name": "Cape Verde",
@@ -9499,7 +9933,21 @@
     "continent": "Africa",
     "emoji": "🇨🇻",
     "hebrewName": "קייפ ורדה",
-    "hebrewCapital": "פראיה"
+    "hebrewCapital": "פראיה",
+    "capitalsDistractors": [
+      "Mindelo",
+      "Praia",
+      "Santa Maria",
+      "Assomada",
+      "Porto Novo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Mindelo",
+      "Praia",
+      "Santa Maria",
+      "Assomada",
+      "Porto Novo"
+    ]
   },
   {
     "name": "Central African Republic",
@@ -9766,7 +10214,21 @@
       ]
     },
     "hebrewName": "הרפובליקה המרכז אפריקאית",
-    "hebrewCapital": "באנגוי"
+    "hebrewCapital": "באנגוי",
+    "capitalsDistractors": [
+      "Bangui",
+      "Bimbo",
+      "Mbaiki",
+      "Berbérati",
+      "Kaga-Bandoro"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bangui",
+      "Bimbo",
+      "Mbaiki",
+      "Berbérati",
+      "Kaga-Bandoro"
+    ]
   },
   {
     "name": "Chad",
@@ -10017,7 +10479,21 @@
       ]
     },
     "hebrewName": "צ'אד",
-    "hebrewCapital": "נג'מנה"
+    "hebrewCapital": "נג'מנה",
+    "capitalsDistractors": [
+      "N'Djamena",
+      "Moundou",
+      "Sarh",
+      "Abeche",
+      "Kelo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "N'Djamena",
+      "Moundou",
+      "Sarh",
+      "Abeche",
+      "Kelo"
+    ]
   },
   {
     "name": "Chile",
@@ -10498,7 +10974,21 @@
       ]
     },
     "hebrewName": "צ'ילה",
-    "hebrewCapital": "סנטיאגו"
+    "hebrewCapital": "סנטיאגו",
+    "capitalsDistractors": [
+      "Santiago",
+      "Valparaíso",
+      "Concepción",
+      "La Serena",
+      "Antofagasta"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Santiago",
+      "ולפראיסו",
+      "קונספסיון",
+      "לה סרנה",
+      "אנטופגסטה"
+    ]
   },
   {
     "name": "China",
@@ -11484,7 +11974,21 @@
       ]
     },
     "hebrewName": "סין",
-    "hebrewCapital": "בייג'ינג"
+    "hebrewCapital": "בייג'ינג",
+    "capitalsDistractors": [
+      "Shanghai",
+      "Beijing",
+      "Guangzhou",
+      "Shenzhen",
+      "Tianjin"
+    ],
+    "hebrewCapitalsDistractors": [
+      "שאנגחאי",
+      "בייג'ינג",
+      "גואנגג'ואו",
+      "שנזן",
+      "טיינג'ין"
+    ]
   },
   {
     "name": "Colombia",
@@ -11903,7 +12407,21 @@
       ]
     },
     "hebrewName": "קולומביה",
-    "hebrewCapital": "בוגוטה"
+    "hebrewCapital": "בוגוטה",
+    "capitalsDistractors": [
+      "Medellín",
+      "Cali",
+      "Barranquilla",
+      "Cartagena",
+      "Cúcuta"
+    ],
+    "hebrewCapitalsDistractors": [
+      "מדלין",
+      "קאלי",
+      "ברנקייה",
+      "קרטחנה",
+      "Cúcuta"
+    ]
   },
   {
     "name": "Comoros",
@@ -11915,7 +12433,21 @@
     "continent": "Africa",
     "emoji": "🇰🇲",
     "hebrewName": "קומורוס",
-    "hebrewCapital": "מורוני"
+    "hebrewCapital": "מורוני",
+    "capitalsDistractors": [
+      "Moroni",
+      "Mutsamudu",
+      "Fomboni",
+      "Domoni",
+      "Tsimbeo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Moroni",
+      "Mutsamudu",
+      "Fomboni",
+      "Domoni",
+      "Tsimbeo"
+    ]
   },
   {
     "name": "Costa Rica",
@@ -12078,7 +12610,21 @@
       ]
     },
     "hebrewName": "קוסטה ריקה",
-    "hebrewCapital": "סן חוזה"
+    "hebrewCapital": "סן חוזה",
+    "capitalsDistractors": [
+      "San José",
+      "Limón",
+      "Alajuela",
+      "Heredia",
+      "Cartago"
+    ],
+    "hebrewCapitalsDistractors": [
+      "San José",
+      "Limón",
+      "Alajuela",
+      "Heredia",
+      "Cartago"
+    ]
   },
   {
     "name": "Croatia",
@@ -12269,7 +12815,21 @@
       ]
     },
     "hebrewName": "קרואטיה",
-    "hebrewCapital": "זאגרב"
+    "hebrewCapital": "זאגרב",
+    "capitalsDistractors": [
+      "Split",
+      "Rijeka",
+      "Osijek",
+      "Zadar",
+      "Pula"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Split",
+      "Rijeka",
+      "Osijek",
+      "Zadar",
+      "Pula"
+    ]
   },
   {
     "name": "Cuba",
@@ -12456,7 +13016,21 @@
       ]
     },
     "hebrewName": "קובה",
-    "hebrewCapital": "הוואנה"
+    "hebrewCapital": "הוואנה",
+    "capitalsDistractors": [
+      "Havana",
+      "Santiago de Cuba",
+      "Camagüey",
+      "Holguín",
+      "Santa Clara"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Havana",
+      "Santiago de Cuba",
+      "Camagüey",
+      "Holguín",
+      "Santa Clara"
+    ]
   },
   {
     "name": "Cyprus",
@@ -12535,7 +13109,21 @@
       ]
     },
     "hebrewName": "קפריסין",
-    "hebrewCapital": "ניקוסיה"
+    "hebrewCapital": "ניקוסיה",
+    "capitalsDistractors": [
+      "Limassol",
+      "Larnaca",
+      "Paphos",
+      "Famagusta",
+      "Kyrenia"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Limassol",
+      "Larnaca",
+      "Paphos",
+      "Famagusta",
+      "Kyrenia"
+    ]
   },
   {
     "name": "Czech Republic",
@@ -12694,7 +13282,21 @@
       ]
     },
     "hebrewName": "צ'כיה",
-    "hebrewCapital": "פראג"
+    "hebrewCapital": "פראג",
+    "capitalsDistractors": [
+      "Brno",
+      "Ostrava",
+      "Plzeň",
+      "Liberec",
+      "Olomouc"
+    ],
+    "hebrewCapitalsDistractors": [
+      "ברנו",
+      "אוסטרבה",
+      "פלזן",
+      "ליברץ",
+      "אולומוץ"
+    ]
   },
   {
     "name": "Denmark",
@@ -12815,7 +13417,21 @@
       ]
     },
     "hebrewName": "דנמרק",
-    "hebrewCapital": "קופנהגן"
+    "hebrewCapital": "קופנהגן",
+    "capitalsDistractors": [
+      "Copenhagen",
+      "Aarhus",
+      "Odense",
+      "Aalborg",
+      "Esbjerg"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Copenhagen",
+      "אורהוס",
+      "אודנסה",
+      "אולבורג",
+      "אסביירג"
+    ]
   },
   {
     "name": "Djibouti",
@@ -12894,7 +13510,21 @@
       ]
     },
     "hebrewName": "ג'יבוטי",
-    "hebrewCapital": "ג'יבוטי"
+    "hebrewCapital": "ג'יבוטי",
+    "capitalsDistractors": [
+      "Djibouti",
+      "Ali Sabieh",
+      "Tadjourah",
+      "Obock",
+      "Dikhil"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Djibouti",
+      "Ali Sabieh",
+      "Tadjourah",
+      "Obock",
+      "Dikhil"
+    ]
   },
   {
     "name": "Dominica",
@@ -12906,7 +13536,21 @@
     "continent": "North America",
     "emoji": "🇩🇲",
     "hebrewName": "דומיניקה",
-    "hebrewCapital": "רוזו"
+    "hebrewCapital": "רוזו",
+    "capitalsDistractors": [
+      "Roseau",
+      "Portsmouth",
+      "Marigot",
+      "Berekua",
+      "Wesley"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Roseau",
+      "Portsmouth",
+      "Marigot",
+      "Berekua",
+      "Wesley"
+    ]
   },
   {
     "name": "Dominican Republic",
@@ -13029,7 +13673,21 @@
       ]
     },
     "hebrewName": "הרפובליקה הדומיניקנית",
-    "hebrewCapital": "סנטו דומינגו"
+    "hebrewCapital": "סנטו דומינגו",
+    "capitalsDistractors": [
+      "Santo Domingo",
+      "Santiago",
+      "Santo Domingo Este",
+      "San Pedro de Macorís",
+      "La Romana"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Santo Domingo",
+      "Santiago",
+      "Santo Domingo Este",
+      "San Pedro de Macorís",
+      "La Romana"
+    ]
   },
   {
     "name": "Democratic Republic of Congo",
@@ -13544,7 +14202,21 @@
       ]
     },
     "hebrewName": "הרפובליקה הדמוקרטית של קונגו",
-    "hebrewCapital": "קינשאסה"
+    "hebrewCapital": "קינשאסה",
+    "capitalsDistractors": [
+      "Kinshasa",
+      "Lubumbashi",
+      "Mbuji-Mayi",
+      "Kananga",
+      "Kisangani"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kinshasa",
+      "Lubumbashi",
+      "Mbuji-Mayi",
+      "Kananga",
+      "Kisangani"
+    ]
   },
   {
     "name": "Ecuador",
@@ -13695,7 +14367,21 @@
       ]
     },
     "hebrewName": "אקוודור",
-    "hebrewCapital": "קיטו"
+    "hebrewCapital": "קיטו",
+    "capitalsDistractors": [
+      "Guayaquil",
+      "Quito",
+      "Cuenca",
+      "Santo Domingo",
+      "Machala"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Guayaquil",
+      "Quito",
+      "Cuenca",
+      "Santo Domingo",
+      "Machala"
+    ]
   },
   {
     "name": "Egypt",
@@ -13890,7 +14576,21 @@
       ]
     },
     "hebrewName": "מצרים",
-    "hebrewCapital": "קהיר"
+    "hebrewCapital": "קהיר",
+    "capitalsDistractors": [
+      "Cairo",
+      "Alexandria",
+      "Giza",
+      "Shubra El Kheima",
+      "Port Said"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Cairo",
+      "אלכסנדריה",
+      "גיזה",
+      "שוברא אל-ח'ימה",
+      "פורט סעיד"
+    ]
   },
   {
     "name": "El Salvador",
@@ -13989,7 +14689,21 @@
       ]
     },
     "hebrewName": "אל סלבדור",
-    "hebrewCapital": "סן סלבדור"
+    "hebrewCapital": "סן סלבדור",
+    "capitalsDistractors": [
+      "San Salvador",
+      "Santa Ana",
+      "San Miguel",
+      "Mejicanos",
+      "Soyapango"
+    ],
+    "hebrewCapitalsDistractors": [
+      "San Salvador",
+      "Santa Ana",
+      "San Miguel",
+      "Mejicanos",
+      "Soyapango"
+    ]
   },
   {
     "name": "Equatorial Guinea",
@@ -14036,7 +14750,21 @@
       ]
     },
     "hebrewName": "גינאה המשוונית",
-    "hebrewCapital": "מלאבו"
+    "hebrewCapital": "מלאבו",
+    "capitalsDistractors": [
+      "Bata",
+      "Malabo",
+      "Ebebiyin",
+      "Aconibe",
+      "Añisoc"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bata",
+      "Malabo",
+      "Ebebiyin",
+      "Aconibe",
+      "Añisoc"
+    ]
   },
   {
     "name": "Eritrea",
@@ -14167,7 +14895,21 @@
       ]
     },
     "hebrewName": "אריתריאה",
-    "hebrewCapital": "אסמרה"
+    "hebrewCapital": "אסמרה",
+    "capitalsDistractors": [
+      "Asmara",
+      "Keren",
+      "Massawa",
+      "Assab",
+      "Mendefera"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Asmara",
+      "Keren",
+      "Massawa",
+      "Assab",
+      "Mendefera"
+    ]
   },
   {
     "name": "Estonia",
@@ -14262,7 +15004,21 @@
       ]
     },
     "hebrewName": "אסטוניה",
-    "hebrewCapital": "טאלין"
+    "hebrewCapital": "טאלין",
+    "capitalsDistractors": [
+      "Tartu",
+      "Narva",
+      "Pärnu",
+      "Kohtla-Järve",
+      "Viljandi"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Tartu",
+      "Narva",
+      "Pärnu",
+      "Kohtla-Järve",
+      "Viljandi"
+    ]
   },
   {
     "name": "Eswatini",
@@ -14325,7 +15081,21 @@
       ]
     },
     "hebrewName": "אסוואטיני",
-    "hebrewCapital": "מבאבאנא"
+    "hebrewCapital": "מבאבאנא",
+    "capitalsDistractors": [
+      "Manzini",
+      "Mbabane",
+      "Big Bend",
+      "Malkerns",
+      "Mhlume"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Manzini",
+      "Mbabane",
+      "Big Bend",
+      "Malkerns",
+      "Mhlume"
+    ]
   },
   {
     "name": "Ethiopia",
@@ -14580,7 +15350,21 @@
       ]
     },
     "hebrewName": "אתיופיה",
-    "hebrewCapital": "אדיס אבבה"
+    "hebrewCapital": "אדיס אבבה",
+    "capitalsDistractors": [
+      "Addis Ababa",
+      "Dire Dawa",
+      "Mekelle",
+      "Gondar",
+      "Adama"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Addis Ababa",
+      "Dire Dawa",
+      "Mekelle",
+      "Gondar",
+      "Adama"
+    ]
   },
   {
     "name": "Fiji",
@@ -14697,7 +15481,21 @@
       ]
     },
     "hebrewName": "פיג'י",
-    "hebrewCapital": "סובה"
+    "hebrewCapital": "סובה",
+    "capitalsDistractors": [
+      "Suva",
+      "Lautoka",
+      "Nadi",
+      "Labasa",
+      "Ba"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Suva",
+      "Lautoka",
+      "Nadi",
+      "Labasa",
+      "Ba"
+    ]
   },
   {
     "name": "Finland",
@@ -14876,7 +15674,21 @@
       ]
     },
     "hebrewName": "פינלנד",
-    "hebrewCapital": "הלסינקי"
+    "hebrewCapital": "הלסינקי",
+    "capitalsDistractors": [
+      "Helsinki",
+      "Espoo",
+      "Tampere",
+      "Vantaa",
+      "Oulu"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Helsinki",
+      "אספו",
+      "טמפרה",
+      "ונטה",
+      "אולו"
+    ]
   },
   {
     "name": "France",
@@ -15201,7 +16013,21 @@
       ]
     },
     "hebrewName": "צרפת",
-    "hebrewCapital": "פריז"
+    "hebrewCapital": "פריז",
+    "capitalsDistractors": [
+      "Paris",
+      "Marseille",
+      "Lyon",
+      "Toulouse",
+      "Nice"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Paris",
+      "מרסיי",
+      "ליון",
+      "טולוז",
+      "ניס"
+    ]
   },
   {
     "name": "French Guiana",
@@ -15296,7 +16122,21 @@
       ]
     },
     "hebrewName": "גיאנה הצרפתית",
-    "hebrewCapital": "קאיין"
+    "hebrewCapital": "קאיין",
+    "capitalsDistractors": [
+      "Cayenne",
+      "Matoury",
+      "Saint-Laurent-du-Maroni",
+      "Kourou",
+      "Remire-Montjoly"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Cayenne",
+      "Matoury",
+      "Saint-Laurent-du-Maroni",
+      "Kourou",
+      "Remire-Montjoly"
+    ]
   },
   {
     "name": "Gabon",
@@ -15439,7 +16279,21 @@
       ]
     },
     "hebrewName": "גבון",
-    "hebrewCapital": "ליברוויל"
+    "hebrewCapital": "ליברוויל",
+    "capitalsDistractors": [
+      "Libreville",
+      "Port-Gentil",
+      "Franceville",
+      "Oyem",
+      "Moanda"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Libreville",
+      "Port-Gentil",
+      "Franceville",
+      "Oyem",
+      "Moanda"
+    ]
   },
   {
     "name": "Gambia",
@@ -15522,7 +16376,21 @@
       ]
     },
     "hebrewName": "גמביה",
-    "hebrewCapital": "בנג'ול"
+    "hebrewCapital": "בנג'ול",
+    "capitalsDistractors": [
+      "Serekunda",
+      "Brikama",
+      "Bakau",
+      "Banjul",
+      "Farafenni"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Serekunda",
+      "Brikama",
+      "Bakau",
+      "Banjul",
+      "Farafenni"
+    ]
   },
   {
     "name": "Georgia",
@@ -15637,7 +16505,21 @@
       ]
     },
     "hebrewName": "גיאורגיה",
-    "hebrewCapital": "טביליסי"
+    "hebrewCapital": "טביליסי",
+    "capitalsDistractors": [
+      "Tbilisi",
+      "Batumi",
+      "Kutaisi",
+      "Rustavi",
+      "Gori"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Tbilisi",
+      "Batumi",
+      "Kutaisi",
+      "Rustavi",
+      "Gori"
+    ]
   },
   {
     "name": "Germany",
@@ -15888,7 +16770,21 @@
       ]
     },
     "hebrewName": "גרמניה",
-    "hebrewCapital": "ברלין"
+    "hebrewCapital": "ברלין",
+    "capitalsDistractors": [
+      "Berlin",
+      "Hamburg",
+      "Munich",
+      "Cologne",
+      "Frankfurt"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Berlin",
+      "המבורג",
+      "מינכן",
+      "קלן",
+      "פרנקפורט"
+    ]
   },
   {
     "name": "Ghana",
@@ -16007,7 +16903,21 @@
       ]
     },
     "hebrewName": "גאנה",
-    "hebrewCapital": "אקרה"
+    "hebrewCapital": "אקרה",
+    "capitalsDistractors": [
+      "Accra",
+      "Kumasi",
+      "Tamale",
+      "Sekondi-Takoradi",
+      "Ashaiman"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Accra",
+      "Kumasi",
+      "Tamale",
+      "Sekondi-Takoradi",
+      "Ashaiman"
+    ]
   },
   {
     "name": "Greece",
@@ -16248,7 +17158,21 @@
       ]
     },
     "hebrewName": "יוון",
-    "hebrewCapital": "אתונה"
+    "hebrewCapital": "אתונה",
+    "capitalsDistractors": [
+      "Athens",
+      "Thessaloniki",
+      "Patras",
+      "Piraeus",
+      "Larissa"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Athens",
+      "סלוניקי",
+      "פטרס",
+      "פיראוס",
+      "לריסה"
+    ]
   },
   {
     "name": "Greenland",
@@ -16795,7 +17719,21 @@
       ]
     },
     "hebrewName": "גרינלנד",
-    "hebrewCapital": "נוק"
+    "hebrewCapital": "נוק",
+    "capitalsDistractors": [
+      "Nuuk",
+      "Sisimiut",
+      "Ilulissat",
+      "Qaqortoq",
+      "Aasiaat"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Nuuk",
+      "Sisimiut",
+      "Ilulissat",
+      "Qaqortoq",
+      "Aasiaat"
+    ]
   },
   {
     "name": "Grenada",
@@ -16807,7 +17745,21 @@
     "continent": "North America",
     "emoji": "🇬🇩",
     "hebrewName": "גרנדה",
-    "hebrewCapital": "סנט ג'ורג'"
+    "hebrewCapital": "סנט ג'ורג'",
+    "capitalsDistractors": [
+      "St. George's",
+      "Gouyave",
+      "Grenville",
+      "Victoria",
+      "Hillsborough"
+    ],
+    "hebrewCapitalsDistractors": [
+      "St. George's",
+      "Gouyave",
+      "Grenville",
+      "Victoria",
+      "Hillsborough"
+    ]
   },
   {
     "name": "Guatemala",
@@ -16966,7 +17918,21 @@
       ]
     },
     "hebrewName": "גואטמלה",
-    "hebrewCapital": "גואטמלה סיטי"
+    "hebrewCapital": "גואטמלה סיטי",
+    "capitalsDistractors": [
+      "Guatemala City",
+      "Mixco",
+      "Villa Nueva",
+      "Quetzaltenango",
+      "San Miguel Petapa"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Guatemala City",
+      "Mixco",
+      "Villa Nueva",
+      "Quetzaltenango",
+      "San Miguel Petapa"
+    ]
   },
   {
     "name": "Guinea",
@@ -17265,7 +18231,21 @@
       ]
     },
     "hebrewName": "גינאה",
-    "hebrewCapital": "קונאקרי"
+    "hebrewCapital": "קונאקרי",
+    "capitalsDistractors": [
+      "Conakry",
+      "Nzérékoré",
+      "Kindia",
+      "Kankan",
+      "Gueckedou"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Conakry",
+      "Nzérékoré",
+      "Kindia",
+      "Kankan",
+      "Gueckedou"
+    ]
   },
   {
     "name": "Guinea Bissau",
@@ -17360,7 +18340,21 @@
       ]
     },
     "hebrewName": "גינאה ביסאו",
-    "hebrewCapital": "ביסאו"
+    "hebrewCapital": "ביסאו",
+    "capitalsDistractors": [
+      "Bissau",
+      "Bafatá",
+      "Gabú",
+      "Bissorã",
+      "Bolama"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bissau",
+      "Bafatá",
+      "Gabú",
+      "Bissorã",
+      "Bolama"
+    ]
   },
   {
     "name": "Guyana",
@@ -17539,7 +18533,21 @@
       ]
     },
     "hebrewName": "גיאנה",
-    "hebrewCapital": "ג'ורג'טאון"
+    "hebrewCapital": "ג'ורג'טאון",
+    "capitalsDistractors": [
+      "Georgetown",
+      "Linden",
+      "New Amsterdam",
+      "Anna Regina",
+      "Bartica"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Georgetown",
+      "Linden",
+      "New Amsterdam",
+      "Anna Regina",
+      "Bartica"
+    ]
   },
   {
     "name": "Haiti",
@@ -17642,7 +18650,21 @@
       ]
     },
     "hebrewName": "האיטי",
-    "hebrewCapital": "פורט או פרינס"
+    "hebrewCapital": "פורט או פרינס",
+    "capitalsDistractors": [
+      "Port-au-Prince",
+      "Gonaïves",
+      "Cap-Haïtien",
+      "Saint-Marc",
+      "Petion-Ville"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Port-au-Prince",
+      "Gonaïves",
+      "Cap-Haïtien",
+      "Saint-Marc",
+      "Petion-Ville"
+    ]
   },
   {
     "name": "Honduras",
@@ -17889,7 +18911,21 @@
       ]
     },
     "hebrewName": "הונדורס",
-    "hebrewCapital": "טגוסיגאלפה"
+    "hebrewCapital": "טגוסיגאלפה",
+    "capitalsDistractors": [
+      "Tegucigalpa",
+      "San Pedro Sula",
+      "Choloma",
+      "La Ceiba",
+      "El Progreso"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Tegucigalpa",
+      "San Pedro Sula",
+      "Choloma",
+      "La Ceiba",
+      "El Progreso"
+    ]
   },
   {
     "name": "Hong Kong",
@@ -17914,7 +18950,7 @@
           ],
           [
             113.933086,
-            22.476020
+            22.47602
           ],
           [
             114.010729,
@@ -17938,7 +18974,7 @@
           ],
           [
             114.336521,
-            22.433680
+            22.43368
           ],
           [
             114.229058,
@@ -17949,12 +18985,12 @@
             22.185537
           ],
           [
-            113.899210,
+            113.89921,
             22.193725
           ],
           [
             113.862017,
-            22.208880
+            22.20888
           ],
           [
             113.845993,
@@ -17964,7 +19000,21 @@
       ]
     },
     "hebrewName": "הונג קונג",
-    "hebrewCapital": "סיטי אוף ויקטוריה"
+    "hebrewCapital": "סיטי אוף ויקטוריה",
+    "capitalsDistractors": [
+      "Hong Kong",
+      "Kowloon",
+      "Tsuen Wan",
+      "Sha Tin",
+      "Tuen Mun"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Hong Kong",
+      "Kowloon",
+      "Tsuen Wan",
+      "Sha Tin",
+      "Tuen Mun"
+    ]
   },
   {
     "name": "Hungary",
@@ -18111,7 +19161,21 @@
       ]
     },
     "hebrewName": "הונגריה",
-    "hebrewCapital": "בודפשט"
+    "hebrewCapital": "בודפשט",
+    "capitalsDistractors": [
+      "Budapest",
+      "Debrecen",
+      "Szeged",
+      "Miskolc",
+      "Pécs"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Budapest",
+      "דברצן",
+      "סגד",
+      "מישקולץ",
+      "פץ'"
+    ]
   },
   {
     "name": "Iceland",
@@ -18210,7 +19274,21 @@
       ]
     },
     "hebrewName": "איסלנד",
-    "hebrewCapital": "רייקיאוויק"
+    "hebrewCapital": "רייקיאוויק",
+    "capitalsDistractors": [
+      "Reykjavík",
+      "Kópavogur",
+      "Hafnarfjörður",
+      "Akureyri",
+      "Reykjanesbær"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Reykjavík",
+      "Kópavogur",
+      "Hafnarfjörður",
+      "Akureyri",
+      "Reykjanesbær"
+    ]
   },
   {
     "name": "India",
@@ -18774,7 +19852,21 @@
       ]
     },
     "hebrewName": "הודו",
-    "hebrewCapital": "ניו דלהי"
+    "hebrewCapital": "ניו דלהי",
+    "capitalsDistractors": [
+      "Mumbai",
+      "Delhi",
+      "Bangalore",
+      "Hyderabad",
+      "Chennai"
+    ],
+    "hebrewCapitalsDistractors": [
+      "מומבאי",
+      "דלהי",
+      "בנגלור",
+      "היידראבאד",
+      "צ'נאי"
+    ]
   },
   {
     "name": "Indonesia",
@@ -19843,7 +20935,21 @@
       ]
     },
     "hebrewName": "אינדונזיה",
-    "hebrewCapital": "ג'קרטה"
+    "hebrewCapital": "ג'קרטה",
+    "capitalsDistractors": [
+      "Jakarta",
+      "Surabaya",
+      "Bandung",
+      "Medan",
+      "Semarang"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Jakarta",
+      "סוראביה",
+      "בנדונג",
+      "מדן",
+      "סמרונג"
+    ]
   },
   {
     "name": "Iran",
@@ -20166,7 +21272,21 @@
       ]
     },
     "hebrewName": "איראן",
-    "hebrewCapital": "טהרן"
+    "hebrewCapital": "טהרן",
+    "capitalsDistractors": [
+      "Tehran",
+      "Mashhad",
+      "Isfahan",
+      "Tabriz",
+      "Shiraz"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Tehran",
+      "משהד",
+      "אספהאן",
+      "טהראן",
+      "שיראז"
+    ]
   },
   {
     "name": "Iraq",
@@ -20305,7 +21425,21 @@
       ]
     },
     "hebrewName": "עיראק",
-    "hebrewCapital": "בגדאד"
+    "hebrewCapital": "בגדאד",
+    "capitalsDistractors": [
+      "Baghdad",
+      "Basra",
+      "Mosul",
+      "Erbil",
+      "Najaf"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Baghdad",
+      "בצרה",
+      "מוסול",
+      "ארביל",
+      "נג'ף"
+    ]
   },
   {
     "name": "Ireland",
@@ -20376,7 +21510,21 @@
       ]
     },
     "hebrewName": "אירלנד",
-    "hebrewCapital": "דבלין"
+    "hebrewCapital": "דבלין",
+    "capitalsDistractors": [
+      "Dublin",
+      "Cork",
+      "Limerick",
+      "Galway",
+      "Waterford"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Dublin",
+      "קורק",
+      "לימריק",
+      "גולוויי",
+      "ווטרפורד"
+    ]
   },
   {
     "name": "Israel",
@@ -20499,7 +21647,21 @@
       ]
     },
     "hebrewName": "ישראל",
-    "hebrewCapital": "ירושלים"
+    "hebrewCapital": "ירושלים",
+    "capitalsDistractors": [
+      "Tel Aviv",
+      "Haifa",
+      "Rishon LeZion",
+      "Petah Tikva",
+      "Ashdod"
+    ],
+    "hebrewCapitalsDistractors": [
+      "תל אביב",
+      "חיפה",
+      "ראשון לציון",
+      "פתח תקווה",
+      "אשדוד"
+    ]
   },
   {
     "name": "Italy",
@@ -20876,7 +22038,21 @@
       ]
     },
     "hebrewName": "איטליה",
-    "hebrewCapital": "רומא"
+    "hebrewCapital": "רומא",
+    "capitalsDistractors": [
+      "Rome",
+      "Milan",
+      "Naples",
+      "Turin",
+      "Palermo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Rome",
+      "מילאנו",
+      "נאפולי",
+      "טורינו",
+      "פלרמו"
+    ]
   },
   {
     "name": "Ivory Coast",
@@ -21079,7 +22255,21 @@
       ]
     },
     "hebrewName": "חוף השנהב",
-    "hebrewCapital": "יאמוסוקרו"
+    "hebrewCapital": "יאמוסוקרו",
+    "capitalsDistractors": [
+      "Abidjan",
+      "Bouaké",
+      "Daloa",
+      "San-Pédro",
+      "Yamoussoukro"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Abidjan",
+      "Bouaké",
+      "Daloa",
+      "San-Pédro",
+      "Yamoussoukro"
+    ]
   },
   {
     "name": "Jamaica",
@@ -21142,7 +22332,21 @@
       ]
     },
     "hebrewName": "ג'מייקה",
-    "hebrewCapital": "קינגסטון"
+    "hebrewCapital": "קינגסטון",
+    "capitalsDistractors": [
+      "Kingston",
+      "Montego Bay",
+      "Portmore",
+      "Spanish Town",
+      "May Pen"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kingston",
+      "Montego Bay",
+      "Portmore",
+      "Spanish Town",
+      "May Pen"
+    ]
   },
   {
     "name": "Japan",
@@ -21431,7 +22635,21 @@
       ]
     },
     "hebrewName": "יפן",
-    "hebrewCapital": "טוקיו"
+    "hebrewCapital": "טוקיו",
+    "capitalsDistractors": [
+      "Tokyo",
+      "Yokohama",
+      "Osaka",
+      "Nagoya",
+      "Sapporo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Tokyo",
+      "יוקוהמה",
+      "אוסקה",
+      "נגויה",
+      "סאפורו"
+    ]
   },
   {
     "name": "Jordan",
@@ -21526,7 +22744,21 @@
       ]
     },
     "hebrewName": "ירדן",
-    "hebrewCapital": "עמאן"
+    "hebrewCapital": "עמאן",
+    "capitalsDistractors": [
+      "Amman",
+      "Zarqa",
+      "Irbid",
+      "Russeifa",
+      "Al Quwaysimah"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Amman",
+      "זרקא",
+      "אירביד",
+      "רוסייפה",
+      "Al Quwaysimah"
+    ]
   },
   {
     "name": "Kazakhstan",
@@ -21993,7 +23225,21 @@
       ]
     },
     "hebrewName": "קזחסטן",
-    "hebrewCapital": "אסטנה"
+    "hebrewCapital": "אסטנה",
+    "capitalsDistractors": [
+      "Almaty",
+      "Nur-Sultan",
+      "Shymkent",
+      "Aktobe",
+      "Karaganda"
+    ],
+    "hebrewCapitalsDistractors": [
+      "אלמטי",
+      "Nur-Sultan",
+      "שימקנט",
+      "אקטובה",
+      "קאראגנדה"
+    ]
   },
   {
     "name": "Kenya",
@@ -22160,7 +23406,21 @@
       ]
     },
     "hebrewName": "קניה",
-    "hebrewCapital": "ניירובי"
+    "hebrewCapital": "ניירובי",
+    "capitalsDistractors": [
+      "Nairobi",
+      "Mombasa",
+      "Kisumu",
+      "Nakuru",
+      "Eldoret"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Nairobi",
+      "מומבסה",
+      "קיסומו",
+      "נאקורו",
+      "אלדורט"
+    ]
   },
   {
     "name": "Kiribati",
@@ -22172,7 +23432,21 @@
     "continent": "Oceania",
     "emoji": "🇰🇮",
     "hebrewName": "קיריבטי",
-    "hebrewCapital": "טארוואה"
+    "hebrewCapital": "טארוואה",
+    "capitalsDistractors": [
+      "South Tarawa",
+      "Betio",
+      "Bikenibeu",
+      "Abaokoro",
+      "Temaiku"
+    ],
+    "hebrewCapitalsDistractors": [
+      "South Tarawa",
+      "Betio",
+      "Bikenibeu",
+      "Abaokoro",
+      "Temaiku"
+    ]
   },
   {
     "name": "Kosovo",
@@ -22282,7 +23556,21 @@
       ]
     },
     "hebrewName": "קוסובו",
-    "hebrewCapital": "פרישטינה"
+    "hebrewCapital": "פרישטינה",
+    "capitalsDistractors": [
+      "Pristina",
+      "Prizren",
+      "Peja",
+      "Mitrovica",
+      "Gjakova"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Pristina",
+      "Prizren",
+      "Peja",
+      "Mitrovica",
+      "Gjakova"
+    ]
   },
   {
     "name": "Kuwait",
@@ -22337,7 +23625,21 @@
       ]
     },
     "hebrewName": "כווית",
-    "hebrewCapital": "כווית סיטי"
+    "hebrewCapital": "כווית סיטי",
+    "capitalsDistractors": [
+      "Kuwait City",
+      "Salmiya",
+      "Hawalli",
+      "Jahra",
+      "Fahaheel"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kuwait City",
+      "Salmiya",
+      "Hawalli",
+      "Jahra",
+      "Fahaheel"
+    ]
   },
   {
     "name": "Kyrgyzstan",
@@ -22496,7 +23798,21 @@
       ]
     },
     "hebrewName": "קירגיזסטן",
-    "hebrewCapital": "בישקק"
+    "hebrewCapital": "בישקק",
+    "capitalsDistractors": [
+      "Bishkek",
+      "Osh",
+      "Jalal-Abad",
+      "Karakol",
+      "Tokmok"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bishkek",
+      "Osh",
+      "Jalal-Abad",
+      "Karakol",
+      "Tokmok"
+    ]
   },
   {
     "name": "Laos",
@@ -22663,7 +23979,21 @@
       ]
     },
     "hebrewName": "לאוס",
-    "hebrewCapital": "ויינטיאן"
+    "hebrewCapital": "ויינטיאן",
+    "capitalsDistractors": [
+      "Vientiane",
+      "Savannakhet",
+      "Pakse",
+      "Luang Prabang",
+      "Thakhek"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Vientiane",
+      "Savannakhet",
+      "Pakse",
+      "Luang Prabang",
+      "Thakhek"
+    ]
   },
   {
     "name": "Latvia",
@@ -22770,7 +24100,21 @@
       ]
     },
     "hebrewName": "לטביה",
-    "hebrewCapital": "ריגה"
+    "hebrewCapital": "ריגה",
+    "capitalsDistractors": [
+      "Riga",
+      "Daugavpils",
+      "Liepāja",
+      "Jelgava",
+      "Jūrmala"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Riga",
+      "Daugavpils",
+      "Liepāja",
+      "Jelgava",
+      "Jūrmala"
+    ]
   },
   {
     "name": "Lebanon",
@@ -22833,7 +24177,21 @@
       ]
     },
     "hebrewName": "לבנון",
-    "hebrewCapital": "ביירות"
+    "hebrewCapital": "ביירות",
+    "capitalsDistractors": [
+      "Beirut",
+      "Tripoli",
+      "Sidon",
+      "Tyre",
+      "Nabatieh"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Beirut",
+      "טריפולי",
+      "צידון",
+      "צור",
+      "Nabatieh"
+    ]
   },
   {
     "name": "Lesotho",
@@ -22900,7 +24258,21 @@
       ]
     },
     "hebrewName": "לסוטו",
-    "hebrewCapital": "מסרו"
+    "hebrewCapital": "מסרו",
+    "capitalsDistractors": [
+      "Maseru",
+      "Teyateyaneng",
+      "Mafeteng",
+      "Hlotse",
+      "Mohale's Hoek"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Maseru",
+      "Teyateyaneng",
+      "Mafeteng",
+      "Hlotse",
+      "Mohale's Hoek"
+    ]
   },
   {
     "name": "Liberia",
@@ -23027,7 +24399,21 @@
       ]
     },
     "hebrewName": "ליבריה",
-    "hebrewCapital": "מונרוביה"
+    "hebrewCapital": "מונרוביה",
+    "capitalsDistractors": [
+      "Monrovia",
+      "Gbarnga",
+      "Kakata",
+      "Bensonville",
+      "Harper"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Monrovia",
+      "Gbarnga",
+      "Kakata",
+      "Bensonville",
+      "Harper"
+    ]
   },
   {
     "name": "Libya",
@@ -23270,7 +24656,21 @@
       ]
     },
     "hebrewName": "לוב",
-    "hebrewCapital": "טריפולי"
+    "hebrewCapital": "טריפולי",
+    "capitalsDistractors": [
+      "Tripoli",
+      "Benghazi",
+      "Misrata",
+      "Tarhuna",
+      "Al Khums"
+    ],
+    "hebrewCapitalsDistractors": [
+      "טריפולי",
+      "Benghazi",
+      "Misrata",
+      "Tarhuna",
+      "Al Khums"
+    ]
   },
   {
     "name": "Liechtenstein",
@@ -23290,7 +24690,7 @@
             47.074679
           ],
           [
-            9.464220,
+            9.46422,
             47.093626
           ],
           [
@@ -23298,7 +24698,7 @@
             47.105765
           ],
           [
-            9.483020,
+            9.48302,
             47.198958
           ],
           [
@@ -23337,7 +24737,21 @@
       ]
     },
     "hebrewName": "ליכטנשטיין",
-    "hebrewCapital": "ואדוז"
+    "hebrewCapital": "ואדוז",
+    "capitalsDistractors": [
+      "Vaduz",
+      "Schaan",
+      "Triesen",
+      "Balzers",
+      "Eschen"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Vaduz",
+      "Schaan",
+      "Triesen",
+      "Balzers",
+      "Eschen"
+    ]
   },
   {
     "name": "Lithuania",
@@ -23432,7 +24846,21 @@
       ]
     },
     "hebrewName": "ליטא",
-    "hebrewCapital": "וילנה"
+    "hebrewCapital": "וילנה",
+    "capitalsDistractors": [
+      "Vilnius",
+      "Kaunas",
+      "Klaipėda",
+      "Šiauliai",
+      "Panevėžys"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Vilnius",
+      "Kaunas",
+      "Klaipėda",
+      "Šiauliai",
+      "Panevėžys"
+    ]
   },
   {
     "name": "Luxembourg",
@@ -23479,7 +24907,21 @@
       ]
     },
     "hebrewName": "לוקסמבורג",
-    "hebrewCapital": "לוקסמבורג סיטי"
+    "hebrewCapital": "לוקסמבורג סיטי",
+    "capitalsDistractors": [
+      "Luxembourg City",
+      "Esch-sur-Alzette",
+      "Differdange",
+      "Dudelange",
+      "Ettelbruck"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Luxembourg City",
+      "Esch-sur-Alzette",
+      "Differdange",
+      "Dudelange",
+      "Ettelbruck"
+    ]
   },
   {
     "name": "Madagascar",
@@ -23694,7 +25136,21 @@
       ]
     },
     "hebrewName": "מדגסקר",
-    "hebrewCapital": "אנטננריבו"
+    "hebrewCapital": "אנטננריבו",
+    "capitalsDistractors": [
+      "Antananarivo",
+      "Toamasina",
+      "Antsirabe",
+      "Fianarantsoa",
+      "Mahajanga"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Antananarivo",
+      "Toamasina",
+      "Antsirabe",
+      "Fianarantsoa",
+      "Mahajanga"
+    ]
   },
   {
     "name": "Malawi",
@@ -23825,7 +25281,21 @@
       ]
     },
     "hebrewName": "מלאווי",
-    "hebrewCapital": "לילונגווה"
+    "hebrewCapital": "לילונגווה",
+    "capitalsDistractors": [
+      "Lilongwe",
+      "Blantyre",
+      "Mzuzu",
+      "Zomba",
+      "Kasungu"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Lilongwe",
+      "Blantyre",
+      "Mzuzu",
+      "Zomba",
+      "Kasungu"
+    ]
   },
   {
     "name": "Malaysia",
@@ -24098,7 +25568,21 @@
       ]
     },
     "hebrewName": "מלזיה",
-    "hebrewCapital": "קואלה לומפור"
+    "hebrewCapital": "קואלה לומפור",
+    "capitalsDistractors": [
+      "Kuala Lumpur",
+      "George Town",
+      "Ipoh",
+      "Shah Alam",
+      "Petaling Jaya"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kuala Lumpur",
+      "ג'ורג' טאון",
+      "איפוה",
+      "שאה אלאם",
+      "פטלינג ג'איה"
+    ]
   },
   {
     "name": "Maldives",
@@ -24164,14 +25648,14 @@
             ],
             [
               73.243103,
-              6.970390
+              6.97039
             ],
             [
               73.231086,
               6.978568
             ],
             [
-              73.215980,
+              73.21598,
               6.985725
             ],
             [
@@ -24204,7 +25688,7 @@
             ],
             [
               73.098907,
-              6.928130
+              6.92813
             ],
             [
               73.087577,
@@ -24243,7 +25727,7 @@
               6.869847
             ],
             [
-              72.995910,
+              72.99591,
               6.873597
             ],
             [
@@ -24305,8 +25789,8 @@
               6.963233
             ],
             [
-              73.012390,
-              6.970730
+              73.01239,
+              6.97073
             ],
             [
               73.014106,
@@ -24342,15 +25826,15 @@
             ],
             [
               73.002777,
-              7.061370
+              7.06137
             ],
             [
               72.985267,
-              7.075340
+              7.07534
             ],
             [
               72.973937,
-              7.085220
+              7.08522
             ],
             [
               72.956428,
@@ -24394,7 +25878,7 @@
             ],
             [
               72.837982,
-              7.119970
+              7.11997
             ],
             [
               72.831115,
@@ -24409,11 +25893,11 @@
               7.105662
             ],
             [
-              72.799530,
+              72.79953,
               7.101914
             ],
             [
-              72.792320,
+              72.79232,
               7.098848
             ],
             [
@@ -24421,20 +25905,20 @@
               7.092034
             ],
             [
-              72.778930,
+              72.77893,
               7.083857
             ],
             [
-              72.774810,
+              72.77481,
               7.078747
             ],
             [
-              72.772750,
+              72.77275,
               7.071251
             ],
             [
-              72.772750,
-              7.056260
+              72.77275,
+              7.05626
             ],
             [
               72.775497,
@@ -24449,11 +25933,11 @@
               7.026616
             ],
             [
-              72.783050,
+              72.78305,
               7.021505
             ],
             [
-              72.792320,
+              72.79232,
               7.011282
             ],
             [
@@ -24493,7 +25977,7 @@
               6.958121
             ],
             [
-              72.886390,
+              72.88639,
               6.946193
             ],
             [
@@ -24501,7 +25985,7 @@
               6.935288
             ],
             [
-              72.899780,
+              72.89978,
               6.924381
             ],
             [
@@ -24541,7 +26025,7 @@
               6.905636
             ],
             [
-              72.995910,
+              72.99591,
               6.913475
             ],
             [
@@ -24602,7 +26086,7 @@
             ],
             [
               72.841415,
-              6.532280
+              6.53228
             ],
             [
               72.834548,
@@ -24669,7 +26153,7 @@
               6.603223
             ],
             [
-              73.094100,
+              73.0941,
               6.562296
             ],
             [
@@ -24707,7 +26191,7 @@
               6.311886
             ],
             [
-              72.564010,
+              72.56401,
               6.331677
             ],
             [
@@ -24731,7 +26215,7 @@
               6.436765
             ],
             [
-              72.668380,
+              72.66838,
               6.447682
             ],
             [
@@ -24804,11 +26288,11 @@
             ],
             [
               72.607269,
-              6.180150
+              6.18015
             ],
             [
               72.591476,
-              6.180150
+              6.18015
             ],
             [
               72.572937,
@@ -24899,7 +26383,7 @@
               5.949363
             ],
             [
-              73.094100,
+              73.0941,
               5.964387
             ],
             [
@@ -24916,7 +26400,7 @@
             ],
             [
               73.055648,
-              6.012190
+              6.01219
             ],
             [
               73.042602,
@@ -24931,7 +26415,7 @@
               6.061355
             ],
             [
-              73.012390,
+              73.01239,
               6.080473
             ],
             [
@@ -24943,7 +26427,7 @@
               6.127583
             ],
             [
-              72.989730,
+              72.98973,
               6.144651
             ],
             [
@@ -25015,11 +26499,11 @@
               6.421754
             ],
             [
-              72.891540,
+              72.89154,
               6.424483
             ],
             [
-              72.903900,
+              72.9039,
               6.439494
             ],
             [
@@ -25043,11 +26527,11 @@
               6.465421
             ],
             [
-              73.096160,
+              73.09616,
               6.454505
             ],
             [
-              73.116760,
+              73.11676,
               6.424483
             ],
             [
@@ -25083,7 +26567,7 @@
               6.232029
             ],
             [
-              73.313140,
+              73.31314,
               6.212916
             ],
             [
@@ -25092,11 +26576,11 @@
             ],
             [
               73.323612,
-              6.175030
+              6.17503
             ],
             [
               73.322238,
-              6.157110
+              6.15711
             ],
             [
               73.318634,
@@ -25124,7 +26608,7 @@
             ],
             [
               73.322753,
-              6.050430
+              6.05043
             ],
             [
               73.328247,
@@ -25204,14 +26688,14 @@
             ],
             [
               73.134956,
-              5.842130
+              5.84213
             ],
             [
               73.126029,
               5.862622
             ],
             [
-              73.115730,
+              73.11573,
               5.893358
             ],
             [
@@ -25223,11 +26707,11 @@
               5.891992
             ],
             [
-              73.201560,
+              73.20156,
               5.913165
             ],
             [
-              73.211860,
+              73.21186,
               5.926142
             ],
             [
@@ -25288,7 +26772,7 @@
             ],
             [
               73.444633,
-              5.965070
+              5.96507
             ],
             [
               73.450126,
@@ -25332,7 +26816,7 @@
             ],
             [
               73.500938,
-              5.813440
+              5.81344
             ],
             [
               73.494071,
@@ -25348,10 +26832,10 @@
             ],
             [
               73.452186,
-              5.765620
+              5.76562
             ],
             [
-              73.443260,
+              73.44326,
               5.757421
             ],
             [
@@ -25396,10 +26880,10 @@
             ],
             [
               72.981662,
-              5.372150
+              5.37215
             ],
             [
-              72.947330,
+              72.94733,
               5.358477
             ],
             [
@@ -25415,11 +26899,11 @@
               5.311646
             ],
             [
-              72.838840,
+              72.83884,
               5.317457
             ],
             [
-              72.822360,
+              72.82236,
               5.328396
             ],
             [
@@ -25428,7 +26912,7 @@
             ],
             [
               72.825107,
-              5.372150
+              5.37215
             ],
             [
               72.833347,
@@ -25472,7 +26956,7 @@
             ],
             [
               72.767429,
-              5.566270
+              5.56627
             ],
             [
               72.779788,
@@ -25508,7 +26992,7 @@
             ],
             [
               72.867679,
-              5.853230
+              5.85323
             ],
             [
               72.884159,
@@ -25535,7 +27019,7 @@
               6.011678
             ],
             [
-              72.945270,
+              72.94527,
               6.011678
             ],
             [
@@ -25563,15 +27047,15 @@
               5.817709
             ],
             [
-              73.043460,
+              73.04346,
               5.749394
             ],
             [
-              73.059940,
-              5.693370
+              73.05994,
+              5.69337
             ],
             [
-              73.064060,
+              73.06406,
               5.642806
             ],
             [
@@ -25595,7 +27079,7 @@
               5.456914
             ],
             [
-              73.068180,
+              73.06818,
               5.430939
             ],
             [
@@ -25619,7 +27103,7 @@
               5.294724
             ],
             [
-              72.882270,
+              72.88227,
               5.316603
             ],
             [
@@ -25647,12 +27131,12 @@
               5.390437
             ],
             [
-              73.042430,
+              73.04243,
               5.397786
             ],
             [
               73.055305,
-              5.398640
+              5.39864
             ],
             [
               73.082771,
@@ -25663,7 +27147,7 @@
               5.367194
             ],
             [
-              73.111610,
+              73.11161,
               5.342582
             ],
             [
@@ -25687,7 +27171,7 @@
               5.271477
             ],
             [
-              73.211860,
+              73.21186,
               5.246862
             ],
             [
@@ -25708,14 +27192,14 @@
             ],
             [
               73.148689,
-              5.125140
+              5.12514
             ],
             [
-              73.123970,
+              73.12397,
               5.112829
             ],
             [
-              73.095130,
+              73.09513,
               5.088208
             ],
             [
@@ -25724,14 +27208,14 @@
             ],
             [
               73.055305,
-              5.047170
+              5.04717
             ],
             [
               73.029212,
               5.025966
             ],
             [
-              72.994880,
+              72.99488,
               5.007498
             ],
             [
@@ -25751,7 +27235,7 @@
               4.975348
             ],
             [
-              72.882270,
+              72.88227,
               4.971928
             ],
             [
@@ -25760,7 +27244,7 @@
             ],
             [
               72.838325,
-              4.977400
+              4.9774
             ],
             [
               72.820472,
@@ -25768,19 +27252,19 @@
             ],
             [
               72.808113,
-              5.012970
+              5.01297
             ],
             [
               72.799873,
               5.041698
             ],
             [
-              72.790260,
+              72.79026,
               5.078633
             ],
             [
               72.791633,
-              5.105990
+              5.10599
             ],
             [
               72.799873,
@@ -25788,7 +27272,7 @@
             ],
             [
               72.816352,
-              5.167540
+              5.16754
             ],
             [
               72.828712,
@@ -25808,7 +27292,7 @@
             ],
             [
               72.830085,
-              5.264640
+              5.26464
             ],
             [
               72.838325,
@@ -25834,10 +27318,10 @@
             ],
             [
               72.922611,
-              4.898900
+              4.8989
             ],
             [
-              72.955570,
+              72.95557,
               4.898216
             ],
             [
@@ -25921,12 +27405,12 @@
               4.866745
             ],
             [
-              72.842960,
+              72.84296,
               4.872902
             ],
             [
-              72.847080,
-              4.879060
+              72.84708,
+              4.87906
             ],
             [
               72.849826,
@@ -25937,11 +27421,11 @@
         [
           [
             [
-              73.603420,
+              73.60342,
               5.244298
             ],
             [
-              73.581790,
+              73.58179,
               5.241905
             ],
             [
@@ -25965,8 +27449,8 @@
               5.228913
             ],
             [
-              73.490810,
-              5.237460
+              73.49081,
+              5.23746
             ],
             [
               73.477077,
@@ -26057,7 +27541,7 @@
               5.590188
             ],
             [
-              73.501110,
+              73.50111,
               5.585063
             ],
             [
@@ -26070,7 +27554,7 @@
             ],
             [
               73.539562,
-              5.532440
+              5.53244
             ],
             [
               73.548145,
@@ -26110,11 +27594,11 @@
             ],
             [
               73.670711,
-              5.303100
+              5.3031
             ],
             [
               73.666591,
-              5.286690
+              5.28669
             ],
             [
               73.648738,
@@ -26125,7 +27609,7 @@
               5.251136
             ],
             [
-              73.603420,
+              73.60342,
               5.244298
             ]
           ]
@@ -26157,15 +27641,15 @@
               4.980307
             ],
             [
-              73.490810,
+              73.49081,
               4.963206
             ],
             [
-              73.490810,
+              73.49081,
               4.957049
             ],
             [
-              73.486690,
+              73.48669,
               4.946104
             ],
             [
@@ -26206,7 +27690,7 @@
             ],
             [
               73.424205,
-              4.985780
+              4.98578
             ],
             [
               73.429012,
@@ -26228,7 +27712,7 @@
             ],
             [
               73.439998,
-              4.802430
+              4.80243
             ],
             [
               73.472957,
@@ -26256,7 +27740,7 @@
             ],
             [
               73.527889,
-              4.724080
+              4.72408
             ],
             [
               73.519649,
@@ -26267,12 +27751,12 @@
               4.717579
             ],
             [
-              73.474330,
+              73.47433,
               4.713474
             ],
             [
               73.446865,
-              4.706630
+              4.70663
             ],
             [
               73.424892,
@@ -26280,7 +27764,7 @@
             ],
             [
               73.404293,
-              4.697050
+              4.69705
             ],
             [
               73.385066,
@@ -26307,7 +27791,7 @@
               4.766849
             ],
             [
-              73.365840,
+              73.36584,
               4.777797
             ],
             [
@@ -26317,7 +27801,7 @@
           ],
           [
             [
-              73.372020,
+              73.37202,
               4.660779
             ],
             [
@@ -26338,7 +27822,7 @@
             ],
             [
               73.453731,
-              4.706630
+              4.70663
             ],
             [
               73.464717,
@@ -26377,7 +27861,7 @@
               4.657357
             ],
             [
-              73.599300,
+              73.5993,
               4.638194
             ],
             [
@@ -26406,7 +27890,7 @@
             ],
             [
               73.732509,
-              4.504040
+              4.50404
             ],
             [
               73.747615,
@@ -26466,7 +27950,7 @@
             ],
             [
               73.585567,
-              4.257570
+              4.25757
             ],
             [
               73.578701,
@@ -26493,7 +27977,7 @@
               4.148002
             ],
             [
-              73.486690,
+              73.48669,
               4.146632
             ],
             [
@@ -26506,10 +27990,10 @@
             ],
             [
               73.408412,
-              4.156220
+              4.15622
             ],
             [
-              73.382320,
+              73.38232,
               4.168547
             ],
             [
@@ -26522,7 +28006,7 @@
             ],
             [
               73.334255,
-              4.227440
+              4.22744
             ],
             [
               73.319149,
@@ -26581,21 +28065,21 @@
               4.647775
             ],
             [
-              73.365840,
+              73.36584,
               4.651882
             ],
             [
-              73.372020,
+              73.37202,
               4.660779
             ]
           ],
           [
             [
               73.376483,
-              4.120950
+              4.12095
             ],
             [
-              73.389530,
+              73.38953,
               4.130538
             ],
             [
@@ -26620,7 +28104,7 @@
             ],
             [
               73.519306,
-              4.144920
+              4.14492
             ],
             [
               73.539905,
@@ -26648,7 +28132,7 @@
             ],
             [
               73.563938,
-              4.052460
+              4.05246
             ],
             [
               73.561191,
@@ -26688,18 +28172,18 @@
             ],
             [
               73.497333,
-              3.885320
+              3.88532
             ],
             [
               73.493213,
               3.872989
             ],
             [
-              73.489780,
+              73.48978,
               3.855177
             ],
             [
-              73.487720,
+              73.48772,
               3.844215
             ],
             [
@@ -26707,8 +28191,8 @@
               3.828458
             ],
             [
-              73.477420,
-              3.815440
+              73.47742,
+              3.81544
             ],
             [
               73.467807,
@@ -26732,7 +28216,7 @@
             ],
             [
               73.376483,
-              3.785980
+              3.78598
             ],
             [
               73.362064,
@@ -26788,7 +28272,7 @@
             ],
             [
               73.348331,
-              4.053830
+              4.05383
             ],
             [
               73.353824,
@@ -26804,7 +28288,7 @@
             ],
             [
               73.376483,
-              4.120950
+              4.12095
             ]
           ]
         ],
@@ -26820,11 +28304,11 @@
             ],
             [
               72.688293,
-              3.931390
+              3.93139
             ],
             [
               72.688293,
-              3.945090
+              3.94509
             ],
             [
               72.691726,
@@ -26835,7 +28319,7 @@
               3.981395
             ],
             [
-              72.688980,
+              72.68898,
               3.995095
             ],
             [
@@ -26872,7 +28356,7 @@
             ],
             [
               72.700653,
-              4.123860
+              4.12386
             ],
             [
               72.706832,
@@ -26903,7 +28387,7 @@
               4.288212
             ],
             [
-              72.768630,
+              72.76863,
               4.299852
             ],
             [
@@ -26916,7 +28400,7 @@
             ],
             [
               72.820129,
-              4.290950
+              4.29095
             ],
             [
               72.832489,
@@ -26956,7 +28440,7 @@
             ],
             [
               72.971878,
-              4.101260
+              4.10126
             ],
             [
               72.974624,
@@ -26980,7 +28464,7 @@
             ],
             [
               72.978057,
-              3.932760
+              3.93276
             ],
             [
               72.978057,
@@ -27038,7 +28522,7 @@
             ],
             [
               73.013076,
-              4.347780
+              4.34778
             ],
             [
               73.026123,
@@ -27050,7 +28534,7 @@
             ],
             [
               73.032989,
-              4.303960
+              4.30396
             ],
             [
               73.032989,
@@ -27066,14 +28550,14 @@
             ],
             [
               73.017883,
-              4.251920
+              4.25192
             ],
             [
               73.005523,
               4.242334
             ],
             [
-              72.991790,
+              72.99179,
               4.238225
             ],
             [
@@ -27143,7 +28627,7 @@
               4.461427
             ],
             [
-              72.991790,
+              72.99179,
               4.441574
             ],
             [
@@ -27164,11 +28648,11 @@
             ],
             [
               72.943725,
-              4.405290
+              4.40529
             ],
             [
               72.930679,
-              4.414190
+              4.41419
             ],
             [
               72.927246,
@@ -27200,14 +28684,14 @@
             ],
             [
               72.860298,
-              3.893370
+              3.89337
             ],
             [
               72.818412,
               3.898165
             ],
             [
-              72.784080,
+              72.78408,
               3.902961
             ],
             [
@@ -27227,8 +28711,8 @@
               3.915291
             ],
             [
-              72.683830,
-              3.896110
+              72.68383,
+              3.89611
             ],
             [
               72.683143,
@@ -27239,8 +28723,8 @@
               3.863226
             ],
             [
-              72.681770,
-              3.848840
+              72.68177,
+              3.84884
             ],
             [
               72.681083,
@@ -27252,7 +28736,7 @@
             ],
             [
               72.680397,
-              3.795400
+              3.7954
             ],
             [
               72.678337,
@@ -27264,18 +28748,18 @@
             ],
             [
               72.679023,
-              3.748810
+              3.74881
             ],
             [
               72.678337,
               3.730995
             ],
             [
-              72.679710,
-              3.714550
+              72.67971,
+              3.71455
             ],
             [
-              72.679710,
+              72.67971,
               3.699476
             ],
             [
@@ -27311,7 +28795,7 @@
               3.593261
             ],
             [
-              72.687950,
+              72.68795,
               3.582981
             ],
             [
@@ -27319,11 +28803,11 @@
               3.562422
             ],
             [
-              72.687950,
+              72.68795,
               3.550772
             ],
             [
-              72.692070,
+              72.69207,
               3.529526
             ],
             [
@@ -27360,15 +28844,15 @@
             ],
             [
               72.762107,
-              3.462360
+              3.46236
             ],
             [
               72.774467,
               3.457562
             ],
             [
-              72.788200,
-              3.453450
+              72.7882,
+              3.45345
             ],
             [
               72.797126,
@@ -27395,11 +28879,11 @@
               3.449338
             ],
             [
-              72.894630,
+              72.89463,
               3.458248
             ],
             [
-              72.906990,
+              72.90699,
               3.467843
             ],
             [
@@ -27443,7 +28927,7 @@
               3.593261
             ],
             [
-              72.988700,
+              72.9887,
               3.608337
             ],
             [
@@ -27455,7 +28939,7 @@
               3.646027
             ],
             [
-              73.001060,
+              73.00106,
               3.656991
             ],
             [
@@ -27467,27 +28951,27 @@
               3.685771
             ],
             [
-              73.004150,
+              73.00415,
               3.701874
             ],
             [
-              73.004150,
+              73.00415,
               3.716948
             ],
             [
               73.002433,
-              3.730310
+              3.73031
             ],
             [
               72.998313,
               3.746754
             ],
             [
-              72.994880,
+              72.99488,
               3.761143
             ],
             [
-              72.990760,
+              72.99076,
               3.774161
             ],
             [
@@ -27499,16 +28983,16 @@
               3.802937
             ],
             [
-              72.986640,
+              72.98664,
               3.815269
             ],
             [
-              72.986640,
+              72.98664,
               3.833767
             ],
             [
               72.985267,
-              3.848840
+              3.84884
             ],
             [
               72.983207,
@@ -27595,7 +29079,7 @@
               3.521473
             ],
             [
-              73.698520,
+              73.69852,
               3.510508
             ],
             [
@@ -27615,15 +29099,15 @@
               3.476239
             ],
             [
-              73.602390,
+              73.60239,
               3.473498
             ],
             [
-              73.594150,
+              73.59415,
               3.472127
             ],
             [
-              73.581790,
+              73.58179,
               3.474869
             ],
             [
@@ -27644,7 +29128,7 @@
             ],
             [
               73.544712,
-              3.535180
+              3.53518
             ],
             [
               73.535099,
@@ -27656,7 +29140,7 @@
             ],
             [
               73.530979,
-              3.577670
+              3.57767
             ],
             [
               73.530979,
@@ -27687,7 +29171,7 @@
               3.694165
             ],
             [
-              73.481540,
+              73.48154,
               3.699647
             ],
             [
@@ -27707,7 +29191,7 @@
               3.703416
             ],
             [
-              73.373050,
+              73.37305,
               3.694165
             ],
             [
@@ -27724,7 +29208,7 @@
             ],
             [
               73.322238,
-              3.624270
+              3.62427
             ],
             [
               73.312625,
@@ -27760,14 +29244,14 @@
             ],
             [
               73.265247,
-              3.450880
+              3.45088
             ],
             [
               73.273487,
               3.445397
             ],
             [
-              73.285160,
+              73.28516,
               3.439228
             ],
             [
@@ -27787,11 +29271,11 @@
               3.413182
             ],
             [
-              73.368930,
+              73.36893,
               3.400844
             ],
             [
-              73.377170,
+              73.37717,
               3.387135
             ],
             [
@@ -27808,7 +29292,7 @@
             ],
             [
               73.423862,
-              3.321330
+              3.32133
             ],
             [
               73.438968,
@@ -27823,7 +29307,7 @@
               3.294596
             ],
             [
-              73.479480,
+              73.47948,
               3.288426
             ],
             [
@@ -27840,7 +29324,7 @@
             ],
             [
               73.532352,
-              3.307620
+              3.30762
             ],
             [
               73.541965,
@@ -27925,11 +29409,11 @@
               3.289455
             ],
             [
-              73.472270,
-              3.286370
+              73.47227,
+              3.28637
             ],
             [
-              73.482570,
+              73.48257,
               3.281228
             ],
             [
@@ -27945,19 +29429,19 @@
               3.262376
             ],
             [
-              73.502140,
-              3.254150
+              73.50214,
+              3.25415
             ],
             [
-              73.501110,
+              73.50111,
               3.244895
             ],
             [
-              73.499050,
+              73.49905,
               3.239068
             ],
             [
-              73.494930,
+              73.49493,
               3.228785
             ],
             [
@@ -28013,7 +29497,7 @@
               3.212674
             ],
             [
-              73.382320,
+              73.38232,
               3.219187
             ],
             [
@@ -28021,11 +29505,11 @@
               3.227414
             ],
             [
-              73.379230,
+              73.37923,
               3.237354
             ],
             [
-              73.377170,
+              73.37717,
               3.246609
             ],
             [
@@ -28033,19 +29517,19 @@
               3.255178
             ],
             [
-              73.380260,
+              73.38026,
               3.269232
             ],
             [
-              73.384380,
+              73.38438,
               3.276772
             ],
             [
-              73.388500,
+              73.3885,
               3.285684
             ],
             [
-              73.392620,
+              73.39262,
               3.291168
             ],
             [
@@ -28065,7 +29549,7 @@
               2.939612
             ],
             [
-              73.636550,
+              73.63655,
               2.954698
             ],
             [
@@ -28073,8 +29557,8 @@
               2.972527
             ],
             [
-              73.648910,
-              2.984870
+              73.64891,
+              2.98487
             ],
             [
               73.651657,
@@ -28085,7 +29569,7 @@
               3.009555
             ],
             [
-              73.657150,
+              73.65715,
               3.020526
             ],
             [
@@ -28093,7 +29577,7 @@
               3.032869
             ],
             [
-              73.661270,
+              73.66127,
               3.045211
             ],
             [
@@ -28121,7 +29605,7 @@
               3.120633
             ],
             [
-              73.665390,
+              73.66539,
               3.126118
             ],
             [
@@ -28134,7 +29618,7 @@
             ],
             [
               73.625564,
-              3.139830
+              3.13983
             ],
             [
               73.601531,
@@ -28154,14 +29638,14 @@
             ],
             [
               73.515014,
-              3.185080
+              3.18508
             ],
             [
               73.489608,
               3.194678
             ],
             [
-              73.481540,
+              73.48154,
               3.195877
             ],
             [
@@ -28173,7 +29657,7 @@
               3.195877
             ],
             [
-              73.430900,
+              73.4309,
               3.193307
             ],
             [
@@ -28238,7 +29722,7 @@
             ],
             [
               73.352279,
-              2.910810
+              2.91081
             ],
             [
               73.352279,
@@ -28254,7 +29738,7 @@
             ],
             [
               73.344039,
-              2.806570
+              2.80657
             ],
             [
               73.348159,
@@ -28297,8 +29781,8 @@
               2.751703
             ],
             [
-              73.448410,
-              2.765420
+              73.44841,
+              2.76542
             ],
             [
               73.453903,
@@ -28318,7 +29802,7 @@
             ],
             [
               73.509521,
-              2.827830
+              2.82783
             ],
             [
               73.539047,
@@ -28366,7 +29850,7 @@
             ],
             [
               73.063201,
-              3.180280
+              3.18028
             ],
             [
               73.063201,
@@ -28374,7 +29858,7 @@
             ],
             [
               73.063201,
-              3.203590
+              3.20359
             ],
             [
               73.059768,
@@ -28398,14 +29882,14 @@
             ],
             [
               73.032302,
-              3.285170
+              3.28517
             ],
             [
               73.024749,
               3.292711
             ],
             [
-              73.012390,
+              73.01239,
               3.302308
             ],
             [
@@ -28450,7 +29934,7 @@
             ],
             [
               72.846221,
-              3.332470
+              3.33247
             ],
             [
               72.837982,
@@ -28462,7 +29946,7 @@
             ],
             [
               72.814636,
-              3.318760
+              3.31876
             ],
             [
               72.805709,
@@ -28505,7 +29989,7 @@
               3.208389
             ],
             [
-              72.799530,
+              72.79953,
               3.196049
             ],
             [
@@ -28598,10 +30082,10 @@
             ],
             [
               72.899093,
-              3.029440
+              3.02944
             ],
             [
-              72.905960,
+              72.90596,
               3.030126
             ],
             [
@@ -28625,7 +30109,7 @@
               3.045211
             ],
             [
-              72.987670,
+              72.98767,
               3.051382
             ],
             [
@@ -28633,7 +30117,7 @@
               3.056867
             ],
             [
-              73.012390,
+              73.01239,
               3.067838
             ],
             [
@@ -28678,7 +30162,7 @@
           [
             [
               73.050842,
-              2.790110
+              2.79011
             ],
             [
               73.052215,
@@ -28698,7 +30182,7 @@
             ],
             [
               73.046722,
-              2.862120
+              2.86212
             ],
             [
               73.048782,
@@ -28726,11 +30210,11 @@
             ],
             [
               73.043975,
-              2.965670
+              2.96567
             ],
             [
               73.042602,
-              2.975270
+              2.97527
             ],
             [
               73.039855,
@@ -28753,11 +30237,11 @@
               3.022583
             ],
             [
-              73.012390,
+              73.01239,
               3.028069
             ],
             [
-              73.004150,
+              73.00415,
               3.032183
             ],
             [
@@ -28766,7 +30250,7 @@
             ],
             [
               72.973937,
-              3.029440
+              3.02944
             ],
             [
               72.955398,
@@ -28854,7 +30338,7 @@
             ],
             [
               72.801589,
-              2.849090
+              2.84909
             ],
             [
               72.800903,
@@ -28869,7 +30353,7 @@
               2.816171
             ],
             [
-              72.795410,
+              72.79541,
               2.805198
             ],
             [
@@ -28945,15 +30429,15 @@
               2.638532
             ],
             [
-              72.877120,
+              72.87712,
               2.639218
             ],
             [
-              72.887420,
+              72.88742,
               2.641961
             ],
             [
-              72.893600,
+              72.8936,
               2.643333
             ],
             [
@@ -28994,7 +30478,7 @@
             ],
             [
               73.000717,
-              2.690660
+              2.69066
             ],
             [
               73.009643,
@@ -29018,11 +30502,11 @@
             ],
             [
               73.046722,
-              2.765420
+              2.76542
             ],
             [
               73.050842,
-              2.790110
+              2.79011
             ]
           ]
         ],
@@ -29058,7 +30542,7 @@
             ],
             [
               73.381118,
-              2.443030
+              2.44303
             ],
             [
               73.377685,
@@ -29106,15 +30590,15 @@
             ],
             [
               73.315887,
-              2.535640
+              2.53564
             ],
             [
               73.302841,
-              2.535640
+              2.53564
             ],
             [
               73.289108,
-              2.535640
+              2.53564
             ],
             [
               73.278121,
@@ -29126,7 +30610,7 @@
             ],
             [
               73.250656,
-              2.539070
+              2.53907
             ],
             [
               73.238296,
@@ -29146,7 +30630,7 @@
             ],
             [
               73.181991,
-              2.564450
+              2.56445
             ],
             [
               73.162078,
@@ -29186,7 +30670,7 @@
             ],
             [
               73.032302,
-              2.578170
+              2.57817
             ],
             [
               73.022689,
@@ -29194,10 +30678,10 @@
             ],
             [
               73.005523,
-              2.571310
+              2.57131
             ],
             [
-              72.993850,
+              72.99385,
               2.565822
             ],
             [
@@ -29218,11 +30702,11 @@
             ],
             [
               72.923812,
-              2.528780
+              2.52878
             ],
             [
               72.911453,
-              2.521920
+              2.52192
             ],
             [
               72.901153,
@@ -29281,7 +30765,7 @@
               2.329832
             ],
             [
-              72.877120,
+              72.87712,
               2.319541
             ],
             [
@@ -29289,19 +30773,19 @@
               2.305819
             ],
             [
-              72.889480,
-              2.296900
+              72.88948,
+              2.2969
             ],
             [
-              72.895660,
-              2.284550
+              72.89566,
+              2.28455
             ],
             [
-              72.897720,
+              72.89772,
               2.273573
             ],
             [
-              72.899780,
+              72.89978,
               2.265339
             ],
             [
@@ -29353,7 +30837,7 @@
               2.155558
             ],
             [
-              72.991790,
+              72.99179,
               2.146638
             ],
             [
@@ -29389,7 +30873,7 @@
               2.149382
             ],
             [
-              73.120880,
+              73.12088,
               2.154185
             ],
             [
@@ -29413,7 +30897,7 @@
               2.213194
             ],
             [
-              73.225250,
+              73.22525,
               2.224172
             ],
             [
@@ -29458,7 +30942,7 @@
             ],
             [
               73.376655,
-              2.343210
+              2.34321
             ],
             [
               73.382148,
@@ -29514,7 +30998,7 @@
             ],
             [
               73.565139,
-              2.068070
+              2.06807
             ],
             [
               73.574066,
@@ -29577,11 +31061,11 @@
               2.153842
             ],
             [
-              73.544540,
+              73.54454,
               2.146295
             ],
             [
-              73.536300,
+              73.5363,
               2.140805
             ],
             [
@@ -29590,7 +31074,7 @@
             ],
             [
               73.508148,
-              2.129140
+              2.12914
             ],
             [
               73.490982,
@@ -29602,7 +31086,7 @@
             ],
             [
               73.468322,
-              2.111300
+              2.1113
             ],
             [
               73.456649,
@@ -29614,11 +31098,11 @@
             ],
             [
               73.428497,
-              2.091400
+              2.0914
             ],
             [
               73.409271,
-              2.082480
+              2.08248
             ],
             [
               73.401718,
@@ -29626,7 +31110,7 @@
             ],
             [
               73.387298,
-              2.062580
+              2.06258
             ],
             [
               73.370132,
@@ -29645,12 +31129,12 @@
               2.038563
             ],
             [
-              73.321380,
+              73.32138,
               2.028956
             ],
             [
               73.304901,
-              2.017290
+              2.01729
             ],
             [
               73.293914,
@@ -29721,7 +31205,7 @@
               1.767488
             ],
             [
-              73.329620,
+              73.32962,
               1.761997
             ],
             [
@@ -29745,7 +31229,7 @@
               1.770233
             ],
             [
-              73.425750,
+              73.42575,
               1.777783
             ],
             [
@@ -29753,12 +31237,12 @@
               1.785332
             ],
             [
-              73.438110,
+              73.43811,
               1.788077
             ],
             [
               73.453903,
-              1.789450
+              1.78945
             ],
             [
               73.468322,
@@ -29818,10 +31302,10 @@
             ],
             [
               73.518447,
-              0.352590
+              0.35259
             ],
             [
-              73.006210,
+              73.00621,
               0.594967
             ],
             [
@@ -29854,7 +31338,7 @@
             ],
             [
               73.094444,
-              0.668090
+              0.66809
             ],
             [
               73.103027,
@@ -29878,7 +31362,7 @@
             ],
             [
               73.179931,
-              0.705510
+              0.70551
             ],
             [
               73.192977,
@@ -29889,7 +31373,7 @@
               0.725421
             ],
             [
-              73.224220,
+              73.22422,
               0.735377
             ],
             [
@@ -29902,7 +31386,7 @@
             ],
             [
               73.214263,
-              0.759750
+              0.75975
             ],
             [
               73.206367,
@@ -29922,7 +31406,7 @@
             ],
             [
               73.164825,
-              0.813990
+              0.81399
             ],
             [
               73.153152,
@@ -29930,7 +31414,7 @@
             ],
             [
               73.150405,
-              0.868230
+              0.86823
             ],
             [
               73.154525,
@@ -29945,7 +31429,7 @@
               0.903931
             ],
             [
-              73.210830,
+              73.21083,
               0.910796
             ],
             [
@@ -29981,7 +31465,7 @@
               0.932766
             ],
             [
-              73.335800,
+              73.3358,
               0.926587
             ],
             [
@@ -29990,7 +31474,7 @@
             ],
             [
               73.367042,
-              0.926930
+              0.92693
             ],
             [
               73.381118,
@@ -30002,7 +31486,7 @@
             ],
             [
               73.394851,
-              0.908050
+              0.90805
             ],
             [
               73.409957,
@@ -30010,7 +31494,7 @@
             ],
             [
               73.422317,
-              0.886080
+              0.88608
             ],
             [
               73.430557,
@@ -30038,7 +31522,7 @@
             ],
             [
               73.466262,
-              0.763870
+              0.76387
             ],
             [
               73.467636,
@@ -30066,7 +31550,7 @@
             ],
             [
               73.486175,
-              0.636850
+              0.63685
             ],
             [
               73.499908,
@@ -30146,7 +31630,7 @@
             ],
             [
               73.524627,
-              0.348470
+              0.34847
             ],
             [
               73.030929,
@@ -30165,7 +31649,7 @@
               0.577802
             ],
             [
-              72.985610,
+              72.98561,
               0.572309
             ],
             [
@@ -30186,7 +31670,7 @@
             ],
             [
               72.954711,
-              0.517380
+              0.51738
             ],
             [
               72.950592,
@@ -30198,7 +31682,7 @@
             ],
             [
               72.949905,
-              0.466570
+              0.46657
             ],
             [
               72.951965,
@@ -30210,11 +31694,11 @@
             ],
             [
               72.961578,
-              0.415760
+              0.41576
             ],
             [
               72.967758,
-              0.403400
+              0.4034
             ],
             [
               72.969131,
@@ -30230,14 +31714,14 @@
             ],
             [
               72.979431,
-              0.346410
+              0.34641
             ],
             [
               72.986297,
               0.336797
             ],
             [
-              72.989730,
+              72.98973,
               0.324438
             ],
             [
@@ -30249,7 +31733,7 @@
               0.286673
             ],
             [
-              72.995910,
+              72.99591,
               0.275687
             ],
             [
@@ -30285,12 +31769,12 @@
               0.209083
             ],
             [
-              73.102340,
+              73.10234,
               0.202216
             ],
             [
               73.126373,
-              0.191230
+              0.19123
             ],
             [
               73.137359,
@@ -30330,11 +31814,11 @@
             ],
             [
               73.285675,
-              0.180930
+              0.18093
             ],
             [
               73.300781,
-              0.193290
+              0.19329
             ],
             [
               73.311767,
@@ -30369,7 +31853,7 @@
               0.231055
             ],
             [
-              73.438110,
+              73.43811,
               0.236548
             ],
             [
@@ -30386,7 +31870,7 @@
             ],
             [
               73.495101,
-              0.277060
+              0.27706
             ],
             [
               73.504028,
@@ -30397,7 +31881,7 @@
               0.299032
             ],
             [
-              73.530120,
+              73.53012,
               0.312078
             ],
             [
@@ -30426,11 +31910,11 @@
             ],
             [
               73.456478,
-              -0.316370
+              -0.31637
             ],
             [
               73.455104,
-              -0.313280
+              -0.31328
             ],
             [
               73.454246,
@@ -30497,7 +31981,7 @@
               -0.265902
             ],
             [
-              73.421630,
+              73.42163,
               -0.265215
             ],
             [
@@ -30558,7 +32042,7 @@
             ],
             [
               73.414936,
-              -0.309160
+              -0.30916
             ],
             [
               73.416996,
@@ -30574,7 +32058,7 @@
             ],
             [
               73.423175,
-              -0.322550
+              -0.32255
             ],
             [
               73.426094,
@@ -30654,7 +32138,7 @@
           [
             [
               73.234863,
-              -0.650410
+              -0.65041
             ],
             [
               73.236579,
@@ -30741,11 +32225,11 @@
               -0.565615
             ],
             [
-              73.221130,
+              73.22113,
               -0.565615
             ],
             [
-              73.217010,
+              73.21701,
               -0.564241
             ],
             [
@@ -30753,7 +32237,7 @@
               -0.563555
             ],
             [
-              73.204650,
+              73.20465,
               -0.564241
             ],
             [
@@ -30778,7 +32262,7 @@
             ],
             [
               73.176498,
-              -0.585870
+              -0.58587
             ],
             [
               73.169288,
@@ -30817,11 +32301,11 @@
               -0.589989
             ],
             [
-              73.112640,
+              73.11264,
               -0.586899
             ],
             [
-              73.106460,
+              73.10646,
               -0.580033
             ],
             [
@@ -30829,11 +32313,11 @@
               -0.575227
             ],
             [
-              73.101310,
+              73.10131,
               -0.570421
             ],
             [
-              73.096160,
+              73.09616,
               -0.565615
             ],
             [
@@ -30906,7 +32390,7 @@
             ],
             [
               73.094787,
-              -0.653500
+              -0.6535
             ],
             [
               73.096847,
@@ -30925,7 +32409,7 @@
               -0.678904
             ],
             [
-              73.110580,
+              73.11058,
               -0.683711
             ],
             [
@@ -30954,11 +32438,11 @@
             ],
             [
               73.151779,
-              -0.719070
+              -0.71907
             ],
             [
               73.160705,
-              -0.720100
+              -0.7201
             ],
             [
               73.165855,
@@ -30997,7 +32481,7 @@
               -0.680278
             ],
             [
-              73.213920,
+              73.21392,
               -0.677874
             ],
             [
@@ -31009,23 +32493,37 @@
               -0.669979
             ],
             [
-              73.232460,
+              73.23246,
               -0.662426
             ],
             [
               73.234176,
-              -0.654530
+              -0.65453
             ],
             [
               73.234863,
-              -0.650410
+              -0.65041
             ]
           ]
         ]
       ]
     },
     "hebrewName": "המלדיביים",
-    "hebrewCapital": "מאלה"
+    "hebrewCapital": "מאלה",
+    "capitalsDistractors": [
+      "Male",
+      "Addu City",
+      "Fuvahmulah",
+      "Kulhudhuffushi",
+      "Thinadhoo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Male",
+      "Addu City",
+      "Fuvahmulah",
+      "Kulhudhuffushi",
+      "Thinadhoo"
+    ]
   },
   {
     "name": "Mali",
@@ -31348,7 +32846,21 @@
       ]
     },
     "hebrewName": "מלי",
-    "hebrewCapital": "במקו"
+    "hebrewCapital": "במקו",
+    "capitalsDistractors": [
+      "Bamako",
+      "Sikasso",
+      "Mopti",
+      "Koutiala",
+      "Ségou"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bamako",
+      "Sikasso",
+      "Mopti",
+      "Koutiala",
+      "Ségou"
+    ]
   },
   {
     "name": "Malta",
@@ -31422,7 +32934,21 @@
       ]
     },
     "hebrewName": "מלטה",
-    "hebrewCapital": "ולטה"
+    "hebrewCapital": "ולטה",
+    "capitalsDistractors": [
+      "Valletta",
+      "Birkirkara",
+      "Mosta",
+      "Qormi",
+      "Żabbar"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Valletta",
+      "Birkirkara",
+      "Mosta",
+      "Qormi",
+      "Żabbar"
+    ]
   },
   {
     "name": "Marshall Islands",
@@ -31434,7 +32960,21 @@
     "continent": "Oceania",
     "emoji": "🇲🇭",
     "hebrewName": "איי מרשל",
-    "hebrewCapital": "מג'ורו"
+    "hebrewCapital": "מג'ורו",
+    "capitalsDistractors": [
+      "Majuro",
+      "Ebeye",
+      "Arno",
+      "Jaluit",
+      "Wotho"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Majuro",
+      "Ebeye",
+      "Arno",
+      "Jaluit",
+      "Wotho"
+    ]
   },
   {
     "name": "Mauritania",
@@ -31609,7 +33149,21 @@
       ]
     },
     "hebrewName": "מאוריטניה",
-    "hebrewCapital": "נואקשוט"
+    "hebrewCapital": "נואקשוט",
+    "capitalsDistractors": [
+      "Nouakchott",
+      "Nouadhibou",
+      "Kiffa",
+      "Kaédi",
+      "Rosso"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Nouakchott",
+      "Nouadhibou",
+      "Kiffa",
+      "Kaédi",
+      "Rosso"
+    ]
   },
   {
     "name": "Mauritius",
@@ -31638,10 +33192,10 @@
           ],
           [
             57.604544,
-            -19.986330
+            -19.98633
           ],
           [
-            57.667570,
+            57.66757,
             -19.991643
           ],
           [
@@ -31649,7 +33203,7 @@
             -20.120735
           ],
           [
-            57.799540,
+            57.79954,
             -20.230681
           ],
           [
@@ -31682,7 +33236,7 @@
           ],
           [
             57.315557,
-            -20.441000
+            -20.441
           ],
           [
             57.338622,
@@ -31692,7 +33246,21 @@
       ]
     },
     "hebrewName": "מאוריציוס",
-    "hebrewCapital": "פורט לואי"
+    "hebrewCapital": "פורט לואי",
+    "capitalsDistractors": [
+      "Port Louis",
+      "Beau Bassin-Rose Hill",
+      "Vacoas-Phoenix",
+      "Curepipe",
+      "Quatre Bornes"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Port Louis",
+      "Beau Bassin-Rose Hill",
+      "Vacoas-Phoenix",
+      "Curepipe",
+      "Quatre Bornes"
+    ]
   },
   {
     "name": "Mexico",
@@ -32391,7 +33959,21 @@
       ]
     },
     "hebrewName": "מקסיקו",
-    "hebrewCapital": "מקסיקו סיטי"
+    "hebrewCapital": "מקסיקו סיטי",
+    "capitalsDistractors": [
+      "Mexico City",
+      "Guadalajara",
+      "Monterrey",
+      "Puebla",
+      "Tijuana"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Mexico City",
+      "גוודלחרה",
+      "מונטריי",
+      "פואבלה",
+      "טיחואנה"
+    ]
   },
   {
     "name": "Micronesia",
@@ -32420,16 +34002,16 @@
               5.320448
             ],
             [
-              162.921710,
+              162.92171,
               5.335216
             ],
             [
-              162.950410,
+              162.95041,
               5.348825
             ],
             [
               162.965217,
-              5.349330
+              5.34933
             ],
             [
               162.986295,
@@ -32476,7 +34058,7 @@
         [
           [
             [
-              158.126020,
+              158.12602,
               6.954435
             ],
             [
@@ -32528,7 +34110,7 @@
               6.885229
             ],
             [
-              158.126020,
+              158.12602,
               6.954435
             ]
           ]
@@ -32541,7 +34123,7 @@
             ],
             [
               151.565704,
-              7.370320
+              7.37032
             ],
             [
               151.586171,
@@ -32561,7 +34143,7 @@
             ],
             [
               151.737885,
-              7.340640
+              7.34064
             ],
             [
               151.707992,
@@ -32573,7 +34155,7 @@
             ],
             [
               151.569049,
-              7.328400
+              7.3284
             ],
             [
               151.557542,
@@ -32624,7 +34206,7 @@
               9.592078
             ],
             [
-              138.214440,
+              138.21444,
               9.576477
             ],
             [
@@ -32636,7 +34218,7 @@
               9.517057
             ],
             [
-              138.202450,
+              138.20245,
               9.494205
             ],
             [
@@ -32656,7 +34238,21 @@
       ]
     },
     "hebrewName": "מיקרונזיה",
-    "hebrewCapital": "פליקיר"
+    "hebrewCapital": "פליקיר",
+    "capitalsDistractors": [
+      "Palikir",
+      "Weno",
+      "Colonia",
+      "Kolonia",
+      "Tofol"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Palikir",
+      "Weno",
+      "Colonia",
+      "Kolonia",
+      "Tofol"
+    ]
   },
   {
     "name": "Moldova",
@@ -32783,7 +34379,21 @@
       ]
     },
     "hebrewName": "מולדובה",
-    "hebrewCapital": "קישינב"
+    "hebrewCapital": "קישינב",
+    "capitalsDistractors": [
+      "Chișinău",
+      "Tiraspol",
+      "Bălți",
+      "Bender",
+      "Rîbnița"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Chișinău",
+      "Tiraspol",
+      "Bălți",
+      "Bender",
+      "Rîbnița"
+    ]
   },
   {
     "name": "Monaco",
@@ -32835,7 +34445,21 @@
       ]
     },
     "hebrewName": "מונאקו",
-    "hebrewCapital": "מונאקו"
+    "hebrewCapital": "מונאקו",
+    "capitalsDistractors": [
+      "Monaco",
+      "Monte Carlo",
+      "La Condamine",
+      "Fontvieille",
+      "Moneghetti"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Monaco",
+      "Monte Carlo",
+      "La Condamine",
+      "Fontvieille",
+      "Moneghetti"
+    ]
   },
   {
     "name": "Mongolia",
@@ -33154,7 +34778,21 @@
       ]
     },
     "hebrewName": "מונגוליה",
-    "hebrewCapital": "אולאן בטור"
+    "hebrewCapital": "אולאן בטור",
+    "capitalsDistractors": [
+      "Ulaanbaatar",
+      "Erdenet",
+      "Darkhan",
+      "Choibalsan",
+      "Mörön"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Ulaanbaatar",
+      "Erdenet",
+      "Darkhan",
+      "Choibalsan",
+      "Mörön"
+    ]
   },
   {
     "name": "Montenegro",
@@ -33245,7 +34883,21 @@
       ]
     },
     "hebrewName": "מונטנגרו",
-    "hebrewCapital": "פודגוריצה"
+    "hebrewCapital": "פודגוריצה",
+    "capitalsDistractors": [
+      "Podgorica",
+      "Nikšić",
+      "Herceg Novi",
+      "Bar",
+      "Bijelo Polje"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Podgorica",
+      "Nikšić",
+      "Herceg Novi",
+      "Bar",
+      "Bijelo Polje"
+    ]
   },
   {
     "name": "Morocco",
@@ -33628,7 +35280,21 @@
       ]
     },
     "hebrewName": "מרוקו",
-    "hebrewCapital": "רבאט"
+    "hebrewCapital": "רבאט",
+    "capitalsDistractors": [
+      "Casablanca",
+      "Rabat",
+      "Fez",
+      "Marrakech",
+      "Agadir"
+    ],
+    "hebrewCapitalsDistractors": [
+      "קזבלנקה",
+      "Rabat",
+      "פז",
+      "מרקש",
+      "אגאדיר"
+    ]
   },
   {
     "name": "Mozambique",
@@ -33963,7 +35629,21 @@
       ]
     },
     "hebrewName": "מוזמביק",
-    "hebrewCapital": "מפוטו"
+    "hebrewCapital": "מפוטו",
+    "capitalsDistractors": [
+      "Maputo",
+      "Matola",
+      "Beira",
+      "Nampula",
+      "Chimoio"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Maputo",
+      "Matola",
+      "Beira",
+      "Nampula",
+      "Chimoio"
+    ]
   },
   {
     "name": "Myanmar",
@@ -34262,7 +35942,21 @@
       ]
     },
     "hebrewName": "מיאנמר",
-    "hebrewCapital": "נייפידאו"
+    "hebrewCapital": "נייפידאו",
+    "capitalsDistractors": [
+      "Yangon",
+      "Mandalay",
+      "Naypyidaw",
+      "Bago",
+      "Mawlamyine"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Yangon",
+      "Mandalay",
+      "Naypyidaw",
+      "Bago",
+      "Mawlamyine"
+    ]
   },
   {
     "name": "Namibia",
@@ -34457,7 +36151,21 @@
       ]
     },
     "hebrewName": "נמיביה",
-    "hebrewCapital": "וינדהוק"
+    "hebrewCapital": "וינדהוק",
+    "capitalsDistractors": [
+      "Windhoek",
+      "Walvis Bay",
+      "Oshakati",
+      "Swakopmund",
+      "Katima Mulilo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Windhoek",
+      "Walvis Bay",
+      "Oshakati",
+      "Swakopmund",
+      "Katima Mulilo"
+    ]
   },
   {
     "name": "Nepal",
@@ -34568,7 +36276,21 @@
       ]
     },
     "hebrewName": "נפאל",
-    "hebrewCapital": "קטמנדו"
+    "hebrewCapital": "קטמנדו",
+    "capitalsDistractors": [
+      "Kathmandu",
+      "Pokhara",
+      "Lalitpur",
+      "Bharatpur",
+      "Biratnagar"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kathmandu",
+      "Pokhara",
+      "Lalitpur",
+      "Bharatpur",
+      "Biratnagar"
+    ]
   },
   {
     "name": "Netherlands",
@@ -34647,7 +36369,21 @@
       ]
     },
     "hebrewName": "הולנד",
-    "hebrewCapital": "אמסטרדם"
+    "hebrewCapital": "אמסטרדם",
+    "capitalsDistractors": [
+      "Amsterdam",
+      "Rotterdam",
+      "The Hague",
+      "Utrecht",
+      "Eindhoven"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Amsterdam",
+      "רוטרדם",
+      "האג",
+      "אוטרכט",
+      "איינדהובן"
+    ]
   },
   {
     "name": "New Zealand",
@@ -34936,7 +36672,21 @@
       ]
     },
     "hebrewName": "ניו זילנד",
-    "hebrewCapital": "ולינגטון"
+    "hebrewCapital": "ולינגטון",
+    "capitalsDistractors": [
+      "Auckland",
+      "Wellington",
+      "Christchurch",
+      "Hamilton",
+      "Tauranga"
+    ],
+    "hebrewCapitalsDistractors": [
+      "אוקלנד",
+      "וולינגטון",
+      "כרייסטצ'רץ'",
+      "המילטון",
+      "טאוראנגה"
+    ]
   },
   {
     "name": "Nicaragua",
@@ -35163,7 +36913,21 @@
       ]
     },
     "hebrewName": "ניקרגואה",
-    "hebrewCapital": "מנגואה"
+    "hebrewCapital": "מנגואה",
+    "capitalsDistractors": [
+      "Managua",
+      "León",
+      "Masaya",
+      "Chinandega",
+      "Matagalpa"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Managua",
+      "León",
+      "Masaya",
+      "Chinandega",
+      "Matagalpa"
+    ]
   },
   {
     "name": "Niger",
@@ -35414,7 +37178,21 @@
       ]
     },
     "hebrewName": "ניז'ר",
-    "hebrewCapital": "ניאמיי"
+    "hebrewCapital": "ניאמיי",
+    "capitalsDistractors": [
+      "Niamey",
+      "Zinder",
+      "Maradi",
+      "Agadez",
+      "Alaghsas"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Niamey",
+      "Zinder",
+      "Maradi",
+      "Agadez",
+      "Alaghsas"
+    ]
   },
   {
     "name": "Nigeria",
@@ -35665,7 +37443,21 @@
       ]
     },
     "hebrewName": "ניגריה",
-    "hebrewCapital": "אבוג'ה"
+    "hebrewCapital": "אבוג'ה",
+    "capitalsDistractors": [
+      "Lagos",
+      "Kano",
+      "Ibadan",
+      "Kaduna",
+      "Port Harcourt"
+    ],
+    "hebrewCapitalsDistractors": [
+      "לאגוס",
+      "קאנו",
+      "איבאדאן",
+      "קאדונה",
+      "פורט הארקורט"
+    ]
   },
   {
     "name": "North Korea",
@@ -35882,7 +37674,21 @@
       ]
     },
     "hebrewName": "צפון קוריאה",
-    "hebrewCapital": "פיונגיאנג"
+    "hebrewCapital": "פיונגיאנג",
+    "capitalsDistractors": [
+      "Pyongyang",
+      "Hamhung",
+      "Chongjin",
+      "Nampo",
+      "Wonsan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Pyongyang",
+      "Hamhung",
+      "Chongjin",
+      "Nampo",
+      "Wonsan"
+    ]
   },
   {
     "name": "North Macedonia",
@@ -35973,7 +37779,21 @@
       ]
     },
     "hebrewName": "צפון מקדוניה",
-    "hebrewCapital": "סקופיה"
+    "hebrewCapital": "סקופיה",
+    "capitalsDistractors": [
+      "Skopje",
+      "Bitola",
+      "Kumanovo",
+      "Prilep",
+      "Tetovo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Skopje",
+      "Bitola",
+      "Kumanovo",
+      "Prilep",
+      "Tetovo"
+    ]
   },
   {
     "name": "Norway",
@@ -36358,7 +38178,21 @@
       ]
     },
     "hebrewName": "נורווגיה",
-    "hebrewCapital": "אוסלו"
+    "hebrewCapital": "אוסלו",
+    "capitalsDistractors": [
+      "Oslo",
+      "Bergen",
+      "Trondheim",
+      "Stavanger",
+      "Drammen"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Oslo",
+      "ברגן",
+      "טרונדהיים",
+      "סטוונגר",
+      "Drammen"
+    ]
   },
   {
     "name": "Oman",
@@ -36571,7 +38405,21 @@
       ]
     },
     "hebrewName": "עומאן",
-    "hebrewCapital": "מוסקט"
+    "hebrewCapital": "מוסקט",
+    "capitalsDistractors": [
+      "Muscat",
+      "Salalah",
+      "Sohar",
+      "Nizwa",
+      "Sur"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Muscat",
+      "Salalah",
+      "Sohar",
+      "Nizwa",
+      "Sur"
+    ]
   },
   {
     "name": "Pakistan",
@@ -36854,7 +38702,21 @@
       ]
     },
     "hebrewName": "פקיסטן",
-    "hebrewCapital": "איסלמבאד"
+    "hebrewCapital": "איסלמבאד",
+    "capitalsDistractors": [
+      "Karachi",
+      "Lahore",
+      "Faisalabad",
+      "Rawalpindi",
+      "Multan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Karachi",
+      "לאהור",
+      "פייסלאבאד",
+      "רוואלפינדי",
+      "מולטן"
+    ]
   },
   {
     "name": "Palau",
@@ -36866,7 +38728,21 @@
     "continent": "Oceania",
     "emoji": "🇵🇼",
     "hebrewName": "פאלאו",
-    "hebrewCapital": "נגרולמוד"
+    "hebrewCapital": "נגרולמוד",
+    "capitalsDistractors": [
+      "Ngerulmud",
+      "Koror",
+      "Melekeok",
+      "Ngaraard",
+      "Ngarchelong"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Ngerulmud",
+      "Koror",
+      "Melekeok",
+      "Ngaraard",
+      "Ngarchelong"
+    ]
   },
   {
     "name": "Panama",
@@ -37093,7 +38969,21 @@
       ]
     },
     "hebrewName": "פנמה",
-    "hebrewCapital": "פנמה סיטי"
+    "hebrewCapital": "פנמה סיטי",
+    "capitalsDistractors": [
+      "Panama City",
+      "San Miguelito",
+      "Juan Díaz",
+      "David",
+      "Arraiján"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Panama City",
+      "San Miguelito",
+      "Juan Díaz",
+      "David",
+      "Arraiján"
+    ]
   },
   {
     "name": "Papua New Guinea",
@@ -37450,7 +39340,21 @@
       ]
     },
     "hebrewName": "פפואה גינאה החדשה",
-    "hebrewCapital": "פורט מורסבי"
+    "hebrewCapital": "פורט מורסבי",
+    "capitalsDistractors": [
+      "Port Moresby",
+      "Lae",
+      "Mount Hagen",
+      "Madang",
+      "Goroka"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Port Moresby",
+      "Lae",
+      "Mount Hagen",
+      "Madang",
+      "Goroka"
+    ]
   },
   {
     "name": "Paraguay",
@@ -37601,7 +39505,21 @@
       ]
     },
     "hebrewName": "פרגוואי",
-    "hebrewCapital": "אסונסיון"
+    "hebrewCapital": "אסונסיון",
+    "capitalsDistractors": [
+      "Asunción",
+      "Ciudad del Este",
+      "San Lorenzo",
+      "Luque",
+      "Capiatá"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Asunción",
+      "Ciudad del Este",
+      "San Lorenzo",
+      "Luque",
+      "Capiatá"
+    ]
   },
   {
     "name": "Peru",
@@ -37924,7 +39842,21 @@
       ]
     },
     "hebrewName": "פרו",
-    "hebrewCapital": "לימה"
+    "hebrewCapital": "לימה",
+    "capitalsDistractors": [
+      "Lima",
+      "Arequipa",
+      "Trujillo",
+      "Chiclayo",
+      "Piura"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Lima",
+      "ארקיפה",
+      "טרוחיו",
+      "צ'יקלאיו",
+      "פיורה"
+    ]
   },
   {
     "name": "Philippines",
@@ -38409,7 +40341,21 @@
       ]
     },
     "hebrewName": "הפיליפינים",
-    "hebrewCapital": "מנילה"
+    "hebrewCapital": "מנילה",
+    "capitalsDistractors": [
+      "Manila",
+      "Quezon City",
+      "Davao City",
+      "Caloocan",
+      "Cebu City"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Manila",
+      "קוויזון סיטי",
+      "דאבאו סיטי",
+      "קאלוקאן",
+      "סבו סיטי"
+    ]
   },
   {
     "name": "Poland",
@@ -38608,7 +40554,21 @@
       ]
     },
     "hebrewName": "פולין",
-    "hebrewCapital": "ורשה"
+    "hebrewCapital": "ורשה",
+    "capitalsDistractors": [
+      "Warsaw",
+      "Kraków",
+      "Łódź",
+      "Wrocław",
+      "Poznań"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Warsaw",
+      "קרקוב",
+      "לודז'",
+      "ורוצלב",
+      "פוזנן"
+    ]
   },
   {
     "name": "Portugal",
@@ -38759,7 +40719,21 @@
       ]
     },
     "hebrewName": "פורטוגל",
-    "hebrewCapital": "ליסבון"
+    "hebrewCapital": "ליסבון",
+    "capitalsDistractors": [
+      "Lisbon",
+      "Porto",
+      "Vila Nova de Gaia",
+      "Amadora",
+      "Braga"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Lisbon",
+      "פורטו",
+      "וילה נובה דה גאיה",
+      "אמדורה",
+      "בראגה"
+    ]
   },
   {
     "name": "Puerto Rico",
@@ -38814,7 +40788,21 @@
       ]
     },
     "hebrewName": "פורטו ריקו",
-    "hebrewCapital": "סן חואן"
+    "hebrewCapital": "סן חואן",
+    "capitalsDistractors": [
+      "San Juan",
+      "Bayamón",
+      "Carolina",
+      "Ponce",
+      "Caguas"
+    ],
+    "hebrewCapitalsDistractors": [
+      "San Juan",
+      "Bayamón",
+      "Carolina",
+      "Ponce",
+      "Caguas"
+    ]
   },
   {
     "name": "Qatar",
@@ -38869,7 +40857,21 @@
       ]
     },
     "hebrewName": "קטאר",
-    "hebrewCapital": "דוחה"
+    "hebrewCapital": "דוחה",
+    "capitalsDistractors": [
+      "Doha",
+      "Al Wakrah",
+      "Al Khor",
+      "Lusail",
+      "Al Rayyan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Doha",
+      "Al Wakrah",
+      "Al Khor",
+      "Lusail",
+      "Al Rayyan"
+    ]
   },
   {
     "name": "Congo",
@@ -39084,7 +41086,21 @@
       ]
     },
     "hebrewName": "קונגו",
-    "hebrewCapital": "ברזוויל"
+    "hebrewCapital": "ברזוויל",
+    "capitalsDistractors": [
+      "Brazzaville",
+      "Pointe-Noire",
+      "Dolisie",
+      "Kayes",
+      "Owando"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Brazzaville",
+      "Pointe-Noire",
+      "Dolisie",
+      "Kayes",
+      "Owando"
+    ]
   },
   {
     "name": "Romania",
@@ -39279,7 +41295,21 @@
       ]
     },
     "hebrewName": "רומניה",
-    "hebrewCapital": "בוקרשט"
+    "hebrewCapital": "בוקרשט",
+    "capitalsDistractors": [
+      "Bucharest",
+      "Cluj-Napoca",
+      "Timișoara",
+      "Iași",
+      "Constanța"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bucharest",
+      "קלוז'-נאפוקה",
+      "טימישוארה",
+      "יאשי",
+      "קונסטנצה"
+    ]
   },
   {
     "name": "Russia",
@@ -41853,7 +43883,21 @@
       ]
     },
     "hebrewName": "רוסיה",
-    "hebrewCapital": "מוסקבה"
+    "hebrewCapital": "מוסקבה",
+    "capitalsDistractors": [
+      "Moscow",
+      "Saint Petersburg",
+      "Novosibirsk",
+      "Yekaterinburg",
+      "Kazan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Moscow",
+      "סנט פטרסבורג",
+      "נובוסיבירסק",
+      "יקטרינבורג",
+      "קאזאן"
+    ]
   },
   {
     "name": "Rwanda",
@@ -41928,7 +43972,21 @@
       ]
     },
     "hebrewName": "רואנדה",
-    "hebrewCapital": "קיגאלי"
+    "hebrewCapital": "קיגאלי",
+    "capitalsDistractors": [
+      "Kigali",
+      "Butare",
+      "Gitarama",
+      "Ruhengeri",
+      "Gisenyi"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kigali",
+      "Butare",
+      "Gitarama",
+      "Ruhengeri",
+      "Gisenyi"
+    ]
   },
   {
     "name": "Saint Kitts and Nevis",
@@ -41940,7 +43998,21 @@
     "continent": "North America",
     "emoji": "🇰🇳",
     "hebrewName": "סנט קיטס ונביס",
-    "hebrewCapital": "בסטר"
+    "hebrewCapital": "בסטר",
+    "capitalsDistractors": [
+      "Basseterre",
+      "Charlestown",
+      "Sandy Point Town",
+      "Cayon",
+      "Gingerland"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Basseterre",
+      "Charlestown",
+      "Sandy Point Town",
+      "Cayon",
+      "Gingerland"
+    ]
   },
   {
     "name": "Saint Lucia",
@@ -41952,7 +44024,21 @@
     "continent": "North America",
     "emoji": "🇱🇨",
     "hebrewName": "סנט לוסיה",
-    "hebrewCapital": "קסטריז"
+    "hebrewCapital": "קסטריז",
+    "capitalsDistractors": [
+      "Castries",
+      "Vieux Fort",
+      "Micoud",
+      "Dennery",
+      "Soufrière"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Castries",
+      "Vieux Fort",
+      "Micoud",
+      "Dennery",
+      "Soufrière"
+    ]
   },
   {
     "name": "Samoa",
@@ -41964,7 +44050,21 @@
     "continent": "Oceania",
     "emoji": "🇼🇸",
     "hebrewName": "סמואה",
-    "hebrewCapital": "אפיה"
+    "hebrewCapital": "אפיה",
+    "capitalsDistractors": [
+      "Apia",
+      "Vaitele",
+      "Faleula",
+      "Siusega",
+      "Malie"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Apia",
+      "Vaitele",
+      "Faleula",
+      "Siusega",
+      "Malie"
+    ]
   },
   {
     "name": "San Marino",
@@ -42032,7 +44132,21 @@
       ]
     },
     "hebrewName": "סן מרינו",
-    "hebrewCapital": "סן מרינו"
+    "hebrewCapital": "סן מרינו",
+    "capitalsDistractors": [
+      "San Marino",
+      "Serravalle",
+      "Borgo Maggiore",
+      "Domagnano",
+      "Fiorentino"
+    ],
+    "hebrewCapitalsDistractors": [
+      "San Marino",
+      "Serravalle",
+      "Borgo Maggiore",
+      "Domagnano",
+      "Fiorentino"
+    ]
   },
   {
     "name": "Sao Tome and Principe",
@@ -42044,7 +44158,21 @@
     "continent": "Africa",
     "emoji": "🇸🇹",
     "hebrewName": "סאו טומה ופרינסיפה",
-    "hebrewCapital": "סאו טומה"
+    "hebrewCapital": "סאו טומה",
+    "capitalsDistractors": [
+      "São Tomé",
+      "Santo António",
+      "Neves",
+      "Santana",
+      "Trindade"
+    ],
+    "hebrewCapitalsDistractors": [
+      "São Tomé",
+      "Santo António",
+      "Neves",
+      "Santana",
+      "Trindade"
+    ]
   },
   {
     "name": "Saudi Arabia",
@@ -42367,7 +44495,21 @@
       ]
     },
     "hebrewName": "סעודיה",
-    "hebrewCapital": "ריאד"
+    "hebrewCapital": "ריאד",
+    "capitalsDistractors": [
+      "Riyadh",
+      "Jeddah",
+      "Mecca",
+      "Medina",
+      "Dammam"
+    ],
+    "hebrewCapitalsDistractors": [
+      "ריאד",
+      "ג'דה",
+      "מכה",
+      "מדינה",
+      "דמאם"
+    ]
   },
   {
     "name": "Senegal",
@@ -42562,7 +44704,21 @@
       ]
     },
     "hebrewName": "סנגל",
-    "hebrewCapital": "דקר"
+    "hebrewCapital": "דקר",
+    "capitalsDistractors": [
+      "Dakar",
+      "Touba",
+      "Thiès",
+      "Rufisque",
+      "Kaolack"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Dakar",
+      "Touba",
+      "Thiès",
+      "Rufisque",
+      "Kaolack"
+    ]
   },
   {
     "name": "Serbia",
@@ -42773,7 +44929,21 @@
       ]
     },
     "hebrewName": "סרביה",
-    "hebrewCapital": "בלגרד"
+    "hebrewCapital": "בלגרד",
+    "capitalsDistractors": [
+      "Belgrade",
+      "Novi Sad",
+      "Niš",
+      "Kragujevac",
+      "Subotica"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Belgrade",
+      "Novi Sad",
+      "Niš",
+      "Kragujevac",
+      "Subotica"
+    ]
   },
   {
     "name": "Seychelles",
@@ -42866,7 +45036,21 @@
       ]
     },
     "hebrewName": "סיישל",
-    "hebrewCapital": "ויקטוריה"
+    "hebrewCapital": "ויקטוריה",
+    "capitalsDistractors": [
+      "Victoria",
+      "Anse Boileau",
+      "Beau Vallon",
+      "Cascade",
+      "Takamaka"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Victoria",
+      "Anse Boileau",
+      "Beau Vallon",
+      "Cascade",
+      "Takamaka"
+    ]
   },
   {
     "name": "Sierra Leone",
@@ -42973,7 +45157,21 @@
       ]
     },
     "hebrewName": "סיירה לאונה",
-    "hebrewCapital": "פריטאון"
+    "hebrewCapital": "פריטאון",
+    "capitalsDistractors": [
+      "Freetown",
+      "Bo",
+      "Kenema",
+      "Koidu",
+      "Makeni"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Freetown",
+      "Bo",
+      "Kenema",
+      "Koidu",
+      "Makeni"
+    ]
   },
   {
     "name": "Singapore",
@@ -43041,7 +45239,21 @@
       ]
     },
     "hebrewName": "סינגפור",
-    "hebrewCapital": "סינגפור"
+    "hebrewCapital": "סינגפור",
+    "capitalsDistractors": [
+      "Singapore",
+      "Jurong West",
+      "Woodlands",
+      "Tampines",
+      "Sengkang"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Singapore",
+      "ג'ורונג מערב",
+      "וודלנדס",
+      "טאמפינס",
+      "סנגקאנג"
+    ]
   },
   {
     "name": "Slovakia",
@@ -43192,7 +45404,21 @@
       ]
     },
     "hebrewName": "סלובקיה",
-    "hebrewCapital": "ברטיסלבה"
+    "hebrewCapital": "ברטיסלבה",
+    "capitalsDistractors": [
+      "Bratislava",
+      "Košice",
+      "Prešov",
+      "Žilina",
+      "Nitra"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bratislava",
+      "Košice",
+      "Prešov",
+      "Žilina",
+      "Nitra"
+    ]
   },
   {
     "name": "Slovenia",
@@ -43283,7 +45509,21 @@
       ]
     },
     "hebrewName": "סלובניה",
-    "hebrewCapital": "לובליאנה"
+    "hebrewCapital": "לובליאנה",
+    "capitalsDistractors": [
+      "Ljubljana",
+      "Maribor",
+      "Celje",
+      "Kranj",
+      "Velenje"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Ljubljana",
+      "Maribor",
+      "Celje",
+      "Kranj",
+      "Velenje"
+    ]
   },
   {
     "name": "Solomon Islands",
@@ -43468,7 +45708,21 @@
       ]
     },
     "hebrewName": "איי סולומון",
-    "hebrewCapital": "הוניארה"
+    "hebrewCapital": "הוניארה",
+    "capitalsDistractors": [
+      "Honiara",
+      "Auki",
+      "Gizo",
+      "Kirakira",
+      "Tulagi"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Honiara",
+      "Auki",
+      "Gizo",
+      "Kirakira",
+      "Tulagi"
+    ]
   },
   {
     "name": "Somalia",
@@ -43635,7 +45889,21 @@
       ]
     },
     "hebrewName": "סומליה",
-    "hebrewCapital": "מוגדישו"
+    "hebrewCapital": "מוגדישו",
+    "capitalsDistractors": [
+      "Mogadishu",
+      "Hargeisa",
+      "Bosaso",
+      "Kismayo",
+      "Berbera"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Mogadishu",
+      "Hargeisa",
+      "Bosaso",
+      "Kismayo",
+      "Berbera"
+    ]
   },
   {
     "name": "South Africa",
@@ -44032,7 +46300,21 @@
       ]
     },
     "hebrewName": "דרום אפריקה",
-    "hebrewCapital": "קייפטאון, פרטוריה, בלומפונטיין"
+    "hebrewCapital": "קייפטאון, פרטוריה, בלומפונטיין",
+    "capitalsDistractors": [
+      "Johannesburg",
+      "Cape Town",
+      "Durban",
+      "Pretoria",
+      "Port Elizabeth"
+    ],
+    "hebrewCapitalsDistractors": [
+      "יוהנסבורג",
+      "קייפטאון",
+      "דרבן",
+      "פרטוריה",
+      "פורט אליזבת"
+    ]
   },
   {
     "name": "South Korea",
@@ -44127,7 +46409,21 @@
       ]
     },
     "hebrewName": "דרום קוריאה",
-    "hebrewCapital": "סיאול"
+    "hebrewCapital": "סיאול",
+    "capitalsDistractors": [
+      "Seoul",
+      "Busan",
+      "Incheon",
+      "Daegu",
+      "Daejeon"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Seoul",
+      "פוסאן",
+      "אינצ'ון",
+      "דאיגו",
+      "דאג'ון"
+    ]
   },
   {
     "name": "South Sudan",
@@ -44398,7 +46694,21 @@
       ]
     },
     "hebrewName": "דרום סודן",
-    "hebrewCapital": "ג'ובה"
+    "hebrewCapital": "ג'ובה",
+    "capitalsDistractors": [
+      "Juba",
+      "Wau",
+      "Malakal",
+      "Yei",
+      "Aweil"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Juba",
+      "Wau",
+      "Malakal",
+      "Yei",
+      "Aweil"
+    ]
   },
   {
     "name": "Spain",
@@ -44621,7 +46931,21 @@
       ]
     },
     "hebrewName": "ספרד",
-    "hebrewCapital": "מדריד"
+    "hebrewCapital": "מדריד",
+    "capitalsDistractors": [
+      "Madrid",
+      "Barcelona",
+      "Valencia",
+      "Seville",
+      "Zaragoza"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Madrid",
+      "ברצלונה",
+      "ולנסיה",
+      "סביליה",
+      "סרגוסה"
+    ]
   },
   {
     "name": "Sri Lanka",
@@ -44680,7 +47004,21 @@
       ]
     },
     "hebrewName": "סרי לנקה",
-    "hebrewCapital": "קולומבו"
+    "hebrewCapital": "קולומבו",
+    "capitalsDistractors": [
+      "Colombo",
+      "Dehiwala-Mount Lavinia",
+      "Moratuwa",
+      "Negombo",
+      "Kandy"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Colombo",
+      "Dehiwala-Mount Lavinia",
+      "Moratuwa",
+      "Negombo",
+      "Kandy"
+    ]
   },
   {
     "name": "Sudan",
@@ -45023,7 +47361,21 @@
       ]
     },
     "hebrewName": "סודן",
-    "hebrewCapital": "חרטום"
+    "hebrewCapital": "חרטום",
+    "capitalsDistractors": [
+      "Khartoum",
+      "Omdurman",
+      "Port Sudan",
+      "Kassala",
+      "El Obeid"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Khartoum",
+      "Omdurman",
+      "Port Sudan",
+      "Kassala",
+      "El Obeid"
+    ]
   },
   {
     "name": "Suriname",
@@ -45146,7 +47498,21 @@
       ]
     },
     "hebrewName": "סורינאם",
-    "hebrewCapital": "פרמריבו"
+    "hebrewCapital": "פרמריבו",
+    "capitalsDistractors": [
+      "Paramaribo",
+      "Lelydorp",
+      "Brokopondo",
+      "Nieuw Nickerie",
+      "Moengo"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Paramaribo",
+      "Lelydorp",
+      "Brokopondo",
+      "Nieuw Nickerie",
+      "Moengo"
+    ]
   },
   {
     "name": "Sweden",
@@ -45325,7 +47691,21 @@
       ]
     },
     "hebrewName": "שוודיה",
-    "hebrewCapital": "שטוקהולם"
+    "hebrewCapital": "שטוקהולם",
+    "capitalsDistractors": [
+      "Stockholm",
+      "Gothenburg",
+      "Malmö",
+      "Uppsala",
+      "Västerås"
+    ],
+    "hebrewCapitalsDistractors": [
+      "סטוקהולם",
+      "גטבורג",
+      "מאלמה",
+      "אופסלה",
+      "וסטראס"
+    ]
   },
   {
     "name": "Switzerland",
@@ -45442,7 +47822,21 @@
       ]
     },
     "hebrewName": "שוויץ",
-    "hebrewCapital": "ברן"
+    "hebrewCapital": "ברן",
+    "capitalsDistractors": [
+      "Zurich",
+      "Geneva",
+      "Basel",
+      "Bern",
+      "Lausanne"
+    ],
+    "hebrewCapitalsDistractors": [
+      "ציריך",
+      "ז'נבה",
+      "בזל",
+      "ברן",
+      "לוזאן"
+    ]
   },
   {
     "name": "Syria",
@@ -45569,7 +47963,21 @@
       ]
     },
     "hebrewName": "סוריה",
-    "hebrewCapital": "דמשק"
+    "hebrewCapital": "דמשק",
+    "capitalsDistractors": [
+      "Damascus",
+      "Aleppo",
+      "Homs",
+      "Hama",
+      "Latakia"
+    ],
+    "hebrewCapitalsDistractors": [
+      "דמשק",
+      "חלב",
+      "חומס",
+      "חמה",
+      "לטקיה"
+    ]
   },
   {
     "name": "Taiwan",
@@ -45624,7 +48032,21 @@
       ]
     },
     "hebrewName": "טייוואן",
-    "hebrewCapital": "טאיפיי"
+    "hebrewCapital": "טאיפיי",
+    "capitalsDistractors": [
+      "Taipei",
+      "Kaohsiung",
+      "Taichung",
+      "Tainan",
+      "Banqiao"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Taipei",
+      "Kaohsiung",
+      "Taichung",
+      "Tainan",
+      "Banqiao"
+    ]
   },
   {
     "name": "Tajikistan",
@@ -45807,7 +48229,21 @@
       ]
     },
     "hebrewName": "טג'יקיסטן",
-    "hebrewCapital": "דושנבה"
+    "hebrewCapital": "דושנבה",
+    "capitalsDistractors": [
+      "Dushanbe",
+      "Khujand",
+      "Kulob",
+      "Qurghonteppa",
+      "Istaravshan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Dushanbe",
+      "Khujand",
+      "Kulob",
+      "Qurghonteppa",
+      "Istaravshan"
+    ]
   },
   {
     "name": "Tanzania",
@@ -46034,7 +48470,21 @@
       ]
     },
     "hebrewName": "טנזניה",
-    "hebrewCapital": "דודומה"
+    "hebrewCapital": "דודומה",
+    "capitalsDistractors": [
+      "Dar es Salaam",
+      "Mwanza",
+      "Arusha",
+      "Dodoma",
+      "Mbeya"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Dar es Salaam",
+      "Mwanza",
+      "Arusha",
+      "Dodoma",
+      "Mbeya"
+    ]
   },
   {
     "name": "Thailand",
@@ -46309,7 +48759,21 @@
       ]
     },
     "hebrewName": "תאילנד",
-    "hebrewCapital": "בנגקוק"
+    "hebrewCapital": "בנגקוק",
+    "capitalsDistractors": [
+      "Bangkok",
+      "Chiang Mai",
+      "Nonthaburi",
+      "Udon Thani",
+      "Hat Yai"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Bangkok",
+      "צ'יאנג מאי",
+      "נונטאבורי",
+      "אודון תאני",
+      "האט יאי"
+    ]
   },
   {
     "name": "Timor Leste",
@@ -46372,7 +48836,21 @@
       ]
     },
     "hebrewName": "טימור לסטה",
-    "hebrewCapital": "דילי"
+    "hebrewCapital": "דילי",
+    "capitalsDistractors": [
+      "Dili",
+      "Baucau",
+      "Maliana",
+      "Liquiçá",
+      "Same"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Dili",
+      "Baucau",
+      "Maliana",
+      "Liquiçá",
+      "Same"
+    ]
   },
   {
     "name": "Togo",
@@ -46467,7 +48945,21 @@
       ]
     },
     "hebrewName": "טוגו",
-    "hebrewCapital": "לומה"
+    "hebrewCapital": "לומה",
+    "capitalsDistractors": [
+      "Lomé",
+      "Sokodé",
+      "Kara",
+      "Kpalimé",
+      "Atakpamé"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Lomé",
+      "Sokodé",
+      "Kara",
+      "Kpalimé",
+      "Atakpamé"
+    ]
   },
   {
     "name": "Tonga",
@@ -46479,7 +48971,21 @@
     "continent": "Oceania",
     "emoji": "🇹🇴",
     "hebrewName": "טונגה",
-    "hebrewCapital": "נוקואלופה"
+    "hebrewCapital": "נוקואלופה",
+    "capitalsDistractors": [
+      "Nuku'alofa",
+      "Neiafu",
+      "Haveluloto",
+      "Vaini",
+      "Pangai"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Nuku'alofa",
+      "Neiafu",
+      "Haveluloto",
+      "Vaini",
+      "Pangai"
+    ]
   },
   {
     "name": "Trinidad and Tobago",
@@ -46530,7 +49036,21 @@
       ]
     },
     "hebrewName": "טרינידד וטובגו",
-    "hebrewCapital": "פורט אוף ספיין"
+    "hebrewCapital": "פורט אוף ספיין",
+    "capitalsDistractors": [
+      "Port of Spain",
+      "San Fernando",
+      "Arima",
+      "Point Fortin",
+      "Tunapuna"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Port of Spain",
+      "San Fernando",
+      "Arima",
+      "Point Fortin",
+      "Tunapuna"
+    ]
   },
   {
     "name": "Tunisia",
@@ -46673,7 +49193,21 @@
       ]
     },
     "hebrewName": "תוניסיה",
-    "hebrewCapital": "תוניס"
+    "hebrewCapital": "תוניס",
+    "capitalsDistractors": [
+      "Tunis",
+      "Sfax",
+      "Sousse",
+      "Ettadhamen",
+      "Kairouan"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Tunis",
+      "ספאקס",
+      "סוסה",
+      "אתדהמן",
+      "קירואן"
+    ]
   },
   {
     "name": "Turkey",
@@ -46970,7 +49504,21 @@
       ]
     },
     "hebrewName": "טורקיה",
-    "hebrewCapital": "אנקרה"
+    "hebrewCapital": "אנקרה",
+    "capitalsDistractors": [
+      "Istanbul",
+      "Ankara",
+      "İzmir",
+      "Bursa",
+      "Antalya"
+    ],
+    "hebrewCapitalsDistractors": [
+      "איסטנבול",
+      "אנקרה",
+      "איזמיר",
+      "בורסה",
+      "אנטליה"
+    ]
   },
   {
     "name": "Turkmenistan",
@@ -47205,7 +49753,21 @@
       ]
     },
     "hebrewName": "טורקמניסטן",
-    "hebrewCapital": "אשגבט"
+    "hebrewCapital": "אשגבט",
+    "capitalsDistractors": [
+      "Ashgabat",
+      "Türkmenabat",
+      "Daşoguz",
+      "Mary",
+      "Balkanabat"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Ashgabat",
+      "Türkmenabat",
+      "Daşoguz",
+      "Mary",
+      "Balkanabat"
+    ]
   },
   {
     "name": "Tuvalu",
@@ -47217,7 +49779,21 @@
     "continent": "Oceania",
     "emoji": "🇹🇻",
     "hebrewName": "טובלו",
-    "hebrewCapital": "פונפוטי"
+    "hebrewCapital": "פונפוטי",
+    "capitalsDistractors": [
+      "Funafuti",
+      "Asau",
+      "Tanrake",
+      "Tongia",
+      "Vaiaku"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Funafuti",
+      "Asau",
+      "Tanrake",
+      "Tongia",
+      "Vaiaku"
+    ]
   },
   {
     "name": "Uganda",
@@ -47348,7 +49924,21 @@
       ]
     },
     "hebrewName": "אוגנדה",
-    "hebrewCapital": "קמפלה"
+    "hebrewCapital": "קמפלה",
+    "capitalsDistractors": [
+      "Kampala",
+      "Gulu",
+      "Lira",
+      "Mbarara",
+      "Jinja"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kampala",
+      "Gulu",
+      "Lira",
+      "Mbarara",
+      "Jinja"
+    ]
   },
   {
     "name": "Ukraine",
@@ -47739,7 +50329,21 @@
       ]
     },
     "hebrewName": "אוקראינה",
-    "hebrewCapital": "קייב"
+    "hebrewCapital": "קייב",
+    "capitalsDistractors": [
+      "Kyiv",
+      "Kharkiv",
+      "Odesa",
+      "Dnipro",
+      "Donetsk"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Kyiv",
+      "חרקוב",
+      "אודסה",
+      "דניפרו",
+      "דונצק"
+    ]
   },
   {
     "name": "United Arab Emirates",
@@ -47846,7 +50450,21 @@
       ]
     },
     "hebrewName": "איחוד האמירויות",
-    "hebrewCapital": "אבו דאבי"
+    "hebrewCapital": "אבו דאבי",
+    "capitalsDistractors": [
+      "Dubai",
+      "Abu Dhabi",
+      "Sharjah",
+      "Al Ain",
+      "Ajman"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Dubai",
+      "Abu Dhabi",
+      "Sharjah",
+      "Al Ain",
+      "Ajman"
+    ]
   },
   {
     "name": "United Kingdom",
@@ -48095,7 +50713,21 @@
       ]
     },
     "hebrewName": "בריטניה",
-    "hebrewCapital": "לונדון"
+    "hebrewCapital": "לונדון",
+    "capitalsDistractors": [
+      "London",
+      "Birmingham",
+      "Manchester",
+      "Glasgow",
+      "Liverpool"
+    ],
+    "hebrewCapitalsDistractors": [
+      "London",
+      "ברמינגהאם",
+      "Manchester",
+      "גלאזגו",
+      "Liverpool"
+    ]
   },
   {
     "name": "United States",
@@ -49941,7 +52573,21 @@
       ]
     },
     "hebrewName": "ארצות הברית",
-    "hebrewCapital": "וושינגטון די.סי."
+    "hebrewCapital": "וושינגטון די.סי.",
+    "capitalsDistractors": [
+      "New York",
+      "Los Angeles",
+      "Chicago",
+      "Houston",
+      "Phoenix"
+    ],
+    "hebrewCapitalsDistractors": [
+      "ניו יורק",
+      "לוס אנג'לס",
+      "שיקגו",
+      "יוסטון",
+      "פיניקס"
+    ]
   },
   {
     "name": "Uruguay",
@@ -50044,7 +52690,21 @@
       ]
     },
     "hebrewName": "אורוגוואי",
-    "hebrewCapital": "מונטווידאו"
+    "hebrewCapital": "מונטווידאו",
+    "capitalsDistractors": [
+      "Montevideo",
+      "Salto",
+      "Ciudad de la Costa",
+      "Paysandú",
+      "Las Piedras"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Montevideo",
+      "Salto",
+      "Ciudad de la Costa",
+      "Paysandú",
+      "Las Piedras"
+    ]
   },
   {
     "name": "Uzbekistan",
@@ -50279,7 +52939,21 @@
       ]
     },
     "hebrewName": "אוזבקיסטן",
-    "hebrewCapital": "טשקנט"
+    "hebrewCapital": "טשקנט",
+    "capitalsDistractors": [
+      "Tashkent",
+      "Namangan",
+      "Samarkand",
+      "Andijan",
+      "Nukus"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Tashkent",
+      "Namangan",
+      "Samarkand",
+      "Andijan",
+      "Nukus"
+    ]
   },
   {
     "name": "Vanuatu",
@@ -50352,7 +53026,21 @@
       ]
     },
     "hebrewName": "ונואטו",
-    "hebrewCapital": "פורט וילה"
+    "hebrewCapital": "פורט וילה",
+    "capitalsDistractors": [
+      "Port Vila",
+      "Luganville",
+      "Norsup",
+      "Sola",
+      "Lakatoro"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Port Vila",
+      "Luganville",
+      "Norsup",
+      "Sola",
+      "Lakatoro"
+    ]
   },
   {
     "name": "Vatican City",
@@ -50555,7 +53243,13 @@
       ]
     },
     "hebrewName": "עיר הוותיקן",
-    "hebrewCapital": "עיר הוותיקן"
+    "hebrewCapital": "עיר הוותיקן",
+    "capitalsDistractors": [
+      "Vatican City"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Vatican City"
+    ]
   },
   {
     "name": "Venezuela",
@@ -50942,7 +53636,21 @@
       ]
     },
     "hebrewName": "ונצואלה",
-    "hebrewCapital": "קראקס"
+    "hebrewCapital": "קראקס",
+    "capitalsDistractors": [
+      "Caracas",
+      "Maracaibo",
+      "Valencia",
+      "Barquisimeto",
+      "Maracay"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Caracas",
+      "מאראקאיבו",
+      "ולנסיה",
+      "ברקיסימטו",
+      "מאראקאי"
+    ]
   },
   {
     "name": "Vietnam",
@@ -51137,7 +53845,21 @@
       ]
     },
     "hebrewName": "וייטנאם",
-    "hebrewCapital": "האנוי"
+    "hebrewCapital": "האנוי",
+    "capitalsDistractors": [
+      "Ho Chi Minh City",
+      "Hanoi",
+      "Da Nang",
+      "Hai Phong",
+      "Can Tho"
+    ],
+    "hebrewCapitalsDistractors": [
+      "הו צ'י מין סיטי",
+      "האנוי",
+      "דה נאנג",
+      "האי פונג",
+      "קאן תו"
+    ]
   },
   {
     "name": "Yemen",
@@ -51332,7 +54054,21 @@
       ]
     },
     "hebrewName": "תימן",
-    "hebrewCapital": "צנעא"
+    "hebrewCapital": "צנעא",
+    "capitalsDistractors": [
+      "Sana'a",
+      "Aden",
+      "Ta'izz",
+      "Al Hudaydah",
+      "Ibb"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Sana'a",
+      "Aden",
+      "Ta'izz",
+      "Al Hudaydah",
+      "Ibb"
+    ]
   },
   {
     "name": "Zambia",
@@ -51595,7 +54331,21 @@
       ]
     },
     "hebrewName": "זמביה",
-    "hebrewCapital": "לוסקה"
+    "hebrewCapital": "לוסקה",
+    "capitalsDistractors": [
+      "Lusaka",
+      "Kitwe",
+      "Ndola",
+      "Kabwe",
+      "Chingola"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Lusaka",
+      "Kitwe",
+      "Ndola",
+      "Kabwe",
+      "Chingola"
+    ]
   },
   {
     "name": "Zimbabwe",
@@ -51762,6 +54512,20 @@
       ]
     },
     "hebrewName": "זימבבואה",
-    "hebrewCapital": "הרארה"
+    "hebrewCapital": "הרארה",
+    "capitalsDistractors": [
+      "Harare",
+      "Bulawayo",
+      "Chitungwiza",
+      "Mutare",
+      "Epworth"
+    ],
+    "hebrewCapitalsDistractors": [
+      "Harare",
+      "Bulawayo",
+      "Chitungwiza",
+      "Mutare",
+      "Epworth"
+    ]
   }
 ]
