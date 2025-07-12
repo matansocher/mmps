@@ -103,7 +103,6 @@ export class WorldlyService {
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      // options.map((capital) => ({ text: capital, callback_data: [BOT_ACTIONS.CAPITAL, capital, randomCountry.capital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
       options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, country.hebrewCapital, randomCountry.capital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 

@@ -1,18 +1,15 @@
 import { Collection, Db } from 'mongodb';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Country } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../worldly-mongo.config';
 
 @Injectable()
-export class WorldlyMongoCountryService implements OnModuleInit {
+export class WorldlyMongoCountryService {
   private readonly countryCollection: Collection<Country>;
   private countries: Country[] = [];
 
   constructor(@Inject(CONNECTION_NAME) private readonly db: Db) {
     this.countryCollection = this.db.collection(COLLECTIONS.COUNTRY);
-  }
-
-  onModuleInit(): any {
     this.countryCollection
       .find()
       .toArray()
