@@ -1,5 +1,5 @@
 import { WoltRestaurant } from '../interface';
-import { CITIES_SLUGS_SUPPORTED, MAX_NUM_OF_RESTAURANTS_TO_SHOW } from '../wolt.config';
+import { CITIES_SLUGS_SUPPORTED } from '../wolt.config';
 
 function normalize(str: string): string {
   return str
@@ -25,6 +25,5 @@ export function getRestaurantsByName(restaurants: WoltRestaurant[], searchInput:
       const normalizedName = normalize(restaurant.name);
       return searchWords.some((word) => normalizedName.includes(word));
     })
-    .sort((a: WoltRestaurant, b: WoltRestaurant) => CITIES_SLUGS_SUPPORTED.indexOf(a.area) - CITIES_SLUGS_SUPPORTED.indexOf(b.area))
-    .slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW);
+    .sort((a: WoltRestaurant, b: WoltRestaurant) => CITIES_SLUGS_SUPPORTED.indexOf(a.area) - CITIES_SLUGS_SUPPORTED.indexOf(b.area));
 }

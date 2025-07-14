@@ -1,6 +1,6 @@
 export { downloadAudioFromVideoOrAudio } from './download-audio-from-video-or-audio';
 export { getCallbackQueryData } from './get-callback-query-data';
-export { getInlineKeyboardMarkup } from './get-inline-keyboard-markup';
+export { getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup } from './get-inline-keyboard-markup';
 export { getMessageData } from './get-message-data';
 export { getTableTemplate } from './get-table-template';
 export { handleCommand } from './handle-command';
