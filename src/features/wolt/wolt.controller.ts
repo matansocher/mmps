@@ -164,7 +164,8 @@ export class WoltController implements OnModuleInit {
       }
     } catch (err) {
       this.logger.error(`${this.callbackQueryHandler.name} - error - ${err}`);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
+      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, what: action, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
+      throw err;
     }
   }
 
