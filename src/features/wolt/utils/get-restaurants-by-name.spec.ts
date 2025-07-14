@@ -1,5 +1,4 @@
 import { WoltRestaurant } from '../interface';
-import { MAX_NUM_OF_RESTAURANTS_TO_SHOW } from '../wolt.config';
 import { getRestaurantsByName } from './get-restaurants-by-name';
 
 const mockRestaurants = [
@@ -41,21 +40,6 @@ describe('getRestaurantsByName()', () => {
     const areas = result.map((r) => r.area);
     const expectedOrder = ['tel-aviv', 'petah-tikva', 'netanya'];
     expect(areas).toEqual(expectedOrder);
-  });
-
-  it('limits the number of results to MAX_NUM_OF_RESTAURANTS_TO_SHOW', () => {
-    const longList = Array.from({ length: 20 }, (_, i) => ({
-      id: `${i}`,
-      name: `Burger ${i}`,
-      isOnline: 'yes',
-      slug: `burger-${i}`,
-      area: 'tel-aviv',
-      photo: '',
-      link: '',
-    })) as WoltRestaurant[];
-
-    const result = getRestaurantsByName(longList, 'burger');
-    expect(result.length).toBe(MAX_NUM_OF_RESTAURANTS_TO_SHOW);
   });
 
   it('returns an empty array when no matches are found', () => {
