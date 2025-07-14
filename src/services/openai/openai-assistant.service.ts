@@ -7,7 +7,7 @@ import { FileObject } from 'openai/resources';
 import { Message, MessageCreateParams, Run, Thread } from 'openai/resources/beta/threads';
 import { z, ZodType } from 'zod';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ASSISTANT_RUN_STATUSES, CHAT_COMPLETIONS_MODEL, ERROR_STATUSES, OPENAI_CLIENT_TOKEN } from './openai.config';
+import { ASSISTANT_RUN_STATUSES, CHAT_COMPLETIONS_MINI_MODEL, ERROR_STATUSES, OPENAI_CLIENT_TOKEN } from './openai.config';
 
 @Injectable()
 export class OpenaiAssistantService {
@@ -25,7 +25,7 @@ export class OpenaiAssistantService {
     return this.getThreadResponse(thread_id);
   }
 
-  async getStructuredOutput<TSchema extends ZodType>(schema: TSchema, instructions: string, content: string, model: string = CHAT_COMPLETIONS_MODEL): Promise<z.infer<TSchema>> {
+  async getStructuredOutput<TSchema extends ZodType>(schema: TSchema, instructions: string, content: string, model: string = CHAT_COMPLETIONS_MINI_MODEL): Promise<z.infer<TSchema>> {
     const completion = await this.openai.beta.chat.completions.parse({
       model,
       messages: [
