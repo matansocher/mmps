@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
-import { getLongestStreak, getSpecialNumber, getStreak } from '@core/utils';
+import { getLongestStreak, getStars, getStreak } from '@core/utils';
 import { OpenaiService } from '@services/openai';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
@@ -93,7 +93,8 @@ export class TrainerController implements OnModuleInit {
       chatId,
       [
         `💣 This Week Trainings: ${lastWeekExercises.length} (${lastWeekExercises.map((exerciseDate) => DAYS_OF_WEEK[exerciseDate.getDay()]).join(' ,')})`,
-        `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`,
+        `📅 This Week: ${getStars(lastWeekExercises.length)}`,
+        `🚀 Current Streak: ${currentStreak}`,
       ].join('\n'),
     );
   }
@@ -116,10 +117,11 @@ export class TrainerController implements OnModuleInit {
     });
 
     const replyText = [
-      `🤾 Whole Life Total Exercises: ${getSpecialNumber(exercises.length)}`,
-      `🚀 Current Streak: ${getSpecialNumber(currentStreak)}`,
-      `💯 Longest Streak: ${getSpecialNumber(longestStreak)}`,
+      `🤾 Whole Life Total Exercises: ${exercises.length}`,
+      `🚀 Current Streak: ${currentStreak}`,
+      `💯 Longest Streak: ${longestStreak}`,
       `💣 This Week Trainings: ${lastWeekExercises.length} (${lastWeekExercises.map((exerciseDate) => DAYS_OF_WEEK[exerciseDate.getDay()]).join(' ,')})`,
+      `📅 This Week: ${getStars(lastWeekExercises.length)}`,
     ].join('\n');
     await this.bot.sendMessage(chatId, replyText);
 

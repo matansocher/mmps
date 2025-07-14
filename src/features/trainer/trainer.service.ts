@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
-import { getLongestStreak, getSpecialNumber, getStreak } from '@core/utils';
+import { getLongestStreak, getStars, getStreak } from '@core/utils';
 import { UserDetails } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './trainer.config';
@@ -54,7 +54,7 @@ export class TrainerService {
 
       const exercisesDays = lastWeekExercises.map((exerciseDate) => `🟢 ${DAYS_OF_WEEK[exerciseDate.getDay()]}`);
       const exercisesDaysText = ['Last Week Exercises:', ...exercisesDays].join('\n');
-      const streaksText = [`🚀 Current Streak: ${getSpecialNumber(currentStreak)}`, `🏋️‍♂️ Longest Streak: ${getSpecialNumber(longestStreak)}`].join('\n');
+      const streaksText = [`📅 This Week: ${getStars(lastWeekExercises.length)}`, `🚀 Current Streak: ${currentStreak}`, `🏋️‍♂️ Longest Streak: ${longestStreak}`].join('\n');
       const replyText = [streaksText, exercisesDaysText].join('\n\n');
       await this.bot.sendMessage(chatId, replyText);
     } catch (err) {
