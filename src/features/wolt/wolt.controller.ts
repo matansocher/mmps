@@ -3,8 +3,8 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { Subscription, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierService } from '@core/notifier';
-import { getDateNumber, hasHebrew, sleep } from '@core/utils';
-import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { getDateNumber, hasHebrew } from '@core/utils';
+import { getCallbackQueryData, getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
 import { RestaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
@@ -230,14 +230,15 @@ export class WoltController implements OnModuleInit {
 
     const previousPageExists = page > 1;
     if (previousPageExists) {
-      newInlineKeyboardMarkup.push({ text: ['⬅️', page - 1, 'דף הקודם'].join(' '), callback_data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, page - 1].join(INLINE_KEYBOARD_SEPARATOR) });
+      newInlineKeyboardMarkup.push({ text: ['⬅️', `(${page - 1})`, 'דף הקודם'].join(' '), callback_data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, page - 1].join(INLINE_KEYBOARD_SEPARATOR) });
     }
     const nextPageExists = to < matchedRestaurants.length;
     if (nextPageExists) {
-      nextPageExists && newInlineKeyboardMarkup.push({ text: ['➡️', page + 1, 'דף הבא'].join(' '), callback_data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, page + 1].join(INLINE_KEYBOARD_SEPARATOR) });
+      newInlineKeyboardMarkup.push({ text: ['➡️', `(${page + 1})`, 'דף הבא'].join(' '), callback_data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, page + 1].join(INLINE_KEYBOARD_SEPARATOR) });
     }
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(newInlineKeyboardMarkup);
-    await this.bot.editMessageReplyMarkup({ ...inlineKeyboardMarkup.reply_markup }, { message_id: messageId, chat_id: chatId });
+    const columnsPerRow: number[] = [...newPageRestaurants.map(() => 1), previousPageExists && nextPageExists ? 2 : 1];
+    const inlineKeyboardMarkup = getCustomInlineKeyboardMarkup(newInlineKeyboardMarkup, columnsPerRow);
+    await this.bot.editMessageReplyMarkup(inlineKeyboardMarkup.reply_markup, { message_id: messageId, chat_id: chatId });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, restaurant }, userDetails);
   }
