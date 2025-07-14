@@ -14,7 +14,7 @@ export class TrainerSchedulerService implements OnModuleInit {
 
   onModuleInit(): void {
     // this.handleEODReminder(); // for testing purposes
-    this.handleWeeklySummary(); // for testing purposes
+    // this.handleWeeklySummary(); // for testing purposes
   }
 
   @Cron(`0 ${SMART_REMINDER_HOUR_OF_DAY} * * *`, { name: 'trainer-daily-scheduler-start', timeZone: DEFAULT_TIMEZONE })
