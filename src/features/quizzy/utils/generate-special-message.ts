@@ -18,9 +18,9 @@ function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
     return null;
   }
   const messages = [
-    ['בונא מישהו פה נותן בראש! 🎉', `${streak} תשובות נכונות ברצף! 🔥`, 'תמשיך ככה! 💪'].join('\n'),
-    ['איזה תותח! 👏', `ענית נכון ${streak} פעמים ברצף!`, 'המשך כך, אתה בדרך הנכונה! 🚀'].join('\n'),
-    ['וואו! 🏅', `${streak} תשובות נכונות ברצף!`, 'אלוף! 🦸‍♂️'].join('\n'),
+    ['Wow, someone here is crushing it! 🎉', '${streak} correct answers in a row! 🔥', 'Keep it up! 💪'].join('\n'),
+    ['What a champion! 👏', 'You answered correctly ${streak} times in a row!', "Keep going, you're on the right track! 🚀"].join('\n'),
+    ['Wow! 🏅', '${streak} correct answers in a row!', 'Champion! 🦸‍♂️'].join('\n'),
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -36,9 +36,9 @@ function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
     return null;
   }
   const messages = [
-    [`וואלק אני רוצה להגיד כל הכבוד על ההתמדה! 🎉`, ['לשחק כבר', streak, 'ימים כל יום זה אש 🔥'].join(' '), `תמשיך ככה! 💪`].join('\n'),
-    [`איזה התמדה! 👏`, `אתה משחק כבר ${streak} ימים ברצף!`, `מדהים! תמשיך להגיע כל יום! 🌟`].join('\n'),
-    [`שחקן קבוע! 🏆`, `כבר ${streak} ימים ברצף במשחק!`, `כל הכבוד על ההתמדה! 🔥`].join('\n'),
+    ['Wow, I want to say congratulations on your persistence! 🎉', 'Playing for ${streak} days every day is fire 🔥', 'Keep it up! 💪'].join('\n'),
+    ['What persistence! 👏', "You've been playing for ${streak} days in a row!", 'Amazing! Keep coming every day! 🌟'].join('\n'),
+    ['Regular player! 🏆', 'Already ${streak} days in a row in the game!', 'Congratulations on your persistence! 🔥'].join('\n'),
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -50,9 +50,9 @@ function getTotalGamesPlayedMessages(userGameLogs: GameLog[]): string {
     return null;
   }
   const messages = [
-    [`הופה הופה!! 🎉`, 'ענית על מספר מיוחד של שאלות! 🔥', `${userGameLogs.length} שאלות!`, `תמשיך ככה! 💪`].join('\n'),
-    [`הגעת לאבן דרך! 🏅`, `שיחקת כבר ${userGameLogs.length} משחקים!`, `מדהים! המשך לשחק ולהנות! 🎲`].join('\n'),
-    [`איזה שחקן! 👑`, `עברת את רף ה-${userGameLogs.length} שאלות!`, `כל הכבוד!`].join('\n'),
+    ['Hooray hooray!! 🎉', 'You answered a special number of questions! 🔥', '${userGameLogs.length} questions!', 'Keep it up! 💪'].join('\n'),
+    ['You reached a milestone! 🏅', "You've already played ${userGameLogs.length} games!", 'Amazing! Keep playing and enjoying! 🎲'].join('\n'),
+    ['What a player! 👑', 'You passed the ${userGameLogs.length} questions threshold!', 'Well done!'].join('\n'),
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -82,16 +82,17 @@ export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   const { currentStreak: currentCorrectAnsweredStreak, longestStreak: longestCorrectAnsweredStreak } = getStreakOfCorrectAnswers(userGameLogs);
 
   return [
+    // English: "Today:"
     [
       `💣`,
-      `היום:`,
+      `Today:`,
       `${todayCorrectGames.length}/${todayGameLogs.length}`,
       todayCorrectGames.length ? `-` : '',
       todayCorrectGames.length ? `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%` : '',
     ].join(' '),
-    [`🤓`, 'רצף התשובות הנכונות הנוכחי:', `${currentCorrectAnsweredStreak}`].join(' '),
-    [`🚀`, 'רצף התשובות הנכונות הכי ארוך:', `${longestCorrectAnsweredStreak}`].join(' '),
-    [`💯`, 'רצף הימים הנוכחי:', `${currentStreak}`].join(' '),
-    [`🚀`, 'רצף הימים הכי ארוך:', `${longestStreak}`].join(' '),
+    [`🤓`, 'Current correct answers streak:', `${currentCorrectAnsweredStreak}`].join(' '),
+    [`🚀`, 'Longest correct answers streak:', `${longestCorrectAnsweredStreak}`].join(' '),
+    [`💯`, 'Current days streak:', `${currentStreak}`].join(' '),
+    [`🚀`, 'Longest days streak:', `${longestStreak}`].join(' '),
   ].join('\n');
 }
