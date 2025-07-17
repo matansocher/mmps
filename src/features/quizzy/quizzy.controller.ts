@@ -21,8 +21,8 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATO
 import { QuizzyService } from './quizzy.service';
 import { generateInitialExplanationPrompt, generateSpecialMessage, generateStatisticsMessage } from './utils';
 
-const loaderMessage = 'אני שניה חושב ונותן הסבר 🤔';
-const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
+const loaderMessage = '🤔 Let me think for a second...';
+const customErrorMessage = '🙁 Oops, something went wrong. Please try again later.';
 
 @Injectable()
 export class QuizzyController implements OnModuleInit {
@@ -65,13 +65,13 @@ export class QuizzyController implements OnModuleInit {
     const { chatId, messageId } = getMessageData(message);
     const subscription = await this.subscriptionDB.getSubscription(chatId);
     const inlineKeyboardButtons = [
-      { text: '📊 סטטיסטיקות 📊', callback_data: `${BOT_ACTIONS.STATISTICS}` },
+      { text: '📊 Statistics 📊', callback_data: `${BOT_ACTIONS.STATISTICS}` },
       !subscription?.isActive
-        ? { text: '🟢 רוצה להתחיל לקבל שאלות יומיות 🟢', callback_data: `${BOT_ACTIONS.START}` }
-        : { text: '🛑 רוצה להפסיק לקבל שאלות יומיות 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
-      { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
+        ? { text: '🟢 Want to get daily games 🟢', callback_data: `${BOT_ACTIONS.START}` }
+        : { text: '🛑 Want to stop getting daily games 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
+      { text: '📬 Contact us 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
-    await this.bot.sendMessage(chatId, 'איך אני יכול לעזור? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
+    await this.bot.sendMessage(chatId, 'How can I help? 👨‍🏫', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
     await this.bot.deleteMessage(chatId, messageId).catch(() => {});
   }
 
@@ -94,7 +94,7 @@ export class QuizzyController implements OnModuleInit {
 
     const { threadId } = await this.questionDB.getActiveQuestion({ chatId });
     if (!threadId) {
-      await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
+      await this.bot.sendMessage(chatId, `I am sorry but I forgot our last topic 🙏.\nMaybe we can start a new question? 😁`);
       return;
     }
 
@@ -171,29 +171,29 @@ export class QuizzyController implements OnModuleInit {
     subscription ? await this.subscriptionDB.updateSubscription(chatId, { isActive: true }) : await this.subscriptionDB.addSubscription(chatId);
 
     const newUserReplyText = [
-      `היי 👋`,
-      'אני בוט טריוויה 😁',
-      'כל יום אני אשלח לכם שאלה 🌎',
-      'אפשר גם לשחק מתי שרוצים בפקודות שלי, פה למטה 👇',
-      `אם אתם רוצים שאני אפסיק לשלוח שאלות בכל יום, אפשר פשוט לבקש ממני בפקודה ׳פעולות׳, פה למטה 👇`,
+      `Hey 👋`,
+      'I am a trivia bot 😁',
+      'Each day, I will send you a trivia question 🙋',
+      'You cal always play whenever you want in the action below 👇',
+      `If you want me to stop daily games, you can ask me in the /actions command below 👇`,
     ].join('\n\n');
-    const existingUserReplyText = `אין בעיה, אני אשלח שאלות בכל יום 🟢`;
+    const existingUserReplyText = `No problem, I will send you games daily 🟢`;
     await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
   }
 
   private async stopHandler(chatId: number): Promise<void> {
     await this.subscriptionDB.updateSubscription(chatId, { isActive: false });
-    await this.bot.sendMessage(chatId, `אין בעיה, אני אפסיק לשלוח שאלות בכל יום 🛑`);
+    await this.bot.sendMessage(chatId, `No problem, I will stop sending daily games 🛑`);
   }
 
   private async contactHandler(chatId: number): Promise<void> {
-    await this.bot.sendMessage(chatId, ['אשמח לעזור', 'אפשר לדבר עם מי שיצר אותי, הוא בטח ידע לעזור', MY_USER_NAME].join('\n'));
+    await this.bot.sendMessage(chatId, ['Gladly!', 'You can talk to the person who created me, he will know what to do 😁', MY_USER_NAME].join('\n'));
   }
 
   private async statisticsHandler(chatId: number): Promise<void> {
     const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
     if (!userGameLogs?.length) {
-      await this.bot.sendMessage(chatId, 'אני רואה שעדיין לא שיחנו ביחד משחקים, אפשר להתחיל משחק חדש בפקודה ׳משחק אקראי׳ או בפקודה ׳מפה׳');
+      await this.bot.sendMessage(chatId, 'I see that you have not played any games yet 😢\nPlease try again after playing some games.');
       return;
     }
 
@@ -211,19 +211,23 @@ export class QuizzyController implements OnModuleInit {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const activeQuestion = await this.questionDB.getActiveQuestion({ questionId });
     if (!activeQuestion) {
-      await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
+      await this.bot.sendMessage(chatId, `I am sorry but I forgot our last topic 🙏.\nMaybe we can start a new question? 😁`);
       return;
     }
     this.questionDB.updateQuestion({ questionId }, { status: QuestionStatus.Answered });
     const { question, answers } = activeQuestion;
     const selectedAnswer = answers.find((ans) => ans.id === selectedAnswerId);
     const correctAnswer = answers.find((ans) => ans.id === correctAnswerId);
-    const replyText = [!selectedAnswer.isCorrect ? `אופס, טעות` : `נכון, יפה מאוד!`, `ענית: ${selectedAnswer.text}`, !selectedAnswer.isCorrect ? `התשובה הנכונה: ${correctAnswer.text}` : null]
+    const replyText = [
+      !selectedAnswer.isCorrect ? `Oops, that is wrong` : `Correct, well done!`,
+      `Answered: ${selectedAnswer.text}`,
+      !selectedAnswer.isCorrect ? `Correct: ${correctAnswer.text}` : null,
+    ]
       .filter(Boolean)
       .join('\n');
     const inlineKeyboardMarkup = getInlineKeyboardMarkup([
       {
-        text: '📝 הסבר 📝',
+        text: '📝 Explain 📝',
         callback_data: [BOT_ACTIONS.EXPLAIN, questionId, selectedAnswerId].join(INLINE_KEYBOARD_SEPARATOR),
       },
     ]);
@@ -238,7 +242,7 @@ export class QuizzyController implements OnModuleInit {
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     const activeQuestion = await this.questionDB.getActiveQuestion({ questionId });
     if (!activeQuestion) {
-      await this.bot.sendMessage(chatId, `שכחתי כבר על מה דיברנו 😁. אולי נתחיל שאלה חדש?`);
+      await this.bot.sendMessage(chatId, `I am sorry but I forgot our last topic 🙏.\nMaybe we can start a new question? 😁`);
       return;
     }
     const { question, answers } = activeQuestion;

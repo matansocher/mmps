@@ -5,9 +5,9 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Quizzy Bot 🤓',
   token: 'QUIZZY_TELEGRAM_BOT_TOKEN',
   commands: {
-    START: { command: '/start', description: 'התחל מהתחלה', hide: true },
-    GAME: { command: '/game', description: '🕹️ משחק 🕹️' },
-    ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
+    START: { command: '/start', description: 'Start Over', hide: true },
+    GAME: { command: '/game', description: '🕹️ Game 🕹️' },
+    ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
   },
 };
 
@@ -40,7 +40,6 @@ Each question should be a multiple-choice question with 1 correct answer and 3 p
 Your goal is to create questions that spark curiosity, invite follow-up explanations, and make users look forward to coming back every day.
 Think of questions users might talk about with friends, say “Wait, really?” — and want to know why.
 Guidelines:
-All questions and answers must be in Hebrew — the users are native Hebrew speakers.
 The difficulty should be medium to hard — avoid simple, common trivia.
 Write questions that make users say: “Why is that the right answer?” or “I didn’t know that — interesting!”
 Cover any interesting and educational topic — you’re not limited to predefined categories. Good examples include:
@@ -54,7 +53,7 @@ Every question should teach something interesting, not just test memory.
 export const FREE_TEXT_CHECK_INSTRUCTIONS = `
 You are a lightweight classifier in a Telegram trivia bot.
 Your task is to analyze a user's message and determine whether they are likely asking for a new trivia question, and not a regular question regarding the current topic.
-The bot is in the hebrew language so if the message is clearly asking for another question (e.g., “הבאה”, “הבא”, “שאל אותי”, “עוד אחת”, etc.), return high confidence.
+If the message is clearly asking for another question (e.g., "another question", "ask me", "lets play", "next question", etc.), return high confidence.
 Focus only on whether the user intends to request a new question.
 If the message is unrelated or unclear, return low confidence.
 `;
