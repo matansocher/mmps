@@ -82,17 +82,14 @@ export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   const { currentStreak: currentCorrectAnsweredStreak, longestStreak: longestCorrectAnsweredStreak } = getStreakOfCorrectAnswers(userGameLogs);
 
   return [
-    // English: 'Today:'
     [
-      `💣`,
-      `Today:`,
-      `${todayCorrectGames.length}/${todayGameLogs.length}`,
+      `💣 Today: ${todayCorrectGames.length}/${todayGameLogs.length}`,
       todayCorrectGames.length ? `-` : '',
       todayCorrectGames.length ? `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%` : '',
     ].join(' '),
-    [`🤓`, 'Current correct answers streak:', `${currentCorrectAnsweredStreak}`].join(' '),
-    [`🚀`, 'Longest correct answers streak:', `${longestCorrectAnsweredStreak}`].join(' '),
-    [`💯`, 'Current days streak:', `${currentStreak}`].join(' '),
-    [`🚀`, 'Longest days streak:', `${longestStreak}`].join(' '),
+    `🤓 Current correct answers streak: ${currentCorrectAnsweredStreak}`,
+    `🚀 Longest correct answers streak: ${longestCorrectAnsweredStreak}`,
+    `💯 Current days streak: ${currentStreak}`,
+    `🚀 Longest days streak: ${longestStreak}`,
   ].join('\n');
 }
