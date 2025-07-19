@@ -18,9 +18,9 @@ function getStreakOfCorrectMessages(userGameLogs: GameLog[]): string {
     return null;
   }
   const messages = [
-    ['Wow, someone here is crushing it! 🎉', '${streak} correct answers in a row! 🔥', 'Keep it up! 💪'].join('\n'),
-    ['What a champion! 👏', 'You answered correctly ${streak} times in a row!', "Keep going, you're on the right track! 🚀"].join('\n'),
-    ['Wow! 🏅', '${streak} correct answers in a row!', 'Champion! 🦸‍♂️'].join('\n'),
+    ['Wow, someone here is crushing it! 🎉', `${streak} correct answers in a row! 🔥`, 'Keep it up! 💪'].join('\n'),
+    ['What a champion! 👏', `You answered correctly ${streak} times in a row!`, `Keep going, you're on the right track! 🚀`].join('\n'),
+    ['Wow! 🏅', `${streak} correct answers in a row!`, 'Champion! 🦸‍♂️'].join('\n'),
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -36,9 +36,9 @@ function getStreakOfDaysPlayed(userGameLogs: GameLog[]): string {
     return null;
   }
   const messages = [
-    ['Wow, I want to say congratulations on your persistence! 🎉', 'Playing for ${streak} days every day is fire 🔥', 'Keep it up! 💪'].join('\n'),
-    ['What persistence! 👏', "You've been playing for ${streak} days in a row!", 'Amazing! Keep coming every day! 🌟'].join('\n'),
-    ['Regular player! 🏆', 'Already ${streak} days in a row in the game!', 'Congratulations on your persistence! 🔥'].join('\n'),
+    ['Wow, I want to say congratulations on your persistence! 🎉', `Playing for ${streak} days every day is fire 🔥`, 'Keep it up! 💪'].join('\n'),
+    ['What persistence! 👏', `You've been playing for ${streak} days in a row!`, 'Amazing! Keep coming every day! 🌟'].join('\n'),
+    ['Regular player! 🏆', `Already ${streak} days in a row in the game!`, 'Congratulations on your persistence! 🔥'].join('\n'),
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -50,9 +50,9 @@ function getTotalGamesPlayedMessages(userGameLogs: GameLog[]): string {
     return null;
   }
   const messages = [
-    ['Hooray hooray!! 🎉', 'You answered a special number of questions! 🔥', '${userGameLogs.length} questions!', 'Keep it up! 💪'].join('\n'),
-    ['You reached a milestone! 🏅', "You've already played ${userGameLogs.length} games!", 'Amazing! Keep playing and enjoying! 🎲'].join('\n'),
-    ['What a player! 👑', 'You passed the ${userGameLogs.length} questions threshold!', 'Well done!'].join('\n'),
+    ['Hooray hooray!! 🎉', 'You answered a special number of questions! 🔥', `${userGameLogs.length} questions!`, 'Keep it up! 💪'].join('\n'),
+    ['You reached a milestone! 🏅', `You've already played ${userGameLogs.length} games!`, 'Amazing! Keep playing and enjoying! 🎲'].join('\n'),
+    ['What a player! 👑', `You passed the ${userGameLogs.length} questions threshold!`, 'Well done!'].join('\n'),
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -82,17 +82,14 @@ export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   const { currentStreak: currentCorrectAnsweredStreak, longestStreak: longestCorrectAnsweredStreak } = getStreakOfCorrectAnswers(userGameLogs);
 
   return [
-    // English: "Today:"
     [
-      `💣`,
-      `Today:`,
-      `${todayCorrectGames.length}/${todayGameLogs.length}`,
+      `💣 Today: ${todayCorrectGames.length}/${todayGameLogs.length}`,
       todayCorrectGames.length ? `-` : '',
       todayCorrectGames.length ? `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%` : '',
     ].join(' '),
-    [`🤓`, 'Current correct answers streak:', `${currentCorrectAnsweredStreak}`].join(' '),
-    [`🚀`, 'Longest correct answers streak:', `${longestCorrectAnsweredStreak}`].join(' '),
-    [`💯`, 'Current days streak:', `${currentStreak}`].join(' '),
-    [`🚀`, 'Longest days streak:', `${longestStreak}`].join(' '),
+    `🤓 Current correct answers streak: ${currentCorrectAnsweredStreak}`,
+    `🚀 Longest correct answers streak: ${longestCorrectAnsweredStreak}`,
+    `💯 Current days streak: ${currentStreak}`,
+    `🚀 Longest days streak: ${longestStreak}`,
   ].join('\n');
 }

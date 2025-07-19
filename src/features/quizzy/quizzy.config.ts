@@ -40,7 +40,7 @@ Each question should be a multiple-choice question with 1 correct answer and 3 p
 Your goal is to create questions that spark curiosity, invite follow-up explanations, and make users look forward to coming back every day.
 Think of questions users might talk about with friends, say “Wait, really?” — and want to know why.
 Guidelines:
-The difficulty should be medium to hard — avoid simple, common trivia.
+The difficulty should be easy to medium — but avoid simple, common trivia.
 Write questions that make users say: “Why is that the right answer?” or “I didn’t know that — interesting!”
 Cover any interesting and educational topic — you’re not limited to predefined categories. Good examples include:
 History, science, language, geography, culture, inventions, literature, psychology, technology, surprising facts, food, music, art, nature, space, etc.
