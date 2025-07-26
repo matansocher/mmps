@@ -52,8 +52,7 @@ To start the NestJS application:
 5. Trainer - A bot to encourage the user the train every day with nice rewards for records.
 6. Educator - A bot to teach the user of interesting stuff with a single message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
 7. Programming Teacher - A bot to teach programming. It has a list of courses it can teach the user each day, with 3 lessons a day.
-8. Quizzy - A bot to send the user a daily trivia quiz. The user can answer the questions and get a score, and also get explanations from the bot about the questions.
-9. Cooker - A bot to store all the recipes gathered over the years.
+8Cooker - A bot to store all the recipes gathered over the years.
 
 ## Bots IDs
 
@@ -63,7 +62,6 @@ To start the NestJS application:
 | Coach               | [@mmps_football_coach_bot](https://web.telegram.org/k/#@mmps_football_coach_bot)           |
 | Cooker              | [@mmps_cooker_bot](https://web.telegram.org/k/#@mmps_cooker_bot)           |
 | Educator            | [@mmps_educator_bot](https://web.telegram.org/k/#@mmps_educator_bot)                       |
-| Quizzy              | [@mmps_quizzy_bot](https://web.telegram.org/k/#@mmps_quizzy_bot)                       |
 | Notifier            | [@mmps_notifier_bot](https://web.telegram.org/k/#@mmps_notifier_bot)                       |
 | Playgrounds         | [@guzi_playgrounds_bot](https://web.telegram.org/k/#@guzi_playgrounds_bot)                 |
 | Programming Teacher | [@mmps_programming_teacher_bot](https://web.telegram.org/k/#@mmps_programming_teacher_bot) |
