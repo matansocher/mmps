@@ -1,6 +1,5 @@
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { QuizzyMongoGameLogService, QuizzyMongoUserService } from '@core/mongo/quizzy-mongo';
 import { WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { GameLog, WorldlyMongoGameLogService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { getStreakOfCorrectAnswers } from '@core/utils';
@@ -19,8 +18,6 @@ export class NotifierController implements OnModuleInit {
   private readonly logger = new Logger(NotifierController.name);
 
   constructor(
-    private readonly quizzyGameLogDB: QuizzyMongoGameLogService,
-    private readonly quizzyUserDB: QuizzyMongoUserService,
     private readonly woltSubscriptionDB: WoltMongoSubscriptionService,
     private readonly woltUserDB: WoltMongoUserService,
     private readonly worldlyGameLogDB: WorldlyMongoGameLogService,
@@ -30,9 +27,8 @@ export class NotifierController implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE } = TELEGRAM_EVENTS;
-    const { QUIZZY, WOLT, WORLDLY } = BOT_CONFIG.commands;
+    const { WOLT, WORLDLY } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: QUIZZY.command, handler: (message) => this.quizzySummaryHandler.call(this, message) },
       { event: COMMAND, regex: WOLT.command, handler: (message) => this.woltSummaryHandler.call(this, message) },
       { event: COMMAND, regex: WORLDLY.command, handler: (message) => this.worldlySummaryHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
@@ -47,27 +43,6 @@ export class NotifierController implements OnModuleInit {
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
     await this.bot.sendMessage(chatId, 'I am here');
-  }
-
-  async quizzySummaryHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
-
-    const topChatIds = await this.quizzyGameLogDB.getTopByChatId(10);
-
-    const topUsers = await Promise.all(
-      topChatIds.map(async ({ chatId, records }) => {
-        const user = await this.quizzyUserDB.getUserDetails({ chatId });
-        const userName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''} ${user.username ?? ''}`.replace('  ', ' ').replace('  ', ' ') : 'Unknown User';
-        const correctCount = records.filter((record: GameLog) => record.selected === record.correct).length;
-        return { chatId, correctCount, records, user: userName } as LightUser;
-      }),
-    );
-
-    const replyText = `
-Top users this week:
-${topUsers.map(({ user, correctCount, records }, index) => `${index + 1}. ${user}: ${correctCount}/${records.length} - ${((correctCount / records.length) * 100).toFixed(2)}%`).join('\n')}
-    `;
-    await this.bot.sendMessage(chatId, replyText);
   }
 
   async woltSummaryHandler(message: Message): Promise<void> {

@@ -6,7 +6,6 @@ export const BOT_CONFIG: TelegramBotConfig = {
   token: 'NOTIFIER_TELEGRAM_BOT_TOKEN',
   forceLocal: true,
   commands: {
-    QUIZZY: { command: '/quizzy', description: '🤓 Quizzy Summary 🤓' },
     WOLT: { command: '/wolt', description: '🩵️ Wolt Summary 🩵' },
     WORLDLY: { command: '/worldly', description: '🌎 Worldly Summary 🌎' },
   },
