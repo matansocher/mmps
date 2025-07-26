@@ -9,6 +9,7 @@ describe('getStars()', () => {
     { amount: 5, total: 5, expected: '★★★★★' },
     { amount: 3, total: 7, expected: '★★★☆☆☆☆' },
     { amount: 10, total: 10, expected: '★★★★★★★★★★' },
+    { amount: 6, total: 5, expected: '★★★★★' },
   ])('should return $expected when input is $input', ({ amount, total, expected }) => {
     expect(getStars(amount, total)).toEqual(expected);
   });
