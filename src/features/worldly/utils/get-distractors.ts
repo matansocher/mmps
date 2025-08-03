@@ -1,25 +1,12 @@
 import { Country, State } from '@core/mongo/worldly-mongo';
-import { shuffleArray } from '@core/utils';
-
-const R = 6371; // Earth's radius in km
-
-function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const toRad = (deg: number) => deg * (Math.PI / 180);
-
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
-}
+import { getDistance, shuffleArray } from '@core/utils';
 
 export function getMapDistractors(allCountries: Country[], correctCountry: Country): Array<Country & { distance: number }> {
   const options = allCountries
     .filter((c) => c.continent === correctCountry.continent && c.alpha2 !== correctCountry.alpha2)
     .map((c) => ({
       ...c,
-      distance: haversineDistance(correctCountry.lat, correctCountry.lon, c.lat, c.lon),
+      distance: getDistance({ lat: correctCountry.lat, lon: correctCountry.lon }, { lat: c.lat, lon: c.lon }),
     }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 7);
@@ -31,7 +18,7 @@ export function getMapStateDistractors(allStates: State[], correctState: State):
     .filter((state) => state.alpha2 !== correctState.alpha2)
     .map((state) => ({
       ...state,
-      distance: haversineDistance(correctState.lat, correctState.lon, state.lat, state.lon),
+      distance: getDistance({ lat: correctState.lat, lon: correctState.lon }, { lat: state.lat, lon: state.lon }),
     }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 7);
