@@ -1,4 +1,4 @@
 export type Location = {
-  lat: number;
-  lon: number;
+  readonly lat: number;
+  readonly lon: number;
 };

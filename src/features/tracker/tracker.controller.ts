@@ -69,7 +69,7 @@ export class TrackerController implements OnModuleInit {
 
     if (distance <= 5000 && !alertsSent.within5000m) {
       const message = [`אני כבר מתקרב ונשארו לי עוד ${distance} מטר כדי להגיע`].join('\n');
-      await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
+      // await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
       await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
       alertsSent.within5000m = true;
       this.tracksCache.saveTrack({ alertsSent, lastAnnounced: new Date() });
@@ -77,7 +77,7 @@ export class TrackerController implements OnModuleInit {
 
     if (distance <= 200 && !alertsSent.arrived) {
       const message = ['אני ממש קרוב, עוד שניה פה בחוץ'].join('\n');
-      await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
+      // await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
       await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
       alertsSent.arrived = true;
       this.tracksCache.clearTrack();
@@ -110,7 +110,7 @@ export class TrackerController implements OnModuleInit {
     await this.bot.sendMessage(chatId, `Tracking started! You are ${distance} meters away from ${targetLocation.name}.`);
 
     const message = ['שלום', `יצאתי לדרך ויש לי ${distance} מטר נסיעה עד שאני מגיע`].join('\n');
-    // $$$$$$$$$$$$$$$$$$$$$$$ send via telegram client
+    // await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
     await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
 
     this.tracksCache.saveTrack({ alertsSent: { trackingStarted: true } });
