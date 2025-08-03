@@ -18,4 +18,8 @@ export interface TelegramMessageData {
   readonly photo: any;
   readonly file: any;
   readonly date: number;
+  readonly location: {
+    readonly lat: number;
+    readonly lon: number;
+  };
 }

@@ -4,6 +4,7 @@ export { generateRandomString } from './generate-random-string';
 export { getDateDescription } from './get-date-description';
 export { getDateNumber } from './get-date-number';
 export { getDateString } from './get-date-string';
+export { getDistance } from './get-distance';
 export { getHourInTimezone } from './get-hour-in-timezone';
 export { getQueryParams } from './get-query-params';
 export { getSpecialNumber } from './get-special-number';

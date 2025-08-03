@@ -25,7 +25,9 @@ export function registerHandlers({ bot, logger, handlers, isBlocked = false, cus
 
       case TELEGRAM_EVENTS.MESSAGE:
       case TELEGRAM_EVENTS.TEXT:
-      case TELEGRAM_EVENTS.CALLBACK_QUERY: {
+      case TELEGRAM_EVENTS.CALLBACK_QUERY:
+      case TELEGRAM_EVENTS.LOCATION:
+      case TELEGRAM_EVENTS.EDITED_MESSAGE: {
         bot.on(event, async (message: Message | CallbackQuery) => {
           await handleCommand({ ...unifiedCommandOptions, message, handler, isCallbackQuery: event === TELEGRAM_EVENTS.CALLBACK_QUERY });
         });

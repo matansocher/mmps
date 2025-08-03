@@ -20,6 +20,8 @@ export enum TELEGRAM_EVENTS {
   TEXT = 'text',
   MESSAGE = 'message',
   CALLBACK_QUERY = 'callback_query',
+  LOCATION = 'location',
+  EDITED_MESSAGE = 'edited_message',
   POLLING_ERROR = 'polling_error',
   ERROR = 'error',
 }
