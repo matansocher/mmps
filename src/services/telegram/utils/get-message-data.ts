@@ -21,5 +21,9 @@ export function getMessageData(message: Message): TelegramMessageData {
     photo: _get(message, 'photo', null) || _get(message, 'sticker', null),
     file: _get(message, 'document', null),
     date: _get(message, 'date', null),
+    location: {
+      lat: _get(message, 'location.latitude', null),
+      lon: _get(message, 'location.longitude', null),
+    },
   };
 }
