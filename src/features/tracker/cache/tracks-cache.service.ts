@@ -8,6 +8,11 @@ type TrackData = {
   lastAnnounced: Date;
   startDate: Date;
   endDate?: Date;
+  alertsSent?: {
+    trackingStarted?: boolean;
+    within5000m?: boolean;
+    arrived?: boolean;
+  };
 };
 
 const validForMinutes = 30;

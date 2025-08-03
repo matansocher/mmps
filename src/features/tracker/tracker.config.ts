@@ -14,7 +14,7 @@ export enum BOT_ACTIONS {
 }
 
 export const LOCATIONS = {
-  tootie: { lat: 32.179027, lon: 34.920085, chatId: 1332013273, name: 'Toodie' },
+  tootie: { lat: 32.179027, lon: 34.920085, chatId: 1332013273, name: 'Toodie', number: '+972546602785' },
 };
 
 export const INLINE_KEYBOARD_SEPARATOR = ' - ';
