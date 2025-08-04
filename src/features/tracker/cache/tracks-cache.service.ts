@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseCache } from '@core/services';
-import { Peer } from '@services/telegram-client/telegram-client.service';
+import { Peer } from '@services/telegram-client';
 import { Location } from '../types';
 
 type TrackData = {
