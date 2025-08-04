@@ -9,7 +9,7 @@ export const TelegramClientProvider: FactoryProvider = {
   provide: TELEGRAM_CLIENT_TOKEN,
   inject: [ConfigService],
   useFactory: async (configService: ConfigService): Promise<TelegramClient> => {
-    const apiId = configService.getOrThrow<number>('TELEGRAM_API_ID');
+    const apiId = +configService.getOrThrow<number>('TELEGRAM_API_ID');
     const apiHash = configService.getOrThrow<string>('TELEGRAM_API_HASH');
     const stringSession = configService.getOrThrow<string>('TELEGRAM_STRING_SESSION');
     const client = new TelegramClient(new StringSession(stringSession), apiId, apiHash, { connectionRetries: 5 });
