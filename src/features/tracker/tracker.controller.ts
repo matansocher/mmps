@@ -4,11 +4,8 @@ import { getDistance } from '@core/utils';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { TelegramClientService } from '@services/telegram-client';
 import { TracksCacheService } from './cache';
-import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LOCATIONS } from './tracker.config';
-
-export function findLocation(targetChatId: number) {
-  return Object.values(LOCATIONS).find((location) => location.chatId === targetChatId) || null;
-}
+import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LOCATIONS, NOTIFY_ARRIVAL_DISTANCE } from './tracker.config';
+import { findLocation, getAnnounceMessage } from './utils';
 
 @Injectable()
 export class TrackerController implements OnModuleInit {
@@ -65,21 +62,18 @@ export class TrackerController implements OnModuleInit {
 
     const distance = getDistance({ lat: location.lat, lon: location.lon }, { lat: targetLocation.lat, lon: targetLocation.lon });
 
-    const alertsSent = track.alertsSent || {};
-
-    if (distance <= 5000 && !alertsSent.within5000m) {
-      const message = [`אני כבר מתקרב ונשארו לי עוד ${distance} מטר כדי להגיע`].join('\n');
-      // await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
-      await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
-      alertsSent.within5000m = true;
-      this.tracksCache.saveTrack({ alertsSent, lastAnnounced: new Date() });
+    if (track.messageId && track.peer) {
+      const message = getAnnounceMessage(distance);
+      await this.telegramClientService.editMessage({ peer: track.peer, id: track.messageId, message }).catch((err) => {
+        this.logger.error(`Failed to edit message for ${targetLocation.name}: ${err}`);
+      });
+      await this.bot.sendMessage(chatId, `Message updated to ${targetLocation.name}:\n${message}`);
     }
 
-    if (distance <= 200 && !alertsSent.arrived) {
-      const message = ['אני ממש קרוב, עוד שניה פה בחוץ'].join('\n');
-      // await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
+    if (distance <= NOTIFY_ARRIVAL_DISTANCE) {
+      const message = 'אני ממש קרוב, עוד שניה פה בחוץ';
+      await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
       await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
-      alertsSent.arrived = true;
       this.tracksCache.clearTrack();
     }
   }
@@ -102,17 +96,16 @@ export class TrackerController implements OnModuleInit {
     if (!this.tracksCache.getTrack()) {
       return;
     }
-    this.tracksCache.saveTrack({ chatId: targetChatId });
     const { startLocation } = this.tracksCache.getTrack();
     const targetLocation = findLocation(targetChatId);
     const distance = getDistance({ lat: startLocation.lat, lon: startLocation.lon }, { lat: targetLocation.lat, lon: targetLocation.lon });
 
     await this.bot.sendMessage(chatId, `Tracking started! You are ${distance} meters away from ${targetLocation.name}.`);
 
-    const message = ['שלום', `יצאתי לדרך ויש לי ${distance} מטר נסיעה עד שאני מגיע`].join('\n');
-    // await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
+    const message = getAnnounceMessage(distance);
+    const { peer, id: messageId } = await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
     await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
 
-    this.tracksCache.saveTrack({ alertsSent: { trackingStarted: true } });
+    this.tracksCache.saveTrack({ chatId: targetChatId, peer, messageId });
   }
 }
