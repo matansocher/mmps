@@ -4,13 +4,21 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EXCLUDED_CHANNELS, LISTEN_TO_EVENTS, TELEGRAM_CLIENT_TOKEN } from './telegram-client.config';
 import { getConversationDetails, getMessageData } from './utils';
 
-export type ListenerOptions = {
+export type Peer = Api.TypeChat | Api.TypePeer | Api.TypeUser;
+
+type ListenerOptions = {
   readonly conversationsIds?: string[];
 };
 
-export type SendMessageOptions = {
+type SendMessageOptions = {
   readonly name: string;
   readonly number: string;
+  readonly message: string;
+};
+
+type EditMessageOptions = {
+  readonly peer: Peer;
+  readonly id: number;
   readonly message: string;
 };
 
@@ -41,22 +49,25 @@ export class TelegramClientService {
     });
   }
 
-  async sendMessage({ name, number, message }: SendMessageOptions) {
-    // Step 1: Import contact by phone number
+  async sendMessage({ name, number, message }: SendMessageOptions): Promise<{ peer: Peer; id: number }> {
     const result = await this.telegramClient.invoke(
       new Api.contacts.ImportContacts({
-        contacts: [new Api.InputPhoneContact({ clientId: Date.now().toString() as any, phone: number, firstName: name, lastName: name })],
+        contacts: [new Api.InputPhoneContact({ clientId: Date.now().toString() as any, phone: number, firstName: name, lastName: '' })],
       }),
     );
 
-    // Step 2: Extract user ID from response
     const importedUser = result.users[0];
     if (!importedUser) {
       console.log('User not found or not on Telegram');
       return;
     }
 
-    // Step 3: Send message
-    await this.telegramClient.sendMessage(importedUser, { message });
+    const sent = await this.telegramClient.sendMessage(importedUser, { message });
+
+    return { peer: importedUser, id: sent.id };
+  }
+
+  async editMessage({ peer, id, message }: EditMessageOptions): Promise<void> {
+    await this.telegramClient.invoke(new Api.messages.EditMessage({ peer, id, message }));
   }
 }

@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { BaseCache } from '@core/services';
+import { Peer } from '@services/telegram-client/telegram-client.service';
 import { Location } from '../types';
 
 type TrackData = {
   chatId?: number;
   startLocation: Location;
   lastAnnounced: Date;
+  messageId: number;
+  peer: Peer;
   startDate: Date;
   endDate?: Date;
-  alertsSent?: {
-    trackingStarted?: boolean;
-    within5000m?: boolean;
-    arrived?: boolean;
-  };
 };
 
 const validForMinutes = 30;
