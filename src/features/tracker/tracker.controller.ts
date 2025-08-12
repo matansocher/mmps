@@ -2,7 +2,7 @@ import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getDistance } from '@core/utils';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { TelegramClientService } from '@services/telegram-client';
+import { editMessage, sendMessage } from '@services/telegram-client';
 import { TracksCacheService } from './cache';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LOCATIONS, NOTIFY_ARRIVAL_DISTANCE } from './tracker.config';
 import { findLocation, getAnnounceMessage } from './utils';
@@ -13,7 +13,6 @@ export class TrackerController implements OnModuleInit {
 
   constructor(
     private readonly tracksCache: TracksCacheService,
-    private readonly telegramClientService: TelegramClientService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -64,7 +63,7 @@ export class TrackerController implements OnModuleInit {
 
     if (track.messageId && track.peer) {
       const message = getAnnounceMessage(distance);
-      await this.telegramClientService.editMessage({ peer: track.peer, id: track.messageId, message }).catch((err) => {
+      await editMessage({ peer: track.peer, id: track.messageId, message }).catch((err) => {
         this.logger.error(`Failed to edit message for ${targetLocation.name}: ${err}`);
       });
       await this.bot.sendMessage(chatId, `Message updated to ${targetLocation.name}:\n${message}`);
@@ -72,7 +71,7 @@ export class TrackerController implements OnModuleInit {
 
     if (distance <= NOTIFY_ARRIVAL_DISTANCE) {
       const message = 'אני ממש קרוב, עוד שניה פה בחוץ';
-      await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
+      await sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
       await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
       this.tracksCache.clearTrack();
     }
@@ -103,7 +102,7 @@ export class TrackerController implements OnModuleInit {
     await this.bot.sendMessage(chatId, `Tracking started! You are ${distance} meters away from ${targetLocation.name}.`);
 
     const message = getAnnounceMessage(distance);
-    const { peer, id: messageId } = await this.telegramClientService.sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
+    const { peer, id: messageId } = await sendMessage({ name: targetLocation.name, number: targetLocation.number, message });
     await this.bot.sendMessage(chatId, `Message sent to ${targetLocation.name}:\n${message}`);
 
     this.tracksCache.saveTrack({ chatId: targetChatId, peer, messageId });

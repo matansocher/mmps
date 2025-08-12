@@ -1,6 +1,6 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { MY_USER_NAME } from '@core/config';
 import { WorldlyMongoCountryService, WorldlyMongoGameLogService, WorldlyMongoStateService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
@@ -27,10 +27,9 @@ export class WorldlyController implements OnModuleInit {
     private readonly gameLogDB: WorldlyMongoGameLogService,
     private readonly userPreferences: UserPreferencesCacheService,
     private readonly notifier: NotifierService,
-    private readonly configService: ConfigService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = getBotToken(BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
+    this.botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
   }
 
   onModuleInit(): void {

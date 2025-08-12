@@ -1,4 +1,4 @@
-import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_MODEL } from '@services/anthropic/constants';
+import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_MODEL } from '../constants';
 import { provideAnthropicClient } from '../provide-anthropic-client';
 
 export async function getChatCompletion(system: string, content: string) {

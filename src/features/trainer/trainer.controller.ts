@@ -1,6 +1,6 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
@@ -18,14 +18,13 @@ export class TrainerController implements OnModuleInit {
   private readonly botToken: string;
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly exerciseDB: TrainerMongoExerciseService,
     private readonly userPreferencesDB: TrainerMongoUserPreferencesService,
     private readonly userDB: TrainerMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = getBotToken(BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
+    this.botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
   }
 
   onModuleInit(): void {
