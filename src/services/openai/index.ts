@@ -1,7 +1,7 @@
 // assistant api
 // export { addMessageToThread } from './utils/assistant/add-message-to-thread';
-export { createThread } from './utils/assistant/create-thread';
-export { getAssistantAnswer } from './utils/assistant/get-assistant-answer';
+// export { createThread } from './utils/assistant/create-thread';
+// export { getAssistantAnswer } from './utils/assistant/get-assistant-answer';
 // export { getThreadResponse } from './utils/assistant/get-thread-response';
 // export { getThreadRunStream } from './utils/assistant/get-thread-run-stream';
 // export { runThread } from './utils/assistant/run-thread';

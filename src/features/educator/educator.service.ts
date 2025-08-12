@@ -55,18 +55,11 @@ export class EducatorService {
     const topicParticipation = await this.topicParticipationDB.createTopicParticipation(chatId, topic._id.toString());
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
-    // const { id: responseId, text } = await getResponse({
-    //   systemPrompt: SYSTEM_PROMPT,
-    //   previousResponseId: topicParticipation.previousResponseId,
-    //   content: [`הנושא של היום הוא`, `${topic.title}`].join(' '),
-    // });
-    // await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
-    // await sendShortenedMessage(this.bot, chatId, text, { ...getBotInlineKeyboardMarkup(topicParticipation) });
     await this.processQuestion(chatId, topicParticipation, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
   }
 
   async processQuestion(chatId: number, topicParticipation: TopicParticipation, question: string): Promise<void> {
-    const { id: responseId, text } = await getResponse({ systemPrompt: SYSTEM_PROMPT, previousResponseId: topicParticipation.previousResponseId, content: question });
+    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: topicParticipation.previousResponseId, content: question });
     await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
     await sendShortenedMessage(this.bot, chatId, text, { ...getBotInlineKeyboardMarkup(topicParticipation) });
   }

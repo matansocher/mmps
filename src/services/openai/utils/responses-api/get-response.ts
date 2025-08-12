@@ -3,7 +3,7 @@ import { provideOpenAiClient } from '@services/openai/provide-openai-client';
 
 type GetResponseOptions = {
   content: string;
-  systemPrompt: string;
+  instructions: string;
   previousResponseId?: string;
   model?: string;
 };
@@ -13,12 +13,12 @@ type GetResponseRes = {
   text: string;
 };
 
-export async function getResponse({ content, systemPrompt, previousResponseId, model = GPT_5_MODEL }: GetResponseOptions): Promise<GetResponseRes> {
+export async function getResponse({ content, instructions, previousResponseId, model = GPT_5_MODEL }: GetResponseOptions): Promise<GetResponseRes> {
   const client = provideOpenAiClient();
   const response = await client.responses.create({
     model,
     store: true,
-    instructions: systemPrompt || 'You are a helpful assistant.',
+    instructions,
     input: content,
     ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
   });

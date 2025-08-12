@@ -103,15 +103,12 @@ export class TeacherService {
     if (!courseParticipation) {
       return;
     }
-    // const { id: responseId, text } = await getResponse({ systemPrompt: SYSTEM_PROMPT, previousResponseId, content: prompt });
-    // await this.courseParticipationDB.updatePreviousResponseId(courseParticipation._id.toString(), responseId);
-    // await sendStyledMessage(this.bot, chatId, text, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, true));
-    await this.processQuestion(chatId, prompt, courseParticipation);
+    await this.processQuestion(chatId, courseParticipation, prompt);
     await this.courseParticipationDB.markCourseParticipationLessonCompleted(courseParticipation._id);
   }
 
-  async processQuestion(chatId: number, question: string, courseParticipation: CourseParticipation): Promise<void> {
-    const { id: responseId, text } = await getResponse({ systemPrompt: SYSTEM_PROMPT, previousResponseId: courseParticipation.previousResponseId, content: question });
+  async processQuestion(chatId: number, courseParticipation: CourseParticipation, question: string): Promise<void> {
+    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: courseParticipation.previousResponseId, content: question });
     await this.courseParticipationDB.updatePreviousResponseId(courseParticipation._id.toString(), responseId);
     await sendStyledMessage(this.bot, chatId, text, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, false));
   }
