@@ -10,7 +10,7 @@ export interface TopicParticipation {
   readonly _id: ObjectId;
   readonly topicId: string;
   readonly chatId: number;
-  threadId?: string;
+  previousResponseId?: string;
   readonly status: TopicParticipationStatus;
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
