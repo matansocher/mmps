@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
+import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
@@ -33,7 +33,6 @@ export class TeacherController implements OnModuleInit {
   private readonly botToken: string;
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly teacherService: TeacherService,
     private readonly courseDB: TeacherMongoCourseService,
     private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
@@ -42,7 +41,7 @@ export class TeacherController implements OnModuleInit {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
-    this.botToken = getBotToken(BOT_CONFIG.id, this.configService.get(BOT_CONFIG.token));
+    this.botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
   }
 
   onModuleInit(): void {

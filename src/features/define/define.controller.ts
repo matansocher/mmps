@@ -1,6 +1,6 @@
 import axios from 'axios';
+import { env } from 'node:process';
 import { Body, Controller, Logger, Post } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { ContactRequestDTO, ContactResponseDTO } from './types';
 
 export const telegramBaseUrl = 'https://api.telegram.org';
@@ -8,13 +8,8 @@ export const telegramBaseUrl = 'https://api.telegram.org';
 @Controller('define')
 export class DefineController {
   private readonly logger = new Logger(DefineController.name);
-  private readonly telegramBotToken: string;
-  private readonly telegramChatId: string;
-
-  constructor(private readonly configService: ConfigService) {
-    this.telegramBotToken = this.configService.get('DEFINE_TELEGRAM_BOT_TOKEN');
-    this.telegramChatId = this.configService.get('DEFINE_TELEGRAM_CHAT_ID');
-  }
+  private readonly telegramBotToken = env.DEFINE_TELEGRAM_BOT_TOKEN;
+  private readonly telegramChatId = env.DEFINE_TELEGRAM_CHAT_ID;
 
   @Post('contact')
   async contact(@Body() body: ContactRequestDTO): Promise<ContactResponseDTO> {

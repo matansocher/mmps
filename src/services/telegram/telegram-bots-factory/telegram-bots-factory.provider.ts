@@ -1,15 +1,14 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Logger, Provider } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { env } from 'node:process';
+import { Provider } from '@nestjs/common';
 import { TELEGRAM_EVENTS } from '../constants';
 import type { TelegramBotConfig } from '../types';
 import { getBotToken } from './get-bot-token';
 
 const createErrorEventListeners = (bot: TelegramBot, botName: string): void => {
   const botErrorHandler = (botName: string, handlerName: string, error): void => {
-    const logger = new Logger(createErrorEventListeners.name);
     const { code, message } = error;
-    logger.log(`${botName} - ${handlerName} - code: ${code}, message: ${message}`);
+    console.error(`${botName} - ${handlerName} - code: ${code}, message: ${message}`);
   };
 
   const { POLLING_ERROR, ERROR } = TELEGRAM_EVENTS;
@@ -19,10 +18,9 @@ const createErrorEventListeners = (bot: TelegramBot, botName: string): void => {
 
 export const TelegramBotsFactoryProvider = (botConfig: TelegramBotConfig): Provider => {
   return {
-    inject: [ConfigService],
     provide: botConfig.id,
-    useFactory: (configService: ConfigService): TelegramBot => {
-      const botToken = configService.get(botConfig.token);
+    useFactory: (): TelegramBot => {
+      const botToken = env[botConfig.token];
       const token = getBotToken(botConfig.id, botToken, botConfig.forceLocal);
       if (!token) {
         throw new Error(`No token found for bot ${botConfig.id}`);

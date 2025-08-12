@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { ConfigService } from '@nestjs/config';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DefineController, telegramBaseUrl } from './define.controller';
@@ -14,23 +13,19 @@ describe('DefineController', () => {
   const mockTelegramChatId = 'mockChatId';
 
   beforeEach(async () => {
+    process.env.DEFINE_TELEGRAM_BOT_TOKEN = mockTelegramBotToken;
+    process.env.DEFINE_TELEGRAM_CHAT_ID = mockTelegramChatId;
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DefineController],
-      providers: [
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key) => {
-              if (key === 'DEFINE_TELEGRAM_BOT_TOKEN') return mockTelegramBotToken;
-              if (key === 'DEFINE_TELEGRAM_CHAT_ID') return mockTelegramChatId;
-              return null;
-            }),
-          },
-        },
-      ],
     }).compile();
 
     defineController = module.get<DefineController>(DefineController);
+  });
+
+  afterEach(() => {
+    delete process.env.DEFINE_TELEGRAM_BOT_TOKEN;
+    delete process.env.DEFINE_TELEGRAM_CHAT_ID;
   });
 
   it('should send a contact message successfully', async () => {
