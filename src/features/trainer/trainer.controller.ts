@@ -1,11 +1,11 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { createImage } from 'src/services/openai';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { TrainerMongoExerciseService, TrainerMongoUserPreferencesService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
-import { OpenaiService } from '@services/openai';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { getLastWeekDates } from './utils';
@@ -22,7 +22,6 @@ export class TrainerController implements OnModuleInit {
     private readonly exerciseDB: TrainerMongoExerciseService,
     private readonly userPreferencesDB: TrainerMongoUserPreferencesService,
     private readonly userDB: TrainerMongoUserService,
-    private readonly openaiService: OpenaiService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {
@@ -83,7 +82,7 @@ export class TrainerController implements OnModuleInit {
     if (currentStreak > 1 && currentStreak > longestStreak) {
       await new MessageLoader(this.bot, this.botToken, chatId, messageId, { loaderMessage }).handleMessageWithLoader(async () => {
         const caption = `🎉 Incredible! You've just broken your record and set a new streak - ${currentStreak} days in a row! 🏆🔥`;
-        const generatedImage = await this.openaiService.createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
+        const generatedImage = await createImage(BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`));
         await this.bot.sendPhoto(chatId, generatedImage, { caption });
       });
       return;

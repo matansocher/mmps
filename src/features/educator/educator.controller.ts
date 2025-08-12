@@ -1,12 +1,12 @@
 import { promises as fs } from 'fs';
 import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
+import { getAudioFromText } from 'src/services/openai';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
-import { OpenaiService } from '@services/openai';
 import {
   BOT_BROADCAST_ACTIONS,
   getBotToken,
@@ -36,7 +36,6 @@ export class EducatorController implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private readonly educatorService: EducatorService,
-    private readonly openaiService: OpenaiService,
     private readonly topicDB: EducatorMongoTopicService,
     private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
     private readonly userPreferencesDB: EducatorMongoUserPreferencesService,
@@ -190,7 +189,7 @@ export class EducatorController implements OnModuleInit {
 
       await reactToMessage(this.botToken, chatId, messageId, '🤯');
 
-      const result = await this.openaiService.getAudioFromText(text);
+      const result = await getAudioFromText(text);
 
       const audioFilePath = `${LOCAL_FILES_PATH}/educator-text-to-speech-${new Date().getTime()}.mp3`;
       const buffer = Buffer.from(await result.arrayBuffer());

@@ -1,8 +1,8 @@
 import type TelegramBot from 'node-telegram-bot-api';
+import { createThread, getAssistantAnswer } from 'src/services/openai';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
-import { OpenaiAssistantService } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
 
@@ -37,7 +37,6 @@ export class TeacherService {
   constructor(
     private readonly courseDB: TeacherMongoCourseService,
     private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
-    private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -81,7 +80,7 @@ export class TeacherService {
     if (!course) {
       return { course: null, courseParticipation: null };
     }
-    const { id: threadId } = await this.openaiAssistantService.createThread();
+    const { id: threadId } = await createThread();
     const courseParticipation = await this.courseParticipationDB.createCourseParticipation(chatId, course._id.toString(), threadId);
     courseParticipation.threadId = threadId;
     return { course, courseParticipation };
@@ -106,13 +105,13 @@ export class TeacherService {
     if (!courseParticipation) {
       return;
     }
-    const response = await this.openaiAssistantService.getAssistantAnswer(TEACHER_ASSISTANT_ID, threadId, prompt);
+    const response = await getAssistantAnswer(TEACHER_ASSISTANT_ID, threadId, prompt);
     await sendStyledMessage(this.bot, chatId, response, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, true));
     await this.courseParticipationDB.markCourseParticipationLessonCompleted(courseParticipation._id);
   }
 
   async processQuestion(chatId: number, question: string, activeCourseParticipation: CourseParticipation): Promise<void> {
-    const response = await this.openaiAssistantService.getAssistantAnswer(TEACHER_ASSISTANT_ID, activeCourseParticipation.threadId, question);
+    const response = await getAssistantAnswer(TEACHER_ASSISTANT_ID, activeCourseParticipation.threadId, question);
     await sendStyledMessage(this.bot, chatId, response, 'Markdown', getBotInlineKeyboardMarkup(activeCourseParticipation, false));
   }
 }
