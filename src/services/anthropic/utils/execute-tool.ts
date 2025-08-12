@@ -1,11 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_MODEL } from '@services/anthropic/constants';
+import { provideAnthropicClient } from '@services/anthropic/provide-anthropic-client';
 
 export type Tool = Anthropic.Messages.Tool;
 
 export async function executeTool<T>(tool: Tool, content: string): Promise<T> {
+  const anthropic = provideAnthropicClient();
   try {
-    const response = await this.anthropic.messages.create({
+    const response = await anthropic.messages.create({
       model: ANTHROPIC_MODEL,
       max_tokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
       tools: [tool],

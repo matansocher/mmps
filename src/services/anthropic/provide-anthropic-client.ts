@@ -3,7 +3,7 @@ import { env } from 'node:process';
 
 let client: Anthropic;
 
-export function provideGeminiClient() {
+export function provideAnthropicClient(): Anthropic {
   if (!client) {
     client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
   }
