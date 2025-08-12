@@ -1,2 +1,2 @@
-export { GeminiModule } from './gemini.module';
-export { GeminiService } from './gemini.service';
+export { generateContentFromFile } from './utils/generate-content-from-file';
+export { getChatCompletion } from './utils/get-chat-completion';
