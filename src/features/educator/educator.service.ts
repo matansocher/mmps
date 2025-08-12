@@ -2,7 +2,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
-import { OpenaiAssistantService } from '@services/openai';
+import { createThread, getAssistantAnswer } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, EDUCATOR_ASSISTANT_ID } from './educator.config';
 
@@ -25,7 +25,6 @@ export class EducatorService {
   constructor(
     private readonly topicDB: EducatorMongoTopicService,
     private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
-    private readonly openaiAssistantService: OpenaiAssistantService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -53,16 +52,16 @@ export class EducatorService {
       return;
     }
 
-    const { id: threadId } = await this.openaiAssistantService.createThread();
+    const { id: threadId } = await createThread();
     const topicParticipation = await this.topicParticipationDB.createTopicParticipation(chatId, topic._id.toString(), threadId);
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
-    const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
+    const response = await getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
     await sendShortenedMessage(this.bot, chatId, response, { ...getBotInlineKeyboardMarkup(topicParticipation) });
   }
 
   async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipation): Promise<void> {
-    const response = await this.openaiAssistantService.getAssistantAnswer(EDUCATOR_ASSISTANT_ID, activeTopicParticipation.threadId, question);
+    const response = await getAssistantAnswer(EDUCATOR_ASSISTANT_ID, activeTopicParticipation.threadId, question);
     await sendShortenedMessage(this.bot, chatId, response, { ...getBotInlineKeyboardMarkup(activeTopicParticipation) });
   }
 }
