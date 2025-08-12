@@ -1,3 +1,2 @@
-export * from './interface';
-export { AnthropicModule } from './anthropic.module';
-export { AnthropicService } from './anthropic.service';
+export { executeTool } from './utils/execute-tool';
+export { getChatCompletion } from './utils/get-chat-completion';
