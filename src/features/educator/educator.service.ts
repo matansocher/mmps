@@ -59,7 +59,7 @@ export class EducatorService {
   }
 
   async processQuestion(chatId: number, topicParticipation: TopicParticipation, question: string): Promise<void> {
-    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: topicParticipation.previousResponseId, content: question });
+    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: topicParticipation.previousResponseId, input: question });
     await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
     await sendShortenedMessage(this.bot, chatId, text, { ...getBotInlineKeyboardMarkup(topicParticipation) });
   }

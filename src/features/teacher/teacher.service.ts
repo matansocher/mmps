@@ -108,7 +108,7 @@ export class TeacherService {
   }
 
   async processQuestion(chatId: number, courseParticipation: CourseParticipation, question: string): Promise<void> {
-    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: courseParticipation.previousResponseId, content: question });
+    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: courseParticipation.previousResponseId, input: question });
     await this.courseParticipationDB.updatePreviousResponseId(courseParticipation._id.toString(), responseId);
     await sendStyledMessage(this.bot, chatId, text, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, false));
   }
