@@ -1,8 +1,8 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { createThread, getAssistantAnswer } from 'src/services/openai';
 import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
+import { createThread, getAssistantAnswer } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, EDUCATOR_ASSISTANT_ID } from './educator.config';
 

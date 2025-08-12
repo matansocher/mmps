@@ -1,12 +1,12 @@
 import { promises as fs } from 'fs';
 import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
-import { getAudioFromText } from 'src/services/openai';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
+import { getAudioFromText } from '@services/openai';
 import {
   BOT_BROADCAST_ACTIONS,
   getBotToken,

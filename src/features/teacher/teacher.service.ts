@@ -1,8 +1,8 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { createThread, getAssistantAnswer } from 'src/services/openai';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
+import { createThread, getAssistantAnswer } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, TEACHER_ASSISTANT_ID, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
 
