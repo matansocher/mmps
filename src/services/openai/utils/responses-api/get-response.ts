@@ -1,4 +1,4 @@
-import { GPT_5_MODEL } from '@services/openai/constants';
+import { CHAT_COMPLETIONS_MODEL } from '@services/openai/constants';
 import { provideOpenAiClient } from '@services/openai/provide-openai-client';
 
 type GetResponseOptions = {
@@ -13,7 +13,7 @@ type GetResponseRes = {
   text: string;
 };
 
-export async function getResponse({ input, instructions, previousResponseId, model = GPT_5_MODEL }: GetResponseOptions): Promise<GetResponseRes> {
+export async function getResponse({ input, instructions, previousResponseId, model = CHAT_COMPLETIONS_MODEL }: GetResponseOptions): Promise<GetResponseRes> {
   const client = provideOpenAiClient();
   const response = await client.responses.create({
     model,
