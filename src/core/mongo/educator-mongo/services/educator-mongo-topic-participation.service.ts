@@ -11,12 +11,11 @@ export class EducatorMongoTopicParticipationService {
     this.topicParticipationCollection = this.db.collection(COLLECTIONS.TOPIC_PARTICIPATION);
   }
 
-  async createTopicParticipation(chatId: number, topicId: string, threadId: string): Promise<TopicParticipation> {
+  async createTopicParticipation(chatId: number, topicId: string): Promise<TopicParticipation> {
     const topicParticipation: TopicParticipation = {
       _id: new ObjectId(),
       topicId,
       chatId,
-      threadId,
       status: TopicParticipationStatus.Assigned,
       assignedAt: new Date(),
       createdAt: new Date(),
@@ -44,5 +43,16 @@ export class EducatorMongoTopicParticipationService {
       },
     };
     await this.topicParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async updatePreviousResponseId(topicParticipationId: string, previousResponseId: string): Promise<void> {
+    const filter = { _id: new ObjectId(topicParticipationId) };
+    const updateObj = {
+      $set: {
+        previousResponseId,
+      },
+    };
+    await this.topicParticipationCollection.updateOne(filter, updateObj);
+    return;
   }
 }

@@ -116,7 +116,7 @@ export class EducatorController implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.educatorService.processQuestion(chatId, text, activeTopicParticipation);
+      await this.educatorService.processQuestion(chatId, activeTopicParticipation, text);
     });
 
     const topic = await this.topicDB.getTopic(activeTopicParticipation.topicId);

@@ -10,7 +10,7 @@ export interface CourseParticipation {
   readonly _id: ObjectId;
   readonly courseId: string;
   readonly chatId: number;
-  threadId?: string;
+  previousResponseId?: string;
   readonly status: CourseParticipationStatus;
   readonly lessonsCompleted?: number;
   readonly assignedAt?: Date;

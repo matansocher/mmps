@@ -2,9 +2,10 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
-import { createThread, getAssistantAnswer } from '@services/openai';
+import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, EDUCATOR_ASSISTANT_ID } from './educator.config';
+import { BOT_ACTIONS, BOT_CONFIG, SYSTEM_PROMPT } from './educator.config';
+import { TopicResponseSchema } from './types';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
@@ -30,8 +31,8 @@ export class EducatorService {
   ) {}
 
   async processTopic(chatId: number): Promise<void> {
-    const activeTopic = await this.topicParticipationDB.getActiveTopicParticipation(chatId);
-    if (activeTopic) {
+    const topicParticipation = await this.topicParticipationDB.getActiveTopicParticipation(chatId);
+    if (topicParticipation) {
       return;
     }
 
@@ -52,16 +53,20 @@ export class EducatorService {
       return;
     }
 
-    const { id: threadId } = await createThread();
-    const topicParticipation = await this.topicParticipationDB.createTopicParticipation(chatId, topic._id.toString(), threadId);
+    const topicParticipation = await this.topicParticipationDB.createTopicParticipation(chatId, topic._id.toString());
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
-    const response = await getAssistantAnswer(EDUCATOR_ASSISTANT_ID, threadId, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
-    await sendShortenedMessage(this.bot, chatId, response, { ...getBotInlineKeyboardMarkup(topicParticipation) });
+    await this.processQuestion(chatId, topicParticipation, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
   }
 
-  async processQuestion(chatId: number, question: string, activeTopicParticipation: TopicParticipation): Promise<void> {
-    const response = await getAssistantAnswer(EDUCATOR_ASSISTANT_ID, activeTopicParticipation.threadId, question);
-    await sendShortenedMessage(this.bot, chatId, response, { ...getBotInlineKeyboardMarkup(activeTopicParticipation) });
+  async processQuestion(chatId: number, topicParticipation: TopicParticipation, question: string): Promise<void> {
+    const { id: responseId, result } = await getResponse<typeof TopicResponseSchema>({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: topicParticipation.previousResponseId,
+      input: question,
+      schema: TopicResponseSchema,
+    });
+    await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
+    await sendShortenedMessage(this.bot, chatId, `זמן קריאה מוערך: ${result.estimatedReadingTime} דקות\n\n${result.text}`, { ...getBotInlineKeyboardMarkup(topicParticipation) });
   }
 }
