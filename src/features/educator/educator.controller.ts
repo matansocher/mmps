@@ -31,7 +31,7 @@ const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה
 @Injectable()
 export class EducatorController implements OnModuleInit {
   private readonly logger = new Logger(EducatorController.name);
-  private readonly botToken: string;
+  private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(
     private readonly educatorService: EducatorService,
@@ -41,9 +41,7 @@ export class EducatorController implements OnModuleInit {
     private readonly userDB: EducatorMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {
-    this.botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
-  }
+  ) {}
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;

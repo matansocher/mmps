@@ -30,7 +30,7 @@ const transcribeLoaderMessage = '👨‍🏫 Give me a few moments to transcribe
 @Injectable()
 export class TeacherController implements OnModuleInit {
   private readonly logger = new Logger(TeacherController.name);
-  private readonly botToken: string;
+  private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(
     private readonly teacherService: TeacherService,
@@ -40,9 +40,7 @@ export class TeacherController implements OnModuleInit {
     private readonly userDB: TeacherMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {
-    this.botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
-  }
+  ) {}
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;

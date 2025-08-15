@@ -28,7 +28,7 @@ const getKeyboardOptions = () => {
 @Injectable()
 export class CoachController implements OnModuleInit {
   private readonly logger = new Logger(CoachController.name);
-  private readonly botToken: string;
+  private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(
     private readonly userDB: CoachMongoUserService,
@@ -36,9 +36,7 @@ export class CoachController implements OnModuleInit {
     private readonly coachService: CoachService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {
-    this.botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
-  }
+  ) {}
 
   onModuleInit(): void {
     const { COMMAND, TEXT, CALLBACK_QUERY } = TELEGRAM_EVENTS;

@@ -16,7 +16,7 @@ const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר ל
 @Injectable()
 export class WorldlyController implements OnModuleInit {
   private readonly logger = new Logger(WorldlyController.name);
-  private readonly botToken: string;
+  private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(
     private readonly worldlyService: WorldlyService,
@@ -28,9 +28,7 @@ export class WorldlyController implements OnModuleInit {
     private readonly userPreferences: UserPreferencesCacheService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {
-    this.botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
-  }
+  ) {}
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
