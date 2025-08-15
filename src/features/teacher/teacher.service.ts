@@ -3,8 +3,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
-import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
+import { getInlineKeyboardMarkup, sendShortenedMessage, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
+import { CourseResponseSchema } from './types';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation, isLesson: boolean) => {
   let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
@@ -108,8 +109,13 @@ export class TeacherService {
   }
 
   async processQuestion(chatId: number, courseParticipation: CourseParticipation, question: string): Promise<void> {
-    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: courseParticipation.previousResponseId, input: question });
+    const { id: responseId, result } = await getResponse<typeof CourseResponseSchema>({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: courseParticipation.previousResponseId,
+      input: question,
+      schema: CourseResponseSchema,
+    });
     await this.courseParticipationDB.updatePreviousResponseId(courseParticipation._id.toString(), responseId);
-    await sendStyledMessage(this.bot, chatId, text, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, false));
+    await sendStyledMessage(this.bot, chatId, `Estimated read time: ${result.estimatedReadingTime} min\n\n${result.text}`, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, false));
   }
 }

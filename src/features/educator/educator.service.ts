@@ -5,6 +5,7 @@ import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, SYSTEM_PROMPT } from './educator.config';
+import { TopicResponseSchema } from './types';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
@@ -59,8 +60,13 @@ export class EducatorService {
   }
 
   async processQuestion(chatId: number, topicParticipation: TopicParticipation, question: string): Promise<void> {
-    const { id: responseId, text } = await getResponse({ instructions: SYSTEM_PROMPT, previousResponseId: topicParticipation.previousResponseId, input: question });
+    const { id: responseId, result } = await getResponse<typeof TopicResponseSchema>({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: topicParticipation.previousResponseId,
+      input: question,
+      schema: TopicResponseSchema,
+    });
     await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
-    await sendShortenedMessage(this.bot, chatId, text, { ...getBotInlineKeyboardMarkup(topicParticipation) });
+    await sendShortenedMessage(this.bot, chatId, `זמן קריאה מוערך: ${result.estimatedReadingTime} דקות\n\n${result.text}`, { ...getBotInlineKeyboardMarkup(topicParticipation) });
   }
 }
