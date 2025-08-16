@@ -6,6 +6,14 @@ export enum TopicParticipationStatus {
   Completed = 'completed',
 }
 
+export interface SummaryDetails {
+  readonly topicTitle: string;
+  readonly summary: string;
+  readonly keyTakeaways: string[];
+  readonly sentAt?: Date;
+  readonly createdAt: Date;
+}
+
 export interface TopicParticipation {
   readonly _id: ObjectId;
   readonly topicId: string;
@@ -13,6 +21,7 @@ export interface TopicParticipation {
   previousResponseId?: string;
   readonly status: TopicParticipationStatus;
   readonly threadMessages?: number[];
+  readonly summaryDetails?: SummaryDetails;
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;

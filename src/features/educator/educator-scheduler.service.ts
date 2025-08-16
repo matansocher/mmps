@@ -1,9 +1,9 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { EducatorMongoUserPreferencesService } from '@core/mongo/educator-mongo';
+import { EducatorMongoTopicParticipationService, EducatorMongoUserPreferencesService, EducatorMongoUserService } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOT_CONFIG, TOPIC_START_HOURS_OF_DAY } from './educator.config';
+import { BOT_CONFIG, TOPIC_REMINDER_HOUR_OF_DAY, TOPIC_START_HOUR_OF_DAY } from './educator.config';
 import { EducatorService } from './educator.service';
 
 @Injectable()
@@ -12,15 +12,18 @@ export class EducatorSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly educatorService: EducatorService,
+    private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
+    private readonly userDB: EducatorMongoUserService,
     private readonly userPreferencesDB: EducatorMongoUserPreferencesService,
     private readonly notifier: NotifierService,
   ) {}
 
   onModuleInit(): void {
     // this.handleTopic();
+    // this.handleTopicReminders();
   }
 
-  @Cron(`0 ${TOPIC_START_HOURS_OF_DAY.join(',')} * * *`, {
+  @Cron(`0 ${TOPIC_START_HOUR_OF_DAY} * * *`, {
     name: 'educator-scheduler-start',
     timeZone: DEFAULT_TIMEZONE,
   })
@@ -31,6 +34,23 @@ export class EducatorSchedulerService implements OnModuleInit {
       await Promise.all(chatIds.map((chatId) => this.educatorService.processTopic(chatId)));
     } catch (err) {
       this.logger.error(`${this.handleTopic.name} - error: ${err}`);
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
+    }
+  }
+
+  @Cron(`0 ${TOPIC_REMINDER_HOUR_OF_DAY} * * *`, { name: 'educator-scheduler-reminders', timeZone: DEFAULT_TIMEZONE })
+  async handleTopicReminders(): Promise<void> {
+    try {
+      const topicParticipationsForReminder = await this.topicParticipationDB.getCourseParticipationsForSummaryReminder();
+      for (const topicParticipation of topicParticipationsForReminder) {
+        await this.educatorService.handleTopicReminders(topicParticipation).catch(async (err) => {
+          const userDetails = await this.userDB.getUserDetails({ chatId: topicParticipation.chatId });
+          this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
+          this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
+        });
+      }
+    } catch (err) {
+      this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
     }
   }

@@ -205,6 +205,6 @@ export class EducatorController implements OnModuleInit {
     const threadMessages = topicParticipation.threadMessages || [];
     await Promise.all(threadMessages.map((messageId) => this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {})));
 
-    // summarize the topic with key takeaways, and add some code to create reminder of the material learned so the user can review it later
+    this.educatorService.generateTopicSummary(topicParticipationId);
   }
 }
