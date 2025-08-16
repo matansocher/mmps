@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 
 export const CourseResponseSchema = z.object({
-  text: z.string().max(4095).describe('The main course content text that will be displayed to the user'),
+  text: z.string().max(TELEGRAM_MAX_MESSAGE_LENGTH).describe('The main course content text that will be displayed to the user'),
 });
 
 export const CourseSummarySchema = z.object({
