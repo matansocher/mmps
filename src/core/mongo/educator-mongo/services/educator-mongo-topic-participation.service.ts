@@ -1,7 +1,7 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
-import { TopicParticipation, TopicParticipationStatus } from '../models';
+import { SummaryDetails, TopicParticipation, TopicParticipationStatus } from '../models';
 
 @Injectable()
 export class EducatorMongoTopicParticipationService {
@@ -22,6 +22,11 @@ export class EducatorMongoTopicParticipationService {
     };
     await this.topicParticipationCollection.insertOne(topicParticipation);
     return topicParticipation;
+  }
+
+  getTopicParticipation(topicParticipationId: string): Promise<TopicParticipation> {
+    const filter = { _id: new ObjectId(topicParticipationId) };
+    return this.topicParticipationCollection.findOne(filter);
   }
 
   getTopicParticipations(chatId: number): Promise<TopicParticipation[]> {
@@ -58,6 +63,31 @@ export class EducatorMongoTopicParticipationService {
   async saveMessageId(topicParticipationId: string, messageId: number): Promise<void> {
     const filter = { _id: new ObjectId(topicParticipationId) };
     const updateObj = { $push: { threadMessages: messageId } };
+    await this.topicParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async saveTopicSummary(topicParticipation: TopicParticipation, topicTitle: string, summaryDetails: Pick<SummaryDetails, 'summary' | 'keyTakeaways'>): Promise<void> {
+    const filter = { _id: new ObjectId(topicParticipation._id) };
+    const updateObj = {
+      $set: {
+        summary: {
+          topicTitle,
+          summary: summaryDetails.summary,
+          keyTakeaways: summaryDetails.keyTakeaways,
+          createdAt: new Date(),
+        },
+      },
+    };
+    await this.topicParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async saveSummarySent(topicParticipation: TopicParticipation): Promise<void> {
+    const filter = { _id: new ObjectId(topicParticipation._id) };
+    const updateObj = {
+      $set: {
+        'summary.sentAt': new Date(),
+      },
+    };
     await this.topicParticipationCollection.updateOne(filter, updateObj);
   }
 }

@@ -12,7 +12,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
   },
 };
 
-export const TOPIC_START_HOURS_OF_DAY = [12, 18, 22];
+export const TOPIC_START_HOUR_OF_DAY = 12;
+export const TOPIC_REMINDER_HOUR_OF_DAY = 22;
 
 export enum BOT_ACTIONS {
   START = 'start',
@@ -46,3 +47,5 @@ export const SYSTEM_PROMPT = `
 תמיד הגיב למשתמש בעברית.
 כשאפשרי, תשתמש באימוג׳ים כדי להבנות ולהסביר יותר טוב את התוכן.
 `;
+
+export const SUMMARY_PROMPT = `אני רוצה שתיצור לי סיכום של השיעור הזה כדי שעוד כמה ימים אוכל לחזור לסיכום השיעור הזה ולהיזכר בכל הדברים שדיברו עליהם בשיעור ובשיחה שלנו, ככה שאוכל לרענן את זכרוני ולא לאפשר לחומר שלמדתי להישכח. צור לי סיכום ונקודות מרכזיות וחשובות מהשיעור.`;

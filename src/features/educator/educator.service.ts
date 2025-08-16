@@ -4,8 +4,8 @@ import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topi
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, SYSTEM_PROMPT } from './educator.config';
-import { TopicResponseSchema } from './types';
+import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT } from './educator.config';
+import { TopicResponseSchema, TopicSummarySchema } from './types';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
@@ -71,5 +71,22 @@ export class EducatorService {
       ...getBotInlineKeyboardMarkup(topicParticipation),
     });
     this.topicParticipationDB.saveMessageId(topicParticipation._id.toString(), messageId);
+  }
+
+  async generateTopicSummary(topicParticipationId: string): Promise<void> {
+    const topicParticipation = await this.topicParticipationDB.getTopicParticipation(topicParticipationId);
+    const topic = await this.topicDB.getTopic(topicParticipation.topicId);
+    if (!topic) {
+      return;
+    }
+
+    const { result: summaryDetails } = await getResponse({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: topicParticipation.previousResponseId,
+      input: SUMMARY_PROMPT,
+      schema: TopicSummarySchema,
+    });
+
+    await this.topicParticipationDB.saveTopicSummary(topicParticipation, topic.title, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
   }
 }
