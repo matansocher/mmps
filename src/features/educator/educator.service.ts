@@ -2,10 +2,11 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
+import { getSummaryMessage } from '@features/educator/utils';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, SYSTEM_PROMPT } from './educator.config';
-import { TopicResponseSchema } from './types';
+import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT } from './educator.config';
+import { TopicResponseSchema, TopicSummarySchema } from './types';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
@@ -29,6 +30,11 @@ export class EducatorService {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
+
+  async handleTopicReminders(topicParticipation: TopicParticipation): Promise<void> {
+    await this.bot.sendMessage(topicParticipation.chatId, getSummaryMessage(topicParticipation.summaryDetails), { parse_mode: 'Markdown' });
+    await this.topicParticipationDB.saveSummarySent(topicParticipation._id.toString());
+  }
 
   async processTopic(chatId: number): Promise<void> {
     const topicParticipation = await this.topicParticipationDB.getActiveTopicParticipation(chatId);
@@ -67,9 +73,24 @@ export class EducatorService {
       schema: TopicResponseSchema,
     });
     await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
-    const { message_id: messageId } = await sendShortenedMessage(this.bot, chatId, `זמן קריאה מוערך: ${result.estimatedReadingTime} דקות\n\n${result.text}`, {
-      ...getBotInlineKeyboardMarkup(topicParticipation),
-    });
+    const { message_id: messageId } = await sendShortenedMessage(this.bot, chatId, result.text, { ...getBotInlineKeyboardMarkup(topicParticipation) });
     this.topicParticipationDB.saveMessageId(topicParticipation._id.toString(), messageId);
+  }
+
+  async generateTopicSummary(topicParticipationId: string): Promise<void> {
+    const topicParticipation = await this.topicParticipationDB.getTopicParticipation(topicParticipationId);
+    const topic = await this.topicDB.getTopic(topicParticipation.topicId);
+    if (!topic) {
+      return;
+    }
+
+    const { result: summaryDetails } = await getResponse({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: topicParticipation.previousResponseId,
+      input: SUMMARY_PROMPT,
+      schema: TopicSummarySchema,
+    });
+
+    await this.topicParticipationDB.saveTopicSummary(topicParticipation, topic.title, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
   }
 }

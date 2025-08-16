@@ -2,10 +2,11 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
+import { getSummaryMessage } from '@features/teacher/utils';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
-import { CourseResponseSchema } from './types';
+import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
+import { CourseResponseSchema, CourseSummarySchema } from './types';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation, isLesson: boolean) => {
   let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
@@ -41,6 +42,11 @@ export class TeacherService {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
+
+  async handleCourseReminders(courseParticipation: CourseParticipation) {
+    await this.bot.sendMessage(courseParticipation.chatId, getSummaryMessage(courseParticipation.summaryDetails), { parse_mode: 'Markdown' });
+    await this.courseParticipationDB.saveSummarySent(courseParticipation._id.toString());
+  }
 
   async processCourseFirstLesson(chatId: number): Promise<void> {
     const courseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
@@ -116,13 +122,24 @@ export class TeacherService {
       schema: CourseResponseSchema,
     });
     await this.courseParticipationDB.updatePreviousResponseId(courseParticipation._id.toString(), responseId);
-    const { message_id: messageId } = await sendStyledMessage(
-      this.bot,
-      chatId,
-      `Estimated read time: ${result.estimatedReadingTime} min\n\n${result.text}`,
-      'Markdown',
-      getBotInlineKeyboardMarkup(courseParticipation, false),
-    );
+    const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, result.text, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, false));
     this.courseParticipationDB.saveMessageId(courseParticipation._id.toString(), messageId);
+  }
+
+  async generateCourseSummary(courseParticipationId: string): Promise<void> {
+    const courseParticipation = await this.courseParticipationDB.getCourseParticipation(courseParticipationId);
+    const course = await this.courseDB.getCourse(courseParticipation.courseId);
+    if (!course) {
+      return;
+    }
+
+    const { result: summaryDetails } = await getResponse({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: courseParticipation.previousResponseId,
+      input: SUMMARY_PROMPT,
+      schema: CourseSummarySchema,
+    });
+
+    await this.courseParticipationDB.saveCourseSummary(courseParticipation, course.topic, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
   }
 }
