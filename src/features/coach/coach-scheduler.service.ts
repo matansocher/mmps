@@ -5,7 +5,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
-import { BLOCKED_ERROR } from '@services/telegram';
+import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
@@ -41,7 +41,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
             continue;
           }
           const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
-          await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+          await sendShortenedMessage(this.bot, chatId, replyText, { parse_mode: 'Markdown' });
         } catch (err) {
           const userDetails = await this.userDB.getUserDetails({ chatId });
           if (err.message.includes(BLOCKED_ERROR)) {
