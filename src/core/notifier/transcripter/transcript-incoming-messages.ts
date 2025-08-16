@@ -17,7 +17,7 @@ export function transcriptIncomingMessages() {
     const transcript = await getTranscriptFromAudio(messageData.voice.fileName, 'he');
     const contact = Object.values(contacts).find((c) => c.chatId === messageData.userId.toString());
 
-    const message = `Transcript from ${contact ? contact.name : 'unknown'}:\n\n${transcript}`;
+    const message = `Transcript from ${contact ? contact.name : 'unknown'}:\n\n_${transcript}_`;
     await sendMessage({ name: contact.name, number: contact.number, message }).catch((err) => {
       console.error(`Error sending message: ${err.message}`, err.stack);
     });

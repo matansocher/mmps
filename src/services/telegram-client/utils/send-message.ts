@@ -22,7 +22,7 @@ export async function sendMessage({ name, number, message }: SendMessageOptions)
     return;
   }
 
-  const sent = await telegramClient.sendMessage(importedUser, { message });
+  const sent = await telegramClient.sendMessage(importedUser, { message, parseMode: 'html' });
 
   return { peer: importedUser, id: sent.id };
 }
