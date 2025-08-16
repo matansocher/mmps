@@ -215,8 +215,13 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
-    await this.courseParticipationDB.markCourseParticipationCompleted(courseParticipationId);
+    const courseParticipation = await this.courseParticipationDB.markCourseParticipationCompleted(courseParticipationId);
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, '😎');
+
+    const threadMessages = courseParticipation.threadMessages || [];
+    await Promise.all(threadMessages.map((messageId) => this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {})));
+
+    // summarize the topic with key takeaways, and add some code to create reminder of the material learned so the user can review it later
   }
 }

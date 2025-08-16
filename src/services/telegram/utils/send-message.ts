@@ -1,19 +1,19 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import type { ParseMode } from 'node-telegram-bot-api';
+import type { Message, ParseMode } from 'node-telegram-bot-api';
 import { BOT_BROADCAST_ACTIONS, TELEGRAM_MAX_MESSAGE_LENGTH } from '../constants';
 
-export async function sendStyledMessage(bot: TelegramBot, chatId: number, message: string, parse_mode: ParseMode = 'Markdown', form = {}): Promise<void> {
+export async function sendStyledMessage(bot: TelegramBot, chatId: number, message: string, parse_mode: ParseMode = 'Markdown', form = {}): Promise<Message> {
   try {
     message = message.slice(0, TELEGRAM_MAX_MESSAGE_LENGTH);
-    await bot.sendMessage(chatId, message, { parse_mode, ...form });
+    return bot.sendMessage(chatId, message, { parse_mode, ...form });
   } catch {
-    await bot.sendMessage(chatId, message);
+    return bot.sendMessage(chatId, message);
   }
 }
 
-export async function sendShortenedMessage(bot: TelegramBot, chatId: number, message: string, form = {}): Promise<void> {
+export async function sendShortenedMessage(bot: TelegramBot, chatId: number, message: string, form = {}): Promise<Message> {
   message = message.slice(0, TELEGRAM_MAX_MESSAGE_LENGTH);
-  await bot.sendMessage(chatId, message, form);
+  return bot.sendMessage(chatId, message, form);
 }
 
 // works fine but if message is too big or too many messages, you get an error of 429 - Too Many Requests
