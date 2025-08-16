@@ -15,7 +15,11 @@ export interface TelegramMessage {
   readonly date: number;
   readonly text: string;
   readonly isVoice: boolean;
-  voice?: any; // $$$$$$$$$$$$$$$$$$$$$
+  voice?: {
+    readonly fileName: string;
+    readonly fileSize: number;
+    readonly mimeType: string;
+  };
 }
 
 export interface ConversationDetails {
