@@ -13,6 +13,7 @@ export interface CourseParticipation {
   previousResponseId?: string;
   readonly status: CourseParticipationStatus;
   readonly lessonsCompleted?: number;
+  readonly threadMessages?: number[];
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;

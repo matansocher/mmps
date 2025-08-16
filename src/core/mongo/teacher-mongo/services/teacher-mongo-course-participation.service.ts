@@ -48,7 +48,7 @@ export class TeacherMongoCourseParticipationService {
     return;
   }
 
-  async markCourseParticipationCompleted(courseParticipationId: string): Promise<void> {
+  async markCourseParticipationCompleted(courseParticipationId: string): Promise<CourseParticipation | null> {
     const filter = { _id: new ObjectId(courseParticipationId) };
     const updateObj = {
       $set: {
@@ -56,8 +56,7 @@ export class TeacherMongoCourseParticipationService {
         completedAt: new Date(),
       },
     };
-    await this.courseParticipationCollection.updateOne(filter, updateObj);
-    return;
+    return this.courseParticipationCollection.findOneAndUpdate(filter, updateObj, { returnDocument: 'after' });
   }
 
   async updatePreviousResponseId(courseParticipationId: string, previousResponseId: string): Promise<void> {
@@ -68,6 +67,11 @@ export class TeacherMongoCourseParticipationService {
       },
     };
     await this.courseParticipationCollection.updateOne(filter, updateObj);
-    return;
+  }
+
+  async saveMessageId(courseParticipationId: string, messageId: number): Promise<void> {
+    const filter = { _id: new ObjectId(courseParticipationId) };
+    const updateObj = { $push: { threadMessages: messageId } };
+    await this.courseParticipationCollection.updateOne(filter, updateObj);
   }
 }

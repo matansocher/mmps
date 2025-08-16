@@ -12,6 +12,7 @@ export interface TopicParticipation {
   readonly chatId: number;
   previousResponseId?: string;
   readonly status: TopicParticipationStatus;
+  readonly threadMessages?: number[];
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;

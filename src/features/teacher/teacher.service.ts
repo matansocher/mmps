@@ -116,6 +116,13 @@ export class TeacherService {
       schema: CourseResponseSchema,
     });
     await this.courseParticipationDB.updatePreviousResponseId(courseParticipation._id.toString(), responseId);
-    await sendStyledMessage(this.bot, chatId, `Estimated read time: ${result.estimatedReadingTime} min\n\n${result.text}`, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, false));
+    const { message_id: messageId } = await sendStyledMessage(
+      this.bot,
+      chatId,
+      `Estimated read time: ${result.estimatedReadingTime} min\n\n${result.text}`,
+      'Markdown',
+      getBotInlineKeyboardMarkup(courseParticipation, false),
+    );
+    this.courseParticipationDB.saveMessageId(courseParticipation._id.toString(), messageId);
   }
 }

@@ -198,8 +198,13 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
-    await this.topicParticipationDB.markTopicParticipationCompleted(topicParticipationId);
+    const topicParticipation = await this.topicParticipationDB.markTopicParticipationCompleted(topicParticipationId);
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
     await reactToMessage(this.botToken, chatId, messageId, '😎');
+
+    const threadMessages = topicParticipation.threadMessages || [];
+    await Promise.all(threadMessages.map((messageId) => this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {})));
+
+    // summarize the topic with key takeaways, and add some code to create reminder of the material learned so the user can review it later
   }
 }
