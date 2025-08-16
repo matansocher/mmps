@@ -6,6 +6,14 @@ export enum CourseParticipationStatus {
   Completed = 'completed',
 }
 
+export interface SummaryDetails {
+  readonly topicTitle: string;
+  readonly summary: string;
+  readonly keyTakeaways: string[];
+  readonly sentAt?: Date;
+  readonly createdAt: Date;
+}
+
 export interface CourseParticipation {
   readonly _id: ObjectId;
   readonly courseId: string;
@@ -14,6 +22,7 @@ export interface CourseParticipation {
   readonly status: CourseParticipationStatus;
   readonly lessonsCompleted?: number;
   readonly threadMessages?: number[];
+  readonly summaryDetails?: SummaryDetails;
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;

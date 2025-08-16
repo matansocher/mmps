@@ -1,9 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import TelegramBot from 'node-telegram-bot-api';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
+import { TeacherMongoCourseParticipationService, TeacherMongoUserPreferencesService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
-import { BOT_CONFIG, COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher.config';
+import { getSummaryMessage } from '@features/teacher/utils';
+import { BOT_CONFIG, COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_REMINDER_HOUR_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher.config';
 import { TeacherService } from './teacher.service';
 
 @Injectable()
@@ -13,7 +15,9 @@ export class TeacherSchedulerService implements OnModuleInit {
   constructor(
     private readonly teacherService: TeacherService,
     private readonly userPreferencesDB: TeacherMongoUserPreferencesService,
+    private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
     private readonly notifier: NotifierService,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
@@ -44,6 +48,23 @@ export class TeacherSchedulerService implements OnModuleInit {
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseNextLesson(chatId)));
     } catch (err) {
       this.logger.error(`${this.handleCourseNextLesson.name} - error: ${err}`);
+      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
+    }
+  }
+
+  @Cron(`0 ${COURSE_REMINDER_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-reminders', timeZone: DEFAULT_TIMEZONE })
+  async handleCourseReminders(): Promise<void> {
+    try {
+      // $$$$$$$$$$$$$$$$$$$$$$
+      // const courseParticipationsForReminder = await this.courseParticipationDB.getCourseSummariesForReminder(3);
+      const courseParticipationsForReminder = [];
+
+      for (const { summary } of courseParticipationsForReminder) {
+        await this.bot.sendMessage(summary.chatId, getSummaryMessage(summary), { parse_mode: 'Markdown' });
+        await this.courseParticipationDB.saveSummarySent(summary._id.toString());
+      }
+    } catch (err) {
+      this.logger.error(`${this.handleCourseReminders.name} - error: ${err}`);
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
     }
   }

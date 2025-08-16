@@ -38,4 +38,9 @@ export class TeacherMongoCourseService {
       .toArray();
     return results[0] || null;
   }
+
+  async getCourse(id: string): Promise<Course> {
+    const filter = { _id: new ObjectId(id) };
+    return this.courseCollection.findOne(filter);
+  }
 }

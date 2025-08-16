@@ -4,8 +4,8 @@ import { Course, CourseParticipation, TeacherMongoCourseParticipationService, Te
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
-import { CourseResponseSchema } from './types';
+import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
+import { CourseResponseSchema, CourseSummarySchema } from './types';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation, isLesson: boolean) => {
   let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
@@ -124,5 +124,22 @@ export class TeacherService {
       getBotInlineKeyboardMarkup(courseParticipation, false),
     );
     this.courseParticipationDB.saveMessageId(courseParticipation._id.toString(), messageId);
+  }
+
+  async generateCourseSummary(courseParticipationId: string): Promise<void> {
+    const courseParticipation = await this.courseParticipationDB.getCourseParticipation(courseParticipationId);
+    const course = await this.courseDB.getCourse(courseParticipation.courseId);
+    if (!course) {
+      return;
+    }
+
+    const { result: summaryDetails } = await getResponse({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: courseParticipation.previousResponseId,
+      input: SUMMARY_PROMPT,
+      schema: CourseSummarySchema,
+    });
+
+    await this.courseParticipationDB.saveCourseSummary(courseParticipation, course.topic, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
   }
 }

@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { CourseParticipation, CourseParticipationStatus } from '../models';
+import { CourseParticipation, CourseParticipationStatus, SummaryDetails } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
 
 @Injectable()
@@ -22,6 +22,11 @@ export class TeacherMongoCourseParticipationService {
     };
     await this.courseParticipationCollection.insertOne(courseParticipation);
     return courseParticipation;
+  }
+
+  getCourseParticipation(courseParticipationId: string): Promise<CourseParticipation> {
+    const filter = { _id: new ObjectId(courseParticipationId) };
+    return this.courseParticipationCollection.findOne(filter);
   }
 
   getCourseParticipations(chatId: number): Promise<CourseParticipation[]> {
@@ -72,6 +77,31 @@ export class TeacherMongoCourseParticipationService {
   async saveMessageId(courseParticipationId: string, messageId: number): Promise<void> {
     const filter = { _id: new ObjectId(courseParticipationId) };
     const updateObj = { $push: { threadMessages: messageId } };
+    await this.courseParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async saveCourseSummary(courseParticipation: CourseParticipation, topicTitle: string, summaryDetails: Pick<SummaryDetails, 'summary' | 'keyTakeaways'>): Promise<void> {
+    const filter = { _id: new ObjectId(courseParticipation._id) };
+    const updateObj = {
+      $set: {
+        summary: {
+          topicTitle,
+          summary: summaryDetails.summary,
+          keyTakeaways: summaryDetails.keyTakeaways,
+          createdAt: new Date(),
+        },
+      },
+    };
+    await this.courseParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async saveSummarySent(courseParticipation: CourseParticipation): Promise<void> {
+    const filter = { _id: new ObjectId(courseParticipation._id) };
+    const updateObj = {
+      $set: {
+        'summary.sentAt': new Date(),
+      },
+    };
     await this.courseParticipationCollection.updateOne(filter, updateObj);
   }
 }

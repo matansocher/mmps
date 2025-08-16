@@ -5,6 +5,7 @@ export enum TopicParticipationStatus {
   Assigned = 'assigned',
   Completed = 'completed',
 }
+
 export interface SummaryDetails {
   readonly topicTitle: string;
   readonly summary: string;
