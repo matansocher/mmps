@@ -8,6 +8,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   commands: {
     WOLT: { command: '/wolt', description: '🩵️ Wolt Summary 🩵' },
     WORLDLY: { command: '/worldly', description: '🌎 Worldly Summary 🌎' },
+    RECIPES: { command: '/recipes', description: '👨‍🍳️ Recipes 👨‍🍳️' },
   },
 };
 
@@ -18,4 +19,8 @@ export enum MessageType {
   PHOTO = 'PHOTO',
   AUDIO = 'AUDIO',
   VIDEO = 'VIDEO',
+}
+
+export enum BOT_ACTIONS {
+  SHOW = 'show',
 }

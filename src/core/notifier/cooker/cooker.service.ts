@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CookerMongoRecipeService, Recipe } from '@core/mongo/cooker-mongo';
-import { RecipesCacheService } from './cache';
+import { RecipesCacheService } from './recipes-cache.service';
 
 @Injectable()
 export class CookerService {

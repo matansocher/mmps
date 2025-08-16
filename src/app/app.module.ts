@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { isProd } from '@core/config';
 import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
-import { BOT_CONFIG as cookerBotConfig, CookerModule } from '@features/cooker';
 import { DefineModule } from '@features/define';
 import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educator';
 import { BOT_CONFIG as teacherBotConfig, TeacherModule } from '@features/teacher';
@@ -23,7 +22,6 @@ const registerBotModule = (module: any, config: { id: string }) => {
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     DefineModule,
     registerBotModule(CoachModule, coachBotConfig),
-    registerBotModule(CookerModule, cookerBotConfig),
     registerBotModule(EducatorModule, educatorBotConfig),
     registerBotModule(TeacherModule, teacherBotConfig),
     registerBotModule(TrackerModule, trackerBotConfig),
