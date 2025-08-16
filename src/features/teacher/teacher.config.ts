@@ -14,6 +14,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
 
 export const COURSE_START_HOUR_OF_DAY = 12;
 export const COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY = [17, 22];
+export const COURSE_REMINDER_HOUR_OF_DAY = 23;
 
 export enum BOT_ACTIONS {
   START = 'start',
@@ -76,4 +77,9 @@ Respect the user’s skill, but push them further.
 Insight is the product — not explanation.
 Whenever possible, use emojis to better explain and structure the explanations.
 Keep your responses always with less characters than 4,096, but always with the most important information.
+`;
+
+export const SUMMARY_PROMPT = `
+I want you to create a summary of this course for me so that in a few days I can go back to the summary of this course and remember all the things that were discussed in the course and in our conversation, so that I can refresh my memory and not allow the material I learned to be forgotten.
+Create a summary and key and important points from the course for me
 `;

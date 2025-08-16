@@ -1,7 +1,9 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { CourseParticipation, CourseParticipationStatus } from '../models';
+import { CourseParticipation, CourseParticipationStatus, SummaryDetails } from '../models';
 import { COLLECTIONS, CONNECTION_NAME } from '../teacher-mongo.config';
+
+const NUM_OD_DAYS_TO_SUMMARY_REMINDER = 14;
 
 @Injectable()
 export class TeacherMongoCourseParticipationService {
@@ -22,6 +24,11 @@ export class TeacherMongoCourseParticipationService {
     };
     await this.courseParticipationCollection.insertOne(courseParticipation);
     return courseParticipation;
+  }
+
+  getCourseParticipation(courseParticipationId: string): Promise<CourseParticipation> {
+    const filter = { _id: new ObjectId(courseParticipationId) };
+    return this.courseParticipationCollection.findOne(filter);
   }
 
   getCourseParticipations(chatId: number): Promise<CourseParticipation[]> {
@@ -73,5 +80,40 @@ export class TeacherMongoCourseParticipationService {
     const filter = { _id: new ObjectId(courseParticipationId) };
     const updateObj = { $push: { threadMessages: messageId } };
     await this.courseParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async saveCourseSummary(courseParticipation: CourseParticipation, topicTitle: string, summaryDetails: Pick<SummaryDetails, 'summary' | 'keyTakeaways'>): Promise<void> {
+    const filter = { _id: new ObjectId(courseParticipation._id) };
+    const updateObj = {
+      $set: {
+        summary: {
+          topicTitle,
+          summary: summaryDetails.summary,
+          keyTakeaways: summaryDetails.keyTakeaways,
+          createdAt: new Date(),
+        },
+      },
+    };
+    await this.courseParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async saveSummarySent(id: string): Promise<void> {
+    const filter = { _id: new ObjectId(id) };
+    const updateObj = {
+      $set: {
+        'summaryDetails.sentAt': new Date(),
+      },
+    };
+    await this.courseParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async getCourseParticipationsForSummaryReminder(): Promise<CourseParticipation[]> {
+    const filter = {
+      status: CourseParticipationStatus.Completed,
+      summaryDetails: { $exists: true },
+      'summaryDetails.sentAt': { $exists: false },
+      completedAt: { $lt: new Date(Date.now() - NUM_OD_DAYS_TO_SUMMARY_REMINDER * 24 * 60 * 60 * 1000) },
+    };
+    return this.courseParticipationCollection.find(filter).toArray();
   }
 }
