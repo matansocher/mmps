@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 
 export const TopicResponseSchema = z.object({
-  text: z.string().max(4095).describe('The main topic content text that will be displayed to the user'),
+  text: z.string().max(TELEGRAM_MAX_MESSAGE_LENGTH).describe('The main topic content text that will be displayed to the user'),
   estimatedReadingTime: z.number().min(1).describe('Estimated time in minutes for an average reader to complete and understand this content (assume 200-250 words per minute reading speed)'),
   // keyTakeaways: z
   //   .array(z.string())
