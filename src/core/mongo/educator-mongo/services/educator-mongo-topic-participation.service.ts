@@ -3,6 +3,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { COLLECTIONS, CONNECTION_NAME } from '../educator-mongo.config';
 import { SummaryDetails, TopicParticipation, TopicParticipationStatus } from '../models';
 
+const NUM_OD_DAYS_TO_SUMMARY_REMINDER = 14;
+
 @Injectable()
 export class EducatorMongoTopicParticipationService {
   private readonly topicParticipationCollection: Collection<TopicParticipation>;
@@ -81,13 +83,23 @@ export class EducatorMongoTopicParticipationService {
     await this.topicParticipationCollection.updateOne(filter, updateObj);
   }
 
-  async saveSummarySent(topicParticipation: TopicParticipation): Promise<void> {
-    const filter = { _id: new ObjectId(topicParticipation._id) };
+  async saveSummarySent(id: string): Promise<void> {
+    const filter = { _id: new ObjectId(id) };
     const updateObj = {
       $set: {
-        'summary.sentAt': new Date(),
+        'summaryDetails.sentAt': new Date(),
       },
     };
     await this.topicParticipationCollection.updateOne(filter, updateObj);
+  }
+
+  async getCourseParticipationsForSummaryReminder(): Promise<TopicParticipation[]> {
+    const filter = {
+      status: TopicParticipationStatus.Completed,
+      summaryDetails: { $exists: true },
+      'summaryDetails.sentAt': { $exists: false },
+      completedAt: { $lt: new Date(Date.now() - NUM_OD_DAYS_TO_SUMMARY_REMINDER * 24 * 60 * 60 * 1000) },
+    };
+    return this.topicParticipationCollection.find(filter).toArray();
   }
 }

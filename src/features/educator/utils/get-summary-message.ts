@@ -11,7 +11,5 @@ export function getSummaryMessage(summaryDetails: SummaryDetails): string {
     ``,
     `🔑 **נקודות מפתח לזכור:**`,
     ...summaryDetails.keyTakeaways.map((takeaway, index) => `${index + 1}. ${takeaway}`),
-    ``,
-    `💡 זה הזמן הטוב לחזור על החומר ולוודא שאתה זוכר את העיקרים!`,
   ].join('\n');
 }

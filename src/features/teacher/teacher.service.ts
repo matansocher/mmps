@@ -2,6 +2,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
+import { getSummaryMessage } from '@features/teacher/utils';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
@@ -41,6 +42,11 @@ export class TeacherService {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
+
+  async handleCourseReminders(courseParticipation: CourseParticipation) {
+    await this.bot.sendMessage(courseParticipation.chatId, getSummaryMessage(courseParticipation.summaryDetails), { parse_mode: 'Markdown' });
+    await this.courseParticipationDB.saveSummarySent(courseParticipation._id.toString());
+  }
 
   async processCourseFirstLesson(chatId: number): Promise<void> {
     const courseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
