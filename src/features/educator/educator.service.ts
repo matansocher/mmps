@@ -73,9 +73,7 @@ export class EducatorService {
       schema: TopicResponseSchema,
     });
     await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
-    const { message_id: messageId } = await sendShortenedMessage(this.bot, chatId, `זמן קריאה מוערך: ${result.estimatedReadingTime} דקות\n\n${result.text}`, {
-      ...getBotInlineKeyboardMarkup(topicParticipation),
-    });
+    const { message_id: messageId } = await sendShortenedMessage(this.bot, chatId, result.text, { ...getBotInlineKeyboardMarkup(topicParticipation) });
     this.topicParticipationDB.saveMessageId(topicParticipation._id.toString(), messageId);
   }
 
