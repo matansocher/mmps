@@ -6,7 +6,6 @@ import { getStreakOfCorrectAnswers } from '@core/utils';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { CookerService, generateRecipeString } from './cooker';
 import { BOT_ACTIONS, BOT_CONFIG } from './notifier.config';
-import { transcriptIncomingMessages } from './transcripter';
 
 type LightUser = {
   readonly chatId: number;
@@ -39,8 +38,6 @@ export class NotifierController implements OnModuleInit {
       { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers });
-
-    transcriptIncomingMessages();
   }
 
   async messageHandler(message: Message): Promise<void> {

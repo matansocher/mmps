@@ -34,24 +34,3 @@ export async function getResponse<T extends z.ZodTypeAny>(options: GetResponseOp
   const response = await client.responses.parse(createRequestOptions<T>(options));
   return { id: response.id, result: JSON.parse(response.output_text) as z.infer<T> };
 }
-
-// export async function getStreamResponse<T extends z.ZodTypeAny>(options: GetResponseOptions<T>): Promise<GetResponseRes<z.infer<T>>> {
-//   const client = provideOpenAiClient();
-//   const streamResp = await client.responses.stream({ stream: true, ...createRequestOptions<T>(options) });
-//
-//   let finalText = '';
-//
-//   for await (const chunk of streamResp) {
-//     if (chunk.type === 'text') {
-//       finalText += chunk.text;
-//       console.log(chunk.text);
-//     } else if (chunk.type === 'error') {
-//       throw new Error(`Error in streaming response: ${chunk.error}`);
-//     }
-//   }
-//
-//   return {
-//     id: streamResp.finalResponse.id,
-//     result: options.schema.parse(JSON.parse(finalText)) as z.infer<T>,
-//   };
-// }

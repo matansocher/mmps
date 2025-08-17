@@ -5,6 +5,7 @@ import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, register
 import { editMessage, sendMessage } from '@services/telegram-client';
 import { TracksCacheService } from './cache';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LOCATIONS, NOTIFY_ARRIVAL_DISTANCE } from './tracker.config';
+import { transcriptIncomingMessages } from './transcripter';
 import { findLocation, getAnnounceMessage } from './utils';
 
 @Injectable()
@@ -26,6 +27,8 @@ export class TrackerController implements OnModuleInit {
       { event: EDITED_MESSAGE, handler: (callbackQuery) => this.editedMessageHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers, isBlocked: true });
+
+    transcriptIncomingMessages();
   }
 
   async startHandler(message: Message): Promise<void> {
