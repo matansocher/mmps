@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { ToolExecutionContext } from '../../types';
+import { z } from 'zod';
+import { ToolExecutionContext, ToolInstance } from '../../types';
 import { newsConfig } from './config';
 
 export interface NewsItem {
@@ -11,7 +12,7 @@ export interface NewsItem {
   source: string;
 }
 
-export class NewsTool {
+export class NewsTool implements ToolInstance {
   getName(): string {
     return newsConfig.name;
   }
@@ -22,6 +23,10 @@ export class NewsTool {
 
   getParameters(): any[] {
     return newsConfig.parameters;
+  }
+
+  getSchema(): z.ZodObject<any> {
+    return newsConfig.schema;
   }
 
   getKeywords(): string[] {
@@ -72,6 +77,7 @@ export class NewsTool {
       title: article.title,
       description: article.description || '',
       url: article.url,
+      image: article.urlToImage || '',
       publishedAt: article.publishedAt,
       source: article.source.name,
     }));
@@ -93,6 +99,7 @@ export class NewsTool {
       title: article.title,
       description: article.description || '',
       url: article.url,
+      image: article.urlToImage || '',
       publishedAt: article.publishedAt,
       source: article.source.name,
     }));

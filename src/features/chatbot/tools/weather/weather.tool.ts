@@ -1,17 +1,25 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { ToolExecutionContext } from '../../types';
+import { z } from 'zod';
+import { ToolExecutionContext, ToolInstance } from '../../types';
 import { weatherConfig } from './config';
 
-export interface WeatherData {
-  location: string;
-  temperature: number;
-  description: string;
-  humidity: number;
-  windSpeed: number;
+interface WeatherData {
+  readonly location: string;
+  readonly temperature: number;
+  readonly feelsLike: number;
+  readonly temperatureMin: number;
+  readonly temperatureMax: number;
+  readonly humidity: number;
+  readonly windSpeed: number;
+  readonly coords: {
+    readonly lat: number;
+    readonly lon: number;
+  };
+  readonly description: string;
 }
 
-export class WeatherTool {
+export class WeatherTool implements ToolInstance {
   getName(): string {
     return weatherConfig.name;
   }
@@ -22,6 +30,10 @@ export class WeatherTool {
 
   getParameters(): any[] {
     return weatherConfig.parameters;
+  }
+
+  getSchema(): z.ZodObject<any> {
+    return weatherConfig.schema;
   }
 
   getKeywords(): string[] {
@@ -61,7 +73,11 @@ export class WeatherTool {
 
       return {
         location: `${data.name}, ${data.sys.country}`,
+        coords: data.coord,
         temperature: Math.round(data.main.temp),
+        temperatureMin: Math.round(data.main.temp_min),
+        temperatureMax: Math.round(data.main.temp_max),
+        feelsLike: Math.round(data.main.feels_like),
         description: data.weather[0].description,
         humidity: data.main.humidity,
         windSpeed: data.wind.speed,

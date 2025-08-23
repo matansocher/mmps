@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { ToolConfig } from '../../types';
 
 export const newsConfig: ToolConfig = {
@@ -23,6 +24,9 @@ export const newsConfig: ToolConfig = {
       description: 'Number of articles to return (default: 5)',
     },
   ],
+  schema: z.object({
+    location: z.string().describe('The city or location to get weather for'),
+  }),
   keywords: ['news', 'headlines', 'articles', 'breaking', 'latest', 'current events', 'journalism'],
   instructions: 'When users ask for news, try to extract specific topics or categories. If no specific topic is mentioned, get general headlines.',
 };

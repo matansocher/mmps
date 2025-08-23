@@ -92,52 +92,6 @@ export function createErrorResponse(error: Error | string, userId?: string): Cha
 }
 
 /**
- * Converts custom tools to LangChain compatible tools
- */
-export function convertToLangChainTools(customTools: ToolInstance[]): DynamicStructuredTool[] {
-  const langchainTools: DynamicStructuredTool[] = [];
-
-  for (const tool of customTools) {
-    const parameters = tool.getParameters();
-
-    // Create Zod schema from parameters
-    const schemaFields: Record<string, any> = {};
-    for (const param of parameters) {
-      const zodType = createZodType(param);
-
-      if (param.required) {
-        schemaFields[param.name] = zodType.describe(param.description);
-      } else {
-        schemaFields[param.name] = zodType.optional().describe(param.description);
-      }
-    }
-
-    const schema = z.object(schemaFields);
-
-    const langchainTool = new DynamicStructuredTool({
-      name: tool.getName(),
-      description: tool.getDescription(),
-      schema,
-      func: async (input: Record<string, any>) => {
-        try {
-          const result = await tool.execute({
-            userRequest: '',
-            parameters: input,
-          });
-          return JSON.stringify(result);
-        } catch (error) {
-          return `Error: ${error.message}`;
-        }
-      },
-    });
-
-    langchainTools.push(langchainTool);
-  }
-
-  return langchainTools;
-}
-
-/**
  * Creates appropriate Zod type based on parameter type
  */
 function createZodType(param: ToolParameter) {
@@ -156,11 +110,11 @@ function createZodType(param: ToolParameter) {
 /**
  * Creates a LangChain tool from a custom tool instance
  */
-export function createLangChainTool(tool: ToolInstance, schemaOverride?: z.ZodObject<any>): DynamicStructuredTool {
+export function createLangChainTool(tool: ToolInstance): DynamicStructuredTool {
   const parameters = tool.getParameters();
 
   // Use provided schema or generate from parameters
-  const schema = schemaOverride || createSchemaFromParameters(parameters);
+  const schema = tool.getSchema() || createSchemaFromParameters(parameters);
 
   return new DynamicStructuredTool({
     name: tool.getName(),

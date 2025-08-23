@@ -3,6 +3,7 @@ import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { MemorySaver } from '@langchain/langgraph';
 import { CompiledStateGraph } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
+import { z } from 'zod';
 
 // Agent descriptor for single agent
 export interface AgentDescriptor {
@@ -86,6 +87,7 @@ export interface ToolConfig {
   name: string;
   description: string;
   parameters: ToolParameter[];
+  schema: z.ZodObject<any>;
   keywords: string[];
   instructions?: string;
 }
@@ -111,6 +113,7 @@ export interface ToolInstance {
   getName(): string;
   getDescription(): string;
   getParameters(): ToolParameter[];
+  getSchema(): z.ZodObject<any>;
   getKeywords(): string[];
   getInstructions?(): string;
   extractParameters?(userRequest: string): Record<string, any>;

@@ -1,48 +1,39 @@
-import { z } from 'zod';
-import { getAllTools } from '../tools/tool-registry';
+import { NewsTool } from '../tools/news/news.tool';
 import { WeatherTool } from '../tools/weather/weather.tool';
 import { AgentDescriptor } from '../types';
-import { convertToLangChainTools, createLangChainTool } from '../utils';
+import { createLangChainTool } from '../utils';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_PROMPT = `
-You are a helpful AI assistant chatbot with access to various tools to help answer user questions.
+You are a helpful AI assistant chatbot that can use external tools to answer user questions.
 
-Your role is to:
-1. Understand user requests and determine if tools are needed
-2. Use appropriate tools to gather information
-3. Provide helpful, accurate, and friendly responses
-4. Handle errors gracefully and inform users of any issues
+Your role:
+1. Understand the request: Carefully interpret the user’s intent and decide whether a tool is needed.
+2. Select tools wisely: Use the most relevant tool(s) when they can provide better, more accurate, or up-to-date information.
+3. Provide responses: Answer clearly, concisely, and in a friendly tone. Always aim to be accurate and useful.
+4. Handle errors gracefully: If a tool fails or provides incomplete data, let the user know and give the best answer you can without it.
 
 Available capabilities:
-- Weather information for any location
-- General conversation and assistance
+- Weather tool: Get current weather for any location worldwide.
+- News tool: Retrieve the latest headlines or search for specific news topics.
+- General conversation & assistance: Provide helpful answers without tools when possible.
 
 Guidelines:
-- Be concise but informative in your responses
-- Only use tools when necessary to answer the user's question
-- If a tool fails, acknowledge the error and provide what help you can
-- Always be polite and helpful
-- When asked about weather, use the weather tool to get current information
+- Be concise but informative: Deliver answers in clear, digestible form.
+- Use tools only when needed: Don’t call tools unnecessarily if you can answer directly.
+- Error handling: If a tool fails, acknowledge it politely and try to assist with alternative info.
+- Politeness: Always be respectful, approachable, and professional.
+- formatting: use markdown for any lists, code snippets, or structured data for readability.
+- Format news results in a readable way with titles, descriptions, and sources, and any relevant links.
+- Format weather information clearly with temperature, conditions, and location, and any relevant links.
 `;
 
-function createWeatherTool() {
-  const weatherTool = new WeatherTool();
-  const schema = z.object({
-    location: z.string().describe('The city or location to get weather for'),
-  });
-
-  return createLangChainTool(weatherTool, schema);
-}
-
 export function agent(): AgentDescriptor {
-  const tools = [createWeatherTool()];
-  // const tools = convertToLangChainTools(getAllTools());
-
+  const toolClasses = [new WeatherTool(), new NewsTool()];
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description: 'A helpful AI assistant chatbot with access to various tools',
-    tools,
+    description: 'A helpful AI assistant chatbot with access to weather and news information',
+    tools: toolClasses.map((tool) => createLangChainTool(tool)),
   };
 }

@@ -17,14 +17,7 @@ export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor
     }
   }
 
-  // Create the React agent
-  const reactAgent = createReactAgent({
-    llm,
-    tools,
-    checkpointSaver,
-  });
-
-  // Wrap in AiService
+  const reactAgent = createReactAgent({ llm, tools, checkpointSaver });
   return new AiService(reactAgent, { name });
 }
 
