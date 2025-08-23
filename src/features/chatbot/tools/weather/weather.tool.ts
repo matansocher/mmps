@@ -1,21 +1,7 @@
 import { z } from 'zod';
-import { getWeatherDetails } from '@services/open-weather-map';
+import { getWeatherDetails, WeatherDetails } from '@services/open-weather-map';
 import { ToolExecutionContext, ToolInstance } from '../../types';
 import { weatherConfig } from './config';
-
-interface WeatherData {
-  readonly location: string;
-  readonly temperature: number;
-  readonly feelsLike: number;
-  readonly temperatureMin: number;
-  readonly temperatureMax: number;
-  readonly humidity: number;
-  readonly coords: {
-    readonly lat: number;
-    readonly lon: number;
-  };
-  readonly description: string;
-}
 
 export class WeatherTool implements ToolInstance {
   getName(): string {
@@ -38,14 +24,14 @@ export class WeatherTool implements ToolInstance {
     return weatherConfig.instructions || '';
   }
 
-  async execute(context: ToolExecutionContext): Promise<WeatherData> {
-    const location = context.parameters.location;
+  async execute(context: ToolExecutionContext): Promise<WeatherDetails> {
+    const { location, date } = context.parameters;
     if (!location) {
       throw new Error('Location parameter is required');
     }
 
     try {
-      return getWeatherDetails(location);
+      return getWeatherDetails(location, date);
     } catch (error) {
       throw new Error(`Failed to fetch weather data: ${error.message}`);
     }

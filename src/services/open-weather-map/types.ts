@@ -7,4 +7,6 @@ export type WeatherDetails = {
   feelsLike: number;
   description: string;
   humidity: number;
+  date?: string;
+  isForecast?: boolean;
 };
