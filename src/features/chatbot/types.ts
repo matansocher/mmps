@@ -52,7 +52,7 @@ export type CompiledAgent = CompiledStateGraph<any, any>;
 // Core chatbot types
 export interface ChatbotRequest {
   message: string;
-  userId: string;
+  chatId: string;
   requestedTools?: string[];
 }
 

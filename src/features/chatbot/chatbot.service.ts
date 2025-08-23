@@ -20,16 +20,16 @@ export class ChatbotService {
     this.aiService = createAgent(agent(), { llm });
   }
 
-  async processMessage(message: string, userId: string): Promise<string> {
+  async processMessage(message: string, chatId: string): Promise<string> {
     try {
-      const systemContext = `User ID: ${userId}. Current time: ${new Date().toISOString()}.`;
+      const systemContext = `User ID: ${chatId}. Current time: ${new Date().toISOString()}.`;
 
-      const result = await this.aiService.invoke(message, { threadId: userId, system: systemContext });
+      const result = await this.aiService.invoke(message, { threadId: chatId, system: systemContext });
 
-      const response = formatAgentResponse(result, userId);
+      const response = formatAgentResponse(result, chatId);
       return response.message;
     } catch (error) {
-      this.logger.error(`Error processing message for user ${userId}:`, error);
+      this.logger.error(`Error processing message for user ${chatId}:`, error);
       return 'I apologize, but I encountered an error while processing your request. Please try again.';
     }
   }

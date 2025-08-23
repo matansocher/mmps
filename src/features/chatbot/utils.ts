@@ -18,7 +18,7 @@ export function createMessage(message: string, opts: Partial<InvokeOptions> = {}
 /**
  * Formats agent result into chatbot response
  */
-export function formatAgentResponse(result: any, userId?: string): ChatbotResponse {
+export function formatAgentResponse(result: any, chatId?: string): ChatbotResponse {
   const messages = result.messages as BaseMessage[];
   const lastMessage = messages[messages.length - 1];
   const responseContent = lastMessage.content as string;
@@ -75,7 +75,7 @@ export function extractToolResults(messages: BaseMessage[]): ToolResult[] {
 /**
  * Creates error response
  */
-export function createErrorResponse(error: Error | string, userId?: string): ChatbotResponse {
+export function createErrorResponse(error: Error | string, chatId?: string): ChatbotResponse {
   const errorMessage = error instanceof Error ? error.message : error;
 
   return {
