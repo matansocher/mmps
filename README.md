@@ -27,7 +27,7 @@ To run this application, ensure you have Node.js installed. Each bot operates as
    ```bash
    IS_PROD=false
     
-   OPEN_AI_API_KEY=
+   OPENAI_API_KEY=
 
    MONGO_DB_URL=
    

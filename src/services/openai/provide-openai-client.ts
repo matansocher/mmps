@@ -5,7 +5,7 @@ let client: OpenAI;
 
 export function provideOpenAiClient(): OpenAI {
   if (!client) {
-    client = new OpenAI({ apiKey: env.OPEN_AI_API_KEY });
+    client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   }
   return client;
 }
