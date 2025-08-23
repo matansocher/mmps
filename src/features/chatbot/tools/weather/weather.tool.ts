@@ -1,6 +1,6 @@
-import axios from 'axios';
 import { env } from 'node:process';
 import { z } from 'zod';
+import { getWeatherDetails } from '@services/open-weather-map';
 import { ToolExecutionContext, ToolInstance } from '../../types';
 import { weatherConfig } from './config';
 
@@ -60,26 +60,7 @@ export class WeatherTool implements ToolInstance {
     }
 
     try {
-      const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
-        params: {
-          q: location,
-          appid: apiKey,
-          units: 'metric',
-        },
-      });
-
-      const data = response.data;
-
-      return {
-        location: `${data.name}, ${data.sys.country}`,
-        coords: data.coord,
-        temperature: Math.round(data.main.temp),
-        temperatureMin: Math.round(data.main.temp_min),
-        temperatureMax: Math.round(data.main.temp_max),
-        feelsLike: Math.round(data.main.feels_like),
-        description: data.weather[0].description,
-        humidity: data.main.humidity,
-      };
+      return getWeatherDetails(apiKey, location);
     } catch (error) {
       throw new Error(`Failed to fetch weather data: ${error.message}`);
     }

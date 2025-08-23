@@ -1,16 +1,8 @@
-import axios from 'axios';
 import { env } from 'node:process';
 import { z } from 'zod';
+import { getNews, NewsItem, searchNews } from '@services/news-api';
 import { ToolExecutionContext, ToolInstance } from '../../types';
 import { newsConfig } from './config';
-
-export interface NewsItem {
-  title: string;
-  description: string;
-  url: string;
-  publishedAt: string;
-  source: string;
-}
 
 export class NewsTool implements ToolInstance {
   getName(): string {
@@ -52,57 +44,13 @@ export class NewsTool implements ToolInstance {
 
     try {
       if (query) {
-        return await this.searchNews(query, limit, apiKey);
+        return await searchNews(query, limit, apiKey);
       } else {
-        return await this.getNews('us', category, limit, apiKey);
+        return await getNews('us', category, limit, apiKey);
       }
     } catch (error) {
       throw new Error(`Failed to fetch news: ${error.message}`);
     }
-  }
-
-  private async getNews(country: string, category: string | undefined, limit: number, apiKey: string): Promise<NewsItem[]> {
-    const response = await axios.get('https://newsapi.org/v2/top-headlines', {
-      params: {
-        country,
-        category,
-        apiKey,
-        pageSize: limit,
-      },
-    });
-
-    const articles = response.data.articles;
-
-    return articles.map((article: any) => ({
-      title: article.title,
-      description: article.description || '',
-      url: article.url,
-      image: article.urlToImage || '',
-      publishedAt: article.publishedAt,
-      source: article.source.name,
-    }));
-  }
-
-  private async searchNews(query: string, limit: number, apiKey: string): Promise<NewsItem[]> {
-    const response = await axios.get('https://newsapi.org/v2/everything', {
-      params: {
-        q: query,
-        apiKey,
-        pageSize: limit,
-        sortBy: 'publishedAt',
-      },
-    });
-
-    const articles = response.data.articles;
-
-    return articles.map((article: any) => ({
-      title: article.title,
-      description: article.description || '',
-      url: article.url,
-      image: article.urlToImage || '',
-      publishedAt: article.publishedAt,
-      source: article.source.name,
-    }));
   }
 
   private extractNewsQueryFromRequest(request: string): string | null {

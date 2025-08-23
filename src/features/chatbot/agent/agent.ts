@@ -1,5 +1,4 @@
-import { NewsTool } from '../tools/news/news.tool';
-import { WeatherTool } from '../tools/weather/weather.tool';
+import { NewsTool, StocksTool, WeatherTool } from '../tools';
 import { AgentDescriptor } from '../types';
 import { createLangChainTool } from '../utils';
 
@@ -26,10 +25,11 @@ Guidelines:
 - formatting: use markdown for any lists, code snippets, or structured data for readability.
 - Format news results in a readable way with titles, descriptions, and sources, and any relevant links.
 - Format weather information clearly with temperature, conditions, and location, and any relevant links.
+- Format stocks information clearly with current price, change, and relevant details, and any relevant links.
 `;
 
 export function agent(): AgentDescriptor {
-  const toolClasses = [new WeatherTool(), new NewsTool()];
+  const toolClasses = [new WeatherTool(), new NewsTool(), new StocksTool()];
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
