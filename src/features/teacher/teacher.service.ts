@@ -2,11 +2,11 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
-import { getSummaryMessage } from '@features/teacher/utils';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
 import { CourseResponseSchema, CourseSummarySchema } from './types';
+import { getSummaryMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation, isLesson: boolean) => {
   let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
