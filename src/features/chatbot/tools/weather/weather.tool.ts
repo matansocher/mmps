@@ -11,7 +11,6 @@ interface WeatherData {
   readonly temperatureMin: number;
   readonly temperatureMax: number;
   readonly humidity: number;
-  readonly windSpeed: number;
   readonly coords: {
     readonly lat: number;
     readonly lon: number;
@@ -80,7 +79,6 @@ export class WeatherTool implements ToolInstance {
         feelsLike: Math.round(data.main.feels_like),
         description: data.weather[0].description,
         humidity: data.main.humidity,
-        windSpeed: data.wind.speed,
       };
     } catch (error) {
       throw new Error(`Failed to fetch weather data: ${error.message}`);

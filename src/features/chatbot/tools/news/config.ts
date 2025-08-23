@@ -25,7 +25,9 @@ export const newsConfig: ToolConfig = {
     },
   ],
   schema: z.object({
-    location: z.string().describe('The city or location to get weather for'),
+    query: z.string().optional().describe('Search query for specific news topics'),
+    category: z.string().optional().describe('News category (business, entertainment, health, science, sports, technology)'),
+    limit: z.number().optional().describe('Number of articles to return (default: 5)'),
   }),
   keywords: ['news', 'headlines', 'articles', 'breaking', 'latest', 'current events', 'journalism'],
   instructions: 'When users ask for news, try to extract specific topics or categories. If no specific topic is mentioned, get general headlines.',

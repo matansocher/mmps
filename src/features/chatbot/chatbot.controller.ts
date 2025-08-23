@@ -18,7 +18,7 @@ export class ChatbotController implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
+    const { COMMAND, MESSAGE } = TELEGRAM_EVENTS;
     const { START } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
@@ -41,7 +41,8 @@ export class ChatbotController implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.chatbotService.processMessage(text, chatId.toString());
+      const replyText = await this.chatbotService.processMessage(text, chatId.toString());
+      await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
     });
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text }, userDetails);
