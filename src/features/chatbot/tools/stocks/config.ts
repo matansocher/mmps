@@ -4,14 +4,6 @@ import { ToolConfig } from '../../types';
 export const stocksConfig: ToolConfig = {
   name: 'stocks',
   description: 'Get latest stock prices',
-  parameters: [
-    {
-      name: 'symbol',
-      type: 'string',
-      description: 'The stock symbol, e.g., AAPL for Apple Inc.',
-      required: true,
-    },
-  ],
   schema: z.object({
     symbol: z.string().min(1, 'Symbol cannot be empty'),
   }),

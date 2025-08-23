@@ -1,6 +1,6 @@
 import { NewsTool, StocksTool, WeatherTool } from '../tools';
 import { AgentDescriptor } from '../types';
-import { createLangChainTool } from '../utils';
+import { createLangChainTool } from './utils';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_PROMPT = `
@@ -33,7 +33,7 @@ export function agent(): AgentDescriptor {
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description: 'A helpful AI assistant chatbot with access to weather and news information',
+    description: 'A helpful AI assistant chatbot with access to weather, news and stocks information',
     tools: toolClasses.map((tool) => createLangChainTool(tool)),
   };
 }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { env } from 'node:process';
 import { StockDetails } from '@services/alpha-vantage/types';
 
 const baseURL = 'https://www.alphavantage.co/query';
@@ -18,7 +19,16 @@ function parseStockDetails(rawDetails): StockDetails {
   };
 }
 
-export async function getStockDetailsBySymbol(apikey: string, symbol: string): Promise<StockDetails> {
+function getApiKey(): string {
+  const apiKey = env.ALPHA_VANTAGE_API_KEY;
+  if (!apiKey) {
+    throw new Error('Alpha Vantage API key not configured');
+  }
+  return apiKey;
+}
+
+export async function getStockDetailsBySymbol(symbol: string): Promise<StockDetails> {
+  const apikey = getApiKey();
   const response = await axios.get(baseURL, {
     params: {
       function: 'GLOBAL_QUOTE',

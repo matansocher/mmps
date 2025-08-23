@@ -1,19 +1,5 @@
-import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { DynamicStructuredTool } from '@langchain/core/tools';
-import { z } from 'zod';
-import { ChatbotResponse, InvokeOptions, MessageState, ToolExecutionContext, ToolInstance, ToolParameter, ToolResult } from './types';
-
-/**
- * Creates a message state for agent processing
- */
-export function createMessage(message: string, opts: Partial<InvokeOptions> = {}): MessageState {
-  const messages: BaseMessage[] = [];
-  if (opts.system) {
-    messages.push(new SystemMessage(opts.system));
-  }
-  messages.push(new HumanMessage(message));
-  return { messages };
-}
+import { BaseMessage } from '@langchain/core/messages';
+import { ChatbotResponse, ToolResult } from './types';
 
 /**
  * Formats agent result into chatbot response
@@ -35,7 +21,7 @@ export function formatAgentResponse(result: any, chatId?: string): ChatbotRespon
 /**
  * Extracts tool results from conversation messages
  */
-export function extractToolResults(messages: BaseMessage[]): ToolResult[] {
+function extractToolResults(messages: BaseMessage[]): ToolResult[] {
   const toolResults: ToolResult[] = [];
 
   // Look through messages to find tool calls and results
@@ -70,92 +56,4 @@ export function extractToolResults(messages: BaseMessage[]): ToolResult[] {
   }
 
   return toolResults;
-}
-
-/**
- * Creates error response
- */
-export function createErrorResponse(error: Error | string, chatId?: string): ChatbotResponse {
-  const errorMessage = error instanceof Error ? error.message : error;
-
-  return {
-    message: 'I apologize, but I encountered an error while processing your request. Please try again.',
-    toolResults: [
-      {
-        toolName: 'system',
-        data: null,
-        error: errorMessage,
-      },
-    ],
-    timestamp: new Date().toISOString(),
-  };
-}
-
-/**
- * Creates appropriate Zod type based on parameter type
- */
-function createZodType(param: ToolParameter) {
-  switch (param.type) {
-    case 'string':
-      return z.string();
-    case 'number':
-      return z.number();
-    case 'boolean':
-      return z.boolean();
-    default:
-      return z.string();
-  }
-}
-
-/**
- * Creates a LangChain tool from a custom tool instance
- */
-export function createLangChainTool(tool: ToolInstance): DynamicStructuredTool {
-  const parameters = tool.getParameters();
-
-  // Use provided schema or generate from parameters
-  const schema = tool.getSchema() || createSchemaFromParameters(parameters);
-
-  return new DynamicStructuredTool({
-    name: tool.getName(),
-    description: tool.getDescription(),
-    schema,
-    func: async (input: Record<string, any>) => {
-      try {
-        const result = await tool.execute({
-          userRequest: '',
-          parameters: input,
-        });
-        return JSON.stringify(result);
-      } catch (error) {
-        return `Error: ${error.message}`;
-      }
-    },
-  });
-}
-
-/**
- * Creates Zod schema from tool parameters
- */
-function createSchemaFromParameters(parameters: ToolParameter[]): z.ZodObject<any> {
-  const schemaFields: Record<string, any> = {};
-
-  for (const param of parameters) {
-    const zodType = createZodType(param);
-
-    if (param.required) {
-      schemaFields[param.name] = zodType.describe(param.description);
-    } else {
-      schemaFields[param.name] = zodType.optional().describe(param.description);
-    }
-  }
-
-  return z.object(schemaFields);
-}
-
-/**
- * Validates tool execution context
- */
-export function validateToolContext(context: ToolExecutionContext): boolean {
-  return !!(context && context.parameters && typeof context.userRequest === 'string');
 }

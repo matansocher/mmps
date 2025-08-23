@@ -3,8 +3,7 @@ import { env } from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { agent } from './agent';
 import { AiService, createAgent } from './agent';
-import { ChatbotResponse } from './types';
-import { createErrorResponse, formatAgentResponse } from './utils';
+import { formatAgentResponse } from './utils';
 
 @Injectable()
 export class ChatbotService {

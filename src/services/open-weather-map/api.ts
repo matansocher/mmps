@@ -1,9 +1,15 @@
 import axios from 'axios';
+import { env } from 'node:process';
 import { WeatherDetails } from './types';
 
 const baseURL = 'https://api.openweathermap.org/data/2.5/weather';
 
-export async function getWeatherDetails(apiKey: string, location: string): Promise<WeatherDetails> {
+export async function getWeatherDetails(location: string): Promise<WeatherDetails> {
+  const apiKey = env.OPENWEATHER_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenWeather API key not configured');
+  }
+
   const response = await axios.get(baseURL, {
     params: {
       q: location,

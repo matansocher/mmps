@@ -2,7 +2,7 @@ import { RunnableConfig } from '@langchain/core/runnables';
 import { CompiledStateGraph } from '@langchain/langgraph';
 import { CHATBOT_CONFIG } from '../chatbot.config';
 import { AiServiceOptions, InvokeOptions } from '../types';
-import { createMessage } from '../utils';
+import { createMessage } from './utils';
 
 export class AiService {
   readonly name: string;

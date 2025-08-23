@@ -1,9 +1,19 @@
 import axios from 'axios';
+import { env } from 'node:process';
 import { NewsItem } from './types';
 
 const baseURL = 'https://newsapi.org/v2';
 
-export async function getNews(country: string, category: string | undefined, limit: number, apiKey: string): Promise<NewsItem[]> {
+function getApiKey(): string {
+  const apiKey = env.NEWS_API_KEY;
+  if (!apiKey) {
+    throw new Error('News API key not configured');
+  }
+  return apiKey;
+}
+
+export async function getNews(country: string, category: string | undefined, limit: number): Promise<NewsItem[]> {
+  const apiKey = getApiKey();
   const response = await axios.get(`${baseURL}/top-headlines`, {
     params: {
       country,
@@ -25,7 +35,8 @@ export async function getNews(country: string, category: string | undefined, lim
   }));
 }
 
-export async function searchNews(query: string, limit: number, apiKey: string): Promise<NewsItem[]> {
+export async function searchNews(query: string, limit: number): Promise<NewsItem[]> {
+  const apiKey = getApiKey();
   const response = await axios.get(`${baseURL}/everything`, {
     params: {
       q: query,

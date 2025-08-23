@@ -4,26 +4,6 @@ import { ToolConfig } from '../../types';
 export const newsConfig: ToolConfig = {
   name: 'news',
   description: 'Get latest news headlines or search for specific news topics',
-  parameters: [
-    {
-      name: 'query',
-      type: 'string',
-      required: false,
-      description: 'Search query for specific news topics',
-    },
-    {
-      name: 'category',
-      type: 'string',
-      required: false,
-      description: 'News category (business, entertainment, health, science, sports, technology)',
-    },
-    {
-      name: 'limit',
-      type: 'number',
-      required: false,
-      description: 'Number of articles to return (default: 5)',
-    },
-  ],
   schema: z.object({
     query: z.string().optional().describe('Search query for specific news topics'),
     category: z.string().optional().describe('News category (business, entertainment, health, science, sports, technology)'),

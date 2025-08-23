@@ -4,14 +4,6 @@ import { ToolConfig } from '../../types';
 export const weatherConfig: ToolConfig = {
   name: 'weather',
   description: 'Get current weather information for a specific location',
-  parameters: [
-    {
-      name: 'location',
-      type: 'string',
-      required: true,
-      description: 'The city or location to get weather for',
-    },
-  ],
   schema: z.object({
     location: z.string().describe('The city or location to get weather for'),
   }),
