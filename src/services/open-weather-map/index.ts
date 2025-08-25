@@ -1,2 +1,2 @@
-export { getWeatherDetails } from './api';
+export { getCurrentWeather, getForecastWeather } from './api';
 export { WeatherDetails } from './types';

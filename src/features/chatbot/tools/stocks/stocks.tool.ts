@@ -1,7 +1,16 @@
 import { z } from 'zod';
 import { getStockDetailsBySymbol, StockDetails } from '@services/alpha-vantage';
-import { ToolExecutionContext, ToolInstance } from '../../types';
-import { stocksConfig } from './config';
+import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
+
+export const stocksConfig: ToolConfig = {
+  name: 'stocks',
+  description: 'Get latest stock prices',
+  schema: z.object({
+    symbol: z.string().min(1, 'Symbol cannot be empty'),
+  }),
+  keywords: ['stock', 'price', 'market', 'shares', 'trading', 'investment', 'finance'],
+  instructions: 'When users ask for stock prices, try to extract the stock symbol or company name. If no specific stock is mentioned, ask them to provide one.',
+};
 
 export class StocksTool implements ToolInstance {
   getName(): string {

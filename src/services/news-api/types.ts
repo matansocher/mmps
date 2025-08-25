@@ -1,7 +1,7 @@
-export interface NewsItem {
-  title: string;
-  description: string;
-  url: string;
-  publishedAt: string;
-  source: string;
-}
+export type NewsItem = {
+  readonly title: string;
+  readonly description: string;
+  readonly url: string;
+  readonly publishedAt: string;
+  readonly source: string;
+};

@@ -43,9 +43,7 @@ export class AiService {
       }
 
       const messages = state.values.messages;
-      const maxMessages = CHATBOT_CONFIG.maxThreadMessages;
-
-      if (messages.length <= maxMessages) {
+      if (messages.length <= CHATBOT_CONFIG.maxThreadMessages) {
         return;
       }
 
@@ -58,7 +56,7 @@ export class AiService {
         messagesToKeep.push(...systemMessages);
       }
 
-      const availableSlots = maxMessages - messagesToKeep.length;
+      const availableSlots = CHATBOT_CONFIG.maxThreadMessages - messagesToKeep.length;
 
       if (availableSlots > 0) {
         const recentMessages = nonSystemMessages.slice(-availableSlots);

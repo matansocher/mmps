@@ -1,4 +1,4 @@
-import { NewsTool, StocksTool, WeatherTool } from '../tools';
+import { CurrentWeatherTool, NewsTool, StocksTool, WeatherForecastTool } from '../tools';
 import { AgentDescriptor } from '../types';
 import { createLangChainTool } from './utils';
 
@@ -13,8 +13,10 @@ Your role:
 4. Handle errors gracefully: If a tool fails or provides incomplete data, let the user know and give the best answer you can without it.
 
 Available capabilities:
-- Weather tool: Get current weather for any location worldwide.
+- Current weather tool: Get current weather conditions for any location worldwide.
+- Weather forecast tool: Get weather forecasts for any location up to 5 days in the future.
 - News tool: Retrieve the latest headlines or search for specific news topics.
+- Stocks tool: Get current stock prices and market information.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Guidelines:
@@ -29,7 +31,7 @@ Guidelines:
 `;
 
 export function agent(): AgentDescriptor {
-  const toolClasses = [new WeatherTool(), new NewsTool(), new StocksTool()];
+  const toolClasses = [new CurrentWeatherTool(), new WeatherForecastTool(), new NewsTool(), new StocksTool()];
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
