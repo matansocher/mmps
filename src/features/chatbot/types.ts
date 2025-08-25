@@ -4,7 +4,6 @@ import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 
-// Agent descriptor for single agent
 export interface AgentDescriptor {
   name: string;
   description?: string;
@@ -12,26 +11,22 @@ export interface AgentDescriptor {
   tools: (DynamicTool | DynamicStructuredTool<any>)[];
 }
 
-// Orchestrator descriptor for multi-agent systems
 export interface OrchestratorDescriptor extends Omit<AgentDescriptor, 'description' | 'tools'> {
   agents: AgentDescriptor[];
   tools?: AgentDescriptor['tools'];
 }
 
-// Options for creating agent
 export interface CreateAgentOptions {
   llm: ChatOpenAI;
   checkpointSaver?: MemorySaver;
   responseFormat?: any;
 }
 
-// AI service configuration
 export interface AiServiceOptions {
   name: string;
   recursionLimit?: number;
 }
 
-// Service invoke options
 export interface InvokeOptions {
   threadId?: string;
   system?: string;
@@ -51,13 +46,11 @@ export interface ToolResult {
   error?: string;
 }
 
-// Message state for agent processing
 export interface MessageState {
   messages: BaseMessage[];
-  [key: string]: any; // Index signature for LangGraph compatibility
+  [key: string]: any; // index signature for LangGraph compatibility
 }
 
-// Tool parameter definition
 export interface ToolParameter {
   name: string;
   type: 'string' | 'number' | 'boolean';
@@ -65,7 +58,6 @@ export interface ToolParameter {
   description: string;
 }
 
-// Tool configuration
 export interface ToolConfig {
   name: string;
   description: string;
@@ -74,13 +66,11 @@ export interface ToolConfig {
   instructions?: string;
 }
 
-// Tool execution context
 export interface ToolExecutionContext {
   userRequest: string;
   parameters: Record<string, any>;
 }
 
-// Tool instance interface (for existing tools)
 export interface ToolInstance {
   getName(): string;
   getDescription(): string;
