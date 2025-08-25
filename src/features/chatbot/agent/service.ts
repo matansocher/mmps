@@ -32,7 +32,7 @@ export class AiService {
     return config;
   }
 
-  private async truncateThreadIfNeeded(threadId?: string): Promise<void> {
+  private async truncateThread(threadId?: string): Promise<void> {
     if (!threadId) return;
 
     try {
@@ -49,25 +49,20 @@ export class AiService {
         return;
       }
 
-      // Separate system messages and regular messages
       const systemMessages = messages.filter((msg) => msg._getType() === 'system');
       const nonSystemMessages = messages.filter((msg) => msg._getType() !== 'system');
 
       const messagesToKeep = [];
 
-      // Always preserve system messages if configured
       if (CHATBOT_CONFIG.preserveSystemMessages) {
         messagesToKeep.push(...systemMessages);
       }
 
-      // Calculate how many non-system messages we can keep
       const availableSlots = maxMessages - messagesToKeep.length;
 
       if (availableSlots > 0) {
-        // Keep the most recent non-system messages
         const recentMessages = nonSystemMessages.slice(-availableSlots);
 
-        // If configured to preserve first message and we have room, include it
         if (CHATBOT_CONFIG.preserveFirstMessage && nonSystemMessages.length > 0 && availableSlots > 1) {
           const firstMessage = nonSystemMessages[0];
           const recentWithoutFirst = recentMessages.filter((msg) => msg !== firstMessage);
@@ -84,28 +79,26 @@ export class AiService {
         }
       }
 
-      // Sort messages by their original order (assuming they have timestamps or indices)
-      messagesToKeep.sort((a, b) => {
-        const aIndex = messages.indexOf(a);
-        const bIndex = messages.indexOf(b);
-        return aIndex - bIndex;
-      });
+      messagesToKeep.sort((a, b) => messages.indexOf(a) - messages.indexOf(b));
 
-      // Update the thread state with truncated messages
       await this.agent.updateState({ configurable: { thread_id: threadId } }, { messages: messagesToKeep });
 
       console.log(`[AiService] Thread ${threadId} truncated from ${messages.length} to ${messagesToKeep.length} messages`);
     } catch (error) {
       console.error(`[AiService] Error truncating thread ${threadId}:`, error);
-      // Don't throw - continue with the original request even if truncation fails
     }
   }
 
   async invoke(message: string, opts: Partial<InvokeOptions> = {}) {
+    await this.truncateThread(opts.threadId);
+
     return this.agent.invoke(createMessage(message, opts), this.createOptions(opts));
   }
 
   stream(message: string, opts: Partial<InvokeOptions> = {}) {
+    // truncation is async but we don't await it to avoid blocking the stream
+    this.truncateThread(opts.threadId);
+
     return this.agent.stream(createMessage(message, opts), this.createOptions(opts));
   }
 
