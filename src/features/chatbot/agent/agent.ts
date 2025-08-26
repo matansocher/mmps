@@ -1,4 +1,15 @@
-import { AudioTranscriberTool, CurrentWeatherTool, ImageAnalyzerTool, NewsTool, StocksTool, TextToSpeechTool, WeatherForecastTool } from '../tools';
+import {
+  AudioTranscriberTool,
+  CompetitionMatchesTool,
+  CompetitionTableTool,
+  CurrentWeatherTool,
+  ImageAnalyzerTool,
+  MatchSummaryTool,
+  NewsTool,
+  StocksTool,
+  TextToSpeechTool,
+  WeatherForecastTool,
+} from '../tools';
 import { AgentDescriptor } from '../types';
 import { createLangChainTool } from './utils';
 
@@ -20,10 +31,12 @@ Available capabilities:
 - Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
 - Audio transcriber tool: Transcribe audio files and voice messages to text.
 - Text-to-speech tool: Convert text to speech and generate audio files.
+- Football/Sports tools: Get match results, league tables and upcoming fixtures.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Guidelines:
 - Be concise but informative: Deliver answers in clear, digestible form.
+- Try to use emojis where appropriate to enhance engagement.
 - Use tools only when needed: Don't call tools unnecessarily if you can answer directly.
 - Error handling: If a tool fails, acknowledge it politely and try to assist with alternative info.
 - Politeness: Always be respectful, approachable, and professional.
@@ -34,11 +47,11 @@ Guidelines:
 - Image analysis: When a user provides an image URL or asks you to analyze an image, use the image analyzer tool to provide detailed descriptions of what you see in the image.
 - Audio transcription: When provided with an audio file path, use the audio transcriber tool to convert speech to text.
 - Text-to-speech: When users request audio output or want to hear text spoken aloud, use the text-to-speech tool to generate voice audio.
+- Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 `;
 
 export function agent(): AgentDescriptor {
   const toolClasses = [
-    // br
     new CurrentWeatherTool(),
     new WeatherForecastTool(),
     new NewsTool(),
@@ -46,11 +59,14 @@ export function agent(): AgentDescriptor {
     new ImageAnalyzerTool(),
     new AudioTranscriberTool(),
     new TextToSpeechTool(),
+    new MatchSummaryTool(),
+    new CompetitionTableTool(),
+    new CompetitionMatchesTool(),
   ];
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, image analysis, audio transcription, and text-to-speech',
+    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, image analysis, audio transcription, text-to-speech, and football/sports information',
     tools: toolClasses.map((tool) => createLangChainTool(tool)),
   };
 }
