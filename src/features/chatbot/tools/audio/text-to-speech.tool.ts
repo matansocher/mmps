@@ -1,7 +1,6 @@
 import fs from 'fs/promises';
 import { z } from 'zod';
 import { LOCAL_FILES_PATH } from '@core/config';
-import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
 import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 

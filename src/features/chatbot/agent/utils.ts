@@ -12,10 +12,7 @@ export function createLangChainTool(tool: ToolInstance): DynamicStructuredTool {
     schema: tool.getSchema(),
     func: async (input: Record<string, any>) => {
       try {
-        const result = await tool.execute({
-          userRequest: '',
-          parameters: input,
-        });
+        const result = await tool.execute({ userRequest: '', parameters: input });
         return JSON.stringify(result);
       } catch (error) {
         return `Error: ${error.message}`;
