@@ -47,7 +47,6 @@ export class CompetitionTableTool implements ToolInstance {
         return `No table data available for competition ID ${competitionId}.`;
       }
 
-      // Format the table
       let result = `**${tableDetails.competition.name} - League Table**\n\n`;
 
       result += '```\n';

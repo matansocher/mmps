@@ -1,6 +1,7 @@
 import {
   AudioTranscriberTool,
   CompetitionMatchesTool,
+  CompetitionsListTool,
   CompetitionTableTool,
   CurrentWeatherTool,
   ImageAnalyzerTool,
@@ -31,7 +32,7 @@ Available capabilities:
 - Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
 - Audio transcriber tool: Transcribe audio files and voice messages to text.
 - Text-to-speech tool: Convert text to speech and generate audio files.
-- Football/Sports tools: Get match results, league tables and upcoming fixtures.
+- Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Guidelines:
@@ -62,6 +63,7 @@ export function agent(): AgentDescriptor {
     new MatchSummaryTool(),
     new CompetitionTableTool(),
     new CompetitionMatchesTool(),
+    new CompetitionsListTool(),
   ];
   return {
     name: AGENT_NAME,

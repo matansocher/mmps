@@ -11,6 +11,7 @@ export { AudioTranscriberTool } from './audio/audio-transcriber.tool';
 
 export { TextToSpeechTool } from './audio/text-to-speech.tool';
 
-export { MatchSummaryTool } from './sports/match-summary.tool';
-export { CompetitionTableTool } from './sports/competition-table.tool';
 export { CompetitionMatchesTool } from './sports/competition-matches.tool';
+export { CompetitionTableTool } from './sports/competition-table.tool';
+export { CompetitionsListTool } from './sports/competitions-list.tool';
+export { MatchSummaryTool } from './sports/match-summary.tool';

@@ -59,18 +59,9 @@ export class CompetitionMatchesTool implements ToolInstance {
         result += `🏟️ **${homeTeam} vs ${awayTeam}**\n`;
         result += `📅 ${startTime}\n`;
         result += `📊 Status: ${status}\n`;
-
-        if (match.venue) {
-          result += `📍 Venue: ${match.venue}\n`;
-        }
-
-        if (match.stage) {
-          result += `🏆 Stage: ${match.stage}\n`;
-        }
-
-        if (match.channel) {
-          result += `📺 TV: ${match.channel}\n`;
-        }
+        result += match.venue ? `📍 Venue: ${match.venue}\n` : '';
+        result += match.stage ? `🏆 Stage: ${match.stage}\n` : '';
+        result += match.channel ? `📺 TV: ${match.channel}\n` : '';
 
         result += '\n';
       });
