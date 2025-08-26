@@ -1,8 +1,10 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { env } from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
+import { CHAT_COMPLETIONS_MODEL } from '@services/openai/constants';
 import { agent } from './agent';
 import { AiService, createAgent } from './agent';
+import { ChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
 @Injectable()
@@ -12,24 +14,25 @@ export class ChatbotService {
 
   constructor() {
     const llm = new ChatOpenAI({
-      modelName: 'gpt-4',
+      modelName: CHAT_COMPLETIONS_MODEL,
       temperature: 0.7,
       openAIApiKey: env.OPENAI_API_KEY,
     });
     this.aiService = createAgent(agent(), { llm });
   }
 
-  async processMessage(message: string, chatId: string): Promise<string> {
+  async processMessage(message: string, chatId: string): Promise<ChatbotResponse> {
     try {
       const systemContext = `User ID: ${chatId}. Current time: ${new Date().toISOString()}.`;
-
       const result = await this.aiService.invoke(message, { threadId: chatId, system: systemContext });
-
-      const response = formatAgentResponse(result, chatId);
-      return response.message;
+      return formatAgentResponse(result, chatId);
     } catch (error) {
       this.logger.error(`Error processing message for user ${chatId}:`, error);
-      return 'I apologize, but I encountered an error while processing your request. Please try again.';
+      return {
+        message: 'I apologize, but I encountered an error while processing your request. Please try again.',
+        toolResults: [],
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 }

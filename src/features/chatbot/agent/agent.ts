@@ -1,4 +1,4 @@
-import { CurrentWeatherTool, NewsTool, StocksTool, WeatherForecastTool } from '../tools';
+import { AudioTranscriberTool, CurrentWeatherTool, ImageAnalyzerTool, NewsTool, StocksTool, TextToSpeechTool, WeatherForecastTool } from '../tools';
 import { AgentDescriptor } from '../types';
 import { createLangChainTool } from './utils';
 
@@ -17,25 +17,40 @@ Available capabilities:
 - Weather forecast tool: Get weather forecasts for any location up to 5 days in the future.
 - News tool: Retrieve the latest headlines or search for specific news topics.
 - Stocks tool: Get current stock prices and market information.
+- Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
+- Audio transcriber tool: Transcribe audio files and voice messages to text.
+- Text-to-speech tool: Convert text to speech and generate audio files.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Guidelines:
 - Be concise but informative: Deliver answers in clear, digestible form.
-- Use tools only when needed: Don’t call tools unnecessarily if you can answer directly.
+- Use tools only when needed: Don't call tools unnecessarily if you can answer directly.
 - Error handling: If a tool fails, acknowledge it politely and try to assist with alternative info.
 - Politeness: Always be respectful, approachable, and professional.
 - formatting: use markdown for any lists, code snippets, or structured data for readability.
 - Format news results in a readable way with titles, descriptions, and sources, and any relevant links.
 - Format weather information clearly with temperature, conditions, and location, and any relevant links.
 - Format stocks information clearly with current price, change, and relevant details, and any relevant links.
+- Image analysis: When a user provides an image URL or asks you to analyze an image, use the image analyzer tool to provide detailed descriptions of what you see in the image.
+- Audio transcription: When provided with an audio file path, use the audio transcriber tool to convert speech to text.
+- Text-to-speech: When users request audio output or want to hear text spoken aloud, use the text-to-speech tool to generate voice audio.
 `;
 
 export function agent(): AgentDescriptor {
-  const toolClasses = [new CurrentWeatherTool(), new WeatherForecastTool(), new NewsTool(), new StocksTool()];
+  const toolClasses = [
+    // br
+    new CurrentWeatherTool(),
+    new WeatherForecastTool(),
+    new NewsTool(),
+    new StocksTool(),
+    new ImageAnalyzerTool(),
+    new AudioTranscriberTool(),
+    new TextToSpeechTool(),
+  ];
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description: 'A helpful AI assistant chatbot with access to weather, news and stocks information',
+    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, image analysis, audio transcription, and text-to-speech',
     tools: toolClasses.map((tool) => createLangChainTool(tool)),
   };
 }
