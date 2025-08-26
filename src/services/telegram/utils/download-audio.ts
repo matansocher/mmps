@@ -17,3 +17,7 @@ export async function downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, a
   }
   return { audioFileLocalPath, videoFileLocalPath };
 }
+
+export async function downloadAudio(bot: TelegramBot, audio, localFilePath: string): Promise<string> {
+  return bot.downloadFile(audio.file_id, localFilePath);
+}

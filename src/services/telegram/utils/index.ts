@@ -1,4 +1,4 @@
-export { downloadAudioFromVideoOrAudio } from './download-audio-from-video-or-audio';
+export { downloadAudioFromVideoOrAudio, downloadAudio } from './download-audio';
 export { getCallbackQueryData } from './get-callback-query-data';
 export { getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup } from './get-inline-keyboard-markup';
 export { getMessageData } from './get-message-data';
