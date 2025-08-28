@@ -4,7 +4,7 @@ import { findLocation } from './find-location';
 describe('findLocation', () => {
   it('should return the correct location when chatId matches', () => {
     const result = findLocation(1332013273);
-    expect(result).toEqual(LOCATIONS.tootie);
+    expect(result).toEqual(LOCATIONS.toodie);
   });
 
   it('should return the correct location when chatId matches work location', () => {

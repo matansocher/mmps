@@ -3,7 +3,7 @@ import { getTranscriptFromAudio } from '@services/openai';
 import { listen, sendMessage, TelegramMessage } from '@services/telegram-client';
 
 const contacts = {
-  tootie: { chatId: '1332013273', name: 'Toodie', number: '+972546602785' },
+  toodie: { chatId: '1332013273', name: 'Toodie', number: '+972546602785' },
   matan: { chatId: '862305226', name: 'Matan', number: '+972545429402' },
 };
 

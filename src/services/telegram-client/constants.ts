@@ -13,7 +13,7 @@ export const CHANNELS = {
   A_MOMENT_BEFORE: { id: '1254419329', name: `A moment before...` },
   GEEKTIME: { id: '1282228958', name: `גיקטיים - Geektime` },
   TRANSFERMARKT: { id: '1304106162', name: `Transfermarkt` },
-  TOOTIE: { id: '1332013273', name: `Tootie 🦔` },
+  TOODIE: { id: '1332013273', name: `Toodie 🦔` },
   ERAN_SWISSA: { id: '1333986900', name: `ערן סויסה חדשות הבידור` },
   CALCALIST: { id: '1353662238', name: `כלכליסט` },
   TRANSFER_NEWS_FOOTBALL: { id: '1362880510', name: `Transfer News Football` },
