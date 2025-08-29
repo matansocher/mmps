@@ -37,13 +37,7 @@ export class ImageGeneratorTool implements ToolInstance {
     const { prompt } = context.parameters;
 
     try {
-      if (!prompt || prompt.trim().length < 3) {
-        throw new Error('Prompt is too short or empty. Please provide a more detailed description of the image you want to generate.');
-      }
-
-      const result = await generateImage(prompt);
-
-      return `🎨 Image generated successfully! Here's your image based on the prompt: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"\n\n${result}`;
+      return generateImage(prompt);
     } catch (error) {
       console.error('Error generating image:', error);
       throw new Error(`Failed to generate image: ${error.message}`);
