@@ -5,7 +5,7 @@ import { LOCAL_FILES_PATH } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
-import { downloadAudio, getBotToken, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, TelegramMessageData } from '@services/telegram';
+import { downloadAudio, getBotToken, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
@@ -56,8 +56,8 @@ export class ChatbotController implements OnModuleInit {
         try {
           await this.bot.sendVoice(chatId, audioFilePath);
           deleteFile(audioFilePath);
-        } catch (error) {
-          this.logger.error(`Error sending voice message:`, error);
+        } catch (err) {
+          this.logger.error(`Error sending voice message: ${err}`);
           await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
         }
       } else {

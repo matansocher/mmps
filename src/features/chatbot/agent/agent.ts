@@ -5,6 +5,8 @@ import {
   CompetitionTableTool,
   CurrentWeatherTool,
   ImageAnalyzerTool,
+  ImageGeneratorPromptEnhancerTool,
+  ImageGeneratorTool,
   MatchSummaryTool,
   NewsTool,
   StocksTool,
@@ -32,6 +34,8 @@ Available capabilities:
 - Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
 - Audio transcriber tool: Transcribe audio files and voice messages to text.
 - Text-to-speech tool: Convert text to speech and generate audio files.
+- Image Generator Prompt Enhancer tool: ALWAYS use this tool FIRST when a user requests image generation. It enhances basic prompts to produce better, more detailed results.
+- Image Generator tool: Use this tool SECOND, after the prompt enhancer, with the enhanced prompt to generate the actual image.
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
@@ -57,6 +61,8 @@ export function agent(): AgentDescriptor {
     new WeatherForecastTool(),
     new NewsTool(),
     new StocksTool(),
+    new ImageGeneratorPromptEnhancerTool(),
+    new ImageGeneratorTool(),
     new ImageAnalyzerTool(),
     new AudioTranscriberTool(),
     new TextToSpeechTool(),
@@ -68,7 +74,7 @@ export function agent(): AgentDescriptor {
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, image analysis, audio transcription, text-to-speech, and football/sports information',
+    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, image generator, image analysis, audio transcription, text-to-speech, and football/sports information',
     tools: toolClasses.map((tool) => createLangChainTool(tool)),
   };
 }
