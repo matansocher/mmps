@@ -1,1 +1,1 @@
-export { createImage } from './utils/create-image';
+export { generateImage } from './utils/generate-image';

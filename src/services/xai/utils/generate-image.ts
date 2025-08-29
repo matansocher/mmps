@@ -1,7 +1,7 @@
 import { IMAGE_GENERATION_MODEL } from '../constants';
 import { provideXAiClient } from '../provide-xai-client';
 
-export async function createImage(prompt: string): Promise<string> {
+export async function generateImage(prompt: string): Promise<string> {
   const client = provideXAiClient();
   const response = await client.images.generate({
     model: IMAGE_GENERATION_MODEL,

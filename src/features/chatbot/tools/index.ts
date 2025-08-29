@@ -6,6 +6,8 @@ export { WeatherForecastTool } from './weather/weather-forecast.tool';
 export { NewsTool } from './news/news.tool';
 
 export { ImageAnalyzerTool } from './image/image-analyzer.tool';
+export { ImageGeneratorTool } from './image/image-generation.tool';
+export { ImageGeneratorPromptEnhancerTool } from './image/image-generation-prompt-enhancer.tool';
 
 export { AudioTranscriberTool } from './audio/audio-transcriber.tool';
 
