@@ -1,7 +1,7 @@
-import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
 import { env } from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
-import { CHAT_COMPLETIONS_MODEL } from '@services/openai/constants';
+import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
 import { agent } from './agent';
 import { AiService, createAgent } from './agent';
 import { ChatbotResponse } from './types';
@@ -13,10 +13,10 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor() {
-    const llm = new ChatOpenAI({
-      modelName: CHAT_COMPLETIONS_MODEL,
+    const llm = new ChatAnthropic({
+      modelName: ANTHROPIC_OPUS_MODEL,
       temperature: 0.7,
-      openAIApiKey: env.OPENAI_API_KEY,
+      apiKey: env.ANTHROPIC_API_KEY,
     });
     this.aiService = createAgent(agent(), { llm });
   }

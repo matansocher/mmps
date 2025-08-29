@@ -1,7 +1,7 @@
+import { ChatAnthropic } from '@langchain/anthropic';
 import { BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { MemorySaver } from '@langchain/langgraph';
-import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 
 export interface AgentDescriptor {
@@ -17,7 +17,7 @@ export interface OrchestratorDescriptor extends Omit<AgentDescriptor, 'descripti
 }
 
 export interface CreateAgentOptions {
-  llm: ChatOpenAI;
+  llm: ChatAnthropic;
   checkpointSaver?: MemorySaver;
   responseFormat?: any;
 }

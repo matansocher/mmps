@@ -1,12 +1,10 @@
-import fs from 'fs/promises';
 import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
-import { MessageType, NotifierService } from '@core/notifier';
+import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
-import { getAudioFromText } from '@services/openai';
 import { downloadAudio, getBotToken, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, TelegramMessageData } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
