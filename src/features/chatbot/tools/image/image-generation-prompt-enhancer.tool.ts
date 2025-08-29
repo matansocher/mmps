@@ -4,12 +4,12 @@ import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 
 export const imageGeneratorToolPromptEnhancerConfig: ToolConfig = {
   name: 'image_generator_prompt_enhancer',
-  description: 'Generate enhanced prompts for image generation based on the provided prompt, so the image is more detailed and accurate.',
+  description: 'Enhance and improve prompts for image generation to make them more detailed, specific, and likely to produce better results. This tool should be used BEFORE generating images.',
   schema: z.object({
-    prompt: z.string().describe('The user prompt to generate the enhanced prompt.'),
+    prompt: z.string().describe('The basic user prompt that needs to be enhanced for better image generation results.'),
   }),
-  keywords: ['image', 'generate', 'picture', 'photo', 'create', 'visual'],
-  instructions: 'Use this tool to enhance the user prompt before using the image generator tool to get better results.',
+  keywords: ['enhance', 'improve', 'prompt', 'better', 'detailed', 'refine'],
+  instructions: 'Use this tool FIRST when a user wants to generate an image. It will enhance their basic prompt to produce better, more detailed results.',
 };
 
 export class ImageGeneratorPromptEnhancerTool implements ToolInstance {
@@ -33,17 +33,52 @@ export class ImageGeneratorPromptEnhancerTool implements ToolInstance {
     return imageGeneratorToolPromptEnhancerConfig.instructions || '';
   }
 
-  async execute(context: ToolExecutionContext): Promise<any> {
-    // $$$$$$$$$$$$$$$$$$$
+  async execute(context: ToolExecutionContext): Promise<string> {
     const { prompt } = context.parameters;
 
     try {
-      const systemPrompt = `You are an expert prompt enhancer for an image generation AI model. Your task is to take a user's prompt and enhance it by adding more detail, context, and specificity to improve the quality of the generated image. Make sure to keep the original intent of the user's prompt while making it more descriptive.`;
-      const result = await getChatCompletion(systemPrompt, prompt);
-      return result.content;
+      if (!prompt || prompt.trim().length < 2) {
+        throw new Error('Prompt is too short. Please provide a basic description of what you want to generate.');
+      }
+
+      const enhancementPrompt = [
+        'Enhance this image generation prompt by adding specific artistic details, style, lighting, composition, and quality descriptors while keeping the original intent. Return only the enhanced prompt without explanations. make sure that the prompt length is not longer than 1023 characters.',
+        `Original: "${prompt}"`,
+        'Enhanced version:',
+      ].join('\n');
+
+      const result = await getChatCompletion('', enhancementPrompt);
+
+      let enhancedPrompt = '';
+      if (Array.isArray(result.content)) {
+        enhancedPrompt = result.content
+          .filter((item) => item.type === 'text')
+          .map((item) => item.text)
+          .join(' ');
+      } else {
+        enhancedPrompt = result.content;
+      }
+
+      enhancedPrompt = enhancedPrompt.trim();
+
+      const prefixesToRemove = ['Enhanced version:', 'Enhanced prompt:', 'Here is the enhanced prompt:', 'Enhanced:'];
+
+      for (const prefix of prefixesToRemove) {
+        if (enhancedPrompt.toLowerCase().startsWith(prefix.toLowerCase())) {
+          enhancedPrompt = enhancedPrompt.substring(prefix.length).trim();
+        }
+      }
+
+      // Ensure we have a meaningful result
+      if (!enhancedPrompt) {
+        throw new Error('Enhancement failed to produce meaningful result');
+      }
+
+      return `✨ Enhanced prompt: ${enhancedPrompt.slice(0, 1023)}`;
     } catch (error) {
-      console.error('Error analyzing image:', error);
-      throw new Error(`Failed to analyze image: ${error.message}`);
+      console.error('Error enhancing prompt:', error);
+      const fallbackPrompt = `${prompt}, highly detailed, professional quality, vibrant colors, excellent composition, sharp focus, 4K resolution`;
+      return `✨ Enhanced prompt (fallback): ${fallbackPrompt}`;
     }
   }
 }
