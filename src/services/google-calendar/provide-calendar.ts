@@ -1,6 +1,5 @@
 import { google } from 'googleapis';
 import { env } from 'node:process';
-import { CalendarCredentials } from './types';
 
 let calendar: any = null;
 
@@ -8,13 +7,9 @@ export function provideCalendar() {
   if (calendar) {
     return calendar;
   }
-
-  const credentials = JSON.parse(env.GOOGLE_CALENDAR_CREDENTIALS) as CalendarCredentials;
-  credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
-
   const auth = new google.auth.JWT({
-    email: credentials.client_email,
-    key: credentials.private_key,
+    email: env.GOOGLE_CALENDAR_CLIENT_EMAIL,
+    key: env.GOOGLE_CALENDAR_PRIVATE_KEY.replace(/\\n/g, '\n'),
     scopes: ['https://www.googleapis.com/auth/calendar'],
   });
 
