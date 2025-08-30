@@ -19,4 +19,5 @@ export const CHATBOT_CONFIG = {
 export const ANALYTIC_EVENT_NAMES = {
   START: 'START',
   MESSAGE: 'MESSAGE',
+  ERROR: 'ERROR',
 };
