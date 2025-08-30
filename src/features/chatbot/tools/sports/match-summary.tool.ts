@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { generateMatchResultsString } from '@features/coach/utils';
 import { getCompetitions, getMatchesSummaryDetails } from '@services/scores-365';
 import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 
@@ -60,30 +61,7 @@ export class MatchSummaryTool implements ToolInstance {
         return `No matches found for the specified competitions on ${date}.`;
       }
 
-      // Format the results
-      let result = `**Football Match Results for ${date}**\n\n`;
-
-      filteredSummary.forEach((competitionDetail) => {
-        result += `**${competitionDetail.competition.name}**\n`;
-
-        competitionDetail.matches.forEach((match) => {
-          const homeTeam = match.homeCompetitor.name;
-          const awayTeam = match.awayCompetitor.name;
-          const homeScore = match.homeCompetitor.score;
-          const awayScore = match.awayCompetitor.score;
-          const status = match.statusText;
-
-          result += `• ${homeTeam} ${homeScore} - ${awayScore} ${awayTeam} (${status})\n`;
-
-          if (match.venue) {
-            result += `  📍 ${match.venue}\n`;
-          }
-        });
-
-        result += '\n';
-      });
-
-      return result.trim();
+      return generateMatchResultsString(filteredSummary);
     } catch (error) {
       console.error('Error fetching match summary:', error);
       throw new Error(`Failed to fetch match results: ${error.message}`);

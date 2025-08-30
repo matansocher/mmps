@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { generateCompetitionMatchesString } from '@features/coach/utils';
 import { getCompetitionMatches } from '@services/scores-365';
 import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 
@@ -47,26 +48,7 @@ export class CompetitionMatchesTool implements ToolInstance {
         return `No upcoming matches found for competition ID ${competitionId}.`;
       }
 
-      // Format the matches
-      let result = `**${matchesData.competition.name} - Upcoming Matches**\n\n`;
-
-      matchesData.matches.forEach((match) => {
-        const homeTeam = match.homeCompetitor.name;
-        const awayTeam = match.awayCompetitor.name;
-        const startTime = new Date(match.startTime).toLocaleString();
-        const status = match.statusText;
-
-        result += `🏟️ **${homeTeam} vs ${awayTeam}**\n`;
-        result += `📅 ${startTime}\n`;
-        result += `📊 Status: ${status}\n`;
-        result += match.venue ? `📍 Venue: ${match.venue}\n` : '';
-        result += match.stage ? `🏆 Stage: ${match.stage}\n` : '';
-        result += match.channel ? `📺 TV: ${match.channel}\n` : '';
-
-        result += '\n';
-      });
-
-      return result.trim();
+      return generateCompetitionMatchesString(matchesData);
     } catch (error) {
       console.error('Error fetching competition matches:', error);
       throw new Error(`Failed to fetch competition matches: ${error.message}`);
