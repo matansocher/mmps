@@ -95,7 +95,8 @@ If you want to use a specific calendar instead of the primary calendar:
 
 ```bash
 # Required: Google Calendar credentials (paste the entire JSON content as a single line)
-GOOGLE_CALENDAR_CREDENTIALS='{"type":"service_account","project_id":"your-project","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"...@....iam.gserviceaccount.com","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"..."}'
+# IMPORTANT: Keep the \n characters in the private_key field - they will be converted to actual newlines
+GOOGLE_CALENDAR_CREDENTIALS='{"type":"service_account","project_id":"your-project","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqh...\n-----END PRIVATE KEY-----\n","client_email":"...@....iam.gserviceaccount.com","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"..."}'
 
 # Optional: Specific calendar ID (defaults to 'primary' if not set)
 GOOGLE_CALENDAR_ID=your-calendar-id@group.calendar.google.com
@@ -106,11 +107,13 @@ GOOGLE_CALENDAR_TIMEZONE=America/New_York
 
 **Important Notes:**
 - The `GOOGLE_CALENDAR_CREDENTIALS` must be a valid JSON string on a single line
-- Replace all the placeholder values with your actual credentials
-- To convert the downloaded JSON file to a single line:
-  - Open the JSON file in a text editor
-  - Remove all line breaks (you can use an online JSON minifier)
-  - Wrap the entire JSON in single quotes
+- **CRITICAL**: Keep the `\n` characters in the private_key field exactly as they appear in the downloaded JSON
+- The application will automatically convert `\n` to actual newlines when parsing
+- To prepare the credentials:
+  1. Open the downloaded JSON file
+  2. Copy the entire content
+  3. Use a JSON minifier to make it a single line (but preserve the `\n` in the private_key)
+  4. Wrap the entire JSON string in single quotes
 
 ### Option 2: Using a Credentials File (For Development)
 

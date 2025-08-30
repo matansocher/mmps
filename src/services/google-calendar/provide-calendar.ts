@@ -10,12 +10,16 @@ export function provideCalendar() {
   }
 
   const credentials = JSON.parse(env.GOOGLE_CALENDAR_CREDENTIALS) as CalendarCredentials;
+  if (credentials.private_key) {
+    credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+  }
 
   const auth = new google.auth.JWT({
     email: credentials.client_email,
     key: credentials.private_key,
     scopes: ['https://www.googleapis.com/auth/calendar'],
   });
+
   calendar = google.calendar({ version: 'v3', auth: auth });
   return calendar;
 }
