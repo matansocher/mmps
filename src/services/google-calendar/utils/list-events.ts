@@ -1,7 +1,8 @@
+import { DEFAULT_CALENDAR_ID } from '../constants';
 import { provideCalendar } from '../provide-calendar';
 import { CalendarEvent, CalendarListOptions } from '../types';
 
-export async function listEvents(options?: CalendarListOptions, calendarId = 'primary'): Promise<CalendarEvent[]> {
+export async function listEvents(options?: CalendarListOptions, calendarId = DEFAULT_CALENDAR_ID): Promise<CalendarEvent[]> {
   const calendar = provideCalendar();
   const params: any = { calendarId, singleEvents: options?.singleEvents !== false, orderBy: options?.orderBy || 'startTime' };
 
