@@ -178,6 +178,4 @@ export class CalendarEventTool implements ToolInstance {
       message: `✅ Event has been deleted successfully!`,
     };
   }
-
-  private formatEvent(event: CalendarEvent): any {}
 }
