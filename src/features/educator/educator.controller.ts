@@ -199,11 +199,12 @@ export class EducatorController implements OnModuleInit {
 
   private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
     const topicParticipation = await this.topicParticipationDB.markTopicParticipationCompleted(topicParticipationId);
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
-    await reactToMessage(this.botToken, chatId, messageId, '😎');
-
-    const threadMessages = topicParticipation.threadMessages || [];
-    await Promise.all(threadMessages.map((messageId) => this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {})));
+    const messagesToUpdate = [messageId, ...(topicParticipation?.threadMessages || [])];
+    await Promise.all(
+      messagesToUpdate.map(async (messageId) => {
+        await Promise.all([this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {}), reactToMessage(this.botToken, chatId, messageId, '😎')]);
+      }),
+    );
 
     this.educatorService.generateTopicSummary(topicParticipationId);
   }

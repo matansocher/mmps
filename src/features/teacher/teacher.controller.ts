@@ -216,11 +216,12 @@ export class TeacherController implements OnModuleInit {
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
     const courseParticipation = await this.courseParticipationDB.markCourseParticipationCompleted(courseParticipationId);
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
-    await reactToMessage(this.botToken, chatId, messageId, '😎');
-
-    const threadMessages = courseParticipation.threadMessages || [];
-    await Promise.all(threadMessages.map((messageId) => this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {})));
+    const messagesToUpdate = [messageId, ...(courseParticipation?.threadMessages || [])];
+    await Promise.all(
+      messagesToUpdate.map(async (message) => {
+        await Promise.all([this.bot.editMessageReplyMarkup(undefined, { message_id: message, chat_id: chatId }).catch(() => {}), reactToMessage(this.botToken, chatId, message, '😎')]);
+      }),
+    );
 
     this.teacherService.generateCourseSummary(courseParticipationId);
   }
