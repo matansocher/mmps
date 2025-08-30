@@ -1,5 +1,6 @@
 import {
   AudioTranscriberTool,
+  CalendarEventTool,
   CompetitionMatchesTool,
   CompetitionsListTool,
   CompetitionTableTool,
@@ -38,6 +39,7 @@ Available capabilities:
 - Weather forecast tool: Get weather forecasts for any location up to 5 days in the future.
 - News tool: Retrieve the latest headlines or search for specific news topics.
 - Stocks tool: Get current stock prices and market information.
+- Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
 - Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
 - Audio transcriber tool: Transcribe audio files and voice messages to text.
 - Text-to-speech tool: Convert text to speech and generate audio files.
@@ -59,6 +61,7 @@ Guidelines:
 - Image analysis: When a user provides an image URL or asks you to analyze an image, use the image analyzer tool to provide detailed descriptions of what you see in the image.
 - Audio transcription: When provided with an audio file path, use the audio transcriber tool to convert speech to text.
 - Text-to-speech: When users request audio output or want to hear text spoken aloud, use the text-to-speech tool to generate voice audio.
+- Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 `;
 
@@ -68,6 +71,7 @@ export function agent(): AgentDescriptor {
     new WeatherForecastTool(),
     new NewsTool(),
     new StocksTool(),
+    new CalendarEventTool(),
     new ImageGeneratorPromptEnhancerTool(),
     new ImageGeneratorTool(),
     new ImageAnalyzerTool(),
@@ -81,7 +85,7 @@ export function agent(): AgentDescriptor {
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, image generator, image analysis, audio transcription, text-to-speech, and football/sports information',
+    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, calendar, image generator, image analysis, audio transcription, text-to-speech, and football/sports information',
     tools: toolClasses.map((tool) => createLangChainTool(tool)),
   };
 }
