@@ -1,6 +1,17 @@
 import { get as _get } from 'lodash';
-import type { CallbackQuery } from 'node-telegram-bot-api';
-import type { TelegramCallbackQueryData } from '../types';
+import { CallbackQuery, InlineKeyboardMarkup } from 'node-telegram-bot-api';
+import { UserDetails } from '../types';
+
+interface TelegramCallbackQueryData {
+  readonly messageId: number;
+  readonly callbackQueryId: string;
+  readonly chatId: number;
+  readonly date: number;
+  readonly userDetails: UserDetails;
+  readonly text: string;
+  readonly data: string;
+  readonly replyMarkup: InlineKeyboardMarkup;
+}
 
 export function getCallbackQueryData(callbackQuery: CallbackQuery): TelegramCallbackQueryData {
   return {

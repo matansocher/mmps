@@ -1,11 +1,15 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { BOT_BROADCAST_ACTIONS } from '../constants';
-import type { MessageLoaderOptions } from '../types';
 import { reactToMessage } from '../utils';
 
-const LOADER_MESSAGE = 'Loading...';
 const SHOW_AFTER_MS = 3000;
 const DELETE_AFTER_NO_RESPONSE_MS = 15000;
+
+export interface MessageLoaderOptions {
+  readonly loaderMessage?: string;
+  readonly reactionEmoji?: string;
+  readonly loadingAction?: BOT_BROADCAST_ACTIONS;
+}
 
 export class MessageLoader {
   private readonly bot: TelegramBot;
@@ -15,7 +19,6 @@ export class MessageLoader {
   private readonly loaderMessage: string;
   private readonly reactionEmoji: string;
   private readonly loadingAction: BOT_BROADCAST_ACTIONS;
-  private readonly noMessage: boolean;
 
   private timeoutId?: NodeJS.Timeout;
   private loaderMessageId?: number;
@@ -25,10 +28,9 @@ export class MessageLoader {
     this.botToken = botToken;
     this.chatId = chatId;
     this.messageId = messageId;
-    this.loaderMessage = options.loaderMessage || LOADER_MESSAGE;
+    this.loaderMessage = options.loaderMessage;
     this.reactionEmoji = options.reactionEmoji;
     this.loadingAction = options.loadingAction || BOT_BROADCAST_ACTIONS.TYPING;
-    this.noMessage = options.noMessage;
   }
 
   async handleMessageWithLoader(action: () => Promise<void>): Promise<void> {
@@ -49,7 +51,7 @@ export class MessageLoader {
     await this.bot.sendChatAction(this.chatId, this.loadingAction);
 
     this.timeoutId = setTimeout(async () => {
-      if (!this.noMessage) {
+      if (this.loaderMessage) {
         const messageRes = await this.bot.sendMessage(this.chatId, this.loaderMessage);
         this.loaderMessageId = messageRes.message_id;
       }

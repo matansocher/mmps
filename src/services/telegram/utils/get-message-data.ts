@@ -1,6 +1,24 @@
 import { get as _get } from 'lodash';
 import type { Message } from 'node-telegram-bot-api';
-import type { TelegramMessageData } from '../types';
+import { UserDetails } from '../types';
+
+interface TelegramMessageData {
+  readonly chatId: number;
+  readonly messageId: number;
+  readonly replyToMessageId: number;
+  readonly replyToMessageText: string;
+  readonly userDetails: UserDetails;
+  readonly text: string;
+  readonly audio: any;
+  readonly video: any;
+  readonly photo: any;
+  readonly file: any;
+  readonly date: number;
+  readonly location: {
+    readonly lat: number;
+    readonly lon: number;
+  };
+}
 
 export function getMessageData(message: Message): TelegramMessageData {
   return {
