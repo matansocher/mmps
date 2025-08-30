@@ -17,3 +17,5 @@ export { CompetitionMatchesTool } from './sports/competition-matches.tool';
 export { CompetitionTableTool } from './sports/competition-table.tool';
 export { CompetitionsListTool } from './sports/competitions-list.tool';
 export { MatchSummaryTool } from './sports/match-summary.tool';
+
+export { CalendarEventTool } from './calendar/calendar-event.tool';
