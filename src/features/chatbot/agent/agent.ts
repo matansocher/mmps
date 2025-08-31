@@ -4,6 +4,7 @@ import {
   CompetitionMatchesTool,
   CompetitionsListTool,
   CompetitionTableTool,
+  CryptoTool,
   CurrentWeatherTool,
   ImageAnalyzerTool,
   ImageGeneratorPromptEnhancerTool,
@@ -38,7 +39,8 @@ Available capabilities:
 - Current weather tool: Get current weather conditions for any location worldwide.
 - Weather forecast tool: Get weather forecasts for any location up to 5 days in the future.
 - News tool: Retrieve the latest headlines or search for specific news topics.
-- Stocks tool: Get current stock prices and market information.
+- Stocks tool: Get current or historical stock prices and market information. Supports specific dates for historical data.
+- Crypto tool: Get current or historical cryptocurrency prices. Supports specific dates for historical data.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
 - Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
 - Audio transcriber tool: Transcribe audio files and voice messages to text.
@@ -71,6 +73,7 @@ export function agent(): AgentDescriptor {
     new WeatherForecastTool(),
     new NewsTool(),
     new StocksTool(),
+    new CryptoTool(),
     new CalendarEventTool(),
     new ImageGeneratorPromptEnhancerTool(),
     new ImageGeneratorTool(),
@@ -82,10 +85,12 @@ export function agent(): AgentDescriptor {
     new CompetitionMatchesTool(),
     new CompetitionsListTool(),
   ];
+
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description: 'A helpful AI assistant chatbot with access to weather, news, stocks, calendar, image generator, image analysis, audio transcription, text-to-speech, and football/sports information',
+    description:
+      'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, and football/sports information',
     tools: toolClasses.map((tool) => createLangChainTool(tool)),
   };
 }

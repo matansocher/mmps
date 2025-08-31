@@ -1,15 +1,17 @@
 import { z } from 'zod';
-import { getStockDetailsBySymbol, StockDetails } from '@services/alpha-vantage';
+import { getHistoricalStockData, getStockDetailsBySymbol, HistoricalStockData, StockDetails } from '@services/alpha-vantage';
 import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 
 export const stocksConfig: ToolConfig = {
   name: 'stocks',
-  description: 'Get latest stock prices',
+  description: 'Get latest or historical stock prices',
   schema: z.object({
     symbol: z.string().min(1, 'Symbol cannot be empty'),
+    date: z.string().optional().describe('Optional date in YYYY-MM-DD format for historical data'),
   }),
-  keywords: ['stock', 'price', 'market', 'shares', 'trading', 'investment', 'finance'],
-  instructions: 'When users ask for stock prices, try to extract the stock symbol or company name. If no specific stock is mentioned, ask them to provide one.',
+  keywords: ['stock', 'price', 'market', 'shares', 'trading', 'investment', 'finance', 'historical', 'past'],
+  instructions:
+    'When users ask for stock prices, try to extract the stock symbol or company name. If they mention a specific date or ask for historical data, extract the date in YYYY-MM-DD format. If no date is provided, return the latest price. If no specific stock is mentioned, ask them to provide one.',
 };
 
 export class StocksTool implements ToolInstance {
@@ -33,13 +35,8 @@ export class StocksTool implements ToolInstance {
     return stocksConfig.instructions || '';
   }
 
-  async execute(context: ToolExecutionContext): Promise<StockDetails> {
-    const { symbol } = context.parameters;
-
-    try {
-      return getStockDetailsBySymbol(symbol);
-    } catch (error) {
-      throw new Error(`Failed to fetch news: ${error.message}`);
-    }
+  async execute(context: ToolExecutionContext): Promise<StockDetails | HistoricalStockData | HistoricalStockData[]> {
+    const { symbol, date } = context.parameters;
+    return date ? getHistoricalStockData(symbol, date) : getStockDetailsBySymbol(symbol);
   }
 }
