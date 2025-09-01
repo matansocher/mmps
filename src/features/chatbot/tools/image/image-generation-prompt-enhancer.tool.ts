@@ -47,8 +47,8 @@ export class ImageGeneratorPromptEnhancerTool implements ToolInstance {
       const textContent = result.content.find((block) => block.type === 'text');
       const promptContent = textContent?.text || prompt;
       return promptContent.trim().slice(0, 1023);
-    } catch (error) {
-      console.error('Error enhancing prompt:', error);
+    } catch (err) {
+      console.error(`Error enhancing prompt: ${err}`);
       return `${prompt}, highly detailed, professional quality, vibrant colors, excellent composition, sharp focus, 4K resolution`;
     }
   }

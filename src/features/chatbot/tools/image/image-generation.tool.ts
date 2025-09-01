@@ -38,9 +38,9 @@ export class ImageGeneratorTool implements ToolInstance {
 
     try {
       return generateImage(prompt);
-    } catch (error) {
-      console.error('Error generating image:', error);
-      throw new Error(`Failed to generate image: ${error.message}`);
+    } catch (err) {
+      console.error(`Error generating image: ${err}`);
+      throw new Error(`Failed to generate image: ${err.message}`);
     }
   }
 }

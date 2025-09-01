@@ -15,9 +15,3 @@ export const CHATBOT_CONFIG = {
   preserveSystemMessages: true,
   preserveFirstMessage: true,
 };
-
-export const ANALYTIC_EVENT_NAMES = {
-  START: 'START',
-  MESSAGE: 'MESSAGE',
-  ERROR: 'ERROR',
-};

@@ -62,9 +62,9 @@ export class MatchSummaryTool implements ToolInstance {
       }
 
       return generateMatchResultsString(filteredSummary);
-    } catch (error) {
-      console.error('Error fetching match summary:', error);
-      throw new Error(`Failed to fetch match results: ${error.message}`);
+    } catch (err) {
+      console.error(`Error fetching match summary: ${err}`);
+      throw new Error(`Failed to fetch match results: ${err.message}`);
     }
   }
 }

@@ -2,11 +2,10 @@ import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
-import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { downloadAudio, getBotToken, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './chatbot.config';
+import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
 @Injectable()
@@ -16,7 +15,6 @@ export class ChatbotController implements OnModuleInit {
 
   constructor(
     private readonly chatbotService: ChatbotService,
-    private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -34,13 +32,12 @@ export class ChatbotController implements OnModuleInit {
   }
 
   async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+    const { chatId } = getMessageData(message);
     await this.bot.sendMessage(chatId, 'Hi, I am your chatbot! How can I assist you today?');
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async messageHandler(message: Message): Promise<void> {
-    const { chatId, messageId, userDetails, text } = getMessageData(message);
+    const { chatId, messageId, text } = getMessageData(message);
 
     // prevent built in options to be processed also here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
@@ -64,12 +61,10 @@ export class ChatbotController implements OnModuleInit {
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
     });
-
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text }, userDetails);
   }
 
   private async photoHandler(message: Message): Promise<void> {
-    const { chatId, messageId, userDetails, photo } = getMessageData(message);
+    const { chatId, messageId, photo } = getMessageData(message);
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '👀' });
     await messageLoaderService.handleMessageWithLoader(async () => {
@@ -83,12 +78,10 @@ export class ChatbotController implements OnModuleInit {
 
       await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
     });
-
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text: 'Image sent' }, userDetails);
   }
 
   private async audioHandler(message: Message): Promise<void> {
-    const { chatId, messageId, userDetails, audio } = getMessageData(message);
+    const { chatId, messageId, audio } = getMessageData(message);
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🎧' });
     await messageLoaderService.handleMessageWithLoader(async () => {
@@ -99,7 +92,5 @@ export class ChatbotController implements OnModuleInit {
 
       await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
     });
-
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text: 'Audio sent' }, userDetails);
   }
 }

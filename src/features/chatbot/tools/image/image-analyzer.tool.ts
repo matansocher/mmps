@@ -48,9 +48,9 @@ export class ImageAnalyzerTool implements ToolInstance {
       const imageAnalysisText = await analyzeImage(analysisPrompt, imageUrl);
 
       return imageAnalysisText || 'I was unable to analyze the image. Please try again with a different image.';
-    } catch (error) {
-      console.error('Error analyzing image:', error);
-      throw new Error(`Failed to analyze image: ${error.message}`);
+    } catch (err) {
+      console.error(`Error analyzing image: ${err}`);
+      throw new Error(`Failed to analyze image: ${err.message}`);
     }
   }
 }

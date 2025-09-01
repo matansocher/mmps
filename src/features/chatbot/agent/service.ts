@@ -82,8 +82,8 @@ export class AiService {
       await this.agent.updateState({ configurable: { thread_id: threadId } }, { messages: messagesToKeep });
 
       console.log(`[AiService] Thread ${threadId} truncated from ${messages.length} to ${messagesToKeep.length} messages`);
-    } catch (error) {
-      console.error(`[AiService] Error truncating thread ${threadId}:`, error);
+    } catch (err) {
+      console.error(`[AiService] Error truncating thread ${threadId}: ${err}`);
     }
   }
 

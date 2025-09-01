@@ -49,9 +49,9 @@ export class CompetitionMatchesTool implements ToolInstance {
       }
 
       return generateCompetitionMatchesString(matchesData);
-    } catch (error) {
-      console.error('Error fetching competition matches:', error);
-      throw new Error(`Failed to fetch competition matches: ${error.message}`);
+    } catch (err) {
+      console.error(`Error fetching competition matches: ${err}`);
+      throw new Error(`Failed to fetch competition matches: ${err.message}`);
     }
   }
 }

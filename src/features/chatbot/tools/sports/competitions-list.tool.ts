@@ -59,9 +59,9 @@ export class CompetitionsListTool implements ToolInstance {
       result += '• Upcoming matches: "When are the next matches?"\n';
 
       return result;
-    } catch (error) {
-      console.error('Error fetching competitions:', error);
-      throw new Error(`Failed to fetch competitions: ${error.message}`);
+    } catch (err) {
+      console.error(`Error fetching competitions: ${err}`);
+      throw new Error(`Failed to fetch competitions: ${err.message}`);
     }
   }
 }

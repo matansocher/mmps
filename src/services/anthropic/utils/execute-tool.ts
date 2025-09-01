@@ -23,7 +23,7 @@ export async function executeTool<T>(tool: Tool, content: string): Promise<T> {
 
     throw new Error('No tool output found in the response');
   } catch (err) {
-    console.error(`Error executing tool ${tool.name}:`, err);
+    console.error(`Error executing tool ${tool.name}: ${err}`);
     return null;
   }
 }

@@ -27,8 +27,8 @@ export class ChatbotService {
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${new Date().toISOString()}]\n\n${message}`;
       const result = await this.aiService.invoke(contextualMessage, { threadId: chatId });
       return formatAgentResponse(result, chatId);
-    } catch (error) {
-      this.logger.error(`Error processing message for user ${chatId}:`, error);
+    } catch (err) {
+      this.logger.error(`Error processing message for user ${chatId}: ${err}`);
       return {
         message: 'I apologize, but I encountered an error while processing your request. Please try again.',
         toolResults: [],

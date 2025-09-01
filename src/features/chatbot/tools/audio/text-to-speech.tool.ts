@@ -49,9 +49,9 @@ export class TextToSpeechTool implements ToolInstance {
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
       return audioFilePath;
-    } catch (error) {
-      console.error('Error generating text-to-speech:', error);
-      throw new Error(`Failed to generate speech from text: ${error.message}`);
+    } catch (err) {
+      console.error(`Error generating text-to-speech: ${err}`);
+      throw new Error(`Failed to generate speech from text: ${err.message}`);
     }
   }
 }

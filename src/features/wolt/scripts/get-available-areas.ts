@@ -10,7 +10,7 @@ async function main() {
     console.log('slugs');
     console.log(slugs);
   } catch (err) {
-    console.error('Error during insertion:', err);
+    console.error(`Error during insertion: ${err}`);
   }
 }
 

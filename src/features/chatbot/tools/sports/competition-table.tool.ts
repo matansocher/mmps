@@ -69,9 +69,9 @@ export class CompetitionTableTool implements ToolInstance {
       result += `🏆 **${tableDetails.competitionTable[0]?.competitor.name}** is currently leading with **${tableDetails.competitionTable[0]?.points} points**`;
 
       return result;
-    } catch (error) {
-      console.error('Error fetching competition table:', error);
-      throw new Error(`Failed to fetch competition table: ${error.message}`);
+    } catch (err) {
+      console.error(`Error fetching competition table: ${err}`);
+      throw new Error(`Failed to fetch competition table: ${err.message}`);
     }
   }
 }
