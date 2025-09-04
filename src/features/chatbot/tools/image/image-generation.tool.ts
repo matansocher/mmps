@@ -1,7 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { generateImage } from '@services/xai';
-import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 
 const schema = z.object({
   prompt: z.string().describe('The enhanced, detailed prompt to generate the image. Should come from the prompt enhancer tool.'),

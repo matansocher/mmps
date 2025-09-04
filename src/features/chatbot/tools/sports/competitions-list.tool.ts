@@ -1,7 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { getCompetitions } from '@services/scores-365';
-import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 
 const schema = z.object({});
 

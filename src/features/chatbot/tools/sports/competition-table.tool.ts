@@ -1,7 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { getCompetitionTable } from '@services/scores-365';
-import { ToolConfig, ToolExecutionContext, ToolInstance } from '../../types';
 
 const schema = z.object({
   competitionId: z.number().describe('The ID of the competition to get the table for'),
