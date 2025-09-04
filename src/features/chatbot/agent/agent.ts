@@ -1,24 +1,25 @@
 import {
-  AudioTranscriberTool,
-  CalendarEventTool,
-  CompetitionMatchesTool,
-  CompetitionsListTool,
-  CompetitionTableTool,
-  CryptoTool,
-  CurrentWeatherTool,
-  ImageAnalyzerTool,
-  ImageGeneratorPromptEnhancerTool,
-  ImageGeneratorTool,
-  MatchSummaryTool,
-  NewsTool,
-  StocksTool,
-  TextToSpeechTool,
-  WeatherForecastTool,
+  audioTranscriberTool,
+  calendarEventTool,
+  competitionMatchesTool,
+  competitionsListTool,
+  competitionTableTool,
+  cryptoTool,
+  currentWeatherTool,
+  imageAnalyzerTool,
+  imageGeneratorPromptEnhancerTool,
+  imageGeneratorTool,
+  matchSummaryTool,
+  newsTool,
+  stocksTool,
+  textToSpeechTool,
+  weatherForecastTool,
 } from '../tools';
 import { AgentDescriptor } from '../types';
-import { createLangChainTool } from './utils';
 
 const AGENT_NAME = 'CHATBOT';
+const AGENT_DESCRIPTION =
+  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, and football/sports information';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions.
 
@@ -68,29 +69,28 @@ Guidelines:
 `;
 
 export function agent(): AgentDescriptor {
-  const toolClasses = [
-    new CurrentWeatherTool(),
-    new WeatherForecastTool(),
-    new NewsTool(),
-    new StocksTool(),
-    new CryptoTool(),
-    new CalendarEventTool(),
-    new ImageGeneratorPromptEnhancerTool(),
-    new ImageGeneratorTool(),
-    new ImageAnalyzerTool(),
-    new AudioTranscriberTool(),
-    new TextToSpeechTool(),
-    new MatchSummaryTool(),
-    new CompetitionTableTool(),
-    new CompetitionMatchesTool(),
-    new CompetitionsListTool(),
+  const tools = [
+    stocksTool,
+    cryptoTool,
+    currentWeatherTool,
+    weatherForecastTool,
+    newsTool,
+    imageAnalyzerTool,
+    imageGeneratorTool,
+    imageGeneratorPromptEnhancerTool,
+    audioTranscriberTool,
+    textToSpeechTool,
+    competitionMatchesTool,
+    competitionTableTool,
+    competitionsListTool,
+    matchSummaryTool,
+    calendarEventTool,
   ];
 
   return {
     name: AGENT_NAME,
     prompt: AGENT_PROMPT,
-    description:
-      'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, and football/sports information',
-    tools: toolClasses.map((tool) => createLangChainTool(tool)),
+    description: AGENT_DESCRIPTION,
+    tools,
   };
 }

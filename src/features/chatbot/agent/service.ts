@@ -1,8 +1,17 @@
+import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { RunnableConfig } from '@langchain/core/runnables';
 import { CompiledStateGraph } from '@langchain/langgraph';
 import { CHATBOT_CONFIG } from '../chatbot.config';
-import { AiServiceOptions, InvokeOptions } from '../types';
-import { createMessage } from './utils';
+import { AiServiceOptions, InvokeOptions, MessageState } from '../types';
+
+function createMessage(message: string, opts: Partial<InvokeOptions> = {}): MessageState {
+  const messages: BaseMessage[] = [];
+  if (opts.system) {
+    messages.push(new SystemMessage(opts.system));
+  }
+  messages.push(new HumanMessage(message));
+  return { messages };
+}
 
 export class AiService {
   readonly name: string;
