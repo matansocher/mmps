@@ -1,22 +1,22 @@
-export { StocksTool } from './stocks/stocks.tool';
-export { CryptoTool } from './crypto/crypto.tool';
+export { stocksTool } from './stocks/stocks.tool';
+export { cryptoTool } from './crypto/crypto.tool';
 
-export { CurrentWeatherTool } from './weather/current-weather.tool';
-export { WeatherForecastTool } from './weather/weather-forecast.tool';
+export { currentWeatherTool } from './weather/current-weather.tool';
+export { weatherForecastTool } from './weather/weather-forecast.tool';
 
-export { NewsTool } from './news/news.tool';
+export { newsTool } from './news/news.tool';
 
-export { ImageAnalyzerTool } from './image/image-analyzer.tool';
-export { ImageGeneratorTool } from './image/image-generation.tool';
-export { ImageGeneratorPromptEnhancerTool } from './image/image-generation-prompt-enhancer.tool';
+export { imageAnalyzerTool } from './image/image-analyzer.tool';
+export { imageGeneratorTool } from './image/image-generation.tool';
+export { imageGeneratorPromptEnhancerTool } from './image/image-generation-prompt-enhancer.tool';
 
-export { AudioTranscriberTool } from './audio/audio-transcriber.tool';
+export { audioTranscriberTool } from './audio/audio-transcriber.tool';
 
-export { TextToSpeechTool } from './audio/text-to-speech.tool';
+export { textToSpeechTool } from './audio/text-to-speech.tool';
 
-export { CompetitionMatchesTool } from './sports/competition-matches.tool';
-export { CompetitionTableTool } from './sports/competition-table.tool';
-export { CompetitionsListTool } from './sports/competitions-list.tool';
-export { MatchSummaryTool } from './sports/match-summary.tool';
+export { competitionMatchesTool } from './sports/competition-matches.tool';
+export { competitionTableTool } from './sports/competition-table.tool';
+export { competitionsListTool } from './sports/competitions-list.tool';
+export { matchSummaryTool } from './sports/match-summary.tool';
 
-export { CalendarEventTool } from './calendar/calendar-event.tool';
+export { calendarEventTool } from './calendar/calendar-event.tool';
