@@ -34,8 +34,9 @@ export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor
     }
   }
 
-  const wrappedTools = tools.map((tool) => wrapToolWithLogging(tool));
-  const reactAgent = createReactAgent({ llm, tools: wrappedTools, checkpointSaver });
+  // const wrappedTools = tools.map((tool) => wrapToolWithLogging(tool));
+  // const reactAgent = createReactAgent({ llm, tools: wrappedTools, checkpointSaver });
+  const reactAgent = createReactAgent({ llm, tools, checkpointSaver });
   return new AiService(reactAgent, { name });
 }
 

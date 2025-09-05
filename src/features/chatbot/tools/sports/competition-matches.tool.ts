@@ -17,7 +17,7 @@ async function runner({ competitionId }: z.infer<typeof schema>) {
 }
 
 export const competitionMatchesTool = tool(runner, {
-  name: 'competitionMatches',
+  name: 'competition_matches',
   description: 'Get upcoming matches and fixtures for a specific football competition',
   schema,
 });
