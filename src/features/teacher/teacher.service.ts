@@ -44,7 +44,7 @@ export class TeacherService {
   ) {}
 
   async handleCourseReminders(courseParticipation: CourseParticipation) {
-    await this.bot.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summary), { parse_mode: 'Markdown' });
+    await this.bot.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails), { parse_mode: 'Markdown' });
     await this.courseParticipationDB.saveSummarySent(courseParticipation._id.toString());
   }
 

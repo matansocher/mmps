@@ -86,7 +86,7 @@ export class TeacherMongoCourseParticipationService {
     const filter = { _id: new ObjectId(courseParticipation._id) };
     const updateObj = {
       $set: {
-        summary: {
+        summaryDetails: {
           topicTitle,
           summary: summaryDetails.summary,
           keyTakeaways: summaryDetails.keyTakeaways,
@@ -101,7 +101,7 @@ export class TeacherMongoCourseParticipationService {
     const filter = { _id: new ObjectId(id) };
     const updateObj = {
       $set: {
-        'summary.sentAt': new Date(),
+        'summaryDetails.sentAt': new Date(),
       },
     };
     await this.courseParticipationCollection.updateOne(filter, updateObj);
@@ -110,8 +110,8 @@ export class TeacherMongoCourseParticipationService {
   async getCourseParticipationForSummaryReminder(): Promise<CourseParticipation> {
     const filter = {
       status: CourseParticipationStatus.Completed,
-      summary: { $exists: true },
-      'summary.sentAt': { $exists: false },
+      summaryDetails: { $exists: true },
+      'summaryDetails.sentAt': { $exists: false },
       completedAt: { $lt: new Date(Date.now() - NUM_OD_DAYS_TO_SUMMARY_REMINDER * 24 * 60 * 60 * 1000) },
     };
     return this.courseParticipationCollection.findOne(filter);
