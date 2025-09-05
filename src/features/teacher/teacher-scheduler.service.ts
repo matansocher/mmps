@@ -21,7 +21,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   onModuleInit(): void {
     // this.handleCourseFirstLesson();
     // this.handleCourseNextLesson();
-    // this.handleCourseReminders();
+    this.handleCourseReminders();
   }
 
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
@@ -55,6 +55,9 @@ export class TeacherSchedulerService implements OnModuleInit {
   async handleCourseReminders(): Promise<void> {
     try {
       const courseParticipation = await this.courseParticipationDB.getCourseParticipationForSummaryReminder();
+      if (!courseParticipation) {
+        return;
+      }
       await this.teacherService.handleCourseReminders(courseParticipation).catch(async (err) => {
         const userDetails = await this.userDB.getUserDetails({ chatId: courseParticipation.chatId });
         this.logger.error(`${this.handleCourseReminders.name} - error: ${err}`);

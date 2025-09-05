@@ -32,7 +32,7 @@ export class EducatorService {
   ) {}
 
   async handleTopicReminders(topicParticipation: TopicParticipation): Promise<void> {
-    await this.bot.sendMessage(topicParticipation.chatId, generateSummaryMessage(topicParticipation.summaryDetails), { parse_mode: 'Markdown' });
+    await this.bot.sendMessage(topicParticipation.chatId, generateSummaryMessage(topicParticipation.summaryDetails));
     await this.topicParticipationDB.saveSummarySent(topicParticipation._id.toString());
   }
 

@@ -42,6 +42,9 @@ export class EducatorSchedulerService implements OnModuleInit {
   async handleTopicReminders(): Promise<void> {
     try {
       const topicParticipation = await this.topicParticipationDB.getCourseParticipationForSummaryReminder();
+      if (!topicParticipation) {
+        return;
+      }
       await this.educatorService.handleTopicReminders(topicParticipation).catch(async (err) => {
         const userDetails = await this.userDB.getUserDetails({ chatId: topicParticipation.chatId });
         this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
