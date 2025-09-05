@@ -1,6 +1,6 @@
 import { SummaryDetails } from '@core/mongo/educator-mongo';
 
-export function getSummaryMessage(summaryDetails: SummaryDetails): string {
+export function generateSummaryMessage(summaryDetails: SummaryDetails): string {
   return [
     `📚 תזכורת לנושא שלמדת לפני כמה ימים:`,
     ``,

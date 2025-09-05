@@ -6,7 +6,7 @@ import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
 import { CourseResponseSchema, CourseSummarySchema } from './types';
-import { getSummaryMessage } from './utils';
+import { generateSummaryMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation, isLesson: boolean) => {
   let isCourseLessonsCompleted = courseParticipation.lessonsCompleted >= TOTAL_COURSE_LESSONS - 1; // minus 1 since the lesson is marked completed only after sending the user the message
@@ -44,7 +44,7 @@ export class TeacherService {
   ) {}
 
   async handleCourseReminders(courseParticipation: CourseParticipation) {
-    await this.bot.sendMessage(courseParticipation.chatId, getSummaryMessage(courseParticipation.summaryDetails), { parse_mode: 'Markdown' });
+    await this.bot.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails), { parse_mode: 'Markdown' });
     await this.courseParticipationDB.saveSummarySent(courseParticipation._id.toString());
   }
 
