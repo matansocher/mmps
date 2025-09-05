@@ -1,1 +1,1 @@
-export { getSummaryMessage } from './get-summary-message';
+export { generateSummaryMessage } from './generate-summary-message';

@@ -21,7 +21,7 @@ export interface TopicParticipation {
   previousResponseId?: string;
   readonly status: TopicParticipationStatus;
   readonly threadMessages?: number[];
-  readonly summaryDetails?: SummaryDetails;
+  readonly summary?: SummaryDetails;
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;

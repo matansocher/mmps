@@ -101,19 +101,19 @@ export class TeacherMongoCourseParticipationService {
     const filter = { _id: new ObjectId(id) };
     const updateObj = {
       $set: {
-        'summaryDetails.sentAt': new Date(),
+        'summary.sentAt': new Date(),
       },
     };
     await this.courseParticipationCollection.updateOne(filter, updateObj);
   }
 
-  async getCourseParticipationsForSummaryReminder(): Promise<CourseParticipation[]> {
+  async getCourseParticipationForSummaryReminder(): Promise<CourseParticipation> {
     const filter = {
       status: CourseParticipationStatus.Completed,
-      summaryDetails: { $exists: true },
-      'summaryDetails.sentAt': { $exists: false },
+      summary: { $exists: true },
+      'summary.sentAt': { $exists: false },
       completedAt: { $lt: new Date(Date.now() - NUM_OD_DAYS_TO_SUMMARY_REMINDER * 24 * 60 * 60 * 1000) },
     };
-    return this.courseParticipationCollection.find(filter).toArray();
+    return this.courseParticipationCollection.findOne(filter);
   }
 }

@@ -1,6 +1,6 @@
 import { SummaryDetails } from '@core/mongo/teacher-mongo';
 
-export function getSummaryMessage(summaryDetails: SummaryDetails) {
+export function generateSummaryMessage(summaryDetails: SummaryDetails) {
   return [
     `📚 A reminder for the course you learned a few days ago:`,
     ``,

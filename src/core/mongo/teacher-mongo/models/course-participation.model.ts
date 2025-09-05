@@ -22,7 +22,7 @@ export interface CourseParticipation {
   readonly status: CourseParticipationStatus;
   readonly lessonsCompleted?: number;
   readonly threadMessages?: number[];
-  readonly summaryDetails?: SummaryDetails;
+  readonly summary?: SummaryDetails;
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;

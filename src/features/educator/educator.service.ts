@@ -6,7 +6,7 @@ import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT } from './educator.config';
 import { TopicResponseSchema, TopicSummarySchema } from './types';
-import { getSummaryMessage } from './utils';
+import { generateSummaryMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
@@ -32,7 +32,7 @@ export class EducatorService {
   ) {}
 
   async handleTopicReminders(topicParticipation: TopicParticipation): Promise<void> {
-    await this.bot.sendMessage(topicParticipation.chatId, getSummaryMessage(topicParticipation.summaryDetails), { parse_mode: 'Markdown' });
+    await this.bot.sendMessage(topicParticipation.chatId, generateSummaryMessage(topicParticipation.summary), { parse_mode: 'Markdown' });
     await this.topicParticipationDB.saveSummarySent(topicParticipation._id.toString());
   }
 

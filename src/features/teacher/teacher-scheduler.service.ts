@@ -54,14 +54,12 @@ export class TeacherSchedulerService implements OnModuleInit {
   @Cron(`0 ${COURSE_REMINDER_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-reminders', timeZone: DEFAULT_TIMEZONE })
   async handleCourseReminders(): Promise<void> {
     try {
-      const courseParticipationsForReminder = await this.courseParticipationDB.getCourseParticipationsForSummaryReminder();
-      for (const courseParticipations of courseParticipationsForReminder) {
-        await this.teacherService.handleCourseReminders(courseParticipations).catch(async (err) => {
-          const userDetails = await this.userDB.getUserDetails({ chatId: courseParticipations.chatId });
-          this.logger.error(`${this.handleCourseReminders.name} - error: ${err}`);
-          this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
-        });
-      }
+      const courseParticipation = await this.courseParticipationDB.getCourseParticipationForSummaryReminder();
+      await this.teacherService.handleCourseReminders(courseParticipation).catch(async (err) => {
+        const userDetails = await this.userDB.getUserDetails({ chatId: courseParticipation.chatId });
+        this.logger.error(`${this.handleCourseReminders.name} - error: ${err}`);
+        this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
+      });
     } catch (err) {
       this.logger.error(`${this.handleCourseReminders.name} - error: ${err}`);
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });

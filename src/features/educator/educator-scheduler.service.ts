@@ -20,7 +20,7 @@ export class EducatorSchedulerService implements OnModuleInit {
 
   onModuleInit(): void {
     // this.handleTopic();
-    // this.handleTopicReminders();
+    this.handleTopicReminders();
   }
 
   @Cron(`0 ${TOPIC_START_HOUR_OF_DAY} * * *`, {
@@ -41,14 +41,12 @@ export class EducatorSchedulerService implements OnModuleInit {
   @Cron(`0 ${TOPIC_REMINDER_HOUR_OF_DAY} * * *`, { name: 'educator-scheduler-reminders', timeZone: DEFAULT_TIMEZONE })
   async handleTopicReminders(): Promise<void> {
     try {
-      const topicParticipationsForReminder = await this.topicParticipationDB.getCourseParticipationsForSummaryReminder();
-      for (const topicParticipation of topicParticipationsForReminder) {
-        await this.educatorService.handleTopicReminders(topicParticipation).catch(async (err) => {
-          const userDetails = await this.userDB.getUserDetails({ chatId: topicParticipation.chatId });
-          this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
-          this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
-        });
-      }
+      const topicParticipation = await this.topicParticipationDB.getCourseParticipationForSummaryReminder();
+      await this.educatorService.handleTopicReminders(topicParticipation).catch(async (err) => {
+        const userDetails = await this.userDB.getUserDetails({ chatId: topicParticipation.chatId });
+        this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
+        this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
+      });
     } catch (err) {
       this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
       this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
