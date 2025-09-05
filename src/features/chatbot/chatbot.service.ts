@@ -15,7 +15,7 @@ export class ChatbotService {
   constructor() {
     const llm = new ChatAnthropic({
       modelName: ANTHROPIC_OPUS_MODEL,
-      temperature: 0.7,
+      temperature: 0.2,
       apiKey: env.ANTHROPIC_API_KEY,
     });
     this.aiService = createAgent(agent(), { llm });

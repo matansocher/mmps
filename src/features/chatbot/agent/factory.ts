@@ -4,6 +4,23 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { AgentDescriptor, CreateAgentOptions, OrchestratorDescriptor } from '../types';
 import { AiService } from './service';
 
+function wrapToolWithLogging(tool: any) {
+  return {
+    ...tool,
+    func: async (input: any) => {
+      console.log(`🔧 LLM is about to use tool: ${tool.name}`, { input });
+      try {
+        const result = await tool.func(input);
+        console.log(`✅ Tool ${tool.name} completed successfully`, { result });
+        return result;
+      } catch (error) {
+        console.log(`❌ Tool ${tool.name} failed`, { error: error.message });
+        throw error;
+      }
+    },
+  };
+}
+
 export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor, opts: CreateAgentOptions): AiService {
   const { name, prompt, tools = [] } = descriptor;
   const { llm, checkpointSaver = new MemorySaver(), responseFormat } = opts;
@@ -17,7 +34,8 @@ export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor
     }
   }
 
-  const reactAgent = createReactAgent({ llm, tools, checkpointSaver });
+  const wrappedTools = tools.map((tool) => wrapToolWithLogging(tool));
+  const reactAgent = createReactAgent({ llm, tools: wrappedTools, checkpointSaver });
   return new AiService(reactAgent, { name });
 }
 
