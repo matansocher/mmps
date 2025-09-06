@@ -1,6 +1,6 @@
 import {
   audioTranscriberTool,
-  calendarEventTool,
+  calendarTool,
   competitionMatchesTool,
   competitionsListTool,
   competitionTableTool,
@@ -84,7 +84,8 @@ export function agent(): AgentDescriptor {
     competitionTableTool,
     competitionsListTool,
     matchSummaryTool,
-    calendarEventTool,
+    calendarTool,
+    gmailTool,
   ];
 
   return {

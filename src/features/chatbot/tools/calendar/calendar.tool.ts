@@ -18,7 +18,9 @@ const schema = z.object({
   eventId: z.string().optional().describe('The ID of an event (for delete action)'),
 });
 
-async function createEventInternal(params: { title: string; startDateTime: string; endDateTime: string; location?: string; description?: string }): Promise<any> {
+type SchemaType = z.infer<typeof schema>;
+
+async function createEventInternal(params: Pick<SchemaType, 'title' | 'description' | 'startDateTime' | 'endDateTime' | 'location'>): Promise<any> {
   const { title, description, location, startDateTime, endDateTime } = params;
   const event: CalendarEvent = {
     summary: title,
@@ -86,7 +88,7 @@ async function deleteEventInternal(eventId: string): Promise<any> {
   };
 }
 
-async function runner({ action, title, startDateTime, endDateTime, location, description, eventId, days, searchQuery }: z.infer<typeof schema>) {
+async function runner({ action, title, startDateTime, endDateTime, location, description, eventId, days, searchQuery }: SchemaType) {
   switch (action) {
     case 'create':
       if (!title || !startDateTime || !endDateTime) {
@@ -111,8 +113,8 @@ async function runner({ action, title, startDateTime, endDateTime, location, des
   }
 }
 
-export const calendarEventTool = tool(runner, {
-  name: 'calendar_event',
+export const calendarTool = tool(runner, {
+  name: 'calendar',
   description: 'Create, list, or manage Google Calendar events.',
   schema,
 });

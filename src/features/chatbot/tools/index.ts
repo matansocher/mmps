@@ -19,4 +19,4 @@ export { competitionTableTool } from './sports/competition-table.tool';
 export { competitionsListTool } from './sports/competitions-list.tool';
 export { matchSummaryTool } from './sports/match-summary.tool';
 
-export { calendarEventTool } from './calendar/calendar-event.tool';
+export { calendarTool } from './calendar/calendar.tool';
