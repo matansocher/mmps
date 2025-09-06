@@ -7,7 +7,7 @@ import { NotifierService } from '@core/notifier';
 import { sleep } from '@core/utils';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { UserPreferencesCacheService } from './cache';
-import { generateSpecialMessage, generateStatisticsMessage } from './utils';
+import { generateStatisticsMessage } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
@@ -204,11 +204,6 @@ export class WorldlyController implements OnModuleInit {
 
       if (![BOT_ACTIONS.MAP, BOT_ACTIONS.US_MAP, BOT_ACTIONS.FLAG, BOT_ACTIONS.CAPITAL].includes(action)) {
         return;
-      }
-      const userGameLogs = await this.gameLogDB.getUserGameLogs(chatId);
-      const specialMessage = generateSpecialMessage(userGameLogs);
-      if (specialMessage) {
-        await this.bot.sendMessage(chatId, specialMessage);
       }
       // If the user is in fire mode, send a new game immediately
       const userPreferences = this.userPreferences.getUserPreferences(chatId);
