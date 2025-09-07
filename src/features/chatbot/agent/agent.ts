@@ -85,7 +85,6 @@ export function agent(): AgentDescriptor {
     competitionsListTool,
     matchSummaryTool,
     calendarTool,
-    gmailTool,
   ];
 
   return {
