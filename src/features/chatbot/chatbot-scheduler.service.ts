@@ -30,7 +30,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
       const prompt = `Good evening! Please create my nightly summary with the following information:
 
 1. **Weather Forecast**: Get tomorrow's weather forecast for Kfar Saba (${tomorrow.toISOString().split('T')[0]})
-2. **Calendar**: Check my calendar events for tomorrow
+2. **Calendar**: Check my calendar events for tomorrow. if you see any special events, address them.
 3. **Football**: Get today's football match results from every league you know
 
 Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a warm greeting like "🌙 Good night!" and wish me sweet dreams at the end.`;
