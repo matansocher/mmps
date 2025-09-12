@@ -1,15 +1,21 @@
+import { Collection, Db } from 'mongodb';
 import { getCollection, getMongoDb } from '@core/mongo/shared/mongo-connection';
 import { Subscription } from '../models';
 import { COLLECTIONS, DB_NAME } from '../wolt-mongo.config';
 
-export async function getActiveSubscriptions(chatId: number = null): Promise<Subscription[]> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
+let db: Db;
+let subscriptionCollection: Collection<Subscription>;
 
+(async () => {
+  db = await getMongoDb(DB_NAME);
+  subscriptionCollection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
+})();
+
+export async function getActiveSubscriptions(chatId: number = null): Promise<Subscription[]> {
   try {
     const filter = { isActive: true };
     if (chatId) filter['chatId'] = chatId;
-    return collection.find(filter).toArray();
+    return subscriptionCollection.find(filter).toArray();
   } catch (err) {
     console.error(`getActiveSubscriptions - err: ${err}`);
     return [];
@@ -17,17 +23,11 @@ export async function getActiveSubscriptions(chatId: number = null): Promise<Sub
 }
 
 export async function getSubscription(chatId: number, restaurant: string): Promise<Subscription> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
-
   const filter = { chatId, restaurant, isActive: true };
-  return collection.findOne(filter);
+  return subscriptionCollection.findOne(filter);
 }
 
 export async function addSubscription(chatId: number, restaurant: string, restaurantPhoto: string) {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
-
   const subscription = {
     chatId,
     restaurant,
@@ -35,30 +35,21 @@ export async function addSubscription(chatId: number, restaurant: string, restau
     isActive: true,
     createdAt: new Date(),
   } as Subscription;
-  return collection.insertOne(subscription);
+  return subscriptionCollection.insertOne(subscription);
 }
 
 export async function archiveSubscription(chatId: number, restaurant: string, isSuccess: boolean) {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
-
   const filter = { chatId, restaurant, isActive: true };
   const updateObj = { $set: { isActive: false, isSuccess, finishedAt: new Date() } } as Partial<Subscription>;
-  return collection.updateOne(filter, updateObj);
+  return subscriptionCollection.updateOne(filter, updateObj);
 }
 
 export async function getExpiredSubscriptions(subscriptionExpirationHours: number): Promise<Subscription[]> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
-
   const validLimitTimestamp = new Date(Date.now() - subscriptionExpirationHours * 60 * 60 * 1000);
   const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
-  return collection.find(filter).toArray();
+  return subscriptionCollection.find(filter).toArray();
 }
 
 export async function getTopBy(topBy: 'restaurant' | 'chatId'): Promise<any[]> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
-
-  return collection.aggregate([{ $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
+  return subscriptionCollection.aggregate([{ $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
 }

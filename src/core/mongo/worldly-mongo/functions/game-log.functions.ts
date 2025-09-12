@@ -1,6 +1,15 @@
+import { Collection, Db } from 'mongodb';
 import { getCollection, getMongoDb } from '@core/mongo/shared';
 import { GameLog } from '../models';
 import { COLLECTIONS, DB_NAME } from '../worldly-mongo.config';
+
+let db: Db;
+let gameLogCollection: Collection<GameLog>;
+
+(async () => {
+  db = await getMongoDb(DB_NAME);
+  gameLogCollection = getCollection<GameLog>(db, COLLECTIONS.GAME_LOG);
+})();
 
 export type SaveGameLogOptions = {
   readonly chatId: number;
@@ -22,9 +31,6 @@ export type TopChatRecord = {
 };
 
 export async function saveGameLog({ chatId, gameId, type, correct }: SaveGameLogOptions): Promise<void> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<GameLog>(db, COLLECTIONS.GAME_LOG);
-
   const gameLog = {
     chatId,
     gameId,
@@ -32,31 +38,22 @@ export async function saveGameLog({ chatId, gameId, type, correct }: SaveGameLog
     correct,
     createdAt: new Date(),
   } as GameLog;
-  await collection.insertOne(gameLog);
+  await gameLogCollection.insertOne(gameLog);
 }
 
 export async function updateGameLog({ chatId, gameId, selected }: UpdateGameLogOptions): Promise<void> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<GameLog>(db, COLLECTIONS.GAME_LOG);
-
   const filter = { chatId, gameId };
   const updateObj = { $set: { selected, answeredAt: new Date() } };
-  await collection.updateOne(filter, updateObj);
+  await gameLogCollection.updateOne(filter, updateObj);
 }
 
 export async function getUserGameLogs(chatId: number): Promise<GameLog[]> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<GameLog>(db, COLLECTIONS.GAME_LOG);
-
   const filter = { chatId };
-  return collection.find(filter).toArray();
+  return gameLogCollection.find(filter).toArray();
 }
 
 export async function getTopByChatId(total: number): Promise<TopChatRecord[]> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<GameLog>(db, COLLECTIONS.GAME_LOG);
-
-  const result = await collection
+  const result = await gameLogCollection
     .aggregate([
       {
         $group: {

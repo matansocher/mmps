@@ -1,26 +1,28 @@
 import { endOfDay, startOfDay } from 'date-fns';
-import { InsertOneResult, ObjectId } from 'mongodb';
+import { Collection, Db, InsertOneResult, ObjectId } from 'mongodb';
 import { getCollection, getMongoDb } from '@core/mongo/shared';
 import { Exercise } from '../models';
 import { COLLECTIONS, DB_NAME } from '../trainer-mongo.config';
 
-export async function addExercise(chatId: number): Promise<InsertOneResult<Exercise>> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Exercise>(db, COLLECTIONS.EXERCISE);
+let db: Db;
+let exerciseCollection: Collection<Exercise>;
 
+(async () => {
+  db = await getMongoDb(DB_NAME);
+  exerciseCollection = getCollection<Exercise>(db, COLLECTIONS.EXERCISE);
+})();
+
+export async function addExercise(chatId: number): Promise<InsertOneResult<Exercise>> {
   const exercise = {
     _id: new ObjectId(),
     chatId,
     createdAt: new Date(),
   };
 
-  return collection.insertOne(exercise);
+  return exerciseCollection.insertOne(exercise);
 }
 
 export async function getTodayExercise(chatId: number): Promise<Exercise> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Exercise>(db, COLLECTIONS.EXERCISE);
-
   const now = new Date();
   const localStart = startOfDay(now);
   const localEnd = endOfDay(now);
@@ -28,12 +30,9 @@ export async function getTodayExercise(chatId: number): Promise<Exercise> {
   const utcEnd = new Date(localEnd.getTime() + now.getTimezoneOffset() * 60000);
 
   const filter = { chatId, createdAt: { $gte: utcStart, $lt: utcEnd } };
-  return collection.findOne(filter);
+  return exerciseCollection.findOne(filter);
 }
 
 export async function getExercises(chatId: number, limit: number = 1000): Promise<Exercise[]> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Exercise>(db, COLLECTIONS.EXERCISE);
-
-  return collection.find({ chatId }).sort({ createdAt: -1 }).limit(limit).toArray();
+  return exerciseCollection.find({ chatId }).sort({ createdAt: -1 }).limit(limit).toArray();
 }

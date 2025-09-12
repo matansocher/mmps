@@ -1,14 +1,21 @@
+import { Collection, Db } from 'mongodb';
 import { getCollection, getMongoDb } from '@core/mongo/shared';
 import { Country } from '../models';
 import { COLLECTIONS, DB_NAME } from '../worldly-mongo.config';
+
+let db: Db;
+let countryCollection: Collection<Country>;
+
+(async () => {
+  db = await getMongoDb(DB_NAME);
+  countryCollection = getCollection<Country>(db, COLLECTIONS.COUNTRY);
+})();
 
 let _countries: Country[] | null = null;
 
 export async function getAllCountries(): Promise<Country[]> {
   if (!_countries) {
-    const db = await getMongoDb(DB_NAME);
-    const collection = getCollection<Country>(db, COLLECTIONS.COUNTRY);
-    _countries = await collection.find().toArray();
+    _countries = await countryCollection.find().toArray();
   }
   return _countries;
 }

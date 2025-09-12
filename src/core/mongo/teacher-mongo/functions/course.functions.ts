@@ -1,26 +1,28 @@
-import { ObjectId } from 'mongodb';
+import { Collection, Db, ObjectId } from 'mongodb';
 import { getCollection, getMongoDb } from '@core/mongo/shared';
 import { Course } from '../models';
 import { COLLECTIONS, DB_NAME } from '../teacher-mongo.config';
 
-export async function createCourse(chatId: number, topic: string): Promise<Course> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Course>(db, COLLECTIONS.COURSE);
+let db: Db;
+let courseCollection: Collection<Course>;
 
+(async () => {
+  db = await getMongoDb(DB_NAME);
+  courseCollection = getCollection<Course>(db, COLLECTIONS.COURSE);
+})();
+
+export async function createCourse(chatId: number, topic: string): Promise<Course> {
   const course: Course = {
     _id: new ObjectId(),
     topic,
     createdBy: chatId,
     createdAt: new Date(),
   };
-  await collection.insertOne(course);
+  await courseCollection.insertOne(course);
   return course;
 }
 
 export async function getRandomCourse(chatId: number, excludedCourses: string[]): Promise<Course | null> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Course>(db, COLLECTIONS.COURSE);
-
   const filter = {
     _id: { $nin: excludedCourses.map((courseId) => new ObjectId(courseId)) },
     $or: [
@@ -28,7 +30,7 @@ export async function getRandomCourse(chatId: number, excludedCourses: string[])
       { createdBy: { $exists: false } }, // Courses without createdBy field
     ],
   };
-  const results = await collection
+  const results = await courseCollection
     .aggregate<Course>([
       { $match: filter },
       { $sample: { size: 1 } }, // Get a random course
@@ -38,9 +40,6 @@ export async function getRandomCourse(chatId: number, excludedCourses: string[])
 }
 
 export async function getCourse(id: string): Promise<Course> {
-  const db = await getMongoDb(DB_NAME);
-  const collection = getCollection<Course>(db, COLLECTIONS.COURSE);
-
   const filter = { _id: new ObjectId(id) };
-  return collection.findOne(filter);
+  return courseCollection.findOne(filter);
 }
