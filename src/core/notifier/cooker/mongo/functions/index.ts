@@ -1,1 +1,1 @@
-export * from './recipe.functions';
+export * from './recipe';

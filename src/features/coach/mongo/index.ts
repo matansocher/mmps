@@ -1,2 +1,2 @@
-export * from './subscription.functions';
-export * from './user.functions';
+export * from './subscription';
+export * from './user';
