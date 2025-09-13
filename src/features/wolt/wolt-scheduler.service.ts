@@ -4,7 +4,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
-import { getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
+import { getInlineKeyboardMarkup } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails } from './mongo';
 import { RestaurantsService } from './restaurants.service';
 import { Subscription, WoltRestaurant } from './types';
