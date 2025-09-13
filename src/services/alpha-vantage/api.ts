@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { StockDetails, HistoricalStockData, CryptoDetails, HistoricalCryptoData } from '@services/alpha-vantage/types';
+import { CryptoDetails, HistoricalCryptoData, HistoricalStockData, StockDetails } from '@services/alpha-vantage/types';
 
 const baseURL = 'https://www.alphavantage.co/query';
 
@@ -80,9 +80,9 @@ export async function getHistoricalStockData(symbol: string, date?: string): Pro
     if (!dateData) {
       // Try to find the closest available date
       const dates = Object.keys(timeSeries).sort().reverse();
-      const closestDate = dates.find(d => d <= date) || dates[0];
+      const closestDate = dates.find((d) => d <= date) || dates[0];
       const closestData = timeSeries[closestDate];
-      
+
       return {
         symbol,
         date: closestDate,
@@ -93,7 +93,7 @@ export async function getHistoricalStockData(symbol: string, date?: string): Pro
         volume: closestData['5. volume'],
       };
     }
-    
+
     return {
       symbol,
       date,
@@ -107,7 +107,7 @@ export async function getHistoricalStockData(symbol: string, date?: string): Pro
 
   // Return recent historical data if no specific date
   const dates = Object.keys(timeSeries).sort().reverse().slice(0, 30); // Last 30 days
-  return dates.map(date => ({
+  return dates.map((date) => ({
     symbol,
     date,
     open: timeSeries[date]['1. open'],
@@ -158,9 +158,9 @@ export async function getHistoricalCryptoData(fromSymbol: string, toSymbol: stri
     if (!dateData) {
       // Try to find the closest available date
       const dates = Object.keys(timeSeries).sort().reverse();
-      const closestDate = dates.find(d => d <= date) || dates[0];
+      const closestDate = dates.find((d) => d <= date) || dates[0];
       const closestData = timeSeries[closestDate];
-      
+
       return {
         fromSymbol,
         toSymbol,
@@ -173,7 +173,7 @@ export async function getHistoricalCryptoData(fromSymbol: string, toSymbol: stri
         marketCap: closestData[`6. market cap (${toSymbol})`],
       };
     }
-    
+
     return {
       fromSymbol,
       toSymbol,
@@ -189,7 +189,7 @@ export async function getHistoricalCryptoData(fromSymbol: string, toSymbol: stri
 
   // Return recent historical data if no specific date
   const dates = Object.keys(timeSeries).sort().reverse().slice(0, 30); // Last 30 days
-  return dates.map(date => ({
+  return dates.map((date) => ({
     fromSymbol,
     toSymbol,
     date,

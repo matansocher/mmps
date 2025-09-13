@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { TeacherMongoModule } from '@core/mongo/teacher-mongo';
 import { NotifierModule } from '@core/notifier';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
 import { TeacherSchedulerService } from './teacher-scheduler.service';
@@ -9,7 +8,7 @@ import { TeacherController } from './teacher.controller';
 import { TeacherService } from './teacher.service';
 
 @Module({
-  imports: [NotifierModule, TeacherMongoModule, ScheduleModule.forRoot()],
+  imports: [NotifierModule, ScheduleModule.forRoot()],
   providers: [TeacherController, TeacherSchedulerService, TeacherService, TelegramBotsFactoryProvider(BOT_CONFIG)],
 })
 export class TeacherModule {}

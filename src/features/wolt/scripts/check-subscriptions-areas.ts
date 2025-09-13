@@ -2,9 +2,9 @@ import { config } from 'dotenv';
 import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
-import { Subscription } from '@core/mongo/wolt-mongo';
-import { COLLECTIONS, DB_NAME } from '@core/mongo/wolt-mongo/wolt-mongo.config';
-import { getRestaurantsList } from '../utils/get-restaurants-data';
+import { COLLECTIONS, DB_NAME } from '../mongo/constants';
+import { Subscription } from '../types';
+import { getRestaurantsList } from '../utils';
 
 async function main() {
   config({ path: join(cwd(), '.env.serve') });

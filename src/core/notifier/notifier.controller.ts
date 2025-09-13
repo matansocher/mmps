@@ -1,8 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
-import { GameLog, WorldlyMongoGameLogService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { getStreakOfCorrectAnswers } from '@core/utils';
+import { getTopBy, getUserDetails as getUserDetailsWolt } from '@features/wolt/mongo';
+import { getGameLogsByUsers, getTopByChatId, getUserDetails as getUserDetailsWorldly } from '@features/worldly/mongo';
+import { GameLog } from '@features/worldly/types';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { CookerService, generateRecipeString } from './cooker';
 import { BOT_ACTIONS, BOT_CONFIG } from './notifier.config';
@@ -19,10 +20,6 @@ export class NotifierController implements OnModuleInit {
   private readonly logger = new Logger(NotifierController.name);
 
   constructor(
-    private readonly woltSubscriptionDB: WoltMongoSubscriptionService,
-    private readonly woltUserDB: WoltMongoUserService,
-    private readonly worldlyGameLogDB: WorldlyMongoGameLogService,
-    private readonly worldlyUserDB: WorldlyMongoUserService,
     private readonly cookerService: CookerService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -52,17 +49,17 @@ export class NotifierController implements OnModuleInit {
   async woltSummaryHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
 
-    const topChatIds = await this.woltSubscriptionDB.getTopBy('chatId');
+    const topChatIds = await getTopBy('chatId');
 
     const topUsers = await Promise.all(
       topChatIds.map(async ({ _id, count }) => {
-        const user = await this.woltUserDB.getUserDetails({ chatId: _id });
+        const user = await getUserDetailsWolt(_id);
         const userName = user ? `${user.firstName} ${user.lastName} - ${user.username}` : 'Unknown User';
         return { _id, count, user: userName };
       }),
     );
 
-    const topRestaurants = await this.woltSubscriptionDB.getTopBy('restaurant');
+    const topRestaurants = await getTopBy('restaurant');
 
     const replyText = `
 Top users this week:\n${topUsers.map(({ user, count }, index) => `${index + 1}. ${user} (${count})`).join('\n')}
@@ -75,7 +72,7 @@ Top restaurants this week:\n${topRestaurants.map(({ _id, count }, index) => `${i
   async worldlySummaryHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
 
-    const topChatIds = await this.worldlyGameLogDB.getTopByChatId(10);
+    const topChatIds = await getTopByChatId(10);
 
     const topUsers: LightUser[] = await Promise.all(
       topChatIds.map(async ({ chatId, records }) => {
@@ -85,7 +82,7 @@ Top restaurants this week:\n${topRestaurants.map(({ _id, count }, index) => `${i
       }),
     );
 
-    const gameLogsByUsers = await this.worldlyGameLogDB.getGameLogsByUsers();
+    const gameLogsByUsers = await getGameLogsByUsers();
     const today = new Date();
     const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
 
@@ -158,7 +155,7 @@ ${summaryLines.join('\n')}
     const cached = existingUsers.find((u) => u.chatId === chatId);
     if (cached) return { chatId, user: cached.user };
 
-    const user = await this.worldlyUserDB.getUserDetails({ chatId });
+    const user = await getUserDetailsWorldly(chatId);
     const userName = [user?.firstName, user?.lastName, user?.username].filter(Boolean).join(' ') || 'Unknown User';
     return { chatId, user: userName };
   }

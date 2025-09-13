@@ -1,21 +1,17 @@
 import * as fs from 'fs';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { Country, State, WorldlyMongoCountryService, WorldlyMongoGameLogService, WorldlyMongoStateService, WorldlyMongoSubscriptionService, WorldlyMongoUserService } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { generateRandomString, shuffleArray } from '@core/utils';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
+import { getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, updateSubscription } from './mongo';
+import { Country, State } from './types';
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 
 @Injectable()
 export class WorldlyService {
   constructor(
-    private readonly countryDB: WorldlyMongoCountryService,
-    private readonly stateDB: WorldlyMongoStateService,
-    private readonly subscriptionDB: WorldlyMongoSubscriptionService,
-    private readonly gameLogDB: WorldlyMongoGameLogService,
-    private readonly userDB: WorldlyMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -34,17 +30,17 @@ export class WorldlyService {
       await handlers[randomGameIndex](chatId);
     } catch (err) {
       if (err.message.includes(BLOCKED_ERROR)) {
-        const userDetails = await this.userDB.getUserDetails({ chatId });
+        const userDetails = await getUserDetails(chatId);
         this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
-        await this.subscriptionDB.updateSubscription(chatId, { isActive: false });
+        await updateSubscription(chatId, { isActive: false });
       }
     }
   }
 
   async mapHandler(chatId: number): Promise<void> {
     const gameFilter = (c: Country) => !!c.geometry;
-    const allCountries = this.countryDB.getAllCountries();
-    const randomCountry = this.countryDB.getRandomCountry(gameFilter);
+    const allCountries = await getAllCountries();
+    const randomCountry = await getRandomCountry(gameFilter);
     const imagePath = getAreaMap(allCountries, randomCountry.name);
 
     const otherOptions = getMapDistractors(allCountries, randomCountry);
@@ -56,13 +52,13 @@ export class WorldlyService {
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה' });
 
-    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.MAP, correct: randomCountry.name });
+    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.MAP, correct: randomCountry.name });
   }
 
   async USMapHandler(chatId: number): Promise<void> {
     const gameFilter = (c: State) => !!c.geometry;
-    const allStates = this.stateDB.getAllStates();
-    const randomState = this.stateDB.getRandomState(gameFilter);
+    const allStates = await getAllStates();
+    const randomState = await getRandomState(gameFilter);
     const imagePath = getAreaMap(allStates, randomState.name, true);
 
     const otherOptions = getMapStateDistractors(allStates, randomState);
@@ -74,13 +70,13 @@ export class WorldlyService {
 
     await this.bot.sendPhoto(chatId, fs.createReadStream(imagePath), { ...inlineKeyboardMarkup, caption: 'נחשו את המדינה בארצות הברית' });
 
-    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.US_MAP, correct: randomState.name });
+    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.US_MAP, correct: randomState.name });
   }
 
   async flagHandler(chatId: number): Promise<void> {
     const gameFilter = (c: Country) => !!c.emoji;
-    const allCountries = this.countryDB.getAllCountries();
-    const randomCountry = this.countryDB.getRandomCountry(gameFilter);
+    const allCountries = await getAllCountries();
+    const randomCountry = await getRandomCountry(gameFilter);
 
     const otherOptions = getFlagDistractors(allCountries, randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
@@ -91,13 +87,13 @@ export class WorldlyService {
 
     await this.bot.sendMessage(chatId, randomCountry.emoji, { ...inlineKeyboardMarkup });
 
-    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.FLAG, correct: randomCountry.name });
+    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.FLAG, correct: randomCountry.name });
   }
 
   async capitalHandler(chatId: number): Promise<void> {
     const gameFilter = (c: Country) => !!c.capital;
-    const allCountries = this.countryDB.getAllCountries();
-    const randomCountry = this.countryDB.getRandomCountry(gameFilter);
+    const allCountries = await getAllCountries();
+    const randomCountry = await getRandomCountry(gameFilter);
 
     const otherOptions = getCapitalDistractors(allCountries, randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
@@ -109,6 +105,6 @@ export class WorldlyService {
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
     await this.bot.sendMessage(chatId, replyText, { ...inlineKeyboardMarkup });
 
-    await this.gameLogDB.saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.CAPITAL, correct: randomCountry.name });
+    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.CAPITAL, correct: randomCountry.name });
   }
 }
