@@ -19,12 +19,12 @@ export async function getAllStates(): Promise<State[]> {
 }
 
 export async function getStateByName(state: string): Promise<State> {
-  const allStates = this.getAllStates();
+  const allStates = await getAllStates();
   return allStates.find((s) => s.name === state);
 }
 
 export async function getRandomState(filter: (country: State) => boolean): Promise<State> {
-  const allStates = this.getAllStates();
+  const allStates = await getAllStates();
   const filteredStates = allStates.filter(filter);
   return filteredStates[Math.floor(Math.random() * filteredStates.length)];
 }

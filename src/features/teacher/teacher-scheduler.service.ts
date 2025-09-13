@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { TeacherMongoCourseParticipationService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
+import { getActiveUsers, getCourseParticipationForSummaryReminder, getUserDetails } from './mongo';
 import { BOT_CONFIG, COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_REMINDER_HOUR_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher.config';
 import { TeacherService } from './teacher.service';
 
@@ -12,9 +12,6 @@ export class TeacherSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly teacherService: TeacherService,
-    private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
-    private readonly userDB: TeacherMongoUserService,
-    private readonly userPreferencesDB: TeacherMongoUserPreferencesService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -27,7 +24,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleCourseFirstLesson(): Promise<void> {
     try {
-      const users = await this.userPreferencesDB.getActiveUsers();
+      const users = await getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseFirstLesson(chatId)));
     } catch (err) {
@@ -42,7 +39,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   })
   async handleCourseNextLesson(): Promise<void> {
     try {
-      const users = await this.userPreferencesDB.getActiveUsers();
+      const users = await getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseNextLesson(chatId)));
     } catch (err) {
@@ -54,12 +51,12 @@ export class TeacherSchedulerService implements OnModuleInit {
   @Cron(`0 ${COURSE_REMINDER_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-reminders', timeZone: DEFAULT_TIMEZONE })
   async handleCourseReminders(): Promise<void> {
     try {
-      const courseParticipation = await this.courseParticipationDB.getCourseParticipationForSummaryReminder();
+      const courseParticipation = await getCourseParticipationForSummaryReminder();
       if (!courseParticipation) {
         return;
       }
       await this.teacherService.handleCourseReminders(courseParticipation).catch(async (err) => {
-        const userDetails = await this.userDB.getUserDetails({ chatId: courseParticipation.chatId });
+        const userDetails = await getUserDetails(courseParticipation.chatId);
         this.logger.error(`${this.handleCourseReminders.name} - error: ${err}`);
         this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
       });

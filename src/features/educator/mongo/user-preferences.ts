@@ -30,7 +30,6 @@ export async function createUserPreference(chatId: number): Promise<void> {
     createdAt: new Date(),
   };
   await userPreferencesCollection.insertOne(userPreference);
-  return;
 }
 
 export async function updateUserPreference(chatId: number, update: Partial<UserPreferences>): Promise<void> {
@@ -38,5 +37,4 @@ export async function updateUserPreference(chatId: number, update: Partial<UserP
   const filter = { chatId };
   const updateObj = { $set: update };
   await userPreferencesCollection.updateOne(filter, updateObj);
-  return;
 }

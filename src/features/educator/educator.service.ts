@@ -1,11 +1,22 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT } from './educator.config';
-import { TopicResponseSchema, TopicSummarySchema } from './types';
+import {
+  createTopicParticipation,
+  getActiveTopicParticipation,
+  getRandomTopic,
+  getTopic,
+  getTopicParticipation,
+  getTopicParticipations,
+  saveMessageId,
+  saveSummarySent,
+  saveTopicSummary,
+  updatePreviousResponseId,
+} from './mongo';
+import { Topic, TopicParticipation, TopicResponseSchema, TopicSummarySchema } from './types';
 import { generateSummaryMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
@@ -25,19 +36,17 @@ const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
 @Injectable()
 export class EducatorService {
   constructor(
-    private readonly topicDB: EducatorMongoTopicService,
-    private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async handleTopicReminders(topicParticipation: TopicParticipation): Promise<void> {
     await this.bot.sendMessage(topicParticipation.chatId, generateSummaryMessage(topicParticipation.summaryDetails));
-    await this.topicParticipationDB.saveSummarySent(topicParticipation._id.toString());
+    await saveSummarySent(topicParticipation._id.toString());
   }
 
   async processTopic(chatId: number): Promise<void> {
-    const topicParticipation = await this.topicParticipationDB.getActiveTopicParticipation(chatId);
+    const topicParticipation = await getActiveTopicParticipation(chatId);
     if (topicParticipation) {
       return;
     }
@@ -46,10 +55,10 @@ export class EducatorService {
   }
 
   async getNewTopic(chatId: number): Promise<Topic> {
-    const topicParticipations = await this.topicParticipationDB.getTopicParticipations(chatId);
+    const topicParticipations = await getTopicParticipations(chatId);
     const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
 
-    return this.topicDB.getRandomTopic(chatId, topicsParticipated);
+    return getRandomTopic(chatId, topicsParticipated);
   }
 
   async startNewTopic(chatId: number): Promise<void> {
@@ -59,7 +68,7 @@ export class EducatorService {
       return;
     }
 
-    const topicParticipation = await this.topicParticipationDB.createTopicParticipation(chatId, topic._id.toString());
+    const topicParticipation = await createTopicParticipation(chatId, topic._id.toString());
 
     await this.bot.sendMessage(chatId, [`נושא השיעור הבא שלנו:`, topic.title].join('\n'));
     await this.processQuestion(chatId, topicParticipation, [`הנושא של היום הוא`, `${topic.title}`].join(' '));
@@ -72,14 +81,14 @@ export class EducatorService {
       input: question,
       schema: TopicResponseSchema,
     });
-    await this.topicParticipationDB.updatePreviousResponseId(topicParticipation._id.toString(), responseId);
+    await updatePreviousResponseId(topicParticipation._id.toString(), responseId);
     const { message_id: messageId } = await sendShortenedMessage(this.bot, chatId, result.text, { ...getBotInlineKeyboardMarkup(topicParticipation) });
-    this.topicParticipationDB.saveMessageId(topicParticipation._id.toString(), messageId);
+    saveMessageId(topicParticipation._id.toString(), messageId);
   }
 
   async generateTopicSummary(topicParticipationId: string): Promise<void> {
-    const topicParticipation = await this.topicParticipationDB.getTopicParticipation(topicParticipationId);
-    const topic = await this.topicDB.getTopic(topicParticipation.topicId);
+    const topicParticipation = await getTopicParticipation(topicParticipationId);
+    const topic = await getTopic(topicParticipation.topicId);
     if (!topic) {
       return;
     }
@@ -91,6 +100,6 @@ export class EducatorService {
       schema: TopicSummarySchema,
     });
 
-    await this.topicParticipationDB.saveTopicSummary(topicParticipation, topic.title, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
+    await saveTopicSummary(topicParticipation, topic.title, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
   }
 }
