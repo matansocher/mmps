@@ -1,7 +1,11 @@
 import { Db, MongoClient, MongoClientOptions } from 'mongodb';
 import { env } from 'node:process';
 import { DynamicModule, Global, Module } from '@nestjs/common';
-import { DatabaseModuleOptions } from './interface';
+
+interface DatabaseModuleOptions {
+  readonly connectionName: string;
+  readonly dbName: string;
+}
 
 @Global()
 @Module({})
