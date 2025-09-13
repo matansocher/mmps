@@ -3,10 +3,6 @@ import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-
 import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
-import { TeacherMongoCourseParticipationService } from '@core/mongo/teacher-mongo';
-import { createCourse, getCourse } from '@core/mongo/teacher-mongo/functions/course.functions';
-import { createUserPreference, getUserPreference, updateUserPreference } from '@core/mongo/teacher-mongo/functions/user-preferences.functions';
-import { saveUserDetails } from '@core/mongo/teacher-mongo/functions/user.functions';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
@@ -24,6 +20,9 @@ import {
   TelegramEventHandler,
   UserDetails,
 } from '@services/telegram';
+import { createCourse, getActiveCourseParticipation, getCourse, markCourseParticipationCompleted } from './mongo';
+import { createUserPreference, getUserPreference, updateUserPreference } from './mongo';
+import { saveUserDetails } from './mongo';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './teacher.config';
 import { TeacherService } from './teacher.service';
 
@@ -37,7 +36,6 @@ export class TeacherController implements OnModuleInit {
 
   constructor(
     private readonly teacherService: TeacherService,
-    private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -77,9 +75,9 @@ export class TeacherController implements OnModuleInit {
 
   private async courseHandler(message: Message): Promise<void> {
     const { chatId, messageId, userDetails } = getMessageData(message);
-    const activeCourse = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
+    const activeCourse = await getActiveCourseParticipation(chatId);
     if (activeCourse?._id) {
-      await this.courseParticipationDB.markCourseParticipationCompleted(activeCourse._id.toString());
+      await markCourseParticipationCompleted(activeCourse._id.toString());
     }
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
@@ -109,7 +107,7 @@ export class TeacherController implements OnModuleInit {
     // prevent built in options to be processed also here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
-    const activeCourseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
+    const activeCourseParticipation = await getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
       await this.bot.sendMessage(chatId, `I see you dont have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);
       return;
@@ -215,7 +213,7 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
-    const courseParticipation = await this.courseParticipationDB.markCourseParticipationCompleted(courseParticipationId);
+    const courseParticipation = await markCourseParticipationCompleted(courseParticipationId);
     const messagesToUpdate = [messageId, ...(courseParticipation?.threadMessages || [])];
     await Promise.all(
       messagesToUpdate.map(async (message) => {

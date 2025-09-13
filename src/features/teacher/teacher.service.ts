@@ -1,11 +1,23 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Course, CourseParticipation, TeacherMongoCourseParticipationService } from '@core/mongo/teacher-mongo';
-import { getCourse, getRandomCourse } from '@core/mongo/teacher-mongo/functions/course.functions';
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
+import {
+  createCourseParticipation,
+  getActiveCourseParticipation,
+  getCourse,
+  getCourseParticipation,
+  getCourseParticipations,
+  getRandomCourse,
+  markCourseParticipationLessonCompleted,
+  saveCourseSummary,
+  saveMessageId,
+  saveSummarySent,
+  updatePreviousResponseId,
+} from './mongo';
 import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT, THREAD_MESSAGE_FIRST_LESSON, THREAD_MESSAGE_NEXT_LESSON, TOTAL_COURSE_LESSONS } from './teacher.config';
+import { Course, CourseParticipation } from './types';
 import { CourseResponseSchema, CourseSummarySchema } from './types';
 import { generateSummaryMessage } from './utils';
 
@@ -38,18 +50,17 @@ export class TeacherService {
   private readonly logger = new Logger(TeacherService.name);
 
   constructor(
-    private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async handleCourseReminders(courseParticipation: CourseParticipation) {
     await this.bot.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails));
-    await this.courseParticipationDB.saveSummarySent(courseParticipation._id.toString());
+    await saveSummarySent(courseParticipation._id.toString());
   }
 
   async processCourseFirstLesson(chatId: number): Promise<void> {
-    const courseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
+    const courseParticipation = await getActiveCourseParticipation(chatId);
     if (courseParticipation) {
       return;
     }
@@ -80,19 +91,19 @@ export class TeacherService {
   }
 
   async getNewCourse(chatId: number): Promise<{ course: Course; courseParticipation: CourseParticipation }> {
-    const courseParticipations = await this.courseParticipationDB.getCourseParticipations(chatId);
+    const courseParticipations = await getCourseParticipations(chatId);
     const coursesParticipated = courseParticipations.map((courseParticipation) => courseParticipation.courseId);
 
     const course = await getRandomCourse(chatId, coursesParticipated);
     if (!course) {
       return { course: null, courseParticipation: null };
     }
-    const courseParticipation = await this.courseParticipationDB.createCourseParticipation(chatId, course._id.toString());
+    const courseParticipation = await createCourseParticipation(chatId, course._id.toString());
     return { course, courseParticipation };
   }
 
   async processLesson(chatId: number, isScheduled = false): Promise<void> {
-    const courseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
+    const courseParticipation = await getActiveCourseParticipation(chatId);
     if (!courseParticipation) {
       !isScheduled && (await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one.`));
       return;
@@ -111,7 +122,7 @@ export class TeacherService {
       return;
     }
     await this.processQuestion(chatId, courseParticipation, prompt);
-    await this.courseParticipationDB.markCourseParticipationLessonCompleted(courseParticipation._id);
+    await markCourseParticipationLessonCompleted(courseParticipation._id);
   }
 
   async processQuestion(chatId: number, courseParticipation: CourseParticipation, question: string): Promise<void> {
@@ -121,13 +132,13 @@ export class TeacherService {
       input: question,
       schema: CourseResponseSchema,
     });
-    await this.courseParticipationDB.updatePreviousResponseId(courseParticipation._id.toString(), responseId);
+    await updatePreviousResponseId(courseParticipation._id.toString(), responseId);
     const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, result.text, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation, false));
-    this.courseParticipationDB.saveMessageId(courseParticipation._id.toString(), messageId);
+    saveMessageId(courseParticipation._id.toString(), messageId);
   }
 
   async generateCourseSummary(courseParticipationId: string): Promise<void> {
-    const courseParticipation = await this.courseParticipationDB.getCourseParticipation(courseParticipationId);
+    const courseParticipation = await getCourseParticipation(courseParticipationId);
     const course = await getCourse(courseParticipation.courseId);
     if (!course) {
       return;
@@ -140,6 +151,6 @@ export class TeacherService {
       schema: CourseSummarySchema,
     });
 
-    await this.courseParticipationDB.saveCourseSummary(courseParticipation, course.topic, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
+    await saveCourseSummary(courseParticipation, course.topic, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
   }
 }

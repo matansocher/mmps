@@ -1,11 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { EducatorMongoTopicParticipationService, EducatorMongoUserService } from '@core/mongo/educator-mongo';
-import { getActiveUsers } from '@core/mongo/educator-mongo/functions/user-preferences.functions';
 import { NotifierService } from '@core/notifier';
 import { BOT_CONFIG, TOPIC_REMINDER_HOUR_OF_DAY, TOPIC_START_HOUR_OF_DAY } from './educator.config';
 import { EducatorService } from './educator.service';
+import { getActiveUsers, getCourseParticipationForSummaryReminder, getUserDetails } from './mongo';
 
 @Injectable()
 export class EducatorSchedulerService implements OnModuleInit {
@@ -13,8 +12,6 @@ export class EducatorSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly educatorService: EducatorService,
-    private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
-    private readonly userDB: EducatorMongoUserService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -41,12 +38,12 @@ export class EducatorSchedulerService implements OnModuleInit {
   @Cron(`0 ${TOPIC_REMINDER_HOUR_OF_DAY} * * *`, { name: 'educator-scheduler-reminders', timeZone: DEFAULT_TIMEZONE })
   async handleTopicReminders(): Promise<void> {
     try {
-      const topicParticipation = await this.topicParticipationDB.getCourseParticipationForSummaryReminder();
+      const topicParticipation = await getCourseParticipationForSummaryReminder();
       if (!topicParticipation) {
         return;
       }
       await this.educatorService.handleTopicReminders(topicParticipation).catch(async (err) => {
-        const userDetails = await this.userDB.getUserDetails({ chatId: topicParticipation.chatId });
+        const userDetails = await getUserDetails(topicParticipation.chatId);
         this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
         this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
       });

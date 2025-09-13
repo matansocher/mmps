@@ -1,4 +1,4 @@
-import { Recipe } from '@core/mongo/cooker-mongo';
+import { Recipe } from '@core/notifier/cooker/mongo';
 
 export function generateRecipeString(recipe: Recipe): string {
   const { emoji, title, ingredients, instructions, tags, link } = recipe;

@@ -1,12 +1,12 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
-import { getExercises, getTodayExercise } from '@core/mongo/trainer-mongo/functions/exercise.functions';
-import { getUserDetails } from '@core/mongo/trainer-mongo/functions/user.functions';
 import { NotifierService } from '@core/notifier';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
 import { UserDetails } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
+import { getExercises, getTodayExercise } from './mongo';
+import { getUserDetails } from './mongo';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './trainer.config';
 import { getLastWeekDates } from './utils';
 

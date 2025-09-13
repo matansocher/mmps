@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { getActiveSubscriptions } from '@core/mongo/worldly-mongo/functions/subscription.functions';
+import { getActiveSubscriptions } from './mongo';
 import { NotifierService } from '@core/notifier';
 import { getHourInTimezone } from '@core/utils';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';

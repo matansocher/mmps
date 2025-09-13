@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Recipe } from '@core/mongo/cooker-mongo';
+import { Recipe } from '@core/notifier/cooker/mongo';
 import { BaseCache } from '@core/services';
 
 const validForMinutes = 200;

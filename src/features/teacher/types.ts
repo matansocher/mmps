@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { ObjectId } from 'mongodb';
 import { TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 
 export const CourseResponseSchema = z.object({
@@ -14,3 +15,46 @@ export const CourseSummarySchema = z.object({
 });
 
 export type CourseResponse = z.infer<typeof CourseResponseSchema>;
+
+// Models from mongo
+export interface Course {
+  readonly _id: ObjectId;
+  readonly topic: string;
+  readonly createdBy?: number;
+  readonly createdAt: Date;
+}
+
+export enum CourseParticipationStatus {
+  Pending = 'pending',
+  Assigned = 'assigned',
+  Completed = 'completed',
+}
+
+export interface SummaryDetails {
+  readonly topicTitle: string;
+  readonly summary: string;
+  readonly keyTakeaways: string[];
+  readonly sentAt?: Date;
+  readonly createdAt: Date;
+}
+
+export interface CourseParticipation {
+  readonly _id: ObjectId;
+  readonly courseId: string;
+  readonly chatId: number;
+  previousResponseId?: string;
+  readonly status: CourseParticipationStatus;
+  readonly lessonsCompleted?: number;
+  readonly threadMessages?: number[];
+  readonly summaryDetails?: SummaryDetails;
+  readonly assignedAt?: Date;
+  readonly completedAt?: Date;
+  readonly createdAt: Date;
+}
+
+export interface UserPreferences {
+  readonly _id: ObjectId;
+  readonly chatId: number;
+  readonly isStopped: boolean;
+  readonly createdAt: Date;
+}

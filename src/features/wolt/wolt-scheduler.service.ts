@@ -3,12 +3,12 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Subscription, WoltMongoUserService } from '@core/mongo/wolt-mongo';
-import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions } from '@core/mongo/wolt-mongo/functions/subscription.functions';
 import { NotifierService } from '@core/notifier';
 import { getInlineKeyboardMarkup, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
+import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails } from './mongo';
 import { RestaurantsService } from './restaurants.service';
+import { Subscription } from './types';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
@@ -21,7 +21,6 @@ export class WoltSchedulerService implements OnModuleInit {
 
   constructor(
     private readonly restaurantsService: RestaurantsService,
-    private readonly userDB: WoltMongoUserService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -115,7 +114,7 @@ export class WoltSchedulerService implements OnModuleInit {
   }
 
   async notifyWithUserDetails(chatId: number, restaurant: string, action: AnalyticEventValue) {
-    const userDetails = (await this.userDB.getUserDetails({ chatId })) as unknown as UserDetails;
+    const userDetails = (await getUserDetails(chatId)) as unknown as UserDetails;
     this.notifier.notify(BOT_CONFIG, { restaurant, action }, userDetails);
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Recipe } from '@core/mongo/cooker-mongo';
-import { getRecipe, getRecipes } from '@core/mongo/cooker-mongo/functions/recipe.functions';
+import { getRecipe, getRecipes } from './mongo';
 import { RecipesCacheService } from './recipes-cache.service';
+import { Recipe } from './types';
 
 @Injectable()
 export class CookerService {
