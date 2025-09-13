@@ -1,15 +1,15 @@
 import * as bodyParser from 'body-parser';
-import { configDotenv } from 'dotenv';
+import { config } from 'dotenv';
 import { env } from 'node:process';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app/app.module';
 
-configDotenv();
+config();
 
 async function bootstrap() {
+  const AppModule = await import('./app/app.module');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug'],
   });

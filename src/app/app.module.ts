@@ -34,4 +34,4 @@ const registerBotModule = (module: any, config: { id: string }) => {
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export default class AppModule {}
