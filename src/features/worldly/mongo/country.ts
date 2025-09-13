@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { Country } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -8,7 +8,7 @@ let countryCollection: Collection<Country>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  countryCollection = getCollection<Country>(db, COLLECTIONS.COUNTRY);
+  countryCollection = getMongoCollection<Country>(db, COLLECTIONS.COUNTRY);
 })();
 
 let _countries: Country[] | null = null;

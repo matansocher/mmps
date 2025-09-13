@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { SummaryDetails, Topic, TopicParticipation, TopicParticipationStatus } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -10,7 +10,7 @@ let topicParticipationCollection: Collection<TopicParticipation>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  topicParticipationCollection = getCollection<TopicParticipation>(db, COLLECTIONS.TOPIC_PARTICIPATION);
+  topicParticipationCollection = getMongoCollection<TopicParticipation>(db, COLLECTIONS.TOPIC_PARTICIPATION);
 })();
 
 export async function createTopicParticipation(chatId: number, topicId: string): Promise<TopicParticipation> {

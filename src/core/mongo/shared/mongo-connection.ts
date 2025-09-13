@@ -13,19 +13,6 @@ export async function getMongoDb(dbName: string): Promise<Db> {
   return connections.get(dbName)!;
 }
 
-export function getCollection<T = any>(db: Db, collectionName: string): Collection<T> {
+export function getMongoCollection<T = any>(db: Db, collectionName: string): Collection<T> {
   return db.collection<T>(collectionName);
-}
-
-export function createDbConnector<T = any>(dbName: string, collectionName: string) {
-  let db: Db;
-  let collection: Collection<T>;
-
-  return async () => {
-    if (!db) {
-      db = await getMongoDb(dbName);
-      collection = getCollection<T>(db, collectionName);
-    }
-    return { db, collection };
-  };
 }

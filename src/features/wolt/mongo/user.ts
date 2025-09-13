@@ -1,17 +1,10 @@
-import { Collection, Db } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
-import { COLLECTIONS, DB_NAME } from './constants';
-
-let db: Db;
-let userCollection: Collection;
-
-(async () => {
-  db = await getMongoDb(DB_NAME);
-  userCollection = getCollection(db, COLLECTIONS.USER);
-})();
+import { User } from '@core/mongo/shared';
+import { getCollection } from './connection';
+import { COLLECTIONS } from './constants';
 
 export async function saveUserDetails(userDetails: any): Promise<boolean> {
   try {
+    const userCollection = await getCollection<User>(COLLECTIONS.USER);
     const filter = { chatId: userDetails.chatId };
     const existingUserDetails = await userCollection.findOne(filter);
     if (existingUserDetails) {
@@ -30,6 +23,7 @@ export async function saveUserDetails(userDetails: any): Promise<boolean> {
 
 export async function getUserDetails(chatId: number): Promise<any> {
   try {
+    const userCollection = await getCollection<User>(COLLECTIONS.USER);
     return userCollection.findOne({ chatId });
   } catch (err) {
     console.error(`getUserDetails - err: ${err}`);

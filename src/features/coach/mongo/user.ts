@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb';
-import { getCollection, getMongoDb, User } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb, User } from '@core/mongo/shared';
 import { COLLECTIONS, DB_NAME } from './constants';
 
 let db: Db;
@@ -7,7 +7,7 @@ let userCollection: Collection<User>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  userCollection = getCollection<User>(db, COLLECTIONS.USER);
+  userCollection = getMongoCollection<User>(db, COLLECTIONS.USER);
 })();
 
 export async function saveUserDetails(userDetails: Partial<User>): Promise<boolean> {

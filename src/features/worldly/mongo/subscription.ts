@@ -1,5 +1,5 @@
 import { Collection, Db, InsertOneResult } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { Subscription } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -8,7 +8,7 @@ let subscriptionCollection: Collection<Subscription>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  subscriptionCollection = getCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
+  subscriptionCollection = getMongoCollection<Subscription>(db, COLLECTIONS.SUBSCRIPTION);
 })();
 
 export async function getActiveSubscriptions(): Promise<{ chatId: number }[]> {

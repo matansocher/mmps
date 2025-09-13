@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { Course } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -8,7 +8,7 @@ let courseCollection: Collection<Course>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  courseCollection = getCollection<Course>(db, COLLECTIONS.COURSE);
+  courseCollection = getMongoCollection<Course>(db, COLLECTIONS.COURSE);
 })();
 
 export async function createCourse(chatId: number, topic: string): Promise<Course> {

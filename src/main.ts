@@ -10,7 +10,7 @@ config();
 
 async function bootstrap() {
   const AppModule = await import('./app/app.module');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule.default, {
     logger: ['error', 'warn', 'log', 'debug'],
   });
 

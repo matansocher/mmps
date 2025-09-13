@@ -1,6 +1,6 @@
 import { endOfDay, startOfDay } from 'date-fns';
 import { Collection, Db, InsertOneResult, ObjectId } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { Exercise } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -9,7 +9,7 @@ let exerciseCollection: Collection<Exercise>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  exerciseCollection = getCollection<Exercise>(db, COLLECTIONS.EXERCISE);
+  exerciseCollection = getMongoCollection<Exercise>(db, COLLECTIONS.EXERCISE);
 })();
 
 export async function addExercise(chatId: number): Promise<InsertOneResult<Exercise>> {

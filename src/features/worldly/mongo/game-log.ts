@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { GameLog } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -8,7 +8,7 @@ let gameLogCollection: Collection<GameLog>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  gameLogCollection = getCollection<GameLog>(db, COLLECTIONS.GAME_LOG);
+  gameLogCollection = getMongoCollection<GameLog>(db, COLLECTIONS.GAME_LOG);
 })();
 
 export type SaveGameLogOptions = {

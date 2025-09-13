@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { DB_NAME } from './constants';
 
 let db: Db;
@@ -7,7 +7,7 @@ let userCollection: Collection;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  userCollection = getCollection(db, 'User');
+  userCollection = getMongoCollection(db, 'User');
 })();
 
 export async function saveUserDetails(userDetails: any): Promise<boolean> {

@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { UserPreferences } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -8,7 +8,7 @@ let userPreferencesCollection: Collection<UserPreferences>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  userPreferencesCollection = getCollection<UserPreferences>(db, COLLECTIONS.USER_PREFERENCES);
+  userPreferencesCollection = getMongoCollection<UserPreferences>(db, COLLECTIONS.USER_PREFERENCES);
 })();
 
 export async function getUserPreference(chatId: number): Promise<UserPreferences> {

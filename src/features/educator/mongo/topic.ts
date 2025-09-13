@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { Topic } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -8,7 +8,7 @@ let topicCollection: Collection<Topic>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  topicCollection = getCollection<Topic>(db, COLLECTIONS.TOPIC);
+  topicCollection = getMongoCollection<Topic>(db, COLLECTIONS.TOPIC);
 })();
 
 export async function createTopic(chatId: number, title: string): Promise<Topic> {

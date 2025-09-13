@@ -1,5 +1,5 @@
 import { Collection, Db, ObjectId } from 'mongodb';
-import { getCollection, getMongoDb } from '@core/mongo/shared';
+import { getMongoCollection, getMongoDb } from '@core/mongo/shared';
 import { Course, CourseParticipation, CourseParticipationStatus, SummaryDetails } from '../types';
 import { COLLECTIONS, DB_NAME } from './constants';
 
@@ -10,7 +10,7 @@ let courseParticipationCollection: Collection<CourseParticipation>;
 
 (async () => {
   db = await getMongoDb(DB_NAME);
-  courseParticipationCollection = getCollection<CourseParticipation>(db, COLLECTIONS.COURSE_PARTICIPATION);
+  courseParticipationCollection = getMongoCollection<CourseParticipation>(db, COLLECTIONS.COURSE_PARTICIPATION);
 })();
 
 export async function createCourseParticipation(chatId: number, courseId: string): Promise<CourseParticipation> {
