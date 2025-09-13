@@ -1,6 +1,7 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
+import { EducatorMongoTopicParticipationService, Topic, TopicParticipation } from '@core/mongo/educator-mongo';
+import { getRandomTopic, getTopic } from '@core/mongo/educator-mongo/functions/topic.functions';
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
@@ -25,7 +26,6 @@ const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
 @Injectable()
 export class EducatorService {
   constructor(
-    private readonly topicDB: EducatorMongoTopicService,
     private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -49,7 +49,7 @@ export class EducatorService {
     const topicParticipations = await this.topicParticipationDB.getTopicParticipations(chatId);
     const topicsParticipated = topicParticipations.map((topic) => topic.topicId);
 
-    return this.topicDB.getRandomTopic(chatId, topicsParticipated);
+    return getRandomTopic(chatId, topicsParticipated);
   }
 
   async startNewTopic(chatId: number): Promise<void> {
@@ -79,7 +79,7 @@ export class EducatorService {
 
   async generateTopicSummary(topicParticipationId: string): Promise<void> {
     const topicParticipation = await this.topicParticipationDB.getTopicParticipation(topicParticipationId);
-    const topic = await this.topicDB.getTopic(topicParticipation.topicId);
+    const topic = await getTopic(topicParticipation.topicId);
     if (!topic) {
       return;
     }

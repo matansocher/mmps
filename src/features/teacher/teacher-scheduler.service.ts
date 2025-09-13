@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { TeacherMongoCourseParticipationService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
+import { TeacherMongoCourseParticipationService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
+import { getActiveUsers } from '@core/mongo/teacher-mongo/functions/user-preferences.functions';
 import { NotifierService } from '@core/notifier';
 import { BOT_CONFIG, COURSE_ADDITIONAL_LESSONS_HOURS_OF_DAY, COURSE_REMINDER_HOUR_OF_DAY, COURSE_START_HOUR_OF_DAY } from './teacher.config';
 import { TeacherService } from './teacher.service';
@@ -14,7 +15,6 @@ export class TeacherSchedulerService implements OnModuleInit {
     private readonly teacherService: TeacherService,
     private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
     private readonly userDB: TeacherMongoUserService,
-    private readonly userPreferencesDB: TeacherMongoUserPreferencesService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -27,7 +27,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async handleCourseFirstLesson(): Promise<void> {
     try {
-      const users = await this.userPreferencesDB.getActiveUsers();
+      const users = await getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseFirstLesson(chatId)));
     } catch (err) {
@@ -42,7 +42,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   })
   async handleCourseNextLesson(): Promise<void> {
     try {
-      const users = await this.userPreferencesDB.getActiveUsers();
+      const users = await getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.teacherService.processCourseNextLesson(chatId)));
     } catch (err) {

@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { EducatorMongoTopicParticipationService, EducatorMongoUserPreferencesService, EducatorMongoUserService } from '@core/mongo/educator-mongo';
+import { EducatorMongoTopicParticipationService, EducatorMongoUserService } from '@core/mongo/educator-mongo';
+import { getActiveUsers } from '@core/mongo/educator-mongo/functions/user-preferences.functions';
 import { NotifierService } from '@core/notifier';
 import { BOT_CONFIG, TOPIC_REMINDER_HOUR_OF_DAY, TOPIC_START_HOUR_OF_DAY } from './educator.config';
 import { EducatorService } from './educator.service';
@@ -14,7 +15,6 @@ export class EducatorSchedulerService implements OnModuleInit {
     private readonly educatorService: EducatorService,
     private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
     private readonly userDB: EducatorMongoUserService,
-    private readonly userPreferencesDB: EducatorMongoUserPreferencesService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -29,7 +29,7 @@ export class EducatorSchedulerService implements OnModuleInit {
   })
   async handleTopic(): Promise<void> {
     try {
-      const users = await this.userPreferencesDB.getActiveUsers();
+      const users = await getActiveUsers();
       const chatIds = users.map((user) => user.chatId);
       await Promise.all(chatIds.map((chatId) => this.educatorService.processTopic(chatId)));
     } catch (err) {

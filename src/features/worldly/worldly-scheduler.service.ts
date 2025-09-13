@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { WorldlyMongoSubscriptionService } from '@core/mongo/worldly-mongo';
+import { getActiveSubscriptions } from '@core/mongo/worldly-mongo/functions/subscription.functions';
 import { NotifierService } from '@core/notifier';
 import { getHourInTimezone } from '@core/utils';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
@@ -13,7 +13,6 @@ const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20];
 export class WorldlyBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly worldlyService: WorldlyService,
-    private readonly subscriptionDB: WorldlyMongoSubscriptionService,
     private readonly notifier: NotifierService,
   ) {}
 
@@ -24,7 +23,7 @@ export class WorldlyBotSchedulerService implements OnModuleInit {
   @Cron(`0 ${INTERVAL_HOURS_BY_PRIORITY.join(',')} * * *`, { name: 'worldly-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
-      const subscriptions = await this.subscriptionDB.getActiveSubscriptions();
+      const subscriptions = await getActiveSubscriptions();
       if (!subscriptions?.length) {
         return;
       }

@@ -76,3 +76,27 @@ export async function getTopByChatId(total: number): Promise<TopChatRecord[]> {
     .toArray();
   return result as TopChatRecord[];
 }
+
+export async function getGameLogsByUsers(): Promise<Record<string, GameLog[]>> {
+  const logsByUsers = await gameLogCollection
+    .aggregate([
+      { $sort: { chatId: 1, createdAt: 1 } },
+      {
+        $group: {
+          _id: '$chatId',
+          logs: {
+            $push: {
+              correct: '$correct',
+              selected: '$selected',
+              createdAt: '$createdAt',
+            },
+          },
+        },
+      },
+    ])
+    .toArray();
+
+  const gameLogsByUsers = {};
+  logsByUsers.forEach(({ _id, logs }) => (gameLogsByUsers[_id] = logs));
+  return gameLogsByUsers;
+}

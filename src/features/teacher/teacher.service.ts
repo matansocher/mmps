@@ -1,6 +1,7 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Course, CourseParticipation, TeacherMongoCourseParticipationService, TeacherMongoCourseService } from '@core/mongo/teacher-mongo';
+import { Course, CourseParticipation, TeacherMongoCourseParticipationService } from '@core/mongo/teacher-mongo';
+import { getCourse, getRandomCourse } from '@core/mongo/teacher-mongo/functions/course.functions';
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
@@ -37,7 +38,6 @@ export class TeacherService {
   private readonly logger = new Logger(TeacherService.name);
 
   constructor(
-    private readonly courseDB: TeacherMongoCourseService,
     private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -83,7 +83,7 @@ export class TeacherService {
     const courseParticipations = await this.courseParticipationDB.getCourseParticipations(chatId);
     const coursesParticipated = courseParticipations.map((courseParticipation) => courseParticipation.courseId);
 
-    const course = await this.courseDB.getRandomCourse(chatId, coursesParticipated);
+    const course = await getRandomCourse(chatId, coursesParticipated);
     if (!course) {
       return { course: null, courseParticipation: null };
     }
@@ -128,7 +128,7 @@ export class TeacherService {
 
   async generateCourseSummary(courseParticipationId: string): Promise<void> {
     const courseParticipation = await this.courseParticipationDB.getCourseParticipation(courseParticipationId);
-    const course = await this.courseDB.getCourse(courseParticipation.courseId);
+    const course = await getCourse(courseParticipation.courseId);
     if (!course) {
       return;
     }

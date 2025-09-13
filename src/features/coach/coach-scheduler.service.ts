@@ -2,7 +2,8 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { CoachMongoSubscriptionService, CoachMongoUserService } from '@core/mongo/coach-mongo';
+import { CoachMongoUserService } from '@core/mongo/coach-mongo';
+import { getActiveSubscriptions, updateSubscription } from '@core/mongo/coach-mongo/functions/subscription.functions';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
 import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
@@ -15,7 +16,6 @@ const HOURS_TO_NOTIFY = [12, 23];
 export class CoachBotSchedulerService implements OnModuleInit {
   constructor(
     private readonly coachService: CoachService,
-    private readonly subscriptionDB: CoachMongoSubscriptionService,
     private readonly userDB: CoachMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
@@ -28,7 +28,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   @Cron(`59 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
-      const subscriptions = await this.subscriptionDB.getActiveSubscriptions();
+      const subscriptions = await getActiveSubscriptions();
       if (!subscriptions?.length) {
         return;
       }
@@ -45,7 +45,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
         } catch (err) {
           const userDetails = await this.userDB.getUserDetails({ chatId });
           if (err.message.includes(BLOCKED_ERROR)) {
-            await this.subscriptionDB.updateSubscription(chatId, { isActive: false });
+            await updateSubscription(chatId, { isActive: false });
             this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
           } else {
             this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
