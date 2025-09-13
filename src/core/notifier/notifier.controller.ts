@@ -20,10 +20,6 @@ export class NotifierController implements OnModuleInit {
   private readonly logger = new Logger(NotifierController.name);
 
   constructor(
-    // private readonly woltSubscriptionDB: WoltMongoSubscriptionService,
-    // private readonly woltUserDB: WoltMongoUserService,
-    // private readonly worldlyGameLogDB: WorldlyMongoGameLogService,
-    // private readonly worldlyUserDB: WorldlyMongoUserService,
     private readonly cookerService: CookerService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
