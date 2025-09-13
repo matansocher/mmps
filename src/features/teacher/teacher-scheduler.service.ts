@@ -18,7 +18,7 @@ export class TeacherSchedulerService implements OnModuleInit {
   onModuleInit(): void {
     // this.handleCourseFirstLesson();
     // this.handleCourseNextLesson();
-    this.handleCourseReminders();
+    // this.handleCourseReminders();
   }
 
   @Cron(`0 ${COURSE_START_HOUR_OF_DAY} * * *`, { name: 'teacher-scheduler-start', timeZone: DEFAULT_TIMEZONE })
