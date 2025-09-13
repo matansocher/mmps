@@ -1,11 +1,10 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
-import { TrainerMongoExerciseService, TrainerMongoUserService } from '@core/mongo/trainer-mongo';
 import { NotifierService } from '@core/notifier';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
-import { UserDetails } from '@services/telegram';
 import { searchMeme } from '@services/tenor';
+import { getExercises, getTodayExercise, getUserDetails } from './mongo';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './trainer.config';
 import { getLastWeekDates } from './utils';
 
@@ -16,15 +15,13 @@ export class TrainerService {
   private readonly logger = new Logger(TrainerService.name);
 
   constructor(
-    private readonly exerciseDB: TrainerMongoExerciseService,
-    private readonly userDB: TrainerMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async processEODReminder(chatId: number): Promise<void> {
     try {
-      const todayExercise = await this.exerciseDB.getTodayExercise(chatId);
+      const todayExercise = await getTodayExercise(chatId);
       if (todayExercise) {
         return;
       }
@@ -44,7 +41,7 @@ export class TrainerService {
     try {
       const { lastSunday, lastSaturday } = getLastWeekDates();
 
-      const exercises = await this.exerciseDB.getExercises(chatId);
+      const exercises = await getExercises(chatId);
       const exercisesDates = exercises.map((exercise) => exercise.createdAt);
       const lastWeekExercises = exercisesDates.filter((exerciseDate) => {
         return exerciseDate.getTime() > lastSunday.getTime() && exerciseDate.getTime() < lastSaturday.getTime();
@@ -64,7 +61,7 @@ export class TrainerService {
   }
 
   async notifyWithUserDetails(chatId: number, action: AnalyticEventValue, error?: string): Promise<void> {
-    const userDetails = (await this.userDB.getUserDetails({ chatId })) as unknown as UserDetails;
+    const userDetails = await getUserDetails(chatId);
     this.notifier.notify(BOT_CONFIG, { action, error }, userDetails);
   }
 }
