@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Logger } from '@nestjs/common';
-import type { WoltRestaurant } from '../interface';
+import type { WoltRestaurant } from '../types';
 import { CITIES_BASE_URL, CITIES_SLUGS_SUPPORTED, RESTAURANT_LINK_BASE_URL, RESTAURANTS_BASE_URL } from '../wolt.config';
 
 interface WoltCity {

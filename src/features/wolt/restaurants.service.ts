@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RestaurantsList, WoltRestaurant } from './interface';
+import { RestaurantsList, WoltRestaurant } from './types';
 import { getRestaurantsList } from './utils';
 import { TOO_OLD_LIST_THRESHOLD_MS } from './wolt.config';
 

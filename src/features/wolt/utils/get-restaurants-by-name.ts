@@ -1,4 +1,4 @@
-import { WoltRestaurant } from '../interface';
+import { WoltRestaurant } from '../types';
 import { CITIES_SLUGS_SUPPORTED } from '../wolt.config';
 
 function normalize(str: string): string {
