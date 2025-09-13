@@ -1,7 +1,7 @@
 import { InsertOneResult } from 'mongodb';
-import { Subscription } from '@core/mongo/worldly-mongo';
-import { COLLECTIONS } from '@core/mongo/worldly-mongo/worldly-mongo.config';
-import { getCollection } from '@features/worldly/mongo/connection';
+import { Subscription } from '../types';
+import { getCollection } from './connection';
+import { COLLECTIONS } from './constants';
 
 export async function getActiveSubscriptions(): Promise<{ chatId: number }[]> {
   const subscriptionCollection = await getCollection<Subscription>(COLLECTIONS.SUBSCRIPTION);

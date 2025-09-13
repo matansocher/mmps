@@ -1,4 +1,4 @@
-import { Country } from '@core/mongo/worldly-mongo';
+import { Country } from '../types';
 import { getCollection } from './connection';
 import { COLLECTIONS } from './constants';
 

@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
-import { Country, State } from '@core/mongo/worldly-mongo';
 import { NotifierService } from '@core/notifier';
 import { generateRandomString, shuffleArray } from '@core/utils';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
 import { getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, updateSubscription } from './mongo';
+import { Country, State } from './types';
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 

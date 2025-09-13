@@ -1,5 +1,5 @@
-import { GameLog } from '@core/mongo/worldly-mongo';
 import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '@core/utils';
+import { GameLog } from '../types';
 
 export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   const currentStreak = getStreak(userGameLogs.map((game) => game.createdAt));

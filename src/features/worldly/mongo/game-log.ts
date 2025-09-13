@@ -1,6 +1,6 @@
-import { GameLog, Subscription } from '@core/mongo/worldly-mongo';
-import { COLLECTIONS } from '@core/mongo/worldly-mongo/worldly-mongo.config';
-import { getCollection } from '@features/worldly/mongo/connection';
+import { GameLog } from '../types';
+import { getCollection } from './connection';
+import { COLLECTIONS } from './constants';
 
 type SaveGameLogOptions = {
   readonly chatId: number;

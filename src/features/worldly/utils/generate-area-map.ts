@@ -1,6 +1,6 @@
 import { Canvas, CanvasRenderingContext2D, createCanvas } from 'canvas';
-import { Country, State } from '@core/mongo/worldly-mongo';
 import { simplifyAreaName } from '.';
+import { Country, State } from '../types';
 
 type GenerateAreaOptions = {
   readonly strokeColor: string;
