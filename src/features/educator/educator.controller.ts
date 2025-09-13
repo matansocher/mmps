@@ -3,7 +3,6 @@ import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-
 import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
-import { EducatorMongoTopicParticipationService, EducatorMongoTopicService, EducatorMongoUserPreferencesService, EducatorMongoUserService } from '@core/mongo/educator-mongo';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
@@ -23,6 +22,7 @@ import {
 } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './educator.config';
 import { EducatorService } from './educator.service';
+import { createTopic, createUserPreference, getActiveTopicParticipation, getTopic, getUserPreference, markTopicParticipationCompleted, saveUserDetails, updateUserPreference } from './mongo';
 
 const loaderMessage = '👩‍🏫 אני אחשוב על זה כמה שניות ואני איתך...';
 const transcribeLoaderMessage = '👩‍🏫 כמה שניות ואני מתמללת לך את זה...';
@@ -35,10 +35,6 @@ export class EducatorController implements OnModuleInit {
 
   constructor(
     private readonly educatorService: EducatorService,
-    private readonly topicDB: EducatorMongoTopicService,
-    private readonly topicParticipationDB: EducatorMongoTopicParticipationService,
-    private readonly userPreferencesDB: EducatorMongoUserPreferencesService,
-    private readonly userDB: EducatorMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -65,7 +61,7 @@ export class EducatorController implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId, messageId } = getMessageData(message);
-    const userPreferences = await this.userPreferencesDB.getUserPreference(chatId);
+    const userPreferences = await getUserPreference(chatId);
     const inlineKeyboardButtons = [
       userPreferences?.isStopped ? { text: '🟢 התחל לקבל שיעורים יומיים 🟢', callback_data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל שיעורים יומיים 🛑', callback_data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', callback_data: `${BOT_ACTIONS.CONTACT}` },
@@ -76,9 +72,9 @@ export class EducatorController implements OnModuleInit {
 
   private async topicHandler(message: Message): Promise<void> {
     const { chatId, messageId, userDetails } = getMessageData(message);
-    const Participation = await this.topicParticipationDB.getActiveTopicParticipation(chatId);
+    const Participation = await getActiveTopicParticipation(chatId);
     if (Participation?._id) {
-      await this.topicParticipationDB.markTopicParticipationCompleted(Participation._id.toString());
+      await markTopicParticipationCompleted(Participation._id.toString());
     }
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
@@ -94,7 +90,7 @@ export class EducatorController implements OnModuleInit {
       await this.bot.sendMessage(chatId, `אין בעיה אני אוסיף מה שתגיד לי רק תרשום לי בנוסף לפקודה את הנושא`);
       return;
     }
-    await this.topicDB.createTopic(chatId, topic);
+    await createTopic(chatId, topic);
     await this.bot.sendMessage(chatId, `סבבה, הוספתי את זה כנושא, ונלמד על זה בשיעורים הבאים`);
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD_TOPIC }, userDetails);
@@ -106,7 +102,7 @@ export class EducatorController implements OnModuleInit {
     // prevent built in options to be processed also here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
-    const activeTopicParticipation = await this.topicParticipationDB.getActiveTopicParticipation(chatId);
+    const activeTopicParticipation = await getActiveTopicParticipation(chatId);
     if (!activeTopicParticipation) {
       await this.bot.sendMessage(chatId, `אני רואה שאין לך נושא פתוח, אז אני לא מבינה על מה לענות. אולי נתחיל נושא חדש?`);
       return;
@@ -117,7 +113,7 @@ export class EducatorController implements OnModuleInit {
       await this.educatorService.processQuestion(chatId, activeTopicParticipation, text);
     });
 
-    const topic = await this.topicDB.getTopic(activeTopicParticipation.topicId);
+    const topic = await getTopic(activeTopicParticipation.topicId);
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text, topic: topic?.title }, userDetails);
   }
 
@@ -156,8 +152,8 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
-    await this.userPreferencesDB.createUserPreference(chatId);
-    const userExists = await this.userDB.saveUserDetails(userDetails);
+    await createUserPreference(chatId);
+    const userExists = await saveUserDetails(userDetails);
     const newUserReplyText = [
       `שלום לך 👋`,
       `אני פה כדי ללמד אותך על כל מיני נושאים, כדי שתהיה חכם יותר 😁`,
@@ -169,7 +165,7 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async stopHandler(chatId: number): Promise<void> {
-    await this.userPreferencesDB.updateUserPreference(chatId, { isStopped: true });
+    await updateUserPreference(chatId, { isStopped: true });
     const replyText = [`סבבה, אני מפסיקה 🛑`, `כדי לחזור ללמוד - אפשר להשתמש בפקודה`, `אפשר גם לבקש נושאים בלי תזכורות ממני, גם לזה הכנתי פקודה`].join('\n\n');
     await this.bot.sendMessage(chatId, replyText);
   }
@@ -198,7 +194,7 @@ export class EducatorController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteTopic(chatId: number, messageId: number, topicParticipationId: string): Promise<void> {
-    const topicParticipation = await this.topicParticipationDB.markTopicParticipationCompleted(topicParticipationId);
+    const topicParticipation = await markTopicParticipationCompleted(topicParticipationId);
     const messagesToUpdate = [messageId, ...(topicParticipation?.threadMessages || [])];
     await Promise.all(
       messagesToUpdate.map(async (messageId) => {

@@ -3,7 +3,6 @@ import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-
 import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
-import { TeacherMongoCourseParticipationService, TeacherMongoCourseService, TeacherMongoUserPreferencesService, TeacherMongoUserService } from '@core/mongo/teacher-mongo';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
@@ -21,6 +20,9 @@ import {
   TelegramEventHandler,
   UserDetails,
 } from '@services/telegram';
+import { createCourse, getActiveCourseParticipation, getCourse, markCourseParticipationCompleted } from './mongo';
+import { createUserPreference, getUserPreference, updateUserPreference } from './mongo';
+import { saveUserDetails } from './mongo';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './teacher.config';
 import { TeacherService } from './teacher.service';
 
@@ -34,10 +36,6 @@ export class TeacherController implements OnModuleInit {
 
   constructor(
     private readonly teacherService: TeacherService,
-    private readonly courseDB: TeacherMongoCourseService,
-    private readonly courseParticipationDB: TeacherMongoCourseParticipationService,
-    private readonly userPreferencesDB: TeacherMongoUserPreferencesService,
-    private readonly userDB: TeacherMongoUserService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -64,7 +62,7 @@ export class TeacherController implements OnModuleInit {
 
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId, messageId } = getMessageData(message);
-    const userPreferences = await this.userPreferencesDB.getUserPreference(chatId);
+    const userPreferences = await getUserPreference(chatId);
     const inlineKeyboardButtons = [
       userPreferences?.isStopped
         ? { text: '🟢 Start getting daily courses 🟢', callback_data: `${BOT_ACTIONS.START}` }
@@ -77,9 +75,9 @@ export class TeacherController implements OnModuleInit {
 
   private async courseHandler(message: Message): Promise<void> {
     const { chatId, messageId, userDetails } = getMessageData(message);
-    const activeCourse = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
+    const activeCourse = await getActiveCourseParticipation(chatId);
     if (activeCourse?._id) {
-      await this.courseParticipationDB.markCourseParticipationCompleted(activeCourse._id.toString());
+      await markCourseParticipationCompleted(activeCourse._id.toString());
     }
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
@@ -97,7 +95,7 @@ export class TeacherController implements OnModuleInit {
       await this.bot.sendMessage(chatId, `Please add the course name after the add command.\n example: /add JavaScript Heap`);
       return;
     }
-    await this.courseDB.createCourse(chatId, courseName);
+    await createCourse(chatId, courseName);
     await this.bot.sendMessage(chatId, `OK, I added \`${courseName}\` to your courses list`);
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD, course: courseName }, userDetails);
@@ -109,7 +107,7 @@ export class TeacherController implements OnModuleInit {
     // prevent built in options to be processed also here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
-    const activeCourseParticipation = await this.courseParticipationDB.getActiveCourseParticipation(chatId);
+    const activeCourseParticipation = await getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
       await this.bot.sendMessage(chatId, `I see you dont have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);
       return;
@@ -162,8 +160,8 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async userStart(chatId: number, userDetails: UserDetails): Promise<void> {
-    await this.userPreferencesDB.createUserPreference(chatId);
-    const userExists = await this.userDB.saveUserDetails(userDetails);
+    await createUserPreference(chatId);
+    const userExists = await saveUserDetails(userDetails);
     const newUserReplyText = [
       `Hey There 👋`,
       `I am here to teach you all you need about any subject you want.`,
@@ -175,7 +173,7 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async stopHandler(chatId: number): Promise<void> {
-    await this.userPreferencesDB.updateUserPreference(chatId, { isStopped: true });
+    await updateUserPreference(chatId, { isStopped: true });
     const replyText = [
       'OK, I will stop teaching you for now 🛑',
       `Whenever you are ready, just send me the Start command and we will continue learning`,
@@ -215,7 +213,7 @@ export class TeacherController implements OnModuleInit {
   }
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
-    const courseParticipation = await this.courseParticipationDB.markCourseParticipationCompleted(courseParticipationId);
+    const courseParticipation = await markCourseParticipationCompleted(courseParticipationId);
     const messagesToUpdate = [messageId, ...(courseParticipation?.threadMessages || [])];
     await Promise.all(
       messagesToUpdate.map(async (message) => {

@@ -1,12 +1,13 @@
 import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
-import { Subscription, WoltMongoSubscriptionService, WoltMongoUserService } from '@core/mongo/wolt-mongo';
 import { NotifierService } from '@core/notifier';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { getCallbackQueryData, getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { WoltRestaurant } from './interface';
+import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails } from './mongo';
 import { RestaurantsService } from './restaurants.service';
+import { Subscription } from './types';
 import { getRestaurantsByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
@@ -18,8 +19,6 @@ export class WoltController implements OnModuleInit {
 
   constructor(
     private readonly restaurantsService: RestaurantsService,
-    private readonly userDB: WoltMongoUserService,
-    private readonly subscriptionDB: WoltMongoSubscriptionService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -40,7 +39,7 @@ export class WoltController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
-    const userExists = await this.userDB.saveUserDetails(userDetails);
+    const userExists = await saveUserDetails(userDetails);
 
     const newUserReplyText = [
       `שלום {firstName}!`,
@@ -66,7 +65,7 @@ export class WoltController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
 
     try {
-      const subscriptions = await this.subscriptionDB.getActiveSubscriptions(chatId);
+      const subscriptions = await getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = `אין לך התראות פתוחות`;
         await this.bot.sendMessage(chatId, replyText);
@@ -141,7 +140,7 @@ export class WoltController implements OnModuleInit {
 
     const [action, restaurant, page] = data.split(INLINE_KEYBOARD_SEPARATOR);
     const restaurantName = restaurant.replace(BOT_ACTIONS.REMOVE, '').replace(INLINE_KEYBOARD_SEPARATOR, '');
-    const activeSubscriptions = await this.subscriptionDB.getActiveSubscriptions(chatId);
+    const activeSubscriptions = await getActiveSubscriptions(chatId);
     try {
       switch (action) {
         case BOT_ACTIONS.REMOVE: {
@@ -197,7 +196,7 @@ export class WoltController implements OnModuleInit {
     }
 
     const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await this.subscriptionDB.addSubscription(chatId, restaurant, restaurantDetails?.photo);
+    await addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
     this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
@@ -206,7 +205,7 @@ export class WoltController implements OnModuleInit {
   async removeSubscription(chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
-      await this.subscriptionDB.archiveSubscription(chatId, restaurant, false);
+      await archiveSubscription(chatId, restaurant, false);
       await this.bot.sendMessage(chatId, [`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n'));
     } else {
       await this.bot.sendMessage(chatId, [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n'));

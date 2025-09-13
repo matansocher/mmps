@@ -1,5 +1,5 @@
-import { Country, State } from '@core/mongo/worldly-mongo';
 import { getDistance, shuffleArray } from '@core/utils';
+import { Country, State } from '../types';
 
 export function getMapDistractors(allCountries: Country[], correctCountry: Country): Array<Country & { distance: number }> {
   const options = allCountries

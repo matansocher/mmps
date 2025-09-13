@@ -1,4 +1,4 @@
-import { SummaryDetails } from '@core/mongo/teacher-mongo';
+import { SummaryDetails } from '../types';
 
 export function generateSummaryMessage(summaryDetails: SummaryDetails) {
   return [
