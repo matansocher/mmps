@@ -1,6 +1,6 @@
 import { toZonedTime } from 'date-fns-tz';
 import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
@@ -15,7 +15,7 @@ export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANAL
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
 @Injectable()
-export class WoltSchedulerService implements OnModuleInit {
+export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
 
   constructor(
@@ -23,10 +23,6 @@ export class WoltSchedulerService implements OnModuleInit {
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
-
-  onModuleInit(): void {
-    // this.scheduleInterval();
-  }
 
   async scheduleInterval(): Promise<void> {
     const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];
