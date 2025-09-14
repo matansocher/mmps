@@ -1,14 +1,16 @@
+import { getMongoCollection } from '@core/mongo';
 import { Country } from '../types';
-import { getCollection } from './connection';
-import { COLLECTIONS } from './constants';
+import { DB_NAME } from './index';
 
 let countries: Country[] = [];
+
+const getCollection = () => getMongoCollection<Country>(DB_NAME, 'Country');
 
 export async function getAllCountries(): Promise<Country[]> {
   if (countries.length) {
     return countries;
   }
-  const countryCollection = await getCollection<Country>(COLLECTIONS.COUNTRY);
+  const countryCollection = getCollection();
   await countryCollection
     .find()
     .toArray()

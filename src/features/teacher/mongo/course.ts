@@ -1,10 +1,12 @@
 import { ObjectId } from 'mongodb';
+import { getMongoCollection } from '@core/mongo';
 import { Course } from '../types';
-import { getCollection } from './connection';
-import { COLLECTIONS } from './constants';
+import { DB_NAME } from './index';
+
+const getCollection = () => getMongoCollection<Course>(DB_NAME, 'Course');
 
 export async function createCourse(chatId: number, topic: string): Promise<Course> {
-  const courseCollection = await getCollection<Course>(COLLECTIONS.COURSE);
+  const courseCollection = getCollection();
   const course: Course = {
     _id: new ObjectId(),
     topic,
@@ -16,7 +18,7 @@ export async function createCourse(chatId: number, topic: string): Promise<Cours
 }
 
 export async function getRandomCourse(chatId: number, excludedCourses: string[]): Promise<Course | null> {
-  const courseCollection = await getCollection<Course>(COLLECTIONS.COURSE);
+  const courseCollection = getCollection();
   const filter = {
     _id: { $nin: excludedCourses.map((courseId) => new ObjectId(courseId)) },
     $or: [
@@ -34,7 +36,7 @@ export async function getRandomCourse(chatId: number, excludedCourses: string[])
 }
 
 export async function getCourse(id: string): Promise<Course> {
-  const courseCollection = await getCollection<Course>(COLLECTIONS.COURSE);
+  const courseCollection = getCollection();
   const filter = { _id: new ObjectId(id) };
   return courseCollection.findOne(filter);
 }

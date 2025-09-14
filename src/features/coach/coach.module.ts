@@ -8,7 +8,7 @@ import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';
 import { CoachService } from './coach.service';
-import { dbName } from './mongo';
+import { DB_NAME } from './mongo';
 
 @Module({
   imports: [ScheduleModule.forRoot(), NotifierModule],
@@ -25,6 +25,6 @@ import { dbName } from './mongo';
 })
 export class CoachModule implements OnModuleInit {
   async onModuleInit() {
-    await createMongoConnection(dbName);
+    await createMongoConnection(DB_NAME);
   }
 }

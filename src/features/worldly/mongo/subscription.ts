@@ -1,16 +1,18 @@
 import { InsertOneResult } from 'mongodb';
+import { getMongoCollection } from '@core/mongo';
 import { Subscription } from '../types';
-import { getCollection } from './connection';
-import { COLLECTIONS } from './constants';
+import { DB_NAME } from './index';
+
+const getCollection = () => getMongoCollection<Subscription>(DB_NAME, 'Subscription');
 
 export async function getActiveSubscriptions(): Promise<{ chatId: number }[]> {
-  const subscriptionCollection = await getCollection<Subscription>(COLLECTIONS.SUBSCRIPTION);
+  const subscriptionCollection = getCollection();
   return subscriptionCollection
     .aggregate<{ chatId: number }>([
       { $match: { isActive: true } },
       {
         $lookup: {
-          from: COLLECTIONS.GAME_LOG,
+          from: 'GameLog',
           let: { subChatId: '$chatId' },
           pipeline: [
             // br
@@ -45,13 +47,13 @@ export async function getActiveSubscriptions(): Promise<{ chatId: number }[]> {
 }
 
 export async function getSubscription(chatId: number): Promise<Subscription> {
-  const subscriptionCollection = await getCollection<Subscription>(COLLECTIONS.SUBSCRIPTION);
+  const subscriptionCollection = getCollection();
   const filter = { chatId };
   return subscriptionCollection.findOne(filter);
 }
 
 export async function addSubscription(chatId: number): Promise<InsertOneResult<Subscription>> {
-  const subscriptionCollection = await getCollection<Subscription>(COLLECTIONS.SUBSCRIPTION);
+  const subscriptionCollection = getCollection();
   const subscription = {
     chatId,
     isActive: true,
@@ -61,7 +63,7 @@ export async function addSubscription(chatId: number): Promise<InsertOneResult<S
 }
 
 export async function updateSubscription(chatId: number, toUpdate: Partial<Subscription>): Promise<void> {
-  const subscriptionCollection = await getCollection<Subscription>(COLLECTIONS.SUBSCRIPTION);
+  const subscriptionCollection = getCollection();
   const filter = { chatId };
   const updateObj = { $set: { ...toUpdate } };
   await subscriptionCollection.updateOne(filter, updateObj);

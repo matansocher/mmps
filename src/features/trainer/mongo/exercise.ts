@@ -1,11 +1,13 @@
 import { endOfDay, startOfDay } from 'date-fns';
 import { InsertOneResult, ObjectId } from 'mongodb';
+import { getMongoCollection } from '@core/mongo';
 import { Exercise } from '../types';
-import { getCollection } from './connection';
-import { COLLECTIONS } from './constants';
+import { DB_NAME } from './index';
+
+const getCollection = () => getMongoCollection<Exercise>(DB_NAME, 'Exercise');
 
 export async function addExercise(chatId: number): Promise<InsertOneResult<Exercise>> {
-  const exerciseCollection = await getCollection<Exercise>(COLLECTIONS.EXERCISE);
+  const exerciseCollection = getCollection();
   const exercise = {
     _id: new ObjectId(),
     chatId,
@@ -15,7 +17,7 @@ export async function addExercise(chatId: number): Promise<InsertOneResult<Exerc
 }
 
 export async function getTodayExercise(chatId: number): Promise<Exercise> {
-  const exerciseCollection = await getCollection<Exercise>(COLLECTIONS.EXERCISE);
+  const exerciseCollection = getCollection();
   const now = new Date();
 
   const localStart = startOfDay(now);
@@ -29,6 +31,6 @@ export async function getTodayExercise(chatId: number): Promise<Exercise> {
 }
 
 export async function getExercises(chatId: number, limit: number = 1000): Promise<Exercise[]> {
-  const exerciseCollection = await getCollection<Exercise>(COLLECTIONS.EXERCISE);
+  const exerciseCollection = getCollection();
   return exerciseCollection.find({ chatId }).sort({ createdAt: -1 }).limit(limit).toArray();
 }
