@@ -5,7 +5,7 @@ import { NotifierService } from '@core/notifier';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { getCallbackQueryData, getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails } from './mongo';
-import { RestaurantsService } from './restaurants.service';
+import { restaurantsService } from './restaurants.service';
 import { Subscription, WoltRestaurant } from './types';
 import { getRestaurantsByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
@@ -17,7 +17,6 @@ export class WoltController implements OnModuleInit {
   private readonly logger = new Logger(WoltController.name);
 
   constructor(
-    private readonly restaurantsService: RestaurantsService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -103,7 +102,7 @@ export class WoltController implements OnModuleInit {
         return;
       }
 
-      const restaurants = await this.restaurantsService.getRestaurants();
+      const restaurants = await restaurantsService.getRestaurants();
       const matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
         const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
@@ -180,7 +179,7 @@ export class WoltController implements OnModuleInit {
       return;
     }
 
-    const restaurants = await this.restaurantsService.getRestaurants();
+    const restaurants = await restaurantsService.getRestaurants();
     const restaurantDetails = restaurants.find((r: WoltRestaurant): boolean => r.name === restaurant);
     if (!restaurantDetails) {
       await this.bot.sendMessage(chatId, 'אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
@@ -215,7 +214,7 @@ export class WoltController implements OnModuleInit {
   }
 
   async changePage(chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, page: number): Promise<void> {
-    const restaurants = await this.restaurantsService.getRestaurants();
+    const restaurants = await restaurantsService.getRestaurants();
     const matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
     const from = MAX_NUM_OF_RESTAURANTS_TO_SHOW * (page - 1);
     const to = from + MAX_NUM_OF_RESTAURANTS_TO_SHOW;

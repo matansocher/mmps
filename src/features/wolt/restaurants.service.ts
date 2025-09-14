@@ -1,31 +1,30 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { RestaurantsList, WoltRestaurant } from './types';
 import { getRestaurantsList } from './utils';
 import { TOO_OLD_LIST_THRESHOLD_MS } from './wolt.config';
 
-@Injectable()
+let restaurantsList: RestaurantsList = {
+  restaurants: [],
+  lastUpdated: 0,
+};
+
 export class RestaurantsService {
   private readonly logger = new Logger(RestaurantsService.name);
 
-  restaurantsList: RestaurantsList = {
-    restaurants: [],
-    lastUpdated: 0,
-  };
-
   async getRestaurants(): Promise<WoltRestaurant[]> {
-    const { lastUpdated } = this.restaurantsList;
+    const { lastUpdated } = restaurantsList;
     const isLastUpdatedTooOld = new Date().getTime() - lastUpdated > TOO_OLD_LIST_THRESHOLD_MS;
     if (isLastUpdatedTooOld) {
       await this.refreshRestaurants();
     }
-    return this.restaurantsList.restaurants;
+    return restaurantsList.restaurants;
   }
 
   async refreshRestaurants(): Promise<void> {
     try {
       const restaurants = await getRestaurantsList();
       if (restaurants.length) {
-        this.restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
+        restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
         this.logger.log(`${this.refreshRestaurants.name} - Restaurants list was refreshed successfully`);
       }
     } catch (err) {
@@ -33,3 +32,6 @@ export class RestaurantsService {
     }
   }
 }
+
+const restaurantsService = new RestaurantsService();
+export { restaurantsService };

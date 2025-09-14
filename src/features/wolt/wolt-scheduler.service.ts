@@ -6,7 +6,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getInlineKeyboardMarkup } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails } from './mongo';
-import { RestaurantsService } from './restaurants.service';
+import { restaurantsService } from './restaurants.service';
 import { Subscription, WoltRestaurant } from './types';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
@@ -19,14 +19,13 @@ export class WoltSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(WoltSchedulerService.name);
 
   constructor(
-    private readonly restaurantsService: RestaurantsService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
-    this.scheduleInterval();
+    // this.scheduleInterval();
   }
 
   async scheduleInterval(): Promise<void> {
@@ -79,7 +78,7 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async alertSubscriptions(subscriptions: Subscription[]): Promise<void> {
     const restaurantsNames = subscriptions.map((subscription: Subscription) => subscription.restaurant);
-    const restaurants = await this.restaurantsService.getRestaurants();
+    const restaurants = await restaurantsService.getRestaurants();
     const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
 
     for (const restaurant of onlineRestaurants) {

@@ -5,7 +5,7 @@ import { MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { sleep } from '@core/utils';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { UserPreferencesCacheService } from './cache';
+import { userPreferencesCacheService } from './cache';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from './mongo';
 import { generateStatisticsMessage } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
@@ -20,7 +20,6 @@ export class WorldlyController implements OnModuleInit {
 
   constructor(
     private readonly worldlyService: WorldlyService,
-    private readonly userPreferences: UserPreferencesCacheService,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
@@ -66,7 +65,7 @@ export class WorldlyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.bot.sendMessage(chatId, 'מצוין! עכשיו נשחק ברצף 🔥');
-      this.userPreferences.saveUserPreferences(chatId, { onFireMode: true });
+      userPreferencesCacheService.saveUserPreferences(chatId, { onFireMode: true });
       await this.worldlyService.randomGameHandler(chatId);
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE }, userDetails);
     } catch (err) {
@@ -201,7 +200,7 @@ export class WorldlyController implements OnModuleInit {
         return;
       }
       // If the user is in fire mode, send a new game immediately
-      const userPreferences = this.userPreferences.getUserPreferences(chatId);
+      const userPreferences = userPreferencesCacheService.getUserPreferences(chatId);
       if (userPreferences?.onFireMode) {
         await sleep(1000);
         await this.worldlyService.randomGameHandler(chatId);
