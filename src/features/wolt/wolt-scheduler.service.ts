@@ -1,12 +1,12 @@
 import { toZonedTime } from 'date-fns-tz';
 import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getInlineKeyboardMarkup } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails } from './mongo';
-import { RestaurantsService } from './restaurants.service';
+import { restaurantsService } from './restaurants.service';
 import { Subscription, WoltRestaurant } from './types';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
@@ -15,19 +15,14 @@ export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANAL
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
 @Injectable()
-export class WoltSchedulerService implements OnModuleInit {
+export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
 
   constructor(
-    private readonly restaurantsService: RestaurantsService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifier: NotifierService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
-
-  onModuleInit(): void {
-    this.scheduleInterval();
-  }
 
   async scheduleInterval(): Promise<void> {
     const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];
@@ -79,7 +74,7 @@ export class WoltSchedulerService implements OnModuleInit {
 
   async alertSubscriptions(subscriptions: Subscription[]): Promise<void> {
     const restaurantsNames = subscriptions.map((subscription: Subscription) => subscription.restaurant);
-    const restaurants = await this.restaurantsService.getRestaurants();
+    const restaurants = await restaurantsService.getRestaurants();
     const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
 
     for (const restaurant of onlineRestaurants) {

@@ -1,1 +1,1 @@
-export { type UserPreferences, UserPreferencesCacheService } from './user-preferences-cache.service';
+export { type UserPreferences, userPreferencesCacheService } from './user-preferences-cache.service';

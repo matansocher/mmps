@@ -1,10 +1,8 @@
-import { Injectable } from '@nestjs/common';
 import { BaseCache } from '@core/services';
-import { Recipe } from './types';
+import { Recipe } from '../types';
 
 const validForMinutes = 200;
 
-@Injectable()
 export class RecipesCacheService extends BaseCache<Recipe[]> {
   private readonly key = 'recipes';
 
@@ -24,3 +22,6 @@ export class RecipesCacheService extends BaseCache<Recipe[]> {
     this.saveToCache(this.key, data);
   }
 }
+
+const recipesCacheService = new RecipesCacheService();
+export { recipesCacheService };

@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { BaseCache } from '@core/services';
 
 export type UserPreferences = {
@@ -7,7 +6,6 @@ export type UserPreferences = {
 
 const validForMinutes = 30;
 
-@Injectable()
 export class UserPreferencesCacheService extends BaseCache<UserPreferences> {
   constructor() {
     super(validForMinutes);
@@ -21,3 +19,6 @@ export class UserPreferencesCacheService extends BaseCache<UserPreferences> {
     this.saveToCache(chatId.toString(), data);
   }
 }
+
+const userPreferencesCacheService = new UserPreferencesCacheService();
+export { userPreferencesCacheService };
