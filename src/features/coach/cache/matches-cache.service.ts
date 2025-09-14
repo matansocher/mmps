@@ -1,10 +1,8 @@
-import { Injectable } from '@nestjs/common';
 import { BaseCache } from '@core/services';
 import { CompetitionDetails } from '@services/scores-365';
 
 const validForMinutes = 5;
 
-@Injectable()
 export class MatchesSummaryCacheService extends BaseCache<CompetitionDetails[]> {
   constructor() {
     super(validForMinutes);
@@ -18,3 +16,6 @@ export class MatchesSummaryCacheService extends BaseCache<CompetitionDetails[]> 
     this.saveToCache(date, data);
   }
 }
+
+const matchesSummaryCacheService = new MatchesSummaryCacheService();
+export { matchesSummaryCacheService };

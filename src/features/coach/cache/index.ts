@@ -1,4 +1,4 @@
-export { CompetitionsCacheService } from './competitions-cache.service';
-export { CompetitionMatchesCacheService } from './competition-matches-cache.service';
-export { MatchesSummaryCacheService } from './matches-cache.service';
-export { CompetitionTableCacheService } from './tables-cache.service';
+export { competitionsCacheService } from './competitions-cache.service';
+export { competitionMatchesCacheService } from './competition-matches-cache.service';
+export { matchesSummaryCacheService } from './matches-cache.service';
+export { competitionTableCacheService } from './tables-cache.service';
