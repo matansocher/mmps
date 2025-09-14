@@ -1,10 +1,12 @@
 import { ObjectId } from 'mongodb';
+import { getMongoCollection } from '@core/mongo';
 import { Topic } from '../types';
-import { getCollection } from './connection';
-import { COLLECTIONS } from './constants';
+import { DB_NAME } from './index';
+
+const getCollection = () => getMongoCollection<Topic>(DB_NAME, 'Topic');
 
 export async function createTopic(chatId: number, title: string): Promise<Topic> {
-  const topicCollection = await getCollection<Topic>(COLLECTIONS.TOPIC);
+  const topicCollection = getCollection();
   const topic: Topic = {
     _id: new ObjectId(),
     title,
@@ -16,7 +18,7 @@ export async function createTopic(chatId: number, title: string): Promise<Topic>
 }
 
 export async function getRandomTopic(chatId: number, excludedTopics: string[]): Promise<Topic | null> {
-  const topicCollection = await getCollection<Topic>(COLLECTIONS.TOPIC);
+  const topicCollection = getCollection();
   const filter = {
     _id: { $nin: excludedTopics.map((topicId) => new ObjectId(topicId)) },
     $or: [
@@ -34,7 +36,7 @@ export async function getRandomTopic(chatId: number, excludedTopics: string[]): 
 }
 
 export async function getTopic(id: string): Promise<Topic> {
-  const topicCollection = await getCollection<Topic>(COLLECTIONS.TOPIC);
+  const topicCollection = getCollection();
   const filter = { _id: new ObjectId(id) };
   return topicCollection.findOne(filter);
 }

@@ -1,12 +1,14 @@
 import { ObjectId } from 'mongodb';
+import { getMongoCollection } from '@core/mongo';
 import { SummaryDetails, TopicParticipation, TopicParticipationStatus } from '../types';
-import { getCollection } from './connection';
-import { COLLECTIONS } from './constants';
+import { DB_NAME } from './index';
 
 const NUM_OD_DAYS_TO_SUMMARY_REMINDER = 14;
 
+const getCollection = () => getMongoCollection<TopicParticipation>(DB_NAME, 'TopicParticipation');
+
 export async function createTopicParticipation(chatId: number, topicId: string): Promise<TopicParticipation> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const topicParticipation: TopicParticipation = {
     _id: new ObjectId(),
     topicId,
@@ -20,25 +22,25 @@ export async function createTopicParticipation(chatId: number, topicId: string):
 }
 
 export async function getTopicParticipation(topicParticipationId: string): Promise<TopicParticipation> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { _id: new ObjectId(topicParticipationId) };
   return topicParticipationCollection.findOne(filter);
 }
 
 export async function getTopicParticipations(chatId: number): Promise<TopicParticipation[]> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { chatId };
   return topicParticipationCollection.find(filter).toArray();
 }
 
 export async function getActiveTopicParticipation(chatId: number): Promise<TopicParticipation> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { chatId, status: TopicParticipationStatus.Assigned };
   return topicParticipationCollection.findOne(filter);
 }
 
 export async function markTopicParticipationCompleted(topicParticipationId: string): Promise<TopicParticipation | null> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { _id: new ObjectId(topicParticipationId) };
   const updateObj = {
     $set: {
@@ -50,7 +52,7 @@ export async function markTopicParticipationCompleted(topicParticipationId: stri
 }
 
 export async function updatePreviousResponseId(topicParticipationId: string, previousResponseId: string): Promise<void> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { _id: new ObjectId(topicParticipationId) };
   const updateObj = {
     $set: {
@@ -61,14 +63,14 @@ export async function updatePreviousResponseId(topicParticipationId: string, pre
 }
 
 export async function saveMessageId(topicParticipationId: string, messageId: number): Promise<void> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { _id: new ObjectId(topicParticipationId) };
   const updateObj = { $push: { threadMessages: messageId } };
   await topicParticipationCollection.updateOne(filter, updateObj);
 }
 
 export async function saveTopicSummary(topicParticipation: TopicParticipation, topicTitle: string, summaryDetails: Pick<SummaryDetails, 'summary' | 'keyTakeaways'>): Promise<void> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { _id: new ObjectId(topicParticipation._id) };
   const updateObj = {
     $set: {
@@ -84,7 +86,7 @@ export async function saveTopicSummary(topicParticipation: TopicParticipation, t
 }
 
 export async function saveSummarySent(id: string): Promise<void> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = { _id: new ObjectId(id) };
   const updateObj = {
     $set: {
@@ -95,7 +97,7 @@ export async function saveSummarySent(id: string): Promise<void> {
 }
 
 export async function getCourseParticipationForSummaryReminder(): Promise<TopicParticipation> {
-  const topicParticipationCollection = await getCollection<TopicParticipation>(COLLECTIONS.TOPIC_PARTICIPATION);
+  const topicParticipationCollection = getCollection();
   const filter = {
     status: TopicParticipationStatus.Completed,
     summaryDetails: { $exists: true },

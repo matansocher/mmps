@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
-import { COLLECTIONS, DB_NAME } from '../mongo/constants';
+import { DB_NAME } from '../mongo';
 import { Subscription } from '../types';
 import { getRestaurantsList } from '../utils';
 
@@ -14,7 +14,7 @@ async function main() {
     await client.connect();
     console.log('Connected to MongoDB.');
 
-    const subscriptionsCollection = client.db(DB_NAME).collection(COLLECTIONS.SUBSCRIPTION);
+    const subscriptionsCollection = client.db(DB_NAME).collection('Subscription');
 
     const [restaurants, subscriptions] = await Promise.all([getRestaurantsList(), subscriptionsCollection.find().toArray()]);
     const restaurantsCount: Record<string, number> = {};

@@ -1,6 +1,6 @@
+import { getMongoCollection } from '@core/mongo';
 import { GameLog } from '../types';
-import { getCollection } from './connection';
-import { COLLECTIONS } from './constants';
+import { DB_NAME } from './index';
 
 type SaveGameLogOptions = {
   readonly chatId: number;
@@ -21,8 +21,10 @@ type TopChatRecord = {
   readonly records: GameLog[];
 };
 
+const getCollection = () => getMongoCollection<GameLog>(DB_NAME, 'GameLog');
+
 export async function saveGameLog({ chatId, gameId, type, correct }: SaveGameLogOptions): Promise<void> {
-  const gameLogCollection = await getCollection<GameLog>(COLLECTIONS.GAME_LOG);
+  const gameLogCollection = getCollection();
   const gameLog = {
     chatId,
     gameId,
@@ -34,20 +36,20 @@ export async function saveGameLog({ chatId, gameId, type, correct }: SaveGameLog
 }
 
 export async function updateGameLog({ chatId, gameId, selected }: UpdateGameLogOptions): Promise<void> {
-  const gameLogCollection = await getCollection<GameLog>(COLLECTIONS.GAME_LOG);
+  const gameLogCollection = getCollection();
   const filter = { chatId, gameId };
   const updateObj = { $set: { selected, answeredAt: new Date() } };
   await gameLogCollection.updateOne(filter, updateObj);
 }
 
 export async function getUserGameLogs(chatId: number): Promise<GameLog[]> {
-  const gameLogCollection = await getCollection<GameLog>(COLLECTIONS.GAME_LOG);
+  const gameLogCollection = getCollection();
   const filter = { chatId };
   return gameLogCollection.find(filter).toArray();
 }
 
 export async function getTopByChatId(total: number): Promise<TopChatRecord[]> {
-  const gameLogCollection = await getCollection<GameLog>(COLLECTIONS.GAME_LOG);
+  const gameLogCollection = getCollection();
   const result = await gameLogCollection
     .aggregate([
       {
@@ -73,7 +75,7 @@ export async function getTopByChatId(total: number): Promise<TopChatRecord[]> {
 }
 
 export async function getGameLogsByUsers(): Promise<Record<string, GameLog[]>> {
-  const gameLogCollection = await getCollection<GameLog>(COLLECTIONS.GAME_LOG);
+  const gameLogCollection = getCollection();
   const logsByUsers = await gameLogCollection
     .aggregate([
       { $sort: { chatId: 1, createdAt: 1 } },
