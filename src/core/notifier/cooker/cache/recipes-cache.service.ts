@@ -10,12 +10,12 @@ export class RecipesCacheService extends BaseCache<Recipe[]> {
     super(validForMinutes);
   }
 
-  getRecipes(): Recipe[] | null {
+  getAllRecipes(): Recipe[] | null {
     return this.getFromCache(this.key) || [];
   }
 
-  getRecipe(recipeId: string): Recipe | null {
-    return this.getRecipes().find((recipe) => recipe._id.toString() === recipeId);
+  getARecipe(recipeId: string): Recipe | null {
+    return this.getAllRecipes().find((recipe) => recipe._id.toString() === recipeId);
   }
 
   saveRecipes(data: Recipe[]): void {

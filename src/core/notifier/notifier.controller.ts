@@ -5,7 +5,7 @@ import { getTopBy, getUserDetails as getUserDetailsWolt } from '@features/wolt/m
 import { getGameLogsByUsers, getTopByChatId, getUserDetails as getUserDetailsWorldly } from '@features/worldly/mongo';
 import { GameLog } from '@features/worldly/types';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { CookerService, generateRecipeString } from './cooker';
+import { generateRecipeString, getRecipe, getRecipes } from './cooker';
 import { BOT_ACTIONS, BOT_CONFIG } from './notifier.config';
 
 type LightUser = {
@@ -19,10 +19,7 @@ type LightUser = {
 export class NotifierController implements OnModuleInit {
   private readonly logger = new Logger(NotifierController.name);
 
-  constructor(
-    private readonly cookerService: CookerService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -117,7 +114,7 @@ ${summaryLines.join('\n')}
 
   async recipesHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const recipes = await this.cookerService.getRecipes(chatId);
+    const recipes = await getRecipes(chatId);
     const inlineKeyboardButtons = recipes.map((recipe) => {
       const { _id, emoji, title } = recipe;
       return { text: `${title} ${emoji}`, callback_data: `${BOT_ACTIONS.SHOW} - ${_id}` };
@@ -131,7 +128,7 @@ ${summaryLines.join('\n')}
     const [action, resource] = response.split(' - ');
     switch (action) {
       case BOT_ACTIONS.SHOW: {
-        const recipe = await this.cookerService.getRecipe(chatId, resource);
+        const recipe = await getRecipe(chatId, resource);
         if (!recipe) {
           await this.bot.sendMessage(chatId, 'מתכון לא נמצא');
           return;
