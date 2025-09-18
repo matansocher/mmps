@@ -20,3 +20,6 @@ export { competitionsListTool } from './sports/competitions-list.tool';
 export { matchSummaryTool } from './sports/match-summary.tool';
 
 export { calendarTool } from './calendar/calendar.tool';
+
+export { exerciseTool } from './exercise/exercise.tool';
+export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
