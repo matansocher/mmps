@@ -20,9 +20,10 @@ export class ChatbotController implements OnModuleInit {
 
   onModuleInit(): void {
     const { COMMAND, TEXT, PHOTO, AUDIO, VOICE } = TELEGRAM_EVENTS;
-    const { START } = BOT_CONFIG.commands;
+    const { START, EXERCISE } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
+      { event: COMMAND, regex: EXERCISE.command, handler: (message) => this.exerciseHandler.call(this, message) },
       { event: TEXT, handler: (message) => this.messageHandler.call(this, message) },
       { event: PHOTO, handler: (message) => this.photoHandler.call(this, message) },
       { event: AUDIO, handler: (message) => this.audioHandler.call(this, message) },
@@ -34,6 +35,17 @@ export class ChatbotController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
     await this.bot.sendMessage(chatId, 'Hi, I am your chatbot! How can I assist you today?');
+  }
+
+  private async exerciseHandler(message: Message): Promise<void> {
+    const { chatId, messageId } = getMessageData(message);
+
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '💪' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      const prompt = `I just exercised. Please log my exercise using the exercise_tracker tool with action "log", then check if I broke any records using exercise_analytics tool with action "check_record". Provide an encouraging response with my stats.`;
+      const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId.toString());
+      await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+    });
   }
 
   private async messageHandler(message: Message): Promise<void> {

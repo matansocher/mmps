@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
+import { createMongoConnection } from '@core/mongo';
+import { DB_NAME } from '@features/trainer/mongo';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
 import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
@@ -10,4 +12,8 @@ import { ChatbotService } from './chatbot.service';
   imports: [ScheduleModule.forRoot()],
   providers: [ChatbotController, ChatbotSchedulerService, ChatbotService, TelegramBotsFactoryProvider(BOT_CONFIG)],
 })
-export class ChatbotModule {}
+export class ChatbotModule implements OnModuleInit {
+  async onModuleInit() {
+    await createMongoConnection(DB_NAME);
+  }
+}

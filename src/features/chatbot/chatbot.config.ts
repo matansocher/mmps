@@ -7,6 +7,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   token: 'CHATBOT_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: 'Start over', hide: true },
+    EXERCISE: { command: '/exercise', description: '🏋️‍♂️ Log exercise', hide: false },
   },
 };
 
