@@ -12,7 +12,7 @@ const educatorToolSchema = z.object({
 export const educatorTool = new DynamicStructuredTool({
   name: 'educator',
   description:
-    'Educational tool for teaching topics, managing learning progress, and generating summaries. Use this when users want to learn something new, continue learning, or check their progress.',
+    'Educational tool that returns COMPLETE Hebrew educational content. CRITICAL: The tool returns fully-formatted educational responses that MUST be passed to the user EXACTLY as provided - do NOT translate, summarize, or modify the response in any way. The response IS the complete message to show the user.',
   schema: educatorToolSchema,
   func: async ({ action, input, enabled }) => {
     switch (action) {
