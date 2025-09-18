@@ -21,11 +21,11 @@ export class ChatbotService {
     this.aiService = createAgent(agent(), { llm });
   }
 
-  async processMessage(message: string, chatId: string): Promise<ChatbotResponse> {
+  async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {
     try {
       // Include context information in the user message instead of system message
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${new Date().toISOString()}]\n\n${message}`;
-      const result = await this.aiService.invoke(contextualMessage, { threadId: chatId });
+      const result = await this.aiService.invoke(contextualMessage, { threadId: chatId.toString() });
       return formatAgentResponse(result, chatId);
     } catch (err) {
       this.logger.error(`Error processing message for user ${chatId}: ${err}`);

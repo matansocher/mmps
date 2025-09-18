@@ -43,7 +43,7 @@ export class ChatbotController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '💪' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const prompt = `I just exercised. Please log my exercise using the exercise_tracker tool with action "log", then check if I broke any records using exercise_analytics tool with action "check_record". Provide an encouraging response with my stats.`;
-      const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId.toString());
+      const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId);
       await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
     });
   }
@@ -56,7 +56,7 @@ export class ChatbotController implements OnModuleInit {
 
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const { message: replyText, toolResults } = await this.chatbotService.processMessage(text, chatId.toString());
+      const { message: replyText, toolResults } = await this.chatbotService.processMessage(text, chatId);
 
       const ttsResult = toolResults.find((result) => result.toolName === 'text_to_speech');
 
@@ -86,7 +86,7 @@ export class ChatbotController implements OnModuleInit {
       deleteFile(imageLocalPath);
 
       const imageAnalysisPrompt = `Please analyze this image: ${imageUrl}`;
-      const { message } = await this.chatbotService.processMessage(imageAnalysisPrompt, chatId.toString());
+      const { message } = await this.chatbotService.processMessage(imageAnalysisPrompt, chatId);
 
       await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
     });
@@ -100,7 +100,7 @@ export class ChatbotController implements OnModuleInit {
       const audioFileLocalPath = await downloadAudio(this.bot, audio, LOCAL_FILES_PATH);
 
       const transcriptionPrompt = `Please transcribe this audio file: ${audioFileLocalPath}`;
-      const { message } = await this.chatbotService.processMessage(transcriptionPrompt, chatId.toString());
+      const { message } = await this.chatbotService.processMessage(transcriptionPrompt, chatId);
 
       await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
     });

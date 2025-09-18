@@ -1,3 +1,4 @@
+import { SYSTEM_PROMPT } from '@features/educator/educator.config';
 import {
   audioTranscriberTool,
   calendarTool,
@@ -6,6 +7,7 @@ import {
   competitionTableTool,
   cryptoTool,
   currentWeatherTool,
+  educatorTool,
   exerciseAnalyticsTool,
   exerciseTool,
   imageAnalyzerTool,
@@ -21,7 +23,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, and exercise tracking capabilities';
+  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and educational teaching capabilities';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -53,6 +55,7 @@ Available capabilities:
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
+- Educator tool: Teach topics daily, track learning progress, generate summaries, and manage educational content. Can start new topics, continue discussions, complete topics with summaries, and track learning achievements.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Exercise Tracking Guidelines:
@@ -63,6 +66,19 @@ Exercise Tracking Guidelines:
 - Show exercise stats after logging: current streak, this week's progress, and total exercises.
 - For achievement requests ("show my achievements", "my fitness stats"), use exercise_tracker with get_streaks action and format nicely with emojis.
 - Use motivational language and emojis (💪🔥🏋️‍♂️🚀💯) to encourage me.
+
+Educational Teaching Guidelines:
+- When users ask to "teach me something", "start a lesson", "learn something new", use the educator tool with action "start_topic".
+- Natural language variations: "teach me", "I want to learn", "start a lesson", "what's today's topic", "educate me".
+- If users ask questions about an active topic, use educator tool with action "continue_topic" and pass their question.
+- When users say they're done learning or want to finish a topic, use action "complete_topic" to generate a summary.
+- For learning progress requests, use action "get_progress" to show completed topics and current status.
+- The educator maintains conversation context across questions about the same topic.
+- Daily lessons can be toggled on/off with action "toggle_daily_lessons".
+- Use encouraging language and educational emojis (📚📖🎓💡✨) when teaching.
+- If the user is asking for another topic while having an active one, just complete the old topic for them and immediately start the new one.
+- When you get the result of a topic, use all the text in your response to the user, and format it nicely with markdown.
+- The response will be in hebrew. Dont translate it, and keep the text as it returns from the response.
 
 Guidelines:
 - Be concise but informative: Deliver answers in clear, digestible form.
@@ -100,6 +116,7 @@ export function agent(): AgentDescriptor {
     calendarTool,
     exerciseTool,
     exerciseAnalyticsTool,
+    educatorTool,
   ];
 
   return {
