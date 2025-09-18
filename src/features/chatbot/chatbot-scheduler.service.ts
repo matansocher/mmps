@@ -104,40 +104,40 @@ Please format the response nicely with emojis and make it feel like a friendly g
     }
   }
 
-  @Cron(`0 ${TOPIC_START_HOUR_OF_DAY} * * *`, {
-    name: 'chatbot-educator-daily-topic',
-    timeZone: DEFAULT_TIMEZONE,
-  })
-  async handleEducatorDailyTopic(): Promise<void> {
-    try {
-      const prompt = `Start teaching me a new topic for today. Use the educator tool with action "start_topic" to begin today's lesson. If I already have an active topic, complete it for me and then start the new topic.`;
-      const response = await this.chatbotService.processMessage(prompt, MY_USER_ID);
-      if (response?.message) {
-        await sendShortenedMessage(this.bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
-      }
-    } catch (err) {
-      this.logger.error(`Failed to handle educator daily topic: ${err}`);
-    }
-  }
-
-  @Cron(`0 ${TOPIC_REMINDER_HOUR_OF_DAY} * * *`, {
-    name: 'chatbot-educator-reminders',
-    timeZone: DEFAULT_TIMEZONE,
-  })
-  async handleEducatorTopicReminders(): Promise<void> {
-    try {
-      const topicParticipation = await getCourseParticipationForSummaryReminder();
-      if (!topicParticipation || topicParticipation.chatId !== MY_USER_ID) {
-        return;
-      }
-
-      if (topicParticipation.summaryDetails) {
-        const summaryMessage = generateSummaryMessage(topicParticipation.summaryDetails);
-        await this.bot.sendMessage(MY_USER_ID, summaryMessage, { parse_mode: 'Markdown' });
-        await saveSummarySent(topicParticipation._id.toString());
-      }
-    } catch (err) {
-      this.logger.error(`Failed to handle educator topic reminders: ${err}`);
-    }
-  }
+  // @Cron(`0 ${TOPIC_START_HOUR_OF_DAY} * * *`, {
+  //   name: 'chatbot-educator-daily-topic',
+  //   timeZone: DEFAULT_TIMEZONE,
+  // })
+  // async handleEducatorDailyTopic(): Promise<void> {
+  //   try {
+  //     const prompt = `Start teaching me a new topic for today. Use the educator tool with action "start_topic" to begin today's lesson. If I already have an active topic, complete it for me and then start the new topic.`;
+  //     const response = await this.chatbotService.processMessage(prompt, MY_USER_ID);
+  //     if (response?.message) {
+  //       await sendShortenedMessage(this.bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
+  //     }
+  //   } catch (err) {
+  //     this.logger.error(`Failed to handle educator daily topic: ${err}`);
+  //   }
+  // }
+  //
+  // @Cron(`0 ${TOPIC_REMINDER_HOUR_OF_DAY} * * *`, {
+  //   name: 'chatbot-educator-reminders',
+  //   timeZone: DEFAULT_TIMEZONE,
+  // })
+  // async handleEducatorTopicReminders(): Promise<void> {
+  //   try {
+  //     const topicParticipation = await getCourseParticipationForSummaryReminder();
+  //     if (!topicParticipation || topicParticipation.chatId !== MY_USER_ID) {
+  //       return;
+  //     }
+  //
+  //     if (topicParticipation.summaryDetails) {
+  //       const summaryMessage = generateSummaryMessage(topicParticipation.summaryDetails);
+  //       await this.bot.sendMessage(MY_USER_ID, summaryMessage, { parse_mode: 'Markdown' });
+  //       await saveSummarySent(topicParticipation._id.toString());
+  //     }
+  //   } catch (err) {
+  //     this.logger.error(`Failed to handle educator topic reminders: ${err}`);
+  //   }
+  // }
 }
