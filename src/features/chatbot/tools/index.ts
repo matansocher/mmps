@@ -23,3 +23,5 @@ export { calendarTool } from './calendar/calendar.tool';
 
 export { exerciseTool } from './exercise/exercise.tool';
 export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
+
+export { educatorTool } from './educator/educator.tool';
