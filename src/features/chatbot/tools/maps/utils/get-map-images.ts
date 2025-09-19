@@ -7,15 +7,12 @@ import { imgurUploadImage } from '@services/imgur';
 import { downloadImage } from './download-image';
 import { findPlace, PlaceInfo } from './find-place';
 import { getStaticMapUrl } from './get-static-map-url';
-import { getStreetViewMetadata } from './get-street-view-metadata';
-import { getStreetViewUrl } from './get-street-view-url';
 
 export interface MapImagesResult {
   success: boolean;
   placeName: string;
   placeInfo?: PlaceInfo;
   mapImageUrl?: string;
-  streetViewImageUrl?: string;
   error?: string;
 }
 
@@ -34,54 +31,15 @@ export async function getMapImages(placeName: string): Promise<MapImagesResult> 
     // Find the place
     const placeInfo = await findPlace(placeName);
 
-    if (placeInfo.useCoordinates) {
-    } else {
-    }
-
     // Create timestamp for unique filenames
     const timestamp = new Date().getTime();
     const sanitizedPlaceName = placeName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
 
     let mapImageUrl: string | undefined;
-    let streetViewImageUrl: string | undefined;
 
     // Ensure the LOCAL_FILES_PATH directory exists
     if (!fs.existsSync(LOCAL_FILES_PATH)) {
       fs.mkdirSync(LOCAL_FILES_PATH, { recursive: true });
-    }
-
-    // Try to get street view
-    let streetViewUrl: string | undefined;
-
-    if (placeInfo.useCoordinates && placeInfo.lat !== null && placeInfo.lng !== null) {
-      // If we have coordinates, check metadata first
-      try {
-        const metadata = await getStreetViewMetadata(placeInfo.lat, placeInfo.lng, apiKey);
-
-        if (metadata.status === 'OK') {
-          streetViewUrl = getStreetViewUrl({ lat: placeInfo.lat, lng: placeInfo.lng }, apiKey, { size: '1280x720', fov: 90, heading: 0, pitch: 0, scale: 1 });
-        } else {
-        }
-      } catch (error) {}
-    } else {
-      // Try to get street view using place name directly
-      streetViewUrl = getStreetViewUrl(placeInfo.name, apiKey, { size: '1280x720', fov: 90, heading: 0, pitch: 0, scale: 1 });
-    }
-
-    // Download and upload street view if URL was generated
-    if (streetViewUrl) {
-      try {
-        const streetViewImagePath = path.join(LOCAL_FILES_PATH, `streetview_${sanitizedPlaceName}_${timestamp}.jpg`);
-        await downloadImage(streetViewUrl, streetViewImagePath);
-
-        // Upload to Imgur
-        streetViewImageUrl = await imgurUploadImage(env.IMGUR_CLIENT_ID, streetViewImagePath);
-
-        // Delete local file after upload
-        deleteFile(streetViewImagePath);
-      } catch (error) {
-        streetViewImageUrl = undefined;
-      }
     }
 
     // Get static map
@@ -102,12 +60,12 @@ export async function getMapImages(placeName: string): Promise<MapImagesResult> 
       mapImageUrl = undefined;
     }
 
-    if (!mapImageUrl && !streetViewImageUrl) {
+    if (!mapImageUrl) {
       return {
         success: false,
         placeName,
         placeInfo,
-        error: 'Failed to generate any map images',
+        error: 'Failed to generate map image',
       };
     }
 
@@ -116,7 +74,6 @@ export async function getMapImages(placeName: string): Promise<MapImagesResult> 
       placeName,
       placeInfo,
       mapImageUrl,
-      streetViewImageUrl,
     };
   } catch (error) {
     console.error('Error getting map images:', error);

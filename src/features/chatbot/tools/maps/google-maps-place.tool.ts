@@ -12,20 +12,11 @@ async function runner({ placeName }: z.infer<typeof schema>) {
   if (!result.success) {
     throw new Error(result.error || 'Failed to generate map images');
   }
-
-  const urls = [];
-  if (result.mapImageUrl) {
-    urls.push(`MAP_IMAGE: ${result.mapImageUrl}`);
-  }
-  if (result.streetViewImageUrl) {
-    urls.push(`STREET_VIEW_IMAGE: ${result.streetViewImageUrl}`);
-  }
-
-  return urls.join('\n');
+  return result.mapImageUrl;
 }
 
 export const googleMapsPlaceTool = tool(runner, {
   name: 'google_maps_place',
-  description: 'Get Google Maps and Street View images for a specific place, landmark, or address. Returns Imgur URLs for both a map view and street-level view images of the location.',
+  description: 'Get a Google Maps image for a specific place, landmark, or address. Returns an Imgur URL for the map view of the location.',
   schema,
 });
