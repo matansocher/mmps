@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
+import { DB_NAME as COACH_DB_NAME } from '@features/coach/mongo';
 import { DB_NAME as EDUCATOR_DB_NAME } from '@features/educator/mongo';
 import { DB_NAME as TRAINER_DB_NAME } from '@features/trainer/mongo';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
@@ -15,7 +16,7 @@ import { ChatbotService } from './chatbot.service';
 })
 export class ChatbotModule implements OnModuleInit {
   async onModuleInit() {
-    await createMongoConnection(TRAINER_DB_NAME);
-    await createMongoConnection(EDUCATOR_DB_NAME);
+    const mongoDbNames = [TRAINER_DB_NAME, EDUCATOR_DB_NAME, COACH_DB_NAME];
+    await Promise.all(mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)));
   }
 }
