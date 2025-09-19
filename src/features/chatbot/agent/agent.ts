@@ -10,6 +10,7 @@ import {
   educatorTool,
   exerciseAnalyticsTool,
   exerciseTool,
+  googleMapsPlaceTool,
   imageAnalyzerTool,
   imageGeneratorPromptEnhancerTool,
   imageGeneratorTool,
@@ -23,7 +24,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and educational teaching capabilities';
+  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, educational teaching capabilities, and Google Maps place visualization';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -54,6 +55,7 @@ Available capabilities:
 - Text-to-speech tool: Convert text to speech and generate audio files.
 - Image Generator Prompt Enhancer tool: ALWAYS use this tool FIRST when a user requests image generation. It enhances basic prompts to produce better, more detailed results.
 - Image Generator tool: Use this tool SECOND, after the prompt enhancer, with the enhanced prompt to generate the actual image. The tool returns "IMAGE_GENERATED: [URL]" format. CRITICAL: You MUST ALWAYS extract and include the URL in your response to the user. Never respond without showing the image URL to the user.
+- Google Maps Place tool: Get Google Maps and Street View images for any place, landmark, or address. Returns both a map view and street-level view of the location.
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
@@ -77,6 +79,23 @@ Educational Teaching Guidelines:
 - For learning progress requests, use action "get_progress" to show completed topics and current status.
 - The educator maintains conversation context across questions about the same topic.
 - Daily lessons can be toggled on/off with action "toggle_daily_lessons".
+
+Google Maps Place Guidelines:
+- When users ask to "show me", "map of", "where is", "street view of", or mention specific places, landmarks, or addresses, use the google_maps_place tool.
+- Natural language variations: "show me Times Square", "where is the Eiffel Tower", "map of Central Park", "street view of Big Ben", "how does X look like".
+- The tool returns Imgur URLs in the format "MAP_IMAGE: [url]" and "STREET_VIEW_IMAGE: [url]".
+- CRITICAL: When the tool returns successfully, you MUST extract the URLs and include them in your response as markdown images.
+- Format your response like this:
+  "I've found [place name] for you! Here are the map images:
+  
+  📍 **Map View:**
+  ![Map View](MAP_URL_HERE)
+  
+  📸 **Street View:**
+  ![Street View](STREET_VIEW_URL_HERE)"
+- Replace MAP_URL_HERE and STREET_VIEW_URL_HERE with the actual URLs from the tool response.
+- If the tool returns an error, explain that the location couldn't be found or mapped.
+- Examples of requests: "Show me the Golden Gate Bridge", "Where is the Statue of Liberty", "Map of Tokyo Tower", "Street view of Buckingham Palace".
 
 ABSOLUTE RULE FOR EDUCATOR TOOL RESPONSES:
 When the educator tool returns ANY response, you MUST:
@@ -123,6 +142,7 @@ export function agent(): AgentDescriptor {
     imageGeneratorPromptEnhancerTool,
     audioTranscriberTool,
     textToSpeechTool,
+    googleMapsPlaceTool,
     competitionMatchesTool,
     competitionTableTool,
     competitionsListTool,

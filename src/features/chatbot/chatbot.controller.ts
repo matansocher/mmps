@@ -70,6 +70,8 @@ export class ChatbotController implements OnModuleInit {
           await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
         }
       } else {
+        // For google_maps_place tool, the URLs are already included in the replyText by the agent
+        // Just send the message with markdown formatting which will display the images inline
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
     });
