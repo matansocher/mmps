@@ -1,3 +1,4 @@
+import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/domains/coach/mongo';
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
@@ -7,7 +8,6 @@ import { getDateString } from '@core/utils';
 import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
-import { getActiveSubscriptions, getUserDetails, updateSubscription } from './mongo';
 
 const HOURS_TO_NOTIFY = [12, 23];
 

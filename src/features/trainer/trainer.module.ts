@@ -3,7 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { NotifierModule } from '@core/notifier';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
-import { DB_NAME } from '@shared/domains/exercise/mongo';
+import { DB_NAME } from '@shared/domains/trainer/mongo';
 import { TrainerSchedulerService } from './trainer-scheduler.service';
 import { BOT_CONFIG } from './trainer.config';
 import { TrainerController } from './trainer.controller';

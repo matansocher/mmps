@@ -8,7 +8,7 @@ import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
-import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from './mongo';
+import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/domains/coach/mongo';
 import { getDateFromUserInput } from './utils';
 
 const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';

@@ -4,7 +4,7 @@ import { DAYS_OF_WEEK, MY_USER_ID } from '@core/config';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
 import { createImage } from '@services/openai';
 import { searchMeme } from '@services/tenor';
-import { getExercises } from '@shared/domains/exercise/mongo';
+import { getExercises } from '@shared/domains/trainer/mongo';
 import { BROKEN_RECORD_IMAGE_PROMPT } from '../../../trainer/trainer.config';
 import { getLastWeekDates } from '../../../trainer/utils';
 
