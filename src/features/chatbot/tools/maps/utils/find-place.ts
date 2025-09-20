@@ -18,7 +18,7 @@ export async function findPlace(placeName: string): Promise<PlaceInfo> {
   try {
     const response = await axios.get(textSearchUrl);
 
-    if (response.data.status === 'OK' && response.data.results && response.data.results.length > 0) {
+    if (response.data.status === 'OK' && response.data.results?.length > 0) {
       const place = response.data.results[0];
       return {
         lat: place.geometry.location.lat,
@@ -38,7 +38,7 @@ export async function findPlace(placeName: string): Promise<PlaceInfo> {
   try {
     const response = await axios.get(findPlaceUrl);
 
-    if (response.data.status === 'OK' && response.data.candidates && response.data.candidates.length > 0) {
+    if (response.data.status === 'OK' && response.data.candidates?.length > 0) {
       const place = response.data.candidates[0];
       return {
         lat: place.geometry.location.lat,
@@ -72,8 +72,6 @@ export async function findPlace(placeName: string): Promise<PlaceInfo> {
       useCoordinates: true,
     };
   } catch {}
-
-  // If all APIs fail, return the place name as-is for direct use in Static Maps API
 
   return {
     lat: null,

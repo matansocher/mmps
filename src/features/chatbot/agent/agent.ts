@@ -1,4 +1,3 @@
-import { SYSTEM_PROMPT } from '@features/educator/educator.config';
 import {
   audioTranscriberTool,
   calendarTool,

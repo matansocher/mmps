@@ -11,16 +11,15 @@ export function getStaticMapUrl(location: string | { lat: number; lng: number },
   const scale = options.scale || 1;
   const markerLabel = options.label || 'A';
 
-  // location can be either {lat, lng} or a place name string
   let centerParam: string;
   let markerParam: string;
 
   if (typeof location === 'string') {
-    // Use place name directly
+    // place name
     centerParam = encodeURIComponent(location);
     markerParam = `color:red%7Clabel:${encodeURIComponent(markerLabel)}%7C${encodeURIComponent(location)}`;
   } else {
-    // Use coordinates
+    // coordinates
     centerParam = `${location.lat},${location.lng}`;
     markerParam = `color:red%7Clabel:${encodeURIComponent(markerLabel)}%7C${location.lat},${location.lng}`;
   }

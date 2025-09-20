@@ -17,70 +17,30 @@ export interface MapImagesResult {
 }
 
 export async function getMapImages(placeName: string): Promise<MapImagesResult> {
-  const apiKey = env.GOOGLE_MAPS_API_KEY;
-
-  if (!apiKey) {
-    return {
-      success: false,
-      placeName,
-      error: 'Google Maps API key not configured',
-    };
-  }
-
   try {
-    // Find the place
     const placeInfo = await findPlace(placeName);
-
-    // Create timestamp for unique filenames
-    const timestamp = new Date().getTime();
     const sanitizedPlaceName = placeName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
 
-    let mapImageUrl: string | undefined;
-
-    // Ensure the LOCAL_FILES_PATH directory exists
-    if (!fs.existsSync(LOCAL_FILES_PATH)) {
-      fs.mkdirSync(LOCAL_FILES_PATH, { recursive: true });
-    }
-
-    // Get static map
     const mapLocation = placeInfo.useCoordinates && placeInfo.lat !== null && placeInfo.lng !== null ? { lat: placeInfo.lat, lng: placeInfo.lng } : placeInfo.name;
+    const mapUrl = getStaticMapUrl(mapLocation, env.GOOGLE_MAPS_API_KEY, { size: '1280x720', zoom: 16, scale: 1, label: 'A' });
 
-    const mapUrl = getStaticMapUrl(mapLocation, apiKey, { size: '1280x720', zoom: 16, scale: 1, label: 'A' });
-
+    let mapImageUrl: string | undefined;
     try {
-      const mapImagePath = path.join(LOCAL_FILES_PATH, `map_${sanitizedPlaceName}_${timestamp}.png`);
+      const mapImagePath = path.join(LOCAL_FILES_PATH, `map_${sanitizedPlaceName}_${new Date().getTime()}.png`);
       await downloadImage(mapUrl, mapImagePath);
-
-      // Upload to Imgur
       mapImageUrl = await imgurUploadImage(env.IMGUR_CLIENT_ID, mapImagePath);
-
-      // Delete local file after upload
       deleteFile(mapImagePath);
     } catch (error) {
       mapImageUrl = undefined;
     }
 
     if (!mapImageUrl) {
-      return {
-        success: false,
-        placeName,
-        placeInfo,
-        error: 'Failed to generate map image',
-      };
+      return { success: false, placeName, placeInfo, error: 'Failed to generate map image' };
     }
 
-    return {
-      success: true,
-      placeName,
-      placeInfo,
-      mapImageUrl,
-    };
+    return { success: true, placeName, placeInfo, mapImageUrl };
   } catch (error) {
     console.error('Error getting map images:', error);
-    return {
-      success: false,
-      placeName,
-      error: error.message || 'Unknown error occurred',
-    };
+    return { success: false, placeName, error: error.message || 'Unknown error occurred' };
   }
 }

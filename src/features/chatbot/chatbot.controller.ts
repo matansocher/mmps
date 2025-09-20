@@ -74,7 +74,8 @@ export class ChatbotController implements OnModuleInit {
         const imageFilePath = mapsResult.data;
         try {
           await this.bot.sendPhoto(chatId, imageFilePath, { caption: replyText }).catch((err) => {
-            this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+            this.logger.error(`Error sending photo: ${err}. Sending as text message instead.`);
+            this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' }).catch(() => {});
           });
           deleteFile(imageFilePath);
         } catch (err) {
@@ -82,8 +83,6 @@ export class ChatbotController implements OnModuleInit {
           await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
         }
       } else {
-        // For google_maps_place tool, the URLs are already included in the replyText by the agent
-        // Just send the message with markdown formatting which will display the images inline
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
     });
