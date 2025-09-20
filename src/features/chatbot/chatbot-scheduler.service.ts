@@ -5,7 +5,7 @@ import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions } from '../coach/mongo';
-import { getTodayExercise } from '../trainer/mongo';
+import { getTodayExercise } from '@shared/domains/exercise/mongo';
 import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from '../trainer/trainer.config';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';

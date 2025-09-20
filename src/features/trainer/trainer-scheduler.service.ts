@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { getActiveUsers } from './mongo';
+import { getActiveUsers } from '@shared/domains/exercise/mongo';
 import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from './trainer.config';
 import { TrainerService } from './trainer.service';
 

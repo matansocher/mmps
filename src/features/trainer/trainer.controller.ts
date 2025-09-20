@@ -6,7 +6,7 @@ import { NotifierService } from '@core/notifier';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
 import { createImage } from '@services/openai';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { addExercise, createUserPreference, getExercises, getUserPreference, saveUserDetails, updateUserPreference } from './mongo';
+import { addExercise, createUserPreference, getExercises, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/domains/exercise/mongo';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { getLastWeekDates } from './utils';
 

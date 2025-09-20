@@ -2,7 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { getLongestStreak, getStreak } from '@core/utils';
-import { addExercise, getExercises, getTodayExercise } from '../../../trainer/mongo';
+import { addExercise, getExercises, getTodayExercise } from '@shared/domains/exercise/mongo';
 
 export function getLastWeekDates(): { lastSunday: Date; lastSaturday: Date } {
   const now = new Date();

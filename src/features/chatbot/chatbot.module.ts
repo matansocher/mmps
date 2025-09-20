@@ -2,7 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { DB_NAME as COACH_DB_NAME } from '@features/coach/mongo';
-import { DB_NAME as TRAINER_DB_NAME } from '@features/trainer/mongo';
+import { DB_NAME as TRAINER_DB_NAME } from '@shared/domains/exercise/mongo';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
 import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
