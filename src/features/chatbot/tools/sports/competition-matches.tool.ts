@@ -1,6 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { generateCompetitionMatchesString } from '@features/coach/utils';
+import { generateCompetitionMatchesString } from '@shared/domains/coach';
 import { getCompetitionMatches } from '@services/scores-365';
 
 const schema = z.object({
