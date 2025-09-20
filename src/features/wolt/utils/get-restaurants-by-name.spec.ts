@@ -1,4 +1,4 @@
-import { WoltRestaurant } from '../types';
+import { WoltRestaurant } from '@shared/wolt';
 import { getRestaurantsByName } from './get-restaurants-by-name';
 
 const mockRestaurants = [
