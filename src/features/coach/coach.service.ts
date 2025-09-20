@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { generateCompetitionMatchesString, generateMatchResultsString } from '@shared//coach';
 import { Competition, CompetitionDetails, getCompetitionMatches, getCompetitions, getCompetitionTable, getMatchesSummaryDetails } from '@services/scores-365';
 import { getTableTemplate } from '@services/telegram';
+import { generateCompetitionMatchesString, generateMatchResultsString } from '@shared/coach';
 import { competitionMatchesCacheService, competitionsCacheService, competitionTableCacheService, matchesSummaryCacheService } from './cache';
 
 @Injectable()

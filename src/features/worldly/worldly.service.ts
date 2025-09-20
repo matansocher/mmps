@@ -3,8 +3,8 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
 import { generateRandomString, shuffleArray } from '@core/utils';
-import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, State, updateSubscription } from '@shared//worldly';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
+import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, State, updateSubscription } from '@shared/worldly';
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 

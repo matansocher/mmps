@@ -1,7 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { generateCompetitionMatchesString } from '@shared//coach';
 import { getCompetitionMatches } from '@services/scores-365';
+import { generateCompetitionMatchesString } from '@shared/coach';
 
 const schema = z.object({
   competitionId: z.number().describe('The ID of the competition to get matches for'),

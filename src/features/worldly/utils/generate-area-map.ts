@@ -1,5 +1,5 @@
 import { Canvas, CanvasRenderingContext2D, createCanvas } from 'canvas';
-import { Country, State } from '@shared//worldly';
+import { Country, State } from '@shared/worldly';
 import { simplifyAreaName } from '.';
 
 type GenerateAreaOptions = {

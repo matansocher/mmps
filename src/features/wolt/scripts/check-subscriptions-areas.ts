@@ -2,8 +2,7 @@ import { config } from 'dotenv';
 import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
-import { DB_NAME } from '../mongo';
-import { Subscription } from '../types';
+import { DB_NAME, Subscription } from '@shared/wolt';
 import { getRestaurantsList } from '../utils';
 
 async function main() {

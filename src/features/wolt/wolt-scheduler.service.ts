@@ -5,9 +5,8 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getInlineKeyboardMarkup } from '@services/telegram';
-import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails } from './mongo';
+import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { Subscription, WoltRestaurant } from './types';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];

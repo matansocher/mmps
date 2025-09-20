@@ -1,5 +1,5 @@
 import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '@core/utils';
-import { GameLog } from '@shared//worldly';
+import { GameLog } from '@shared/worldly';
 
 export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   const currentStreak = getStreak(userGameLogs.map((game) => game.createdAt));

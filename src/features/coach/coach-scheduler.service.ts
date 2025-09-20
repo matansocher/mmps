@@ -4,8 +4,8 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
-import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared//coach/mongo';
 import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
+import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach/mongo';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 

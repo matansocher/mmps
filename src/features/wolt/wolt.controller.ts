@@ -4,9 +4,8 @@ import { MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { getCallbackQueryData, getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails } from './mongo';
+import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { Subscription, WoltRestaurant } from './types';
 import { getRestaurantsByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
