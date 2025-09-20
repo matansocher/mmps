@@ -9,8 +9,6 @@ import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educa
 import { BOT_CONFIG as trainerBotConfig, TrainerModule } from '@features/trainer';
 import { BOT_CONFIG as woltBotConfig, WoltModule } from '@features/wolt';
 import { BOT_CONFIG as worldlyBotConfig, WorldlyModule } from '@features/worldly';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 const registerBotModule = (module: any, config: { id: string }) => {
   return ConditionalModule.registerWhen(module, () => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id);
@@ -27,7 +25,5 @@ const registerBotModule = (module: any, config: { id: string }) => {
     registerBotModule(WoltModule, woltBotConfig),
     registerBotModule(WorldlyModule, worldlyBotConfig),
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
