@@ -1,10 +1,10 @@
-import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/domains/coach/mongo';
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
+import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/domains/coach/mongo';
 import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';

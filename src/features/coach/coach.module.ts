@@ -2,12 +2,12 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { NotifierModule } from '@core/notifier';
+import { DB_NAME } from '@shared/domains/coach/mongo';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';
 import { CoachService } from './coach.service';
-import { DB_NAME } from '@shared/domains/coach/mongo';
 
 @Module({
   imports: [ScheduleModule.forRoot(), NotifierModule],

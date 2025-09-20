@@ -16,6 +16,7 @@ module.exports = {
     '^@core/(.*)$',
     '^@decorators/(.*)$',
     '^@features/(.*)$',
+    '^@shared/(.*)$',
     '^@mocks/(.*)$',
     '^@services/(.*)$',
     '^@test/(.*)$',

@@ -3,9 +3,9 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getDateString } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions } from '@shared/domains/coach/mongo';
 import { getTodayExercise } from '@shared/domains/trainer/mongo';
+import { sendShortenedMessage } from '@services/telegram';
 import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from '../trainer/trainer.config';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
@@ -31,7 +31,6 @@ export class ChatbotSchedulerService implements OnModuleInit {
   @Cron(`59 12,23 * * *`, { name: 'chatbot-football-update', timeZone: DEFAULT_TIMEZONE })
   async handleFootballUpdate(): Promise<void> {
     try {
-      // Get all active coach subscriptions
       const activeSubscriptions = await getActiveSubscriptions();
       if (!activeSubscriptions?.length) {
         return;

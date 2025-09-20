@@ -8,9 +8,4 @@ export { addExercise, getTodayExercise, getExercises } from './exercise.reposito
 export { saveUserDetails, getUserDetails } from './user.repository';
 
 // User preferences repository functions
-export {
-  getUserPreference,
-  getActiveUsers,
-  createUserPreference,
-  updateUserPreference,
-} from './user-preferences.repository';
+export { getUserPreference, getActiveUsers, createUserPreference, updateUserPreference } from './user-preferences.repository';

@@ -4,11 +4,11 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getDateDescription } from '@core/utils';
+import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/domains/coach/mongo';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
-import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/domains/coach/mongo';
 import { getDateFromUserInput } from './utils';
 
 const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';
