@@ -2,7 +2,7 @@ import { subDays } from 'date-fns';
 import { ObjectId } from 'mongodb';
 import { getStreak, getStreakOfCorrectAnswers } from './streak-calc';
 
-export interface GameLog {
+export type GameLog = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly gameId: string;
@@ -11,7 +11,7 @@ export interface GameLog {
   readonly selected: string;
   readonly createdAt: Date;
   readonly answeredAt?: Date;
-}
+};
 
 const getDateAgo = (daysAgo: number): Date => {
   const today = new Date();

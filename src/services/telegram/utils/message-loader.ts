@@ -5,11 +5,11 @@ import { reactToMessage } from '../utils';
 const SHOW_AFTER_MS = 3000;
 const DELETE_AFTER_NO_RESPONSE_MS = 15000;
 
-export interface MessageLoaderOptions {
+export type MessageLoaderOptions = {
   readonly loaderMessage?: string;
   readonly reactionEmoji?: string;
   readonly loadingAction?: BOT_BROADCAST_ACTIONS;
-}
+};
 
 export class MessageLoader {
   private readonly bot: TelegramBot;

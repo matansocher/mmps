@@ -1,4 +1,4 @@
-export interface CalendarEvent {
+export type CalendarEvent = {
   id?: string;
   summary: string;
   description?: string;
@@ -27,13 +27,13 @@ export interface CalendarEvent {
   };
   recurrence?: string[];
   status?: 'confirmed' | 'tentative' | 'cancelled';
-}
+};
 
-export interface CalendarListOptions {
+export type CalendarListOptions = {
   timeMin?: string;
   timeMax?: string;
   maxResults?: number;
   orderBy?: 'startTime' | 'updated';
   q?: string; // Free text search terms
   singleEvents?: boolean;
-}
+};

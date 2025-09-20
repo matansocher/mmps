@@ -16,12 +16,12 @@ export const CourseSummarySchema = z.object({
 
 export type CourseResponse = z.infer<typeof CourseResponseSchema>;
 
-export interface Course {
+export type Course = {
   readonly _id: ObjectId;
   readonly topic: string;
   readonly createdBy?: number;
   readonly createdAt: Date;
-}
+};
 
 export enum CourseParticipationStatus {
   Pending = 'pending',
@@ -29,15 +29,15 @@ export enum CourseParticipationStatus {
   Completed = 'completed',
 }
 
-export interface SummaryDetails {
+export type SummaryDetails = {
   readonly topicTitle: string;
   readonly summary: string;
   readonly keyTakeaways: string[];
   readonly sentAt?: Date;
   readonly createdAt: Date;
-}
+};
 
-export interface CourseParticipation {
+export type CourseParticipation = {
   readonly _id: ObjectId;
   readonly courseId: string;
   readonly chatId: number;
@@ -49,11 +49,11 @@ export interface CourseParticipation {
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;
-}
+};
 
-export interface UserPreferences {
+export type UserPreferences = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly isStopped: boolean;
   readonly createdAt: Date;
-}
+};

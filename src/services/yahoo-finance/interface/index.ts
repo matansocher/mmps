@@ -1,14 +1,14 @@
-export interface MarketDayRange {
+export type MarketDayRange = {
   readonly low: number;
   readonly high: number;
-}
+};
 
-export interface FiftyTwoWeekRange {
+export type FiftyTwoWeekRange = {
   readonly low: number;
   readonly high: number;
-}
+};
 
-export interface SummaryDetail {
+export type SummaryDetail = {
   readonly maxAge: number;
   readonly priceHint: number;
   readonly previousClose: number;
@@ -51,9 +51,9 @@ export interface SummaryDetail {
   readonly coinMarketCapLink: null;
   readonly algorithm: null;
   readonly tradeable: boolean;
-}
+};
 
-export interface Price {
+export type Price = {
   readonly maxAge: number;
   readonly preMarketChangePercent: number;
   readonly preMarketChange: number;
@@ -89,9 +89,9 @@ export interface Price {
   readonly toCurrency: null;
   readonly lastMarket: null;
   readonly marketCap: number;
-}
+};
 
-export interface Quote {
+export type Quote = {
   readonly exchange: string;
   readonly shortname: string;
   readonly quoteType: string;
@@ -107,9 +107,9 @@ export interface Quote {
   readonly industryDisp?: string;
   readonly dispSecIndFlag?: boolean;
   readonly isYahooFinance: boolean;
-}
+};
 
-export interface DataInterface {
+export type DataInterface = {
   readonly language?: string;
   readonly region?: string;
   readonly quoteType?: string;
@@ -211,9 +211,9 @@ export interface DataInterface {
   readonly timeTakenForScreenerField?: number;
   readonly timeTakenForCulturalAssets?: number;
   readonly timeTakenForSearchLists?: number;
-}
+};
 
-export interface StockDataSummary {
+export type StockDataSummary = {
   readonly symbol: string;
   readonly shortName: string;
   readonly longName: string;
@@ -249,9 +249,9 @@ export interface StockDataSummary {
   readonly regularMarketPreviousClose: number;
   readonly regularMarketOpen: number;
   readonly tradeable: boolean;
-}
+};
 
-export interface StockDataSearchResults {
+export type StockDataSearchResults = {
   readonly explains: any[];
   readonly count: number;
   readonly quotes: Quote[];
@@ -270,9 +270,9 @@ export interface StockDataSearchResults {
   readonly timeTakenForScreenerField: number;
   readonly timeTakenForCulturalAssets: number;
   readonly timeTakenForSearchLists: number;
-}
+};
 
-export interface StockSearchResult {
+export type StockSearchResult = {
   readonly symbol: string;
   readonly shortName: string;
   readonly longName: string;
@@ -281,4 +281,4 @@ export interface StockSearchResult {
   readonly exchangeDisplayName: string;
   readonly typeDisplayName: string;
   readonly score: number;
-}
+};

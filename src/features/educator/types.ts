@@ -21,12 +21,12 @@ export const TopicSummarySchema = z.object({
 export type TopicResponse = z.infer<typeof TopicResponseSchema>;
 export type TopicSummaryResponse = z.infer<typeof TopicSummarySchema>;
 
-export interface Topic {
+export type Topic = {
   readonly _id: ObjectId;
   readonly title: string;
   readonly createdBy?: number;
   readonly createdAt: Date;
-}
+};
 
 export enum TopicParticipationStatus {
   Pending = 'pending',
@@ -34,15 +34,15 @@ export enum TopicParticipationStatus {
   Completed = 'completed',
 }
 
-export interface SummaryDetails {
+export type SummaryDetails = {
   readonly topicTitle: string;
   readonly summary: string;
   readonly keyTakeaways: string[];
   readonly sentAt?: Date;
   readonly createdAt: Date;
-}
+};
 
-export interface TopicParticipation {
+export type TopicParticipation = {
   readonly _id: ObjectId;
   readonly topicId: string;
   readonly chatId: number;
@@ -53,11 +53,11 @@ export interface TopicParticipation {
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;
-}
+};
 
-export interface UserPreferences {
+export type UserPreferences = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly isStopped: boolean;
   readonly createdAt: Date;
-}
+};

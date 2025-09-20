@@ -1,7 +1,7 @@
-export interface CacheEntry<T> {
+export type CacheEntry<T> = {
   readonly lastUpdated: number;
   readonly data: T;
-}
+};
 
 export class BaseCache<T> {
   private cache: Record<string, CacheEntry<T>> = {};

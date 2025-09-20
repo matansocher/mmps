@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface Country {
+export type Country = {
   readonly _id: ObjectId;
   readonly name: string;
   readonly hebrewName: string;
@@ -20,9 +20,9 @@ export interface Country {
     readonly type: string;
     readonly coordinates: number[][][] | number[][][][]; // Polygon or MultiPolygon
   };
-}
+};
 
-export interface State {
+export type State = {
   readonly _id: ObjectId;
   readonly name: string;
   readonly hebrewName: string;
@@ -36,16 +36,16 @@ export interface State {
     readonly type: string;
     readonly coordinates: number[][][] | number[][][][]; // Polygon or MultiPolygon
   };
-}
+};
 
-export interface Subscription {
+export type Subscription = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly isActive: boolean;
   readonly createdAt: Date;
-}
+};
 
-export interface GameLog {
+export type GameLog = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly gameId: string;
@@ -54,4 +54,4 @@ export interface GameLog {
   readonly selected: string;
   readonly createdAt: Date;
   readonly answeredAt?: Date;
-}
+};
