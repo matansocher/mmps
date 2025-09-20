@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface WoltRestaurant {
+export type WoltRestaurant = {
   readonly id: string;
   readonly name: string;
   readonly isOnline: string;
@@ -8,14 +8,14 @@ export interface WoltRestaurant {
   readonly area: string;
   readonly photo: string;
   readonly link: string;
-}
+};
 
-export interface RestaurantsList {
+export type RestaurantsList = {
   readonly restaurants: WoltRestaurant[];
   readonly lastUpdated: number;
-}
+};
 
-export interface Subscription {
+export type Subscription = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly restaurant: string;
@@ -24,4 +24,4 @@ export interface Subscription {
   readonly isSuccess: boolean;
   readonly finishedAt: Date;
   readonly createdAt: Date;
-}
+};

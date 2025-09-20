@@ -3,49 +3,49 @@ import { BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { MemorySaver } from '@langchain/langgraph';
 
-export interface AgentDescriptor {
+export type AgentDescriptor = {
   name: string;
   description?: string;
   prompt: string;
   tools: (DynamicTool | DynamicStructuredTool<any>)[];
-}
+};
 
-export interface OrchestratorDescriptor extends Omit<AgentDescriptor, 'description' | 'tools'> {
+export type OrchestratorDescriptor = Omit<AgentDescriptor, 'description' | 'tools'> & {
   agents: AgentDescriptor[];
   tools?: AgentDescriptor['tools'];
-}
+};
 
-export interface CreateAgentOptions {
+export type CreateAgentOptions = {
   llm: ChatAnthropic;
   checkpointSaver?: MemorySaver;
   responseFormat?: any;
-}
+};
 
-export interface AiServiceOptions {
+export type AiServiceOptions = {
   name: string;
   recursionLimit?: number;
-}
+};
 
-export interface InvokeOptions {
+export type InvokeOptions = {
   threadId?: string;
   system?: string;
   callbacks?: any[];
   recursionLimit?: number;
-}
+};
 
-export interface ChatbotResponse {
+export type ChatbotResponse = {
   message: string;
   toolResults: ToolResult[];
   timestamp: string;
-}
+};
 
-export interface ToolResult {
+export type ToolResult = {
   toolName: string;
   data: any;
   error?: string;
-}
+};
 
-export interface MessageState {
+export type MessageState = {
   messages: BaseMessage[];
   [key: string]: any; // index signature for LangGraph compatibility
-}
+};

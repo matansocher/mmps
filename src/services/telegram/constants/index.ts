@@ -84,10 +84,10 @@ export enum TELEGRAM_EVENTS {
   // chat_join_request = 'chat_join_request'
 }
 
-export interface TelegramEventHandler {
+export type TelegramEventHandler = {
   readonly event: TELEGRAM_EVENTS;
   readonly regex?: string;
   readonly handler: (payload: Message | CallbackQuery) => Promise<void> | void;
-}
+};
 
 export const BLOCKED_ERROR = 'bot was blocked by the user';

@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export interface Recipe {
+export type Recipe = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly title: string;
@@ -11,4 +11,4 @@ export interface Recipe {
   readonly link?: string;
   readonly updatedAt: Date;
   readonly createdAt: Date;
-}
+};

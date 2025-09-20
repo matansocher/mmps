@@ -1,14 +1,14 @@
 import type { ObjectId } from 'mongodb';
 
-export interface UserPreferences {
+export type UserPreferences = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly isStopped: boolean;
   readonly createdAt: Date;
-}
+};
 
-export interface Exercise {
+export type Exercise = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly createdAt: Date;
-}
+};

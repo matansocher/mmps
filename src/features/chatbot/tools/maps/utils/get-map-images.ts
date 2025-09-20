@@ -8,13 +8,13 @@ import { downloadImage } from './download-image';
 import { findPlace, PlaceInfo } from './find-place';
 import { getStaticMapUrl } from './get-static-map-url';
 
-export interface MapImagesResult {
+export type MapImagesResult = {
   success: boolean;
   placeName: string;
   placeInfo?: PlaceInfo;
   mapImageUrl?: string;
   error?: string;
-}
+};
 
 export async function getMapImages(placeName: string): Promise<MapImagesResult> {
   try {

@@ -8,7 +8,7 @@ type ListenerOptions = {
   readonly conversationsIds?: string[];
 };
 
-export interface TelegramMessage {
+export type TelegramMessage = {
   readonly id: string;
   readonly userId: string;
   readonly channelId: string;
@@ -18,9 +18,9 @@ export interface TelegramMessage {
   voice?: {
     readonly fileName: string;
   };
-}
+};
 
-export interface ConversationDetails {
+export type ConversationDetails = {
   readonly id: string;
   readonly createdDate: number;
   readonly title: string;
@@ -28,7 +28,7 @@ export interface ConversationDetails {
   readonly lastName: string;
   readonly userName: string;
   readonly photo?: string;
-}
+};
 
 export async function getMessageData(client: TelegramClient, event): Promise<TelegramMessage> {
   const data: TelegramMessage = {

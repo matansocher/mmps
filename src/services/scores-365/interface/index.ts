@@ -1,34 +1,34 @@
-export interface CompetitionDetails {
+export type CompetitionDetails = {
   readonly competition: Competition;
   readonly matches: MatchDetails[];
-}
+};
 
-export interface Competition {
+export type Competition = {
   readonly id: number;
   readonly name: string;
   readonly icon?: string;
   readonly hasTable?: boolean;
-}
+};
 
-export interface Competitor {
+export type Competitor = {
   readonly id: number;
   readonly name: string;
-}
+};
 
-export interface ExpectedTeam {
+export type ExpectedTeam = {
   readonly id: number;
   readonly name: string;
   readonly symbolicName: string;
   readonly score: number;
   readonly color: string;
-}
+};
 
-export interface ExpectedTvNetworks {
+export type ExpectedTvNetworks = {
   readonly id: number;
   readonly name: string;
-}
+};
 
-export interface ExpectedMatch {
+export type ExpectedMatch = {
   readonly id: number;
   readonly startTime: string;
   readonly statusText: string;
@@ -42,17 +42,17 @@ export interface ExpectedMatch {
   readonly homeCompetitor: ExpectedTeam;
   readonly awayCompetitor: ExpectedTeam;
   readonly tvNetworks: ExpectedTvNetworks[];
-}
+};
 
-export interface Team {
+export type Team = {
   readonly id: number;
   readonly name: string;
   readonly symbolicName: string;
   readonly score: number;
   readonly color: string;
-}
+};
 
-export interface MatchDetails {
+export type MatchDetails = {
   readonly id: number;
   readonly startTime: string;
   readonly statusText: string;
@@ -62,15 +62,15 @@ export interface MatchDetails {
   readonly homeCompetitor: Team;
   readonly awayCompetitor: Team;
   readonly channel: string;
-}
+};
 
-export interface CompetitionTableDetails {
+export type CompetitionTableDetails = {
   readonly competition: Competition & { icon: string };
   readonly competitionTable: CompetitionTableRow[];
-}
+};
 
-export interface CompetitionTableRow {
+export type CompetitionTableRow = {
   readonly competitor: Competitor;
   readonly points: number;
   readonly gamesPlayed: number;
-}
+};
