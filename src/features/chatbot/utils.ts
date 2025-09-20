@@ -19,11 +19,11 @@ function extractToolResults(messages: BaseMessage[]): ToolResult[] {
   const toolResults: ToolResult[] = [];
 
   for (let i = 0; i < messages.length; i++) {
-    const message = messages[i];
-    if (message.additional_kwargs?.tool_calls) {
-      const toolCalls = message.additional_kwargs.tool_calls;
+    const message = messages[i] as any;
+    if (message.tool_calls || message.additional_kwargs?.tool_calls || message.kwargs?.tool_calls) {
+      const toolCalls = message.tool_calls || message.additional_kwargs.tool_calls || message.kwargs.tool_calls;
       for (const toolCall of toolCalls) {
-        const toolName = toolCall.function.name;
+        const toolName = toolCall.name;
 
         const nextMessage = messages[i + 1];
         if (nextMessage && nextMessage.content) {

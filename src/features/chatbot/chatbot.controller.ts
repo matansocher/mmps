@@ -59,12 +59,25 @@ export class ChatbotController implements OnModuleInit {
       const { message: replyText, toolResults } = await this.chatbotService.processMessage(text, chatId);
 
       const ttsResult = toolResults.find((result) => result.toolName === 'text_to_speech');
+      const mapsResult = toolResults.find((result) => result.toolName === 'google_maps_place');
 
       if (ttsResult && !ttsResult.error) {
         const audioFilePath = ttsResult.data;
         try {
           await this.bot.sendVoice(chatId, audioFilePath);
           deleteFile(audioFilePath);
+        } catch (err) {
+          this.logger.error(`Error sending voice message: ${err}`);
+          await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+        }
+      } else if (mapsResult && !mapsResult.error) {
+        const imageFilePath = mapsResult.data;
+        try {
+          await this.bot.sendPhoto(chatId, imageFilePath, { caption: replyText }).catch((err) => {
+            this.logger.error(`Error sending photo: ${err}. Sending as text message instead.`);
+            this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' }).catch(() => {});
+          });
+          deleteFile(imageFilePath);
         } catch (err) {
           this.logger.error(`Error sending voice message: ${err}`);
           await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
