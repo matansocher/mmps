@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DAYS_OF_WEEK } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
-import { getExercises, getTodayExercise, getUserDetails } from '@shared/domains/trainer/mongo';
+import { getExercises, getTodayExercise, getUserDetails } from '@shared//trainer/mongo';
 import { searchMeme } from '@services/tenor';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './trainer.config';
 import { getLastWeekDates } from './utils';
