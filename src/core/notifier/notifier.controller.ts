@@ -1,10 +1,9 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getStreakOfCorrectAnswers } from '@core/utils';
-import { getTopBy, getUserDetails as getUserDetailsWolt } from '@features/wolt/mongo';
-import { getGameLogsByUsers, getTopByChatId, getUserDetails as getUserDetailsWorldly } from '@features/worldly/mongo';
-import { GameLog } from '@features/worldly/types';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { getTopBy, getUserDetails as getUserDetailsWolt } from '@shared/wolt';
+import { GameLog, getGameLogsByUsers, getTopByChatId, getUserDetails as getUserDetailsWorldly } from '@shared/worldly';
 import { generateRecipeString, getRecipe, getRecipes } from './cooker';
 import { BOT_ACTIONS, BOT_CONFIG } from './notifier.config';
 

@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getHourInTimezone } from '@core/utils';
-import { getActiveSubscriptions } from './mongo';
+import { getActiveSubscriptions } from '@shared/worldly';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 

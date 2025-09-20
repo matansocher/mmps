@@ -1,5 +1,5 @@
 import { getDistance, shuffleArray } from '@core/utils';
-import { Country, State } from '../types';
+import { Country, State } from '@shared/worldly';
 
 export function getMapDistractors(allCountries: Country[], correctCountry: Country): Array<Country & { distance: number }> {
   const options = allCountries

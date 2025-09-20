@@ -1,7 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { generateMatchResultsString } from '@features/coach/utils';
 import { getCompetitions, getMatchesSummaryDetails } from '@services/scores-365';
+import { generateMatchResultsString } from '@shared/coach';
 
 const schema = z.object({
   date: z.string().describe('Date in YYYY-MM-DD format to get match results for'),

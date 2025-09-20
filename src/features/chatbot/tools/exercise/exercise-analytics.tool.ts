@@ -2,9 +2,9 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { DAYS_OF_WEEK, MY_USER_ID } from '@core/config';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
-import { getExercises } from '@shared/domains/trainer/mongo';
 import { createImage } from '@services/openai';
 import { searchMeme } from '@services/tenor';
+import { getExercises } from '@shared/trainer/mongo';
 import { BROKEN_RECORD_IMAGE_PROMPT } from '../../../trainer/trainer.config';
 import { getLastWeekDates } from '../../../trainer/utils';
 

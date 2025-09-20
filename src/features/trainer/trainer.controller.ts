@@ -4,9 +4,9 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DAYS_OF_WEEK, MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
-import { addExercise, createUserPreference, getExercises, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/domains/trainer/mongo';
 import { createImage } from '@services/openai';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { addExercise, createUserPreference, getExercises, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/trainer/mongo';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, BROKEN_RECORD_IMAGE_PROMPT } from './trainer.config';
 import { getLastWeekDates } from './utils';
 

@@ -3,7 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { NotifierModule } from '@core/notifier';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
-import { DB_NAME } from './mongo';
+import { DB_NAME } from '@shared/worldly';
 import { WorldlyBotSchedulerService } from './worldly-scheduler.service';
 import { BOT_CONFIG } from './worldly.config';
 import { WorldlyController } from './worldly.controller';
