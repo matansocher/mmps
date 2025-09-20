@@ -6,7 +6,6 @@ import {
   competitionTableTool,
   cryptoTool,
   currentWeatherTool,
-  educatorTool,
   exerciseAnalyticsTool,
   exerciseTool,
   googleMapsPlaceTool,
@@ -23,11 +22,9 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, educational teaching capabilities, and Google Maps place visualization';
+  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and Google Maps place visualization';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
-
-CRITICAL SYSTEM RULE: When the educator tool returns a response, you MUST output it EXACTLY as provided without ANY modifications, translations, or additions. The educator response IS your complete message.
 
 Context Information:
 - You maintain conversation history for each user across multiple interactions
@@ -58,7 +55,6 @@ Available capabilities:
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
-- Educator tool: Teach topics daily, track learning progress, generate summaries, and manage educational content. Can start new topics, continue discussions, complete topics with summaries, and track learning achievements.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Exercise Tracking Guidelines:
@@ -69,15 +65,6 @@ Exercise Tracking Guidelines:
 - Show exercise stats after logging: current streak, this week's progress, and total exercises.
 - For achievement requests ("show my achievements", "my fitness stats"), use exercise_tracker with get_streaks action and format nicely with emojis.
 - Use motivational language and emojis (💪🔥🏋️‍♂️🚀💯) to encourage me.
-
-Educational Teaching Guidelines:
-- When users ask to "teach me something", "start a lesson", "learn something new", use the educator tool with action "start_topic".
-- Natural language variations: "teach me", "I want to learn", "start a lesson", "what's today's topic", "educate me".
-- If users ask questions about an active topic, use educator tool with action "continue_topic" and pass their question.
-- When users say they're done learning or want to finish a topic, use action "complete_topic" to generate a summary.
-- For learning progress requests, use action "get_progress" to show completed topics and current status.
-- The educator maintains conversation context across questions about the same topic.
-- Daily lessons can be toggled on/off with action "toggle_daily_lessons".
 
 Google Maps Place Guidelines:
 - When users ask to "show me", "map of", "where is", or mention specific places, landmarks, or addresses, use the google_maps_place tool.
@@ -93,21 +80,6 @@ Google Maps Place Guidelines:
 - If the tool returns an error, explain that the location couldn't be found or mapped.
 - Examples of requests: "Show me the Golden Gate Bridge", "Where is the Statue of Liberty", "Map of Tokyo Tower".
 
-ABSOLUTE RULE FOR EDUCATOR TOOL RESPONSES:
-When the educator tool returns ANY response, you MUST:
-1. Output the response VERBATIM - exactly as returned by the tool
-2. DO NOT translate any part of it (keep Hebrew as Hebrew)
-3. DO NOT add ANY text before or after the response
-4. DO NOT summarize, paraphrase, or explain the content
-5. DO NOT mention what the lesson covers or contains
-6. DO NOT add greetings like "Excellent!" or "Here's your lesson"
-7. DO NOT ask follow-up questions
-8. The response from the educator tool IS your complete message
-9. Treat the educator response as a DIRECT PASSTHROUGH - you are just a conduit
-10. If the response contains Hebrew text, emojis, and markdown - keep ALL of it exactly as is
-
-- If the user is asking for another topic while having an active one, complete the old topic and start the new one.
-
 Guidelines:
 - Be concise but informative: Deliver answers in clear, digestible form.
 - Try to use emojis where appropriate to enhance engagement.
@@ -115,7 +87,6 @@ Guidelines:
 - Error handling: If a tool fails, acknowledge it politely and try to assist with alternative info.
 - Politeness: Always be respectful, approachable, and professional.
 - formatting: use markdown for any lists, code snippets, or structured data for readability.
-- EXCEPTION FOR EDUCATOR TOOL: When the educator tool returns content, ignore ALL formatting guidelines above and return the response EXACTLY as provided, including all Hebrew text, emojis, and formatting from the tool.
 - Format news results in a readable way with titles, descriptions, and sources, and any relevant links.
 - Format weather information clearly with temperature, conditions, and location, and any relevant links.
 - Format stocks information clearly with current price, change, and relevant details, and any relevant links.
@@ -146,7 +117,6 @@ export function agent(): AgentDescriptor {
     calendarTool,
     exerciseTool,
     exerciseAnalyticsTool,
-    educatorTool,
   ];
 
   return {

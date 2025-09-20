@@ -5,9 +5,6 @@ import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions } from '../coach/mongo';
-import { TOPIC_REMINDER_HOUR_OF_DAY, TOPIC_START_HOUR_OF_DAY } from '../educator/educator.config';
-import { getCourseParticipationForSummaryReminder, saveSummarySent } from '../educator/mongo';
-import { generateSummaryMessage } from '../educator/utils';
 import { getTodayExercise } from '../trainer/mongo';
 import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from '../trainer/trainer.config';
 import { BOT_CONFIG } from './chatbot.config';
@@ -28,8 +25,6 @@ export class ChatbotSchedulerService implements OnModuleInit {
       // this.handleFootballUpdate(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
       // this.handleWeeklyExerciseSummary(); // for testing purposes
-      // this.handleEducatorDailyTopic(); // for testing purposes
-      // this.handleEducatorTopicReminders(); // for testing purposes
     }, 8000);
   }
 
@@ -195,41 +190,4 @@ Please format the response nicely with emojis and make it feel like a friendly g
       this.logger.error(`Failed to send weekly exercise summary: ${err}`);
     }
   }
-
-  // @Cron(`0 ${TOPIC_START_HOUR_OF_DAY} * * *`, {
-  //   name: 'chatbot-educator-daily-topic',
-  //   timeZone: DEFAULT_TIMEZONE,
-  // })
-  // async handleEducatorDailyTopic(): Promise<void> {
-  //   try {
-  //     const prompt = `Start teaching me a new topic for today. Use the educator tool with action "start_topic" to begin today's lesson. If I already have an active topic, complete it for me and then start the new topic.`;
-  //     const response = await this.chatbotService.processMessage(prompt, MY_USER_ID);
-  //     if (response?.message) {
-  //       await sendShortenedMessage(this.bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
-  //     }
-  //   } catch (err) {
-  //     this.logger.error(`Failed to handle educator daily topic: ${err}`);
-  //   }
-  // }
-  //
-  // @Cron(`0 ${TOPIC_REMINDER_HOUR_OF_DAY} * * *`, {
-  //   name: 'chatbot-educator-reminders',
-  //   timeZone: DEFAULT_TIMEZONE,
-  // })
-  // async handleEducatorTopicReminders(): Promise<void> {
-  //   try {
-  //     const topicParticipation = await getCourseParticipationForSummaryReminder();
-  //     if (!topicParticipation || topicParticipation.chatId !== MY_USER_ID) {
-  //       return;
-  //     }
-  //
-  //     if (topicParticipation.summaryDetails) {
-  //       const summaryMessage = generateSummaryMessage(topicParticipation.summaryDetails);
-  //       await this.bot.sendMessage(MY_USER_ID, summaryMessage, { parse_mode: 'Markdown' });
-  //       await saveSummarySent(topicParticipation._id.toString());
-  //     }
-  //   } catch (err) {
-  //     this.logger.error(`Failed to handle educator topic reminders: ${err}`);
-  //   }
-  // }
 }
