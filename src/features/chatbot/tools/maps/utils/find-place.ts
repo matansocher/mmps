@@ -12,9 +12,6 @@ export type PlaceInfo = {
   useCoordinates: boolean;
 };
 
-/**
- * Try to find a place using Google Places Text Search API
- */
 async function tryTextSearchAPI(placeName: string): Promise<PlaceInfo | null> {
   const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(placeName)}&key=${env.GOOGLE_PLACES_API_KEY}`;
 
