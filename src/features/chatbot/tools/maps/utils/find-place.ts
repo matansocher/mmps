@@ -12,13 +12,16 @@ export type PlaceInfo = {
   useCoordinates: boolean;
 };
 
-export async function findPlace(placeName: string): Promise<PlaceInfo> {
+/**
+ * Try to find a place using Google Places Text Search API
+ */
+async function tryTextSearchAPI(placeName: string): Promise<PlaceInfo | null> {
   const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(placeName)}&key=${env.GOOGLE_PLACES_API_KEY}`;
 
   try {
     const response = await axios.get(textSearchUrl);
 
-    if (response.data.status === 'OK' && response.data.results?.length > 0) {
+    if (response.data.status === 'OK' && response.data.results && response.data.results.length > 0) {
       const place = response.data.results[0];
       return {
         lat: place.geometry.location.lat,
@@ -32,13 +35,16 @@ export async function findPlace(placeName: string): Promise<PlaceInfo> {
     }
   } catch {}
 
-  // Try Find Place from Text API (if enabled)
+  return null;
+}
+
+async function tryFindPlaceAPI(placeName: string): Promise<PlaceInfo | null> {
   const findPlaceUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(placeName)}&inputtype=textquery&fields=geometry,name,formatted_address,place_id,types&key=${env.GOOGLE_MAPS_API_KEY}`;
 
   try {
     const response = await axios.get(findPlaceUrl);
 
-    if (response.data.status === 'OK' && response.data.candidates?.length > 0) {
+    if (response.data.status === 'OK' && response.data.candidates && response.data.candidates.length > 0) {
       const place = response.data.candidates[0];
       return {
         lat: place.geometry.location.lat,
@@ -50,15 +56,15 @@ export async function findPlace(placeName: string): Promise<PlaceInfo> {
         useCoordinates: true,
       };
     }
-  } catch (error) {
-    // Silent fail, try next method
-  }
+  } catch {}
 
-  // Try Geocoding API
+  return null;
+}
+
+async function tryGeocodingAPI(placeName: string): Promise<PlaceInfo | null> {
   try {
     const geocodeResult = await geocodeAddress(placeName, env.GOOGLE_MAPS_API_KEY);
 
-    // Extract place name from the formatted address (first part before comma)
     const nameParts = geocodeResult.formatted_address.split(',');
     const extractedName = nameParts[0] || placeName;
 
@@ -72,6 +78,25 @@ export async function findPlace(placeName: string): Promise<PlaceInfo> {
       useCoordinates: true,
     };
   } catch {}
+
+  return null;
+}
+
+export async function findPlace(placeName: string): Promise<PlaceInfo> {
+  const textSearchResult = await tryTextSearchAPI(placeName);
+  if (textSearchResult) {
+    return textSearchResult;
+  }
+
+  const findPlaceResult = await tryFindPlaceAPI(placeName);
+  if (findPlaceResult) {
+    return findPlaceResult;
+  }
+
+  const geocodingResult = await tryGeocodingAPI(placeName);
+  if (geocodingResult) {
+    return geocodingResult;
+  }
 
   return {
     lat: null,
