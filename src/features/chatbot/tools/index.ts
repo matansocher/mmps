@@ -4,8 +4,6 @@ export { cryptoTool } from './crypto/crypto.tool';
 export { currentWeatherTool } from './weather/current-weather.tool';
 export { weatherForecastTool } from './weather/weather-forecast.tool';
 
-export { newsTool } from './news/news.tool';
-
 export { imageAnalyzerTool } from './image/image-analyzer.tool';
 export { imageGeneratorTool } from './image/image-generation.tool';
 export { imageGeneratorPromptEnhancerTool } from './image/image-generation-prompt-enhancer.tool';
