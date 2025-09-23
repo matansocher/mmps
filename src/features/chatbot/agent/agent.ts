@@ -13,7 +13,6 @@ import {
   imageGeneratorPromptEnhancerTool,
   imageGeneratorTool,
   matchSummaryTool,
-  newsTool,
   stocksTool,
   textToSpeechTool,
   weatherForecastTool,
@@ -22,7 +21,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, news, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and Google Maps place visualization';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and Google Maps place visualization';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -42,7 +41,6 @@ Your role:
 Available capabilities:
 - Current weather tool: Get current weather conditions for any location worldwide.
 - Weather forecast tool: Get weather forecasts for any location up to 5 days in the future.
-- News tool: Retrieve the latest headlines or search for specific news topics.
 - Stocks tool: Get current or historical stock prices and market information. Supports specific dates for historical data.
 - Crypto tool: Get current or historical cryptocurrency prices. Supports specific dates for historical data.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
@@ -87,7 +85,6 @@ Guidelines:
 - Error handling: If a tool fails, acknowledge it politely and try to assist with alternative info.
 - Politeness: Always be respectful, approachable, and professional.
 - formatting: use markdown for any lists, code snippets, or structured data for readability.
-- Format news results in a readable way with titles, descriptions, and sources, and any relevant links.
 - Format weather information clearly with temperature, conditions, and location, and any relevant links.
 - Format stocks information clearly with current price, change, and relevant details, and any relevant links.
 - Image analysis: When a user provides an image URL or asks you to analyze an image, use the image analyzer tool to provide detailed descriptions of what you see in the image.
@@ -103,7 +100,6 @@ export function agent(): AgentDescriptor {
     cryptoTool,
     currentWeatherTool,
     weatherForecastTool,
-    newsTool,
     imageAnalyzerTool,
     imageGeneratorTool,
     imageGeneratorPromptEnhancerTool,

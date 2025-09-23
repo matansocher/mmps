@@ -9,7 +9,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 configDotenv();
 
 async function bootstrap() {
-  const AppModule = await import('./app/app.module').then((m) => m.AppModule);
+  const AppModule = await import('./app.module').then((m) => m.AppModule);
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug'],
   });
