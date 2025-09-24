@@ -17,11 +17,9 @@ export async function getTikTokUserVideos(username: string): Promise<TikTokVideo
     await page.goto(`https://www.tiktok.com/@${username}`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-e2e="user-post-item"]', { timeout: 10000 });
 
-    // Scroll once to ensure thumbnails load
     await page.evaluate(() => window.scrollBy(0, window.innerHeight));
     await sleep(1000);
 
-    // Grab basic data (id, url, description). uploadDate left empty to fill later.
     const videos: TikTokVideo[] = await page.evaluate(() => {
       const videoElements = document.querySelectorAll('[data-e2e="user-post-item"]');
       const videoData: TikTokVideo[] = [];
@@ -47,10 +45,8 @@ export async function getTikTokUserVideos(username: string): Promise<TikTokVideo
       return videoData.slice(0, 5);
     });
 
-    // If no videos found, return early
     if (videos.length === 0) return [];
 
-    // Reuse a single page to visit each video and try to extract upload date
     videoPage = await browser.newPage();
 
     for (const v of videos) {
@@ -73,7 +69,6 @@ export async function getTikTokUserVideos(username: string): Promise<TikTokVideo
           const m = scripts.match(/createTime\"\s*:\s*\"?(\d{9,13})\"?/);
           if (m) {
             const ts = parseInt(m[1], 10);
-            // createTime is often seconds; convert to ms if needed
             const ms = ts > 1e12 ? ts : ts * 1000;
             const d = new Date(ms);
             return d.toISOString().slice(0, 10);
@@ -88,7 +83,6 @@ export async function getTikTokUserVideos(username: string): Promise<TikTokVideo
 
         v.uploadDate = uploadDate || '';
       } catch (err) {
-        // per-video error: continue and keep uploadDate empty
         v.uploadDate = v.uploadDate || '';
       }
     }

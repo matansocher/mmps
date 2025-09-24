@@ -2,7 +2,12 @@ import { ContentBlock } from '@anthropic-ai/sdk/resources';
 import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_OPUS_MODEL } from '../constants';
 import { provideAnthropicClient } from '../provide-anthropic-client';
 
-export async function getChatCompletion(system: string, content: string): Promise<{ threadId: string; content: ContentBlock[] }> {
+type ChatCompletionResult = {
+  readonly threadId: string;
+  readonly content: ContentBlock[];
+};
+
+export async function getChatCompletion(system: string, content: string): Promise<ChatCompletionResult> {
   const anthropic = provideAnthropicClient();
   const result = await anthropic.messages.create({
     model: ANTHROPIC_OPUS_MODEL,
