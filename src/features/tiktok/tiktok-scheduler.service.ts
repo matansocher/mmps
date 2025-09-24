@@ -17,7 +17,7 @@ export class TiktokSchedulerService implements OnModuleInit {
 
   onModuleInit(): void {
     setTimeout(() => {
-      this.handleEODReminder(); // for testing purposes
+      // this.handleEODReminder(); // for testing purposes
     }, 8000);
   }
 
