@@ -39,10 +39,10 @@ async function pollTranscriptJob(supadata: Supadata, jobId: string, maxAttempts:
   throw new Error(`Transcript job ${jobId} did not complete within ${maxAttempts} attempts`);
 }
 
-export async function getTikTokTranscript(username: string, videoId: string, lang: string = 'en'): Promise<TranscriptResult> {
+export async function getTikTokTranscript(username: string, videoId: string): Promise<TranscriptResult> {
   const supadata = new Supadata({ apiKey: env.SUPADATA_API_KEY });
   const url = `https://www.tiktok.com/@${username}/video/${videoId}`;
-  const transcriptResult: TranscriptOrJobId = await supadata.transcript({ url, lang });
+  const transcriptResult: TranscriptOrJobId = await supadata.transcript({ url });
 
   let transcript: Transcript;
 
