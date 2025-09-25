@@ -36,7 +36,7 @@ export class TiktokSchedulerService implements OnModuleInit {
 
       for (const video of newVideos) {
         const videoUrl = `https://www.tiktok.com/@${channel.username}/video/${video.id}`;
-        const videoTranscript = await getTikTokTranscript(channel.username, video.id, channel.lang || 'en');
+        const videoTranscript = await getTikTokTranscript(channel.username, video.id);
         const transcriptSummary = await getChatCompletion(SUMMARY_PROMPT, `Please Summarize this video text: ${videoTranscript.text}`);
         const textContent = transcriptSummary.content
           .filter((c) => c.type === 'text')
