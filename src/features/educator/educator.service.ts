@@ -93,7 +93,7 @@ export class EducatorService {
       return;
     }
 
-    const { result: summaryDetails } = await getResponse({
+    const { result: summaryDetails } = await getResponse<typeof TopicSummarySchema>({
       instructions: SYSTEM_PROMPT,
       previousResponseId: topicParticipation.previousResponseId,
       input: SUMMARY_PROMPT,
