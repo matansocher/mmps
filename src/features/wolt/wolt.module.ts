@@ -17,6 +17,8 @@ export class WoltModule implements OnModuleInit {
 
   async onModuleInit() {
     await createMongoConnection(DB_NAME);
-    await this.woltSchedulerService.scheduleInterval();
+    setTimeout(() => {
+      this.woltSchedulerService.scheduleInterval();
+    }, 5000);
   }
 }
