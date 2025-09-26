@@ -22,7 +22,7 @@ export class TiktokSchedulerService implements OnModuleInit {
 
   onModuleInit(): void {
     setTimeout(() => {
-      this.dailyVideoDigest(); // for testing purposes
+      // this.dailyVideoDigest(); // for testing purposes
     }, 8000);
   }
 
