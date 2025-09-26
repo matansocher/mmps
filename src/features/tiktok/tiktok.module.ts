@@ -2,7 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
-import { DB_NAME } from '@shared/tiktok/mongo';
+import { DB_NAME } from '@shared/tiktok';
 import { TiktokSchedulerService } from './tiktok-scheduler.service';
 import { BOT_CONFIG } from './tiktok.config';
 import { TiktokController } from './tiktok.controller';
