@@ -5,10 +5,9 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { sleep } from '@core/utils';
 import { getResponse } from '@services/openai';
-import { getFollowedChannels } from '@shared/tiktok/mongo/channel.repository';
-import { addVideo, getVideos } from '@shared/tiktok/mongo/video.repository';
+import { getTikTokTranscript, getTikTokUserVideos } from '@services/tiktok';
+import { addVideo, getFollowedChannels, getVideos } from '@shared/tiktok';
 import { BOT_CONFIG, SUMMARY_PROMPT } from './tiktok.config';
-import { getTikTokTranscript, getTikTokUserVideos } from './utils';
 
 const SMART_REMINDER_HOUR_OF_DAY = 20;
 

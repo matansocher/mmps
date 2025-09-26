@@ -15,13 +15,16 @@ import {
   matchSummaryTool,
   stocksTool,
   textToSpeechTool,
+  tiktokSearchTool,
+  tiktokSubscriptionTool,
+  tiktokVideosTool,
   weatherForecastTool,
 } from '../tools';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and Google Maps place visualization';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, TikTok management, and Google Maps place visualization';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -53,7 +56,24 @@ Available capabilities:
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
+- TikTok Search tool: Search for TikTok users by username or name to find channels to follow.
+- TikTok Subscription tool: Manage TikTok subscriptions - follow, unfollow, or list your followed channels.
+- TikTok Videos tool: Get recent videos, today's videos, or transcripts from TikTok channels.
 - General conversation & assistance: Provide helpful answers without tools when possible.
+
+TikTok Management Guidelines:
+- When users want to search for TikTok users, use the tiktok_search tool with their query.
+- Natural language variations: "search cristiano on tiktok", "find nike tiktok", "look for ronaldo on tiktok".
+- For subscription management, use tiktok_subscription tool:
+  - "follow @cristiano" or "subscribe to cristiano on tiktok" → action: follow
+  - "unfollow nike" or "stop following @nike" → action: unfollow  
+  - "show my tiktok subscriptions" or "list tiktok channels" → action: list
+- For video queries, use tiktok_videos tool:
+  - "show recent videos from cristiano" → action: recent
+  - "what videos came out today" → action: today
+  - "get transcript for video X" → action: transcript
+- Daily summaries are automatically sent at 8 PM for all followed channels.
+- Use emojis to make TikTok responses engaging (📱🎬📹✅).
 
 Exercise Tracking Guidelines:
 - When I mention exercising, working out, or completing fitness activities, use the exercise_tracker tool to log my exercise.
@@ -113,6 +133,9 @@ export function agent(): AgentDescriptor {
     calendarTool,
     exerciseTool,
     exerciseAnalyticsTool,
+    tiktokSearchTool,
+    tiktokSubscriptionTool,
+    tiktokVideosTool,
   ];
 
   return {
