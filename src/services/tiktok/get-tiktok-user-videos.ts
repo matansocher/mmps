@@ -1,4 +1,6 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
+import puppeteer from 'puppeteer';
+import puppeteerCore from 'puppeteer-core';
+import { isProd } from '@core/config';
 import { sleep } from '@core/utils';
 
 type TikTokVideo = {
@@ -9,9 +11,15 @@ type TikTokVideo = {
 };
 
 export async function getTikTokUserVideos(username: string): Promise<TikTokVideo[]> {
-  const browser: Browser = await puppeteer.launch({ headless: true });
-  const page: Page = await browser.newPage();
-  let videoPage: Page | null = null;
+  const browser = isProd
+    ? await puppeteerCore.launch({
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+        headless: true,
+      })
+    : await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+  let videoPage = null;
 
   try {
     await page.goto(`https://www.tiktok.com/@${username}`, { waitUntil: 'domcontentloaded' });
