@@ -1,25 +1,21 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { z } from 'zod';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { getDateString, sleep } from '@core/utils';
-import { getResponse } from '@services/openai';
+import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
-import { getTikTokTranscript, getTikTokUserVideos } from '@services/tiktok';
 import { getActiveSubscriptions } from '@shared/coach/mongo';
-import { addVideo, getFollowedChannels, getVideos } from '@shared/tiktok';
 import { getTodayExercise } from '@shared/trainer/mongo';
 import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from '../trainer/trainer.config';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
-const TIKTOK_SUMMARY_PROMPT = 'You are a helpful assistant that summarizes TikTok video transcripts into concise summaries that capture the main points and essence of the video.';
-
-export const VideoSummarySchema = z.object({
-  summary: z.string().max(4095).describe('A comprehensive summary of the video transcript, covering the main points and concepts learned'),
-  description: z.string().max(200).describe('A short description of the video content, suitable for use as a caption or brief overview.'),
-});
+// const TIKTOK_SUMMARY_PROMPT = 'You are a helpful assistant that summarizes TikTok video transcripts into concise summaries that capture the main points and essence of the video.';
+//
+// export const VideoSummarySchema = z.object({
+//   summary: z.string().max(4095).describe('A comprehensive summary of the video transcript, covering the main points and concepts learned'),
+//   description: z.string().max(200).describe('A short description of the video content, suitable for use as a caption or brief overview.'),
+// });
 
 @Injectable()
 export class ChatbotSchedulerService implements OnModuleInit {
@@ -202,59 +198,59 @@ Please format the response nicely with emojis and make it feel like a friendly g
     }
   }
 
-  @Cron(`0 ${SMART_REMINDER_HOUR_OF_DAY} * * *`, { name: 'chatbot-tiktok-digest', timeZone: DEFAULT_TIMEZONE })
-  async handleTikTokDigest(): Promise<void> {
-    try {
-      const channels = await getFollowedChannels();
-      if (!channels.length) {
-        return;
-      }
-
-      for (const channel of channels) {
-        await this.processTikTokChannel(channel);
-        await sleep(1000);
-      }
-    } catch (err) {
-      this.logger.error(`Failed to handle TikTok digest: ${err}`);
-    }
-  }
-
-  private async processTikTokChannel(channel: { username: string }): Promise<void> {
-    try {
-      const videos = await getTikTokUserVideos(channel.username);
-      const todayVideos = videos.filter((video) => video.uploadDate === new Date().toISOString().split('T')[0]);
-      const viewedVideos = await getVideos();
-      const newVideos = todayVideos.filter((video) => !viewedVideos.find((v) => v.videoId === video.id));
-
-      if (!newVideos.length) {
-        return;
-      }
-
-      for (const video of newVideos) {
-        await this.processTikTokVideo(channel.username, video);
-      }
-    } catch (err) {
-      this.logger.error(`Failed to process TikTok channel ${channel.username}: ${err}`);
-    }
-  }
-
-  private async processTikTokVideo(username: string, video: { id: string; url?: string }): Promise<void> {
-    try {
-      const videoUrl = `https://www.tiktok.com/@${username}/video/${video.id}`;
-      const videoTranscript = await getTikTokTranscript(username, video.id);
-
-      const { result: summaryDetails } = await getResponse<typeof VideoSummarySchema>({
-        instructions: TIKTOK_SUMMARY_PROMPT,
-        input: `Please Summarize this video text: ${videoTranscript.text}`,
-        schema: VideoSummarySchema,
-      });
-
-      const message = [`🎬 New TikTok video from @${username}`, `🔗 ${videoUrl}`, '', `📝 **${summaryDetails.description}**`, '', `📖 **Summary:**`, summaryDetails.summary].join('\n');
-
-      await this.bot.sendMessage(MY_USER_ID, message, { parse_mode: 'Markdown' });
-      await addVideo(video.id);
-    } catch (err) {
-      this.logger.error(`Failed to process TikTok video ${video.id} from ${username}: ${err}`);
-    }
-  }
+  // @Cron(`0 ${SMART_REMINDER_HOUR_OF_DAY} * * *`, { name: 'chatbot-tiktok-digest', timeZone: DEFAULT_TIMEZONE })
+  // async handleTikTokDigest(): Promise<void> {
+  //   try {
+  //     const channels = await getFollowedChannels();
+  //     if (!channels.length) {
+  //       return;
+  //     }
+  //
+  //     for (const channel of channels) {
+  //       await this.processTikTokChannel(channel);
+  //       await sleep(1000);
+  //     }
+  //   } catch (err) {
+  //     this.logger.error(`Failed to handle TikTok digest: ${err}`);
+  //   }
+  // }
+  //
+  // private async processTikTokChannel(channel: { username: string }): Promise<void> {
+  //   try {
+  //     const videos = await getTikTokUserVideos(channel.username);
+  //     const todayVideos = videos.filter((video) => video.uploadDate === new Date().toISOString().split('T')[0]);
+  //     const viewedVideos = await getVideos();
+  //     const newVideos = todayVideos.filter((video) => !viewedVideos.find((v) => v.videoId === video.id));
+  //
+  //     if (!newVideos.length) {
+  //       return;
+  //     }
+  //
+  //     for (const video of newVideos) {
+  //       await this.processTikTokVideo(channel.username, video);
+  //     }
+  //   } catch (err) {
+  //     this.logger.error(`Failed to process TikTok channel ${channel.username}: ${err}`);
+  //   }
+  // }
+  //
+  // private async processTikTokVideo(username: string, video: { id: string; url?: string }): Promise<void> {
+  //   try {
+  //     const videoUrl = `https://www.tiktok.com/@${username}/video/${video.id}`;
+  //     const videoTranscript = await getTikTokTranscript(username, video.id);
+  //
+  //     const { result: summaryDetails } = await getResponse<typeof VideoSummarySchema>({
+  //       instructions: TIKTOK_SUMMARY_PROMPT,
+  //       input: `Please Summarize this video text: ${videoTranscript.text}`,
+  //       schema: VideoSummarySchema,
+  //     });
+  //
+  //     const message = [`🎬 New TikTok video from @${username}`, `🔗 ${videoUrl}`, '', `📝 **${summaryDetails.description}**`, '', `📖 **Summary:**`, summaryDetails.summary].join('\n');
+  //
+  //     await this.bot.sendMessage(MY_USER_ID, message, { parse_mode: 'Markdown' });
+  //     await addVideo(video.id);
+  //   } catch (err) {
+  //     this.logger.error(`Failed to process TikTok video ${video.id} from ${username}: ${err}`);
+  //   }
+  // }
 }

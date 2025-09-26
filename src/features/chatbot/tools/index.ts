@@ -23,7 +23,3 @@ export { exerciseTool } from './exercise/exercise.tool';
 export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
 
 export { googleMapsPlaceTool } from './maps/google-maps-place.tool';
-
-export { tiktokSearchTool } from './tiktok/tiktok-search.tool';
-export { tiktokSubscriptionTool } from './tiktok/tiktok-subscription.tool';
-export { tiktokVideosTool } from './tiktok/tiktok-videos.tool';
