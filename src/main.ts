@@ -25,6 +25,7 @@ async function bootstrap() {
 
   const logger = new Logger('main.ts');
   logger.log(`NODE_VERSION: ${process.versions.node}`);
+  logger.log(`PUPPETEER_EXECUTABLE_PATH: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
 
   await app.listen(env.PORT || 3000);
 
