@@ -1,6 +1,6 @@
+import { env } from 'node:process';
 import puppeteer from 'puppeteer';
 import puppeteerCore from 'puppeteer-core';
-import { isProd } from '@core/config';
 import { sleep } from '@core/utils';
 
 type TikTokVideo = {
@@ -11,9 +11,9 @@ type TikTokVideo = {
 };
 
 export async function getTikTokUserVideos(username: string): Promise<TikTokVideo[]> {
-  const browser = isProd
+  const browser = env.PUPPETEER_EXECUTABLE_PATH
     ? await puppeteerCore.launch({
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+        executablePath: env.PUPPETEER_EXECUTABLE_PATH,
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
         headless: true,
       })
