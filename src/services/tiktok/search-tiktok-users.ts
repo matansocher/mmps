@@ -1,4 +1,6 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
+import puppeteer from 'puppeteer';
+import puppeteerCore from 'puppeteer-core';
+import { isProd } from '@core/config';
 import { sleep } from '@core/utils';
 
 export type TikTokUserSearchResult = {
@@ -10,8 +12,14 @@ export type TikTokUserSearchResult = {
 };
 
 export async function searchTikTokUsers(query: string): Promise<TikTokUserSearchResult[]> {
-  const browser: Browser = await puppeteer.launch({ headless: true });
-  const page: Page = await browser.newPage();
+  const browser = isProd
+    ? await puppeteerCore.launch({
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+        headless: true,
+      })
+    : await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
 
   try {
     const searchUrl = `https://www.tiktok.com/search/user?q=${encodeURIComponent(query)}`;
