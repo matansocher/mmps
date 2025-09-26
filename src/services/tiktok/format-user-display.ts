@@ -1,4 +1,4 @@
-import type { TikTokUserSearchResult } from '@features/tiktok/utils/search-tiktok-users';
+import { TikTokUserSearchResult } from '@services/tiktok';
 
 export function formatUserDisplay(user: TikTokUserSearchResult): string {
   let display = `@${user.username}`;
