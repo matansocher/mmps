@@ -1,9 +1,9 @@
 import TelegramBot, { CallbackQuery, InlineKeyboardButton, Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { addChannel, getChannel, getFollowedChannels, removeChannel } from '@shared/tiktok/mongo/channel.repository';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { formatUserDisplay, searchTikTokUsers, TikTokUserSearchResult } from '@services/tiktok';
+import { addChannel, getChannel, getFollowedChannels, removeChannel } from '@shared/tiktok';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './tiktok.config';
-import { formatUserDisplay, searchTikTokUsers, TikTokUserSearchResult } from './utils';
 
 @Injectable()
 export class TiktokController implements OnModuleInit {
