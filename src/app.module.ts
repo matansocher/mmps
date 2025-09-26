@@ -6,6 +6,7 @@ import { BOT_CONFIG as chatbotBotConfig, ChatbotModule } from '@features/chatbot
 import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
 import { DefineModule } from '@features/define';
 import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educator';
+import { BOT_CONFIG as tiktokBotConfig, TiktokModule } from '@features/tiktok';
 import { BOT_CONFIG as langlyBotConfig, LanglyModule } from '@features/langly';
 import { BOT_CONFIG as trainerBotConfig, TrainerModule } from '@features/trainer';
 import { BOT_CONFIG as woltBotConfig, WoltModule } from '@features/wolt';
@@ -22,6 +23,7 @@ const registerBotModule = (module: any, config: { id: string }) => {
     registerBotModule(ChatbotModule, chatbotBotConfig),
     registerBotModule(CoachModule, coachBotConfig),
     registerBotModule(EducatorModule, educatorBotConfig),
+    registerBotModule(TiktokModule, tiktokBotConfig),
     registerBotModule(LanglyModule, langlyBotConfig),
     registerBotModule(TrainerModule, trainerBotConfig),
     registerBotModule(WoltModule, woltBotConfig),
