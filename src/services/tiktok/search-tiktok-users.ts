@@ -1,7 +1,5 @@
-import { env } from 'node:process';
-import puppeteer from 'puppeteer';
-import puppeteerCore from 'puppeteer-core';
 import { sleep } from '@core/utils';
+import { getBrowser } from '@services/tiktok/get-browser';
 
 export type TikTokUserSearchResult = {
   readonly username: string;
@@ -12,13 +10,7 @@ export type TikTokUserSearchResult = {
 };
 
 export async function searchTikTokUsers(query: string): Promise<TikTokUserSearchResult[]> {
-  const browser = env.PUPPETEER_EXECUTABLE_PATH
-    ? await puppeteerCore.launch({
-        executablePath: env.PUPPETEER_EXECUTABLE_PATH,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-        headless: true,
-      })
-    : await puppeteer.launch({ headless: true });
+  const browser = await getBrowser();
   const page = await browser.newPage();
 
   try {
