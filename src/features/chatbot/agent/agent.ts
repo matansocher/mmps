@@ -16,12 +16,13 @@ import {
   stocksTool,
   textToSpeechTool,
   weatherForecastTool,
+  webScraperTool,
 } from '../tools';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and Google Maps place visualization';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, and web page reading/summarization';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -53,6 +54,7 @@ Available capabilities:
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
+- Web Scraper tool: Read and summarize web pages. Extract main content, metadata, and provide brief or detailed summaries of any URL.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Exercise Tracking Guidelines:
@@ -92,6 +94,32 @@ Guidelines:
 - Text-to-speech: When users request audio output or want to hear text spoken aloud, use the text-to-speech tool to generate voice audio.
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
+
+Web Scraper Guidelines:
+- When users ask to "read", "summarize", "what does this page say", or provide a URL to analyze, use the web_scraper tool.
+- Natural language variations: "summarize this article", "read this page for me", "what's on this website", "tell me about [URL]".
+- The tool extracts main content, title, author, publication date, and other metadata from web pages.
+- Available summary types based on user needs:
+  * "brief" - Quick 2-3 sentence overview (for quick understanding)
+  * "detailed" - 1-2 paragraph summary with main points (DEFAULT - good balance)
+  * "comprehensive" - Full analysis with all key information, examples, and conclusions (for in-depth understanding)
+  * "outline" - Structured bullet-point format with topics and subtopics (for organized overview)
+  * "key-points" - 7-10 most important takeaways with context (for actionable insights)
+- Choose summary type based on user's request:
+  * If they say "quick summary" or "briefly" → use "brief"
+  * If they say "full analysis" or "everything important" → use "comprehensive"
+  * If they say "main points" or "key takeaways" → use "key-points"
+  * If they say "outline" or "structure" → use "outline"
+  * Otherwise → use "detailed" (default)
+- The tool now extracts up to 20,000 characters by default (previously 5,000) for better coverage of long articles.
+- After using the tool, provide the summary in the format requested, ensuring you capture all important information from the extracted content.
+- If the content is very long, the AI will automatically process it appropriately based on the summary type selected.
+- Examples of requests: 
+  * "Summarize https://example.com/article" → uses detailed
+  * "Give me a quick summary of this page" → uses brief
+  * "I need a comprehensive analysis of this research paper" → uses comprehensive
+  * "What are the key points from this article?" → uses key-points
+  * "Create an outline of this blog post" → uses outline
 `;
 
 export function agent(): AgentDescriptor {
@@ -113,6 +141,7 @@ export function agent(): AgentDescriptor {
     calendarTool,
     exerciseTool,
     exerciseAnalyticsTool,
+    webScraperTool,
   ];
 
   return {
