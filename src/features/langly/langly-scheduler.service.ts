@@ -20,8 +20,8 @@ export class LanglyBotSchedulerService implements OnModuleInit {
     try {
       await this.langlyService.sendChallenge(MY_USER_ID);
       this.logger.log(`Daily Spanish challenge sent at ${new Date().toISOString()}`);
-    } catch (error) {
-      this.logger.error('Failed to send daily challenge', error);
+    } catch (err) {
+      this.logger.error(`Failed to send daily challenge, ${err}`);
     }
   }
 }

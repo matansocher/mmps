@@ -140,8 +140,8 @@ export class TiktokController implements OnModuleInit {
 
       await this.bot.answerCallbackQuery(callbackQuery.id, { text: `Subscribed to @${username}` });
       await this.bot.editMessageText(`✅ Successfully subscribed to @${username}\n\nYou will now receive updates from this TikTok channel.`, { message_id: messageId, chat_id: chatId });
-    } catch (error) {
-      this.logger.error(`Error in handleUserSelection: ${error}`);
+    } catch (err) {
+      this.logger.error(`Error in handleUserSelection: ${err}`);
       await this.bot.answerCallbackQuery(callbackQuery.id, { text: 'Error subscribing to user' });
       await this.bot.editMessageText('Sorry, there was an error subscribing to this user. Please try again.', { message_id: messageId, chat_id: chatId });
     }

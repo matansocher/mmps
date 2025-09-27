@@ -54,8 +54,8 @@ export class LanglyController implements OnModuleInit {
     try {
       await this.bot.sendChatAction(chatId, 'typing');
       await this.langlyService.sendChallenge(chatId);
-    } catch (error) {
-      this.logger.error('Error sending challenge:', error);
+    } catch (err) {
+      this.logger.error(`Error sending challenge:, ${err}`);
       await this.bot.sendMessage(chatId, '❌ Sorry, something went wrong. Please try again.');
     }
   }
@@ -86,8 +86,8 @@ export class LanglyController implements OnModuleInit {
         default:
           await this.bot.answerCallbackQuery(callbackQuery.id, { text: 'Unknown action' });
       }
-    } catch (error) {
-      this.logger.error('Error handling callback query:', error);
+    } catch (err) {
+      this.logger.error(`Error handling callback query, ${err}`);
       await this.bot.answerCallbackQuery(callbackQuery.id, { text: 'Something went wrong. Please try again.', show_alert: true });
     }
   }

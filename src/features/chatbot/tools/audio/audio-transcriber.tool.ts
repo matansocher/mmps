@@ -12,9 +12,9 @@ async function runner({ audioFilePath }: z.infer<typeof schema>) {
     const transcript = await getTranscriptFromAudio(audioFilePath, 'he');
     deleteFile(audioFilePath);
     return transcript || 'I was unable to transcribe the audio. The audio might be unclear or in an unsupported format.';
-  } catch (error) {
+  } catch (err) {
     deleteFile(audioFilePath);
-    throw new Error(`Failed to transcribe audio: ${error.message}`);
+    throw new Error(`Failed to transcribe audio: ${err.message}`);
   }
 }
 

@@ -97,8 +97,8 @@ export class LanglyService {
       await this.bot.sendVoice(chatId, audioPath, { caption: `🔊 "${challenge.exampleSentence}"` });
 
       await deleteFile(audioPath);
-    } catch (error) {
-      this.logger.error('Failed to generate audio', error);
+    } catch (err) {
+      this.logger.error(`Failed to generate audio ${err}`);
       await this.bot.sendMessage(chatId, '❌ Failed to generate audio. Please try again.');
     }
   }

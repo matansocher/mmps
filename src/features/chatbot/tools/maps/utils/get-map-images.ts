@@ -30,7 +30,7 @@ export async function getMapImages(placeName: string): Promise<MapImagesResult> 
       await downloadImage(mapUrl, mapImagePath);
       mapImageUrl = await imgurUploadImage(env.IMGUR_CLIENT_ID, mapImagePath);
       deleteFile(mapImagePath);
-    } catch (error) {
+    } catch (err) {
       mapImageUrl = undefined;
     }
 
@@ -39,8 +39,8 @@ export async function getMapImages(placeName: string): Promise<MapImagesResult> 
     }
 
     return { success: true, placeName, placeInfo, mapImageUrl };
-  } catch (error) {
-    console.error('Error getting map images:', error);
-    return { success: false, placeName, error: error.message || 'Unknown error occurred' };
+  } catch (err) {
+    console.error(`Error getting map images: ${err}`);
+    return { success: false, placeName, error: err.message || 'Unknown error occurred' };
   }
 }

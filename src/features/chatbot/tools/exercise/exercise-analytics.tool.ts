@@ -138,10 +138,8 @@ export const exerciseAnalyticsTool = new DynamicStructuredTool({
         default:
           return JSON.stringify({ error: 'Invalid action' });
       }
-    } catch (error) {
-      return JSON.stringify({
-        error: `Failed to generate analytics: ${error.message}`,
-      });
+    } catch (err) {
+      return JSON.stringify({ error: `Failed to generate analytics: ${err.message}` });
     }
   },
 });

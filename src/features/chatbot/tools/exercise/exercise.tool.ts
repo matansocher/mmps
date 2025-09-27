@@ -129,10 +129,8 @@ export const exerciseTool = new DynamicStructuredTool({
         default:
           return JSON.stringify({ error: 'Invalid action' });
       }
-    } catch (error) {
-      return JSON.stringify({
-        error: `Failed to perform exercise action: ${error.message}`,
-      });
+    } catch (err) {
+      return JSON.stringify({ error: `Failed to perform exercise action: ${err.message}` });
     }
   },
 });
