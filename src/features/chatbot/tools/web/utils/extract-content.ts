@@ -9,7 +9,7 @@ export interface ExtractedContent {
   imageUrl?: string;
 }
 
-export function extractContent(html: string, maxLength: number = 5000): ExtractedContent {
+export function extractContent(html: string, maxLength: number = 20000): ExtractedContent {
   const $ = cheerio.load(html);
 
   // Remove script and style elements

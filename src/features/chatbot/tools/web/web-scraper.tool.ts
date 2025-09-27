@@ -4,8 +4,8 @@ import { createSummaryPrompt, extractContent, fetchPage } from './utils';
 
 const schema = z.object({
   url: z.string().describe('The URL of the web page to read and summarize'),
-  summaryType: z.enum(['brief', 'detailed']).optional().default('brief').describe('Type of summary: brief (2-3 sentences) or detailed (comprehensive)'),
-  maxLength: z.number().optional().default(5000).describe('Maximum number of characters to extract from the page'),
+  summaryType: z.enum(['brief', 'detailed', 'comprehensive', 'outline', 'key-points']).optional().default('detailed').describe('Type of summary: brief (2-3 sentences), detailed (1-2 paragraphs), comprehensive (full analysis), outline (structured bullets), or key-points (7-10 main points)'),
+  maxLength: z.number().optional().default(20000).describe('Maximum number of characters to extract from the page'),
 });
 
 async function runner({ url, summaryType, maxLength }: z.infer<typeof schema>) {
@@ -53,13 +53,31 @@ async function runner({ url, summaryType, maxLength }: z.infer<typeof schema>) {
     formattedResponse.push('---');
     formattedResponse.push('');
 
-    // Add summary instruction for the AI
-    if (summaryType === 'brief') {
-      formattedResponse.push('**Brief Summary:**');
-      formattedResponse.push('Based on the extracted content below, here is a concise summary:');
-    } else {
-      formattedResponse.push('**Detailed Summary:**');
-      formattedResponse.push('Based on the extracted content below, here is a comprehensive summary:');
+    // Add summary instruction for the AI based on type
+    switch (summaryType) {
+      case 'brief':
+        formattedResponse.push('**Brief Summary:**');
+        formattedResponse.push('Based on the extracted content below, here is a concise 2-3 sentence summary:');
+        break;
+      case 'detailed':
+        formattedResponse.push('**Detailed Summary:**');
+        formattedResponse.push('Based on the extracted content below, here is a detailed 1-2 paragraph summary:');
+        break;
+      case 'comprehensive':
+        formattedResponse.push('**Comprehensive Analysis:**');
+        formattedResponse.push('Based on the extracted content below, here is a thorough analysis covering all key information:');
+        break;
+      case 'outline':
+        formattedResponse.push('**Structured Outline:**');
+        formattedResponse.push('Based on the extracted content below, here is a hierarchical outline of the main topics:');
+        break;
+      case 'key-points':
+        formattedResponse.push('**Key Points Summary:**');
+        formattedResponse.push('Based on the extracted content below, here are the 7-10 most important points:');
+        break;
+      default:
+        formattedResponse.push('**Summary:**');
+        formattedResponse.push('Based on the extracted content below, here is a summary:');
     }
 
     formattedResponse.push('');

@@ -99,10 +99,27 @@ Web Scraper Guidelines:
 - When users ask to "read", "summarize", "what does this page say", or provide a URL to analyze, use the web_scraper tool.
 - Natural language variations: "summarize this article", "read this page for me", "what's on this website", "tell me about [URL]".
 - The tool extracts main content, title, author, publication date, and other metadata from web pages.
-- You can provide either brief (2-3 sentences) or detailed summaries based on user preference.
-- After using the tool, provide a clear summary based on the extracted content.
-- If the tool encounters an error (e.g., page not found, timeout), explain the issue clearly to the user.
-- Examples of requests: "Summarize https://example.com/article", "Read this page and tell me the main points", "What does this article say about AI?".
+- Available summary types based on user needs:
+  * "brief" - Quick 2-3 sentence overview (for quick understanding)
+  * "detailed" - 1-2 paragraph summary with main points (DEFAULT - good balance)
+  * "comprehensive" - Full analysis with all key information, examples, and conclusions (for in-depth understanding)
+  * "outline" - Structured bullet-point format with topics and subtopics (for organized overview)
+  * "key-points" - 7-10 most important takeaways with context (for actionable insights)
+- Choose summary type based on user's request:
+  * If they say "quick summary" or "briefly" → use "brief"
+  * If they say "full analysis" or "everything important" → use "comprehensive"
+  * If they say "main points" or "key takeaways" → use "key-points"
+  * If they say "outline" or "structure" → use "outline"
+  * Otherwise → use "detailed" (default)
+- The tool now extracts up to 20,000 characters by default (previously 5,000) for better coverage of long articles.
+- After using the tool, provide the summary in the format requested, ensuring you capture all important information from the extracted content.
+- If the content is very long, the AI will automatically process it appropriately based on the summary type selected.
+- Examples of requests: 
+  * "Summarize https://example.com/article" → uses detailed
+  * "Give me a quick summary of this page" → uses brief
+  * "I need a comprehensive analysis of this research paper" → uses comprehensive
+  * "What are the key points from this article?" → uses key-points
+  * "Create an outline of this blog post" → uses outline
 `;
 
 export function agent(): AgentDescriptor {
