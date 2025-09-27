@@ -88,8 +88,8 @@ export async function getTikTokUserVideos(username: string): Promise<TikTokVideo
     }
 
     return videos;
-  } catch (error) {
-    console.error('Error fetching TikTok videos:', error instanceof Error ? error.message : String(error));
+  } catch (err) {
+    console.error('Error fetching TikTok videos:', err instanceof Error ? err.message : String(err));
     return [];
   } finally {
     if (videoPage) await videoPage.close();

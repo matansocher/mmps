@@ -23,10 +23,10 @@ export async function geocodeAddress(address: string, apiKey: string): Promise<G
       lng: location.lng,
       formatted_address: response.data.results[0].formatted_address,
     };
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`Geocoding API request failed: ${error.message}`);
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      throw new Error(`Geocoding API request failed: ${err.message}`);
     }
-    throw error;
+    throw err;
   }
 }

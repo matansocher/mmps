@@ -14,10 +14,10 @@ export async function downloadImage(url: string, filepath: string): Promise<stri
     fs.writeFileSync(filepath, response.data);
 
     return filepath;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`Failed to download image: ${error.message}`);
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      throw new Error(`Failed to download image: ${err.message}`);
     }
-    throw error;
+    throw err;
   }
 }

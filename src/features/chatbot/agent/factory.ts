@@ -13,9 +13,9 @@ function wrapToolWithLogging(tool: any) {
         const result = await tool.func(input);
         console.log(`✅ Tool ${tool.name} completed successfully`, { result });
         return result;
-      } catch (error) {
-        console.log(`❌ Tool ${tool.name} failed`, { error: error.message });
-        throw error;
+      } catch (err) {
+        console.log(`❌ Tool ${tool.name} failed`, { error: err.message });
+        throw err;
       }
     },
   };
@@ -53,8 +53,8 @@ export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor
 //           return lastMessage.content as string;
 //         }
 //         return String(result);
-//       } catch (error) {
-//         return `Error calling ${agent.name}: ${error.message}`;
+//       } catch (err) {
+//         return `Error calling ${agent.name}: ${err.message}`;
 //       }
 //     },
 //   });
