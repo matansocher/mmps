@@ -16,12 +16,13 @@ import {
   stocksTool,
   textToSpeechTool,
   weatherForecastTool,
+  webScraperTool,
 } from '../tools';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and Google Maps place visualization';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, and web page reading/summarization';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -53,6 +54,7 @@ Available capabilities:
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
+- Web Scraper tool: Read and summarize web pages. Extract main content, metadata, and provide brief or detailed summaries of any URL.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Exercise Tracking Guidelines:
@@ -92,6 +94,15 @@ Guidelines:
 - Text-to-speech: When users request audio output or want to hear text spoken aloud, use the text-to-speech tool to generate voice audio.
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
+
+Web Scraper Guidelines:
+- When users ask to "read", "summarize", "what does this page say", or provide a URL to analyze, use the web_scraper tool.
+- Natural language variations: "summarize this article", "read this page for me", "what's on this website", "tell me about [URL]".
+- The tool extracts main content, title, author, publication date, and other metadata from web pages.
+- You can provide either brief (2-3 sentences) or detailed summaries based on user preference.
+- After using the tool, provide a clear summary based on the extracted content.
+- If the tool encounters an error (e.g., page not found, timeout), explain the issue clearly to the user.
+- Examples of requests: "Summarize https://example.com/article", "Read this page and tell me the main points", "What does this article say about AI?".
 `;
 
 export function agent(): AgentDescriptor {
@@ -113,6 +124,7 @@ export function agent(): AgentDescriptor {
     calendarTool,
     exerciseTool,
     exerciseAnalyticsTool,
+    webScraperTool,
   ];
 
   return {

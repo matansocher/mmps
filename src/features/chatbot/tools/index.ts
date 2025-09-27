@@ -23,3 +23,5 @@ export { exerciseTool } from './exercise/exercise.tool';
 export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
 
 export { googleMapsPlaceTool } from './maps/google-maps-place.tool';
+
+export { webScraperTool } from './web/web-scraper.tool';
