@@ -4,7 +4,6 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
-import { getActiveSubscriptions } from '@shared/coach/mongo';
 import { getTodayExercise } from '@shared/trainer/mongo';
 import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from '../trainer/trainer.config';
 import { BOT_CONFIG } from './chatbot.config';
@@ -39,25 +38,10 @@ export class ChatbotSchedulerService implements OnModuleInit {
   @Cron(`59 12,23 * * *`, { name: 'chatbot-football-update', timeZone: DEFAULT_TIMEZONE })
   async handleFootballUpdate(): Promise<void> {
     try {
-      const activeSubscriptions = await getActiveSubscriptions();
-      if (!activeSubscriptions?.length) {
-        return;
-      }
-
       const todayDate = getDateString();
 
-      for (const subscription of activeSubscriptions) {
-        try {
-          const { chatId, customLeagues } = subscription;
-
-          // Build prompt based on custom leagues
-          let prompt = `Generate a midday football update for today (${todayDate}). `;
-
-          if (customLeagues?.length) {
-            prompt += `Focus only on the leagues with IDs: ${customLeagues.join(', ')}. `;
-          }
-
-          prompt += `Use the match_summary tool to get today's match results and ongoing matches. 
+      const prompt = `Generate a midday football update for today (${todayDate}).
+          Use the match_summary tool to get today's match results and ongoing matches. 
           Format the message as:
           - Start with "⚽ המצב הנוכחי של משחקי היום:"
           - Include all matches (completed, ongoing, and upcoming)
@@ -65,17 +49,13 @@ export class ChatbotSchedulerService implements OnModuleInit {
           - Keep it concise and informative
           - If no matches are found, say "אין משחקים היום"`;
 
-          const response = await this.chatbotService.processMessage(prompt, chatId);
+      const response = await this.chatbotService.processMessage(prompt, MY_USER_ID);
 
-          if (response?.message) {
-            await sendShortenedMessage(this.bot, chatId, response.message, { parse_mode: 'Markdown' });
-          }
-        } catch (err) {
-          this.logger.error(`Failed to send midday football update to ${subscription.chatId}: ${err}`);
-        }
+      if (response?.message) {
+        await sendShortenedMessage(this.bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
       }
     } catch (err) {
-      this.logger.error(`Failed to handle midday football update: ${err}`);
+      this.logger.error(`Failed to send midday football update: ${err}`);
     }
   }
 
@@ -102,54 +82,6 @@ Please format the response nicely with emojis and make it feel like a friendly g
     } catch (err) {
       await this.bot.sendMessage(MY_USER_ID, '⚠️ Failed to generate your nightly summary.');
       this.logger.error(`Failed to generate/send daily summary: ${err}`);
-    }
-  }
-
-  @Cron(`59 23 * * *`, { name: 'chatbot-evening-football', timeZone: DEFAULT_TIMEZONE })
-  async handleEveningFootballUpdate(): Promise<void> {
-    try {
-      const activeSubscriptions = await getActiveSubscriptions();
-      if (!activeSubscriptions?.length) {
-        return;
-      }
-
-      const todayDate = getDateString();
-
-      for (const subscription of activeSubscriptions) {
-        try {
-          const { chatId, customLeagues } = subscription;
-
-          // Skip MY_USER_ID as they get it in the daily summary
-          if (chatId === MY_USER_ID) {
-            continue;
-          }
-
-          // Build prompt based on custom leagues
-          let prompt = `Generate an evening football summary for today (${todayDate}). `;
-
-          if (customLeagues?.length) {
-            prompt += `Focus only on the leagues with IDs: ${customLeagues.join(', ')}. `;
-          }
-
-          prompt += `Use the match_summary tool to get today's match results. 
-          Format the message as:
-          - Start with "⚽ זה המצב הנוכחי של משחקי היום:"
-          - Include all match results from today
-          - Use the formatted text from the tool as it contains proper markdown
-          - Keep it concise and informative
-          - If no matches are found, say "אין משחקים היום"`;
-
-          const response = await this.chatbotService.processMessage(prompt, chatId);
-
-          if (response?.message) {
-            await sendShortenedMessage(this.bot, chatId, response.message, { parse_mode: 'Markdown' });
-          }
-        } catch (err) {
-          this.logger.error(`Failed to send evening football update to ${subscription.chatId}: ${err}`);
-        }
-      }
-    } catch (err) {
-      this.logger.error(`Failed to handle evening football update: ${err}`);
     }
   }
 
