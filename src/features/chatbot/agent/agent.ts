@@ -12,9 +12,11 @@ import {
   imageAnalyzerTool,
   imageGeneratorPromptEnhancerTool,
   imageGeneratorTool,
+  matchPredictionTool,
   matchSummaryTool,
   stocksTool,
   textToSpeechTool,
+  topMatchesForPredictionTool,
   weatherForecastTool,
 } from '../tools';
 import { AgentDescriptor } from '../types';
@@ -51,6 +53,7 @@ Available capabilities:
 - Image Generator tool: Use this tool SECOND, after the prompt enhancer, with the enhanced prompt to generate the actual image. The tool returns "IMAGE_GENERATED: [URL]" format. CRITICAL: You MUST ALWAYS extract and include the URL in your response to the user. Never respond without showing the image URL to the user.
 - Google Maps Place tool: Get Google Maps and Street View images for any place, landmark, or address. Returns both a map view and street-level view of the location.
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
+- Football Match Prediction tools: Get prediction data for specific matches and identify top matches worth predicting. Use comprehensive data including betting odds, recent form, and statistics to make informed predictions.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
 - General conversation & assistance: Provide helpful answers without tools when possible.
@@ -79,7 +82,8 @@ Google Maps Place Guidelines:
 - Examples of requests: "Show me the Golden Gate Bridge", "Where is the Statue of Liberty", "Map of Tokyo Tower".
 
 Guidelines:
-- Be concise but informative: Deliver answers in clear, digestible form.
+- Be concise but informative: Deliver answers in clear, digestible form. Keep responses brief and to the point.
+- For predictions: Keep reasoning to 2-3 sentences per match maximum. Focus on the most important factors.
 - Try to use emojis where appropriate to enhance engagement.
 - Use tools only when needed: Don't call tools unnecessarily if you can answer directly.
 - Error handling: If a tool fails, acknowledge it politely and try to assist with alternative info.
@@ -92,6 +96,7 @@ Guidelines:
 - Text-to-speech: When users request audio output or want to hear text spoken aloud, use the text-to-speech tool to generate voice audio.
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
+- Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 `;
 
 export function agent(): AgentDescriptor {
@@ -110,6 +115,8 @@ export function agent(): AgentDescriptor {
     competitionTableTool,
     competitionsListTool,
     matchSummaryTool,
+    topMatchesForPredictionTool,
+    matchPredictionTool,
     calendarTool,
     exerciseTool,
     exerciseAnalyticsTool,
