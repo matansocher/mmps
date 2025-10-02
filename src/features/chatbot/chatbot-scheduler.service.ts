@@ -29,6 +29,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
+      // this.handleFootballPredictions(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleTikTokDigest(); // for testing purposes
@@ -55,7 +56,40 @@ export class ChatbotSchedulerService implements OnModuleInit {
         await sendShortenedMessage(this.bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
       }
     } catch (err) {
-      this.logger.error(`Failed to send midday football update: ${err}`);
+      this.logger.error(`Failed to send football update: ${err}`);
+    }
+  }
+
+  @Cron(`00 13 * * *`, { name: 'chatbot-football-update', timeZone: DEFAULT_TIMEZONE })
+  async handleFootballPredictions(): Promise<void> {
+    try {
+      const todayDate = getDateString();
+
+      const prompt = `Generate a morning football update with predictions for today (${todayDate}).
+
+1. First, use the top_matches_for_prediction tool to find the top 3 most important matches today.
+2. For each match, use the match_prediction_data tool to get prediction data.
+3. Analyze the data and provide match predictions with:
+   - Home Win / Draw / Away Win percentages (must sum to 100%)
+   - Brief reasoning (2-3 sentences max per match)
+   - Consider betting odds (very valuable!), recent form, and key statistics
+
+Format the message as:
+- Start with "⚽ משחקי היום וניבויים:"
+- For each match:
+  * Match info: Competition, teams, time
+  * Predictions: 🏠 X% | 🤝 Y% | 🚌 Z%
+  * Brief analysis (2-3 sentences)
+- Keep it concise and in Hebrew
+- If no matches found, say "אין משחקים חשובים היום"`;
+
+      const response = await this.chatbotService.processMessage(prompt, MY_USER_ID);
+
+      if (response?.message) {
+        await sendShortenedMessage(this.bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
+      }
+    } catch (err) {
+      this.logger.error(`Failed to send football update: ${err}`);
     }
   }
 
