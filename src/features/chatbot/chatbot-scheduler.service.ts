@@ -29,7 +29,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
-      this.handleFootballPredictions(); // for testing purposes
+      // this.handleFootballPredictions(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleTikTokDigest(); // for testing purposes
