@@ -17,11 +17,14 @@ export class LanglyService {
   constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
 
   async generateChallenge(): Promise<SpanishChallenge> {
+    const timestamp = Date.now();
+    const randomNum = Math.floor(Math.random() * 10000);
     const { result } = await getResponse<typeof SpanishChallengeSchema>({
-      input: 'Generate a Spanish language challenge for an intermediate learner.',
+      input: `Generate a unique Spanish language challenge for an intermediate learner. Use this as inspiration for variety: ${timestamp}-${randomNum}. Ensure this challenge is completely different from any previous ones.`,
       instructions: CHALLENGE_GENERATION_PROMPT,
       schema: SpanishChallengeSchema,
       store: false,
+      temperature: 1.2,
     });
     return result;
   }

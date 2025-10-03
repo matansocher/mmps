@@ -24,12 +24,16 @@ export const CHALLENGE_GENERATION_PROMPT = `
 Generate a Spanish language challenge for intermediate to upper-intermediate learners.
 Focus on practical, everyday Spanish that native speakers actually use.
 
+IMPORTANT: Generate a DIFFERENT word, phrase, or concept each time. Do not repeat the same content.
+Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expressions, false friends, regional phrases, etc.
+
 Guidelines:
 - Choose words/phrases that are commonly used but often confusing for English speakers
 - Include false friends (words that look similar to English but mean something different)
 - Include common idioms and colloquial expressions
 - Include regional variations when relevant
 - Make the wrong options plausible but clearly incorrect when you understand the context
+- Vary the difficulty and topic type to keep content fresh and engaging
 
 The question should test understanding of meaning in context, not just memorization.
 The explanation should be concise but informative, helping the learner understand usage.

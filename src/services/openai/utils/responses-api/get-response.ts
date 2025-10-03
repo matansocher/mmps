@@ -9,6 +9,7 @@ type GetResponseOptions<T extends z.ZodTypeAny> = {
   store?: boolean;
   previousResponseId?: string;
   model?: string;
+  temperature?: number;
   schema: T;
 };
 
