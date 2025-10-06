@@ -107,12 +107,16 @@ Keep it concise and in Hebrew`;
 
       const prompt = `Good evening! Please create my nightly summary with the following information:
 
-1. **Weather Forecast**: Get tomorrow's weather forecast for Kfar Saba (${tomorrow.toISOString().split('T')[0]})
-2. **Calendar**: Check my calendar events for tomorrow. if you see any special events, address them.
-4. **Exercises**: Mention if I exercised today or not. If I did, congratulate me and provide a fun motivational message. If I didn't, encourage me to exercise tomorrow with a motivational message.
-5. **Fun Face**: End with a fun fact related to todays date or if no something interesting, just a random fun fact.
+1. **Weather Forecast**: Get tomorrow's weather forecast for Kfar Saba (${tomorrow.toISOString().split('T')[0]}) - format as a single line with only the important data (temperature range, rain chance, general conditions).
+2. **Calendar**: Check my calendar events for tomorrow. Format as:
+   - List each event (just the name and time)
+   - If no events, write "- no events"
+3. **Stock Market**: Show the top 7 most important stock market indices/values (e.g., S&P 500, Nasdaq, Dow Jones, etc.) with their current values and daily change percentage.
+4. **Crypto**: Show current Bitcoin and Ethereum values with daily change percentage.
+5. **Exercises**: Mention if I exercised today or not. If I did, congratulate me and provide a fun motivational message. If I didn't, encourage me to exercise tomorrow with a motivational message.
+6. **Fun Fact**: End with a fun fact related to todays date or if no something interesting, just a random fun fact.
 
-Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a warm greeting like "🌙 Good night!" and wish me sweet dreams at the end.`;
+Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
 
       const response = await this.chatbotService.processMessage(prompt, MY_USER_ID);
 
