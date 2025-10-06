@@ -1,3 +1,7 @@
 export type VectorMetadata = {
-  [key: string]: string | number | boolean;
+  courseId?: string;
+  chunkIndex?: number;
+  content?: string;
+  summary?: string;
+  [key: string]: string | number | boolean | undefined;
 };
