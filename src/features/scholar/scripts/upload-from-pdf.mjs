@@ -220,7 +220,7 @@ async function main(topic, pdfFile) {
 }
 
 const topic = 'A Philosophy of Software Design';
-const pdfFile = 'psd.pdf';
+const pdfFile = 'resources/psd.pdf';
 main(topic, pdfFile)
   .then(() => {
     process.exit(0);

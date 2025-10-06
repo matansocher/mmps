@@ -4,7 +4,8 @@ import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
 import OpenAI from 'openai';
-import { claudeCodeBestPractices } from './claude-code-best-practices.mjs';
+import { claudeCodeBestPractices } from './resources/claude-code-best-practices.mjs';
+import { theTwelveFactorApp } from './resources/the-twelve-factor-app.mjs';
 import { generateChunkSummary } from './utils/generate-chunk-summary.mjs';
 import { generateLessonPlan } from './utils/generate-lesson-plan.mjs';
 
@@ -82,7 +83,7 @@ async function generateEmbedding(text) {
 }
 
 // Main function
-async function main(topic) {
+async function main(topic, content) {
   console.log('╔══════════════════════════════════════════════════════════╗');
   console.log('║       Scholar Bot - Web Content Upload Script           ║');
   console.log('╚══════════════════════════════════════════════════════════╝\n');
@@ -96,8 +97,6 @@ async function main(topic) {
 
   const coursesCollection = client.db('Scholar').collection('Course');
   console.log('   ✓ Connected\n');
-
-  const content = claudeCodeBestPractices;
 
   if (!content || content.trim().length === 0) {
     console.error('❌ No content available to process. Exiting.');
@@ -181,8 +180,12 @@ async function main(topic) {
   console.log('\n✨ You can now start this course with /course command\n');
 }
 
-const topic = 'Claude Code Best Practices';
-main(topic)
+// const topic = 'Claude Code Best Practices';
+// const content = claudeCodeBestPractices;
+const topic = 'The Twelve-Factor App';
+const content = theTwelveFactorApp;
+
+main(topic, content)
   .then(() => {
     process.exit(0);
   })
