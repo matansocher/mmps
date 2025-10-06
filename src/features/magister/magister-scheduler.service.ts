@@ -2,16 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { MY_USER_ID } from '@core/config';
 import { getActiveCourseParticipation, getCourse, getParticipationsReadyForNextLesson } from './mongo';
-import { COURSE_LESSON_HOURS_OF_DAY, COURSE_REMINDER_HOUR_OF_DAY } from './scholar.config';
-import { ScholarService } from './scholar.service';
+import { COURSE_LESSON_HOURS_OF_DAY, COURSE_REMINDER_HOUR_OF_DAY } from './magister.config';
+import { MagisterService } from './magister.service';
 
 @Injectable()
-export class ScholarSchedulerService {
-  private readonly logger = new Logger(ScholarSchedulerService.name);
+export class MagisterSchedulerService {
+  private readonly logger = new Logger(MagisterSchedulerService.name);
 
-  constructor(private readonly scholarService: ScholarService) {}
+  constructor(private readonly magisterService: MagisterService) {}
 
-  @Cron(`0 ${COURSE_LESSON_HOURS_OF_DAY.join(',')} * * *`, { name: 'scholar-course-progression' })
+  @Cron(`0 ${COURSE_LESSON_HOURS_OF_DAY.join(',')} * * *`, { name: 'magister-course-progression' })
   async handleCourseProgression(): Promise<void> {
     this.logger.log('Running scheduled: Course progression');
 
@@ -20,7 +20,7 @@ export class ScholarSchedulerService {
 
       if (!activeCourse) {
         this.logger.log('Starting new course');
-        await this.scholarService.startNewCourse(MY_USER_ID, false);
+        await this.magisterService.startNewCourse(MY_USER_ID, false);
         return;
       }
 
@@ -30,7 +30,7 @@ export class ScholarSchedulerService {
       if (userParticipation) {
         const course = await getCourse(userParticipation.courseId);
         this.logger.log(`Sending lesson ${userParticipation.currentLesson}/${userParticipation.totalLessons}`);
-        await this.scholarService.sendLesson(MY_USER_ID, userParticipation, course);
+        await this.magisterService.sendLesson(MY_USER_ID, userParticipation, course);
       } else {
         this.logger.log('No lessons ready to send');
       }
@@ -39,7 +39,7 @@ export class ScholarSchedulerService {
     }
   }
 
-  @Cron(`0 ${COURSE_REMINDER_HOUR_OF_DAY} * * *`, { name: 'scholar-send-reminders' })
+  @Cron(`0 ${COURSE_REMINDER_HOUR_OF_DAY} * * *`, { name: 'magister-send-reminders' })
   async sendCourseReminders(): Promise<void> {
     this.logger.log('Running scheduled: Send course reminder');
 
@@ -48,7 +48,7 @@ export class ScholarSchedulerService {
 
       if (activeCourse?.summaryDetails && !activeCourse.summaryDetails.sentAt) {
         this.logger.log('Sending course summary');
-        await this.scholarService.handleCourseReminders(activeCourse);
+        await this.magisterService.handleCourseReminders(activeCourse);
       }
     } catch (error) {
       this.logger.error(`Error in sendCourseReminders cron: ${error}`);

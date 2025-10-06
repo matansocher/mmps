@@ -18,7 +18,7 @@ import {
   saveSummarySent,
   updatePreviousResponseId,
 } from './mongo';
-import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './scholar.config';
+import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema } from './types';
 import { formatLessonProgress, generateSummaryMessage } from './utils';
 
@@ -46,8 +46,8 @@ const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) =>
 };
 
 @Injectable()
-export class ScholarService {
-  private readonly logger = new Logger(ScholarService.name);
+export class MagisterService {
+  private readonly logger = new Logger(MagisterService.name);
 
   constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
 

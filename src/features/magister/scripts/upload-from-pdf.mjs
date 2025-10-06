@@ -4,8 +4,7 @@ import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
 import OpenAI from 'openai';
-import { claudeCodeBestPractices } from './resources/claude-code-best-practices.mjs';
-import { theTwelveFactorApp } from './resources/the-twelve-factor-app.mjs';
+import { PdfReader } from 'pdfreader';
 import { generateChunkSummary } from './utils/generate-chunk-summary.mjs';
 import { generateLessonPlan } from './utils/generate-lesson-plan.mjs';
 
@@ -17,7 +16,44 @@ const OVERLAP = 100; // word overlap between chunks
 const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 const pinecone = new Pinecone({ apiKey: env.PINECONE_API_KEY });
 
-// Chunk text
+async function extractTextFromPDF(filePath) {
+  console.log(`📄 Extracting text from: ${filePath}`);
+
+  return new Promise((resolve, reject) => {
+    const reader = new PdfReader();
+    let fullText = '';
+    let pageCount = 0;
+    let currentPage = -1;
+
+    reader.parseFileItems(filePath, (err, item) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      if (!item) {
+        // End of file
+        const wordCount = fullText.trim().split(/\s+/).length;
+        console.log(`   ✓ Extracted ${wordCount} words from ${pageCount} pages`);
+        resolve(fullText.trim());
+        return;
+      }
+
+      if (item.page) {
+        // New page
+        if (item.page > currentPage) {
+          currentPage = item.page;
+          pageCount = currentPage;
+        }
+      }
+
+      if (item.text) {
+        fullText += item.text;
+      }
+    });
+  });
+}
+
 function chunkText(text, chunkSize = CHUNK_SIZE, overlap = OVERLAP) {
   const words = text.split(/\s+/);
   const chunks = [];
@@ -83,9 +119,9 @@ async function generateEmbedding(text) {
 }
 
 // Main function
-async function main(topic, content) {
+async function main(topic, pdfFile) {
   console.log('╔══════════════════════════════════════════════════════════╗');
-  console.log('║       Scholar Bot - Web Content Upload Script           ║');
+  console.log('║         Magister Bot - PDF Upload Script                 ║');
   console.log('╚══════════════════════════════════════════════════════════╝\n');
 
   console.log(`📚 Topic: ${topic}`);
@@ -95,11 +131,14 @@ async function main(topic, content) {
   const client = new MongoClient(env.MONGO_DB_URL);
   await client.connect();
 
-  const coursesCollection = client.db('Scholar').collection('Course');
+  const coursesCollection = client.db('Magister').collection('Course');
   console.log('   ✓ Connected\n');
 
-  if (!content || content.trim().length === 0) {
-    console.error('❌ No content available to process. Exiting.');
+  const content = await extractTextFromPDF(pdfFile);
+
+  if (!content) {
+    console.error('\n❌ Error: No content extracted from any PDF');
+    await client.close();
     process.exit(1);
   }
 
@@ -110,7 +149,7 @@ async function main(topic, content) {
   // Chunk and summarize
   console.log('\n📦 Processing chunks...');
   const chunks = chunkText(content);
-  console.log(`   Processing ${chunks.length} chunks from content`);
+  console.log(`   Processing ${chunks.length} chunks from PDF...`);
 
   const chunkSummaries = [];
   for (let i = 0; i < chunks.length; i++) {
@@ -136,7 +175,7 @@ async function main(topic, content) {
 
   // Store chunks with summaries in Pinecone
   console.log('\n📦 Storing chunks with summaries in Pinecone...');
-  const index = pinecone.index('scholar-materials');
+  const index = pinecone.index('magister-materials');
   let totalChunksStored = 0;
 
   for (let i = 0; i < chunks.length; i++) {
@@ -179,12 +218,9 @@ async function main(topic, content) {
   console.log('\n✨ You can now start this course with /course command\n');
 }
 
-// const topic = 'Claude Code Best Practices';
-// const content = claudeCodeBestPractices;
-const topic = 'The Twelve-Factor App';
-const content = theTwelveFactorApp;
-
-main(topic, content)
+const topic = 'A Philosophy of Software Design';
+const pdfFile = 'resources/psd.pdf';
+main(topic, pdfFile)
   .then(() => {
     process.exit(0);
   })

@@ -1,9 +1,9 @@
 import { TelegramBotConfig } from '@services/telegram';
 
 export const BOT_CONFIG: TelegramBotConfig = {
-  id: 'SCHOLAR',
-  name: 'Scholar Bot 📚',
-  token: 'SCHOLAR_TELEGRAM_BOT_TOKEN',
+  id: 'MAGISTER',
+  name: 'Magister Bot 📚',
+  token: 'MAGISTER_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: 'Start learning', hide: true },
     COURSE: { command: '/course', description: '📚 Start next course 📚' },
@@ -21,7 +21,7 @@ export enum BOT_ACTIONS {
   COMPLETE_COURSE = 'complete_course',
 }
 
-export const PINECONE_INDEX_NAME = 'scholar-materials';
+export const PINECONE_INDEX_NAME = 'magister-materials';
 
 export const SYSTEM_PROMPT = `
 You are a sharp, insightful, and experienced learning mentor specializing in teaching from curated materials.

@@ -18,20 +18,20 @@ import {
   TelegramEventHandler,
 } from '@services/telegram';
 import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
-import { BOT_ACTIONS, BOT_CONFIG } from './scholar.config';
-import { ScholarService } from './scholar.service';
+import { BOT_ACTIONS, BOT_CONFIG } from './magister.config';
+import { MagisterService } from './magister.service';
 import { formatLessonProgress } from './utils';
 
 const loaderMessage = '📚 Give me a few moments to prepare your lesson...';
 const transcribeLoaderMessage = '🎧 Give me a few moments to transcribe it...';
 
 @Injectable()
-export class ScholarController implements OnModuleInit {
-  private readonly logger = new Logger(ScholarController.name);
+export class MagisterController implements OnModuleInit {
+  private readonly logger = new Logger(MagisterController.name);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(
-    private readonly scholarService: ScholarService,
+    private readonly magisterService: MagisterService,
     @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
@@ -57,7 +57,7 @@ export class ScholarController implements OnModuleInit {
     const replyText = [
       `Hey There 👋`,
       ``,
-      `I am *Scholar Bot* 📚 - your personal learning companion!`,
+      `I am *Magister Bot* 📚 - your personal learning companion!`,
       ``,
       `I teach from curated materials tailored to your learning goals.`,
       `Each course is broken into multiple lessons that adapt to the material depth.`,
@@ -84,7 +84,7 @@ export class ScholarController implements OnModuleInit {
     });
 
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.scholarService.startNewCourse(chatId, true);
+      await this.magisterService.startNewCourse(chatId, true);
     });
   }
 
@@ -114,7 +114,7 @@ export class ScholarController implements OnModuleInit {
     });
 
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.scholarService.processNextLesson(chatId);
+      await this.magisterService.processNextLesson(chatId);
     });
   }
 
@@ -136,7 +136,7 @@ export class ScholarController implements OnModuleInit {
     });
 
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.scholarService.processQuestion(chatId, activeCourseParticipation, text);
+      await this.magisterService.processQuestion(chatId, activeCourseParticipation, text);
     });
   }
 
@@ -177,7 +177,7 @@ export class ScholarController implements OnModuleInit {
 
       const result = await getAudioFromText(text);
 
-      const audioFilePath = `${LOCAL_FILES_PATH}/scholar-text-to-speech-${new Date().getTime()}.mp3`;
+      const audioFilePath = `${LOCAL_FILES_PATH}/magister-text-to-speech-${new Date().getTime()}.mp3`;
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
 
@@ -196,7 +196,7 @@ export class ScholarController implements OnModuleInit {
       }),
     );
 
-    await this.scholarService.handleLessonCompletion(chatId, courseParticipationId);
+    await this.magisterService.handleLessonCompletion(chatId, courseParticipationId);
   }
 
   private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
@@ -211,6 +211,6 @@ export class ScholarController implements OnModuleInit {
 
     await this.bot.sendMessage(chatId, `🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
 
-    this.scholarService.generateCourseSummary(courseParticipationId);
+    this.magisterService.generateCourseSummary(courseParticipationId);
   }
 }
