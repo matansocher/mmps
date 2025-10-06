@@ -1,15 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { MY_USER_ID } from '@core/config';
-import { getActiveCourseParticipation, getCourse, getParticipationsReadyForNextLesson } from './mongo';
 import { COURSE_LESSON_HOURS_OF_DAY, COURSE_REMINDER_HOUR_OF_DAY } from './magister.config';
 import { MagisterService } from './magister.service';
+import { getActiveCourseParticipation, getCourse, getParticipationsReadyForNextLesson } from './mongo';
 
 @Injectable()
-export class MagisterSchedulerService {
+export class MagisterSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(MagisterSchedulerService.name);
 
   constructor(private readonly magisterService: MagisterService) {}
+
+  onModuleInit(): void {
+    setTimeout(() => {
+      // this.handleCourseProgression(); // for testing purposes
+      // this.sendCourseReminders(); // for testing purposes
+    }, 8000);
+  }
 
   @Cron(`0 ${COURSE_LESSON_HOURS_OF_DAY.join(',')} * * *`, { name: 'magister-course-progression' })
   async handleCourseProgression(): Promise<void> {
