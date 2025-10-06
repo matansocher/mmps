@@ -73,6 +73,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
 
 3. Analyze the data and provide match predictions with:
    - Home Win / Draw / Away Win percentages (must sum to 100%)
+   - **Betting Odds**: Display the actual betting odds from the data (Home / Draw / Away)
    - Brief reasoning (2-3 sentences max per match)
    - Consider betting odds (very valuable!), recent form, and key statistics
 
@@ -81,6 +82,7 @@ Format the message as:
   * Start with "⚽ משחקי היום וניבויים:"
   * For each match:
     - Match info: Competition, teams, time
+    - Betting Odds: 🏠 X.XX | 🤝 Y.YY | 🚌 Z.ZZ (show the actual odds from the data)
     - Predictions: 🏠 X% | 🤝 Y% | 🚌 Z%
     - Brief analysis (2-3 sentences)
 - If no matches found:
