@@ -166,7 +166,6 @@ async function main(topic, pdfFile) {
   console.log('\n💾 Creating course...');
   const courseResult = await coursesCollection.insertOne({
     topic,
-    materialSummary: `PDF-based course from 1 document`,
     totalLessons: analysis.recommendedLessonCount,
     estimatedTokens: analysis.estimatedTokens,
     lessonOutlines,

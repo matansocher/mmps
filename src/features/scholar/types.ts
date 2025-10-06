@@ -10,13 +10,15 @@ export const LessonCountAnalysisSchema = z.object({
   recommendedLessonCount: z.number().min(1).max(50).describe('The recommended number of lessons based on material volume and complexity'),
   rationale: z.string().max(500).describe('Brief explanation of why this lesson count is appropriate'),
   estimatedTokens: z.number().describe('Estimated total tokens in the material'),
-  lessonOutlines: z.array(
-    z.object({
-      lessonNumber: z.number().describe('The lesson number'),
-      topics: z.array(z.string()).describe('Main topics covered in this lesson'),
-      suggestedChunkIndexes: z.array(z.number()).describe('Indexes of chunks most relevant to this lesson'),
-    }),
-  ).describe('Structured outline for each lesson with topics and relevant chunk indexes'),
+  lessonOutlines: z
+    .array(
+      z.object({
+        lessonNumber: z.number().describe('The lesson number'),
+        topics: z.array(z.string()).describe('Main topics covered in this lesson'),
+        suggestedChunkIndexes: z.array(z.number()).describe('Indexes of chunks most relevant to this lesson'),
+      }),
+    )
+    .describe('Structured outline for each lesson with topics and relevant chunk indexes'),
 });
 
 export const CourseSummarySchema = z.object({
@@ -39,7 +41,6 @@ export type LessonOutline = {
 export type Course = {
   readonly _id: ObjectId;
   readonly topic: string;
-  readonly materialSummary: string;
   readonly totalLessons: number;
   readonly estimatedTokens: number;
   readonly lessonOutlines?: LessonOutline[];

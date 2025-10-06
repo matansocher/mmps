@@ -71,7 +71,6 @@ export class ScholarService {
       ``,
       `📖 This course has *${course.totalLessons} lessons*`,
       `⏰ Complete each lesson to unlock the next one`,
-      `💡 ${course.materialSummary}`,
       ``,
       `Let's begin! 🚀`,
     ].join('\n');
@@ -123,7 +122,7 @@ export class ScholarService {
 
     const lessonOutline = course.lessonOutlines?.find((outline) => outline.lessonNumber === lessonNumber);
 
-    let matches;
+    let matches: Awaited<ReturnType<typeof queryVectors>>;
     if (lessonOutline?.suggestedChunkIndexes?.length) {
       // Use pre-planned chunks for this lesson
       const query = `Lesson ${lessonNumber}: ${lessonOutline.topics.join(', ')}`;
@@ -145,7 +144,7 @@ export class ScholarService {
       score: match.score,
     }));
 
-    const materialContext = relevantMaterials.map((m, i) => `[Source ${i + 1}]:\n${m.summary}`).join('\n\n---\n\n');
+    const materialContext = relevantMaterials.map((m, i: number) => `[Source ${i + 1}]:\n${m.summary}`).join('\n\n---\n\n');
 
     const previousLessonsContext =
       lessonNumber > 1

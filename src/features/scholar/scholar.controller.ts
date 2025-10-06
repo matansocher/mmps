@@ -100,15 +100,7 @@ export class ScholarController implements OnModuleInit {
     const course = await getCourse(activeCourse.courseId);
     const progressText = formatLessonProgress(activeCourse.currentLesson, activeCourse.totalLessons, activeCourse.lessonsCompleted);
 
-    let nextLessonText = '';
-    if (activeCourse.nextLessonAvailableAt && activeCourse.isWaitingForNextLesson) {
-      const timeStr = activeCourse.nextLessonAvailableAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      nextLessonText = `\n\n⏰ Next lesson available at: *${timeStr}*`;
-    } else if (activeCourse.lessonsCompleted < activeCourse.currentLesson) {
-      nextLessonText = `\n\n💡 Complete your current lesson to unlock the next one!`;
-    }
-
-    const statusMessage = [`📚 *Course: ${course.topic}*`, ``, progressText, nextLessonText, ``, course.materialSummary ? `📖 ${course.materialSummary}` : ''].join('\n');
+    const statusMessage = [`📚 *Course: ${course.topic}*`, ``, progressText].join('\n');
 
     await this.bot.sendMessage(chatId, statusMessage, { parse_mode: 'Markdown' });
   }

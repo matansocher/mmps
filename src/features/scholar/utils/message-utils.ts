@@ -22,12 +22,20 @@ export function generateSummaryMessage(summaryDetails: SummaryDetails): string {
 }
 
 export function formatLessonProgress(currentLesson: number, totalLessons: number, lessonsCompleted: number): string {
-  const progressBar = generateProgressBar(lessonsCompleted, totalLessons);
-  return `📊 Progress: Lesson ${currentLesson}/${totalLessons}\n${progressBar}\n✅ Completed: ${lessonsCompleted}/${totalLessons}`;
+  const progressBar = generateProgressBar(currentLesson, lessonsCompleted, totalLessons);
+  return `📖 *Lesson ${currentLesson} of ${totalLessons}*\n\n${progressBar}`;
 }
 
-function generateProgressBar(completed: number, total: number, length: number = 10): string {
-  const filledLength = Math.round((completed / total) * length);
-  const emptyLength = length - filledLength;
-  return '█'.repeat(filledLength) + '░'.repeat(emptyLength);
+function generateProgressBar(currentLesson: number, completed: number, total: number): string {
+  const circles = [];
+  for (let i = 1; i <= total; i++) {
+    if (i < currentLesson) {
+      circles.push('✅'); // Completed lessons
+    } else if (i === currentLesson) {
+      circles.push('📍'); // Current lesson
+    } else {
+      circles.push('⚪️'); // Upcoming lessons
+    }
+  }
+  return circles.join(' ');
 }

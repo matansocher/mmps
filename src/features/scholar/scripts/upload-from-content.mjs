@@ -127,7 +127,6 @@ async function main(topic, content) {
   console.log('\n💾 Creating course...');
   const courseResult = await coursesCollection.insertOne({
     topic,
-    materialSummary: `course from text content`,
     totalLessons: analysis.recommendedLessonCount,
     estimatedTokens: analysis.estimatedTokens,
     lessonOutlines,
