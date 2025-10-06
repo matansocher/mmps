@@ -60,6 +60,7 @@
     "mongodb": "^6.8.0",
     "node-telegram-bot-api": "^0.66.0",
     "openai": "^5.16.0",
+    "pdfreader": "^3.0.7",
     "puppeteer": "^24.22.3",
     "puppeteer-core": "^24.22.3",
     "reflect-metadata": "^0.2.0",
