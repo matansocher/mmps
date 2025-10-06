@@ -1,15 +1,4 @@
-import OpenAI from 'openai';
-import { env } from 'node:process';
-
-const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-
-/**
- * Generate a concise summary of a text chunk
- * @param {string} chunk - The text chunk to summarize
- * @param {number} maxWords - Maximum words in summary (default 200)
- * @returns {Promise<string>} - The summary
- */
-export async function generateChunkSummary(chunk, maxWords = 200) {
+export async function generateChunkSummary(openai, chunk, maxWords = 200) {
   try {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',

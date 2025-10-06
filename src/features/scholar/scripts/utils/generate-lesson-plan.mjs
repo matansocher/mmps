@@ -1,21 +1,7 @@
-import OpenAI from 'openai';
-import { env } from 'node:process';
-
-const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-
-/**
- * Generate a structured lesson plan with topics and chunk assignments
- * @param {string[]} chunkSummaries - Array of chunk summaries
- * @param {string} topic - Course topic
- * @param {number} lessonCount - Number of lessons
- * @returns {Promise<Array>} - Array of lesson outlines
- */
-export async function generateLessonPlan(chunkSummaries, topic, lessonCount) {
+export async function generateLessonPlan(openai, chunkSummaries, topic, lessonCount) {
   console.log('\\n🗺️  Generating structured lesson plan...');
 
-  const summariesWithIndexes = chunkSummaries
-    .map((summary, idx) => `[Chunk ${idx}]: ${summary}`)
-    .join('\\n\\n');
+  const summariesWithIndexes = chunkSummaries.map((summary, idx) => `[Chunk ${idx}]: ${summary}`).join('\\n\\n');
 
   const prompt = `You are an expert curriculum designer. Given these material summaries for a course on "${topic}", create a structured lesson plan.
 

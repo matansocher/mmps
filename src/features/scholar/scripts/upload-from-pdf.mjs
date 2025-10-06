@@ -153,7 +153,7 @@ async function main(topic, pdfFile) {
 
   const chunkSummaries = [];
   for (let i = 0; i < chunks.length; i++) {
-    const summary = await generateChunkSummary(chunks[i]);
+    const summary = await generateChunkSummary(openai, chunks[i]);
     chunkSummaries.push(summary);
     if ((i + 1) % 5 === 0) process.stdout.write('.');
   }
@@ -161,9 +161,8 @@ async function main(topic, pdfFile) {
   console.log(`   ✓ Generated ${chunkSummaries.length} chunk summaries`);
 
   // Generate lesson plan
-  const lessonOutlines = await generateLessonPlan(chunkSummaries, topic, analysis.recommendedLessonCount);
+  const lessonOutlines = await generateLessonPlan(openai, chunkSummaries, topic, analysis.recommendedLessonCount);
 
-  // Create course
   console.log('\n💾 Creating course...');
   const courseResult = await coursesCollection.insertOne({
     topic,
@@ -222,7 +221,11 @@ async function main(topic, pdfFile) {
 
 const topic = 'A Philosophy of Software Design';
 const pdfFile = 'psd.pdf';
-main(topic, pdfFile).catch((error) => {
-  console.error('\n❌ Fatal error:', error);
-  process.exit(1);
-});
+main(topic, pdfFile)
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('\n❌ Fatal error:', error);
+    process.exit(1);
+  });

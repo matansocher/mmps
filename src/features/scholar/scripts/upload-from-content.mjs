@@ -27,7 +27,6 @@ function chunkText(text, chunkSize = CHUNK_SIZE, overlap = OVERLAP) {
   return chunks;
 }
 
-// Analyze and determine lesson count (without lesson plan yet)
 async function determineLessonCount(content, topic) {
   console.log('\n🤖 Analyzing material to determine lesson count...');
   const totalWords = content.split(/\s+/).length;
@@ -116,7 +115,7 @@ async function main(topic) {
 
   const chunkSummaries = [];
   for (let i = 0; i < chunks.length; i++) {
-    const summary = await generateChunkSummary(chunks[i]);
+    const summary = await generateChunkSummary(openai, chunks[i]);
     chunkSummaries.push(summary);
     if ((i + 1) % 5 === 0) process.stdout.write('.');
   }
@@ -124,7 +123,7 @@ async function main(topic) {
   console.log(`   ✓ Generated ${chunkSummaries.length} chunk summaries`);
 
   // Generate lesson plan
-  const lessonOutlines = await generateLessonPlan(chunkSummaries, topic, analysis.recommendedLessonCount);
+  const lessonOutlines = await generateLessonPlan(openai, chunkSummaries, topic, analysis.recommendedLessonCount);
 
   console.log('\n💾 Creating course...');
   const courseResult = await coursesCollection.insertOne({
@@ -183,7 +182,11 @@ async function main(topic) {
 }
 
 const topic = 'Claude Code Best Practices';
-main(topic).catch((error) => {
-  console.error('\n❌ Fatal error:', error);
-  process.exit(1);
-});
+main(topic)
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('\n❌ Fatal error:', error);
+    process.exit(1);
+  });

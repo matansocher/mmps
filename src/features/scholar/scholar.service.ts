@@ -18,11 +18,9 @@ import {
   saveSummarySent,
   updatePreviousResponseId,
 } from './mongo';
-import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, SUMMARY_PROMPT, SYSTEM_PROMPT } from './scholar.config';
+import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './scholar.config';
 import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema } from './types';
 import { formatLessonProgress, generateSummaryMessage } from './utils';
-
-const PINECONE_INDEX_NAME = 'scholar-materials';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) => {
   const isLastLesson = courseParticipation.currentLesson >= courseParticipation.totalLessons;
