@@ -1,9 +1,9 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { MY_USER_ID } from '@core/config';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
+import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,
   getActiveCourseParticipation,
@@ -18,7 +18,6 @@ import {
   saveSummarySent,
   updatePreviousResponseId,
 } from './mongo';
-import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema } from './types';
 import { formatLessonProgress, generateSummaryMessage } from './utils';
 
@@ -30,16 +29,15 @@ const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) =>
       text: '🎧 Transcribe 🎧',
       callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${courseParticipation._id}`,
     },
-    {
-      text: '✅ Complete Lesson ✅',
-      callback_data: `${BOT_ACTIONS.COMPLETE_LESSON} - ${courseParticipation._id}`,
-    },
     isLastLesson
       ? {
           text: '🎓 Complete Course 🎓',
           callback_data: `${BOT_ACTIONS.COMPLETE_COURSE} - ${courseParticipation._id}`,
         }
-      : null,
+      : {
+          text: '✅ Complete Lesson ✅',
+          callback_data: `${BOT_ACTIONS.COMPLETE_LESSON} - ${courseParticipation._id}`,
+        },
   ].filter(Boolean);
 
   return getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -56,14 +54,14 @@ export class MagisterService {
     await saveSummarySent(courseParticipation._id.toString());
   }
 
-  async startNewCourse(chatId: number, onDemand: boolean): Promise<void> {
-    const { course, courseParticipation } = await this.getNewCourse();
+  async startNewCourse(chatId: number, onDemand: boolean): Promise<{ course: Course; courseParticipation: CourseParticipation } | null> {
+    const { course, courseParticipation } = await this.getNewCourse(chatId);
     if (!course || !courseParticipation) {
       this.logger.error('No new courses found');
       if (onDemand) {
         await this.bot.sendMessage(chatId, `I see no courses available. Please upload some materials first.`);
       }
-      return;
+      return null;
     }
 
     const welcomeMessage = [
@@ -77,10 +75,10 @@ export class MagisterService {
 
     await this.bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown' });
 
-    await this.sendLesson(chatId, courseParticipation, course);
+    return { course, courseParticipation };
   }
 
-  async getNewCourse(): Promise<{ course: Course; courseParticipation: CourseParticipation }> {
+  async getNewCourse(chatId: number): Promise<{ course: Course; courseParticipation: CourseParticipation }> {
     const courseParticipations = await getCourseParticipations();
     const coursesParticipated = courseParticipations.map((cp) => cp.courseId);
 
@@ -89,17 +87,20 @@ export class MagisterService {
       return { course: null, courseParticipation: null };
     }
 
-    const courseParticipation = await createCourseParticipation(MY_USER_ID, course._id.toString(), course.totalLessons);
+    const courseParticipation = await createCourseParticipation(chatId, course._id.toString(), course.totalLessons);
     return { course, courseParticipation };
   }
 
   async processNextLesson(chatId: number): Promise<void> {
-    const courseParticipation = await getActiveCourseParticipation(MY_USER_ID);
+    const courseParticipation = await getActiveCourseParticipation(chatId);
     if (!courseParticipation) {
       await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one with /course.`);
       return;
     }
 
+    // Check if user needs to complete previous lesson first
+    // currentLesson is always 1 ahead after markLessonSent
+    // So if currentLesson=2 and lessonsCompleted=0, user needs to complete lesson 1 first
     if (courseParticipation.lessonsCompleted < courseParticipation.currentLesson - 1) {
       await this.bot.sendMessage(
         chatId,

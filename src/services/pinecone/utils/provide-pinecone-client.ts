@@ -12,4 +12,5 @@ export function providePineconeClient(): Pinecone {
     throw new Error('PINECONE_API_KEY environment variable is not set');
   }
   pineconeClientInstance = new Pinecone({ apiKey });
+  return pineconeClientInstance;
 }

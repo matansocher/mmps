@@ -136,7 +136,7 @@ async function main(topic, content) {
 
   // Store chunks with summaries in Pinecone
   console.log('\n📦 Storing chunks with summaries in Pinecone...');
-  const index = pinecone.index('magister-materials');
+  const index = pinecone.index('scholar-materials');
   let totalChunksStored = 0;
 
   for (let i = 0; i < chunks.length; i++) {

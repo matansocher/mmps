@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { LOCAL_FILES_PATH, MY_USER_ID } from '@core/config';
+import { LOCAL_FILES_PATH } from '@core/config';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
 import {
@@ -17,9 +17,9 @@ import {
   TELEGRAM_EVENTS,
   TelegramEventHandler,
 } from '@services/telegram';
-import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
 import { BOT_ACTIONS, BOT_CONFIG } from './magister.config';
 import { MagisterService } from './magister.service';
+import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
 import { formatLessonProgress } from './utils';
 
 const loaderMessage = '📚 Give me a few moments to prepare your lesson...';
@@ -72,25 +72,28 @@ export class MagisterController implements OnModuleInit {
 
   private async courseHandler(message: Message): Promise<void> {
     const { chatId, messageId } = getMessageData(message);
-    const activeCourse = await getActiveCourseParticipation(MY_USER_ID);
+    const activeCourse = await getActiveCourseParticipation(chatId);
 
     if (activeCourse?._id) {
       await markCourseParticipationCompleted(activeCourse._id.toString());
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, {
-      reactionEmoji: '🤔',
-      loaderMessage,
-    });
+    const result = await this.magisterService.startNewCourse(chatId, true);
+    if (!result) return;
 
+    const { course, courseParticipation } = result;
+
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.magisterService.startNewCourse(chatId, true);
+      await this.magisterService.sendLesson(chatId, courseParticipation, course).catch((err) => {
+        this.logger.error(`Error sending lesson after course start ${err}`);
+      });
     });
   }
 
   private async statusHandler(message: Message): Promise<void> {
     const { chatId } = getMessageData(message);
-    const activeCourse = await getActiveCourseParticipation(MY_USER_ID);
+    const activeCourse = await getActiveCourseParticipation(chatId);
 
     if (!activeCourse) {
       await this.bot.sendMessage(chatId, `📚 No active course\n\nUse /course to start your learning journey!`);
@@ -108,11 +111,7 @@ export class MagisterController implements OnModuleInit {
   private async nextHandler(message: Message): Promise<void> {
     const { chatId, messageId } = getMessageData(message);
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, {
-      reactionEmoji: '🤔',
-      loaderMessage,
-    });
-
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.magisterService.processNextLesson(chatId);
     });
@@ -124,17 +123,13 @@ export class MagisterController implements OnModuleInit {
     // Prevent built-in commands from being processed here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
-    const activeCourseParticipation = await getActiveCourseParticipation(MY_USER_ID);
+    const activeCourseParticipation = await getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
       await this.bot.sendMessage(chatId, `I see you don't have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, {
-      reactionEmoji: '🤔',
-      loaderMessage: '💭 Let me think about your question...',
-    });
-
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage: '💭 Let me think about your question...' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.magisterService.processQuestion(chatId, activeCourseParticipation, text);
     });

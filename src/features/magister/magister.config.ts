@@ -21,7 +21,7 @@ export enum BOT_ACTIONS {
   COMPLETE_COURSE = 'complete_course',
 }
 
-export const PINECONE_INDEX_NAME = 'magister-materials';
+export const PINECONE_INDEX_NAME = 'scholar-materials';
 
 export const SYSTEM_PROMPT = `
 You are a sharp, insightful, and experienced learning mentor specializing in teaching from curated materials.
