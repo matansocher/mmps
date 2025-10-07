@@ -27,3 +27,5 @@ export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
 export { googleMapsPlaceTool } from './maps/google-maps-place.tool';
 
 export { spotifyTool } from './music/spotify.tool';
+
+export { githubTool } from './github/github.tool';

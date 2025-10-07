@@ -8,6 +8,7 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
+import { connectGithubMcp } from './mcp/github-mcp-client';
 
 @Module({
   imports: [ScheduleModule.forRoot()],
@@ -16,6 +17,11 @@ import { ChatbotService } from './chatbot.service';
 export class ChatbotModule implements OnModuleInit {
   async onModuleInit() {
     const mongoDbNames = [TRAINER_DB_NAME, COACH_DB_NAME];
-    await Promise.all(mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)));
+    await Promise.all([
+      ...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)),
+      await connectGithubMcp().catch((err) => {
+        console.error('[ChatbotModule] Failed to connect to GitHub MCP:', err);
+      }),
+    ]);
   }
 }
