@@ -14,6 +14,7 @@ import {
   imageGeneratorTool,
   matchPredictionTool,
   matchSummaryTool,
+  spotifyTool,
   stocksTool,
   textToSpeechTool,
   topMatchesForPredictionTool,
@@ -23,7 +24,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, and Google Maps place visualization';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, and Spotify music search';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -56,6 +57,7 @@ Available capabilities:
 - Football Match Prediction tools: Get prediction data for specific matches and identify top matches worth predicting. Use comprehensive data including betting odds, recent form, and statistics to make informed predictions.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
+- Spotify tool: Search for songs, artists, and playlists on Spotify. Get detailed track information, find artist top tracks, and discover music. Returns song details with links to listen on Spotify.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Exercise Tracking Guidelines:
@@ -74,12 +76,29 @@ Google Maps Place Guidelines:
 - CRITICAL: When the tool returns successfully, you MUST include the URL in your response as a markdown image.
 - Format your response like this:
   "I've found [place name] for you! Here's the map:
-  
+
   📍 **Map View:**
   ![Map View](URL_HERE)"
 - Replace URL_HERE with the actual URL returned from the tool.
 - If the tool returns an error, explain that the location couldn't be found or mapped.
 - Examples of requests: "Show me the Golden Gate Bridge", "Where is the Statue of Liberty", "Map of Tokyo Tower".
+
+Spotify Music Guidelines:
+- When users ask about music, songs, artists, or playlists, use the spotify tool with the appropriate action.
+- Natural language variations: "find me songs by", "search for", "what are the best songs by", "show me playlists about", "what's that song", "who sings".
+- The tool returns JSON data with raw Spotify API results. You decide how to format the response, but generally:
+  * For tracks: Include track name, artist(s), album, release year, duration (MM:SS format), popularity score, and Spotify link
+  * For artists: Include artist name, ID (for fetching top tracks), genres, popularity, follower count, and Spotify link
+  * For playlists: Include playlist name, description (truncate if long), owner, track count, and Spotify link
+  * For top tracks: Include track name, album, popularity, and Spotify link
+- Formatting suggestions (but you decide the final format):
+  * Use numbered lists for multiple results (1., 2., 3., ...)
+  * Use bold (**) for track/artist/playlist names
+  * Consider using emojis for visual appeal: 🎵 (music), 🎤 (artist), 💿 (album), 🌟 (popularity), 🎧 (playlist), 🔗 (link)
+  * Keep responses concise but informative
+  * ALWAYS include the Spotify link (external_urls.spotify) so users can listen
+- For artist searches: You can get the artist ID from search results, then use get_artist_top_tracks to show their most popular songs.
+- Handle empty results gracefully: If no results are found, suggest alternative search terms or check spelling.
 
 Guidelines:
 - Be concise but informative: Deliver answers in clear, digestible form. Keep responses brief and to the point.
@@ -97,6 +116,7 @@ Guidelines:
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
+- Spotify Music: When users ask about music, use the spotify tool. The tool returns JSON data - parse it and format the response according to the Spotify Music Guidelines above. Always include Spotify links so users can listen.
 `;
 
 export function agent(): AgentDescriptor {
@@ -120,6 +140,7 @@ export function agent(): AgentDescriptor {
     calendarTool,
     exerciseTool,
     exerciseAnalyticsTool,
+    spotifyTool,
   ];
 
   return {
