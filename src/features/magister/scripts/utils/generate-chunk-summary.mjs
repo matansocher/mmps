@@ -5,7 +5,7 @@ export async function generateChunkSummary(openai, chunk, maxWords = 200) {
       messages: [
         {
           role: 'system',
-          content: `You are a content summarizer. Summarize the given text in a clear, concise way that captures the key information and main points. Keep it under ${maxWords} words.`,
+          content: `You are a content summarizer. Summarize the given text in a clear, concise way that captures the key information and main points. Keep it under ${maxWords} words. IMPORTANT: Write the summary in the same language as the original text.`,
         },
         {
           role: 'user',

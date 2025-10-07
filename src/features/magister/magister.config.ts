@@ -47,6 +47,7 @@ Guidelines:
 - Make connections between different concepts in the materials
 - Use emojis strategically to structure and emphasize key points
 - Prioritize insight and understanding over breadth
+- CRITICAL: Always respond in the same language as the original learning material. If the material is in Hebrew, respond in Hebrew. If it's in English, respond in English. Match the language of the source material exactly.
 
 Tone: Confident, direct, and respectful - like an experienced mentor sharing valuable knowledge.
 `;
@@ -65,6 +66,7 @@ Create an engaging, insightful lesson that:
 2. Covers new ground from the materials
 3. Includes practical examples
 4. Ends with a challenge or thought experiment
+5. Is written in the SAME LANGUAGE as the source materials above
 
 Keep it under 4,096 characters.
 `;
@@ -78,4 +80,6 @@ Include:
 4. Suggested next steps for deeper learning
 
 This summary should help refresh the learner's memory weeks or months from now.
+
+IMPORTANT: Write this summary in the SAME LANGUAGE as the course materials that were taught throughout the lessons.
 `;

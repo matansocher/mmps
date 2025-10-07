@@ -4,8 +4,24 @@ import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
 import OpenAI from 'openai';
-import { claudeCodeBestPractices } from './resources/claude-code-best-practices.mjs';
-import { theTwelveFactorApp } from './resources/the-twelve-factor-app.mjs';
+// import { claudeCodeBestPractices } from './resources/claude-code-best-practices.mjs';
+// import { theTwelveFactorApp } from './resources/the-twelve-factor-app.mjs';
+import {
+  bitcoinEtfIls,
+  bitcoinInvestment,
+  currencyHedgedFund,
+  defenseStocks,
+  ethereumFunds,
+  globalLeadingStockIndexes,
+  kidsInvestments,
+  moneySavingTips,
+  nasdaqOrSp500Index,
+  recommendedMoneyMarketFund,
+  recurringInvestment,
+  securitiesTransfer,
+  sp500FundsComparison,
+  telAviv125Index,
+} from './resources/trading-il.mjs';
 import { generateChunkSummary } from './utils/generate-chunk-summary.mjs';
 import { generateLessonPlan } from './utils/generate-lesson-plan.mjs';
 
@@ -45,33 +61,24 @@ Based on this material, determine:
 1. How many lessons should this course have? (Consider: depth, breadth, complexity)
 2. What's your rationale?
 3. Estimate total tokens in the material
+4. Detect the primary language of the material (e.g., "en", "he", "es", "fr", etc.)
 
 Respond in JSON format:
 {
   "recommendedLessonCount": <number>,
   "rationale": "<explanation>",
-  "estimatedTokens": <number>
+  "estimatedTokens": <number>,
+  "language": "<language_code>"
 }`;
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    });
-    return JSON.parse(response.choices[0].message.content);
-  } catch (error) {
-    console.error(`   ✗ Error: ${error.message}`);
-    const fallbackLessons = Math.max(3, Math.ceil(totalChunks / 5));
-    return {
-      recommendedLessonCount: fallbackLessons,
-      rationale: `Fallback: ${totalChunks} chunks ÷ 5 = ${fallbackLessons} lessons`,
-      estimatedTokens: Math.ceil(totalWords * 1.3),
-    };
-  }
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content: prompt }],
+    response_format: { type: 'json_object' },
+  });
+  return JSON.parse(response.choices[0].message.content);
 }
 
-// Generate embedding
 async function generateEmbedding(text) {
   const response = await openai.embeddings.create({
     model: 'text-embedding-3-small',
@@ -82,7 +89,6 @@ async function generateEmbedding(text) {
   return response.data[0].embedding;
 }
 
-// Main function
 async function main(topic, content) {
   console.log('╔══════════════════════════════════════════════════════════╗');
   console.log('║       Magister Bot - Web Content Upload Script           ║');
@@ -106,6 +112,7 @@ async function main(topic, content) {
   const analysis = await determineLessonCount(content, topic);
   console.log(`   ✓ Recommended Lessons: ${analysis.recommendedLessonCount}`);
   console.log(`   ✓ Rationale: ${analysis.rationale}`);
+  console.log(`   ✓ Detected Language: ${analysis.language}`);
 
   // Chunk and summarize
   console.log('\n📦 Processing chunks...');
@@ -129,6 +136,7 @@ async function main(topic, content) {
     topic,
     totalLessons: analysis.recommendedLessonCount,
     estimatedTokens: analysis.estimatedTokens,
+    language: analysis.language,
     lessonOutlines,
     createdAt: new Date(),
   });
@@ -154,6 +162,7 @@ async function main(topic, content) {
             chunkIndex: totalChunksStored,
             content: chunk.substring(0, 40000),
             summary: summary.substring(0, 2000),
+            language: analysis.language,
           },
         },
       ]);
@@ -181,10 +190,25 @@ async function main(topic, content) {
 
 // const topic = 'Claude Code Best Practices';
 // const content = claudeCodeBestPractices;
-const topic = 'The Twelve-Factor App';
-const content = theTwelveFactorApp;
+// const topic = 'The Twelve-Factor App';
+// const content = theTwelveFactorApp;
 
-main(topic, content)
+// const { title, content } = bitcoinEtfIls;
+// const { title, content } = bitcoinInvestment;
+// const { title, content } = currencyHedgedFund;
+// const { title, content } = defenseStocks;
+// const { title, content } = ethereumFunds;
+// const { title, content } = globalLeadingStockIndexes;
+// const { title, content } = kidsInvestments;
+// const { title, content } = moneySavingTips;
+// const { title, content } = nasdaqOrSp500Index;
+// const { title, content } = recommendedMoneyMarketFund;
+// const { title, content } = recurringInvestment;
+// const { title, content } = securitiesTransfer;
+// const { title, content } = sp500FundsComparison;
+const { title, content } = telAviv125Index;
+
+main(title, content)
   .then(() => {
     process.exit(0);
   })

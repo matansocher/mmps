@@ -81,12 +81,14 @@ Based on this material, determine:
 1. How many lessons should this course have? (Consider: depth, breadth, complexity)
 2. What's your rationale?
 3. Estimate total tokens in the material
+4. Detect the primary language of the material (e.g., "en", "he", "es", "fr", etc.)
 
 Respond in JSON format:
 {
   "recommendedLessonCount": <number>,
   "rationale": "<explanation>",
-  "estimatedTokens": <number>
+  "estimatedTokens": <number>,
+  "language": "<language_code>"
 }`;
 
   try {
@@ -103,6 +105,7 @@ Respond in JSON format:
       recommendedLessonCount: fallbackLessons,
       rationale: `Fallback: ${totalChunks} chunks ÷ 5 = ${fallbackLessons} lessons`,
       estimatedTokens: Math.ceil(totalWords * 1.3),
+      language: 'en',
     };
   }
 }
@@ -145,6 +148,7 @@ async function main(topic, pdfFile) {
   const analysis = await determineLessonCount(content, topic);
   console.log(`   ✓ Recommended Lessons: ${analysis.recommendedLessonCount}`);
   console.log(`   ✓ Rationale: ${analysis.rationale}`);
+  console.log(`   ✓ Detected Language: ${analysis.language}`);
 
   // Chunk and summarize
   console.log('\n📦 Processing chunks...');
@@ -168,6 +172,7 @@ async function main(topic, pdfFile) {
     topic,
     totalLessons: analysis.recommendedLessonCount,
     estimatedTokens: analysis.estimatedTokens,
+    language: analysis.language,
     lessonOutlines,
     createdAt: new Date(),
   });
@@ -193,6 +198,7 @@ async function main(topic, pdfFile) {
             chunkIndex: totalChunksStored,
             content: chunk.substring(0, 40000),
             summary: summary.substring(0, 2000),
+            language: analysis.language,
           },
         },
       ]);
