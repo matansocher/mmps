@@ -1,14 +1,12 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { getCompetitions, getCompetitionTable, getMatchesSummaryDetails } from '@services/scores-365';
-import { calculateMatchImportance, IMPORTANCE_THRESHOLD, LEAGUE_IMPORTANCE } from './utils';
 
 const schema = z.object({
-  date: z.string().describe('Date in YYYY-MM-DD format to get top matches for'),
-  maxMatches: z.number().optional().default(5).describe('Maximum number of matches to return (default: 5, only returns truly important matches)'),
+  date: z.string().describe('Date in YYYY-MM-DD format to get all matches for'),
 });
 
-async function runner({ date, maxMatches = 5 }: z.infer<typeof schema>) {
+async function runner({ date }: z.infer<typeof schema>) {
   try {
     const competitions = await getCompetitions();
     if (!competitions?.length) {
@@ -20,25 +18,25 @@ async function runner({ date, maxMatches = 5 }: z.infer<typeof schema>) {
       return `No matches found for ${date}.`;
     }
 
-    const priorityLeagues = Object.keys(LEAGUE_IMPORTANCE).map(Number);
-    const priorityMatches = summaryDetails.filter((detail) => priorityLeagues.includes(detail.competition.id));
+    const leagueTables = new Map<number, Array<{ name: string; position: number; points: number; gamesPlayed: number }>>();
 
-    const leagueTables = new Map<number, Array<{ name: string; value: number; midValue: number }>>();
-    for (const competitionDetail of priorityMatches) {
+    // Fetch league tables for competitions that have them
+    for (const competitionDetail of summaryDetails) {
       if (competitionDetail.competition.hasTable) {
         const tableData = await getCompetitionTable(competitionDetail.competition.id);
         if (tableData?.competitionTable) {
-          const formattedTable = tableData.competitionTable.map(({ competitor, points, gamesPlayed }) => ({
+          const formattedTable = tableData.competitionTable.map(({ competitor, points, gamesPlayed }, index) => ({
             name: competitor.name,
-            value: points,
-            midValue: gamesPlayed,
+            position: index + 1,
+            points,
+            gamesPlayed,
           }));
           leagueTables.set(competitionDetail.competition.id, formattedTable);
         }
       }
     }
 
-    const matchesWithScores: Array<{
+    const allMatches: Array<{
       matchId: number;
       competition: string;
       competitionId: number;
@@ -47,29 +45,24 @@ async function runner({ date, maxMatches = 5 }: z.infer<typeof schema>) {
       startTime: string;
       status: string;
       venue: string;
-      importanceScore: number;
+      homeTeamPosition?: number;
+      awayTeamPosition?: number;
+      homeTeamPoints?: number;
+      awayTeamPoints?: number;
     }> = [];
 
-    for (const competitionDetail of priorityMatches) {
-      const table = leagueTables.get(competitionDetail.competition.id) || null;
+    for (const competitionDetail of summaryDetails) {
+      const table = leagueTables.get(competitionDetail.competition.id);
 
       for (const match of competitionDetail.matches) {
         const matchTime = new Date(match.startTime);
         const now = new Date();
+        // Only include upcoming matches that haven't started
         if (matchTime <= now || match.statusText !== 'טרם החל') {
           continue;
         }
 
-        const importanceScore = await calculateMatchImportance(
-          {
-            homeTeam: match.homeCompetitor.name,
-            awayTeam: match.awayCompetitor.name,
-            competitionId: competitionDetail.competition.id,
-          },
-          table,
-        );
-
-        matchesWithScores.push({
+        const matchData: any = {
           matchId: match.id,
           competition: competitionDetail.competition.name,
           competitionId: competitionDetail.competition.id,
@@ -78,57 +71,66 @@ async function runner({ date, maxMatches = 5 }: z.infer<typeof schema>) {
           startTime: match.startTime,
           status: match.statusText,
           venue: match.venue,
-          importanceScore,
-        });
+        };
+
+        // Add league table data if available
+        if (table) {
+          const homeTeamData = table.find((row) => row.name === match.homeCompetitor.name);
+          const awayTeamData = table.find((row) => row.name === match.awayCompetitor.name);
+
+          if (homeTeamData) {
+            matchData.homeTeamPosition = homeTeamData.position;
+            matchData.homeTeamPoints = homeTeamData.points;
+          }
+          if (awayTeamData) {
+            matchData.awayTeamPosition = awayTeamData.position;
+            matchData.awayTeamPoints = awayTeamData.points;
+          }
+        }
+
+        allMatches.push(matchData);
       }
     }
 
-    const importantMatches = matchesWithScores.filter((match) => match.importanceScore >= IMPORTANCE_THRESHOLD);
-
-    const sorted = importantMatches.sort((a, b) => {
-      if (b.importanceScore !== a.importanceScore) {
-        return b.importanceScore - a.importanceScore;
-      }
-      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
-    });
-
-    const topMatches = sorted.slice(0, maxMatches);
-
-    if (!topMatches.length) {
-      return `No important matches found for ${date}. (Checked priority leagues but none meet importance criteria)`;
+    if (!allMatches.length) {
+      return `No upcoming matches found for ${date}.`;
     }
 
-    const matchesForOutput = topMatches.map(({ ...match }) => match);
+    // Sort by start time
+    const sorted = allMatches.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
     return JSON.stringify(
       {
         date,
-        matchCount: matchesForOutput.length,
-        note: `Found ${matchesForOutput.length} truly important matches (scored above importance threshold)`,
-        matches: matchesForOutput,
+        matchCount: sorted.length,
+        note: `All upcoming matches for ${date}. You should analyze these matches and decide which ones are important based on factors like: league prestige, team positions in standings, title races, relegation battles, derbies, and points differences.`,
+        matches: sorted,
       },
       null,
       2,
     );
   } catch (error) {
-    return `Error fetching top matches: ${error.message}`;
+    return `Error fetching matches: ${error.message}`;
   }
 }
 
 export const topMatchesForPredictionTool = tool(runner, {
   name: 'top_matches_for_prediction',
-  description: `Get truly important upcoming matches for a given date that are worth predicting.
+  description: `Get ALL upcoming matches for a given date with league table information where available.
 
-This tool uses SMART MATCH SELECTION based on multiple factors:
-- League importance (Champions League, Premier League, La Liga, Israeli League)
-- Team positions in league table (top teams = more important)
-- Close matches (teams near each other in standings)
-- Title races (top 4 teams playing each other)
-- Points difference (close in points = more important)
+This tool returns ALL upcoming matches (not started yet) for the specified date, including:
+- Match details (teams, venue, start time)
+- Competition information
+- League table positions and points (when available)
 
-IMPORTANT: This tool returns ONLY genuinely important matches. It might return 0, 1, 2, or more matches depending on what's actually important that day. Not every day has 3 important matches!
+You should analyze the matches and determine which ones are important based on factors such as:
+- League prestige (Champions League, top European leagues, etc.)
+- Team positions in standings (top teams, title races)
+- Close matches in the table (teams near each other)
+- Points differences (teams competing for same positions)
+- Relegation battles
+- Derby matches
 
-Returns only upcoming matches that haven't started yet, sorted by importance score (highest first).
-Each match includes the matchId which you can use with the match_prediction_data tool to get detailed prediction data.`,
+Each match includes the matchId which you can use with the match_prediction_data tool to get detailed prediction data for the matches you deem important.`,
   schema,
 });
