@@ -24,10 +24,10 @@ export async function connectGithubMcp(): Promise<void> {
     connected = true;
 
     console.log('[GitHub MCP] Connected to GitHub MCP server');
-  } catch (error) {
-    console.error('[GitHub MCP] Failed to connect:', error);
+  } catch (err) {
+    console.error(`[GitHub MCP] Failed to connect: ${err}`);
     connected = false;
-    throw error;
+    throw err;
   }
 }
 
@@ -36,8 +36,8 @@ export async function disconnectGithubMcp(): Promise<void> {
     try {
       await client.close();
       console.log('[GitHub MCP] Disconnected from GitHub MCP server');
-    } catch (error) {
-      console.error('[GitHub MCP] Error disconnecting:', error);
+    } catch (err) {
+      console.error(`[GitHub MCP] Error disconnecting: ${err}`);
     }
   }
   client = null;

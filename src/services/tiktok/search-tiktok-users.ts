@@ -115,7 +115,7 @@ export async function searchTikTokUsers(query: string): Promise<TikTokUserSearch
 
     return users;
   } catch (err) {
-    console.error('Error searching TikTok users:', err instanceof Error ? err.message : String(err));
+    console.error(`Error searching TikTok users: ${err}`);
     return [];
   } finally {
     await browser.close();

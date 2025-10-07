@@ -20,7 +20,7 @@ export class ChatbotModule implements OnModuleInit {
     await Promise.all([
       ...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)),
       await connectGithubMcp().catch((err) => {
-        console.error('[ChatbotModule] Failed to connect to GitHub MCP:', err);
+        console.error(`[ChatbotModule] Failed to connect to GitHub MCP: ${err}`);
       }),
     ]);
   }
