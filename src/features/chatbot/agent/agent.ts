@@ -8,6 +8,7 @@ import {
   currentWeatherTool,
   exerciseAnalyticsTool,
   exerciseTool,
+  githubTool,
   googleMapsPlaceTool,
   imageAnalyzerTool,
   imageGeneratorPromptEnhancerTool,
@@ -24,7 +25,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, and Spotify music search';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Spotify music search, and GitHub automation via MCP';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -58,6 +59,7 @@ Available capabilities:
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
 - Spotify tool: Search for songs, artists, and playlists on Spotify. Get detailed track information, find artist top tracks, and discover music. Returns song details with links to listen on Spotify.
+- GitHub tool (MCP): Automate GitHub operations including creating/updating files, searching repositories, creating issues and pull requests, managing branches, reading file contents, and more. Use this for any GitHub-related tasks.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Exercise Tracking Guidelines:
@@ -117,6 +119,19 @@ Guidelines:
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - Spotify Music: When users ask about music, use the spotify tool. The tool returns JSON data - parse it and format the response according to the Spotify Music Guidelines above. Always include Spotify links so users can listen.
+- GitHub Automation (MCP): When users need to work with GitHub repositories, use the github tool with the appropriate operation:
+  * create_or_update_file: Create or modify files in repos
+  * search_repositories: Find repositories
+  * create_repository: Create new repos
+  * get_file_contents: Read file contents
+  * push_files: Push multiple files
+  * create_issue: Create issues
+  * create_pull_request: Create PRs
+  * fork_repository: Fork repos
+  * create_branch: Create branches
+  * list_commits: View commit history
+  * list_issues: View repository issues
+  Use cases: "Create a new issue in repo X", "Read the README from repo Y", "Create a PR", "Search for TypeScript projects".
 `;
 
 export function agent(): AgentDescriptor {
@@ -141,6 +156,7 @@ export function agent(): AgentDescriptor {
     exerciseTool,
     exerciseAnalyticsTool,
     spotifyTool,
+    githubTool,
   ];
 
   return {

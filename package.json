@@ -34,6 +34,8 @@
     "@langchain/core": "^0.3.71",
     "@langchain/langgraph": "^0.4.5",
     "@langchain/openai": "^0.6.7",
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "@modelcontextprotocol/server-github": "^2025.4.8",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.3",
