@@ -49,9 +49,8 @@ To start the NestJS application:
 2. Wolt - A bot to notify the user when a Wolt restaurant is open and available to get orders
 3. Worldly - A Geography teacher bot
 4. Coach - A bot to show the user a daily list of sports games
-5. Trainer - A bot to encourage the user the train every day with nice rewards for records.
-6. Educator - A bot to teach the user of interesting stuff with a single message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
-7. Programming Teacher - A bot to teach programming. It has a list of courses it can teach the user each day, with 3 lessons a day.
+5. Educator - A bot to teach the user of interesting stuff with a single message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
+6. Programming Teacher - A bot to teach programming. It has a list of courses it can teach the user each day, with 3 lessons a day.
 8Cooker - A bot to store all the recipes gathered over the years.
 
 ## Bots IDs

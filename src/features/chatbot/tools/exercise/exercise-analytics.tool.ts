@@ -5,8 +5,7 @@ import { getLongestStreak, getStars, getStreak } from '@core/utils';
 import { createImage } from '@services/openai';
 import { searchMeme } from '@services/tenor';
 import { getExercises } from '@shared/trainer/mongo';
-import { BROKEN_RECORD_IMAGE_PROMPT } from '../../../trainer/trainer.config';
-import { getLastWeekDates } from '../../../trainer/utils';
+import { BROKEN_RECORD_IMAGE_PROMPT, getLastWeekDates } from './utils';
 
 const schema = z.object({
   action: z.enum(['weekly_summary', 'achievements', 'generate_reminder', 'check_record']).describe('The action to perform'),

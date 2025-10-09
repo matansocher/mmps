@@ -5,7 +5,6 @@ import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getTodayExercise } from '@shared/trainer/mongo';
-import { SMART_REMINDER_HOUR_OF_DAY, WEEKLY_SUMMARY_HOUR_OF_DAY } from '../trainer/trainer.config';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
@@ -140,7 +139,7 @@ Please format the response nicely with emojis and make it feel like a friendly g
     }
   }
 
-  @Cron(`0 ${SMART_REMINDER_HOUR_OF_DAY} * * *`, { name: 'chatbot-exercise-reminder', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 19 * * *`, { name: 'chatbot-exercise-reminder', timeZone: DEFAULT_TIMEZONE })
   async handleExerciseReminder(): Promise<void> {
     try {
       const todayExercise = await getTodayExercise(MY_USER_ID);
@@ -163,7 +162,7 @@ Please format the response nicely with emojis and make it feel like a friendly g
     }
   }
 
-  @Cron(`0 ${WEEKLY_SUMMARY_HOUR_OF_DAY} * * 6`, { name: 'chatbot-weekly-exercise-summary', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 22 * * 6`, { name: 'chatbot-weekly-exercise-summary', timeZone: DEFAULT_TIMEZONE })
   async handleWeeklyExerciseSummary(): Promise<void> {
     try {
       const prompt = `Generate my weekly exercise summary.
