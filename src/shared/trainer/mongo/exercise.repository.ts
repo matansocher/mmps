@@ -3,8 +3,6 @@ import { InsertOneResult, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { Exercise } from '../types';
 
-// Using 'Trainer' as DB_NAME to maintain backward compatibility
-// This can be changed to 'Exercise' or 'Fitness' in the future if needed
 export const DB_NAME = 'Trainer';
 
 const getCollection = () => getMongoCollection<Exercise>(DB_NAME, 'Exercise');
