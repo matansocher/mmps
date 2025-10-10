@@ -1,5 +1,6 @@
 import { JobResult, Supadata, Transcript, TranscriptOrJobId } from '@supadata/js';
 import { env } from 'node:process';
+import { TIKTOK_BASE_URL } from './constants';
 
 type TranscriptResult = {
   readonly lang: string;
@@ -41,7 +42,7 @@ async function pollTranscriptJob(supadata: Supadata, jobId: string, maxAttempts:
 
 export async function getTikTokTranscript(username: string, videoId: string): Promise<TranscriptResult> {
   const supadata = new Supadata({ apiKey: env.SUPADATA_API_KEY });
-  const url = `https://www.tiktok.com/@${username}/video/${videoId}`;
+  const url = `${TIKTOK_BASE_URL}/@${username}/video/${videoId}`;
   const transcriptResult: TranscriptOrJobId = await supadata.transcript({ url });
 
   let transcript: Transcript;
