@@ -17,7 +17,7 @@ export class TiktokSchedulerService implements OnModuleInit {
     }, 8000);
   }
 
-  @Cron(`0 20 * * *`, { name: 'tiktok-daily-scheduler-start', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`0 10,14,18,22 * * *`, { name: 'tiktok-daily-scheduler-start', timeZone: DEFAULT_TIMEZONE })
   async dailyVideoDigest(): Promise<void> {
     const channels = await getFollowedChannels();
     for (const channel of channels) {
