@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
+import { DEFAULT_TIMEZONE } from '@core/config';
+import { getActiveUsers } from '@shared/langly';
 import { DAILY_CHALLENGE_HOURS } from './langly.config';
 import { LanglyService } from './langly.service';
 
@@ -11,15 +12,18 @@ export class LanglyBotSchedulerService implements OnModuleInit {
   constructor(private readonly langlyService: LanglyService) {}
 
   onModuleInit(): void {
-    // Uncomment for testing
-    // this.handleDailyChallenge();
+    setTimeout(() => {
+      this.handleDailyChallenge(); // for testing purposes
+    }, 8000);
   }
 
   @Cron(`0 ${DAILY_CHALLENGE_HOURS.join(',')} * * *`, { name: 'langly-daily-challenge', timeZone: DEFAULT_TIMEZONE })
   async handleDailyChallenge(): Promise<void> {
     try {
-      await this.langlyService.sendChallenge(MY_USER_ID);
-      this.logger.log(`Daily Spanish challenge sent at ${new Date().toISOString()}`);
+      const users = await getActiveUsers();
+      const chatIds = users.map((user) => user.chatId);
+      await Promise.all(chatIds.map((chatId) => this.langlyService.sendChallenge(chatId)));
+      this.logger.log(`Daily Spanish challenge sent to ${chatIds.length} users at ${new Date().toISOString()}`);
     } catch (err) {
       this.logger.error(`Failed to send daily challenge, ${err}`);
     }

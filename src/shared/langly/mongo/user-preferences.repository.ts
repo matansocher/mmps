@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from '.';
 import { UserPreferences } from '../types';
+import { DB_NAME } from './index';
 
 const getCollection = () => getMongoCollection<UserPreferences>(DB_NAME, 'UserPreferences');
 
@@ -32,7 +32,6 @@ export async function createUserPreference(chatId: number): Promise<void> {
     createdAt: new Date(),
   };
   await userPreferencesCollection.insertOne(userPreference);
-  return;
 }
 
 export async function updateUserPreference(chatId: number, update: Partial<UserPreferences>): Promise<void> {
@@ -40,5 +39,11 @@ export async function updateUserPreference(chatId: number, update: Partial<UserP
   const filter = { chatId };
   const updateObj = { $set: update };
   await userPreferencesCollection.updateOne(filter, updateObj);
-  return;
+}
+
+export async function updatePreviousResponseId(chatId: number, previousResponseId: string): Promise<void> {
+  const userPreferencesCollection = getCollection();
+  const filter = { chatId };
+  const updateObj = { $set: { previousResponseId } };
+  await userPreferencesCollection.updateOne(filter, updateObj);
 }

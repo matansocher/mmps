@@ -7,11 +7,13 @@ export const BOT_CONFIG: TelegramBotConfig = {
   commands: {
     START: { command: '/start', description: 'Start', hide: true },
     CHALLENGE: { command: '/challenge', description: '🎯 Start a challenge' },
+    ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
   },
 };
 
 export enum BOT_ACTIONS {
-  START = 'start',
+  SUBSCRIBE = 'subscribe',
+  UNSUBSCRIBE = 'unsubscribe',
   ANSWER = 'answer',
   AUDIO = 'audio',
 }
