@@ -13,7 +13,7 @@ export class LanglyBotSchedulerService implements OnModuleInit {
 
   onModuleInit(): void {
     setTimeout(() => {
-      this.handleDailyChallenge(); // for testing purposes
+      // this.handleDailyChallenge(); // for testing purposes
     }, 8000);
   }
 

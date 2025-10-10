@@ -51,12 +51,12 @@ export class LanglyService {
     this.cleanupOldChallenges();
   }
 
-  async handleAnswer(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<void> {
+  async handleAnswer(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<{ word: string; type: string; isCorrect: boolean } | null> {
     const challengeKey = `${chatId}_${messageId}`;
     const activeChallenge = this.activeChallenges.get(challengeKey);
 
     if (!activeChallenge) {
-      return;
+      return null;
     }
 
     const { challenge } = activeChallenge;
@@ -84,6 +84,8 @@ export class LanglyService {
     };
 
     await this.bot.sendMessage(chatId, explanationMessage, { parse_mode: 'Markdown', ...getInlineKeyboardMarkup([audioButton]) });
+
+    return { word: challenge.word, type: challenge.type, isCorrect };
   }
 
   async sendAudioPronunciation(chatId: number, challengeKey: string): Promise<void> {

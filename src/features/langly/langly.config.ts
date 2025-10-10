@@ -11,6 +11,16 @@ export const BOT_CONFIG: TelegramBotConfig = {
   },
 };
 
+export const ANALYTIC_EVENT_NAMES = {
+  START: 'START',
+  SUBSCRIBE: 'SUBSCRIBE',
+  UNSUBSCRIBE: 'UNSUBSCRIBE',
+  CHALLENGE: 'CHALLENGE',
+  ANSWERED: 'ANSWERED',
+  AUDIO: 'AUDIO',
+  ERROR: 'ERROR',
+};
+
 export enum BOT_ACTIONS {
   SUBSCRIBE = 'subscribe',
   UNSUBSCRIBE = 'unsubscribe',
