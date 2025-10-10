@@ -1,6 +1,13 @@
 export const DEFAULT_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   'Accept-Language': 'en-US,en;q=0.9',
+  'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"',
+  'sec-fetch-dest': 'empty',
+  'sec-fetch-mode': 'cors',
+  'sec-fetch-site': 'same-origin',
+  'priority': 'u=1, i',
 } as const;
 
 export const TIKTOK_BASE_URL = 'https://www.tiktok.com';
@@ -14,8 +21,8 @@ export const DEFAULT_API_PARAMS = {
   browser_language: 'en-US',
   browser_name: 'Mozilla',
   browser_online: 'true',
-  browser_platform: 'MacIntel',
-  browser_version: '5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  browser_platform: 'Win32',
+  browser_version: '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   channel: 'tiktok_web',
   cookie_enabled: 'true',
   count: '30',
@@ -24,7 +31,7 @@ export const DEFAULT_API_PARAMS = {
   device_platform: 'web_pc',
   from_page: 'user',
   language: 'en',
-  os: 'mac',
+  os: 'windows',
   region: 'US',
   screen_height: '1080',
   screen_width: '1920',

@@ -88,7 +88,7 @@ export class TiktokController implements OnModuleInit {
     try {
       switch (action) {
         case BOT_ACTIONS.SEARCH_VIDEOS: {
-          await this.searchChannelVideos(callbackQuery, chatId, username);
+          await this.searchChannelVideos(chatId, username);
           break;
         }
         case BOT_ACTIONS.REMOVE: {
@@ -107,7 +107,7 @@ export class TiktokController implements OnModuleInit {
     }
   }
 
-  private async searchChannelVideos(callbackQuery: CallbackQuery, chatId: number, username: string): Promise<void> {
+  private async searchChannelVideos(chatId: number, username: string): Promise<void> {
     try {
       const channel = await getChannel(username);
       if (!channel) {

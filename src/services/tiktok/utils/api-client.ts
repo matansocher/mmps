@@ -24,11 +24,30 @@ export async function fetchVideosFromAPI(username: string, count?: number): Prom
       },
     });
 
+    console.log(`API Response Status: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`API Error Response Body: ${errorBody.substring(0, 500)}`);
       throw new Error(`API returned status: ${response.status} ${response.statusText}`);
     }
 
-    const data: TikTokApiResponse = await response.json();
+    // Get response text first to handle empty/malformed responses
+    const responseText = await response.text();
+    console.log(`API Response Length: ${responseText.length} bytes`);
+
+    if (!responseText || responseText.trim().length === 0) {
+      console.error('API returned empty response body');
+      throw new Error('API returned empty response - likely blocked by TikTok');
+    }
+
+    let data: TikTokApiResponse;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error(`Failed to parse JSON. Response body (first 500 chars): ${responseText.substring(0, 500)}`);
+      throw new Error(`Invalid JSON response from TikTok API: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    }
 
     // Step 4: Extract and format video information
     if (!data.itemList || !Array.isArray(data.itemList)) {
