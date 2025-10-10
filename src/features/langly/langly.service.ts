@@ -6,6 +6,7 @@ import { deleteFile } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { getAudioFromText } from '@services/openai';
 import { getInlineKeyboardMarkup } from '@services/telegram';
+import { getUserPreference, updatePreviousResponseId } from '@shared/langly';
 import { BOT_ACTIONS, BOT_CONFIG, CHALLENGE_GENERATION_PROMPT, INLINE_KEYBOARD_SEPARATOR } from './langly.config';
 import { ActiveChallenge, SpanishChallenge, SpanishChallengeSchema } from './types';
 
@@ -16,21 +17,25 @@ export class LanglyService {
 
   constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
 
-  async generateChallenge(): Promise<SpanishChallenge> {
-    const timestamp = Date.now();
-    const randomNum = Math.floor(Math.random() * 10000);
-    const { result } = await getResponse<typeof SpanishChallengeSchema>({
-      input: `Generate a unique Spanish language challenge for an intermediate learner. Use this as inspiration for variety: ${timestamp}-${randomNum}. Ensure this challenge is completely different from any previous ones.`,
+  async generateChallenge(chatId: number): Promise<SpanishChallenge> {
+    const userPreference = await getUserPreference(chatId);
+    const previousResponseId = userPreference?.previousResponseId;
+
+    const { id: responseId, result } = await getResponse<typeof SpanishChallengeSchema>({
+      input: 'Generate a unique Spanish language challenge for an intermediate learner. Ensure this challenge is completely different from any previous ones.',
       instructions: CHALLENGE_GENERATION_PROMPT,
       schema: SpanishChallengeSchema,
-      store: false,
+      store: true,
+      previousResponseId,
       temperature: 1.2,
     });
+
+    await updatePreviousResponseId(chatId, responseId);
     return result;
   }
 
   async sendChallenge(chatId: number): Promise<void> {
-    const challenge = await this.generateChallenge();
+    const challenge = await this.generateChallenge(chatId);
 
     const inlineKeyboardButtons = challenge.options.map((option, index) => ({
       text: option.text,
@@ -46,12 +51,12 @@ export class LanglyService {
     this.cleanupOldChallenges();
   }
 
-  async handleAnswer(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<void> {
+  async handleAnswer(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<{ word: string; type: string; isCorrect: boolean } | null> {
     const challengeKey = `${chatId}_${messageId}`;
     const activeChallenge = this.activeChallenges.get(challengeKey);
 
     if (!activeChallenge) {
-      return;
+      return null;
     }
 
     const { challenge } = activeChallenge;
@@ -79,6 +84,8 @@ export class LanglyService {
     };
 
     await this.bot.sendMessage(chatId, explanationMessage, { parse_mode: 'Markdown', ...getInlineKeyboardMarkup([audioButton]) });
+
+    return { word: challenge.word, type: challenge.type, isCorrect };
   }
 
   async sendAudioPronunciation(chatId: number, challengeKey: string): Promise<void> {
