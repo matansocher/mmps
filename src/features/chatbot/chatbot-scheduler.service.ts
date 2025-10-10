@@ -57,7 +57,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
     }
   }
 
-  @Cron(`00 13 * * *`, { name: 'chatbot-football-update', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`00 13 * * *`, { name: 'chatbot-football-predictions', timeZone: DEFAULT_TIMEZONE })
   async handleFootballPredictions(): Promise<void> {
     try {
       const todayDate = getDateString();
