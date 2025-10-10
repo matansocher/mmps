@@ -1,9 +1,6 @@
 import { VIDEO_ID_REFERENCES } from '../constants';
 import type { TikTokApiItem, TikTokVideo } from '../types';
 
-/**
- * Extract video information from TikTok API item
- */
 export function extractVideoInfo(item: TikTokApiItem, username: string): TikTokVideo {
   const videoId = item.id;
   const video: TikTokVideo = {
@@ -13,27 +10,21 @@ export function extractVideoInfo(item: TikTokApiItem, username: string): TikTokV
     uploadDate: '',
   };
 
-  // Extract description
   if (item.desc || item.description) {
     video.description = (item.desc || item.description || '').substring(0, 100);
   }
 
-  // Extract upload date
   if (item.createTime) {
     video.uploadDate = formatDateFromTimestamp(item.createTime);
   } else if (item.createDate) {
     video.uploadDate = item.createDate;
   } else {
-    // Fallback: estimate from video ID
     video.uploadDate = estimateDateFromVideoId(videoId);
   }
 
   return video;
 }
 
-/**
- * Format date from Unix timestamp
- */
 function formatDateFromTimestamp(timestamp: number): string {
   const date = new Date(timestamp * 1000);
   const year = date.getFullYear();
@@ -42,11 +33,6 @@ function formatDateFromTimestamp(timestamp: number): string {
   return `${year}-${month}-${day}`;
 }
 
-/**
- * Estimate upload date from video ID
- * TikTok video IDs are sequential numbers that increase over time
- * This provides an approximate date based on known reference points
- */
 export function estimateDateFromVideoId(videoId: string): string {
   try {
     const videoIdNum = BigInt(videoId);
@@ -82,39 +68,28 @@ export function estimateDateFromVideoId(videoId: string): string {
       return `~${year}-${month}-${day}`; // ~ indicates it's an estimate
     }
   } catch (error) {
-    // If parsing fails, return empty string
     console.error('Failed to estimate date from video ID:', error);
   }
 
   return '';
 }
 
-/**
- * Sort videos by upload date (newest first)
- * Handles dates with ~ prefix (estimates) by treating them as regular dates
- */
 export function sortVideosByDate(videos: TikTokVideo[]): TikTokVideo[] {
   return [...videos].sort((a, b) => {
     const dateA = parseDateString(a.uploadDate);
     const dateB = parseDateString(b.uploadDate);
 
-    // Put videos without dates at the end
     if (!dateA && !dateB) return 0;
     if (!dateA) return 1;
     if (!dateB) return -1;
 
-    // Sort newest first
     return dateB.getTime() - dateA.getTime();
   });
 }
 
-/**
- * Parse date string, handling estimates (with ~ prefix)
- */
 function parseDateString(dateStr: string): Date | null {
   if (!dateStr) return null;
 
-  // Remove ~ prefix if present (indicates estimate)
   const cleanDate = dateStr.replace(/^~/, '');
 
   try {
@@ -125,9 +100,6 @@ function parseDateString(dateStr: string): Date | null {
   }
 }
 
-/**
- * Get the latest N videos sorted by upload date
- */
 export function getLatestVideos(videos: TikTokVideo[], count: number): TikTokVideo[] {
   const sorted = sortVideosByDate(videos);
   return sorted.slice(0, count);

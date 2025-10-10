@@ -1,70 +1,52 @@
-/**
- * TikTok Video Metadata
- */
-export interface TikTokVideo {
-  id: string;
-  url: string;
+export type TikTokVideo = {
+  readonly id: string;
+  readonly url: string;
   description: string;
   uploadDate: string;
-}
+};
 
-/**
- * TikTok User Information
- */
-export interface TikTokUser {
-  id: string;
-  secUid: string;
-  username: string;
-}
+export type TikTokUser = {
+  readonly id: string;
+  readonly secUid: string;
+  readonly username: string;
+};
 
-/**
- * TikTok API Response
- */
-export interface TikTokApiResponse {
-  cursor: number;
-  hasMore: boolean;
-  itemList: TikTokApiItem[];
-  statusCode: number;
-  status_code: number;
-  status_msg: string;
-}
+export type TikTokApiResponse = {
+  readonly cursor: number;
+  readonly hasMore: boolean;
+  readonly itemList: TikTokApiItem[];
+  readonly statusCode: number;
+  readonly status_code: number;
+  readonly status_msg: string;
+};
 
-/**
- * TikTok API Video Item
- */
-export interface TikTokApiItem {
-  id: string;
-  desc?: string;
-  description?: string;
-  createTime?: number;
-  createDate?: string;
-  [key: string]: any;
-}
+export type TikTokApiItem = {
+  readonly id: string;
+  readonly desc?: string;
+  readonly description?: string;
+  readonly createTime?: number;
+  readonly createDate?: string;
+  readonly [key: string]: any;
+};
 
-/**
- * TikTok Internal Data Structures
- */
-export interface TikTokUniversalData {
-  __DEFAULT_SCOPE__?: {
-    'webapp.user-detail'?: {
-      userInfo?: {
-        user?: {
-          id: string;
-          secUid: string;
+export type TikTokUniversalData = {
+  readonly __DEFAULT_SCOPE__?: {
+    readonly 'webapp.user-detail'?: {
+      readonly userInfo?: {
+        readonly user?: {
+          readonly id: string;
+          readonly secUid: string;
         };
       };
-      itemList?: string[];
+      readonly itemList?: string[];
     };
-    ItemModule?: Record<string, TikTokApiItem>;
-    [key: string]: any;
+    readonly ItemModule?: Record<string, TikTokApiItem>;
+    readonly [key: string]: any;
   };
-}
+};
 
-/**
- * Video Fetcher Result
- */
-export interface FetchResult {
-  videos: TikTokVideo[];
-  source: 'api' | 'html';
-  error?: string;
-}
+export type FetchResult = {
+  readonly videos: TikTokVideo[];
+  readonly source: 'api' | 'html';
+  readonly error?: string;
+};

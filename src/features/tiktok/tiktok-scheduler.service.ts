@@ -5,8 +5,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { sleep } from '@core/utils';
 import { getResponse } from '@services/openai';
-import { getTikTokTranscript } from '@services/tiktok';
-import { fetchUserVideos } from '@services/tiktok/utils';
+import { fetchUserVideos, getTikTokTranscript } from '@services/tiktok';
 import { addVideo, Channel, getFollowedChannels, getVideos } from '@shared/tiktok';
 import { BOT_CONFIG, SUMMARY_PROMPT } from './tiktok.config';
 

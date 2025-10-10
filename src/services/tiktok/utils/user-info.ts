@@ -2,9 +2,6 @@ import * as cheerio from 'cheerio';
 import { DEFAULT_HEADERS, TIKTOK_BASE_URL } from '../constants';
 import type { TikTokUniversalData, TikTokUser } from '../types';
 
-/**
- * Fetch TikTok user information from their profile page
- */
 export async function fetchUserInfo(username: string): Promise<TikTokUser> {
   const userPageUrl = `${TIKTOK_BASE_URL}/@${username}`;
 

@@ -13,7 +13,6 @@ export const BOT_CONFIG: TelegramBotConfig = {
 export const BOT_ACTIONS = {
   REMOVE: 'REMOVE',
   LIST: 'LIST',
-  SEARCH_RESULT_SELECT: 'SELECT_USER',
 };
 
 export const INLINE_KEYBOARD_SEPARATOR = '|';

@@ -1,13 +1,8 @@
+import { extractVideoInfo } from '.';
 import { DEFAULT_API_PARAMS, DEFAULT_HEADERS, TIKTOK_API_ENDPOINT, TIKTOK_BASE_URL } from '../constants';
 import type { TikTokApiResponse, TikTokVideo } from '../types';
 import { fetchUserInfo } from './user-info';
-import { extractVideoInfo } from './video-extractor';
 
-/**
- * Fetch videos from TikTok's internal API
- * @param username - TikTok username (without @)
- * @param count - Optional number of videos to fetch (max 30, will be further sorted and limited by fetcher)
- */
 export async function fetchVideosFromAPI(username: string, count?: number): Promise<TikTokVideo[]> {
   try {
     // Step 1: Get user information (secUid)
@@ -52,9 +47,6 @@ export async function fetchVideosFromAPI(username: string, count?: number): Prom
   }
 }
 
-/**
- * Build the API URL with all required parameters
- */
 function buildApiUrl(secUid: string, count?: number): string {
   // TikTok API max is 30, request more than needed if count is specified
   // to ensure we have enough after sorting
@@ -64,7 +56,6 @@ function buildApiUrl(secUid: string, count?: number): string {
     ...DEFAULT_API_PARAMS,
     count: requestCount.toString(),
     secUid,
-    // Add a random device_id for each request
     device_id: generateDeviceId(),
     msToken: '', // TikTok sometimes requires this but empty works
   });
@@ -72,12 +63,7 @@ function buildApiUrl(secUid: string, count?: number): string {
   return `${TIKTOK_API_ENDPOINT}?${params.toString()}`;
 }
 
-/**
- * Generate a pseudo-random device ID
- * TikTok uses device IDs for tracking, we generate a random one
- */
 function generateDeviceId(): string {
-  // Generate a random 19-digit number similar to TikTok's device IDs
   const min = BigInt('7000000000000000000');
   const max = BigInt('7999999999999999999');
   const range = max - min;

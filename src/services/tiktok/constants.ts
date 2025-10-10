@@ -1,25 +1,12 @@
-/**
- * Default HTTP headers for TikTok requests
- */
 export const DEFAULT_HEADERS = {
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   'Accept-Language': 'en-US,en;q=0.9',
 } as const;
 
-/**
- * TikTok base URL
- */
 export const TIKTOK_BASE_URL = 'https://www.tiktok.com';
 
-/**
- * TikTok API endpoint for fetching user videos
- */
 export const TIKTOK_API_ENDPOINT = `${TIKTOK_BASE_URL}/api/post/item_list/`;
 
-/**
- * Default API parameters
- */
 export const DEFAULT_API_PARAMS = {
   aid: '1988',
   app_language: 'en',
@@ -45,10 +32,6 @@ export const DEFAULT_API_PARAMS = {
   webcast_language: 'en',
 } as const;
 
-/**
- * Video ID estimation reference points
- * Used to estimate upload dates from video IDs
- */
 export const VIDEO_ID_REFERENCES = [
   { id: BigInt('7550000000000000000'), date: new Date('2025-01-20') },
   { id: BigInt('7500000000000000000'), date: new Date('2024-06-01') },
