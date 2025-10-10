@@ -1,3 +1,4 @@
+import { env } from 'node:process';
 import { extractVideoInfo } from '.';
 import { DEFAULT_API_PARAMS, DEFAULT_HEADERS, TIKTOK_API_ENDPOINT, TIKTOK_BASE_URL } from '../constants';
 import type { TikTokApiResponse, TikTokVideo } from '../types';
@@ -14,15 +15,11 @@ export async function fetchVideosFromAPI(username: string, count?: number): Prom
     const apiUrl = buildApiUrl(userInfo.secUid, count);
     console.log('Fetching from internal API...');
 
-    // Step 3: Fetch videos from API
-    const response = await fetch(apiUrl, {
-      headers: {
-        ...DEFAULT_HEADERS,
-        Accept: 'application/json, text/plain, */*',
-        Referer: `${TIKTOK_BASE_URL}/@${username}`,
-        Origin: TIKTOK_BASE_URL,
-      },
-    });
+    // Step 3: Fetch videos from API (with optional proxy)
+    const fetchUrl = buildFetchUrl(apiUrl);
+    const fetchOptions = buildFetchOptions(username);
+
+    const response = await fetch(fetchUrl, fetchOptions);
 
     console.log(`API Response Status: ${response.status} ${response.statusText}`);
 
@@ -88,4 +85,38 @@ function generateDeviceId(): string {
   const range = max - min;
   const random = BigInt(Math.floor(Math.random() * Number(range)));
   return (min + random).toString();
+}
+
+function buildFetchUrl(apiUrl: string): string {
+  const scraperApiKey = env.SCRAPERAPI_API_KEY;
+
+  if (scraperApiKey) {
+    console.log('Using ScraperAPI proxy...');
+    // ScraperAPI format: http://api.scraperapi.com?api_key=KEY&url=TARGET_URL
+    const encodedUrl = encodeURIComponent(apiUrl);
+    return `http://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodedUrl}`;
+  }
+
+  console.log('Using direct connection (no proxy)...');
+  return apiUrl;
+}
+
+function buildFetchOptions(username: string): RequestInit {
+  const scraperApiKey = env.SCRAPERAPI_API_KEY;
+
+  if (scraperApiKey) {
+    return {
+      method: 'GET',
+    };
+  }
+
+  return {
+    method: 'GET',
+    headers: {
+      ...DEFAULT_HEADERS,
+      Accept: 'application/json, text/plain, */*',
+      Referer: `${TIKTOK_BASE_URL}/@${username}`,
+      Origin: TIKTOK_BASE_URL,
+    },
+  };
 }
