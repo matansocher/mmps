@@ -5,8 +5,9 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { sleep } from '@core/utils';
 import { getResponse } from '@services/openai';
-import { getTikTokTranscript, getTikTokUserVideos } from '@services/tiktok';
-import { addVideo, getFollowedChannels, getVideos } from '@shared/tiktok';
+import { getTikTokTranscript } from '@services/tiktok';
+import { fetchUserVideos } from '@services/tiktok/utils';
+import { addVideo, Channel, getFollowedChannels, getVideos } from '@shared/tiktok';
 import { BOT_CONFIG, SUMMARY_PROMPT } from './tiktok.config';
 
 const SMART_REMINDER_HOUR_OF_DAY = 20;
@@ -22,7 +23,7 @@ export class TiktokSchedulerService implements OnModuleInit {
 
   onModuleInit(): void {
     setTimeout(() => {
-      // this.dailyVideoDigest(); // for testing purposes
+      this.dailyVideoDigest(); // for testing purposes
     }, 8000);
   }
 
@@ -35,11 +36,13 @@ export class TiktokSchedulerService implements OnModuleInit {
     }
   }
 
-  private async handleChannel(channel: { username: string }): Promise<void> {
-    const videos = await getTikTokUserVideos(channel.username);
-    const todayVideos = videos.filter((video) => video.uploadDate === new Date().toISOString().split('T')[0]);
+  private async handleChannel(channel: Channel): Promise<void> {
+    const { videos } = await fetchUserVideos(channel.username, 5).catch(() => ({ videos: [] }));
+    if (!videos.length) {
+      return;
+    }
     const viewedVideos = await getVideos();
-    const newVideos = todayVideos.filter((video) => !viewedVideos.find((v) => v.videoId === video.id));
+    const newVideos = videos.filter((video) => !viewedVideos.find((v) => v.videoId === video.id));
 
     if (!newVideos.length) {
       return;
