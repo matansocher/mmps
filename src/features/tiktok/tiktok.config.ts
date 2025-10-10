@@ -12,6 +12,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
 
 export const BOT_ACTIONS = {
   REMOVE: 'REMOVE',
+  SEARCH_VIDEOS: 'SEARCH_VIDEOS',
   LIST: 'LIST',
 };
 

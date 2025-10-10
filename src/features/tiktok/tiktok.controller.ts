@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { addChannel, getChannel, getFollowedChannels, removeChannel } from '@shared/tiktok';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './tiktok.config';
+import { processChannelVideos } from './utils';
 
 @Injectable()
 export class TiktokController implements OnModuleInit {
@@ -46,16 +47,12 @@ export class TiktokController implements OnModuleInit {
       return;
     }
 
-    const inlineKeyboardButtons = channels.map((channel) => {
-      return {
-        text: `⛔️ ${channel.username} ⛔️`,
-        callback_data: [BOT_ACTIONS.REMOVE, channel.username].join(INLINE_KEYBOARD_SEPARATOR),
-      };
-    });
+    const inlineKeyboardButtons = channels.flatMap((channel) => [
+      { text: `🔍 ${channel.username}`, callback_data: [BOT_ACTIONS.SEARCH_VIDEOS, channel.username].join(INLINE_KEYBOARD_SEPARATOR) },
+      { text: `⛔️ Remove`, callback_data: [BOT_ACTIONS.REMOVE, channel.username].join(INLINE_KEYBOARD_SEPARATOR) },
+    ]);
 
-    const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
-    const replyText = 'Choose a channel to remove:';
-    await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
+    await this.bot.sendMessage(chatId, 'Your subscribed channels:', getInlineKeyboardMarkup(inlineKeyboardButtons, 2));
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -90,6 +87,10 @@ export class TiktokController implements OnModuleInit {
     const [action, username] = data.split(INLINE_KEYBOARD_SEPARATOR);
     try {
       switch (action) {
+        case BOT_ACTIONS.SEARCH_VIDEOS: {
+          await this.searchChannelVideos(callbackQuery, chatId, username);
+          break;
+        }
         case BOT_ACTIONS.REMOVE: {
           await this.removeSubscription(chatId, messageId, username);
           break;
@@ -106,23 +107,18 @@ export class TiktokController implements OnModuleInit {
     }
   }
 
-  private async handleUserSelection(callbackQuery: CallbackQuery, chatId: number, messageId: number, username: string): Promise<void> {
+  private async searchChannelVideos(callbackQuery: CallbackQuery, chatId: number, username: string): Promise<void> {
     try {
-      const existingSubscription = await getChannel(username);
-      if (existingSubscription) {
-        await this.bot.answerCallbackQuery(callbackQuery.id, { text: `Already subscribed to @${username}` });
-        await this.bot.editMessageText(`You are already subscribed to @${username}`, { message_id: messageId, chat_id: chatId });
+      const channel = await getChannel(username);
+      if (!channel) {
+        await this.bot.sendMessage(chatId, `Channel @${username} not found in subscriptions.`);
         return;
       }
 
-      await addChannel(username);
-
-      await this.bot.answerCallbackQuery(callbackQuery.id, { text: `Subscribed to @${username}` });
-      await this.bot.editMessageText(`✅ Successfully subscribed to @${username}\n\nYou will now receive updates from this TikTok channel.`, { message_id: messageId, chat_id: chatId });
+      await processChannelVideos({ bot: this.bot, chatId, channel });
     } catch (err) {
-      this.logger.error(`Error in handleUserSelection: ${err}`);
-      await this.bot.answerCallbackQuery(callbackQuery.id, { text: 'Error subscribing to user' });
-      await this.bot.editMessageText('Sorry, there was an error subscribing to this user. Please try again.', { message_id: messageId, chat_id: chatId });
+      this.logger.error(`Error in searchChannelVideos: ${err}`);
+      await this.bot.sendMessage(chatId, `Sorry, there was an error searching for videos from @${username}. Please try again.`);
     }
   }
 
