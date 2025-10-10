@@ -1,6 +1,6 @@
 import { getLatestVideos } from '.';
-import type { FetchResult } from '../types';
-import { fetchVideosFromAPI } from './api-client';
+import type { FetchResult } from './types';
+import { fetchVideosFromAPI } from './utils';
 
 export async function fetchUserVideos(username: string, count?: number): Promise<FetchResult> {
   console.log(`Fetching videos for @${username}...`);
