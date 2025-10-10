@@ -1,11 +1,11 @@
-import { VIDEO_ID_REFERENCES } from '../constants';
+import { TIKTOK_BASE_URL, VIDEO_ID_REFERENCES } from '../constants';
 import type { TikTokApiItem, TikTokVideo } from '../types';
 
 export function extractVideoInfo(item: TikTokApiItem, username: string): TikTokVideo {
   const videoId = item.id;
   const video: TikTokVideo = {
     id: videoId,
-    url: `https://www.tiktok.com/@${username}/video/${videoId}`,
+    url: `${TIKTOK_BASE_URL}/@${username}/video/${videoId}`,
     description: '',
     uploadDate: '',
   };

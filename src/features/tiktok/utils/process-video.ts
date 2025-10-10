@@ -2,6 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { z } from 'zod';
 import { getResponse } from '@services/openai';
 import { getTikTokTranscript } from '@services/tiktok';
+import { TIKTOK_BASE_URL } from '@services/tiktok/constants';
 import { addVideo, Channel } from '@shared/tiktok';
 import { SUMMARY_PROMPT } from '../tiktok.config';
 
@@ -36,7 +37,7 @@ type ProcessSingleVideoOptions = {
 export async function processSingleVideo(options: ProcessSingleVideoOptions): Promise<ProcessedVideo> {
   const { bot, chatId, username, videoId, videoUrl } = options;
 
-  const finalVideoUrl = videoUrl || `https://www.tiktok.com/@${username}/video/${videoId}`;
+  const finalVideoUrl = videoUrl || `${TIKTOK_BASE_URL}/@${username}/video/${videoId}`;
 
   const videoTranscript = await getTikTokTranscript(username, videoId);
 
