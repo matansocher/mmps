@@ -15,6 +15,7 @@ import {
   imageGeneratorTool,
   matchPredictionTool,
   matchSummaryTool,
+  recipesTool,
   spotifyTool,
   stocksTool,
   textToSpeechTool,
@@ -25,7 +26,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Spotify music search, and GitHub automation via MCP';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Spotify music search, cooking recipes, and GitHub automation via MCP';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -59,6 +60,7 @@ Available capabilities:
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
 - Spotify tool: Search for songs, artists, and playlists on Spotify. Get detailed track information, find artist top tracks, and discover music. Returns song details with links to listen on Spotify.
+- Recipes tool: Access your personal cooking recipe collection. List all recipes or get specific recipe details including ingredients, instructions, tags, and links.
 - GitHub tool (MCP): Automate GitHub operations including creating/updating files, searching repositories, creating issues and pull requests, managing branches, reading file contents, and more. Use this for any GitHub-related tasks.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
@@ -133,6 +135,18 @@ Guidelines:
   * list_commits: View commit history
   * list_issues: View repository issues
   Use cases: "Create a new issue in mmps", "Read the README from my repo", "Create a PR from feature-branch to main", "List my recent commits".
+- Recipes Guidelines:
+  * When users ask about recipes, cooking, or food, use the recipes tool.
+  * Natural language variations: "show me recipes", "what can I cook", "recipe for", "show me the [recipe name] recipe", "what recipes do I have".
+  * Two-step process:
+    1. First use action "list_recipes" to show all available recipes with their titles and emojis
+    2. When user selects a specific recipe, use action "get_recipe" with the recipe ID to show full details
+  * The tool returns JSON for list_recipes (parse and format as a numbered list with emojis)
+  * For get_recipe, the tool returns a pre-formatted markdown string (use it directly in your response)
+  * ALWAYS format recipe lists nicely with emojis and make it easy for users to reference recipes by name
+  * Present recipes in an inviting way that encourages cooking
+  * IMPORTANT: ALL recipe content is in Hebrew. When responding about recipes, respond in Hebrew as well to match the recipe language. Use Hebrew for introductory text, explanations, and any commentary about the recipes.
+  * Examples: "Show me my recipes", "What's in the pasta recipe?", "I want to cook something"
 `;
 
 export function agent(): AgentDescriptor {
@@ -157,6 +171,7 @@ export function agent(): AgentDescriptor {
     exerciseTool,
     exerciseAnalyticsTool,
     spotifyTool,
+    recipesTool,
     githubTool,
   ];
 

@@ -29,3 +29,5 @@ export { googleMapsPlaceTool } from './maps/google-maps-place.tool';
 export { spotifyTool } from './music/spotify.tool';
 
 export { githubTool } from './github/github.tool';
+
+export { recipesTool } from './recipes/recipes.tool';

@@ -4,7 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
-import { getTodayExercise } from '@shared/trainer/mongo';
+import { getTodayExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 

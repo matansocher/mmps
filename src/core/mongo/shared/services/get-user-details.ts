@@ -1,5 +1,5 @@
 import { Db } from 'mongodb';
-import { User } from '@core/mongo/shared';
+import { User } from '@core/mongo';
 
 export async function getUserDetails(db: Db, chatId: number): Promise<User> {
   try {

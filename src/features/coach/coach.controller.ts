@@ -6,7 +6,7 @@ import { NotifierService } from '@core/notifier';
 import { getDateDescription } from '@core/utils';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach/mongo';
+import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 import { getDateFromUserInput } from './utils';
