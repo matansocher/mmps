@@ -14,7 +14,7 @@ type HandleCommandOptions = Pick<RegisterHandlersOptions, 'bot' | 'logger' | 'is
 export async function handleCommand(handleCommandOptions: HandleCommandOptions): Promise<void> {
   const { bot, message, logger, handlerName, handler, isCallbackQuery = false, isBlocked = false, customErrorMessage = null } = handleCommandOptions;
   const { chatId, userDetails, text } = isCallbackQuery ? getCallbackQueryData(message as CallbackQuery) : getMessageData(message as Message);
-  const shortText = text?.length > 20 ? `${text.slice(0, 20)}...` : text;
+  const shortText = text?.length > 40 ? `${text.slice(0, 40)}...` : text;
   const logBody = stringify({ chatId, firstName: userDetails.firstName, lastName: userDetails.lastName, text: shortText });
 
   try {
