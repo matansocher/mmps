@@ -50,7 +50,6 @@ To start the NestJS application:
 3. Worldly - A Geography teacher bot
 4. Coach - A bot to show the user a daily list of sports games
 5. Educator - A bot to teach the user of interesting stuff with a single message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
-8Cooker - A bot to store all the recipes gathered over the years.
 
 ## Bots IDs
 
@@ -58,7 +57,6 @@ To start the NestJS application:
 |---------------------|--------------------------------------------------------------------------------------------|
 | Announcer           | [@mmps_announcer_bot](https://web.telegram.org/k/#@mmps_announcer_bot)                     |
 | Coach               | [@mmps_football_coach_bot](https://web.telegram.org/k/#@mmps_football_coach_bot)           |
-| Cooker              | [@mmps_cooker_bot](https://web.telegram.org/k/#@mmps_cooker_bot)           |
 | Educator            | [@mmps_educator_bot](https://web.telegram.org/k/#@mmps_educator_bot)                       |
 | Notifier            | [@mmps_notifier_bot](https://web.telegram.org/k/#@mmps_notifier_bot)                       |
 | Playgrounds         | [@guzi_playgrounds_bot](https://web.telegram.org/k/#@guzi_playgrounds_bot)                 |

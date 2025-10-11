@@ -54,7 +54,15 @@ export async function callGithubMcpTool(name: string, args: Record<string, any>)
     throw new Error('GitHub MCP client is not connected');
   }
 
-  return client.callTool({ name, arguments: args });
+  try {
+    console.log(`[GitHub MCP] Calling tool: ${name} with args:`, JSON.stringify(args, null, 2));
+    const result = await client.callTool({ name, arguments: args });
+    console.log(`[GitHub MCP] Tool ${name} succeeded`);
+    return result;
+  } catch (error: any) {
+    console.error(`[GitHub MCP] Tool ${name} failed:`, error);
+    throw new Error(`GitHub MCP tool ${name} failed: ${error.message || error}`);
+  }
 }
 
 export function isGithubMcpConnected(): boolean {

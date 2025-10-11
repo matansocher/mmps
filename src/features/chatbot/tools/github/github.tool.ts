@@ -6,7 +6,7 @@ const githubSchema = z.object({
   operation: z
     .string()
     .describe(
-      'The GitHub operation to perform. Available operations: create_or_update_file, search_repositories, create_repository, get_file_contents, push_files, create_issue, create_pull_request, fork_repository, create_branch, list_commits, list_issues',
+      'The GitHub operation to perform. Available operations: create_or_update_file, create_repository, get_file_contents, push_files, create_issue, update_issue, add_issue_comment, get_issue, list_issues, create_pull_request, get_pull_request, list_pull_requests, create_pull_request_review, merge_pull_request, get_pull_request_files, get_pull_request_status, get_pull_request_comments, get_pull_request_reviews, update_pull_request_branch, fork_repository, create_branch, list_commits, search_code, search_issues, search_repositories, search_users',
     ),
   owner: z.string().describe('The repository owner (username or organization)').optional(),
   repo: z.string().describe('The repository name').optional(),
@@ -20,11 +20,18 @@ const githubSchema = z.object({
   title: z.string().describe('Title for issues or pull requests').optional(),
   body: z.string().describe('Body/description for issues or pull requests').optional(),
   sha: z.string().describe('Commit SHA (for some operations)').optional(),
+  draft: z.boolean().describe('Whether to create the pull request as a draft').optional(),
+  pull_number: z.number().describe('Pull request number (for PR operations)').optional(),
+  issue_number: z.number().describe('Issue number (for issue operations)').optional(),
 });
 
 async function githubRunner(args: z.infer<typeof githubSchema>) {
   try {
     const { operation, ...params } = args;
+
+    if (!params.owner && operation !== 'search_repositories' && operation !== 'search_code' && operation !== 'search_issues' && operation !== 'search_users') {
+      params.owner = 'matansocher';
+    }
 
     const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== undefined));
 
@@ -45,19 +52,50 @@ async function githubRunner(args: z.infer<typeof githubSchema>) {
 
 export const githubTool = tool(githubRunner, {
   name: 'github',
-  description: `Interact with GitHub repositories. Supports operations like:
-- create_or_update_file: Create or update files in a repository
-- search_repositories: Search for GitHub repositories
-- create_repository: Create a new repository
-- get_file_contents: Read file contents from a repository
-- push_files: Push multiple files to a repository
-- create_issue: Create a new issue
-- create_pull_request: Create a new pull request
-- fork_repository: Fork a repository
-- create_branch: Create a new branch
-- list_commits: List commits in a repository
-- list_issues: List issues in a repository
+  description: `Interact with GitHub repositories via the GitHub MCP server.
 
-Provide the operation name and relevant parameters (owner, repo, path, content, message, branch, etc.)`,
+IMPORTANT: When the owner/organization is not explicitly specified, it defaults to 'matansocher' (the user's GitHub username). For example, if asked about "mmps repo", it will automatically use 'matansocher/mmps'.
+
+Supports operations like:
+
+File Operations:
+- create_or_update_file: Create or update a single file in a repository
+- get_file_contents: Read file contents from a repository
+- push_files: Push multiple files to a repository in a single commit
+
+Repository Operations:
+- create_repository: Create a new repository
+- fork_repository: Fork a repository to your account
+- search_repositories: Search for GitHub repositories
+
+Branch Operations:
+- create_branch: Create a new branch in a repository
+- list_commits: Get list of commits of a branch
+
+Issue Operations:
+- create_issue: Create a new issue
+- get_issue: Get details of a specific issue
+- list_issues: List issues with filtering options
+- update_issue: Update an existing issue
+- add_issue_comment: Add a comment to an issue
+
+Pull Request Operations:
+- create_pull_request: Create a new pull request (requires: owner, repo, title, head, base; optional: body, draft)
+- get_pull_request: Get details of a specific pull request
+- list_pull_requests: List pull requests with filtering options
+- create_pull_request_review: Create a review on a pull request
+- merge_pull_request: Merge a pull request
+- get_pull_request_files: Get the list of files changed in a pull request
+- get_pull_request_status: Get the combined status of all status checks
+- get_pull_request_comments: Get review comments on a pull request
+- get_pull_request_reviews: Get reviews on a pull request
+- update_pull_request_branch: Update PR branch with latest changes from base
+
+Search Operations:
+- search_code: Search for code across GitHub repositories
+- search_issues: Search for issues and pull requests
+- search_users: Search for users on GitHub
+
+Provide the operation name and relevant parameters (owner, repo, path, content, message, branch, title, body, head, base, draft, pull_number, issue_number, etc.)`,
   schema: githubSchema,
 });

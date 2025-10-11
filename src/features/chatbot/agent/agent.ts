@@ -120,18 +120,19 @@ Guidelines:
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - Spotify Music: When users ask about music, use the spotify tool. The tool returns JSON data - parse it and format the response according to the Spotify Music Guidelines above. Always include Spotify links so users can listen.
 - GitHub Automation (MCP): When users need to work with GitHub repositories, use the github tool with the appropriate operation:
+  * IMPORTANT: The owner defaults to "matansocher" when not specified. So "mmps repo" means "matansocher/mmps".
   * create_or_update_file: Create or modify files in repos
   * search_repositories: Find repositories
   * create_repository: Create new repos
   * get_file_contents: Read file contents
   * push_files: Push multiple files
   * create_issue: Create issues
-  * create_pull_request: Create PRs
+  * create_pull_request: Create PRs (requires: owner, repo, title, head branch, base branch)
   * fork_repository: Fork repos
   * create_branch: Create branches
   * list_commits: View commit history
   * list_issues: View repository issues
-  Use cases: "Create a new issue in repo X", "Read the README from repo Y", "Create a PR", "Search for TypeScript projects".
+  Use cases: "Create a new issue in mmps", "Read the README from my repo", "Create a PR from feature-branch to main", "List my recent commits".
 `;
 
 export function agent(): AgentDescriptor {
