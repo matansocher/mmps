@@ -1,7 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { createMongoConnection } from '@core/mongo';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
-import { DB_NAME } from './cooker/mongo';
+import { DB_NAME } from '@shared/cooker';
 import { BOT_CONFIG } from './notifier.config';
 import { NotifierController } from './notifier.controller';
 import { NotifierService } from './notifier.service';
