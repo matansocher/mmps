@@ -21,12 +21,14 @@ import {
   textToSpeechTool,
   topMatchesForPredictionTool,
   weatherForecastTool,
+  woltTool,
+  worldlyTool,
 } from '../tools';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Spotify music search, cooking recipes, and GitHub automation via MCP';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -62,6 +64,8 @@ Available capabilities:
 - Spotify tool: Search for songs, artists, and playlists on Spotify. Get detailed track information, find artist top tracks, and discover music. Returns song details with links to listen on Spotify.
 - Recipes tool: Access your personal cooking recipe collection. List all recipes or get specific recipe details including ingredients, instructions, tags, and links.
 - GitHub tool (MCP): Automate GitHub operations including creating/updating files, searching repositories, creating issues and pull requests, managing branches, reading file contents, and more. Use this for any GitHub-related tasks.
+- Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
+- Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Exercise Tracking Guidelines:
@@ -147,6 +151,19 @@ Guidelines:
   * Present recipes in an inviting way that encourages cooking
   * IMPORTANT: ALL recipe content is in Hebrew. When responding about recipes, respond in Hebrew as well to match the recipe language. Use Hebrew for introductory text, explanations, and any commentary about the recipes.
   * Examples: "Show me my recipes", "What's in the pasta recipe?", "I want to cook something"
+- Wolt Summary Guidelines:
+  * When users ask about Wolt, food delivery statistics, popular restaurants, or who orders most, use the wolt_summary tool.
+  * Natural language variations: "wolt stats", "wolt summary", "top restaurants", "who orders most on wolt", "wolt weekly stats".
+  * The tool returns a formatted text with top users and top restaurants for the current week.
+  * Format the response clearly with the user rankings and restaurant rankings.
+  * Examples: "Show me Wolt stats", "Who ordered the most this week?", "What are the top restaurants?"
+- Worldly Summary Guidelines:
+  * When users ask about Worldly game, player statistics, streaks, or rankings, use the worldly_summary tool.
+  * Natural language variations: "worldly stats", "worldly summary", "top players", "longest streak", "worldly rankings", "who's winning at worldly".
+  * The tool returns a formatted text with greatest streaks (all-time and weekly) and top players with their correct answer percentages.
+  * The response includes emojis (🏆, 📅, 🔥) - keep them in your response for visual appeal.
+  * Present the statistics clearly showing both streaks and weekly performance.
+  * Examples: "Show me Worldly stats", "Who has the longest streak?", "Worldly rankings this week"
 `;
 
 export function agent(): AgentDescriptor {
@@ -173,6 +190,8 @@ export function agent(): AgentDescriptor {
     spotifyTool,
     recipesTool,
     githubTool,
+    woltTool,
+    worldlyTool,
   ];
 
   return {

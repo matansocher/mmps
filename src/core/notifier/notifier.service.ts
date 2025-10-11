@@ -2,8 +2,13 @@ import TelegramBot from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
 import { TelegramBotConfig, UserDetails } from '@services/telegram';
-import { NotifyOptions } from './interface';
 import { BOT_CONFIG, MessageType, NOTIFIER_CHAT_ID } from './notifier.config';
+
+type NotifyOptions = {
+  readonly [key: string]: any;
+  readonly action: string;
+  readonly plainText?: string;
+};
 
 @Injectable()
 export class NotifierService {
