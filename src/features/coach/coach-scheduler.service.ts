@@ -5,7 +5,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
 import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
-import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach/mongo';
+import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 

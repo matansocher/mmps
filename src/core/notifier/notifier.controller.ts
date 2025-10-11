@@ -1,11 +1,10 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getStreakOfCorrectAnswers } from '@core/utils';
-import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { getTopBy, getUserDetails as getUserDetailsWolt } from '@shared/wolt';
 import { GameLog, getGameLogsByUsers, getTopByChatId, getUserDetails as getUserDetailsWorldly } from '@shared/worldly';
-import { generateRecipeString, getRecipe, getRecipes } from './cooker';
-import { BOT_ACTIONS, BOT_CONFIG } from './notifier.config';
+import { BOT_CONFIG } from './notifier.config';
 
 type LightUser = {
   readonly chatId: number;
@@ -21,14 +20,12 @@ export class NotifierController implements OnModuleInit {
   constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
 
   onModuleInit(): void {
-    const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
-    const { WOLT, WORLDLY, RECIPES } = BOT_CONFIG.commands;
+    const { COMMAND, MESSAGE } = TELEGRAM_EVENTS;
+    const { WOLT, WORLDLY } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
       { event: COMMAND, regex: WOLT.command, handler: (message) => this.woltSummaryHandler.call(this, message) },
       { event: COMMAND, regex: WORLDLY.command, handler: (message) => this.worldlySummaryHandler.call(this, message) },
-      { event: COMMAND, regex: RECIPES.command, handler: (message) => this.recipesHandler.call(this, message) },
       { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
-      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
     ];
     registerHandlers({ bot: this.bot, logger: this.logger, handlers });
   }
@@ -109,36 +106,6 @@ ${summaryLines.join('\n')}
   `;
 
     await this.bot.sendMessage(chatId, replyText.trim());
-  }
-
-  async recipesHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
-    const recipes = await getRecipes(chatId);
-    const inlineKeyboardButtons = recipes.map((recipe) => {
-      const { _id, emoji, title } = recipe;
-      return { text: `${title} ${emoji}`, callback_data: `${BOT_ACTIONS.SHOW} - ${_id}` };
-    });
-    await this.bot.sendMessage(chatId, 'איזה מתכון בא לך?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons, 2) });
-  }
-
-  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, messageId, data: response } = getCallbackQueryData(callbackQuery);
-
-    const [action, resource] = response.split(' - ');
-    switch (action) {
-      case BOT_ACTIONS.SHOW: {
-        const recipe = await getRecipe(chatId, resource);
-        if (!recipe) {
-          await this.bot.sendMessage(chatId, 'מתכון לא נמצא');
-          return;
-        }
-        await this.bot.sendMessage(chatId, generateRecipeString(recipe), { parse_mode: 'Markdown' });
-        await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        break;
-      }
-      default:
-        throw new Error('Invalid action');
-    }
   }
 
   private getMaxStreak<T extends { [key: string]: any }>(records: T[], key: string): T {

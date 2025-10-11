@@ -1,5 +1,4 @@
-import { getMongoCollection } from '@core/mongo';
-import { User } from '@core/mongo/shared';
+import { getMongoCollection, User } from '@core/mongo';
 import { DB_NAME } from '.';
 
 const getCollection = () => getMongoCollection<User>(DB_NAME, 'User');
