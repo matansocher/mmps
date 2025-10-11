@@ -1,7 +1,5 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import { createMongoConnection } from '@core/mongo';
+import { Module } from '@nestjs/common';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
-import { DB_NAME } from '@shared/cooker';
 import { BOT_CONFIG } from './notifier.config';
 import { NotifierController } from './notifier.controller';
 import { NotifierService } from './notifier.service';
@@ -10,8 +8,4 @@ import { NotifierService } from './notifier.service';
   providers: [NotifierController, NotifierService, TelegramBotsFactoryProvider(BOT_CONFIG)],
   exports: [NotifierService],
 })
-export class NotifierModule implements OnModuleInit {
-  async onModuleInit() {
-    await createMongoConnection(DB_NAME);
-  }
-}
+export class NotifierModule {}
