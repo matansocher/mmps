@@ -6,8 +6,8 @@ import { deleteFile } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { getAudioFromText } from '@services/openai';
 import { getInlineKeyboardMarkup } from '@services/telegram';
-import { getUserPreference, updatePreviousResponseId } from '@shared/langly';
-import { BOT_ACTIONS, BOT_CONFIG, CHALLENGE_GENERATION_PROMPT, INLINE_KEYBOARD_SEPARATOR } from './langly.config';
+import { DifficultyLevel, getUserPreference, updatePreviousResponseId } from '@shared/langly';
+import { BOT_ACTIONS, BOT_CONFIG, getDifficultyPrompt, INLINE_KEYBOARD_SEPARATOR } from './langly.config';
 import { ActiveChallenge, SpanishChallenge, SpanishChallengeSchema } from './types';
 
 @Injectable()
@@ -20,10 +20,13 @@ export class LanglyService {
   async generateChallenge(chatId: number): Promise<SpanishChallenge> {
     const userPreference = await getUserPreference(chatId);
     const previousResponseId = userPreference?.previousResponseId;
+    const difficulty = userPreference?.difficulty ?? DifficultyLevel.INTERMEDIATE;
+
+    const prompt = getDifficultyPrompt(difficulty);
 
     const { id: responseId, result } = await getResponse<typeof SpanishChallengeSchema>({
-      input: 'Generate a unique Spanish language challenge for an intermediate learner. Ensure this challenge is completely different from any previous ones.',
-      instructions: CHALLENGE_GENERATION_PROMPT,
+      input: 'Generate a unique Spanish language challenge appropriate for the specified difficulty level. Ensure this challenge is completely different from any previous ones.',
+      instructions: prompt,
       schema: SpanishChallengeSchema,
       store: true,
       previousResponseId,

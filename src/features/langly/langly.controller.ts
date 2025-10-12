@@ -1,10 +1,11 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
-import { createUserPreference, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/langly';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, INLINE_KEYBOARD_SEPARATOR } from './langly.config';
+import { createUserPreference, DifficultyLevel, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/langly';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR } from './langly.config';
 import { LanglyService } from './langly.service';
 
 @Injectable()
@@ -40,17 +41,18 @@ export class LanglyController implements OnModuleInit {
     const welcomeMessage = [
       '¡Hola! 👋 Welcome to Langly Spanish Learning Bot!',
       '',
-      "🎯 I'll help you improve your Spanish with fun challenges focused on:",
+      "🎯 I'll help you improve your Argentine Spanish with fun challenges focused on:",
       '• False friends (tricky words that look like English)',
       '• Common idioms and expressions',
       '• Colloquial Spanish that natives actually use',
-      '• Regional variations',
+      '• Regional variations from Argentina',
       '',
-      '📚 Perfect for intermediate learners who want to sound more natural!',
+      '📚 Choose your difficulty level:',
+      '🌱 Beginner | 📚 Intermediate (default) | 🎓 Advanced | 🏆 Native',
       '',
       'Commands:',
       '/challenge - Get a Spanish challenge',
-      '/actions - Manage your subscription',
+      '/actions - Manage your subscription and difficulty level',
     ].join('\n');
 
     await this.bot.sendMessage(chatId, welcomeMessage);
@@ -60,11 +62,14 @@ export class LanglyController implements OnModuleInit {
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId, messageId } = getMessageData(message);
     const userPreferences = await getUserPreference(chatId);
+    const currentDifficulty = userPreferences?.difficulty ?? DifficultyLevel.INTERMEDIATE;
 
     const inlineKeyboardButtons = [
       userPreferences?.isStopped
         ? { text: '🔔 Subscribe to daily challenges', callback_data: `${BOT_ACTIONS.SUBSCRIBE}` }
         : { text: '🔕 Unsubscribe from daily challenges', callback_data: `${BOT_ACTIONS.UNSUBSCRIBE}` },
+      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, callback_data: `${BOT_ACTIONS.DIFFICULTY}` },
+      { text: '📬 Contact', callback_data: `${BOT_ACTIONS.CONTACT}` },
     ];
 
     await this.bot.sendMessage(chatId, '⚙️ How can I help you?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
@@ -83,6 +88,10 @@ export class LanglyController implements OnModuleInit {
       await this.bot.sendMessage(chatId, '❌ Sorry, something went wrong. Please try again.');
       this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHALLENGE, error: `❗️ ${err}` }, userDetails);
     }
+  }
+
+  private async contactHandler(chatId: number): Promise<void> {
+    await this.bot.sendMessage(chatId, ['Happy to help! 🤝', '', 'You can reach the creator at:', MY_USER_NAME].join('\n'));
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
@@ -145,6 +154,40 @@ export class LanglyController implements OnModuleInit {
           await this.langlyService.sendAudioPronunciation(chatId, challengeKey);
           await this.bot.answerCallbackQuery(callbackQuery.id);
           this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.AUDIO }, userDetails);
+          break;
+
+        case BOT_ACTIONS.DIFFICULTY:
+          if (params.length === 0) {
+            // Show difficulty selection menu
+            const difficultyButtons = [
+              { text: DIFFICULTY_LABELS[DifficultyLevel.BEGINNER], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.BEGINNER}` },
+              { text: DIFFICULTY_LABELS[DifficultyLevel.INTERMEDIATE], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.INTERMEDIATE}` },
+              { text: DIFFICULTY_LABELS[DifficultyLevel.ADVANCED], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.ADVANCED}` },
+              { text: DIFFICULTY_LABELS[DifficultyLevel.NATIVE], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.NATIVE}` },
+            ];
+
+            await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+            await this.bot.sendMessage(chatId, '📊 Select your difficulty level:', { ...getInlineKeyboardMarkup(difficultyButtons) });
+            await this.bot.answerCallbackQuery(callbackQuery.id);
+          } else {
+            // Save selected difficulty
+            const selectedDifficulty = parseInt(params[0]);
+            await updateUserPreference(chatId, { difficulty: selectedDifficulty });
+            await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+
+            const confirmationMessage = [`✅ Difficulty level updated to: ${DIFFICULTY_LABELS[selectedDifficulty]}`, '', 'Your next challenges will be at this difficulty level!'].join('\n');
+
+            await this.bot.sendMessage(chatId, confirmationMessage);
+            await this.bot.answerCallbackQuery(callbackQuery.id);
+            this.notifier.notify(BOT_CONFIG, { action: 'DIFFICULTY_CHANGED', difficulty: DIFFICULTY_LABELS[selectedDifficulty] }, userDetails);
+          }
+          break;
+
+        case BOT_ACTIONS.CONTACT:
+          await this.contactHandler(chatId);
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+          await this.bot.answerCallbackQuery(callbackQuery.id);
+          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
 
         default:
