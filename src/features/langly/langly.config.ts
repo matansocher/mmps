@@ -42,26 +42,17 @@ export const DIFFICULTY_LABELS = {
   4: '🏆 Native Speaker',
 };
 
-export const DIFFICULTY_DESCRIPTIONS = {
-  1: 'Basic vocabulary and simple phrases used in everyday situations',
-  2: 'Intermediate learners who want to improve fluency and natural expression',
-  3: 'Advanced learners focusing on nuanced expressions, idioms, and complex structures',
-  4: 'Native-level content with slang, regional expressions, and cultural references',
-};
-
-export const getDifficultyPrompt = (difficulty: number): string => {
-  const basePrompt = `
+const BASE_PROMPT = `
 Generate a Spanish language challenge.
 Focus on practical, everyday Spanish that native speakers actually use.
 
 IMPORTANT: Use ARGENTINE SPANISH (from Argentina, not Spain). Use Argentine vocabulary, expressions, and pronunciation patterns.
 Generate a DIFFERENT word, phrase, or concept each time. Do not repeat the same content.
 Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expressions, false friends, regional phrases, etc.
-
 `;
 
-  const difficultySpecific = {
-    1: `DIFFICULTY LEVEL: BEGINNER
+const DIFFICULTY_SPECIFIC = {
+  1: `DIFFICULTY LEVEL: BEGINNER
 - Focus on basic, essential vocabulary and simple phrases
 - Use common everyday words that beginners need to know
 - Keep sentence structures simple and clear
@@ -70,7 +61,7 @@ Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expression
 - Example types: basic verbs (ser, estar, tener), common nouns, simple adjectives
 - Questions should test fundamental understanding`,
 
-    2: `DIFFICULTY LEVEL: INTERMEDIATE
+  2: `DIFFICULTY LEVEL: INTERMEDIATE
 - Focus on intermediate vocabulary and common expressions
 - Include moderately challenging idioms and colloquial phrases
 - Use natural sentence structures that are common in conversation
@@ -79,7 +70,7 @@ Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expression
 - Example types: phrasal verbs, common idioms, everyday expressions
 - Questions should test contextual understanding`,
 
-    3: `DIFFICULTY LEVEL: ADVANCED
+  3: `DIFFICULTY LEVEL: ADVANCED
 - Focus on nuanced vocabulary and sophisticated expressions
 - Include complex idioms, regional variations, and cultural references
 - Use advanced grammatical structures
@@ -88,7 +79,7 @@ Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expression
 - Example types: advanced idioms, formal/informal distinctions, literary expressions
 - Questions should test deep understanding and cultural knowledge`,
 
-    4: `DIFFICULTY LEVEL: NATIVE SPEAKER
+  4: `DIFFICULTY LEVEL: NATIVE SPEAKER
 - Focus on slang, regional expressions, and colloquialisms used by native Argentines
 - Include cultural references, wordplay, and extremely nuanced expressions
 - Use the most authentic Argentine Spanish possible
@@ -96,10 +87,9 @@ Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expression
 - Target learners who want to speak like a native Argentine
 - Example types: street slang, regional sayings, cultural idioms, lunfardo (Argentine slang)
 - Questions should test native-level comprehension and cultural awareness`,
-  };
+};
 
-  return `${basePrompt}${difficultySpecific[difficulty] || difficultySpecific[2]}
-
+const GUIDELINES = `
 Guidelines:
 - Use Argentine Spanish variants (e.g., "vos" instead of "tú", Argentine slang like "che", "boludo", etc.)
 - Choose words/phrases appropriate for the difficulty level
@@ -119,31 +109,7 @@ The question should test understanding of meaning in context, not just memorizat
 The explanation should be concise but informative, helping the learner understand usage in Argentine Spanish.
 The example sentence should sound natural and demonstrate real-world usage in Argentina.
 `;
+
+export const getDifficultyPrompt = (difficulty: number): string => {
+  return `${BASE_PROMPT} ${DIFFICULTY_SPECIFIC[difficulty] || DIFFICULTY_SPECIFIC[2]} ${GUIDELINES}`;
 };
-
-export const CHALLENGE_GENERATION_PROMPT = `
-Generate a Spanish language challenge for intermediate to upper-intermediate learners.
-Focus on practical, everyday Spanish that native speakers actually use.
-
-IMPORTANT: Use ARGENTINE SPANISH (from Argentina, not Spain). Use Argentine vocabulary, expressions, and pronunciation patterns.
-Generate a DIFFERENT word, phrase, or concept each time. Do not repeat the same content.
-Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expressions, false friends, regional phrases, etc.
-
-Guidelines:
-- Use Argentine Spanish variants (e.g., "vos" instead of "tú", Argentine slang like "che", "boludo", etc.)
-- Choose words/phrases that are commonly used in Argentina but often confusing for English speakers
-- Include false friends (words that look similar to English but mean something different)
-- Include common Argentine idioms and colloquial expressions
-- Include regional variations specific to Argentina when relevant
-- Make the wrong options plausible but clearly incorrect when you understand the context
-- Vary the difficulty and topic type to keep content fresh and engaging
-
-The question should test understanding of meaning in context, not just memorization.
-The explanation should be concise but informative, helping the learner understand usage in Argentine Spanish.
-The example sentence should sound natural and demonstrate real-world usage in Argentina.
-
-Target learners who:
-- Have basic Spanish knowledge (A2-B2 level)
-- Want to sound more natural and less like a textbook
-- Are interested in understanding native speakers in real conversations in Argentina
-`;
