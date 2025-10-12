@@ -5,7 +5,7 @@ export const SpanishChallengeSchema = z.object({
   translation: z.string().describe('The correct English translation'),
   type: z.enum(['vocabulary', 'false_friend', 'idiom', 'phrasal_verb', 'colloquial']).describe('Type of challenge'),
   difficulty: z.enum(['intermediate', 'upper_intermediate']).describe('Difficulty level'),
-  question: z.string().describe('The challenge question presented to the user'),
+  question: z.string().describe('The challenge question presented to the user. Do NOT include any emoji in the question text'),
   options: z
     .array(
       z.object({
@@ -18,7 +18,7 @@ export const SpanishChallengeSchema = z.object({
   explanation: z.string().describe('Clear explanation of why this is correct, with usage context'),
   exampleSentence: z.string().describe('A natural Spanish sentence using the word/phrase in context'),
   exampleTranslation: z.string().describe('English translation of the example sentence'),
-  emoji: z.string().describe('An emoji that represents this challenge'),
+  emoji: z.string().describe('An emoji that represents the TYPE of challenge (e.g., 🎯 for vocabulary, 🤔 for idioms, 💬 for colloquial). NEVER use an emoji related to the answer itself'),
 });
 
 export type SpanishChallenge = z.infer<typeof SpanishChallengeSchema>;
