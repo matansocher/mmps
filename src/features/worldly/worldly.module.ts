@@ -1,5 +1,4 @@
 import { Module, OnModuleInit } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { NotifierModule } from '@core/notifier';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
@@ -10,7 +9,7 @@ import { WorldlyController } from './worldly.controller';
 import { WorldlyService } from './worldly.service';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), NotifierModule],
+  imports: [NotifierModule],
   providers: [WorldlyController, WorldlyService, WorldlyBotSchedulerService, TelegramBotsFactoryProvider(BOT_CONFIG)],
 })
 export class WorldlyModule implements OnModuleInit {

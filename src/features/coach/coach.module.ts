@@ -1,5 +1,4 @@
 import { Module, OnModuleInit } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { NotifierModule } from '@core/notifier';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
@@ -10,7 +9,7 @@ import { CoachController } from './coach.controller';
 import { CoachService } from './coach.service';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), NotifierModule],
+  imports: [NotifierModule],
   providers: [CoachController, CoachBotSchedulerService, CoachService, TelegramBotsFactoryProvider(BOT_CONFIG)],
 })
 export class CoachModule implements OnModuleInit {

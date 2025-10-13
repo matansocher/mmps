@@ -1,6 +1,9 @@
+import { Logger } from '@nestjs/common';
 import { Api } from 'telegram';
 import { Peer } from '../interface';
 import { provideTelegramClient } from '../provide-telegram-client';
+
+const logger = new Logger('TelegramClientSendMessage');
 
 type SendMessageOptions = {
   readonly name: string;
@@ -18,7 +21,7 @@ export async function sendMessage({ name, number, message }: SendMessageOptions)
 
   const importedUser = result.users[0];
   if (!importedUser) {
-    console.log('User not found or not on Telegram');
+    logger.warn('User not found or not on Telegram');
     return;
   }
 

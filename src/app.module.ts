@@ -1,6 +1,7 @@
 import { env } from 'node:process';
 import { Module } from '@nestjs/common';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { isProd } from '@core/config';
 import { BOT_CONFIG as chatbotBotConfig, ChatbotModule } from '@features/chatbot';
 import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
@@ -18,6 +19,7 @@ const registerBotModule = (module: any, config: { id: string }) => {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ScheduleModule.forRoot(),
     DefineModule,
     registerBotModule(ChatbotModule, chatbotBotConfig),
     registerBotModule(CoachModule, coachBotConfig),

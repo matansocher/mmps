@@ -1,6 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { Logger } from '@nestjs/common';
 import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_OPUS_MODEL } from '../constants';
 import { provideAnthropicClient } from '../provide-anthropic-client';
+
+const logger = new Logger('AnthropicToolExecutor');
 
 export type Tool = Anthropic.Messages.Tool;
 
@@ -23,7 +26,7 @@ export async function executeTool<T>(tool: Tool, content: string): Promise<T> {
 
     throw new Error('No tool output found in the response');
   } catch (err) {
-    console.error(`Error executing tool ${tool.name}: ${err}`);
+    logger.error(`Error executing tool ${tool.name}: ${err}`);
     return null;
   }
 }

@@ -1,6 +1,8 @@
+import { Logger } from '@nestjs/common';
 import { getMongoCollection, User } from '@core/mongo';
 import { DB_NAME } from './index';
 
+const logger = new Logger('LanglyUserRepository');
 const getCollection = () => getMongoCollection<User>(DB_NAME, 'User');
 
 export async function saveUserDetails(userDetails: any): Promise<boolean> {
@@ -17,7 +19,7 @@ export async function saveUserDetails(userDetails: any): Promise<boolean> {
     await userCollection.insertOne(user);
     return false;
   } catch (err) {
-    console.error(`saveUserDetails - err: ${err}`);
+    logger.error(`saveUserDetails - err: ${err}`);
     return false;
   }
 }
@@ -27,7 +29,7 @@ export async function getUserDetails(chatId: number): Promise<any> {
     const userCollection = getCollection();
     return userCollection.findOne({ chatId });
   } catch (err) {
-    console.error(`getUserDetails - err: ${err}`);
+    logger.error(`getUserDetails - err: ${err}`);
     return null;
   }
 }
