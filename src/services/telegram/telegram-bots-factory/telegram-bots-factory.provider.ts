@@ -1,14 +1,16 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Provider } from '@nestjs/common';
+import { Logger, Provider } from '@nestjs/common';
 import { TELEGRAM_EVENTS } from '../constants';
 import type { TelegramBotConfig } from '../types';
 import { getBotToken } from './get-bot-token';
 
+const logger = new Logger('TelegramBotsFactory');
+
 const createErrorEventListeners = (bot: TelegramBot, botName: string): void => {
   const botErrorHandler = (botName: string, handlerName: string, error): void => {
     const { code, message } = error;
-    console.error(`${botName} - ${handlerName} - code: ${code}, message: ${message}`);
+    logger.error(`${botName} - ${handlerName} - code: ${code}, message: ${message}`);
   };
 
   const { POLLING_ERROR, ERROR } = TELEGRAM_EVENTS;

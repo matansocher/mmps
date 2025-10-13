@@ -1,5 +1,4 @@
 import { Module, OnModuleInit } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { createMongoConnection } from '@core/mongo';
 import { NotifierModule } from '@core/notifier';
 import { TelegramBotsFactoryProvider } from '@services/telegram';
@@ -9,7 +8,7 @@ import { BOT_CONFIG } from './wolt.config';
 import { WoltController } from './wolt.controller';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), NotifierModule],
+  imports: [NotifierModule],
   providers: [WoltController, WoltSchedulerService, TelegramBotsFactoryProvider(BOT_CONFIG)],
 })
 export class WoltModule implements OnModuleInit {
