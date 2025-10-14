@@ -1,4 +1,5 @@
 import { TelegramBotConfig } from '@services/telegram';
+import { Language } from '@shared/langly';
 
 export const BOT_CONFIG: TelegramBotConfig = {
   id: 'LANGLY',
@@ -28,6 +29,7 @@ export enum BOT_ACTIONS {
   ANSWER = 'answer',
   AUDIO = 'audio',
   DIFFICULTY = 'difficulty',
+  LANGUAGE = 'language',
   CONTACT = 'contact',
 }
 
@@ -42,11 +44,26 @@ export const DIFFICULTY_LABELS = {
   4: '🏆 Native Speaker',
 };
 
-const BASE_PROMPT = `
-Generate a Spanish language challenge.
-Focus on practical, everyday Spanish that native speakers actually use.
+export const LANGUAGE_LABELS: Record<Language, string> = {
+  hebrew: '🇮🇱 Hebrew',
+  english: '🇺🇸 English',
+  spanish: '🇦🇷 Spanish',
+  french: '🇫🇷 French',
+  arabic: '🇸🇦 Arabic',
+};
 
-IMPORTANT: Use ARGENTINE SPANISH (from Argentina, not Spain). Use Argentine vocabulary, expressions, and pronunciation patterns.
+const LANGUAGE_SPECIFIC_INSTRUCTIONS: Record<Language, string> = {
+  spanish: `Use ARGENTINE SPANISH (from Argentina, not Spain). Use Argentine vocabulary, expressions, and pronunciation patterns (e.g., "vos" instead of "tú", Argentine slang like "che", "boludo", etc.).`,
+  hebrew: `Use MODERN HEBREW as spoken in Israel. Include contemporary expressions, slang, and colloquialisms used by native Hebrew speakers.`,
+  english: `Use AMERICAN ENGLISH. Focus on natural, everyday language, idioms, and expressions commonly used by native English speakers.`,
+  french: `Use FRENCH as spoken in France. Include common idioms, colloquial expressions, and vocabulary used in everyday conversation.`,
+  arabic: `Use MODERN STANDARD ARABIC with focus on colloquial expressions. Include commonly used phrases and vocabulary in everyday conversation.`,
+};
+
+const BASE_PROMPT = `
+Generate a language learning challenge in the specified target language.
+Focus on practical, everyday language that native speakers actually use.
+
 Generate a DIFFERENT word, phrase, or concept each time. Do not repeat the same content.
 Pick from a wide variety of topics: verbs, nouns, adjectives, idioms, expressions, false friends, regional phrases, etc.
 `;
@@ -57,8 +74,8 @@ const DIFFICULTY_SPECIFIC = {
 - Use common everyday words that beginners need to know
 - Keep sentence structures simple and clear
 - Avoid complex idioms or slang
-- Target learners who are just starting to learn Spanish
-- Example types: basic verbs (ser, estar, tener), common nouns, simple adjectives
+- Target learners who are just starting to learn the language
+- Example types: basic verbs, common nouns, simple adjectives
 - Questions should test fundamental understanding`,
 
   2: `DIFFICULTY LEVEL: INTERMEDIATE
@@ -80,21 +97,20 @@ const DIFFICULTY_SPECIFIC = {
 - Questions should test deep understanding and cultural knowledge`,
 
   4: `DIFFICULTY LEVEL: NATIVE SPEAKER
-- Focus on slang, regional expressions, and colloquialisms used by native Argentines
+- Focus on slang, regional expressions, and colloquialisms used by native speakers
 - Include cultural references, wordplay, and extremely nuanced expressions
-- Use the most authentic Argentine Spanish possible
+- Use the most authentic regional variant possible
 - Challenge even native speakers with less common expressions
-- Target learners who want to speak like a native Argentine
-- Example types: street slang, regional sayings, cultural idioms, lunfardo (Argentine slang)
+- Target learners who want to speak like a native
+- Example types: street slang, regional sayings, cultural idioms
 - Questions should test native-level comprehension and cultural awareness`,
 };
 
 const GUIDELINES = `
 Guidelines:
-- Use Argentine Spanish variants (e.g., "vos" instead of "tú", Argentine slang like "che", "boludo", etc.)
 - Choose words/phrases appropriate for the difficulty level
 - Include false friends when appropriate
-- Include common Argentine idioms and colloquial expressions
+- Include common idioms and colloquial expressions
 - Make the wrong options plausible but clearly incorrect when you understand the context
 - Vary the topic type to keep content fresh and engaging
 
@@ -106,10 +122,18 @@ IMPORTANT - Question and Emoji Guidelines:
 - NEVER use an emoji that hints at or relates to the answer itself
 
 The question should test understanding of meaning in context, not just memorization.
-The explanation should be concise but informative, helping the learner understand usage in Argentine Spanish.
-The example sentence should sound natural and demonstrate real-world usage in Argentina.
+The explanation should be concise but informative, helping the learner understand usage.
+The example sentence should sound natural and demonstrate real-world usage.
 `;
 
-export const getDifficultyPrompt = (difficulty: number): string => {
-  return `${BASE_PROMPT} ${DIFFICULTY_SPECIFIC[difficulty] || DIFFICULTY_SPECIFIC[2]} ${GUIDELINES}`;
+export const getDifficultyPrompt = (difficulty: number, language: Language = Language.SPANISH): string => {
+  const languageInstruction = LANGUAGE_SPECIFIC_INSTRUCTIONS[language] || LANGUAGE_SPECIFIC_INSTRUCTIONS[Language.SPANISH];
+  return `${BASE_PROMPT}
+
+LANGUAGE: ${language.toUpperCase()}
+${languageInstruction}
+
+${DIFFICULTY_SPECIFIC[difficulty] || DIFFICULTY_SPECIFIC[2]}
+
+${GUIDELINES}`;
 };
