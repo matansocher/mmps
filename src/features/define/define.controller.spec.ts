@@ -13,9 +13,15 @@ describe('DefineController', () => {
   const mockTelegramBotToken = 'mockBotToken';
   const mockTelegramChatId = 'mockChatId';
 
-  beforeEach(async () => {
+  beforeAll(() => {
+    // Set environment variables before any tests run
     env.DEFINE_TELEGRAM_BOT_TOKEN = mockTelegramBotToken;
     env.DEFINE_TELEGRAM_CHAT_ID = mockTelegramChatId;
+  });
+
+  beforeEach(async () => {
+    // Clear all mocks before each test
+    jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DefineController],
@@ -24,7 +30,8 @@ describe('DefineController', () => {
     defineController = module.get<DefineController>(DefineController);
   });
 
-  afterEach(() => {
+  afterAll(() => {
+    // Clean up environment variables after all tests
     delete env.DEFINE_TELEGRAM_BOT_TOKEN;
     delete env.DEFINE_TELEGRAM_CHAT_ID;
   });
