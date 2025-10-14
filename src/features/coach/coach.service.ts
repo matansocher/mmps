@@ -1,22 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Competition, CompetitionDetails, getCompetitionMatches, getCompetitions, getCompetitionTable, getMatchesSummaryDetails } from '@services/scores-365';
+import { CompetitionDetails } from '@services/scores-365';
 import { getTableTemplate } from '@services/telegram';
-import { generateCompetitionMatchesString, generateMatchResultsString } from '@shared/coach';
-import { competitionMatchesCacheService, competitionsCacheService, competitionTableCacheService, matchesSummaryCacheService } from './cache';
+import { generateCompetitionMatchesString, generateMatchResultsString, getSportsCompetitionMatches, getSportsCompetitions, getSportsCompetitionTable, getSportsMatchesSummary } from '@shared/sports';
 
 @Injectable()
 export class CoachService {
   async getMatchesSummary(date: string): Promise<CompetitionDetails[]> {
-    let summaryDetails = matchesSummaryCacheService.getMatchesSummary(date);
-    if (!summaryDetails?.length) {
-      const competitions = await this.getCompetitions();
-      summaryDetails = await getMatchesSummaryDetails(competitions, date);
-      summaryDetails?.length && matchesSummaryCacheService.saveMatchesSummary(date, summaryDetails);
-    }
-    if (!summaryDetails?.length) {
-      return null;
-    }
-    return summaryDetails;
+    return await getSportsMatchesSummary(date);
   }
 
   async getMatchesSummaryMessage(date: string, competitionIds: number[] = []): Promise<string> {
@@ -29,11 +19,7 @@ export class CoachService {
   }
 
   async getCompetitionTable(competitionId: number): Promise<Array<{ name: string; midValue: number; value: number }>> {
-    let competitionTableDetails = competitionTableCacheService.getCompetitionTable(competitionId);
-    if (!competitionTableDetails) {
-      competitionTableDetails = await getCompetitionTable(competitionId);
-      competitionTableCacheService.saveCompetitionTable(competitionId, competitionTableDetails);
-    }
+    const competitionTableDetails = await getSportsCompetitionTable(competitionId);
     if (!competitionTableDetails) {
       return null;
     }
@@ -50,15 +36,7 @@ export class CoachService {
   }
 
   async getCompetitionMatches(competitionId: number): Promise<CompetitionDetails> {
-    let competitionMatches = competitionMatchesCacheService.getCompetitionMatches(competitionId);
-    if (!competitionMatches) {
-      competitionMatches = await getCompetitionMatches(competitionId);
-      competitionMatchesCacheService.saveCompetitionMatches(competitionId, competitionMatches);
-    }
-    if (!competitionMatches?.matches?.length) {
-      return null;
-    }
-    return competitionMatches;
+    return await getSportsCompetitionMatches(competitionId);
   }
 
   async getCompetitionMatchesMessage(competitionId: number): Promise<string> {
@@ -69,15 +47,7 @@ export class CoachService {
     return generateCompetitionMatchesString(competitionMatches);
   }
 
-  async getCompetitions(): Promise<Competition[]> {
-    let competitions = competitionsCacheService.getCompetitions();
-    if (!competitions) {
-      competitions = await getCompetitions();
-      competitionsCacheService.saveCompetitions(competitions);
-    }
-    if (!competitions?.length) {
-      return null;
-    }
-    return competitions;
+  async getCompetitions() {
+    return await getSportsCompetitions();
   }
 }

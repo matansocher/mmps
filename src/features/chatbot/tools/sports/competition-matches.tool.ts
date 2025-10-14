@@ -1,14 +1,14 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { getCompetitionMatches } from '@services/scores-365';
-import { generateCompetitionMatchesString } from '@shared/coach';
+import { generateCompetitionMatchesString, getSportsCompetitionMatches } from '@shared/sports';
 
 const schema = z.object({
   competitionId: z.number().describe('The ID of the competition to get matches for'),
 });
 
 async function runner({ competitionId }: z.infer<typeof schema>) {
-  const matchesData = await getCompetitionMatches(competitionId);
+  const matchesData = await getSportsCompetitionMatches(competitionId);
+
   if (!matchesData?.matches?.length) {
     return `No upcoming matches found for competition ID ${competitionId}.`;
   }
