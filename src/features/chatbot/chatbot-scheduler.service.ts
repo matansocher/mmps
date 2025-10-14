@@ -113,10 +113,8 @@ Keep it concise and in Hebrew`;
 2. **Calendar**: Check my calendar events for tomorrow. Format as:
    - List each event (just the name and time)
    - If no events, write "- no events"
-3. **Stock Market**: Show the top 7 companies (e.g., Apple, Amazon, Tesla, Meta, Nvidia, Microsoft, Google) with their current stock values and daily change percentage.
-4. **Crypto**: Show current Bitcoin and Ethereum values with daily change percentage.
-5. **Exercises**: Mention if I exercised today or not. If I did, congratulate me and provide a fun motivational message. If I didn't, encourage me to exercise tomorrow with a motivational message.
-6. **Fun Fact**: End with a fun fact related to todays date or if no something interesting, just a random fun fact.
+3. **Exercises**: Mention if I exercised today or not. Keep it brief (1-2 sentences max).
+4. **Fun Fact**: End with a fun fact related to todays date or if no something interesting, just a random fun fact.
 
 Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
 
