@@ -1,7 +1,7 @@
 import { BaseCache } from '@core/services';
 import { CompetitionTableDetails } from '@services/scores-365';
 
-const validForMinutes = 30;
+const validForMinutes = 60;
 
 export class CompetitionTableCacheService extends BaseCache<CompetitionTableDetails> {
   constructor() {

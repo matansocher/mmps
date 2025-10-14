@@ -1,13 +1,14 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { getCompetitionTable } from '@services/scores-365';
+import { getSportsCompetitionTable } from '@shared/sports';
 
 const schema = z.object({
   competitionId: z.number().describe('The ID of the competition to get the table for'),
 });
 
 async function runner({ competitionId }: z.infer<typeof schema>) {
-  const tableDetails = await getCompetitionTable(competitionId);
+  const tableDetails = await getSportsCompetitionTable(competitionId);
+
   if (!tableDetails?.competitionTable?.length) {
     return `No table data available for competition ID ${competitionId}.`;
   }
