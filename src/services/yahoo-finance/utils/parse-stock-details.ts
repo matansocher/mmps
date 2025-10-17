@@ -1,6 +1,6 @@
-import type { DataInterface, StockDataSummary } from '../interface';
+import type { StockDetail } from '../interface';
 
-export function parseStockDetails(quote: DataInterface): StockDataSummary {
+export function parseStockDetail(quote: any): StockDetail {
   return {
     symbol: quote.symbol || '',
     shortName: quote.shortName || '',
@@ -22,8 +22,14 @@ export function parseStockDetails(quote: DataInterface): StockDataSummary {
       high: quote.fiftyTwoWeekHigh || 0,
     },
     fiftyTwoWeekChangePercent: quote.fiftyTwoWeekChangePercent || 0,
-    esgPopulated: quote.esgPopulated || false,
-    gmtOffsetMilliseconds: quote.gmtOffSetMilliseconds || 0,
+    dividendRate: quote.dividendRate,
+    dividendYield: quote.dividendYield,
+    trailingPE: quote.trailingPE,
+    forwardPE: quote.forwardPE,
+    earningsTimestamp: quote.earningsTimestamp,
+    earningsTimestampStart: quote.earningsTimestampStart,
+    earningsTimestampEnd: quote.earningsTimestampEnd,
+    averageAnalystRating: quote.averageAnalystRating,
     exchangeTimezoneName: quote.exchangeTimezoneName || '',
     exchangeTimezoneShortName: quote.exchangeTimezoneShortName || '',
     regularMarketPreviousClose: quote.regularMarketPreviousClose || 0,
