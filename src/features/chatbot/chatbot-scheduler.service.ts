@@ -1,5 +1,5 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { BOT_CONFIG } from './chatbot.config';
@@ -8,11 +8,9 @@ import { dailySummary, exerciseReminder, footballPredictions, footballUpdate, sp
 
 @Injectable()
 export class ChatbotSchedulerService implements OnModuleInit {
-  private readonly logger = new Logger(ChatbotSchedulerService.name);
-
   constructor(
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
     private readonly chatbotService: ChatbotService,
+    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {
