@@ -1,1 +1,2 @@
-export * from './yahoo-finance';
+export { searchStocks, getStockDetails } from './yahoo-finance';
+export type { StockDetail, StockSearchResult } from './interface';
