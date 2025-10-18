@@ -2,6 +2,7 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { MemorySaver } from '@langchain/langgraph';
+import { ToolCallbackOptions } from './agent/tool-callback-handler';
 
 export type AgentDescriptor = {
   name: string;
@@ -19,11 +20,13 @@ export type CreateAgentOptions = {
   llm: ChatAnthropic;
   checkpointSaver?: MemorySaver;
   responseFormat?: any;
+  toolCallbackOptions?: ToolCallbackOptions;
 };
 
 export type AiServiceOptions = {
   name: string;
   recursionLimit?: number;
+  callbacks?: any[];
 };
 
 export type InvokeOptions = {
