@@ -24,12 +24,13 @@ import {
   weatherForecastTool,
   woltTool,
   worldlyTool,
+  youtubeTool,
 } from '../tools';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, YouTube video search, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -64,6 +65,7 @@ Available capabilities:
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
 - Spotify tool: Search for songs, artists, and playlists on Spotify. Get detailed track information, find artist top tracks, and discover music. Returns song details with links to listen on Spotify.
+- YouTube Search tool: Search for YouTube videos by query. Returns video titles, channel names, descriptions, publish dates, and direct links to watch. Perfect for finding tutorials, music videos, reviews, or any video content.
 - Recipes tool: Access your personal cooking recipe collection. List all recipes or get specific recipe details including ingredients, instructions, tags, and links.
 - GitHub tool (MCP): Automate GitHub operations including creating/updating files, searching repositories, creating issues and pull requests, managing branches, reading file contents, and more. Use this for any GitHub-related tasks.
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
@@ -135,6 +137,7 @@ Guidelines:
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - Spotify Music: When users ask about music, use the spotify tool. The tool returns JSON data - parse it and format the response according to the Spotify Music Guidelines above. Always include Spotify links so users can listen.
+- YouTube Search: When users want to find YouTube videos, use the youtube_search tool. Natural language variations include: "find videos about", "search YouTube for", "show me YouTube videos on", "find tutorials for". The tool returns formatted text with video titles, channel names, links, descriptions, and publish dates - use it directly in your response.
 - GitHub Automation (MCP): When users need to work with GitHub repositories, use the github tool with the appropriate operation:
   * IMPORTANT: The owner defaults to "matansocher" when not specified. So "mmps repo" means "matansocher/mmps".
   * create_or_update_file: Create or modify files in repos
@@ -199,6 +202,7 @@ export function agent(): AgentDescriptor {
     exerciseTool,
     exerciseAnalyticsTool,
     spotifyTool,
+    youtubeTool,
     recipesTool,
     githubTool,
     woltTool,
