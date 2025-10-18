@@ -25,6 +25,7 @@ export { exerciseTool } from './exercise/exercise.tool';
 export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
 
 export { googleMapsPlaceTool } from './maps/google-maps-place.tool';
+export { googlePlaceDetailsTool } from './maps/google-place-details.tool';
 
 export { spotifyTool } from './music/spotify.tool';
 

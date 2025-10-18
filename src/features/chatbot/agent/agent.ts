@@ -10,6 +10,7 @@ import {
   exerciseTool,
   githubTool,
   googleMapsPlaceTool,
+  googlePlaceDetailsTool,
   imageAnalyzerTool,
   imageGeneratorPromptEnhancerTool,
   imageGeneratorTool,
@@ -28,7 +29,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -57,6 +58,7 @@ Available capabilities:
 - Image Generator Prompt Enhancer tool: ALWAYS use this tool FIRST when a user requests image generation. It enhances basic prompts to produce better, more detailed results.
 - Image Generator tool: Use this tool SECOND, after the prompt enhancer, with the enhanced prompt to generate the actual image. The tool returns "IMAGE_GENERATED: [URL]" format. CRITICAL: You MUST ALWAYS extract and include the URL in your response to the user. Never respond without showing the image URL to the user.
 - Google Maps Place tool: Get Google Maps and Street View images for any place, landmark, or address. Returns both a map view and street-level view of the location.
+- Google Place Details tool: Get comprehensive information about a specific place using Google Places API. Returns address, phone number, website, rating, reviews, opening hours, price level, and more. Use this when users want detailed information about a business or location.
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Football Match Prediction tools: Get prediction data for specific matches and identify top matches worth predicting. Use comprehensive data including betting odds, recent form, and statistics to make informed predictions.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
@@ -90,6 +92,14 @@ Google Maps Place Guidelines:
 - Replace URL_HERE with the actual URL returned from the tool.
 - If the tool returns an error, explain that the location couldn't be found or mapped.
 - Examples of requests: "Show me the Golden Gate Bridge", "Where is the Statue of Liberty", "Map of Tokyo Tower".
+
+Google Place Details Guidelines:
+- When users want detailed information about a business, restaurant, landmark, or location, use the google_place_details tool.
+- Natural language variations: "tell me about", "what are the hours for", "phone number for", "reviews of", "is X open now", "information about".
+- The tool returns comprehensive place data including: address, phone, website, rating, reviews, opening hours, price level, and business status.
+- The tool returns formatted markdown text - use it directly in your response.
+- Use this tool when users want more than just a map view - they want operational details, reviews, or contact information.
+- Examples: "Tell me about Central Perk coffee shop", "Is the Empire State Building open now?", "What are reviews for Joe's Pizza?"
 
 Spotify Music Guidelines:
 - When users ask about music, songs, artists, or playlists, use the spotify tool with the appropriate action.
@@ -178,6 +188,7 @@ export function agent(): AgentDescriptor {
     audioTranscriberTool,
     textToSpeechTool,
     googleMapsPlaceTool,
+    googlePlaceDetailsTool,
     competitionMatchesTool,
     competitionTableTool,
     competitionsListTool,
