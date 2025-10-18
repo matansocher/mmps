@@ -3,6 +3,7 @@ import { MemorySaver } from '@langchain/langgraph';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { AgentDescriptor, CreateAgentOptions, OrchestratorDescriptor } from '../types';
 import { AiService } from './service';
+import { ToolCallbackHandler } from './tool-callback-handler';
 
 function wrapToolWithLogging(tool: any) {
   return {
@@ -23,7 +24,7 @@ function wrapToolWithLogging(tool: any) {
 
 export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor, opts: CreateAgentOptions): AiService {
   const { name, prompt, tools = [] } = descriptor;
-  const { llm, checkpointSaver = new MemorySaver(), responseFormat } = opts;
+  const { llm, checkpointSaver = new MemorySaver(), responseFormat, toolCallbackOptions } = opts;
 
   // Handle multi-agent orchestration
   if ('agents' in descriptor && Array.isArray(descriptor.agents)) {
@@ -34,10 +35,13 @@ export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor
     }
   }
 
+  // Create tool callback handler if options provided
+  const callbacks = toolCallbackOptions ? [new ToolCallbackHandler(toolCallbackOptions)] : undefined;
+
   // const wrappedTools = tools.map((tool) => wrapToolWithLogging(tool));
   // const reactAgent = createReactAgent({ llm, tools: wrappedTools, checkpointSaver });
   const reactAgent = createReactAgent({ llm, tools, checkpointSaver });
-  return new AiService(reactAgent, { name });
+  return new AiService(reactAgent, { name, callbacks });
 }
 
 // export function asTool(agent: AiService): DynamicTool {

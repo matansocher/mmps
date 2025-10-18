@@ -3,7 +3,7 @@ import { env } from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
 import { agent } from './agent';
-import { AiService, createAgent } from './agent';
+import { AiService, createAgent, ToolCallbackOptions } from './agent';
 import { ChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
@@ -18,7 +18,23 @@ export class ChatbotService {
       temperature: 0.2,
       apiKey: env.ANTHROPIC_API_KEY,
     });
-    this.aiService = createAgent(agent(), { llm });
+
+    const toolCallbackOptions: ToolCallbackOptions = {
+      enableLogging: false,
+      onToolStart: async (toolName, input) => {
+        this.logger.log(`🔧 Tool Start: ${toolName}`);
+        this.logger.log(`   Parameters: ${JSON.stringify(input)}`);
+      },
+      onToolEnd: async (toolName, output, metadata) => {
+        this.logger.log(`✅ Tool End: ${toolName} (${metadata?.duration}ms)`);
+      },
+      onToolError: async (toolName, error, metadata) => {
+        this.logger.error(`❌ Tool Error: ${toolName} (${metadata?.duration}ms)`);
+        this.logger.error(`   Error: ${error.message}`);
+      },
+    };
+
+    this.aiService = createAgent(agent(), { llm, toolCallbackOptions });
   }
 
   async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {

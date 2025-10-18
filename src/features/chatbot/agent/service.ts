@@ -16,6 +16,7 @@ function createMessage(message: string, opts: Partial<InvokeOptions> = {}): Mess
 export class AiService {
   readonly name: string;
   readonly recursionLimit: number;
+  readonly defaultCallbacks?: any[];
 
   constructor(
     readonly agent: CompiledStateGraph<any, any>,
@@ -23,6 +24,7 @@ export class AiService {
   ) {
     this.name = options.name;
     this.recursionLimit = options.recursionLimit ?? 100;
+    this.defaultCallbacks = options.callbacks;
   }
 
   private createOptions(opts: Partial<InvokeOptions> = {}): RunnableConfig {
@@ -34,8 +36,10 @@ export class AiService {
       config.configurable = { thread_id: opts.threadId };
     }
 
-    if (opts.callbacks) {
-      config.callbacks = opts.callbacks;
+    // Merge default callbacks with runtime callbacks
+    const callbacks = [...(this.defaultCallbacks || []), ...(opts.callbacks || [])];
+    if (callbacks.length > 0) {
+      config.callbacks = callbacks;
     }
 
     return config;
