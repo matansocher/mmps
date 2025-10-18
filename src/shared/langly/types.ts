@@ -24,6 +24,5 @@ export type UserPreferences = {
   previousResponseId?: string;
   difficulty?: DifficultyLevel;
   language?: Language;
-  preferredChallengeTypes?: string[]; // Array of ChallengeType values
   readonly createdAt: Date;
 };

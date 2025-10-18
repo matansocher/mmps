@@ -122,7 +122,7 @@ export class LanglyController implements OnModuleInit {
           const [answerIndex, isCorrect] = params;
           const answerResult = await this.answerHandler(chatId, messageId, parseInt(answerIndex), isCorrect === 'true');
           if (answerResult) {
-            this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, word: answerResult.word, type: answerResult.type, challengeType: answerResult.challengeType, isCorrect: answerResult.isCorrect ? '✅' : '❌' }, userDetails);
+            this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, word: answerResult.word, type: answerResult.type, isCorrect: answerResult.isCorrect ? '✅' : '❌' }, userDetails);
           }
           break;
 
@@ -201,7 +201,7 @@ export class LanglyController implements OnModuleInit {
     await this.bot.sendMessage(chatId, unsubscribeMessage);
   }
 
-  async answerHandler(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<{ word: string; type: string; challengeType: string; isCorrect: boolean } | null> {
+  async answerHandler(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<{ word: string; type: string; isCorrect: boolean } | null> {
     return await this.langlyService.handleAnswer(chatId, messageId, answerIndex, isCorrect);
   }
 
