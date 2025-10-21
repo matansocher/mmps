@@ -25,7 +25,7 @@ import {
   woltTool,
   worldlyTool,
   youtubeTool,
-} from '../tools';
+} from '@shared/tools';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
