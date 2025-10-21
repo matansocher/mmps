@@ -1,4 +1,4 @@
-import { competitionMatchesTool, competitionsListTool, competitionTableTool, matchPredictionTool, matchSummaryTool, topMatchesForPredictionTool } from '@shared/tools';
+import { competitionMatchesTool, competitionsListTool, competitionTableTool, matchPredictionTool, matchSummaryTool, topMatchesForPredictionTool } from '@shared/ai';
 
 const AGENT_PROMPT = `
 You are a football predictions assistant. Your role is to analyze upcoming football matches and provide predictions with betting odds.

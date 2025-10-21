@@ -12,7 +12,7 @@ export { audioTranscriberTool } from './audio/audio-transcriber.tool';
 
 export { textToSpeechTool } from './audio/text-to-speech.tool';
 
-export { competitionMatchesTool, competitionTableTool, competitionsListTool, matchSummaryTool, matchPredictionTool, topMatchesForPredictionTool } from '@shared/tools';
+export { competitionMatchesTool, competitionTableTool, competitionsListTool, matchSummaryTool, matchPredictionTool, topMatchesForPredictionTool } from './sports';
 
 export { calendarTool } from './calendar/calendar.tool';
 
