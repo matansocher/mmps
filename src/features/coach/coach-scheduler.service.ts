@@ -20,7 +20,10 @@ export class CoachBotSchedulerService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    // this.handleIntervalFlow(); // for testing purposes
+    setTimeout(() => {
+      // this.handleIntervalFlow(); // for testing purposes
+      this.handlePredictionsFlow(); // for testing purposes
+    }, 8000);
   }
 
   @Cron(`59 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
@@ -52,6 +55,41 @@ export class CoachBotSchedulerService implements OnModuleInit {
       }
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+    }
+  }
+
+  @Cron(`0 13 * * *`, { name: 'coach-predictions-scheduler', timeZone: DEFAULT_TIMEZONE })
+  async handlePredictionsFlow(): Promise<void> {
+    try {
+      const subscriptions = await getActiveSubscriptions();
+      if (!subscriptions?.length) {
+        return;
+      }
+
+      // Generate predictions once for all users (no league filtering)
+      const predictionsText = await this.coachService.getMatchesPredictionsMessage(getDateString());
+      if (!predictionsText) {
+        return;
+      }
+
+      // Send the same predictions to all users
+      const relevantSubscriptions = subscriptions.filter((chatId) => !!chatId);
+      const chatIds = relevantSubscriptions.map(({ chatId }) => chatId);
+      await Promise.all(
+        chatIds.map(async (chatId) => {
+          await sendShortenedMessage(this.bot, chatId, predictionsText, { parse_mode: 'Markdown' }).catch(async (err) => {
+            const userDetails = await getUserDetails(chatId);
+            if (err.message.includes(BLOCKED_ERROR)) {
+              await updateSubscription(chatId, { isActive: false });
+              this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+            } else {
+              this.notifier.notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+            }
+          });
+        }),
+      );
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 }

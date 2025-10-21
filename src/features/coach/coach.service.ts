@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { CompetitionDetails } from '@services/scores-365';
 import { getTableTemplate } from '@services/telegram';
 import { generateCompetitionMatchesString, generateMatchResultsString, getSportsCompetitionMatches, getSportsCompetitions, getSportsCompetitionTable, getSportsMatchesSummary } from '@shared/sports';
+import { CoachPredictionsService } from './predictions/coach-predictions.service';
 
 @Injectable()
 export class CoachService {
+  constructor(private readonly predictionsService: CoachPredictionsService) {}
   async getMatchesSummary(date: string): Promise<CompetitionDetails[]> {
     return await getSportsMatchesSummary(date);
   }
@@ -49,5 +51,9 @@ export class CoachService {
 
   async getCompetitions() {
     return await getSportsCompetitions();
+  }
+
+  async getMatchesPredictionsMessage(date: string, competitionIds: number[] = []): Promise<string> {
+    return await this.predictionsService.generatePredictions(date, competitionIds);
   }
 }

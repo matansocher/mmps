@@ -12,12 +12,7 @@ export { audioTranscriberTool } from './audio/audio-transcriber.tool';
 
 export { textToSpeechTool } from './audio/text-to-speech.tool';
 
-export { competitionMatchesTool } from './sports/competition-matches.tool';
-export { competitionTableTool } from './sports/competition-table.tool';
-export { competitionsListTool } from './sports/competitions-list.tool';
-export { matchSummaryTool } from './sports/match-summary.tool';
-export { matchPredictionTool } from './sports/match-prediction.tool';
-export { topMatchesForPredictionTool } from './sports/top-matches-for-prediction.tool';
+export { competitionMatchesTool, competitionTableTool, competitionsListTool, matchSummaryTool, matchPredictionTool, topMatchesForPredictionTool } from '@shared/tools';
 
 export { calendarTool } from './calendar/calendar.tool';
 
