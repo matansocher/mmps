@@ -4,7 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, exerciseReminder, footballPredictions, footballUpdate, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import { dailySummary, exerciseReminder, footballPredictions, footballUpdate, footballUpdateEvening, sportsCalendar, weeklyExerciseSummary } from './schedulers';
 
 @Injectable()
 export class ChatbotSchedulerService implements OnModuleInit {
@@ -17,6 +17,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
+      // this.handleFootballUpdateEvening(); // for testing purposes
       // this.handleFootballPredictions(); // for testing purposes
       // this.handleSportsCalendar(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
@@ -24,9 +25,14 @@ export class ChatbotSchedulerService implements OnModuleInit {
     }, 8000);
   }
 
-  @Cron(`59 12,23 * * *`, { name: 'chatbot-football-update', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`59 12 * * *`, { name: 'chatbot-football-update-midday', timeZone: DEFAULT_TIMEZONE })
   async handleFootballUpdate(): Promise<void> {
     await footballUpdate(this.bot, this.chatbotService);
+  }
+
+  @Cron(`59 23 * * *`, { name: 'chatbot-football-update-evening', timeZone: DEFAULT_TIMEZONE })
+  async handleFootballUpdateEvening(): Promise<void> {
+    await footballUpdateEvening(this.bot, this.chatbotService);
   }
 
   @Cron(`00 13 * * *`, { name: 'chatbot-football-predictions', timeZone: DEFAULT_TIMEZONE })
