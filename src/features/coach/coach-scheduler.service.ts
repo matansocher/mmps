@@ -22,7 +22,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
   onModuleInit(): void {
     setTimeout(() => {
       // this.handleIntervalFlow(); // for testing purposes
-      this.handlePredictionsFlow(); // for testing purposes
+      // this.handlePredictionsFlow(); // for testing purposes
     }, 8000);
   }
 
