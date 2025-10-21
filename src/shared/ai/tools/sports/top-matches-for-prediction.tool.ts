@@ -3,20 +3,52 @@ import { z } from 'zod';
 import { getCompetitions, getCompetitionTable, getMatchesSummaryDetails } from '@services/scores-365';
 
 const schema = z.object({
-  date: z.string().describe('Date in YYYY-MM-DD format to get all matches for'),
+  date: z.string().describe('Start date in YYYY-MM-DD format to get matches for'),
+  endDate: z.string().optional().describe('Optional end date in YYYY-MM-DD format. If provided, will fetch matches for the date range from date to endDate (inclusive)'),
 });
 
-async function runner({ date }: z.infer<typeof schema>) {
+// generate date range if endDate is provided
+const handleDates = (date: string, endDate: string): string[] => {
+  const dates: string[] = [];
+  if (endDate) {
+    const startDate = new Date(date);
+    const end = new Date(endDate);
+    const current = new Date(startDate);
+
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+  } else {
+    dates.push(date);
+  }
+
+  return dates;
+};
+
+async function runner({ date, endDate }: z.infer<typeof schema>) {
   try {
     const competitions = await getCompetitions();
     if (!competitions?.length) {
       return 'No competitions available at the moment.';
     }
 
-    const summaryDetails = await getMatchesSummaryDetails(competitions, date);
-    if (!summaryDetails?.length) {
-      return `No matches found for ${date}.`;
+    const dates = handleDates(date, endDate);
+
+    // Fetch matches for all dates in range
+    const allSummaryDetails = [];
+    for (const currentDate of dates) {
+      const summaryDetails = await getMatchesSummaryDetails(competitions, currentDate);
+      if (summaryDetails?.length) {
+        allSummaryDetails.push(...summaryDetails);
+      }
     }
+
+    if (!allSummaryDetails?.length) {
+      return endDate ? `No matches found for date range ${date} to ${endDate}.` : `No matches found for ${date}.`;
+    }
+
+    const summaryDetails = allSummaryDetails;
 
     const leagueTables = new Map<number, Array<{ name: string; position: number; points: number; gamesPlayed: number }>>();
 
@@ -93,17 +125,18 @@ async function runner({ date }: z.infer<typeof schema>) {
     }
 
     if (!allMatches.length) {
-      return `No upcoming matches found for ${date}.`;
+      return endDate ? `No upcoming matches found for date range ${date} to ${endDate}.` : `No upcoming matches found for ${date}.`;
     }
 
-    // Sort by start time
     const sorted = allMatches.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
+    const dateRangeText = endDate ? `${date} to ${endDate}` : date;
     return JSON.stringify(
       {
         date,
+        endDate: endDate || date,
         matchCount: sorted.length,
-        note: `All upcoming matches for ${date}. You should analyze these matches and decide which ones are important based on factors like: league prestige, team positions in standings, title races, relegation battles, derbies, and points differences.`,
+        note: `All upcoming matches for ${dateRangeText}. You should analyze these matches and decide which ones are important based on factors like: league prestige, team positions in standings, title races, relegation battles, derbies, and points differences.`,
         matches: sorted,
       },
       null,
@@ -116,12 +149,16 @@ async function runner({ date }: z.infer<typeof schema>) {
 
 export const topMatchesForPredictionTool = tool(runner, {
   name: 'top_matches_for_prediction',
-  description: `Get ALL upcoming matches for a given date with league table information where available.
+  description: `Get ALL upcoming matches for a given date or date range with league table information where available.
 
-This tool returns ALL upcoming matches (not started yet) for the specified date, including:
+This tool returns ALL upcoming matches (not started yet) for the specified date or date range, including:
 - Match details (teams, venue, start time)
 - Competition information
 - League table positions and points (when available)
+
+Parameters:
+- date: Start date (required) in YYYY-MM-DD format
+- endDate: End date (optional) in YYYY-MM-DD format. If provided, fetches all matches from date to endDate (inclusive)
 
 You should analyze the matches and determine which ones are important based on factors such as:
 - League prestige (Champions League, top European leagues, etc.)
