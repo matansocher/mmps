@@ -39,7 +39,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
     await dailySummary(this.bot, this.chatbotService);
   }
 
-  @Cron(`05 13 * * *`, { name: 'chatbot-important-games-calendar', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`00 08 * * 0,3`, { name: 'chatbot-important-games-calendar', timeZone: DEFAULT_TIMEZONE })
   async handleSportsCalendar(): Promise<void> {
     await sportsCalendar(this.bot, this.chatbotService);
   }
