@@ -7,6 +7,25 @@ const schema = z.object({
   endDate: z.string().optional().describe('Optional end date in YYYY-MM-DD format. If provided, will fetch matches for the date range from date to endDate (inclusive)'),
 });
 
+// generate date range if endDate is provided
+const handleDates = (date: string, endDate: string): string[] => {
+  const dates: string[] = [];
+  if (endDate) {
+    const startDate = new Date(date);
+    const end = new Date(endDate);
+    const current = new Date(startDate);
+
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+  } else {
+    dates.push(date);
+  }
+
+  return dates;
+};
+
 async function runner({ date, endDate }: z.infer<typeof schema>) {
   try {
     const competitions = await getCompetitions();
@@ -14,20 +33,7 @@ async function runner({ date, endDate }: z.infer<typeof schema>) {
       return 'No competitions available at the moment.';
     }
 
-    // Generate date range if endDate is provided
-    const dates: string[] = [];
-    if (endDate) {
-      const startDate = new Date(date);
-      const end = new Date(endDate);
-      const current = new Date(startDate);
-
-      while (current <= end) {
-        dates.push(current.toISOString().split('T')[0]);
-        current.setDate(current.getDate() + 1);
-      }
-    } else {
-      dates.push(date);
-    }
+    const dates = handleDates(date, endDate);
 
     // Fetch matches for all dates in range
     const allSummaryDetails = [];
@@ -122,7 +128,6 @@ async function runner({ date, endDate }: z.infer<typeof schema>) {
       return endDate ? `No upcoming matches found for date range ${date} to ${endDate}.` : `No upcoming matches found for ${date}.`;
     }
 
-    // Sort by start time
     const sorted = allMatches.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
     const dateRangeText = endDate ? `${date} to ${endDate}` : date;
