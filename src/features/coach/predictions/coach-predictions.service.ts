@@ -81,4 +81,73 @@ If no important matches: "אין משחקים חשובים במיוחד היום
       return null;
     }
   }
+
+  async generatePredictionsVerification(date: string, competitionIds: number[] = []): Promise<string> {
+    try {
+      const todayDate = date || getDateString();
+
+      // Build the competition filter text for the prompt
+      let competitionFilter = '';
+      if (competitionIds && competitionIds.length > 0) {
+        competitionFilter = `\n\nIMPORTANT: Focus on matches from these competition IDs: ${competitionIds.join(', ')}`;
+      }
+
+      const userPrompt = `Generate an evening football update with prediction verification for today (${todayDate}).
+
+IMPORTANT: Look back in our conversation history from earlier today to find the morning predictions you made.
+
+1. Use the match_summary tool to get today's final match results.
+
+2. Review the conversation history to find your morning predictions (the message sent around 13:00 today).
+   - Look for predictions with percentages (🏠 X% | 🤝 Y% | 🚌 Z%)
+   - Identify which matches you predicted${competitionFilter}
+
+3. For each match you predicted, compare:
+   - Your predicted outcome (which option had the highest percentage)
+   - The actual result
+   - How close your prediction was
+
+4. Format the message in Hebrew as:
+   - Start with "⚽ תוצאות היום והערכת הניבויים:"
+   - For each match that was predicted:
+     * Match info and final score
+     * Your prediction: "ניבאתי: [outcome] ([percentage]%)"
+     * Actual result: "התוצאה: [actual outcome]"
+     * Accuracy comment:
+       - If correct: "✅ ניבוי מדויק!" or "🎯 פגעתי במטרה!"
+       - If close (e.g., predicted draw, ended 1-1): "🤏 קרוב מאוד!"
+       - If wrong: "❌ טעיתי הפעם" or "😅 לא היה יום טוב לניבויים"
+   - For matches that completed but weren't predicted:
+     * Just show the result briefly
+   - End with a summary:
+     * "סיכום: X/Y ניבויים נכונים" (if you made predictions)
+     * Add a humble/confident note based on accuracy
+
+5. If you didn't make predictions today or cannot find them in history:
+   - Just show today's results without the prediction comparison
+   - Say "היום לא היו ניבויים, אבל הנה התוצאות:"
+
+IMPORTANT: Respond in Hebrew only. Keep it engaging, honest about mistakes, and celebrate successes!`;
+
+      const messages = [new SystemMessage(coachPredictionsAgent.prompt), new HumanMessage(userPrompt)];
+
+      const result = await this.agent.invoke(
+        { messages },
+        {
+          configurable: { thread_id: `coach_predictions_${MY_USER_ID}` },
+          recursionLimit: 100,
+        },
+      );
+
+      if (result && result.messages && result.messages.length > 0) {
+        const lastMessage = result.messages[result.messages.length - 1];
+        return lastMessage.content || null;
+      }
+
+      return null;
+    } catch (err) {
+      this.logger.error(`Error generating prediction verification: ${err}`);
+      return null;
+    }
+  }
 }
