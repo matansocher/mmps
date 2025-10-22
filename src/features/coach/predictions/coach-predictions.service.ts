@@ -39,16 +39,36 @@ export class CoachPredictionsService {
         competitionFilter = `\n\nIMPORTANT: Filter matches to only include those from these competition IDs: ${competitionIds.join(', ')}`;
       }
 
-      const userPrompt = `Generate football predictions for today (${todayDate}).
+      const userPrompt = `Generate football predictions with value betting recommendations for today (${todayDate}).
 
 1. Use top_matches_for_prediction to get all upcoming matches for today${competitionFilter}
 2. Select the most important matches (3-6 matches typically)
 3. For each selected match, use match_prediction_data to get betting odds and statistics
 4. Analyze and provide your predictions
 
+5. **VALUE BETTING ANALYSIS** (CRITICAL):
+   After generating all predictions, identify VALUE BETS using this logic:
+
+   For each match and each outcome (Home/Draw/Away):
+   a) Check if outcome meets BOTH criteria:
+      - Your AI prediction probability ≥ 70%
+      - Betting odds for that outcome ≥ 1.30
+
+   b) If criteria met, calculate Expected Value (EV):
+      - Formula: EV = (AI_probability × betting_odds) - 1
+      - Example: AI predicts 75% home win, odds 1.50
+        → EV = (0.75 × 1.50) - 1 = 0.125 = +12.5%
+
+   c) Risk Rating:
+      - 🟢 Low Risk: AI confidence ≥ 80%
+      - 🟡 Medium Risk: AI confidence 70-79%
+
+   d) ONLY show bets with POSITIVE Expected Value (EV > 0)
+
 IMPORTANT: Respond in Hebrew only.
 
 Format your response as:
+**SECTION 1: Regular Predictions**
 ⚽ ניבויים למשחקי היום:
 
 For each match:
@@ -57,6 +77,20 @@ For each match:
 סיכויים לפי הימורים: 🏠 X.XX | 🤝 Y.YY | 🚌 Z.ZZ
 הניבוי שלי: 🏠 X% | 🤝 Y% | 🚌 Z%
 [Brief 2-3 sentence analysis in Hebrew explaining your prediction]
+
+**SECTION 2: Value Betting Recommendations** (ONLY if value bets exist)
+- Add a separator line: "---"
+- Start with "💰 המלצות הימורים - ערך טוב:"
+- For EACH value bet:
+  * Match info: Competition, teams
+  * Recommended outcome (e.g., "המלצה: ניצחון סיטי בבית 🏠")
+  * Betting odds: "סיכויים: X.XX"
+  * AI confidence: "הניבוי שלי: X%"
+  * Expected value: "ערך צפוי: +X% 💰"
+  * Risk rating: "דירוג סיכון: 🟢 נמוך" or "🟡 בינוני"
+  * Brief reasoning (1-2 sentences explaining why it's a value bet)
+
+- If NO value bets found, do NOT include Section 2 at all
 
 If no important matches: "אין משחקים חשובים במיוחד היום 🤷‍♂️"`;
 
