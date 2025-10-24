@@ -4,7 +4,7 @@ import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, exerciseReminder, footballPredictions, footballUpdate, footballUpdateEvening, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import { dailySummary, exerciseReminder, footballPredictions, footballUpdate, footballUpdateEvening, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
 
 @Injectable()
 export class ChatbotSchedulerService implements OnModuleInit {
@@ -22,6 +22,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
       // this.handleSportsCalendar(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
       // this.handleWeeklyExerciseSummary(); // for testing purposes
+      this.handleReminderCheck(); // for testing purposes
     }, 8000);
   }
 
@@ -58,5 +59,10 @@ export class ChatbotSchedulerService implements OnModuleInit {
   @Cron(`0 22 * * 6`, { name: 'chatbot-weekly-exercise-summary', timeZone: DEFAULT_TIMEZONE })
   async handleWeeklyExerciseSummary(): Promise<void> {
     await weeklyExerciseSummary(this.bot, this.chatbotService);
+  }
+
+  @Cron(`15 * * * *`, { name: 'chatbot-reminder-check', timeZone: DEFAULT_TIMEZONE })
+  async handleReminderCheck(): Promise<void> {
+    await reminderCheck(this.bot);
   }
 }
