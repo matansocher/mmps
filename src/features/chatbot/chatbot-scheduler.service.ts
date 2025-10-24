@@ -22,7 +22,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
       // this.handleSportsCalendar(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
       // this.handleWeeklyExerciseSummary(); // for testing purposes
-      this.handleReminderCheck(); // for testing purposes
+      // this.handleReminderCheck(); // for testing purposes
     }, 8000);
   }
 

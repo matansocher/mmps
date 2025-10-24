@@ -7,15 +7,11 @@ const logger = new Logger('ReminderCheckScheduler');
 
 export async function reminderCheck(bot: TelegramBot): Promise<void> {
   try {
-    const reactivatedCount = await reactivateSnoozedReminders();
-    if (reactivatedCount > 0) {
-      logger.log(`Reactivated ${reactivatedCount} snoozed reminder(s)`);
-    }
+    await reactivateSnoozedReminders();
 
     const dueReminders = await getDueReminders();
 
     if (dueReminders.length === 0) {
-      logger.log('No due reminders to send');
       return;
     }
 
