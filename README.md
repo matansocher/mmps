@@ -45,24 +45,15 @@ To start the NestJS application:
    ```
 
 ## Available Bots
-1. Playgrounds - A dev only bot to test telegram stuff
-2. Wolt - A bot to notify the user when a Wolt restaurant is open and available to get orders
-3. Worldly - A Geography teacher bot
-4. Coach - A bot to show the user a daily list of sports games
-5. Educator - A bot to teach the user of interesting stuff with a single message lesson. It sends the user 3 lessons a day. The topic can vary between any topic.
-
-## Bots IDs
-
-| **Bot**             | **Prod ID**                                                                                |
-|---------------------|--------------------------------------------------------------------------------------------|
-| Announcer           | [@mmps_announcer_bot](https://web.telegram.org/k/#@mmps_announcer_bot)                     |
-| Coach               | [@mmps_football_coach_bot](https://web.telegram.org/k/#@mmps_football_coach_bot)           |
-| Educator            | [@mmps_educator_bot](https://web.telegram.org/k/#@mmps_educator_bot)                       |
-| Notifier            | [@mmps_notifier_bot](https://web.telegram.org/k/#@mmps_notifier_bot)                       |
-| Playgrounds         | [@guzi_playgrounds_bot](https://web.telegram.org/k/#@guzi_playgrounds_bot)                 |
-| Trainer             | [@mmps_trainer_bot](https://web.telegram.org/k/#@mmps_trainer_bot)                         |
-| Wolt                | [@guzi_wolt_checker_bot](https://web.telegram.org/k/#@guzi_wolt_checker_bot)               |
-| Worldly             | [@@mmps_worldly_bot](https://web.telegram.org/k/#@mmps_worldly_staging_bot)               |
+1. **Chatbot** - An AI-powered conversational bot with advanced features
+2. **Coach** - Sports scheduler and predictions bot with game recommendations
+3. **Define** - A bot to provide word definitions
+4. **Educator** - Educational bot that teaches interesting topics with daily lessons
+5. **Langly** - Language learning assistant bot
+6. **Magister** - A bot with various utility features
+7. **Twitter** - Twitter integration bot for automated interactions
+8. **Wolt** - Restaurant availability notifier for Wolt delivery service
+9. **Worldly** - Geography teacher and quiz bot
 
 ## License
 This project is licensed under the MIT License.
