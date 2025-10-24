@@ -24,11 +24,6 @@ export async function handleEditReminder({ chatId, reminderId, message, dueDate 
     if (isNaN(parsedDate.getTime())) {
       return JSON.stringify({ success: false, error: 'Invalid date format. Please use ISO 8601 format' });
     }
-
-    if (parsedDate.getHours() === 0 && parsedDate.getMinutes() === 0 && parsedDate.getSeconds() === 0) {
-      parsedDate.setHours(18, 0, 0, 0);
-    }
-
     if (parsedDate <= new Date()) {
       return JSON.stringify({ success: false, error: 'Due date must be in the future' });
     }

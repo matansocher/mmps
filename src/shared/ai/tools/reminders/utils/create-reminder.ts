@@ -16,10 +16,6 @@ export async function handleCreateReminder({ chatId, message, dueDate }: CreateR
     return JSON.stringify({ success: false, error: 'Invalid date format. Please use ISO 8601 format (e.g., 2025-01-15T14:30:00Z)' });
   }
 
-  if (parsedDate.getHours() === 0 && parsedDate.getMinutes() === 0 && parsedDate.getSeconds() === 0) {
-    parsedDate.setHours(18, 0, 0, 0);
-  }
-
   if (parsedDate <= new Date()) {
     return JSON.stringify({ success: false, error: 'Due date must be in the future' });
   }
