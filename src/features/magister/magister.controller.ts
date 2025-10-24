@@ -101,7 +101,7 @@ export class MagisterController implements OnModuleInit {
     }
 
     const course = await getCourse(activeCourse.courseId);
-    const progressText = formatLessonProgress(activeCourse.currentLesson, activeCourse.totalLessons, activeCourse.lessonsCompleted);
+    const progressText = formatLessonProgress(activeCourse.currentLesson, activeCourse.totalLessons);
 
     const statusMessage = [`📚 *Course: ${course.topic}*`, ``, progressText].join('\n');
 

@@ -168,7 +168,7 @@ export class MagisterService {
 
     await updatePreviousResponseId(courseParticipation._id.toString(), responseId);
 
-    const progressText = formatLessonProgress(courseParticipation.currentLesson, courseParticipation.totalLessons, courseParticipation.lessonsCompleted);
+    const progressText = formatLessonProgress(courseParticipation.currentLesson, courseParticipation.totalLessons);
 
     const fullMessage = `${progressText}\n\n${result.text}`;
 
@@ -191,9 +191,7 @@ export class MagisterService {
         chatId,
         [
           `✅ Lesson ${courseParticipation.lessonsCompleted}/${courseParticipation.totalLessons} completed!`,
-          ``,
           `Your next lesson will be delivered at the next scheduled time.`,
-          ``,
           `Or use /next to continue immediately.`,
         ].join('\n'),
         { parse_mode: 'Markdown' },
