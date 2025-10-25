@@ -35,7 +35,7 @@ export enum BOT_ACTIONS {
 
 export const INLINE_KEYBOARD_SEPARATOR = '|';
 
-export const DAILY_CHALLENGE_HOURS = [14, 19];
+export const DAILY_CHALLENGE_HOURS = [14];
 
 export const DIFFICULTY_LABELS = {
   1: '🌱 Beginner',

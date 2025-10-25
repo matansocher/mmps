@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
+import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,
   getActiveCourseParticipation,
@@ -15,11 +15,14 @@ import {
   markLessonSent,
   saveCourseSummary,
   saveMessageId,
+  saveQuizAnswer,
+  saveQuizQuestions,
   saveSummarySent,
   updatePreviousResponseId,
+  updateQuizScore,
 } from './mongo';
-import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema } from './types';
-import { formatLessonProgress, generateSummaryMessage } from './utils';
+import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema, QuizAnswer, QuizSchema } from './types';
+import { formatLessonProgress, generateSummaryMessage, getScoreMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) => {
   const isLastLesson = courseParticipation.currentLesson >= courseParticipation.totalLessons;
@@ -27,18 +30,26 @@ const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) =>
   const inlineKeyboardButtons = [
     {
       text: '🎧 Transcribe 🎧',
-      callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${courseParticipation._id}`,
+      callback_data: [BOT_ACTIONS.TRANSCRIBE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
     },
-    isLastLesson
-      ? {
-          text: '🎓 Complete Course 🎓',
-          callback_data: `${BOT_ACTIONS.COMPLETE_COURSE} - ${courseParticipation._id}`,
-        }
-      : {
-          text: '✅ Complete Lesson ✅',
-          callback_data: `${BOT_ACTIONS.COMPLETE_LESSON} - ${courseParticipation._id}`,
-        },
-  ].filter(Boolean);
+    ...(isLastLesson
+      ? [
+          {
+            text: '🎯 Take Quiz 🎯',
+            callback_data: [BOT_ACTIONS.QUIZ, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+          },
+          {
+            text: '🎓 Complete Course 🎓',
+            callback_data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+          },
+        ]
+      : [
+          {
+            text: '✅ Complete Lesson ✅',
+            callback_data: [BOT_ACTIONS.COMPLETE_LESSON, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+          },
+        ]),
+  ];
 
   return getInlineKeyboardMarkup(inlineKeyboardButtons);
 };
@@ -256,5 +267,85 @@ Please answer the question based on the course materials and your expertise. If 
       practicalApplications: summaryDetails.practicalApplications,
       nextSteps: summaryDetails.nextSteps,
     });
+  }
+
+  async generateQuiz(courseParticipationId: string): Promise<void> {
+    const courseParticipation = await getCourseParticipation(courseParticipationId);
+    if (!courseParticipation) {
+      return;
+    }
+
+    const { result: quizData } = await getResponse<typeof QuizSchema>({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: courseParticipation.previousResponseId,
+      input: QUIZ_PROMPT,
+      schema: QuizSchema,
+      store: true,
+    });
+
+    await saveQuizQuestions(courseParticipationId, quizData.questions);
+  }
+
+  async sendQuizQuestion(chatId: number, courseParticipation: CourseParticipation, questionIndex: number): Promise<void> {
+    if (!courseParticipation.quizDetails || questionIndex >= courseParticipation.quizDetails.questions.length) {
+      return;
+    }
+
+    const question = courseParticipation.quizDetails.questions[questionIndex];
+    const questionNumber = questionIndex + 1;
+    const totalQuestions = courseParticipation.quizDetails.questions.length;
+
+    const questionText = [`*Question ${questionNumber} of ${totalQuestions}:*`, '', question.question].join('\n');
+
+    const buttonLayout = question.options.map((option, index) => [
+      {
+        text: option,
+        callback_data: [BOT_ACTIONS.QUIZ_ANSWER, courseParticipation._id, questionIndex, index].join(INLINE_KEYBOARD_SEPARATOR),
+      },
+    ]);
+
+    await this.bot.sendMessage(chatId, questionText, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: buttonLayout } });
+  }
+
+  async checkQuizAnswer(courseParticipationId: string, questionIndex: number, userAnswerIndex: number, chatId: number, messageId: number): Promise<void> {
+    const courseParticipation = await getCourseParticipation(courseParticipationId);
+    if (!courseParticipation?.quizDetails) {
+      return;
+    }
+
+    const question = courseParticipation.quizDetails.questions[questionIndex];
+    const isCorrect = userAnswerIndex === question.correctAnswer;
+
+    const answer: QuizAnswer = { questionIndex, userAnswer: userAnswerIndex, isCorrect, answeredAt: new Date() };
+    await saveQuizAnswer(courseParticipationId, answer);
+
+    await this.bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId }).catch(() => {});
+
+    if (isCorrect) {
+      await this.bot.sendMessage(chatId, `✅ Correct! Well done! 🎉`);
+    } else {
+      const correctAnswerText = question.options[question.correctAnswer];
+      await this.bot.sendMessage(chatId, [`❌ Not quite...`, '', `The correct answer is: ${correctAnswerText}`, '', `💡 ${question.explanation}`].join('\n'));
+    }
+
+    const updatedParticipation = await getCourseParticipation(courseParticipationId);
+    const answersCount = updatedParticipation.quizDetails.answers.length;
+    const totalQuestions = updatedParticipation.quizDetails.questions.length;
+
+    if (answersCount < totalQuestions) {
+      await this.sendQuizQuestion(chatId, updatedParticipation, answersCount);
+    } else {
+      const correctAnswers = updatedParticipation.quizDetails.answers.filter((a) => a.isCorrect).length;
+      await updateQuizScore(courseParticipationId, correctAnswers);
+
+      const scoreMessage = getScoreMessage(correctAnswers, totalQuestions);
+
+      const completeButton = {
+        text: '🎓 Complete Course 🎓',
+        callback_data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+      };
+
+      await this.bot.sendMessage(chatId, scoreMessage, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[completeButton]] } });
+    }
   }
 }

@@ -21,6 +21,8 @@ export enum BOT_ACTIONS {
   CONTACT = 'contact',
   TRANSCRIBE = 'transcribe',
   COMPLETE = 'complete',
+  QUIZ = 'quiz',
+  QUIZ_ANSWER = 'quiz_answer',
 }
 
 export const ANALYTIC_EVENT_NAMES = {
@@ -32,9 +34,13 @@ export const ANALYTIC_EVENT_NAMES = {
   ADD_TOPIC: 'ADD_TOPIC',
   COMPLETED_TOPIC: 'COMPLETED_TOPIC',
   TRANSCRIBE_TOPIC: 'TRANSCRIBE_TOPIC',
+  QUIZ_STARTED: 'QUIZ_STARTED',
+  QUIZ_COMPLETED: 'QUIZ_COMPLETED',
   MESSAGE: 'MESSAGE',
   ERROR: 'ERROR',
 };
+
+export const INLINE_KEYBOARD_SEPARATOR = ' - ';
 
 export const SYSTEM_PROMPT = `
 אתה מורה מנוסה ובקיא, האחראי ללמד נושא אחד בכל יום.
@@ -49,3 +55,19 @@ export const SYSTEM_PROMPT = `
 `;
 
 export const SUMMARY_PROMPT = `אני רוצה שתיצור לי סיכום של השיעור הזה כדי שעוד כמה ימים אוכל לחזור לסיכום השיעור הזה ולהיזכר בכל הדברים שדיברו עליהם בשיעור ובשיחה שלנו, ככה שאוכל לרענן את זכרוני ולא לאפשר לחומר שלמדתי להישכח. צור לי סיכום ונקודות מרכזיות וחשובות מהשיעור.`;
+
+export const QUIZ_PROMPT = `
+אני רוצה שתיצור בחן מהנה ומעניין של 3 שאלות כדי לבדוק את הידע שלי על הנושא שלמדנו.
+השאלות צריכות להיות מעניינות ומאתגרות, ולבחון את הבנת התוכן באמת.
+צור שילוב של שאלות:
+- שאלות אמריקאיות (4 תשובות אפשריות)
+- שאלות נכון/לא נכון
+
+כל שאלה צריכה:
+1. להיות ברורה ומדויקת
+2. לבדוק הבנה אמיתית של הנושא (לא רק זכירת עובדות)
+3. לכלול הסבר קצר למה התשובה הנכונה היא נכונה (יוצג למשתמש אם הוא טועה)
+
+השאלות צריכות להיות כיפיות ומעניינות, לא יבשות או טכניות מדי.
+השתמש באימוג׳ים כשזה מתאים כדי להפוך את השאלות למהנות יותר.
+`;
