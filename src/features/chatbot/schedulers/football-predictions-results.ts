@@ -7,7 +7,7 @@ import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('FootballUpdateEveningScheduler');
 
-export async function footballUpdateEvening(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function footballPredictionsResults(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
   try {
     const todayDate = getDateString();
 
@@ -19,9 +19,11 @@ IMPORTANT: Look back in our conversation history from earlier today to find the 
 
 2. Review the conversation history to find your morning predictions (the message sent around 13:00 today).
    - Look for predictions with percentages (🏠 X% | 🤝 Y% | 🚌 Z%)
+   - Look for the betting odds that were displayed (🏠 X.XX | 🤝 Y.YY | 🚌 Z.ZZ)
    - Identify which matches you predicted
 
 3. For each match you predicted, compare:
+   - The betting odds that were available (from morning message)
    - Your predicted outcome (which option had the highest percentage)
    - The actual result
    - How close your prediction was
@@ -30,6 +32,7 @@ IMPORTANT: Look back in our conversation history from earlier today to find the 
    - Start with "⚽ תוצאות היום והערכת הניבויים:"
    - For each match that was predicted:
      * Match info and final score
+     * Betting odds from morning: "סיכויי ההימורים: 🏠 X.XX | 🤝 Y.YY | 🚌 Z.ZZ"
      * Your prediction: "ניבאתי: [outcome] ([percentage]%)"
      * Actual result: "התוצאה: [actual outcome]"
      * Accuracy comment:
