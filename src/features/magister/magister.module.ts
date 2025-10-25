@@ -1,14 +1,12 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { createMongoConnection } from '@core/mongo';
-import { TelegramBotsFactoryProvider } from '@services/telegram';
 import { MagisterSchedulerService } from './magister-scheduler.service';
-import { BOT_CONFIG } from './magister.config';
 import { MagisterController } from './magister.controller';
 import { MagisterService } from './magister.service';
 import { DB_NAME } from './mongo';
 
 @Module({
-  providers: [MagisterController, MagisterSchedulerService, MagisterService, TelegramBotsFactoryProvider(BOT_CONFIG)],
+  providers: [MagisterController, MagisterSchedulerService, MagisterService],
 })
 export class MagisterModule implements OnModuleInit {
   async onModuleInit() {

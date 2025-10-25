@@ -1,9 +1,19 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
-import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import {
+  getBotToken,
+  getCallbackQueryData,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  provideTelegramBot,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
 import { createUserPreference, DifficultyLevel, getUserPreference, Language, saveUserDetails, updateUserPreference } from '@shared/langly';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 import { LanglyService } from './langly.service';
@@ -12,11 +22,11 @@ import { LanglyService } from './langly.service';
 export class LanglyController implements OnModuleInit {
   private readonly logger = new Logger(LanglyController.name);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   constructor(
     private readonly langlyService: LanglyService,
     private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {

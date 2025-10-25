@@ -1,7 +1,6 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
-import { TelegramBotConfig, UserDetails } from '@services/telegram';
+import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/telegram';
 import { BOT_CONFIG, MessageType, NOTIFIER_CHAT_ID } from './notifier.config';
 
 type NotifyOptions = {
@@ -13,8 +12,7 @@ type NotifyOptions = {
 @Injectable()
 export class NotifierService {
   private readonly logger = new Logger(NotifierService.name);
-
-  constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): void {
     if (userDetails?.chatId === MY_USER_ID) {

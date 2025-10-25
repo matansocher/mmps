@@ -4,7 +4,7 @@ import { getWoltSummary } from './utils';
 
 const schema = z.object({});
 
-async function runner(_: z.infer<typeof schema>) {
+async function runner() {
   return getWoltSummary();
 }
 

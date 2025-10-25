@@ -42,7 +42,7 @@ export class ChatbotService {
       // Include context information in the user message instead of system message
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${new Date().toISOString()}]\n\n${message}`;
       const result = await this.aiService.invoke(contextualMessage, { threadId: chatId.toString() });
-      return formatAgentResponse(result, chatId);
+      return formatAgentResponse(result);
     } catch (err) {
       this.logger.error(`Error processing message for user ${chatId}: ${err}`);
       return {

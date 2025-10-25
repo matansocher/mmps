@@ -1,8 +1,18 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
-import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import {
+  getBotToken,
+  getCallbackQueryData,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  MessageLoader,
+  provideTelegramBot,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+} from '@services/telegram';
 import { getSubscriptions } from '@shared/twitter';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './twitter.config';
 import { TwitterService } from './twitter.service';
@@ -14,11 +24,11 @@ const customErrorMessage = 'Sorry, something went wrong. Please try again later.
 export class TwitterController implements OnModuleInit {
   private readonly logger = new Logger(TwitterController.name);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   constructor(
     private readonly twitterService: TwitterService,
     private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {

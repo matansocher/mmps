@@ -1,19 +1,17 @@
 import * as fs from 'fs';
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
 import { generateRandomString, shuffleArray } from '@core/utils';
-import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
+import { BLOCKED_ERROR, getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
 import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, State, updateSubscription } from '@shared/worldly';
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 
 @Injectable()
 export class WorldlyService {
-  constructor(
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
+  constructor(private readonly notifier: NotifierService) {}
 
   async randomGameHandler(chatId: number): Promise<void> {
     const handlers = [

@@ -1,10 +1,9 @@
 import { toZonedTime } from 'date-fns-tz';
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
-import { getInlineKeyboardMarkup } from '@services/telegram';
+import { getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
@@ -16,11 +15,11 @@ const JOB_NAME = 'wolt-scheduler-job-interval';
 @Injectable()
 export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   constructor(
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   async scheduleInterval(): Promise<void> {

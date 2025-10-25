@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
-import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
+import { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
@@ -13,6 +13,7 @@ import {
   getInlineKeyboardMarkup,
   getMessageData,
   MessageLoader,
+  provideTelegramBot,
   reactToMessage,
   registerHandlers,
   removeItemFromInlineKeyboardMarkup,
@@ -41,12 +42,12 @@ const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה
 @Injectable()
 export class EducatorController implements OnModuleInit {
   private readonly logger = new Logger(EducatorController.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(
     private readonly educatorService: EducatorService,
     private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {

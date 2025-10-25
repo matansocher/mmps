@@ -1,8 +1,7 @@
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
-import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
+import { getInlineKeyboardMarkup, provideTelegramBot, sendShortenedMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './educator.config';
 import {
   createTopicParticipation,
@@ -42,10 +41,9 @@ const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
 
 @Injectable()
 export class EducatorService {
-  constructor(
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
+  constructor(private readonly notifier: NotifierService) {}
 
   async handleTopicReminders(topicParticipation: TopicParticipation): Promise<void> {
     await this.bot.sendMessage(topicParticipation.chatId, generateSummaryMessage(topicParticipation.summaryDetails));

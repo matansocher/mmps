@@ -1,9 +1,19 @@
-import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getDateNumber, hasHebrew } from '@core/utils';
-import { getCallbackQueryData, getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import {
+  getCallbackQueryData,
+  getCustomInlineKeyboardMarkup,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  provideTelegramBot,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
@@ -14,11 +24,9 @@ const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר 
 @Injectable()
 export class WoltController implements OnModuleInit {
   private readonly logger = new Logger(WoltController.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly notifier: NotifierService) {}
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
