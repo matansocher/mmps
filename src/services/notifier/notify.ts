@@ -1,3 +1,4 @@
+import { MY_USER_ID } from '@core/config';
 import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/telegram';
 
 const NOTIFIER_CHAT_ID = 862305226;
@@ -27,9 +28,9 @@ function getNotyMessageText(botName: string, options: NotifyOptions, userDetails
 }
 
 export function notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): void {
-  // if (userDetails?.chatId === MY_USER_ID) {
-  //   return;
-  // }
+  if (userDetails?.chatId === MY_USER_ID) {
+    return;
+  }
   const notyMessageText = getNotyMessageText(bot.name, options, userDetails);
   const botInstance = provideTelegramBot(botConfig);
   botInstance.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
