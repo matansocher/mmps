@@ -22,7 +22,7 @@ import {
   updateQuizScore,
 } from './mongo';
 import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema, QuizAnswer, QuizSchema } from './types';
-import { formatLessonProgress, generateSummaryMessage } from './utils';
+import { formatLessonProgress, generateSummaryMessage, getScoreMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) => {
   const isLastLesson = courseParticipation.currentLesson >= courseParticipation.totalLessons;
@@ -338,36 +338,14 @@ Please answer the question based on the course materials and your expertise. If 
       const correctAnswers = updatedParticipation.quizDetails.answers.filter((a) => a.isCorrect).length;
       await updateQuizScore(courseParticipationId, correctAnswers);
 
-      const scoreMessage = this.getScoreMessage(correctAnswers, totalQuestions);
+      const scoreMessage = getScoreMessage(correctAnswers, totalQuestions);
 
       const completeButton = {
         text: '🎓 Complete Course 🎓',
         callback_data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
       };
 
-      await this.bot.sendMessage(chatId, scoreMessage, {
-        parse_mode: 'Markdown',
-        reply_markup: { inline_keyboard: [[completeButton]] },
-      });
+      await this.bot.sendMessage(chatId, scoreMessage, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[completeButton]] } });
     }
-  }
-
-  private getScoreMessage(correctAnswers: number, totalQuestions: number): string {
-    const percentage = (correctAnswers / totalQuestions) * 100;
-
-    let encouragement: string;
-    if (percentage === 100) {
-      encouragement = 'Outstanding! 🎉🏆 Perfect score!';
-    } else if (percentage >= 80) {
-      encouragement = 'Excellent! 👏 You really know your stuff!';
-    } else if (percentage >= 60) {
-      encouragement = 'Good job! 👍 Solid understanding!';
-    } else if (percentage >= 40) {
-      encouragement = 'Not bad! 📚 Review the material to strengthen your knowledge.';
-    } else {
-      encouragement = 'Consider reviewing the course material 📚 to reinforce your learning.';
-    }
-
-    return [`🎯 *Quiz Complete!*`, '', `*Your Score: ${correctAnswers}/${totalQuestions}*`, '', encouragement].join('\n');
   }
 }

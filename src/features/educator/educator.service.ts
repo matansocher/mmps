@@ -20,7 +20,7 @@ import {
   updateQuizScore,
 } from './mongo';
 import { QuizAnswer, QuizSchema, Topic, TopicParticipation, TopicResponseSchema, TopicSummarySchema } from './types';
-import { generateSummaryMessage } from './utils';
+import { generateSummaryMessage, getScoreMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
@@ -179,34 +179,14 @@ export class EducatorService {
       const correctAnswers = updatedParticipation.quizDetails.answers.filter((a) => a.isCorrect).length;
       await updateQuizScore(topicParticipationId, correctAnswers);
 
-      const scoreMessage = this.getScoreMessage(correctAnswers, totalQuestions);
+      const scoreMessage = getScoreMessage(correctAnswers, totalQuestions);
 
-      // Add complete course button to the score message
       const completeButton = {
         text: '✅ סיימתי את הקורס ✅',
         callback_data: [BOT_ACTIONS.COMPLETE, topicParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
       };
 
-      await this.bot.sendMessage(chatId, scoreMessage, {
-        reply_markup: { inline_keyboard: [[completeButton]] },
-      });
+      await this.bot.sendMessage(chatId, scoreMessage, { reply_markup: { inline_keyboard: [[completeButton]] } });
     }
-  }
-
-  private getScoreMessage(correctAnswers: number, totalQuestions: number): string {
-    const percentage = (correctAnswers / totalQuestions) * 100;
-
-    let encouragement: string;
-    if (percentage === 100) {
-      encouragement = 'מדהים! 🎉🏆 ציון מושלם!';
-    } else if (percentage >= 66) {
-      encouragement = 'מעולה! 👏💪 אתה באמת שולט בחומר!';
-    } else if (percentage >= 33) {
-      encouragement = 'לא רע! 👍 עוד קצת תרגול ותהיה מושלם!';
-    } else {
-      encouragement = 'כדאי לחזור על החומר 📚 אבל זה בסדר, ככה לומדים!';
-    }
-
-    return [`🎯 הבחן הסתיים!`, '', `הציון שלך: ${correctAnswers}/${totalQuestions}`, '', encouragement].join('\n');
   }
 }
