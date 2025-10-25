@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { NotifierService } from '@core/notifier';
+import { notify } from '@services/notifier';
 import { BOT_CONFIG, TOPIC_REMINDER_HOUR_OF_DAY, TOPIC_START_HOUR_OF_DAY } from './educator.config';
 import { EducatorService } from './educator.service';
 import { getActiveUsers, getCourseParticipationForSummaryReminder, getUserDetails } from './mongo';
@@ -10,10 +10,7 @@ import { getActiveUsers, getCourseParticipationForSummaryReminder, getUserDetail
 export class EducatorSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(EducatorSchedulerService.name);
 
-  constructor(
-    private readonly educatorService: EducatorService,
-    private readonly notifier: NotifierService,
-  ) {}
+  constructor(private readonly educatorService: EducatorService) {}
 
   onModuleInit(): void {
     // this.handleTopic();
@@ -31,7 +28,7 @@ export class EducatorSchedulerService implements OnModuleInit {
       await Promise.all(chatIds.map((chatId) => this.educatorService.processTopic(chatId)));
     } catch (err) {
       this.logger.error(`${this.handleTopic.name} - error: ${err}`);
-      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
+      notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
     }
   }
 
@@ -45,11 +42,11 @@ export class EducatorSchedulerService implements OnModuleInit {
       await this.educatorService.handleTopicReminders(topicParticipation).catch(async (err) => {
         const userDetails = await getUserDetails(topicParticipation.chatId);
         this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
-        this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
+        notify(BOT_CONFIG, { action: 'ERROR', error: `${err}`, userDetails });
       });
     } catch (err) {
       this.logger.error(`${this.handleTopicReminders.name} - error: ${err}`);
-      this.notifier.notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
+      notify(BOT_CONFIG, { action: 'ERROR', error: `${err}` });
     }
   }
 }

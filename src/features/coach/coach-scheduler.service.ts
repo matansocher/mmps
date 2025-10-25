@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
+import { notify } from '@services/notifier';
 import { BLOCKED_ERROR, provideTelegramBot, sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
@@ -14,10 +14,7 @@ const HOURS_TO_NOTIFY = [12, 23];
 export class CoachBotSchedulerService implements OnModuleInit {
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(
-    private readonly coachService: CoachService,
-    private readonly notifier: NotifierService,
-  ) {}
+  constructor(private readonly coachService: CoachService) {}
 
   onModuleInit(): void {
     setTimeout(() => {
@@ -47,14 +44,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
           const userDetails = await getUserDetails(chatId);
           if (err.message.includes(BLOCKED_ERROR)) {
             await updateSubscription(chatId, { isActive: false });
-            this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+            notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
           } else {
-            this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+            notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
           }
         }
       }
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+      notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 
@@ -81,15 +78,15 @@ export class CoachBotSchedulerService implements OnModuleInit {
             const userDetails = await getUserDetails(chatId);
             if (err.message.includes(BLOCKED_ERROR)) {
               await updateSubscription(chatId, { isActive: false });
-              this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+              notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
             } else {
-              this.notifier.notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+              notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
             }
           });
         }),
       );
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+      notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 }
