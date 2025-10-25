@@ -1,12 +1,10 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { createMongoConnection } from '@core/mongo';
-import { NotifierModule } from '@core/notifier';
 import { DB_NAME } from '@shared/wolt';
 import { WoltSchedulerService } from './wolt-scheduler.service';
 import { WoltController } from './wolt.controller';
 
 @Module({
-  imports: [NotifierModule],
   providers: [WoltController, WoltSchedulerService],
 })
 export class WoltModule implements OnModuleInit {

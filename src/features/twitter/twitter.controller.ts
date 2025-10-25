@@ -1,7 +1,7 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { NotifierService } from '@core/notifier';
+import { notify } from '@services/notifier';
 import {
   getBotToken,
   getCallbackQueryData,
@@ -26,10 +26,7 @@ export class TwitterController implements OnModuleInit {
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(
-    private readonly twitterService: TwitterService,
-    private readonly notifier: NotifierService,
-  ) {}
+  constructor(private readonly twitterService: TwitterService) {}
 
   onModuleInit(): void {
     const { COMMAND, TEXT, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -61,7 +58,7 @@ This bot allows you to subscribe to Twitter users and receive their daily tweets
 Let's get started! Send me a Twitter username to track.`;
 
     await this.bot.sendMessage(chatId, welcomeMessage);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   async listHandler(message: Message): Promise<void> {
@@ -71,7 +68,7 @@ Let's get started! Send me a Twitter username to track.`;
 
     if (subscriptions.length === 0) {
       await this.bot.sendMessage(chatId, 'You are not subscribed to any Twitter users yet.\n\nSend me a username (e.g., @askdani__real) to start tracking!');
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST_SUBSCRIPTIONS }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST_SUBSCRIPTIONS }, userDetails);
       return;
     }
 
@@ -87,7 +84,7 @@ Let's get started! Send me a Twitter username to track.`;
 
     await this.bot.sendMessage(chatId, listMessage, { ...getInlineKeyboardMarkup(inlineKeyboardButtons, 2) });
 
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST_SUBSCRIPTIONS }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST_SUBSCRIPTIONS }, userDetails);
   }
 
   async textHandler(message: Message): Promise<void> {
@@ -105,7 +102,7 @@ Let's get started! Send me a Twitter username to track.`;
       await this.bot.sendMessage(chatId, result.message);
 
       if (result.success) {
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD_SUBSCRIPTION, username: text }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD_SUBSCRIPTION, username: text }, userDetails);
       }
     });
   }
@@ -122,7 +119,7 @@ Let's get started! Send me a Twitter username to track.`;
       await this.bot.sendMessage(chatId, result.message);
 
       if (result.success) {
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.REMOVE_SUBSCRIPTION, username }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.REMOVE_SUBSCRIPTION, username }, userDetails);
       }
     }
   }
