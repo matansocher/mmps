@@ -58,8 +58,6 @@ export class MagisterService {
   private readonly logger = new Logger(MagisterService.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor() {}
-
   async handleCourseReminders(courseParticipation: CourseParticipation) {
     await this.bot.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails));
     await saveSummarySent(courseParticipation._id.toString());

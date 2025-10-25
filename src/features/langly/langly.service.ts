@@ -14,8 +14,6 @@ export class LanglyService {
   private readonly logger = new Logger(LanglyService.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor() {}
-
   async generateChallenge(chatId: number): Promise<LanguageChallenge> {
     const userPreference = await getUserPreference(chatId);
     const previousResponseId = userPreference?.previousResponseId;
