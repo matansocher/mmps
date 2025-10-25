@@ -1,7 +1,7 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { ChatbotResponse, ToolResult } from './types';
 
-export function formatAgentResponse(result: any, chatId?: number): ChatbotResponse {
+export function formatAgentResponse(result: any): ChatbotResponse {
   const messages = result.messages as BaseMessage[];
   const lastMessage = messages[messages.length - 1];
   const responseContent = lastMessage.content as string;

@@ -1,9 +1,19 @@
-import TelegramBot, { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
-import { NotifierService } from '@core/notifier';
 import { getDateNumber, hasHebrew } from '@core/utils';
-import { getCallbackQueryData, getCustomInlineKeyboardMarkup, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { notify } from '@services/notifier';
+import {
+  getCallbackQueryData,
+  getCustomInlineKeyboardMarkup,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  provideTelegramBot,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
@@ -14,11 +24,7 @@ const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר 
 @Injectable()
 export class WoltController implements OnModuleInit {
   private readonly logger = new Logger(WoltController.name);
-
-  constructor(
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -48,14 +54,14 @@ export class WoltController implements OnModuleInit {
       .replace('{firstName}', userDetails.firstName || userDetails.username || '');
     const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
     await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: !userExists }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: !userExists }, userDetails);
   }
 
   async contactHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
     await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
   async listHandler(message: Message): Promise<void> {
@@ -81,9 +87,9 @@ export class WoltController implements OnModuleInit {
         return this.bot.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, inlineKeyboardMarkup);
       });
       await Promise.all(promisesArr);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${err}`, method: this.listHandler.name }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${err}`, method: this.listHandler.name }, userDetails);
       throw err;
     }
   }
@@ -106,7 +112,7 @@ export class WoltController implements OnModuleInit {
       if (!matchedRestaurants.length) {
         const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
         await this.bot.sendMessage(chatId, replyText);
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
         return;
       }
 
@@ -125,9 +131,9 @@ export class WoltController implements OnModuleInit {
       const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
       const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
       await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
+      notify(BOT_CONFIG, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
       throw err;
     }
   }
@@ -160,7 +166,7 @@ export class WoltController implements OnModuleInit {
       }
     } catch (err) {
       this.logger.error(`${this.callbackQueryHandler.name} - error - ${err}`);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, what: action, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, what: action, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
       throw err;
     }
   }
@@ -196,7 +202,7 @@ export class WoltController implements OnModuleInit {
     await addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await this.bot.sendMessage(chatId, replyText);
 
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
   async removeSubscription(chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
@@ -209,7 +215,7 @@ export class WoltController implements OnModuleInit {
     }
     await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
 
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
   }
 
   async changePage(chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, page: number): Promise<void> {
@@ -237,6 +243,6 @@ export class WoltController implements OnModuleInit {
     const inlineKeyboardMarkup = getCustomInlineKeyboardMarkup(newInlineKeyboardMarkup, columnsPerRow);
     await this.bot.editMessageReplyMarkup(inlineKeyboardMarkup.reply_markup, { message_id: messageId, chat_id: chatId });
 
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, restaurant }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, restaurant }, userDetails);
   }
 }

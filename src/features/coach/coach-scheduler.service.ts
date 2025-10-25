@@ -1,10 +1,9 @@
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
-import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
+import { notify } from '@services/notifier';
+import { BLOCKED_ERROR, provideTelegramBot, sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -13,11 +12,9 @@ const HOURS_TO_NOTIFY = [12];
 
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {
-  constructor(
-    private readonly coachService: CoachService,
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
+  constructor(private readonly coachService: CoachService) {}
 
   onModuleInit(): void {
     setTimeout(() => {
@@ -48,14 +45,14 @@ export class CoachBotSchedulerService implements OnModuleInit {
           const userDetails = await getUserDetails(chatId);
           if (err.message.includes(BLOCKED_ERROR)) {
             await updateSubscription(chatId, { isActive: false });
-            this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+            notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
           } else {
-            this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+            notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
           }
         }
       }
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+      notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 
@@ -82,15 +79,15 @@ export class CoachBotSchedulerService implements OnModuleInit {
             const userDetails = await getUserDetails(chatId);
             if (err.message.includes(BLOCKED_ERROR)) {
               await updateSubscription(chatId, { isActive: false });
-              this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+              notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
             } else {
-              this.notifier.notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+              notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
             }
           });
         }),
       );
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+      notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 

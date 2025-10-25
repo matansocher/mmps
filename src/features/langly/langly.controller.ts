@@ -1,9 +1,8 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
-import { NotifierService } from '@core/notifier';
-import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { notify } from '@services/notifier';
+import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { createUserPreference, DifficultyLevel, getUserPreference, Language, saveUserDetails, updateUserPreference } from '@shared/langly';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 import { LanglyService } from './langly.service';
@@ -11,13 +10,9 @@ import { LanglyService } from './langly.service';
 @Injectable()
 export class LanglyController implements OnModuleInit {
   private readonly logger = new Logger(LanglyController.name);
-  private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(
-    private readonly langlyService: LanglyService,
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly langlyService: LanglyService) {}
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -59,7 +54,7 @@ export class LanglyController implements OnModuleInit {
     ].join('\n');
 
     await this.bot.sendMessage(chatId, welcomeMessage);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -87,11 +82,11 @@ export class LanglyController implements OnModuleInit {
     try {
       await this.bot.sendChatAction(chatId, 'typing');
       await this.langlyService.sendChallenge(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHALLENGE }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHALLENGE }, userDetails);
     } catch (err) {
       this.logger.error(`Error sending challenge:, ${err}`);
       await this.bot.sendMessage(chatId, '❌ Sorry, something went wrong. Please try again.');
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHALLENGE, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHALLENGE, error: `❗️ ${err}` }, userDetails);
     }
   }
 
@@ -109,27 +104,27 @@ export class LanglyController implements OnModuleInit {
         case BOT_ACTIONS.SUBSCRIBE:
           await this.subscribeHandler(chatId, userDetails);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, userDetails);
           break;
 
         case BOT_ACTIONS.UNSUBSCRIBE:
           await this.unsubscribeHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE }, userDetails);
           break;
 
         case BOT_ACTIONS.ANSWER:
           const [answerIndex, isCorrect] = params;
           const answerResult = await this.answerHandler(chatId, messageId, parseInt(answerIndex), isCorrect === 'true');
           if (answerResult) {
-            this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, word: answerResult.word, type: answerResult.type, isCorrect: answerResult.isCorrect ? '✅' : '❌' }, userDetails);
+            notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, word: answerResult.word, type: answerResult.type, isCorrect: answerResult.isCorrect ? '✅' : '❌' }, userDetails);
           }
           break;
 
         case BOT_ACTIONS.AUDIO:
           const [challengeKey] = params;
           await this.audioHandler(chatId, challengeKey);
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.AUDIO }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.AUDIO }, userDetails);
           break;
 
         case BOT_ACTIONS.LANGUAGE:
@@ -138,7 +133,7 @@ export class LanglyController implements OnModuleInit {
           } else {
             const selectedLanguage = params[0] as Language;
             await this.languageHandler(chatId, selectedLanguage);
-            this.notifier.notify(BOT_CONFIG, { action: 'LANGUAGE_CHANGED', language: LANGUAGE_LABELS[selectedLanguage] }, userDetails);
+            notify(BOT_CONFIG, { action: 'LANGUAGE_CHANGED', language: LANGUAGE_LABELS[selectedLanguage] }, userDetails);
           }
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           break;
@@ -149,7 +144,7 @@ export class LanglyController implements OnModuleInit {
           } else {
             const selectedDifficulty = parseInt(params[0]);
             await this.difficultyHandler(chatId, selectedDifficulty);
-            this.notifier.notify(BOT_CONFIG, { action: 'DIFFICULTY_CHANGED', difficulty: DIFFICULTY_LABELS[selectedDifficulty] }, userDetails);
+            notify(BOT_CONFIG, { action: 'DIFFICULTY_CHANGED', difficulty: DIFFICULTY_LABELS[selectedDifficulty] }, userDetails);
           }
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           break;
@@ -157,7 +152,7 @@ export class LanglyController implements OnModuleInit {
         case BOT_ACTIONS.CONTACT:
           await this.contactHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
 
         default:

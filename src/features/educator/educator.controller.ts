@@ -1,10 +1,10 @@
 import { promises as fs } from 'fs';
-import TelegramBot, { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
+import { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
-import { NotifierService } from '@core/notifier';
 import { deleteFile } from '@core/utils';
+import { notify } from '@services/notifier';
 import { getAudioFromText } from '@services/openai';
 import {
   BOT_BROADCAST_ACTIONS,
@@ -13,6 +13,7 @@ import {
   getInlineKeyboardMarkup,
   getMessageData,
   MessageLoader,
+  provideTelegramBot,
   reactToMessage,
   registerHandlers,
   removeItemFromInlineKeyboardMarkup,
@@ -41,13 +42,10 @@ const customErrorMessage = `וואלה מצטערת, אבל משהו רע קרה
 @Injectable()
 export class EducatorController implements OnModuleInit {
   private readonly logger = new Logger(EducatorController.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
-  constructor(
-    private readonly educatorService: EducatorService,
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly educatorService: EducatorService) {}
 
   onModuleInit(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -66,7 +64,7 @@ export class EducatorController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.userStart(chatId, userDetails);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -90,7 +88,7 @@ export class EducatorController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => await this.educatorService.startNewTopic(chatId));
 
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TOPIC }, userDetails);
   }
 
   private async addHandler(message: Message): Promise<void> {
@@ -103,7 +101,7 @@ export class EducatorController implements OnModuleInit {
     await createTopic(chatId, topic);
     await this.bot.sendMessage(chatId, `סבבה, הוספתי את זה כנושא, ונלמד על זה בשיעורים הבאים`);
 
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD_TOPIC }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ADD_TOPIC }, userDetails);
   }
 
   private async messageHandler(message: Message): Promise<void> {
@@ -124,7 +122,7 @@ export class EducatorController implements OnModuleInit {
     });
 
     const topic = await getTopic(activeTopicParticipation.topicId);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text, topic: topic?.title }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MESSAGE, text, topic: topic?.title }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
@@ -137,29 +135,29 @@ export class EducatorController implements OnModuleInit {
       case BOT_ACTIONS.START:
         await this.userStart(chatId, userDetails);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.TRANSCRIBE:
         await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_TOPIC }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TRANSCRIBE_TOPIC }, userDetails);
         break;
       case BOT_ACTIONS.COMPLETE:
         await this.handleCallbackCompleteTopic(chatId, messageId, topicParticipationId);
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.COMPLETED_TOPIC }, userDetails);
         break;
       case BOT_ACTIONS.QUIZ:
         await this.handleCallbackQuiz(chatId, topicParticipationId, userDetails);
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.QUIZ_STARTED }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.QUIZ_STARTED }, userDetails);
         break;
       case BOT_ACTIONS.QUIZ_ANSWER:
         const questionIndex = parseInt(responseParts[2], 10);
@@ -167,7 +165,7 @@ export class EducatorController implements OnModuleInit {
         await this.handleCallbackQuizAnswer(chatId, messageId, topicParticipationId, questionIndex, answerIndex, userDetails);
         break;
       default:
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
         throw new Error('Invalid action');
     }
   }
@@ -245,7 +243,7 @@ export class EducatorController implements OnModuleInit {
     });
 
     const topic = await getTopic((await getTopicParticipation(topicParticipationId))?.topicId);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.QUIZ_STARTED, topic: topic?.title }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.QUIZ_STARTED, topic: topic?.title }, userDetails);
   }
 
   private async handleCallbackQuizAnswer(chatId: number, messageId: number, topicParticipationId: string, questionIndex: number, answerIndex: number, userDetails: UserDetails): Promise<void> {
@@ -254,7 +252,7 @@ export class EducatorController implements OnModuleInit {
     const topicParticipation = await getTopicParticipation(topicParticipationId);
     if (topicParticipation?.quizDetails?.completedAt) {
       const topic = await getTopic(topicParticipation.topicId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.QUIZ_COMPLETED, score: topicParticipation.quizDetails.score, topic: topic?.title }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.QUIZ_COMPLETED, score: topicParticipation.quizDetails.score, topic: topic?.title }, userDetails);
     }
   }
 }

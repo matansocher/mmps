@@ -1,10 +1,9 @@
 import { toZonedTime } from 'date-fns-tz';
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { NotifierService } from '@core/notifier';
-import { getInlineKeyboardMarkup } from '@services/telegram';
+import { notify } from '@services/notifier';
+import { getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
@@ -16,12 +15,9 @@ const JOB_NAME = 'wolt-scheduler-job-interval';
 @Injectable()
 export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(
-    private readonly schedulerRegistry: SchedulerRegistry,
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly schedulerRegistry: SchedulerRegistry) {}
 
   async scheduleInterval(): Promise<void> {
     const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];
@@ -59,7 +55,7 @@ export class WoltSchedulerService {
         await this.bot.sendPhoto(chatId, restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText });
       } catch (err) {
         this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
         await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
       }
 
@@ -67,7 +63,7 @@ export class WoltSchedulerService {
       await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
       this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
 
@@ -97,7 +93,7 @@ export class WoltSchedulerService {
       this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
       this.logger.error(`${this.cleanSubscription.name} - error - ${err}`);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
 
@@ -108,6 +104,6 @@ export class WoltSchedulerService {
 
   async notifyWithUserDetails(chatId: number, restaurant: string, action: AnalyticEventValue) {
     const userDetails = await getUserDetails(chatId);
-    this.notifier.notify(BOT_CONFIG, { restaurant, action }, userDetails);
+    notify(BOT_CONFIG, { restaurant, action }, userDetails);
   }
 }

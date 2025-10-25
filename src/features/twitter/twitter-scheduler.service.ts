@@ -1,7 +1,7 @@
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { provideTelegramBot } from '@services/telegram';
 import { getUserTweets } from '@services/twitter';
 import { getAllActiveSubscriptions, updateLastFetched } from '@shared/twitter';
 import { BOT_CONFIG } from './twitter.config';
@@ -10,11 +10,9 @@ import { TwitterService } from './twitter.service';
 @Injectable()
 export class TwitterSchedulerService {
   private readonly logger = new Logger(TwitterSchedulerService.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(
-    private readonly twitterService: TwitterService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly twitterService: TwitterService) {}
 
   @Cron('0 18 * * *', { name: 'twitter-daily-tweets', timeZone: DEFAULT_TIMEZONE })
   async handleDailyTweetsFetch(): Promise<void> {

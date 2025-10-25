@@ -19,7 +19,6 @@ export type OrchestratorDescriptor = Omit<AgentDescriptor, 'description' | 'tool
 export type CreateAgentOptions = {
   llm: ChatAnthropic;
   checkpointSaver?: MemorySaver;
-  responseFormat?: any;
   toolCallbackOptions?: ToolCallbackOptions;
 };
 

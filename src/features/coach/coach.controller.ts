@@ -1,11 +1,22 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
-import { NotifierService } from '@core/notifier';
 import { getDateDescription } from '@core/utils';
+import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
-import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import {
+  getBotToken,
+  getCallbackQueryData,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  MessageLoader,
+  provideTelegramBot,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
 import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -28,13 +39,10 @@ const getKeyboardOptions = () => {
 @Injectable()
 export class CoachController implements OnModuleInit {
   private readonly logger = new Logger(CoachController.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
-  constructor(
-    private readonly coachService: CoachService,
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly coachService: CoachService) {}
 
   onModuleInit(): void {
     const { COMMAND, TEXT, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -53,7 +61,7 @@ export class CoachController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.userStart(chatId, userDetails);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async tablesHandler(message: Message): Promise<void> {
@@ -109,7 +117,7 @@ export class CoachController implements OnModuleInit {
       await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown', ...getKeyboardOptions() });
     });
 
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, text }, userDetails);
   }
 
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
@@ -120,22 +128,22 @@ export class CoachController implements OnModuleInit {
       case BOT_ACTIONS.START:
         await this.userStart(chatId, userDetails);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
         break;
       case BOT_ACTIONS.STOP:
         await this.stopHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
         break;
       case BOT_ACTIONS.CONTACT:
         await this.contactHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
         break;
       case BOT_ACTIONS.TABLE:
         await this.tableHandler(chatId, Number(resource));
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
         break;
       case BOT_ACTIONS.MATCH:
         await this.competitionMatchesHandler(chatId, Number(resource));
@@ -143,20 +151,20 @@ export class CoachController implements OnModuleInit {
         const leagueName = Object.entries(COMPETITION_IDS_MAP)
           .filter(([_, value]) => value === Number(resource))
           .map(([key]) => key)[0];
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
         break;
       case BOT_ACTIONS.CUSTOM_LEAGUES:
         await this.customLeaguesHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES }, userDetails);
         break;
       case BOT_ACTIONS.CUSTOM_LEAGUES_SELECT:
         await this.customLeaguesSelectHandler(chatId, Number(resource), Number(subAction));
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES_SELECT }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES_SELECT }, userDetails);
         break;
       default:
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, reason: 'invalid action', response }, userDetails);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, reason: 'invalid action', response }, userDetails);
         throw new Error('Invalid action');
     }
   }

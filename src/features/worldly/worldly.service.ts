@@ -1,19 +1,15 @@
 import * as fs from 'fs';
-import TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable } from '@nestjs/common';
-import { NotifierService } from '@core/notifier';
+import { Injectable } from '@nestjs/common';
 import { generateRandomString, shuffleArray } from '@core/utils';
-import { BLOCKED_ERROR, getInlineKeyboardMarkup } from '@services/telegram';
+import { notify } from '@services/notifier';
+import { BLOCKED_ERROR, getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
 import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, State, updateSubscription } from '@shared/worldly';
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 
 @Injectable()
 export class WorldlyService {
-  constructor(
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   async randomGameHandler(chatId: number): Promise<void> {
     const handlers = [
@@ -30,7 +26,7 @@ export class WorldlyService {
     } catch (err) {
       if (err.message.includes(BLOCKED_ERROR)) {
         const userDetails = await getUserDetails(chatId);
-        this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
         await updateSubscription(chatId, { isActive: false });
       }
     }

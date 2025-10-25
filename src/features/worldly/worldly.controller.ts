@@ -1,10 +1,21 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
-import { NotifierService } from '@core/notifier';
 import { sleep } from '@core/utils';
-import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { notify } from '@services/notifier';
+import {
+  getBotToken,
+  getCallbackQueryData,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  provideTelegramBot,
+  reactToMessage,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
 import { generateStatisticsMessage } from './utils';
@@ -16,13 +27,10 @@ const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר ל
 @Injectable()
 export class WorldlyController implements OnModuleInit {
   private readonly logger = new Logger(WorldlyController.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
-  constructor(
-    private readonly worldlyService: WorldlyService,
-    private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly worldlyService: WorldlyService) {}
 
   onModuleInit(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -44,7 +52,7 @@ export class WorldlyController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
     await this.userStart(chatId, userDetails);
-    this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
   private async actionsHandler(message: Message): Promise<void> {
@@ -67,9 +75,9 @@ export class WorldlyController implements OnModuleInit {
       await this.bot.sendMessage(chatId, 'מצוין! עכשיו נשחק ברצף 🔥');
       userPreferencesCacheService.saveUserPreferences(chatId, { onFireMode: true });
       await this.worldlyService.randomGameHandler(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -78,9 +86,9 @@ export class WorldlyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.worldlyService.randomGameHandler(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.RANDOM }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.RANDOM }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.RANDOM, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.RANDOM, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -89,9 +97,9 @@ export class WorldlyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.worldlyService.mapHandler(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MAP, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -100,9 +108,9 @@ export class WorldlyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.worldlyService.USMapHandler(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.US_MAP, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -111,9 +119,9 @@ export class WorldlyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.worldlyService.flagHandler(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FLAG, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -122,9 +130,9 @@ export class WorldlyController implements OnModuleInit {
     const { chatId, userDetails } = getMessageData(message);
     try {
       await this.worldlyService.capitalHandler(chatId);
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL }, userDetails);
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CAPITAL, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }
@@ -138,36 +146,32 @@ export class WorldlyController implements OnModuleInit {
         case BOT_ACTIONS.START:
           await this.userStart(chatId, userDetails);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
         case BOT_ACTIONS.STOP:
           await this.stopHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
           break;
         case BOT_ACTIONS.CONTACT:
           await this.contactHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.STATISTICS:
           await this.statisticsHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STATISTICS }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STATISTICS }, userDetails);
           break;
         case BOT_ACTIONS.MAP:
           await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
-          this.notifier.notify(
-            BOT_CONFIG,
-            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
-            userDetails,
-          );
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.US_MAP:
           await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
-          this.notifier.notify(
+          notify(
             BOT_CONFIG,
             { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🇺🇸 🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
             userDetails,
@@ -176,23 +180,15 @@ export class WorldlyController implements OnModuleInit {
         case BOT_ACTIONS.FLAG:
           await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
-          this.notifier.notify(
-            BOT_CONFIG,
-            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
-            userDetails,
-          );
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.CAPITAL:
           await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
-          this.notifier.notify(
-            BOT_CONFIG,
-            { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName },
-            userDetails,
-          );
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName }, userDetails);
           break;
         default:
-          this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
+          notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, response }, userDetails);
           throw new Error('Invalid action');
       }
 
@@ -206,7 +202,7 @@ export class WorldlyController implements OnModuleInit {
         await this.worldlyService.randomGameHandler(chatId);
       }
     } catch (err) {
-      this.notifier.notify(BOT_CONFIG, { action: `${action} answer`, error: `❗️ ${err}` }, userDetails);
+      notify(BOT_CONFIG, { action: `${action} answer`, error: `❗️ ${err}` }, userDetails);
       throw err;
     }
   }

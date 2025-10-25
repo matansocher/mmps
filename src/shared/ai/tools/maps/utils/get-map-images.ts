@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import { env } from 'node:process';
 import * as path from 'path';
 import { LOCAL_FILES_PATH } from '@core/config';
