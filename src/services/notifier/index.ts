@@ -1,2 +1,1 @@
-export * from './notifier.config';
-export * from './utils';
+export { notify } from './notify';

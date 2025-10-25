@@ -1,7 +1,12 @@
-import { MY_USER_ID } from '@core/config';
-import { NOTIFIER_CHAT_ID } from '@services/notifier';
 import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/telegram';
-import { BOT_CONFIG } from '../notifier.config';
+
+const NOTIFIER_CHAT_ID = 862305226;
+const botConfig = {
+  id: 'NOTIFIER',
+  name: 'Notifier Bot 🦔',
+  token: 'NOTIFIER_TELEGRAM_BOT_TOKEN',
+  forceLocal: true,
+};
 
 type NotifyOptions = {
   readonly [key: string]: any;
@@ -22,10 +27,10 @@ function getNotyMessageText(botName: string, options: NotifyOptions, userDetails
 }
 
 export function notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): void {
-  if (userDetails?.chatId === MY_USER_ID) {
-    return;
-  }
+  // if (userDetails?.chatId === MY_USER_ID) {
+  //   return;
+  // }
   const notyMessageText = getNotyMessageText(bot.name, options, userDetails);
-  const botInstance = provideTelegramBot(BOT_CONFIG);
+  const botInstance = provideTelegramBot(botConfig);
   botInstance.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
 }
