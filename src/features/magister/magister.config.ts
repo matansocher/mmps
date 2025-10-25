@@ -19,7 +19,11 @@ export enum BOT_ACTIONS {
   TRANSCRIBE = 'transcribe',
   COMPLETE_LESSON = 'complete_lesson',
   COMPLETE_COURSE = 'complete_course',
+  QUIZ = 'quiz',
+  QUIZ_ANSWER = 'quiz_answer',
 }
+
+export const INLINE_KEYBOARD_SEPARATOR = ' - ';
 
 export const PINECONE_INDEX_NAME = 'scholar-materials';
 
@@ -82,4 +86,26 @@ Include:
 This summary should help refresh the learner's memory weeks or months from now.
 
 IMPORTANT: Write this summary in the SAME LANGUAGE as the course materials that were taught throughout the lessons.
+`;
+
+export const QUIZ_PROMPT = `
+Create an engaging and comprehensive quiz of 5 questions to test the learner's understanding of the entire course.
+
+The questions should:
+- Cover key concepts from across ALL lessons (not just the final lesson)
+- Test deep understanding, not just memorization
+- Be challenging but fair
+- Include a mix of question types:
+  * Multiple choice questions (4 options)
+  * True/False questions
+
+For each question, provide:
+1. A clear, well-written question
+2. Answer options (4 for multiple choice, 2 for true/false)
+3. The correct answer index (0-based)
+4. A brief but insightful explanation of why the correct answer is correct (shown to user if they answer incorrectly)
+
+Make the quiz engaging and educational. The explanations should reinforce learning.
+
+IMPORTANT: Write all questions, options, and explanations in the SAME LANGUAGE as the course materials that were taught.
 `;

@@ -16,6 +16,8 @@ export { competitionMatchesTool, competitionTableTool, competitionsListTool, mat
 
 export { calendarTool } from './calendar/calendar.tool';
 
+export { reminderTool } from './reminders/reminder.tool';
+
 export { exerciseTool } from './exercise/exercise.tool';
 export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
 

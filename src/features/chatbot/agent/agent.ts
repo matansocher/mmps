@@ -17,6 +17,7 @@ import {
   matchPredictionTool,
   matchSummaryTool,
   recipesTool,
+  reminderTool,
   spotifyTool,
   stocksTool,
   textToSpeechTool,
@@ -30,7 +31,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, YouTube video search, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, smart reminders, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, YouTube video search, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -53,6 +54,7 @@ Available capabilities:
 - Stocks tool: Get current or historical stock prices and market information. Supports specific dates for historical data.
 - Crypto tool: Get current or historical cryptocurrency prices. Supports specific dates for historical data.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
+- Smart Reminders tool: Save reminders for specific dates/times and get notified when they're due. Supports creating, listing, editing, completing, deleting, and snoozing reminders.
 - Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
 - Audio transcriber tool: Transcribe audio files and voice messages to text.
 - Text-to-speech tool: Convert text to speech and generate audio files.
@@ -71,6 +73,22 @@ Available capabilities:
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
 - General conversation & assistance: Provide helpful answers without tools when possible.
+
+Smart Reminders Guidelines:
+- When users want to remember something, save information for later, or be reminded about something, use the smart_reminders tool.
+- Natural language variations to recognize: "remind me to", "save this for", "remember to", "set a reminder", "don't let me forget", "alert me when", "notify me on".
+- Parse natural language dates and times into ISO 8601 format (e.g., "tomorrow at 3pm" → "2025-10-25T15:00:00Z").
+- IMPORTANT: When the user specifies only a date without a specific time (e.g., "remind me on October 31st"), always default to 18:00 (6 PM) on that date. Never use midnight (00:00) as the default time. Examples:
+  * "Remind me to submit the report on October 31st" → "2025-10-31T18:00:00Z" (18:00, not 00:00)
+  * "Remind me at the end of the month" → Use the last day at 18:00
+  * "Remind me tomorrow" → Tomorrow at 18:00
+  * "Remind me on Friday at 3pm" → Friday at 15:00 (respect the specified time)
+- After creating a reminder, confirm the details back to the user including the formatted due date.
+- When users ask "what are my reminders" or "show my reminders", use action "list" to display all pending reminders.
+- Users can manage reminders by ID - support editing, deleting, completing, or snoozing specific reminders.
+- Snooze defaults to 60 minutes but users can specify custom durations (e.g., "snooze for 2 hours" → snoozeMinutes: 120).
+- Format reminder lists clearly with numbering, showing the message and due date for each.
+- Use emojis (🔔, ⏰, ✅, 🗑️, ⏸️) to make reminder interactions more engaging.
 
 Exercise Tracking Guidelines:
 - When I mention exercising, working out, or completing fitness activities, use the exercise_tracker tool to log my exercise.
@@ -134,6 +152,7 @@ Guidelines:
 - Audio transcription: When provided with an audio file path, use the audio transcriber tool to convert speech to text.
 - Text-to-speech: When users request audio output or want to hear text spoken aloud, use the text-to-speech tool to generate voice audio.
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
+- Smart Reminders: When users want to save information for later, set reminders, or be notified about something, use the smart_reminders tool with natural language date parsing. CRITICAL: Always use 18:00 (6 PM) as the default time when no specific time is mentioned. Follow the Smart Reminders Guidelines above for all reminder-related interactions.
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - Spotify Music: When users ask about music, use the spotify tool. The tool returns JSON data - parse it and format the response according to the Spotify Music Guidelines above. Always include Spotify links so users can listen.
@@ -199,6 +218,7 @@ export function agent(): AgentDescriptor {
     topMatchesForPredictionTool,
     matchPredictionTool,
     calendarTool,
+    reminderTool,
     exerciseTool,
     exerciseAnalyticsTool,
     spotifyTool,

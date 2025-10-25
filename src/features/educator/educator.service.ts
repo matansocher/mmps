@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { NotifierService } from '@core/notifier';
 import { getResponse } from '@services/openai';
 import { getInlineKeyboardMarkup, sendShortenedMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, SUMMARY_PROMPT, SYSTEM_PROMPT } from './educator.config';
+import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './educator.config';
 import {
   createTopicParticipation,
   getActiveTopicParticipation,
@@ -12,22 +12,29 @@ import {
   getTopicParticipation,
   getTopicParticipations,
   saveMessageId,
+  saveQuizAnswer,
+  saveQuizQuestions,
   saveSummarySent,
   saveTopicSummary,
   updatePreviousResponseId,
+  updateQuizScore,
 } from './mongo';
-import { Topic, TopicParticipation, TopicResponseSchema, TopicSummarySchema } from './types';
-import { generateSummaryMessage } from './utils';
+import { QuizAnswer, QuizSchema, Topic, TopicParticipation, TopicResponseSchema, TopicSummarySchema } from './types';
+import { generateSummaryMessage, getScoreMessage } from './utils';
 
 const getBotInlineKeyboardMarkup = (topicParticipation: TopicParticipation) => {
   const inlineKeyboardButtons = [
     {
       text: '🎧 הקראה 🎧',
-      callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${topicParticipation._id}`,
+      callback_data: [BOT_ACTIONS.TRANSCRIBE, topicParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+    },
+    {
+      text: '🎯 בואו נבחן! 🎯',
+      callback_data: [BOT_ACTIONS.QUIZ, topicParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
     },
     {
       text: '✅ סיימתי ✅',
-      callback_data: `${BOT_ACTIONS.COMPLETE} - ${topicParticipation._id}`,
+      callback_data: [BOT_ACTIONS.COMPLETE, topicParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
     },
   ];
   return getInlineKeyboardMarkup(inlineKeyboardButtons);
@@ -101,5 +108,84 @@ export class EducatorService {
     });
 
     await saveTopicSummary(topicParticipation, topic.title, { summary: summaryDetails.summary, keyTakeaways: summaryDetails.keyTakeaways });
+  }
+
+  async generateQuiz(topicParticipationId: string): Promise<void> {
+    const topicParticipation = await getTopicParticipation(topicParticipationId);
+    if (!topicParticipation) {
+      return;
+    }
+
+    const { result: quizData } = await getResponse<typeof QuizSchema>({
+      instructions: SYSTEM_PROMPT,
+      previousResponseId: topicParticipation.previousResponseId,
+      input: QUIZ_PROMPT,
+      schema: QuizSchema,
+    });
+
+    await saveQuizQuestions(topicParticipationId, quizData.questions);
+  }
+
+  async sendQuizQuestion(chatId: number, topicParticipation: TopicParticipation, questionIndex: number): Promise<void> {
+    if (!topicParticipation.quizDetails || questionIndex >= topicParticipation.quizDetails.questions.length) {
+      return;
+    }
+
+    const question = topicParticipation.quizDetails.questions[questionIndex];
+    const questionNumber = questionIndex + 1;
+    const totalQuestions = topicParticipation.quizDetails.questions.length;
+
+    const questionText = [`שאלה ${questionNumber} מתוך ${totalQuestions}:`, '', question.question].join('\n');
+
+    const buttonLayout = question.options.map((option, index) => [
+      {
+        text: option,
+        callback_data: [BOT_ACTIONS.QUIZ_ANSWER, topicParticipation._id, questionIndex, index].join(INLINE_KEYBOARD_SEPARATOR),
+      },
+    ]);
+
+    await this.bot.sendMessage(chatId, questionText, { reply_markup: { inline_keyboard: buttonLayout } });
+  }
+
+  async checkQuizAnswer(topicParticipationId: string, questionIndex: number, userAnswerIndex: number, chatId: number, messageId: number): Promise<void> {
+    const topicParticipation = await getTopicParticipation(topicParticipationId);
+    if (!topicParticipation?.quizDetails) {
+      return;
+    }
+
+    const question = topicParticipation.quizDetails.questions[questionIndex];
+    const isCorrect = userAnswerIndex === question.correctAnswer;
+
+    const answer: QuizAnswer = { questionIndex, userAnswer: userAnswerIndex, isCorrect, answeredAt: new Date() };
+    await saveQuizAnswer(topicParticipationId, answer);
+
+    await this.bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId }).catch(() => {});
+
+    if (isCorrect) {
+      await this.bot.sendMessage(chatId, `✅ נכון! כל הכבוד! 🎉`);
+    } else {
+      const correctAnswerText = question.options[question.correctAnswer];
+      await this.bot.sendMessage(chatId, [`❌ לא בדיוק...`, '', `התשובה הנכונה היא: ${correctAnswerText}`, '', `💡 ${question.explanation}`].join('\n'));
+    }
+
+    const updatedParticipation = await getTopicParticipation(topicParticipationId);
+    const answersCount = updatedParticipation.quizDetails.answers.length;
+    const totalQuestions = updatedParticipation.quizDetails.questions.length;
+
+    if (answersCount < totalQuestions) {
+      await this.sendQuizQuestion(chatId, updatedParticipation, answersCount);
+    } else {
+      const correctAnswers = updatedParticipation.quizDetails.answers.filter((a) => a.isCorrect).length;
+      await updateQuizScore(topicParticipationId, correctAnswers);
+
+      const scoreMessage = getScoreMessage(correctAnswers, totalQuestions);
+
+      const completeButton = {
+        text: '✅ סיימתי את הקורס ✅',
+        callback_data: [BOT_ACTIONS.COMPLETE, topicParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+      };
+
+      await this.bot.sendMessage(chatId, scoreMessage, { reply_markup: { inline_keyboard: [[completeButton]] } });
+    }
   }
 }

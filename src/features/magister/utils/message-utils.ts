@@ -21,21 +21,49 @@ export function generateSummaryMessage(summaryDetails: SummaryDetails): string {
   return sections.join('\n');
 }
 
-export function formatLessonProgress(currentLesson: number, totalLessons: number, lessonsCompleted: number): string {
-  const progressBar = generateProgressBar(currentLesson, lessonsCompleted, totalLessons);
+export function formatLessonProgress(currentLesson: number, totalLessons: number): string {
+  const progressBar = generateProgressBar(currentLesson, totalLessons);
   return `📖 *Lesson ${currentLesson} of ${totalLessons}*\n\n${progressBar}`;
 }
 
-function generateProgressBar(currentLesson: number, completed: number, total: number): string {
-  const circles = [];
-  for (let i = 1; i <= total; i++) {
-    if (i < currentLesson) {
-      circles.push('✅'); // Completed lessons
-    } else if (i === currentLesson) {
-      circles.push('📍'); // Current lesson
+function generateProgressBar(currentLesson: number, total: number): string {
+  const completed = currentLesson - 1;
+  const percentage = Math.round((completed / total) * 100);
+  const barLength = 10;
+  const filledLength = Math.round((completed / total) * barLength);
+
+  let bar = '[';
+  for (let i = 0; i < barLength; i++) {
+    if (i < filledLength) {
+      bar += '=';
+    } else if (i === filledLength) {
+      bar += '>';
     } else {
-      circles.push('⚪️'); // Upcoming lessons
+      bar += '-';
     }
   }
-  return circles.join(' ');
+  bar += `] ${percentage}% (${completed}/${total})`;
+
+  return bar;
 }
+
+// function generateProgressBar(currentLesson: number, total: number): string {
+//   const completed = currentLesson - 1;
+//   const percentage = Math.round((completed / total) * 100);
+//   const barLength = 10;
+//   const filledLength = Math.round((completed / total) * barLength);
+//
+//   let bar = '';
+//   for (let i = 0; i < barLength; i++) {
+//     if (i < filledLength) {
+//       bar += '█';
+//     } else if (i === filledLength && completed < total) {
+//       bar += '▓';
+//     } else {
+//       bar += '░';
+//     }
+//   }
+//   bar += ` 📍 ${percentage}%`;
+//
+//   return bar;
+// }

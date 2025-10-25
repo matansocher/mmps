@@ -28,9 +28,23 @@ export const CourseSummarySchema = z.object({
   nextSteps: z.array(z.string()).min(2).max(3).describe('2-3 suggested next steps for deeper learning'),
 });
 
+export const QuizQuestionSchema = z.object({
+  question: z.string().describe('The quiz question in English'),
+  type: z.enum(['multiple_choice', 'true_false']).describe('Type of question'),
+  options: z.array(z.string()).min(2).max(4).describe('For multiple choice: 4 options. For true/false: ["True", "False"]'),
+  correctAnswer: z.number().describe('Index of the correct answer (0-based)'),
+  explanation: z.string().describe('Brief explanation in English why the correct answer is correct (shown if user answers incorrectly)'),
+});
+
+export const QuizSchema = z.object({
+  questions: z.array(QuizQuestionSchema).length(5).describe('Exactly 5 quiz questions - mix of multiple choice and true/false questions to test understanding of the entire course'),
+});
+
 export type LessonResponse = z.infer<typeof LessonResponseSchema>;
 export type LessonCountAnalysis = z.infer<typeof LessonCountAnalysisSchema>;
 export type CourseSummary = z.infer<typeof CourseSummarySchema>;
+export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
+export type Quiz = z.infer<typeof QuizSchema>;
 
 export type LessonOutline = {
   readonly lessonNumber: number;
@@ -52,6 +66,21 @@ export enum CourseParticipationStatus {
   Active = 'active',
   Completed = 'completed',
 }
+
+export type QuizAnswer = {
+  readonly questionIndex: number;
+  readonly userAnswer: number;
+  readonly isCorrect: boolean;
+  readonly answeredAt: Date;
+};
+
+export type QuizDetails = {
+  readonly questions: QuizQuestion[];
+  readonly answers: QuizAnswer[];
+  readonly score?: number;
+  readonly startedAt: Date;
+  readonly completedAt?: Date;
+};
 
 export type SummaryDetails = {
   readonly topicTitle: string;
@@ -77,6 +106,7 @@ export type CourseParticipation = {
   readonly isWaitingForNextLesson: boolean;
   readonly threadMessages?: number[]; // Telegram message IDs in this course thread
   readonly summaryDetails?: SummaryDetails;
+  readonly quizDetails?: QuizDetails;
   readonly assignedAt?: Date;
   readonly completedAt?: Date;
   readonly createdAt: Date;
