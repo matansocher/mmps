@@ -123,37 +123,20 @@ export async function getParticipationsReadyForNextLesson(): Promise<CourseParti
 export async function saveQuizQuestions(participationId: string, questions: QuizQuestion[]): Promise<void> {
   const participationCollection = getCollection();
   const filter = { _id: new ObjectId(participationId) };
-  const updateObj = {
-    $set: {
-      quizDetails: {
-        questions,
-        answers: [],
-        startedAt: new Date(),
-      },
-    },
-  };
+  const updateObj = { $set: { quizDetails: { questions, answers: [], startedAt: new Date() } } };
   await participationCollection.updateOne(filter, updateObj);
 }
 
 export async function saveQuizAnswer(participationId: string, answer: QuizAnswer): Promise<void> {
   const participationCollection = getCollection();
   const filter = { _id: new ObjectId(participationId) };
-  const updateObj = {
-    $push: {
-      'quizDetails.answers': answer,
-    },
-  };
+  const updateObj = { $push: { 'quizDetails.answers': answer } };
   await participationCollection.updateOne(filter, updateObj);
 }
 
 export async function updateQuizScore(participationId: string, score: number): Promise<void> {
   const participationCollection = getCollection();
   const filter = { _id: new ObjectId(participationId) };
-  const updateObj = {
-    $set: {
-      'quizDetails.score': score,
-      'quizDetails.completedAt': new Date(),
-    },
-  };
+  const updateObj = { $set: { 'quizDetails.score': score, 'quizDetails.completedAt': new Date() } };
   await participationCollection.updateOne(filter, updateObj);
 }

@@ -137,7 +137,6 @@ export class EducatorService {
 
     const questionText = [`שאלה ${questionNumber} מתוך ${totalQuestions}:`, '', question.question].join('\n');
 
-    // Show all buttons in a single column, one button per row
     const buttonLayout = question.options.map((option, index) => [
       {
         text: option,
