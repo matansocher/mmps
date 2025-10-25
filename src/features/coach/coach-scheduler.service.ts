@@ -9,7 +9,7 @@ import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@sha
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
-const HOURS_TO_NOTIFY = [12, 23];
+const HOURS_TO_NOTIFY = [12];
 
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {
@@ -23,10 +23,11 @@ export class CoachBotSchedulerService implements OnModuleInit {
     setTimeout(() => {
       // this.handleIntervalFlow(); // for testing purposes
       // this.handlePredictionsFlow(); // for testing purposes
+      // this.handlePredictionsVerificationFlow(); // for testing purposes
     }, 8000);
   }
 
-  @Cron(`59 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`59 ${HOURS_TO_NOTIFY.join(',')} * * *`, { name: 'coach-midday-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
       const subscriptions = await getActiveSubscriptions();
@@ -90,6 +91,41 @@ export class CoachBotSchedulerService implements OnModuleInit {
       );
     } catch (err) {
       this.notifier.notify(BOT_CONFIG, { action: `predictions-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+    }
+  }
+
+  @Cron(`59 23 * * *`, { name: 'coach-predictions-verification-scheduler', timeZone: DEFAULT_TIMEZONE })
+  async handlePredictionsVerificationFlow(): Promise<void> {
+    try {
+      const subscriptions = await getActiveSubscriptions();
+      if (!subscriptions?.length) {
+        return;
+      }
+
+      // Generate prediction verification once for all users (no league filtering)
+      const verificationText = await this.coachService.getMatchesPredictionsVerificationMessage(getDateString());
+      if (!verificationText) {
+        return;
+      }
+
+      // Send the same verification to all users
+      const relevantSubscriptions = subscriptions.filter((chatId) => !!chatId);
+      const chatIds = relevantSubscriptions.map(({ chatId }) => chatId);
+      await Promise.all(
+        chatIds.map(async (chatId) => {
+          await sendShortenedMessage(this.bot, chatId, verificationText, { parse_mode: 'Markdown' }).catch(async (err) => {
+            const userDetails = await getUserDetails(chatId);
+            if (err.message.includes(BLOCKED_ERROR)) {
+              await updateSubscription(chatId, { isActive: false });
+              this.notifier.notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, userDetails, error: BLOCKED_ERROR });
+            } else {
+              this.notifier.notify(BOT_CONFIG, { action: `predictions-verification-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+            }
+          });
+        }),
+      );
+    } catch (err) {
+      this.notifier.notify(BOT_CONFIG, { action: `predictions-verification-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
     }
   }
 }
