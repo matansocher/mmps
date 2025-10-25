@@ -49,7 +49,7 @@ IMPORTANT: Look back in our conversation history from earlier today to find the 
    - Just show today's results without the prediction comparison
    - Say "היום לא היו ניבויים, אבל הנה התוצאות:"
 
-Keep it engaging, honest about mistakes, and celebrate successes!`;
+IMPORTANT: Respond in Hebrew only. Keep it engaging, honest about mistakes, and celebrate successes!`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
