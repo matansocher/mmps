@@ -1,10 +1,21 @@
-import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { sleep } from '@core/utils';
-import { getBotToken, getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, reactToMessage, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import {
+  getBotToken,
+  getCallbackQueryData,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  provideTelegramBot,
+  reactToMessage,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
 import { generateStatisticsMessage } from './utils';
@@ -16,12 +27,12 @@ const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר ל
 @Injectable()
 export class WorldlyController implements OnModuleInit {
   private readonly logger = new Logger(WorldlyController.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(
     private readonly worldlyService: WorldlyService,
     private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {

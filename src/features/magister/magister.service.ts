@@ -1,8 +1,7 @@
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
-import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
+import { getInlineKeyboardMarkup, provideTelegramBot, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,
@@ -57,8 +56,9 @@ const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) =>
 @Injectable()
 export class MagisterService {
   private readonly logger = new Logger(MagisterService.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
+  constructor() {}
 
   async handleCourseReminders(courseParticipation: CourseParticipation) {
     await this.bot.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails));

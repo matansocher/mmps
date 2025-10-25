@@ -5,26 +5,9 @@ import { AgentDescriptor, CreateAgentOptions, OrchestratorDescriptor } from '../
 import { AiService } from './service';
 import { ToolCallbackHandler } from './tool-callback-handler';
 
-function wrapToolWithLogging(tool: any) {
-  return {
-    ...tool,
-    func: async (input: any) => {
-      console.log(`🔧 LLM is about to use tool: ${tool.name}`, { input });
-      try {
-        const result = await tool.func(input);
-        console.log(`✅ Tool ${tool.name} completed successfully`, { result });
-        return result;
-      } catch (err) {
-        console.log(`❌ Tool ${tool.name} failed`, { error: err.message });
-        throw err;
-      }
-    },
-  };
-}
-
 export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor, opts: CreateAgentOptions): AiService {
-  const { name, prompt, tools = [] } = descriptor;
-  const { llm, checkpointSaver = new MemorySaver(), responseFormat, toolCallbackOptions } = opts;
+  const { name, tools = [] } = descriptor;
+  const { llm, checkpointSaver = new MemorySaver(), toolCallbackOptions } = opts;
 
   // Handle multi-agent orchestration
   if ('agents' in descriptor && Array.isArray(descriptor.agents)) {

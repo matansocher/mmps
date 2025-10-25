@@ -1,10 +1,9 @@
-import type TelegramBot from 'node-telegram-bot-api';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { NotifierService } from '@core/notifier';
 import { getDateString } from '@core/utils';
-import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
+import { BLOCKED_ERROR, provideTelegramBot, sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -13,10 +12,11 @@ const HOURS_TO_NOTIFY = [12, 23];
 
 @Injectable()
 export class CoachBotSchedulerService implements OnModuleInit {
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
   constructor(
     private readonly coachService: CoachService,
     private readonly notifier: NotifierService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
   ) {}
 
   onModuleInit(): void {

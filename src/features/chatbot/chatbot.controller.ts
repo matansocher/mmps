@@ -1,22 +1,20 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
+import { Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
-import { downloadAudio, getBotToken, getMessageData, MessageLoader, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { downloadAudio, getBotToken, getMessageData, MessageLoader, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
 @Injectable()
 export class ChatbotController implements OnModuleInit {
   private readonly logger = new Logger(ChatbotController.name);
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
-  constructor(
-    private readonly chatbotService: ChatbotService,
-    @Inject(BOT_CONFIG.id) private readonly bot: TelegramBot,
-  ) {}
+  constructor(private readonly chatbotService: ChatbotService) {}
 
   onModuleInit(): void {
     const { COMMAND, TEXT, PHOTO, AUDIO, VOICE } = TELEGRAM_EVENTS;

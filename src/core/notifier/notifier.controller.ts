@@ -1,13 +1,12 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { getMessageData, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { Message } from 'node-telegram-bot-api';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { BOT_CONFIG } from './notifier.config';
 
 @Injectable()
 export class NotifierController implements OnModuleInit {
   private readonly logger = new Logger(NotifierController.name);
-
-  constructor(@Inject(BOT_CONFIG.id) private readonly bot: TelegramBot) {}
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   onModuleInit(): void {
     const { MESSAGE } = TELEGRAM_EVENTS;
