@@ -138,7 +138,8 @@ export class MagisterController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, messageId, data: response, text, replyMarkup } = getCallbackQueryData(callbackQuery);
 
-    const [action, courseParticipationId] = response.split(INLINE_KEYBOARD_SEPARATOR);
+    const responseParts = response.split(INLINE_KEYBOARD_SEPARATOR);
+    const [action, courseParticipationId] = responseParts;
 
     switch (action) {
       case BOT_ACTIONS.COMPLETE_LESSON:
@@ -151,6 +152,16 @@ export class MagisterController implements OnModuleInit {
 
       case BOT_ACTIONS.COMPLETE_COURSE:
         await this.handleCallbackCompleteCourse(chatId, messageId, courseParticipationId);
+        break;
+
+      case BOT_ACTIONS.QUIZ:
+        await this.handleCallbackQuiz(chatId, courseParticipationId);
+        break;
+
+      case BOT_ACTIONS.QUIZ_ANSWER:
+        const questionIndex = parseInt(responseParts[2], 10);
+        const answerIndex = parseInt(responseParts[3], 10);
+        await this.handleCallbackQuizAnswer(chatId, messageId, courseParticipationId, questionIndex, answerIndex);
         break;
 
       default:
@@ -206,6 +217,29 @@ export class MagisterController implements OnModuleInit {
 
     await this.bot.sendMessage(chatId, `🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
 
-    this.magisterService.generateCourseSummary(courseParticipationId);
+    await this.magisterService.generateCourseSummary(courseParticipationId);
+  }
+
+  private async handleCallbackQuiz(chatId: number, courseParticipationId: string): Promise<void> {
+    const quizLoaderMessage = '🎯 Generating your quiz...';
+    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, undefined, { reactionEmoji: '🤔', loaderMessage: quizLoaderMessage });
+
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      await this.magisterService.generateQuiz(courseParticipationId);
+
+      const courseParticipation = await getCourseParticipation(courseParticipationId);
+      if (!courseParticipation) {
+        await this.bot.sendMessage(chatId, 'Something went wrong... Could not generate the quiz. Please try again later.');
+        return;
+      }
+
+      await this.bot.sendMessage(chatId, [`🎯 *Final Quiz!*`, '', `5 questions to test your understanding of the entire course 🚀`].join('\n'), { parse_mode: 'Markdown' });
+
+      await this.magisterService.sendQuizQuestion(chatId, courseParticipation, 0);
+    });
+  }
+
+  private async handleCallbackQuizAnswer(chatId: number, messageId: number, courseParticipationId: string, questionIndex: number, answerIndex: number): Promise<void> {
+    await this.magisterService.checkQuizAnswer(courseParticipationId, questionIndex, answerIndex, chatId, messageId);
   }
 }
