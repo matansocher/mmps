@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { SummaryDetails, TopicParticipation, TopicParticipationStatus } from '../types';
+import { QuizAnswer, QuizQuestion, SummaryDetails, TopicParticipation, TopicParticipationStatus } from '../types';
 import { DB_NAME } from './index';
 
 const NUM_OD_DAYS_TO_SUMMARY_REMINDER = 14;
@@ -105,4 +105,42 @@ export async function getCourseParticipationForSummaryReminder(): Promise<TopicP
     completedAt: { $lt: new Date(Date.now() - NUM_OD_DAYS_TO_SUMMARY_REMINDER * 24 * 60 * 60 * 1000) },
   };
   return topicParticipationCollection.findOne(filter);
+}
+
+export async function saveQuizQuestions(topicParticipationId: string, questions: QuizQuestion[]): Promise<void> {
+  const topicParticipationCollection = getCollection();
+  const filter = { _id: new ObjectId(topicParticipationId) };
+  const updateObj = {
+    $set: {
+      quizDetails: {
+        questions,
+        answers: [],
+        startedAt: new Date(),
+      },
+    },
+  };
+  await topicParticipationCollection.updateOne(filter, updateObj);
+}
+
+export async function saveQuizAnswer(topicParticipationId: string, answer: QuizAnswer): Promise<void> {
+  const topicParticipationCollection = getCollection();
+  const filter = { _id: new ObjectId(topicParticipationId) };
+  const updateObj = {
+    $push: {
+      'quizDetails.answers': answer,
+    },
+  };
+  await topicParticipationCollection.updateOne(filter, updateObj);
+}
+
+export async function updateQuizScore(topicParticipationId: string, score: number): Promise<void> {
+  const topicParticipationCollection = getCollection();
+  const filter = { _id: new ObjectId(topicParticipationId) };
+  const updateObj = {
+    $set: {
+      'quizDetails.score': score,
+      'quizDetails.completedAt': new Date(),
+    },
+  };
+  await topicParticipationCollection.updateOne(filter, updateObj);
 }

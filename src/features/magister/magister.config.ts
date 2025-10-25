@@ -21,6 +21,8 @@ export enum BOT_ACTIONS {
   COMPLETE_COURSE = 'complete_course',
 }
 
+export const INLINE_KEYBOARD_SEPARATOR = ' - ';
+
 export const PINECONE_INDEX_NAME = 'scholar-materials';
 
 export const SYSTEM_PROMPT = `

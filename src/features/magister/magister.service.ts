@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
 import { getInlineKeyboardMarkup, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
+import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,
   getActiveCourseParticipation,
@@ -27,16 +27,16 @@ const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) =>
   const inlineKeyboardButtons = [
     {
       text: '🎧 Transcribe 🎧',
-      callback_data: `${BOT_ACTIONS.TRANSCRIBE} - ${courseParticipation._id}`,
+      callback_data: [BOT_ACTIONS.TRANSCRIBE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
     },
     isLastLesson
       ? {
           text: '🎓 Complete Course 🎓',
-          callback_data: `${BOT_ACTIONS.COMPLETE_COURSE} - ${courseParticipation._id}`,
+          callback_data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
         }
       : {
           text: '✅ Complete Lesson ✅',
-          callback_data: `${BOT_ACTIONS.COMPLETE_LESSON} - ${courseParticipation._id}`,
+          callback_data: [BOT_ACTIONS.COMPLETE_LESSON, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
         },
   ].filter(Boolean);
 

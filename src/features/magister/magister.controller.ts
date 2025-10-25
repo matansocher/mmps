@@ -17,7 +17,7 @@ import {
   TELEGRAM_EVENTS,
   TelegramEventHandler,
 } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG } from './magister.config';
+import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './magister.config';
 import { MagisterService } from './magister.service';
 import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
 import { formatLessonProgress } from './utils';
@@ -138,7 +138,7 @@ export class MagisterController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, messageId, data: response, text, replyMarkup } = getCallbackQueryData(callbackQuery);
 
-    const [action, courseParticipationId] = response.split(' - ');
+    const [action, courseParticipationId] = response.split(INLINE_KEYBOARD_SEPARATOR);
 
     switch (action) {
       case BOT_ACTIONS.COMPLETE_LESSON:
