@@ -56,4 +56,8 @@ export class CoachService {
   async getMatchesPredictionsMessage(date: string, competitionIds: number[] = []): Promise<string> {
     return await this.predictionsService.generatePredictions(date, competitionIds);
   }
+
+  async getPredictionsResultsMessage(date: string): Promise<string> {
+    return await this.predictionsService.generatePredictionsResults(date);
+  }
 }
