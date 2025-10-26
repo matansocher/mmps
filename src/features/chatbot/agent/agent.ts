@@ -1,5 +1,4 @@
 import {
-  audioTranscriberTool,
   calendarTool,
   competitionMatchesTool,
   competitionsListTool,
@@ -31,7 +30,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, smart reminders, image generator, image analysis, audio transcription, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, YouTube video search, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
+  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, smart reminders, image generator, image analysis, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, YouTube video search, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -56,7 +55,6 @@ Available capabilities:
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
 - Smart Reminders tool: Save reminders for specific dates/times and get notified when they're due. Supports creating, listing, editing, completing, deleting, and snoozing reminders.
 - Image analyzer tool: Analyze images and provide detailed descriptions of what is seen in the image.
-- Audio transcriber tool: Transcribe audio files and voice messages to text.
 - Text-to-speech tool: Convert text to speech and generate audio files.
 - Image Generator Prompt Enhancer tool: ALWAYS use this tool FIRST when a user requests image generation. It enhances basic prompts to produce better, more detailed results.
 - Image Generator tool: Use this tool SECOND, after the prompt enhancer, with the enhanced prompt to generate the actual image. The tool returns "IMAGE_GENERATED: [URL]" format. CRITICAL: You MUST ALWAYS extract and include the URL in your response to the user. Never respond without showing the image URL to the user.
@@ -207,7 +205,6 @@ export function agent(): AgentDescriptor {
     imageAnalyzerTool,
     imageGeneratorTool,
     imageGeneratorPromptEnhancerTool,
-    audioTranscriberTool,
     textToSpeechTool,
     googleMapsPlaceTool,
     googlePlaceDetailsTool,

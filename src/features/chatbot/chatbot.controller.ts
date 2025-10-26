@@ -4,6 +4,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
+import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadAudio, getBotToken, getMessageData, MessageLoader, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
@@ -57,35 +58,38 @@ export class ChatbotController implements OnModuleInit {
     const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const { message: replyText, toolResults } = await this.chatbotService.processMessage(text, chatId);
+      await this.handleBotResponse(chatId, replyText, toolResults);
+    });
+  }
 
-      const ttsResult = toolResults.find((result) => result.toolName === 'text_to_speech');
-      const mapsResult = toolResults.find((result) => result.toolName === 'google_maps_place');
+  private async handleBotResponse(chatId: number, replyText: string, toolResults: any[]): Promise<void> {
+    const ttsResult = toolResults.find((result) => result.toolName === 'text_to_speech');
+    const mapsResult = toolResults.find((result) => result.toolName === 'google_maps_place');
 
-      if (ttsResult && !ttsResult.error) {
-        const audioFilePath = ttsResult.data;
-        try {
-          await this.bot.sendVoice(chatId, audioFilePath);
-          deleteFile(audioFilePath);
-        } catch (err) {
-          this.logger.error(`Error sending voice message: ${err}`);
-          await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
-        }
-      } else if (mapsResult && !mapsResult.error) {
-        const imageFilePath = mapsResult.data;
-        try {
-          await this.bot.sendPhoto(chatId, imageFilePath, { caption: replyText }).catch((err) => {
-            this.logger.error(`Error sending photo: ${err}. Sending as text message instead.`);
-            this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' }).catch(() => {});
-          });
-          deleteFile(imageFilePath);
-        } catch (err) {
-          this.logger.error(`Error sending voice message: ${err}`);
-          await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
-        }
-      } else {
+    if (ttsResult && !ttsResult.error) {
+      const audioFilePath = ttsResult.data;
+      try {
+        await this.bot.sendVoice(chatId, audioFilePath);
+        deleteFile(audioFilePath);
+      } catch (err) {
+        this.logger.error(`Error sending voice message: ${err}`);
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
-    });
+    } else if (mapsResult && !mapsResult.error) {
+      const imageFilePath = mapsResult.data;
+      try {
+        await this.bot.sendPhoto(chatId, imageFilePath, { caption: replyText }).catch((err) => {
+          this.logger.error(`Error sending photo: ${err}. Sending as text message instead.`);
+          this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' }).catch(() => {});
+        });
+        deleteFile(imageFilePath);
+      } catch (err) {
+        this.logger.error(`Error sending voice message: ${err}`);
+        await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+      }
+    } else {
+      await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+    }
   }
 
   private async photoHandler(message: Message): Promise<void> {
@@ -112,10 +116,12 @@ export class ChatbotController implements OnModuleInit {
     await messageLoaderService.handleMessageWithLoader(async () => {
       const audioFileLocalPath = await downloadAudio(this.bot, audio, LOCAL_FILES_PATH);
 
-      const transcriptionPrompt = `Please transcribe this audio file: ${audioFileLocalPath}`;
-      const { message } = await this.chatbotService.processMessage(transcriptionPrompt, chatId);
+      const transcribedText = await getTranscriptFromAudio(audioFileLocalPath);
+      const { message: replyText, toolResults } = await this.chatbotService.processMessage(transcribedText, chatId);
 
-      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      await this.handleBotResponse(chatId, replyText, toolResults);
+
+      deleteFile(audioFileLocalPath);
     });
   }
 }

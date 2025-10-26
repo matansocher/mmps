@@ -87,7 +87,9 @@ If no important matches found:
   * Say "אין משחקים חשובים במיוחד היום 🤷‍♂️"
   * You can add a friendly note like "נהנה מהיום!" or similar
 
-Keep it concise and in Hebrew`;
+Keep it concise and in Hebrew.
+
+Important: Do NOT include any internal thoughts, reasoning about your process, or meta-commentary (such as "I got all the data I needed", "Now I will address the predictions", etc.) in your final response. Your response should ONLY contain the formatted predictions message for the user, starting directly with "⚽ משחקי היום וניבויים:" or "אין משחקים חשובים במיוחד היום 🤷‍♂️" if there are no matches. This is a user-facing message - skip any internal processing notes.`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
