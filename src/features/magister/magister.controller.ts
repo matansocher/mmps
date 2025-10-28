@@ -137,6 +137,8 @@ export class MagisterController implements OnModuleInit {
   private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
     const { chatId, messageId, data: response, text, replyMarkup } = getCallbackQueryData(callbackQuery);
 
+    await this.bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+
     const responseParts = response.split(INLINE_KEYBOARD_SEPARATOR);
     const [action, courseParticipationId] = responseParts;
 
