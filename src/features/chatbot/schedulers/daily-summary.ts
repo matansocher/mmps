@@ -17,8 +17,12 @@ export async function dailySummary(bot: TelegramBot, chatbotService: ChatbotServ
 2. **Calendar**: Check my calendar events for tomorrow. Format as:
    - List each event (just the name and time)
    - If no events, write "- no events"
-3. **Exercises**: Mention if I exercised today or not. Keep it brief (1-2 sentences max).
-4. **Fun Fact**: End with a fun fact related to todays date or if no something interesting, just a random fun fact.
+3. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
+   - Extract the person's name from the event title
+   - Create a reminder using the reminders tool for 4 PM (16:00) tomorrow with the message: "Today is [Name]'s birthday! Remember to wish them happy birthday."
+   - Mention in the summary that you've added the reminder(s)
+4. **Exercises**: Mention if I exercised today or not. Keep it brief (1-2 sentences max).
+5. **Fun Fact**: End with a fun fact related to todays date or if no something interesting, just a random fun fact.
 
 Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
 
