@@ -1,54 +1,54 @@
-export interface EarthquakeProperties {
-  mag: number;
-  place: string;
-  time: number;
-  updated: number;
-  tz: number | null;
-  url: string;
-  detail: string;
-  felt: number | null;
-  cdi: number | null;
-  mmi: number | null;
-  alert: 'green' | 'yellow' | 'orange' | 'red' | null;
-  status: string;
-  tsunami: number;
-  sig: number;
-  net: string;
-  code: string;
-  ids: string;
-  sources: string;
-  types: string;
-  nst: number | null;
-  dmin: number | null;
-  rms: number;
-  gap: number | null;
-  magType: string;
-  type: string;
-  title: string;
-}
+export type EarthquakeProperties = {
+  readonly mag: number;
+  readonly place: string;
+  readonly time: number;
+  readonly updated: number;
+  readonly tz: number | null;
+  readonly url: string;
+  readonly detail: string;
+  readonly felt: number | null;
+  readonly cdi: number | null;
+  readonly mmi: number | null;
+  readonly alert: 'green' | 'yellow' | 'orange' | 'red' | null;
+  readonly status: string;
+  readonly tsunami: number;
+  readonly sig: number;
+  readonly net: string;
+  readonly code: string;
+  readonly ids: string;
+  readonly sources: string;
+  readonly types: string;
+  readonly nst: number | null;
+  readonly dmin: number | null;
+  readonly rms: number;
+  readonly gap: number | null;
+  readonly magType: string;
+  readonly type: string;
+  readonly title: string;
+};
 
-export interface EarthquakeGeometry {
-  type: 'Point';
-  coordinates: [number, number, number]; // [longitude, latitude, depth]
-}
+export type EarthquakeGeometry = {
+  readonly type: 'Point';
+  readonly coordinates: [number, number, number]; // [longitude, latitude, depth]
+};
 
-export interface Earthquake {
-  type: 'Feature';
-  properties: EarthquakeProperties;
-  geometry: EarthquakeGeometry;
-  id: string;
-}
+export type Earthquake = {
+  readonly type: 'Feature';
+  readonly properties: EarthquakeProperties;
+  readonly geometry: EarthquakeGeometry;
+  readonly id: string;
+};
 
-export interface USGSResponse {
-  type: 'FeatureCollection';
-  metadata: {
-    generated: number;
-    url: string;
-    title: string;
-    status: number;
-    api: string;
-    count: number;
+export type USGSResponse = {
+  readonly type: 'FeatureCollection';
+  readonly metadata: {
+    readonly generated: number;
+    readonly url: string;
+    readonly title: string;
+    readonly status: number;
+    readonly api: string;
+    readonly count: number;
   };
-  features: Earthquake[];
-  bbox?: number[];
-}
+  readonly features: Earthquake[];
+  readonly bbox?: number[];
+};

@@ -6,13 +6,13 @@ const USGS_BASE_URL = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
-interface GetEarthquakesOptions {
-  minMagnitude?: number;
-  startTime?: Date;
-  endTime?: Date;
-  limit?: number;
-  orderBy?: 'time' | 'time-asc' | 'magnitude' | 'magnitude-asc';
-}
+type GetEarthquakesOptions = {
+  readonly minMagnitude?: number;
+  readonly startTime?: Date;
+  readonly endTime?: Date;
+  readonly limit?: number;
+  readonly orderBy?: 'time' | 'time-asc' | 'magnitude' | 'magnitude-asc';
+};
 
 export async function getRecentEarthquakes(options: GetEarthquakesOptions = {}): Promise<Earthquake[]> {
   const {

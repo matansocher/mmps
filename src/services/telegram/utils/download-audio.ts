@@ -1,10 +1,10 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { extractAudioFromVideo } from '@core/utils';
 
-interface ReturnType {
+type ReturnType = {
   readonly audioFileLocalPath: string;
   readonly videoFileLocalPath: string;
-}
+};
 
 export async function downloadAudioFromVideoOrAudio(bot: TelegramBot, { video, audio }, localFilePath: string): Promise<ReturnType> {
   let audioFileLocalPath: string;
