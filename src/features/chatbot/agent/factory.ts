@@ -1,9 +1,9 @@
 // import { DynamicTool } from '@langchain/core/tools';
 import { MemorySaver } from '@langchain/langgraph';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
+import { ToolCallbackHandler } from '@shared/ai';
 import { AgentDescriptor, CreateAgentOptions, OrchestratorDescriptor } from '../types';
 import { AiService } from './service';
-import { ToolCallbackHandler } from './tool-callback-handler';
 
 export function createAgent(descriptor: AgentDescriptor | OrchestratorDescriptor, opts: CreateAgentOptions): AiService {
   const { name, tools = [] } = descriptor;

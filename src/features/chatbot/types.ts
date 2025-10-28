@@ -2,7 +2,7 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { MemorySaver } from '@langchain/langgraph';
-import { ToolCallbackOptions } from './agent/tool-callback-handler';
+import { ToolCallbackOptions } from '@shared/ai';
 
 export type AgentDescriptor = {
   name: string;

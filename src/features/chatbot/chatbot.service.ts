@@ -2,8 +2,9 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { env } from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
+import { ToolCallbackOptions } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgent, ToolCallbackOptions } from './agent';
+import { AiService, createAgent } from './agent';
 import { ChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
