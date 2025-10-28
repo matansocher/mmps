@@ -2,7 +2,7 @@ import { get as _get } from 'lodash';
 import type { Message } from 'node-telegram-bot-api';
 import { UserDetails } from '../types';
 
-interface TelegramMessageData {
+type TelegramMessageData = {
   readonly chatId: number;
   readonly messageId: number;
   readonly replyToMessageId: number;
@@ -18,7 +18,7 @@ interface TelegramMessageData {
     readonly lat: number;
     readonly lon: number;
   };
-}
+};
 
 export function getMessageData(message: Message): TelegramMessageData {
   return {

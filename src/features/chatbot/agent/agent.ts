@@ -5,6 +5,7 @@ import {
   competitionTableTool,
   cryptoTool,
   currentWeatherTool,
+  earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
   githubTool,
@@ -30,7 +31,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, stocks, crypto, calendar, smart reminders, image generator, image analysis, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, YouTube video search, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, stocks, crypto, calendar, smart reminders, image generator, image analysis, text-to-speech, football/sports information, exercise tracking, Google Maps place visualization, Google Places details, YouTube video search, Spotify music search, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -50,6 +51,7 @@ Your role:
 Available capabilities:
 - Current weather tool: Get current weather conditions for any location worldwide.
 - Weather forecast tool: Get weather forecasts for any location up to 5 days in the future.
+- Earthquake monitor tool: Get real-time earthquake data from USGS. Check recent earthquakes or query by magnitude threshold. Useful for seismic activity updates.
 - Stocks tool: Get current or historical stock prices and market information. Supports specific dates for historical data.
 - Crypto tool: Get current or historical cryptocurrency prices. Supports specific dates for historical data.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
@@ -194,6 +196,17 @@ Guidelines:
   * The response includes emojis (🏆, 📅, 🔥) - keep them in your response for visual appeal.
   * Present the statistics clearly showing both streaks and weekly performance.
   * Examples: "Show me Worldly stats", "Who has the longest streak?", "Worldly rankings this week"
+- Earthquake Monitor Guidelines:
+  * When users ask about earthquakes, seismic activity, or recent tremors, use the earthquake_monitor tool.
+  * Natural language variations: "any earthquakes", "recent earthquakes", "strong earthquakes", "earthquake news", "seismic activity", "has there been an earthquake".
+  * Two actions available:
+    - "recent": Get the most recent earthquakes (default: last 10 minutes, magnitude 4.0+)
+    - "magnitude": Get earthquakes above a specific magnitude threshold in the last N hours
+  * The tool returns formatted markdown with earthquake details including magnitude, location, time, depth, coordinates, tsunami warnings, and alert levels.
+  * Present the information clearly with the severity emojis provided (🟡🟠🔴🟣⚠️).
+  * Include USGS links for users to get more details.
+  * For queries like "any big earthquakes today", use action "magnitude" with appropriate threshold (e.g., 5.5+) and hoursBack (e.g., 24).
+  * Examples: "Show me recent earthquakes", "Any earthquakes above magnitude 6?", "Earthquake activity today"
 `;
 
 export function agent(): AgentDescriptor {
@@ -202,6 +215,7 @@ export function agent(): AgentDescriptor {
     cryptoTool,
     currentWeatherTool,
     weatherForecastTool,
+    earthquakeTool,
     imageAnalyzerTool,
     imageGeneratorTool,
     imageGeneratorPromptEnhancerTool,
