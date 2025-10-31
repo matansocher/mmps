@@ -5,6 +5,40 @@ import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
+export const FAVORITE_TEAMS: string[] = [
+  // Spain
+  'Real Madrid',
+  'Barcelona',
+  'Atletico Madrid',
+
+  // Germany
+  'Bayern Munich',
+  'Borussia Dortmund',
+
+  // France
+  'Paris Saint‑Germain F.C.',
+
+  // England
+  'Chelsea FC',
+  'Arsenal FC',
+  'Liverpool FC',
+  'Manchester United FC',
+  'Manchester City FC',
+
+  // Israel
+  'Maccabi Tel Aviv',
+  'Maccabi Haifa',
+  "Hapoel Be'er Sheva",
+  'Hapoel Tel Aviv',
+  'Beitar Jerusalem',
+];
+
+/**
+ * Priority leagues
+ * Only matches from these leagues will be considered (unless involving favorite teams)
+ */
+export const PRIORITY_LEAGUES = ['UEFA Champions League', 'Israeli Premier League'];
+
 const logger = new Logger('SportsCalendarScheduler');
 
 const getDaysToAdd = (dayOfWeek: number): number => {
@@ -35,30 +69,54 @@ export async function sportsCalendar(bot: TelegramBot, chatbotService: ChatbotSe
     const { dayOfWeek, startDate, endDate } = handleDates();
     const dateRangeLabel = dayOfWeek === 0 ? 'the next 3 days (Sunday-Tuesday)' : 'the next 4 days (Wednesday-Saturday)';
 
-    const prompt = `Check football matches from ${startDate} to ${endDate} (${dateRangeLabel}) and add very important ones to my calendar.
+    const prompt = `Check football matches from ${startDate} to ${endDate} (${dateRangeLabel}) and add ONLY the most important ones to my calendar.
+
+**STRICT FILTERING CRITERIA - Be VERY selective:**
 
 1. Use the top_matches_for_prediction tool to get ALL upcoming matches for this period. Pass both date="${startDate}" and endDate="${endDate}" parameters.
 
-2. Analyze ALL matches in this period and identify the MOST IMPORTANT ones based on:
-   - League prestige: Champions League > Israeli premier league > Premier League/La Liga/Bundesliga/Serie A > Other top leagues
-   - Team quality: Matches involving top teams (position 1-4 in their league)
-   - Title races: Top teams within 5 points of each other
-   - Relegation battles: Bottom 4 teams playing against each other
-   - Table proximity: Teams within 3 positions of each other with less than 6 points difference
-   - Derby significance: Teams very close in the table (within 2 positions)
+2. **My Favorite Teams**: ${FAVORITE_TEAMS.join(', ')}
 
-3. Select ONLY the truly important matches (typically 1-3 matches per day for this period, could be less if no important matches).
-   A match should be considered "very important" if it meets at least 2 of the above criteria.
+3. **Match Selection Rules** - A match is considered VERY IMPORTANT only if it meets at least 3 of these criteria:
 
-4. For each important match, use the calendar tool to create an event:
+   **HIGH PRIORITY CRITERIA:**
+   - ⭐ **Favorite Team Match**: Any match involving one of my favorite teams (${FAVORITE_TEAMS.join(', ')}) in a meaningful competition (league/champions league knockout, NOT early cup rounds or friendlies)
+
+   - 🏆 **Champions League Knockout**: ONLY Round of 16, Quarter-finals, Semi-finals, or Final (NO group stage matches unless involving favorite team)
+
+   - 🇮🇱 **Israeli Premier League Derby**: True historic derbies (e.g., Tel Aviv derby, Haifa derby, Beer Sheva vs Maccabi Tel Aviv)
+
+   - 🥇 **Title Decider**: Top 2 teams, within 3 points, playing each other in the final 5 rounds
+
+   - ⚽ **Israeli Premier League Top Match**: Top 4 teams playing each other
+
+   **MEDIUM PRIORITY CRITERIA:**
+   - 🔴 **Relegation Six-Pointer**: Bottom 3 teams playing each other in the final 5 rounds
+
+   - 📊 **Israeli Premier League: Top team vs contender**: Team in position 1-2 playing team in position 3-5
+
+4. **TARGET**: Add 1-2 matches total for this period (NOT per day). Only exceed this if there are multiple exceptional matches (e.g., multiple CL knockout games).
+
+5. **EXPLICIT EXCLUSIONS - Do NOT add:**
+   - Champions League group stage matches (unless involving favorite team)
+   - Regular league matches between mid-table teams
+   - Matches between teams with >8 points difference
+   - Early round cup matches
+   - Friendlies
+   - Matches from leagues outside the priority list
+   - "Interesting" matches that don't meet 3+ criteria
+
+6. For each selected match, use the calendar tool to create an event:
    - title: "⚽ [Home Team] vs [Away Team]" (in English)
-   - description: Include league name and why it's important (1 sentence)
+   - description: Include league name and specific reason why it's important (1 sentence)
    - startDateTime and endDateTime: Use the match's actual start time, add 2 hours for end time
    - location: The venue from the match data
 
-5. After creating calendar events, send me a summary message in Hebrew:
-   - If events were created: "✅ הוספתי [X] משחקים חשובים ללוח השנה:" followed by the list grouped by day
+7. After creating calendar events, send me a summary message in Hebrew:
+   - If events were created: "✅ הוספתי [X] משחקים חשובים ללוח השנה:" followed by the list grouped by day with brief explanation why each is important
    - If no important matches: "אין משחקים חשובים במיוחד בתקופה הקרובה 🤷‍♂️"
+
+**Remember**: Quality over quantity. It's better to add zero matches than to add matches that aren't truly important.
 
 Keep the message concise and in Hebrew.`;
 
