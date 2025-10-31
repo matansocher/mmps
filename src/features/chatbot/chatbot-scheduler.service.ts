@@ -35,10 +35,10 @@ export class ChatbotSchedulerService implements OnModuleInit {
     await footballUpdate(this.bot, this.chatbotService);
   }
 
-  @Cron(`00 13 * * *`, { name: 'chatbot-football-predictions', timeZone: DEFAULT_TIMEZONE })
-  async handleFootballPredictions(): Promise<void> {
-    await footballPredictions(this.bot, this.chatbotService);
-  }
+  // @Cron(`00 13 * * *`, { name: 'chatbot-football-predictions', timeZone: DEFAULT_TIMEZONE })
+  // async handleFootballPredictions(): Promise<void> {
+  //   await footballPredictions(this.bot, this.chatbotService);
+  // }
 
   // @Cron(`59 23 * * *`, { name: 'chatbot-football-update-evening', timeZone: DEFAULT_TIMEZONE })
   // async handleFootballPredictionsResults(): Promise<void> {
