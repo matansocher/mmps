@@ -4,7 +4,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, earthquakeMonitor, exerciseReminder, footballPredictions, footballPredictionsResults, footballUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import { dailySummary, earthquakeMonitor, exerciseReminder, footballPredictions, footballUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
 
 @Injectable()
 export class ChatbotSchedulerService implements OnModuleInit {
@@ -40,10 +40,10 @@ export class ChatbotSchedulerService implements OnModuleInit {
     await footballPredictions(this.bot, this.chatbotService);
   }
 
-  @Cron(`59 23 * * *`, { name: 'chatbot-football-update-evening', timeZone: DEFAULT_TIMEZONE })
-  async handleFootballPredictionsResults(): Promise<void> {
-    await footballPredictionsResults(this.bot, this.chatbotService);
-  }
+  // @Cron(`59 23 * * *`, { name: 'chatbot-football-update-evening', timeZone: DEFAULT_TIMEZONE })
+  // async handleFootballPredictionsResults(): Promise<void> {
+  //   await footballPredictionsResults(this.bot, this.chatbotService);
+  // }
 
   @Cron(`00 10 * * 0,3`, { name: 'chatbot-important-games-calendar', timeZone: DEFAULT_TIMEZONE })
   async handleSportsCalendar(): Promise<void> {

@@ -90,34 +90,34 @@ export class CoachBotSchedulerService implements OnModuleInit {
     }
   }
 
-  @Cron(`59 23 * * *`, { name: 'coach-predictions-results-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handlePredictionsResultsFlow(): Promise<void> {
-    try {
-      const subscriptions = await getActiveSubscriptions();
-      if (!subscriptions?.length) {
-        return;
-      }
-
-      const todayDate = getDateString();
-
-      const predictionsResultsText = await this.coachService.getPredictionsResultsMessage(todayDate);
-      if (!predictionsResultsText) {
-        return;
-      }
-
-      const relevantSubscriptions = subscriptions.filter((chatId) => !!chatId);
-      const chatIds = relevantSubscriptions.map(({ chatId }) => chatId);
-      await Promise.all(
-        chatIds.map(async (chatId) => {
-          await sendShortenedMessage(this.bot, chatId, predictionsResultsText, { parse_mode: 'Markdown' }).catch(async (err) => {
-            const userDetails = await getUserDetails(chatId);
-            notify(BOT_CONFIG, { action: `predictions-results-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
-          });
-        }),
-      );
-    } catch (err) {
-      this.logger.error(`Failed to send evening predictions results: ${err}`);
-      notify(BOT_CONFIG, { action: `predictions-results-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
-    }
-  }
+  // @Cron(`59 23 * * *`, { name: 'coach-predictions-results-scheduler', timeZone: DEFAULT_TIMEZONE })
+  // async handlePredictionsResultsFlow(): Promise<void> {
+  //   try {
+  //     const subscriptions = await getActiveSubscriptions();
+  //     if (!subscriptions?.length) {
+  //       return;
+  //     }
+  //
+  //     const todayDate = getDateString();
+  //
+  //     const predictionsResultsText = await this.coachService.getPredictionsResultsMessage(todayDate);
+  //     if (!predictionsResultsText) {
+  //       return;
+  //     }
+  //
+  //     const relevantSubscriptions = subscriptions.filter((chatId) => !!chatId);
+  //     const chatIds = relevantSubscriptions.map(({ chatId }) => chatId);
+  //     await Promise.all(
+  //       chatIds.map(async (chatId) => {
+  //         await sendShortenedMessage(this.bot, chatId, predictionsResultsText, { parse_mode: 'Markdown' }).catch(async (err) => {
+  //           const userDetails = await getUserDetails(chatId);
+  //           notify(BOT_CONFIG, { action: `predictions-results-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, userDetails, error: err });
+  //         });
+  //       }),
+  //     );
+  //   } catch (err) {
+  //     this.logger.error(`Failed to send evening predictions results: ${err}`);
+  //     notify(BOT_CONFIG, { action: `predictions-results-cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });
+  //   }
+  // }
 }
