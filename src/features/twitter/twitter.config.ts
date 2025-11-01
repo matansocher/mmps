@@ -3,7 +3,7 @@ import { TelegramBotConfig } from '@services/telegram';
 export const BOT_CONFIG: TelegramBotConfig = {
   id: 'TWITTER',
   name: 'Twitter 🐦',
-  token: 'TWITTER_TELEGRAM_BOT_TOKEN',
+  token: 'TWITTER_TELEGRAM_BOT_TOKEN', // MISSING
   commands: {
     START: { command: '/start', description: 'Start the bot', hide: true },
     LIST: { command: '/list', description: '📋 List subscribed users' },
