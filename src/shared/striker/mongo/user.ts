@@ -1,5 +1,5 @@
 import { getMongoCollection } from '@core/mongo';
-import { UserStats, TopPlayerRecord } from '../types';
+import { TopPlayerRecord, UserStats } from '../types';
 import { DB_NAME } from './index';
 
 const getCollection = () => getMongoCollection<UserStats>(DB_NAME, 'User');
@@ -32,7 +32,7 @@ export async function updateUserStats(
     isCorrect: boolean;
     hintsUsed: number;
     score: number;
-  }
+  },
 ): Promise<void> {
   const userCollection = getCollection();
   const user = await getUserStats(chatId);
@@ -43,11 +43,9 @@ export async function updateUserStats(
 
   const { isCorrect, hintsUsed, score } = updates;
 
-  // Calculate new streak
   const newStreak = isCorrect ? (user?.currentStreak || 0) + 1 : 0;
   const bestStreak = Math.max(user?.bestStreak || 0, newStreak);
 
-  // Calculate new average hints used
   const totalGames = (user?.totalGames || 0) + 1;
   const previousTotalHints = (user?.averageHintsUsed || 0) * (user?.totalGames || 0);
   const newAverageHints = (previousTotalHints + hintsUsed) / totalGames;

@@ -21,11 +21,9 @@ describe('getRandomPlayer', () => {
 
   it('should return different players when called multiple times (statistically)', () => {
     const players = new Set();
-    // Call 20 times, statistically should get at least 2 different players
     for (let i = 0; i < 20; i++) {
       players.add(getRandomPlayer().id);
     }
-    // With 20 players and 20 calls, very likely to get more than 1 unique player
     expect(players.size).toBeGreaterThan(1);
   });
 
