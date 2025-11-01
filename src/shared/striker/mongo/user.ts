@@ -1,8 +1,11 @@
-import { getMongoCollection } from '@core/mongo';
+import { Logger } from '@nestjs/common';
+import { getMongoCollection, User } from '@core/mongo';
 import { TopPlayerRecord, UserStats } from '../types';
 import { DB_NAME } from './index';
 
+const logger = new Logger('StrikerUserRepository');
 const getCollection = () => getMongoCollection<UserStats>(DB_NAME, 'User');
+const getUserCollection = () => getMongoCollection<User>(DB_NAME, 'User');
 
 export async function getUserStats(chatId: number): Promise<UserStats | null> {
   const userCollection = getCollection();
@@ -101,4 +104,33 @@ export async function getLeaderboard(limit: number = 10): Promise<TopPlayerRecor
     .toArray();
 
   return result as TopPlayerRecord[];
+}
+
+export async function saveUserDetails(userDetails: any): Promise<boolean> {
+  try {
+    const userCollection = getUserCollection();
+    const filter = { chatId: userDetails.chatId };
+    const existingUserDetails = await userCollection.findOne(filter);
+    if (existingUserDetails) {
+      await userCollection.updateOne(filter, { $set: { ...userDetails } });
+      return true;
+    }
+
+    const user = { ...userDetails, createdAt: new Date() };
+    await userCollection.insertOne(user);
+    return false;
+  } catch (err) {
+    logger.error(`saveUserDetails - err: ${err}`);
+    return false;
+  }
+}
+
+export async function getUserDetails(chatId: number): Promise<any> {
+  try {
+    const userCollection = getUserCollection();
+    return userCollection.findOne({ chatId });
+  } catch (err) {
+    logger.error(`getUserDetails - err: ${err}`);
+    return null;
+  }
 }

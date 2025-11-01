@@ -2,6 +2,7 @@ import { Message } from 'node-telegram-bot-api';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { notify } from '@services/notifier';
 import { getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler } from '@services/telegram';
+import { saveUserDetails } from '@shared/striker';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './striker.config';
 import { getPlayerName, getStats, giveUp, HELP_MESSAGE, processGuess, revealNextClue, startNewGame, WELCOME_MESSAGE } from './utils';
 
@@ -32,6 +33,7 @@ export class StrikerController implements OnModuleInit {
   async startHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
+    await saveUserDetails(userDetails);
     await this.bot.sendMessage(chatId, WELCOME_MESSAGE);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
