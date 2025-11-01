@@ -1,8 +1,6 @@
-import { Player } from '@shared/striker';
-import { getCurrentGame, updateGameLog } from '@shared/striker/mongo/game-log';
-import { updateUserStats } from '@shared/striker/mongo/user';
-import { formatGiveUpMessage, NO_ACTIVE_GAME_MESSAGE } from '.';
+import { getCurrentGame, Player, updateGameLog, updateUserStats } from '@shared/striker';
 import { PLAYERS_DATA } from '../data/players-data';
+import { formatGiveUpMessage, NO_ACTIVE_GAME_MESSAGE } from './format-messages';
 
 export async function giveUp(chatId: number): Promise<{ message: string; player?: Player }> {
   const currentGame = await getCurrentGame(chatId);

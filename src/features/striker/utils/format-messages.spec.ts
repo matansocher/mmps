@@ -1,4 +1,4 @@
-import { Player, UserStats } from '@shared/striker/types';
+import { Player, UserStats } from '@shared/striker';
 import {
   ALREADY_PLAYING_MESSAGE,
   CLUE_REVEALED_MESSAGE,

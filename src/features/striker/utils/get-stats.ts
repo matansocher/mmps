@@ -1,5 +1,5 @@
-import { getUserStats } from '@shared/striker/mongo/user';
-import { formatStatsMessage, NO_STATS_MESSAGE } from '.';
+import { getUserStats } from '@shared/striker';
+import { formatStatsMessage, NO_STATS_MESSAGE } from './format-messages';
 
 export async function getStats(chatId: number): Promise<string> {
   const stats = await getUserStats(chatId);

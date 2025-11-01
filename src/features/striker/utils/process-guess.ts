@@ -1,8 +1,7 @@
-import { Player } from '@shared/striker';
-import { getCurrentGame, updateGameLog } from '@shared/striker/mongo/game-log';
-import { updateUserStats } from '@shared/striker/mongo/user';
-import { formatSuccessMessage, formatWrongGuessMessage, fuzzyMatchPlayerNameParts, getPlayerName, NO_ACTIVE_GAME_MESSAGE } from '.';
+import { getCurrentGame, Player, updateGameLog, updateUserStats } from '@shared/striker';
 import { PLAYERS_DATA } from '../data/players-data';
+import { formatSuccessMessage, formatWrongGuessMessage, getPlayerName, NO_ACTIVE_GAME_MESSAGE } from './format-messages';
+import { fuzzyMatchPlayerNameParts } from './fuzzy-match-player-name-parts';
 
 type ProcessGuessResult = {
   readonly isCorrect: boolean;

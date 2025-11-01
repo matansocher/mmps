@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Player } from '@shared/striker';
-import { getCurrentGame, saveGameLog } from '@shared/striker/mongo/game-log';
-import { ALREADY_PLAYING_MESSAGE, formatHintMessage, getPlayerName, getRandomPlayer } from '.';
+import { getCurrentGame, Player, saveGameLog } from '@shared/striker';
+import { ALREADY_PLAYING_MESSAGE, formatHintMessage, getPlayerName } from './format-messages';
+import { getRandomPlayer } from './get-random-player';
 
 export async function startNewGame(chatId: number): Promise<{ message: string; player: Player }> {
   const currentGame = await getCurrentGame(chatId);

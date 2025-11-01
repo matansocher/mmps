@@ -1,4 +1,5 @@
-import { fuzzyMatchPlayerName, normalizeString } from '.';
+import { fuzzyMatchPlayerName } from './fuzzy-match-player-name';
+import { normalizeString } from './normalize-string';
 
 /**
  * Check if a guess matches any part of a player's full name

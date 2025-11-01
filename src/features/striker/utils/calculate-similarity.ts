@@ -1,4 +1,5 @@
-import { levenshteinDistance, normalizeString } from '.';
+import { levenshteinDistance } from './levenshtein-distance';
+import { normalizeString } from './normalize-string';
 
 /**
  * Calculate similarity percentage between two strings (0-100)

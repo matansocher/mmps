@@ -1,7 +1,6 @@
-import { Player } from '@shared/striker';
-import { getCurrentGame, updateGameLog } from '@shared/striker/mongo/game-log';
-import { CLUE_REVEALED_MESSAGE, formatHintMessage, NO_ACTIVE_GAME_MESSAGE, NO_MORE_CLUES_MESSAGE } from '.';
+import { getCurrentGame, Player, updateGameLog } from '@shared/striker';
 import { PLAYERS_DATA } from '../data/players-data';
+import { CLUE_REVEALED_MESSAGE, formatHintMessage, NO_ACTIVE_GAME_MESSAGE, NO_MORE_CLUES_MESSAGE } from './format-messages';
 
 export async function revealNextClue(chatId: number): Promise<{ message: string; player?: Player; hintsRevealed?: number }> {
   const currentGame = await getCurrentGame(chatId);
