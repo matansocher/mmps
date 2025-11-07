@@ -8,8 +8,8 @@ const logger = new Logger('EarthquakeMonitorScheduler');
 
 const seenEarthquakeIds = new Set<string>();
 
-const MIN_MAGNITUDE = 4.0;
-const LOOKBACK_MINUTES = 15;
+const MIN_MAGNITUDE = 6.0;
+export const LOOKBACK_MINUTES = 15;
 
 export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
   try {

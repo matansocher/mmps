@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { LOOKBACK_MINUTES } from '@features/chatbot/schedulers/earthquake-monitor';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
@@ -65,7 +66,7 @@ export class ChatbotSchedulerService implements OnModuleInit {
     await reminderCheck(this.bot);
   }
 
-  @Cron(`*/5 * * * *`, { name: 'chatbot-earthquake-monitor', timeZone: DEFAULT_TIMEZONE })
+  @Cron(`*/${LOOKBACK_MINUTES} * * * *`, { name: 'chatbot-earthquake-monitor', timeZone: DEFAULT_TIMEZONE })
   async handleEarthquakeMonitor(): Promise<void> {
     await earthquakeMonitor(this.bot);
   }
