@@ -88,7 +88,7 @@ export class LanglyService {
     const challengeKey = `${chatId}_${messageId}`;
     const audioButton = {
       text: '🔊 Listen to pronunciation',
-      callback_data: `${BOT_ACTIONS.AUDIO}${INLINE_KEYBOARD_SEPARATOR}${challengeKey}`,
+      callback_data: [BOT_ACTIONS.AUDIO, challengeKey].join(INLINE_KEYBOARD_SEPARATOR),
     };
 
     await this.bot.sendMessage(chatId, explanationMessage, { parse_mode: 'Markdown', ...getInlineKeyboardMarkup([audioButton]) });
@@ -96,7 +96,7 @@ export class LanglyService {
     return { word: challenge.word, type: challenge.type, isCorrect };
   }
 
-  async sendAudioPronunciation(chatId: number, challengeKey: string): Promise<void> {
+  async sendAudioPronunciation(chatId: number, originalMessageId: number, challengeKey: string): Promise<void> {
     // Parse challengeKey to get chatId and messageId
     const [, messageIdStr] = challengeKey.split('_');
     const messageId = parseInt(messageIdStr);
@@ -110,6 +110,8 @@ export class LanglyService {
     const { challenge } = activeChallenge;
 
     try {
+      await this.bot.editMessageReplyMarkup(undefined, { message_id: originalMessageId, chat_id: chatId }).catch(() => {});
+
       const audioPath = `${LOCAL_FILES_PATH}/langly_audio_${Date.now()}.mp3`;
       const audioResponse = await getAudioFromText(challenge.exampleSentence);
 

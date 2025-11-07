@@ -123,7 +123,7 @@ export class LanglyController implements OnModuleInit {
 
         case BOT_ACTIONS.AUDIO:
           const [challengeKey] = params;
-          await this.audioHandler(chatId, challengeKey);
+          await this.audioHandler(chatId, messageId, challengeKey);
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.AUDIO }, userDetails);
           break;
 
@@ -200,13 +200,13 @@ export class LanglyController implements OnModuleInit {
     return await this.langlyService.handleAnswer(chatId, messageId, answerIndex, isCorrect);
   }
 
-  async audioHandler(chatId: number, challengeKey: string): Promise<void> {
-    await this.langlyService.sendAudioPronunciation(chatId, challengeKey);
+  async audioHandler(chatId: number, messageId: number, challengeKey: string): Promise<void> {
+    await this.langlyService.sendAudioPronunciation(chatId, messageId, challengeKey);
   }
 
   async languageHandler(chatId: number, selectedLanguage?: Language): Promise<void> {
     if (!selectedLanguage) {
-      const languageButtons = Object.values(Language).map((l) => ({ text: LANGUAGE_LABELS[l], callback_data: `${BOT_ACTIONS.LANGUAGE}${INLINE_KEYBOARD_SEPARATOR}${l}` }));
+      const languageButtons = Object.values(Language).map((l) => ({ text: LANGUAGE_LABELS[l], callback_data: [BOT_ACTIONS.LANGUAGE, l].join(INLINE_KEYBOARD_SEPARATOR) }));
 
       await this.bot.sendMessage(chatId, '🌍 Select your preferred language:', { ...getInlineKeyboardMarkup(languageButtons) });
     } else {
@@ -223,10 +223,10 @@ export class LanglyController implements OnModuleInit {
     if (!selectedDifficulty) {
       // Show difficulty selection menu
       const difficultyButtons = [
-        { text: DIFFICULTY_LABELS[DifficultyLevel.BEGINNER], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.BEGINNER}` },
-        { text: DIFFICULTY_LABELS[DifficultyLevel.INTERMEDIATE], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.INTERMEDIATE}` },
-        { text: DIFFICULTY_LABELS[DifficultyLevel.ADVANCED], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.ADVANCED}` },
-        { text: DIFFICULTY_LABELS[DifficultyLevel.NATIVE], callback_data: `${BOT_ACTIONS.DIFFICULTY}${INLINE_KEYBOARD_SEPARATOR}${DifficultyLevel.NATIVE}` },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.BEGINNER], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.BEGINNER].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.INTERMEDIATE], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.INTERMEDIATE].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.ADVANCED], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.ADVANCED].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.NATIVE], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.NATIVE].join(INLINE_KEYBOARD_SEPARATOR) },
       ];
 
       await this.bot.sendMessage(chatId, '📊 Select your difficulty level:', { ...getInlineKeyboardMarkup(difficultyButtons) });
