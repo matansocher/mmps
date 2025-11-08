@@ -54,7 +54,7 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatHintMessage', () => {
+  describe('formatHintMessage()', () => {
     const mockPlayer: Player = {
       id: 1,
       firstName: 'Kylian',
@@ -145,7 +145,7 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatSuccessMessage', () => {
+  describe('formatSuccessMessage()', () => {
     const mockPlayer: Player = {
       id: 1,
       firstName: 'Lionel',
@@ -204,7 +204,7 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatGiveUpMessage', () => {
+  describe('formatGiveUpMessage()', () => {
     const mockPlayer: Player = {
       id: 1,
       firstName: 'Cristiano',
@@ -248,7 +248,7 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatWrongGuessMessage', () => {
+  describe('formatWrongGuessMessage()', () => {
     it('should include the incorrect guess', () => {
       const message = formatWrongGuessMessage('Ronaldo', 3);
       expect(message).toContain('Ronaldo');
@@ -267,7 +267,7 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatStatsMessage', () => {
+  describe('formatStatsMessage()', () => {
     it('should display all statistics', () => {
       const stats: UserStats = {
         chatId: 123,
