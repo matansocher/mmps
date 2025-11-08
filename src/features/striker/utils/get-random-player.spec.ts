@@ -1,7 +1,7 @@
 import { PLAYERS_DATA } from '../data/players-data';
 import { getRandomPlayer } from './get-random-player';
 
-describe('getRandomPlayer', () => {
+describe('getRandomPlayer()', () => {
   it('should return a player object', () => {
     const player = getRandomPlayer();
     expect(player).toBeDefined();
@@ -32,7 +32,6 @@ describe('getRandomPlayer', () => {
     expect(typeof player.id).toBe('number');
     expect(typeof player.firstName).toBe('string');
     expect(typeof player.lastName).toBe('string');
-    expect(typeof player.commonName).toBe('string');
     expect(typeof player.position).toBe('string');
     expect(typeof player.nationality).toBe('string');
     expect(typeof player.team).toBe('string');

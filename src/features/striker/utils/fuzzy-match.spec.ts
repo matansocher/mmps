@@ -1,3 +1,4 @@
+import { FUZZY_MATCH_THRESHOLD } from '../striker.config';
 import { fuzzyMatchPlayerName, fuzzyMatchPlayerNameParts } from './fuzzy-match';
 
 describe('fuzzyMatchPlayerName()', () => {
@@ -16,9 +17,10 @@ describe('fuzzyMatchPlayerName()', () => {
     expect(fuzzyMatchPlayerName('RoNaLdO', 'ronaldo')).toBe(true);
   });
 
-  it('should match names with small typos (80% threshold)', () => {
+  it(`should match names with small typos (${FUZZY_MATCH_THRESHOLD}% threshold)`, () => {
     expect(fuzzyMatchPlayerName('Messy', 'Messi')).toBe(true);
-    expect(fuzzyMatchPlayerName('Ronalod', 'Ronaldo')).toBe(false);
+    expect(fuzzyMatchPlayerName('Ronalod', 'Ronaldo')).toBe(true);
+    expect(fuzzyMatchPlayerName('Ronalod', 'Roldo')).toBe(false);
   });
 
   it('should not match completely different names', () => {

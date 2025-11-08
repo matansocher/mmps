@@ -1,6 +1,6 @@
 import { normalizeString } from './normalize-string';
 
-describe('normalizeString', () => {
+describe('normalizeString()', () => {
   it('should convert to lowercase', () => {
     expect(normalizeString('HELLO')).toBe('hello');
     expect(normalizeString('WoRlD')).toBe('world');

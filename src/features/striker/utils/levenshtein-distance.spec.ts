@@ -1,6 +1,6 @@
 import { levenshteinDistance } from './levenshtein-distance';
 
-describe('levenshteinDistance', () => {
+describe('levenshteinDistance()', () => {
   it('should return 0 for identical strings', () => {
     expect(levenshteinDistance('hello', 'hello')).toBe(0);
     expect(levenshteinDistance('', '')).toBe(0);
