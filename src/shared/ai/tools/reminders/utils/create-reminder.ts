@@ -1,3 +1,4 @@
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { parseJerusalemDate } from '@core/utils';
 import { createReminder } from '@shared/reminders';
 
@@ -14,7 +15,7 @@ export async function handleCreateReminder({ chatId, message, dueDate }: CreateR
 
   let parsedDate: Date;
   try {
-    parsedDate = parseJerusalemDate(dueDate);
+    parsedDate = parseJerusalemDate(dueDate, DEFAULT_TIMEZONE);
   } catch (err) {
     return JSON.stringify({ success: false, error: 'Invalid date format. Please use ISO 8601 format (e.g., 2025-01-15T14:30:00)' });
   }
