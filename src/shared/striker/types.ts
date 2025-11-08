@@ -2,11 +2,15 @@ export type Player = {
   readonly id: number;
   readonly firstName: string;
   readonly lastName: string;
-  readonly commonName: string;
+  readonly commonName: string | null;
+  readonly height: number;
+  readonly weight: number;
+  readonly birthdate: string;
   readonly photo: string;
   readonly preferredFoot: string;
   readonly overallRating: number;
   readonly position: string;
+  readonly league: string;
   readonly team: string;
   readonly teamPhoto: string;
   readonly nationality: string;

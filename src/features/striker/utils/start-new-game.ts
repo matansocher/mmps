@@ -1,12 +1,21 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getCurrentGame, Player, saveGameLog } from '@shared/striker';
-import { ALREADY_PLAYING_MESSAGE, formatHintMessage, getPlayerName } from './format-messages';
+import { getCurrentGame, Player, saveGameLog, updateGameLog } from '@shared/striker';
+import { formatHintMessage, getPlayerName } from './format-messages';
 import { getRandomPlayer } from './get-random-player';
 
 export async function startNewGame(chatId: number): Promise<{ message: string; player: Player }> {
   const currentGame = await getCurrentGame(chatId);
+
+  // If there's an active game, end it as incomplete
   if (currentGame) {
-    return { message: ALREADY_PLAYING_MESSAGE, player: null };
+    await updateGameLog({
+      chatId,
+      gameId: currentGame.gameId,
+      guess: '[abandoned]',
+      hintsRevealed: currentGame.hintsRevealed,
+      isCorrect: false,
+      score: 0,
+    });
   }
 
   const player = getRandomPlayer();

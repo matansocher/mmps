@@ -1,7 +1,7 @@
 import { getCurrentGame, Player, updateGameLog, updateUserStats } from '@shared/striker';
 import { PLAYERS_DATA } from '../data/players-data';
 import { formatSuccessMessage, formatWrongGuessMessage, getPlayerName, NO_ACTIVE_GAME_MESSAGE } from './format-messages';
-import { fuzzyMatchPlayerNameParts } from './fuzzy-match-player-name-parts';
+import { fuzzyMatchPlayerNameParts } from './fuzzy-match';
 
 type ProcessGuessResult = {
   readonly isCorrect: boolean;
@@ -9,6 +9,14 @@ type ProcessGuessResult = {
   readonly player?: Player;
   readonly score?: number;
 };
+
+function getScore(hintsRevealed: number) {
+  if (hintsRevealed === 1) return 5;
+  else if (hintsRevealed === 2) return 4;
+  else if (hintsRevealed === 3) return 3;
+  else if (hintsRevealed === 4) return 2;
+  else return 1;
+}
 
 export async function processGuess(chatId: number, guess: string): Promise<ProcessGuessResult> {
   const currentGame = await getCurrentGame(chatId);
@@ -23,20 +31,21 @@ export async function processGuess(chatId: number, guess: string): Promise<Proce
 
   const isCorrect = fuzzyMatchPlayerNameParts(guess, getPlayerName(player));
 
-  if (isCorrect) {
-    const score = Math.max(1, 5 - (currentGame.hintsRevealed - 1));
-
-    await updateGameLog({ chatId, gameId: currentGame.gameId, guess, hintsRevealed: currentGame.hintsRevealed, isCorrect: true, score });
-
-    await updateUserStats(chatId, { isCorrect: true, hintsUsed: currentGame.hintsRevealed, score });
-
-    const allGuesses = [...currentGame.guesses, guess];
-
-    const message = formatSuccessMessage(player, score, currentGame.hintsRevealed, allGuesses);
-    return { isCorrect: true, message, player, score };
-  } else {
+  if (!isCorrect) {
     await updateGameLog({ chatId, gameId: currentGame.gameId, guess, hintsRevealed: currentGame.hintsRevealed, isCorrect: false, score: 0 });
 
     return { isCorrect: false, message: formatWrongGuessMessage(guess, currentGame.hintsRevealed), player };
   }
+
+  // correct guess
+  const score = getScore(currentGame.hintsRevealed);
+
+  await Promise.all([
+    updateGameLog({ chatId, gameId: currentGame.gameId, guess, hintsRevealed: currentGame.hintsRevealed, isCorrect: true, score }),
+    updateUserStats(chatId, { isCorrect: true, hintsUsed: currentGame.hintsRevealed, score }),
+  ]);
+
+  const allGuesses = [...currentGame.guesses, guess];
+  const message = formatSuccessMessage(player, score, currentGame.hintsRevealed, allGuesses);
+  return { isCorrect: true, message, player, score };
 }
