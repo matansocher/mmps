@@ -1,6 +1,9 @@
 import { ChatAnthropic } from '@langchain/anthropic';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
+import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
 import { ToolCallbackOptions } from '@shared/ai';
 import { agent } from './agent';
@@ -40,8 +43,8 @@ export class ChatbotService {
 
   async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {
     try {
-      // Include context information in the user message instead of system message
-      const contextualMessage = `[Context: User ID: ${chatId}, Time: ${new Date().toISOString()}]\n\n${message}`;
+      const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
+      const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
       const result = await this.aiService.invoke(contextualMessage, { threadId: chatId.toString() });
       return formatAgentResponse(result);
     } catch (err) {

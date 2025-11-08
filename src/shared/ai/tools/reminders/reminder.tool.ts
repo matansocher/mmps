@@ -6,7 +6,7 @@ import { handleCompleteReminder, handleCreateReminder, handleDeleteReminder, han
 const schema = z.object({
   action: z.enum(['create', 'list', 'complete', 'delete', 'edit', 'snooze']).describe('The action to perform'),
   message: z.string().optional().describe('The reminder message text (required for create and edit actions)'),
-  dueDate: z.string().optional().describe('The due date in ISO 8601 format (e.g., 2025-01-15T14:30:00Z) (required for create, optional for edit)'),
+  dueDate: z.string().optional().describe('The due date in ISO 8601 format in local timezone (e.g., 2025-01-15T14:30:00) (required for create, optional for edit)'),
   reminderId: z.string().optional().describe('The reminder ID (required for complete, delete, edit, and snooze actions)'),
   snoozeMinutes: z.number().optional().default(60).describe('Number of minutes to snooze the reminder (default: 60)'),
 });
@@ -47,7 +47,7 @@ export const reminderTool = tool(runner, {
   description: `Manage smart reminders for the user. This tool allows creating, listing, editing, completing, deleting, and snoozing reminders.
 
 Actions:
-- create: Create a new reminder with a message and due date (ISO 8601 format)
+- create: Create a new reminder with a message and due date (ISO 8601 format in local timezone)
 - list: List all pending and snoozed reminders
 - complete: Mark a reminder as completed by ID
 - delete: Delete a reminder by ID
@@ -55,7 +55,7 @@ Actions:
 - snooze: Snooze a reminder for a specified number of minutes (default: 60)
 
 When the user mentions saving something for later, setting a reminder, or asking to be reminded about something, use this tool to create a reminder.
-Parse natural language dates and times into ISO 8601 format before calling this tool.
+Parse natural language dates and times into ISO 8601 format in the user's local timezone (without Z suffix) before calling this tool.
 
 Examples:
 - "Remind me to call mom tomorrow at 3pm" → create with dueDate

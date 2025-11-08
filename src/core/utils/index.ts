@@ -13,6 +13,7 @@ export { getStars } from './get-stars';
 export { hasHebrew } from './has-hebrew';
 export { isDateStringFormat } from './is-date-string-format';
 export { objectToQueryParams } from './object-to-query-params';
+export { parseJerusalemDate } from './parse-jerusalem-date';
 export { queryParamsToObject } from './query-params-to-object';
 export { saveVideoBytesArray } from './save-video-bytes-array';
 export { setFfmpegPath } from './set-ffmpeg-path';

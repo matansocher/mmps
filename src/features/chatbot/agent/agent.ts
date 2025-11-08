@@ -18,6 +18,7 @@ import {
   worldlyTool,
 } from '@shared/ai';
 import { AgentDescriptor } from '../types';
+import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
@@ -30,6 +31,7 @@ Context Information:
 - Messages may include context in the format: [Context: User ID: xxx, Time: xxx] at the beginning
 - Use this context information to provide personalized responses when relevant
 - Always consider the conversation history when responding
+- IMPORTANT TIMEZONE: The user's timezone is ${DEFAULT_TIMEZONE}. All times should be interpreted and created in this timezone unless explicitly specified otherwise.
 
 Your role:
 1. Understand the request: Carefully interpret the user's intent and decide whether a tool is needed.
@@ -57,9 +59,9 @@ Available capabilities:
 Smart Reminders Guidelines:
 - When users want to remember something, save information for later, or be reminded about something, use the smart_reminders tool.
 - Natural language variations to recognize: "remind me to", "save this for", "remember to", "set a reminder", "don't let me forget", "alert me when", "notify me on".
-- Parse natural language dates and times into ISO 8601 format (e.g., "tomorrow at 3pm" → "2025-10-25T15:00:00Z").
+- Parse natural language dates and times into ISO 8601 format in the user's timezone (${DEFAULT_TIMEZONE}). Use format without timezone suffix (e.g., "tomorrow at 3pm" → "2025-10-25T15:00:00").
 - IMPORTANT: When the user specifies only a date without a specific time (e.g., "remind me on October 31st"), always default to 18:00 (6 PM) on that date. Never use midnight (00:00) as the default time. Examples:
-  * "Remind me to submit the report on October 31st" → "2025-10-31T18:00:00Z" (18:00, not 00:00)
+  * "Remind me to submit the report on October 31st" → "2025-10-31T18:00:00" (18:00, not 00:00)
   * "Remind me at the end of the month" → Use the last day at 18:00
   * "Remind me tomorrow" → Tomorrow at 18:00
   * "Remind me on Friday at 3pm" → Friday at 15:00 (respect the specified time)
@@ -90,7 +92,7 @@ Guidelines:
 - Format weather information clearly with temperature, conditions, and location, and any relevant links.
 - Audio transcription: When provided with an audio file path, use the audio transcriber tool to convert speech to text.
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
-- Smart Reminders: When users want to save information for later, set reminders, or be notified about something, use the smart_reminders tool with natural language date parsing. CRITICAL: Always use 18:00 (6 PM) as the default time when no specific time is mentioned. Follow the Smart Reminders Guidelines above for all reminder-related interactions.
+- Smart Reminders: When users want to save information for later, set reminders, or be notified about something, use the smart_reminders tool with natural language date parsing in ${DEFAULT_TIMEZONE} timezone. CRITICAL: Always use 18:00 (6 PM) as the default time when no specific time is mentioned. Follow the Smart Reminders Guidelines above for all reminder-related interactions.
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - GitHub Automation (MCP): When users need to work with GitHub repositories, use the github tool with the appropriate operation:
