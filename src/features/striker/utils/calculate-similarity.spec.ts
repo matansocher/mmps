@@ -1,6 +1,6 @@
 import { calculateSimilarity } from './calculate-similarity';
 
-describe('calculateSimilarity', () => {
+describe('calculateSimilarity()', () => {
   it('should return 100 for identical strings', () => {
     expect(calculateSimilarity('hello', 'hello')).toBe(100);
     expect(calculateSimilarity('Mbappe', 'Mbappe')).toBe(100);

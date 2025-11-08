@@ -22,3 +22,5 @@ export const ANALYTIC_EVENT_NAMES = {
   GIVE_UP: 'give_up',
   STATS: 'stats',
 };
+
+export const FUZZY_MATCH_THRESHOLD = 70;

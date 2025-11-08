@@ -54,7 +54,7 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatHintMessage', () => {
+  describe('formatHintMessage()', () => {
     const mockPlayer: Player = {
       id: 1,
       firstName: 'Kylian',
@@ -63,72 +63,89 @@ describe('Format Messages', () => {
       photo: 'https://example.com/photo.png',
       position: 'Forward',
       nationality: 'France',
+      league: 'La Liga',
       team: 'Real Madrid',
       teamPhoto: 'https://example.com/team.png',
       nationalityPhoto: 'https://example.com/flag.png',
+      height: 178,
+      weight: 73,
+      birthdate: '1998-12-20',
       overallRating: 91,
       preferredFoot: 'Right',
     };
 
-    it('should show only position for 1 hint', () => {
+    it('should show position and league for 1 hint (initial 2 clues)', () => {
       const message = formatHintMessage(mockPlayer, 1);
       expect(message).toContain('Position: Forward');
+      expect(message).toContain('League: La Liga');
       expect(message).not.toContain('Nationality');
       expect(message).not.toContain('Club');
     });
 
-    it('should show position and nationality for 2 hints', () => {
+    it('should show position, league, and nationality for 2 hints', () => {
       const message = formatHintMessage(mockPlayer, 2);
       expect(message).toContain('Position: Forward');
+      expect(message).toContain('League: La Liga');
       expect(message).toContain('Nationality: France');
+      expect(message).not.toContain('Age');
+    });
+
+    it('should show position, league, nationality, and age for 3 hints', () => {
+      const message = formatHintMessage(mockPlayer, 3);
+      expect(message).toContain('Position: Forward');
+      expect(message).toContain('League: La Liga');
+      expect(message).toContain('Nationality: France');
+      expect(message).toContain('Age:');
+      expect(message).toContain('years old');
+      expect(message).not.toContain('Height');
       expect(message).not.toContain('Club');
     });
 
-    it('should show position, nationality, and club for 3 hints', () => {
-      const message = formatHintMessage(mockPlayer, 3);
-      expect(message).toContain('Position: Forward');
-      expect(message).toContain('Nationality: France');
-      expect(message).toContain('Club: Real Madrid');
-      expect(message).not.toContain('Rating');
-    });
-
-    it('should show all hints except preferred foot for 4 hints', () => {
+    it('should show all hints except club and preferred foot for 4 hints', () => {
       const message = formatHintMessage(mockPlayer, 4);
       expect(message).toContain('Position: Forward');
+      expect(message).toContain('League: La Liga');
       expect(message).toContain('Nationality: France');
-      expect(message).toContain('Club: Real Madrid');
-      expect(message).toContain('Overall Rating: 91');
+      expect(message).toContain('Age:');
+      expect(message).toContain('years old');
+      expect(message).toContain('Height: 178 cm');
+      expect(message).toContain('Weight: 73 kg');
+      expect(message).not.toContain('Club: Real Madrid');
       expect(message).not.toContain('Preferred Foot');
     });
 
-    it('should show all hints for 5 hints', () => {
-      const message = formatHintMessage(mockPlayer, 5);
+    it('should show all hints for 6 hints', () => {
+      const message = formatHintMessage(mockPlayer, 6);
       expect(message).toContain('Position: Forward');
+      expect(message).toContain('League: La Liga');
       expect(message).toContain('Nationality: France');
+      expect(message).toContain('Age:');
+      expect(message).toContain('years old');
+      expect(message).toContain('Height: 178 cm');
+      expect(message).toContain('Weight: 73 kg');
       expect(message).toContain('Club: Real Madrid');
-      expect(message).toContain('Overall Rating: 91');
       expect(message).toContain('Preferred Foot: Right');
     });
 
-    it('should suggest /clue when hints < 5', () => {
+    it('should suggest /clue when hints < 6', () => {
       const message = formatHintMessage(mockPlayer, 3);
       expect(message).toContain('/clue');
     });
 
-    it('should show "last hint" message when hints = 5', () => {
-      const message = formatHintMessage(mockPlayer, 5);
+    it('should show "last hint" message when hints = 6', () => {
+      const message = formatHintMessage(mockPlayer, 6);
       expect(message).toContain('This is the last hint');
       expect(message).not.toContain('/clue');
     });
 
     it('should suggest /giveup when all hints are revealed', () => {
-      const message = formatHintMessage(mockPlayer, 5);
+      const message = formatHintMessage(mockPlayer, 6);
       expect(message).toContain('/giveup');
       expect(message).toContain('reveal the answer');
     });
   });
 
-  describe('formatSuccessMessage', () => {
+  describe('formatSuccessMessage()', () => {
     const mockPlayer: Player = {
       id: 1,
       firstName: 'Lionel',
@@ -137,9 +154,13 @@ describe('Format Messages', () => {
       photo: 'https://example.com/photo.png',
       position: 'Forward',
       nationality: 'Argentina',
+      league: 'MLS',
       team: 'Inter Miami',
       teamPhoto: 'https://example.com/team.png',
       nationalityPhoto: 'https://example.com/flag.png',
+      height: 170,
+      weight: 72,
+      birthdate: '1987-06-24',
       overallRating: 90,
       preferredFoot: 'Left',
     };
@@ -156,7 +177,7 @@ describe('Format Messages', () => {
 
     it('should show hints used', () => {
       const message = formatSuccessMessage(mockPlayer, 3, 3, ['guess1', 'guess2', 'guess3']);
-      expect(message).toContain('3/5');
+      expect(message).toContain('3/6');
     });
 
     it('should show number of attempts', () => {
@@ -183,7 +204,7 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatGiveUpMessage', () => {
+  describe('formatGiveUpMessage()', () => {
     const mockPlayer: Player = {
       id: 1,
       firstName: 'Cristiano',
@@ -192,9 +213,13 @@ describe('Format Messages', () => {
       photo: 'https://example.com/photo.png',
       position: 'Forward',
       nationality: 'Portugal',
+      league: 'Saudi Pro League',
       team: 'Al Nassr',
       teamPhoto: 'https://example.com/team.png',
       nationalityPhoto: 'https://example.com/flag.png',
+      height: 187,
+      weight: 83,
+      birthdate: '1985-02-05',
       overallRating: 87,
       preferredFoot: 'Right',
     };
@@ -208,8 +233,12 @@ describe('Format Messages', () => {
       const message = formatGiveUpMessage(mockPlayer);
       expect(message).toContain('Position: Forward');
       expect(message).toContain('Nationality: Portugal');
+      expect(message).toContain('League: Saudi Pro League');
       expect(message).toContain('Club: Al Nassr');
-      expect(message).toContain('Overall Rating: 87');
+      expect(message).toContain('Age:');
+      expect(message).toContain('years old');
+      expect(message).toContain('Height: 187 cm');
+      expect(message).toContain('Weight: 83 kg');
       expect(message).toContain('Preferred Foot: Right');
     });
 
@@ -219,26 +248,26 @@ describe('Format Messages', () => {
     });
   });
 
-  describe('formatWrongGuessMessage', () => {
+  describe('formatWrongGuessMessage()', () => {
     it('should include the incorrect guess', () => {
       const message = formatWrongGuessMessage('Ronaldo', 3);
       expect(message).toContain('Ronaldo');
       expect(message).toContain('incorrect');
     });
 
-    it('should suggest /clue when hints < 5', () => {
+    it('should suggest /clue when hints < 6', () => {
       const message = formatWrongGuessMessage('guess', 3);
       expect(message).toContain('/clue');
     });
 
-    it('should show "all hints revealed" when hints >= 5', () => {
-      const message = formatWrongGuessMessage('guess', 5);
+    it('should show "all hints revealed" when hints >= 6', () => {
+      const message = formatWrongGuessMessage('guess', 6);
       expect(message).toContain('All hints revealed');
       expect(message).toContain('/giveup');
     });
   });
 
-  describe('formatStatsMessage', () => {
+  describe('formatStatsMessage()', () => {
     it('should display all statistics', () => {
       const stats: UserStats = {
         chatId: 123,

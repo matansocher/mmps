@@ -1,17 +1,11 @@
-// Game logic functions
-export * from './get-random-player';
-export * from './start-new-game';
-export * from './process-guess';
-export * from './reveal-next-clue';
-export * from './give-up';
-export * from './get-stats';
-
-// Format message functions
+export { calculateSimilarity } from './calculate-similarity';
 export * from './format-messages';
-
-// Fuzzy match functions
-export * from './levenshtein-distance';
-export * from './normalize-string';
-export * from './calculate-similarity';
-export * from './fuzzy-match-player-name';
-export * from './fuzzy-match-player-name-parts';
+export { fuzzyMatchPlayerName, fuzzyMatchPlayerNameParts } from './fuzzy-match';
+export { getRandomPlayer } from './get-random-player';
+export { getStats } from './get-stats';
+export { giveUp } from './give-up';
+export { levenshteinDistance } from './levenshtein-distance';
+export { normalizeString } from './normalize-string';
+export { processGuess } from './process-guess';
+export { revealNextClue } from './reveal-next-clue';
+export { startNewGame } from './start-new-game';
