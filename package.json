@@ -122,15 +122,6 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^@src/(.*)$": "<rootDir>/$1",
-      "^@core/(.*)$": "<rootDir>/core/$1",
-      "^@decorators$": "<rootDir>/decorators",
-      "^@features/(.*)$": "<rootDir>/features/$1",
-      "^@config/(.*)$": "<rootDir>/config/$1",
-      "^@services/(.*)$": "<rootDir>/services/$1",
-      "^@shared/(.*)$": "<rootDir>/shared/$1"
-    }
+    "testEnvironment": "node"
   }
 }
