@@ -4,23 +4,38 @@ export function getPlayerName(player: Player): string {
   return player.commonName || `${player.firstName} ${player.lastName}`;
 }
 
+export function calculateAge(birthdate: string): number {
+  const birth = new Date(birthdate);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  // Adjust age if birthday hasn't occurred yet this year
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age;
+}
+
 export const WELCOME_MESSAGE = `⚽ Welcome to Striker Guessing Game! ⚽
 
 I'll give you hints about a football player, and you need to guess who it is!
 
 🎮 How to Play:
 • Type /play to start a new game
-• I'll show you the first hint
+• I'll show you the first 2 hints
 • Type your guess anytime
 • Use /clue to reveal the next hint
 • The fewer hints you use, the higher your score!
 
 🏆 Scoring:
-• 1st hint (Position) = 5 points
+• 1st hint (Position + League) = 5 points
 • 2nd hint (+ Nationality) = 4 points
-• 3rd hint (+ Club) = 3 points
-• 4th hint (+ Rating) = 2 points
-• 5th hint (+ Preferred Foot) = 1 point
+• 3rd hint (+ Age) = 3 points
+• 4th hint (+ Height + Weight) = 2 points
+• 5th hint (+ Club) = 1 point
+• 6th hint (+ Preferred Foot) = 1 point
 
 📊 Commands:
 /play - Start a new game
@@ -53,7 +68,7 @@ export const HELP_MESSAGE = `⚽ Striker Guessing Game - Help
 
 🎮 How to Play:
 1. Use /play to start a new game
-2. Read the hint carefully
+2. Read the hints carefully (starts with 2 hints!)
 3. Type your guess (player's name) OR
 4. Use /clue to reveal the next hint
 5. Keep guessing until you get it right!
@@ -66,10 +81,11 @@ export const HELP_MESSAGE = `⚽ Striker Guessing Game - Help
 
 🏆 Scoring System:
 The earlier you guess, the more points you earn:
-• Position only = 5 pts ⭐⭐⭐⭐⭐
+• Position + League = 5 pts ⭐⭐⭐⭐⭐
 • + Nationality = 4 pts ⭐⭐⭐⭐
-• + Club = 3 pts ⭐⭐⭐
-• + Rating = 2 pts ⭐⭐
+• + Age = 3 pts ⭐⭐⭐
+• + Height + Weight = 2 pts ⭐⭐
+• + Club = 1 pt ⭐
 • + Preferred Foot = 1 pt ⭐
 
 📊 Track your progress with /stats
@@ -78,15 +94,19 @@ The earlier you guess, the more points you earn:
 Good luck! ⚽`;
 
 export function formatGiveUpMessage(player: Player): string {
+  const age = calculateAge(player.birthdate);
   return `❌ Game Over!
 
 The answer was: ${getPlayerName(player)}
 
 📊 Player Info:
 • Position: ${player.position}
+• League: ${player.league}
 • Nationality: ${player.nationality}
+• Age: ${age} years old
+• Height: ${player.height} cm
+• Weight: ${player.weight} kg
 • Club: ${player.team}
-• Overall Rating: ${player.overallRating}
 • Preferred Foot: ${player.preferredFoot}
 
 Better luck next time! 💪
@@ -97,29 +117,42 @@ export function formatHintMessage(player: Player, hintsRevealed: number): string
   let message = '⚽ Guess the Football Player!\n\n';
   message += '📋 Hints:\n';
 
+  // Hint 1: Position + League
   if (hintsRevealed >= 1) {
     message += `1️⃣ Position: ${player.position}\n`;
+    message += `2️⃣ League: ${player.league}\n`;
   }
 
+  // Hint 2: Nationality
   if (hintsRevealed >= 2) {
-    message += `2️⃣ Nationality: ${player.nationality}\n`;
+    message += `3️⃣ Nationality: ${player.nationality}\n`;
   }
 
+  // Hint 3: Age
   if (hintsRevealed >= 3) {
-    message += `3️⃣ Club: ${player.team}\n`;
+    const age = calculateAge(player.birthdate);
+    message += `4️⃣ Age: ${age} years old\n`;
   }
 
+  // Hint 4: Height + Weight
   if (hintsRevealed >= 4) {
-    message += `4️⃣ Overall Rating: ${player.overallRating}\n`;
+    message += `5️⃣ Height: ${player.height} cm\n`;
+    message += `6️⃣ Weight: ${player.weight} kg\n`;
   }
 
+  // Hint 5: Club
   if (hintsRevealed >= 5) {
-    message += `5️⃣ Preferred Foot: ${player.preferredFoot}\n`;
+    message += `7️⃣ Club: ${player.team}\n`;
+  }
+
+  // Hint 6: Preferred Foot
+  if (hintsRevealed >= 6) {
+    message += `8️⃣ Preferred Foot: ${player.preferredFoot}\n`;
   }
 
   message += '\n💭 Type your guess now!';
 
-  if (hintsRevealed < 5) {
+  if (hintsRevealed < 6) {
     message += '\n\n💡 Need more info? Use /clue for the next hint';
   } else {
     message += '\n\n⚠️ This is the last hint!';
@@ -169,7 +202,7 @@ export function formatSuccessMessage(player: Player, score: number, hintsUsed: n
   else scoreEmoji = '⭐';
 
   message += `${scoreEmoji} Score: ${score} points\n`;
-  message += `💡 Hints used: ${hintsUsed}/5\n`;
+  message += `💡 Hints used: ${hintsUsed}/6\n`;
   message += `🎯 Attempts: ${guesses.length}\n\n`;
 
   if (score === 5) {
@@ -192,7 +225,7 @@ export function formatSuccessMessage(player: Player, score: number, hintsUsed: n
 export function formatWrongGuessMessage(guess: string, hintsRevealed: number): string {
   let message = `❌ Not quite! "${guess}" is incorrect.\n\n`;
 
-  if (hintsRevealed < 5) {
+  if (hintsRevealed < 6) {
     message += `💡 Use /clue to reveal the next hint, or keep guessing!`;
   } else {
     message += `⚠️ All hints revealed! Keep trying or /giveup`;
