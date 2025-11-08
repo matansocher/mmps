@@ -1,5 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
+
 export enum DifficultyLevel {
   BEGINNER = 1,
   INTERMEDIATE = 2,
