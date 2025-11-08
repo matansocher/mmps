@@ -1,3 +1,5 @@
+import { DEFAULT_TIMEZONE } from '@core/config';
+import { parseJerusalemDate } from '@core/utils';
 import { getReminderById, updateReminder } from '@shared/reminders';
 
 type EditReminderParams = {
@@ -20,7 +22,12 @@ export async function handleEditReminder({ chatId, reminderId, message, dueDate 
   const updates: any = {};
   if (message) updates.message = message;
   if (dueDate) {
-    const parsedDate = new Date(dueDate);
+    let parsedDate: Date;
+    try {
+      parsedDate = parseJerusalemDate(dueDate, DEFAULT_TIMEZONE);
+    } catch (err) {
+      return JSON.stringify({ success: false, error: 'Invalid date format. Please use ISO 8601 format' });
+    }
     if (isNaN(parsedDate.getTime())) {
       return JSON.stringify({ success: false, error: 'Invalid date format. Please use ISO 8601 format' });
     }
