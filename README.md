@@ -45,15 +45,14 @@ To start the NestJS application:
    ```
 
 ## Available Bots
-1. **Chatbot** - An AI-powered conversational bot with advanced features
-2. **Coach** - Sports scheduler and predictions bot with game recommendations
-3. **Define** - A bot to provide word definitions
-4. **Educator** - Educational bot that teaches interesting topics with daily lessons
-5. **Langly** - Language learning assistant bot
-6. **Magister** - A bot with various utility features
-7. **Twitter** - Twitter integration bot for automated interactions
-8. **Wolt** - Restaurant availability notifier for Wolt delivery service
-9. **Worldly** - Geography teacher and quiz bot
+**Chatbot** - An AI-powered conversational bot with advanced features
+**Coach** - Sports scheduler and predictions bot with game recommendations
+**Educator** - Educational bot that teaches interesting topics with daily lessons
+**Langly** - Language learning assistant bot
+**Magister** - A bot with various utility features
+**Twitter** - Twitter integration bot for automated interactions
+**Wolt** - Restaurant availability notifier for Wolt delivery service
+**Worldly** - Geography teacher and quiz bot
 
 ## License
 This project is licensed under the MIT License.

@@ -5,7 +5,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { isProd } from '@core/config';
 import { BOT_CONFIG as chatbotBotConfig, ChatbotModule } from '@features/chatbot';
 import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
-import { DefineModule } from '@features/define';
 import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educator';
 import { BOT_CONFIG as langlyBotConfig, LanglyModule } from '@features/langly';
 import { BOT_CONFIG as magisterBotConfig, MagisterModule } from '@features/magister';
@@ -22,7 +21,6 @@ const registerBotModule = (module: any, config: { id: string }) => {
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     ScheduleModule.forRoot(),
-    DefineModule,
     registerBotModule(ChatbotModule, chatbotBotConfig),
     registerBotModule(CoachModule, coachBotConfig),
     registerBotModule(EducatorModule, educatorBotConfig),
