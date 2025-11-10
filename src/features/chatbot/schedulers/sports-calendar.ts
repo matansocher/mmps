@@ -5,39 +5,7 @@ import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
-export const FAVORITE_TEAMS: string[] = [
-  // Spain
-  'Real Madrid',
-  'Barcelona',
-  'Atletico Madrid',
-
-  // Germany
-  'Bayern Munich',
-  'Borussia Dortmund',
-
-  // France
-  'Paris Saint‑Germain F.C.',
-
-  // England
-  'Chelsea FC',
-  'Arsenal FC',
-  'Liverpool FC',
-  'Manchester United FC',
-  'Manchester City FC',
-
-  // Israel
-  'Maccabi Tel Aviv',
-  'Maccabi Haifa',
-  "Hapoel Be'er Sheva",
-  'Hapoel Tel Aviv',
-  'Beitar Jerusalem',
-];
-
-/**
- * Priority leagues
- * Only matches from these leagues will be considered (unless involving favorite teams)
- */
-export const PRIORITY_LEAGUES = ['UEFA Champions League', 'Israeli Premier League'];
+export const LIKED_TEAMS: string[] = ['Real Madrid', 'Barcelona', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Manchester City FC', 'Maccabi Haifa'];
 
 const logger = new Logger('SportsCalendarScheduler');
 
@@ -69,18 +37,22 @@ export async function sportsCalendar(bot: TelegramBot, chatbotService: ChatbotSe
     const { dayOfWeek, startDate, endDate } = handleDates();
     const dateRangeLabel = dayOfWeek === 0 ? 'the next 3 days (Sunday-Tuesday)' : 'the next 4 days (Wednesday-Saturday)';
 
+    // Merge favorite teams and liked teams (removing duplicates)
+    const allTeams = Array.from(new Set(LIKED_TEAMS));
+    const likedTeamsInfo = LIKED_TEAMS.length > 0 ? `\n   - **IMPORTANT**: My personal liked teams (${LIKED_TEAMS.join(', ')}) - ALL their matches must be added regardless of other criteria` : '';
+
     const prompt = `Check football matches from ${startDate} to ${endDate} (${dateRangeLabel}) and add ONLY the most important ones to my calendar.
 
 **STRICT FILTERING CRITERIA - Be VERY selective:**
 
 1. Use the top_matches_for_prediction tool to get ALL upcoming matches for this period. Pass both date="${startDate}" and endDate="${endDate}" parameters.
 
-2. **My Favorite Teams**: ${FAVORITE_TEAMS.join(', ')}
+2. **My Favorite Teams**: ${allTeams.join(', ')}
 
 3. **Match Selection Rules** - A match is considered VERY IMPORTANT only if it meets at least 3 of these criteria:
 
    **HIGH PRIORITY CRITERIA:**
-   - ⭐ **Favorite Team Match**: Any match involving one of my favorite teams (${FAVORITE_TEAMS.join(', ')}) in a meaningful competition (league/champions league knockout, NOT early cup rounds or friendlies)
+   - ⭐ **Favorite Team Match**: Any match involving one of my favorite teams (${allTeams.join(', ')}) in a meaningful competition (league/champions league knockout, NOT early cup rounds or friendlies)${likedTeamsInfo}
 
    - 🏆 **Champions League Knockout**: ONLY Round of 16, Quarter-finals, Semi-finals, or Final (NO group stage matches unless involving favorite team)
 
