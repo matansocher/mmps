@@ -1,9 +1,9 @@
+import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import {
   calendarTool,
   competitionMatchesTool,
   competitionsListTool,
   competitionTableTool,
-  currentWeatherTool,
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
@@ -13,12 +13,11 @@ import {
   recipesTool,
   reminderTool,
   topMatchesForPredictionTool,
-  weatherForecastTool,
+  weatherTool,
   woltTool,
   worldlyTool,
 } from '@shared/ai';
 import { AgentDescriptor } from '../types';
-import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
@@ -41,8 +40,10 @@ Your role:
 5. Maintain context: Use conversation history to provide more personalized and contextual responses.
 
 Available capabilities:
-- Current weather tool: Get current weather conditions for any location worldwide.
-- Weather forecast tool: Get weather forecasts for any location up to 5 days in the future.
+- Weather tool: Get weather information with three actions:
+  * "current" - Get current weather conditions for any location
+  * "forecast" - Get weather forecast for a specific date (up to 14 days ahead, requires date in YYYY-MM-DD format)
+  * "tomorrow_hourly" - Get detailed 24-hour forecast for tomorrow with temperature, conditions, humidity, wind speed, and rain chance for each hour
 - Earthquake monitor tool: Get real-time earthquake data from USGS. Check recent earthquakes or query by magnitude threshold. Useful for seismic activity updates.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
 - Smart Reminders tool: Save reminders for specific dates/times and get notified when they're due. Supports creating, listing, editing, completing, deleting, and snoozing reminders.
@@ -149,8 +150,7 @@ Guidelines:
 
 export function agent(): AgentDescriptor {
   const tools = [
-    currentWeatherTool,
-    weatherForecastTool,
+    weatherTool,
     earthquakeTool,
     competitionMatchesTool,
     competitionTableTool,
