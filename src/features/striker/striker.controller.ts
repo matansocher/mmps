@@ -2,8 +2,8 @@ import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { notify } from '@services/notifier';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { createUserPreference, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/striker';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './striker.config';
+import { createUserPreference, DifficultyLevel, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/striker';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR } from './striker.config';
 import { getPlayerName, getStats, giveUp, HELP_MESSAGE, processGuess, revealNextClue, startNewGame, WELCOME_MESSAGE } from './utils';
 
 const customErrorMessage = 'Oops, something went wrong! Please try again later.';
@@ -44,11 +44,14 @@ export class StrikerController implements OnModuleInit {
   async playHandler(message: Message): Promise<void> {
     const { chatId, userDetails } = getMessageData(message);
 
-    const result = await startNewGame(chatId);
+    const userPreferences = await getUserPreference(chatId);
+    const difficulty = userPreferences?.difficulty ?? DifficultyLevel.EASY;
+
+    const result = await startNewGame(chatId, difficulty);
     await this.bot.sendMessage(chatId, result.message);
 
     if (result.player) {
-      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.PLAY, player: getPlayerName(result.player) }, userDetails);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.PLAY, player: getPlayerName(result.player), difficulty: DIFFICULTY_LABELS[difficulty] }, userDetails);
     }
   }
 
@@ -110,11 +113,13 @@ export class StrikerController implements OnModuleInit {
   private async actionsHandler(message: Message): Promise<void> {
     const { chatId, messageId } = getMessageData(message);
     const userPreferences = await getUserPreference(chatId);
+    const currentDifficulty = userPreferences?.difficulty ?? DifficultyLevel.EASY;
 
     const inlineKeyboardButtons = [
       userPreferences?.isStopped
         ? { text: '🔔 Subscribe to daily games', callback_data: `${BOT_ACTIONS.SUBSCRIBE}` }
         : { text: '🔕 Unsubscribe from daily games', callback_data: `${BOT_ACTIONS.UNSUBSCRIBE}` },
+      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, callback_data: `${BOT_ACTIONS.DIFFICULTY}` },
     ];
 
     await this.bot.sendMessage(chatId, '⚙️ How can I help you?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
@@ -128,7 +133,7 @@ export class StrikerController implements OnModuleInit {
       return;
     }
 
-    const [action] = data.split(INLINE_KEYBOARD_SEPARATOR);
+    const [action, ...params] = data.split(INLINE_KEYBOARD_SEPARATOR);
 
     try {
       switch (action) {
@@ -142,6 +147,17 @@ export class StrikerController implements OnModuleInit {
           await this.unsubscribeHandler(chatId);
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE }, userDetails);
+          break;
+
+        case BOT_ACTIONS.DIFFICULTY:
+          if (params.length === 0) {
+            await this.difficultyHandler(chatId);
+          } else {
+            const selectedDifficulty = parseInt(params[0]);
+            await this.difficultyHandler(chatId, selectedDifficulty);
+            notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.DIFFICULTY_CHANGED, difficulty: DIFFICULTY_LABELS[selectedDifficulty] }, userDetails);
+          }
+          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           break;
 
         default:
@@ -176,5 +192,23 @@ export class StrikerController implements OnModuleInit {
     const unsubscribeMessage = ['👋 You have been unsubscribed from daily games.', '', 'You can still use /play anytime to start a new game!', '', 'Use /actions to subscribe again.'].join('\n');
 
     await this.bot.sendMessage(chatId, unsubscribeMessage);
+  }
+
+  async difficultyHandler(chatId: number, selectedDifficulty?: number): Promise<void> {
+    if (!selectedDifficulty) {
+      const difficultyButtons = [
+        { text: DIFFICULTY_LABELS[DifficultyLevel.EASY], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.EASY].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.MEDIUM], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.MEDIUM].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.HARD], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.HARD].join(INLINE_KEYBOARD_SEPARATOR) },
+      ];
+
+      await this.bot.sendMessage(chatId, '⚽️ Select your difficulty level:', { ...getInlineKeyboardMarkup(difficultyButtons) });
+    } else {
+      await updateUserPreference(chatId, { difficulty: selectedDifficulty });
+
+      const confirmationMessage = [`✅ Difficulty level updated to: ${DIFFICULTY_LABELS[selectedDifficulty]}`, '', 'Your next game will be at this difficulty level!'].join('\n');
+
+      await this.bot.sendMessage(chatId, confirmationMessage);
+    }
   }
 }

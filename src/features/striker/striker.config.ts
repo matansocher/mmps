@@ -25,13 +25,21 @@ export const ANALYTIC_EVENT_NAMES = {
   DAILY_GAME: 'daily_game',
   SUBSCRIBE: 'subscribe',
   UNSUBSCRIBE: 'unsubscribe',
+  DIFFICULTY_CHANGED: 'difficulty_changed',
   ERROR: 'error',
 };
 
 export enum BOT_ACTIONS {
   SUBSCRIBE = 'subscribe',
   UNSUBSCRIBE = 'unsubscribe',
+  DIFFICULTY = 'difficulty',
 }
+
+export const DIFFICULTY_LABELS = {
+  1: '⚽️ Easy',
+  2: '🔥 Medium',
+  3: '🏆 Hard',
+};
 
 export const INLINE_KEYBOARD_SEPARATOR = '|';
 
