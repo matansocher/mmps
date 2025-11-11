@@ -10,6 +10,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
     CLUE: { command: '/clue', description: 'Next clue' },
     GIVEUP: { command: '/giveup', description: 'Give up' },
     STATS: { command: '/stats', description: 'Game statistics' },
+    ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
     HELP: { command: '/help', description: 'Get help' },
   },
 };
@@ -21,6 +22,17 @@ export const ANALYTIC_EVENT_NAMES = {
   GUESS: 'guess',
   GIVE_UP: 'give_up',
   STATS: 'stats',
+  DAILY_GAME: 'daily_game',
+  SUBSCRIBE: 'subscribe',
+  UNSUBSCRIBE: 'unsubscribe',
+  ERROR: 'error',
 };
+
+export enum BOT_ACTIONS {
+  SUBSCRIBE = 'subscribe',
+  UNSUBSCRIBE = 'unsubscribe',
+}
+
+export const INLINE_KEYBOARD_SEPARATOR = '|';
 
 export const FUZZY_MATCH_THRESHOLD = 70;
