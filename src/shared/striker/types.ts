@@ -73,9 +73,16 @@ export type GameState = {
   readonly createdAt: Date;
 };
 
+export enum DifficultyLevel {
+  EASY = 1,
+  MEDIUM = 2,
+  HARD = 3,
+}
+
 export type UserPreferences = {
   readonly _id?: ObjectId;
   readonly chatId: number;
   readonly isStopped: boolean;
+  readonly difficulty?: DifficultyLevel;
   readonly createdAt: Date;
 };
