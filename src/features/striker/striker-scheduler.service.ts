@@ -33,7 +33,7 @@ export class StrikerSchedulerService implements OnModuleInit {
             return null;
           }
 
-          const { player, message } = await startNewGame(chatId);
+          const { message } = await startNewGame(chatId);
           await this.bot.sendMessage(chatId, message);
         }),
       );
