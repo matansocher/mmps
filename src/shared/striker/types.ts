@@ -1,3 +1,15 @@
+import type { ObjectId } from 'mongodb';
+
+export type User = {
+  readonly _id?: ObjectId;
+  readonly telegramUserId: number;
+  readonly chatId: number;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly username: string;
+  readonly createdAt: Date;
+};
+
 export type Player = {
   readonly id: number;
   readonly firstName: string;
@@ -58,5 +70,12 @@ export type GameState = {
   readonly playerName: string;
   readonly hintsRevealed: number;
   readonly guesses: string[];
+  readonly createdAt: Date;
+};
+
+export type UserPreferences = {
+  readonly _id?: ObjectId;
+  readonly chatId: number;
+  readonly isStopped: boolean;
   readonly createdAt: Date;
 };

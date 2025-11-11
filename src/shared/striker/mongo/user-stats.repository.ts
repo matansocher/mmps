@@ -1,19 +1,16 @@
-import { Logger } from '@nestjs/common';
-import { getMongoCollection, User } from '@core/mongo';
+import { getMongoCollection } from '@core/mongo';
 import { TopPlayerRecord, UserStats } from '../types';
 import { DB_NAME } from './index';
 
-const logger = new Logger('StrikerUserRepository');
-const getCollection = () => getMongoCollection<UserStats>(DB_NAME, 'User');
-const getUserCollection = () => getMongoCollection<User>(DB_NAME, 'User');
+const getCollection = () => getMongoCollection<UserStats>(DB_NAME, 'UserStats');
 
 export async function getUserStats(chatId: number): Promise<UserStats | null> {
-  const userCollection = getCollection();
-  return userCollection.findOne({ chatId });
+  const userStatsCollection = getCollection();
+  return userStatsCollection.findOne({ chatId });
 }
 
 export async function createUserStats(chatId: number): Promise<void> {
-  const userCollection = getCollection();
+  const userStatsCollection = getCollection();
   const userStats: UserStats = {
     chatId,
     totalGames: 0,
@@ -26,7 +23,7 @@ export async function createUserStats(chatId: number): Promise<void> {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
-  await userCollection.insertOne(userStats);
+  await userStatsCollection.insertOne(userStats);
 }
 
 export async function updateUserStats(
@@ -37,7 +34,7 @@ export async function updateUserStats(
     score: number;
   },
 ): Promise<void> {
-  const userCollection = getCollection();
+  const userStatsCollection = getCollection();
   const user = await getUserStats(chatId);
 
   if (!user) {
@@ -68,12 +65,12 @@ export async function updateUserStats(
     },
   };
 
-  await userCollection.updateOne({ chatId }, updateObj, { upsert: true });
+  await userStatsCollection.updateOne({ chatId }, updateObj, { upsert: true });
 }
 
 export async function getLeaderboard(limit: number = 10): Promise<TopPlayerRecord[]> {
-  const userCollection = getCollection();
-  const result = await userCollection
+  const userStatsCollection = getCollection();
+  const result = await userStatsCollection
     .aggregate([
       {
         $match: {
@@ -81,10 +78,25 @@ export async function getLeaderboard(limit: number = 10): Promise<TopPlayerRecor
         },
       },
       {
+        $lookup: {
+          from: 'User',
+          localField: 'chatId',
+          foreignField: 'chatId',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $addFields: {
           winRate: {
             $multiply: [{ $divide: ['$correctGuesses', '$totalGames'] }, 100],
           },
+          username: '$user.username',
         },
       },
       { $sort: { totalScore: -1 } },
@@ -104,33 +116,4 @@ export async function getLeaderboard(limit: number = 10): Promise<TopPlayerRecor
     .toArray();
 
   return result as TopPlayerRecord[];
-}
-
-export async function saveUserDetails(userDetails: any): Promise<boolean> {
-  try {
-    const userCollection = getUserCollection();
-    const filter = { chatId: userDetails.chatId };
-    const existingUserDetails = await userCollection.findOne(filter);
-    if (existingUserDetails) {
-      await userCollection.updateOne(filter, { $set: { ...userDetails } });
-      return true;
-    }
-
-    const user = { ...userDetails, createdAt: new Date() };
-    await userCollection.insertOne(user);
-    return false;
-  } catch (err) {
-    logger.error(`saveUserDetails - err: ${err}`);
-    return false;
-  }
-}
-
-export async function getUserDetails(chatId: number): Promise<any> {
-  try {
-    const userCollection = getUserCollection();
-    return userCollection.findOne({ chatId });
-  } catch (err) {
-    logger.error(`getUserDetails - err: ${err}`);
-    return null;
-  }
 }
