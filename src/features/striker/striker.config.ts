@@ -35,4 +35,4 @@ export enum BOT_ACTIONS {
 
 export const INLINE_KEYBOARD_SEPARATOR = '|';
 
-export const FUZZY_MATCH_THRESHOLD = 70;
+export const FUZZY_MATCH_THRESHOLD = 65;

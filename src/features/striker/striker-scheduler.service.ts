@@ -14,7 +14,7 @@ export class StrikerSchedulerService implements OnModuleInit {
 
   onModuleInit(): void {
     setTimeout(() => {
-      this.handleDailyGame(); // for testing purposes
+      // this.handleDailyGame(); // for testing purposes
     }, 8000);
   }
 
