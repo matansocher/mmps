@@ -5,9 +5,18 @@ import { deleteFile } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { getAudioFromText } from '@services/openai';
 import { getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
-import { cleanupOldChallenges, createActiveChallenge, DifficultyLevel, getActiveChallenge, getUserPreference, Language, updatePreviousResponseId } from '@shared/langly';
+import {
+  cleanupOldChallenges,
+  createActiveChallenge,
+  DifficultyLevel,
+  getActiveChallenge,
+  getUserPreference,
+  Language,
+  LanguageChallenge,
+  LanguageChallengeSchema,
+  updatePreviousResponseId,
+} from '@shared/langly';
 import { BOT_ACTIONS, BOT_CONFIG, getDifficultyPrompt, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
-import { LanguageChallenge, LanguageChallengeSchema } from './types';
 
 @Injectable()
 export class LanglyService {

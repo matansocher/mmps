@@ -8,6 +8,7 @@ type ProcessGuessResult = {
   readonly message: string;
   readonly player?: Player;
   readonly score?: number;
+  readonly messageId?: number;
 };
 
 function getScore(hintsRevealed: number) {
@@ -34,7 +35,7 @@ export async function processGuess(chatId: number, guess: string): Promise<Proce
   if (!isCorrect) {
     await updateGameLog({ chatId, gameId: currentGame.gameId, guess, hintsRevealed: currentGame.hintsRevealed, isCorrect: false, score: 0 });
 
-    return { isCorrect: false, message: formatWrongGuessMessage(guess, currentGame.hintsRevealed), player };
+    return { isCorrect: false, message: formatWrongGuessMessage(guess, currentGame.hintsRevealed), player, messageId: currentGame.messageId };
   }
 
   // correct guess

@@ -1,11 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { startNewGame } from '@features/striker/utils';
 import { notify } from '@services/notifier';
 import { provideTelegramBot } from '@services/telegram';
 import { getActiveUsers, getCurrentGame } from '@shared/striker';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './striker.config';
+import { startNewGame } from './utils';
 
 @Injectable()
 export class StrikerSchedulerService implements OnModuleInit {

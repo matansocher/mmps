@@ -117,40 +117,34 @@ export function formatHintMessage(player: Player, hintsRevealed: number): string
   let message = '⚽ Guess the Football Player!\n\n';
   message += '📋 Hints:\n';
 
-  // Hint 1: Position + League
   if (hintsRevealed >= 1) {
     message += `1️⃣ Position: ${player.position}\n`;
     message += `2️⃣ League: ${player.league}\n`;
   }
 
-  // Hint 2: Nationality
   if (hintsRevealed >= 2) {
     message += `3️⃣ Nationality: ${player.nationality}\n`;
   }
 
-  // Hint 3: Age
   if (hintsRevealed >= 3) {
     const age = calculateAge(player.birthdate);
     message += `4️⃣ Age: ${age} years old\n`;
   }
 
-  // Hint 4: Height + Weight
   if (hintsRevealed >= 4) {
     message += `5️⃣ Height: ${player.height} cm\n`;
     message += `6️⃣ Weight: ${player.weight} kg\n`;
   }
 
-  // Hint 5: Club
   if (hintsRevealed >= 5) {
     message += `7️⃣ Club: ${player.team}\n`;
   }
 
-  // Hint 6: Preferred Foot
   if (hintsRevealed >= 6) {
     message += `8️⃣ Preferred Foot: ${player.preferredFoot}\n`;
   }
 
-  message += '\n💭 Type your guess now!';
+  message += `\n\n🔢 Clues used: ${hintsRevealed}`;
 
   if (hintsRevealed < 6) {
     message += '\n\n💡 Need more info? Use /clue for the next hint';

@@ -1,8 +1,20 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
+import { env } from 'node:process';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { notify } from '@services/notifier';
-import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { createUserPreference, DifficultyLevel, getUserPreference, saveUserDetails, updateUserPreference } from '@shared/striker';
+import {
+  getBotToken,
+  getCallbackQueryData,
+  getInlineKeyboardMarkup,
+  getMessageData,
+  provideTelegramBot,
+  reactToMessage,
+  registerHandlers,
+  TELEGRAM_EVENTS,
+  TelegramEventHandler,
+  UserDetails,
+} from '@services/telegram';
+import { createUserPreference, DifficultyLevel, getUserPreference, saveGameLog, saveUserDetails, updateUserPreference } from '@shared/striker';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR } from './striker.config';
 import { getPlayerName, getStats, giveUp, HELP_MESSAGE, processGuess, revealNextClue, startNewGame, WELCOME_MESSAGE } from './utils';
 
@@ -12,6 +24,7 @@ const customErrorMessage = 'Oops, something went wrong! Please try again later.'
 export class StrikerController implements OnModuleInit {
   private readonly logger = new Logger(StrikerController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
+  private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   onModuleInit(): void {
     const { COMMAND, TEXT, CALLBACK_QUERY } = TELEGRAM_EVENTS;
@@ -48,7 +61,9 @@ export class StrikerController implements OnModuleInit {
     const difficulty = userPreferences?.difficulty ?? DifficultyLevel.EASY;
 
     const result = await startNewGame(chatId, difficulty);
-    await this.bot.sendMessage(chatId, result.message);
+    const sentMessage = await this.bot.sendMessage(chatId, result.message);
+
+    await saveGameLog({ chatId, gameId: result.gameId, playerId: result.playerId, playerName: result.playerName, hintsRevealed: 1, messageId: sentMessage.message_id });
 
     if (result.player) {
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.PLAY, player: getPlayerName(result.player), difficulty: DIFFICULTY_LABELS[difficulty] }, userDetails);
@@ -56,11 +71,26 @@ export class StrikerController implements OnModuleInit {
   }
 
   async clueHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+    const { chatId, messageId, userDetails } = getMessageData(message);
     const result = await revealNextClue(chatId);
-    await this.bot.sendMessage(chatId, result.message);
 
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLUE }, userDetails);
+    if (result.success && result.messageId) {
+      await this.bot
+        .editMessageText(result.message, {
+          chat_id: chatId,
+          message_id: result.messageId,
+        })
+        .catch((err) => {
+          this.logger.warn(`Failed to edit message: ${err.message}`);
+          this.bot.sendMessage(chatId, result.message);
+        });
+
+      await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLUE }, userDetails);
+    } else {
+      await this.bot.sendMessage(chatId, result.message);
+    }
   }
 
   async statsHandler(message: Message): Promise<void> {
@@ -88,7 +118,7 @@ export class StrikerController implements OnModuleInit {
   }
 
   async textHandler(message: Message): Promise<void> {
-    const { chatId, text, userDetails } = getMessageData(message);
+    const { chatId, messageId, text, userDetails } = getMessageData(message);
 
     if (text.startsWith('/')) {
       return;
@@ -96,15 +126,15 @@ export class StrikerController implements OnModuleInit {
 
     const result = await processGuess(chatId, text);
 
-    // If correct, send player image with message as caption, otherwise just send message
     if (result.isCorrect && result.player?.photo) {
       await this.bot.sendPhoto(chatId, result.player.photo, { caption: result.message }).catch((err) => {
         this.logger.warn(`Failed to send player photo: ${err.message}`);
-        // Fallback to sending just the message if photo fails
         this.bot.sendMessage(chatId, result.message);
       });
-    } else {
-      await this.bot.sendMessage(chatId, result.message);
+    } else if (!result.isCorrect && result.messageId) {
+      await reactToMessage(this.botToken, chatId, messageId, '🤡').catch((err) => {
+        this.logger.warn(`Failed to set reaction: ${err}`);
+      });
     }
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.GUESS, guess: text, isCorrect: result.isCorrect, player: getPlayerName(result.player), score: result.score }, userDetails);

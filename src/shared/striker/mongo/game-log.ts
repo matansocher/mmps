@@ -8,6 +8,7 @@ type SaveGameLogOptions = {
   readonly playerId: number;
   readonly playerName: string;
   readonly hintsRevealed: number;
+  readonly messageId?: number;
 };
 
 type UpdateGameLogOptions = {
@@ -21,13 +22,14 @@ type UpdateGameLogOptions = {
 
 const getCollection = () => getMongoCollection<GameLog>(DB_NAME, 'GameLog');
 
-export async function saveGameLog({ chatId, gameId, playerId, playerName, hintsRevealed }: SaveGameLogOptions): Promise<void> {
+export async function saveGameLog({ chatId, gameId, playerId, playerName, hintsRevealed, messageId }: SaveGameLogOptions): Promise<void> {
   const gameLogCollection = getCollection();
   const gameLog = {
     chatId,
     gameId,
     playerId,
     playerName,
+    messageId,
     hintsRevealed,
     guesses: [],
     isCorrect: false,
@@ -63,7 +65,7 @@ export async function updateGameLog({ chatId, gameId, guess, hintsRevealed, isCo
 export async function getCurrentGame(chatId: number): Promise<GameLog | null> {
   const gameLogCollection = getCollection();
   const filter = { chatId, answeredAt: { $exists: false } };
-  return gameLogCollection.findOne(filter);
+  return gameLogCollection.findOne(filter, { sort: { createdAt: -1 } });
 }
 
 export async function getUserGameLogs(chatId: number): Promise<GameLog[]> {
