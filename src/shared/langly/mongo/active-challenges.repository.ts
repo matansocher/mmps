@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { ActiveChallenge } from '@features/langly/types';
+import { ActiveChallenge } from '../types';
 import { DB_NAME } from './index';
 
 const getCollection = () => getMongoCollection<ActiveChallenge>(DB_NAME, 'ActiveChallenges');

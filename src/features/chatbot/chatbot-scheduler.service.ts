@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { LOOKBACK_MINUTES } from '@features/chatbot/schedulers/earthquake-monitor';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
 @Injectable()
 export class ChatbotSchedulerService implements OnModuleInit {
