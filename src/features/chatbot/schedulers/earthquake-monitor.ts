@@ -1,14 +1,13 @@
 import type TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
-import { type Earthquake, formatEarthquake, getRecentEarthquakes } from '@services/earthquake-api';
+import { MIN_MAGNITUDE_NEARBY, shouldNotifyEarthquake, type Earthquake, formatEarthquake, getRecentEarthquakes } from '@services/earthquake-api';
 import { sendShortenedMessage } from '@services/telegram';
 
 const logger = new Logger('EarthquakeMonitorScheduler');
 
 const seenEarthquakeIds = new Set<string>();
 
-const MIN_MAGNITUDE = 6.0;
 export const LOOKBACK_MINUTES = 15;
 
 export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
@@ -16,7 +15,7 @@ export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
     const startTime = new Date(Date.now() - LOOKBACK_MINUTES * 60 * 1000);
 
     const earthquakes = await getRecentEarthquakes({
-      minMagnitude: MIN_MAGNITUDE,
+      minMagnitude: MIN_MAGNITUDE_NEARBY,
       startTime,
       orderBy: 'time',
       limit: 50,
@@ -27,7 +26,7 @@ export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
       return;
     }
 
-    const newEarthquakes = earthquakes.filter((quake) => !seenEarthquakeIds.has(quake.id));
+    const newEarthquakes = earthquakes.filter((quake) => !seenEarthquakeIds.has(quake.id) && shouldNotifyEarthquake(quake));
 
     if (newEarthquakes.length === 0) {
       logger.debug(`${earthquakes.length} earthquake(s) detected but all were already seen`);
@@ -78,5 +77,6 @@ function getSeverityLabel(magnitude: number): string {
   if (magnitude >= 7.0) return 'MAJOR';
   if (magnitude >= 6.0) return 'STRONG';
   if (magnitude >= 5.0) return 'MODERATE';
+  if (magnitude >= 4.0) return 'LIGHT';
   return 'MINOR';
 }
