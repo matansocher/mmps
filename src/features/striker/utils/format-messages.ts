@@ -159,6 +159,8 @@ export function formatHintMessage(player: Player, hintsRevealed: number): string
     message += "\n❌ Can't guess? Use /giveup to reveal the answer";
   }
 
+  message += `\n\n🔢 Clues used: ${hintsRevealed}/6`;
+
   return message;
 }
 

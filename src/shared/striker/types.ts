@@ -34,6 +34,7 @@ export type GameLog = {
   readonly gameId: string;
   readonly playerId: number;
   readonly playerName: string;
+  readonly messageId?: number;
   readonly hintsRevealed: number;
   readonly guesses: string[];
   readonly isCorrect: boolean;

@@ -1,20 +1,24 @@
 import { getCurrentGame, Player, updateGameLog } from '@shared/striker';
 import { PLAYERS_DATA } from '../data/players-data';
-import { CLUE_REVEALED_MESSAGE, formatHintMessage, NO_ACTIVE_GAME_MESSAGE, NO_MORE_CLUES_MESSAGE } from './format-messages';
+import { formatHintMessage, NO_ACTIVE_GAME_MESSAGE, NO_MORE_CLUES_MESSAGE } from './format-messages';
 
-export async function revealNextClue(chatId: number): Promise<{ message: string; player?: Player; hintsRevealed?: number }> {
+export async function revealNextClue(chatId: number): Promise<{ success: boolean; message: string; messageId?: number; player?: Player; hintsRevealed?: number }> {
   const currentGame = await getCurrentGame(chatId);
   if (!currentGame) {
-    return { message: NO_ACTIVE_GAME_MESSAGE };
+    return { success: false, message: NO_ACTIVE_GAME_MESSAGE };
   }
 
   if (currentGame.hintsRevealed >= 6) {
-    return { message: NO_MORE_CLUES_MESSAGE };
+    return { success: false, message: NO_MORE_CLUES_MESSAGE };
+  }
+
+  if (!currentGame.messageId) {
+    return { success: false, message: 'Cannot edit message. Please start a new game.' };
   }
 
   const player = PLAYERS_DATA.find((p) => p.id === currentGame.playerId);
   if (!player) {
-    return { message: 'Error: Player data not found. Please start a new game.' };
+    return { success: false, message: 'Error: Player data not found. Please start a new game.' };
   }
 
   const newHintsRevealed = currentGame.hintsRevealed + 1;
@@ -23,5 +27,5 @@ export async function revealNextClue(chatId: number): Promise<{ message: string;
 
   const hintMessage = formatHintMessage(player, newHintsRevealed);
 
-  return { message: `${CLUE_REVEALED_MESSAGE}\n\n${hintMessage}`, player, hintsRevealed: newHintsRevealed };
+  return { success: true, message: hintMessage, messageId: currentGame.messageId, player, hintsRevealed: newHintsRevealed };
 }
