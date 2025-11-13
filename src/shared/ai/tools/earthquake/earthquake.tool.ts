@@ -34,7 +34,6 @@ async function runner({ action, limit, minMagnitude, hoursBack }: z.infer<typeof
         return 'Invalid action. Use "recent" or "magnitude".';
     }
 
-    // Filter earthquakes based on notification criteria
     const relevantEarthquakes = earthquakes.filter(shouldNotifyAboutEarthquake);
 
     if (relevantEarthquakes.length === 0) {

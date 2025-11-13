@@ -9,7 +9,6 @@ const logger = new Logger('EarthquakeMonitorScheduler');
 
 const seenEarthquakeIds = new Set<string>();
 
-const MIN_MAGNITUDE = 4.0;
 export const LOOKBACK_MINUTES = 15;
 
 export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
@@ -17,13 +16,11 @@ export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
     const startTime = new Date(Date.now() - LOOKBACK_MINUTES * 60 * 1000);
 
     const earthquakes = await getRecentEarthquakes({
-      minMagnitude: MIN_MAGNITUDE,
       startTime,
       orderBy: 'time',
       limit: 50,
     });
 
-    // Filter earthquakes based on notification criteria (magnitude > 6 globally OR within 1000km of Israel)
     const relevantEarthquakes = earthquakes.filter(shouldNotifyAboutEarthquake);
 
     if (relevantEarthquakes.length === 0) {
@@ -31,7 +28,6 @@ export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
     }
 
     const newEarthquakes = relevantEarthquakes.filter((quake) => !seenEarthquakeIds.has(quake.id));
-
     if (newEarthquakes.length === 0) {
       return;
     }

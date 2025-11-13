@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Earthquake, USGSResponse } from './types';
 
 const USGS_BASE_URL = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
+const MIN_MAGNITUDE = 4.0;
 
 type GetEarthquakesOptions = {
   readonly minMagnitude?: number;
@@ -12,7 +13,7 @@ type GetEarthquakesOptions = {
 };
 
 export async function getRecentEarthquakes(options: GetEarthquakesOptions = {}): Promise<Earthquake[]> {
-  const { minMagnitude = 3.0, startTime = new Date(Date.now() - 15 * 60 * 1000), endTime, limit = 100, orderBy = 'time' } = options;
+  const { minMagnitude = MIN_MAGNITUDE, startTime = new Date(Date.now() - 15 * 60 * 1000), endTime, limit = 100, orderBy = 'time' } = options;
 
   const params: Record<string, string> = {
     format: 'geojson',
