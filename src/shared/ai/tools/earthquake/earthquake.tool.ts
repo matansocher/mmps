@@ -1,5 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
+import { shouldNotifyAboutEarthquake } from '@features/chatbot';
 import { formatEarthquake, getEarthquakesAboveMagnitude, getRecentEarthquakes } from '@services/earthquake-api';
 
 const schema = z.object({
@@ -33,16 +34,19 @@ async function runner({ action, limit, minMagnitude, hoursBack }: z.infer<typeof
         return 'Invalid action. Use "recent" or "magnitude".';
     }
 
-    if (earthquakes.length === 0) {
-      return `No earthquakes found with magnitude ${minMagnitude}+ in the specified time range.`;
+    // Filter earthquakes based on notification criteria
+    const relevantEarthquakes = earthquakes.filter(shouldNotifyAboutEarthquake);
+
+    if (relevantEarthquakes.length === 0) {
+      return `No significant earthquakes found (magnitude > 6 globally OR any magnitude within 1000km of Israel) in the specified time range.`;
     }
 
-    const formattedQuakes = earthquakes.map((quake, index) => {
+    const formattedQuakes = relevantEarthquakes.map((quake, index) => {
       const header = `\n${'─'.repeat(50)}\n*Earthquake #${index + 1}*\n`;
       return header + formatEarthquake(quake);
     });
 
-    const summary = `Found ${earthquakes.length} earthquake(s) with magnitude ${minMagnitude}+:\n`;
+    const summary = `Found ${relevantEarthquakes.length} significant earthquake(s):\n`;
     return summary + formattedQuakes.join('\n');
   } catch (error) {
     return `Error fetching earthquake data: ${error instanceof Error ? error.message : 'Unknown error'}`;
