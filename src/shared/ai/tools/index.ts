@@ -7,7 +7,6 @@ export { earthquakeTool } from './earthquake';
 
 export { imageAnalyzerTool } from './image/image-analyzer.tool';
 export { imageGeneratorTool } from './image/image-generation.tool';
-export { imageGeneratorPromptEnhancerTool } from './image/image-generation-prompt-enhancer.tool';
 
 export { audioTranscriberTool } from './audio/audio-transcriber.tool';
 
