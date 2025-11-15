@@ -94,7 +94,7 @@ export class WorldlyService {
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const inlineKeyboardMarkup = getInlineKeyboardMarkup(
-      options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, country.hebrewCapital, randomCountry.capital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
+      options.map((country) => ({ text: country.hebrewCapital, callback_data: [BOT_ACTIONS.CAPITAL, country.hebrewCapital, randomCountry.hebrewCapital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
     );
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');

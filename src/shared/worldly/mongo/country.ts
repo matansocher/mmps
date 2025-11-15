@@ -27,7 +27,7 @@ export async function getCountryByName(name: string): Promise<Country> {
 
 export async function getCountryByCapital(capitalName: string): Promise<Country> {
   const allCountries = await getAllCountries();
-  return allCountries.find((country) => country.capital === capitalName);
+  return allCountries.find((country) => country.hebrewCapital === capitalName);
 }
 
 export async function getRandomCountry(filter: (country: Country) => boolean): Promise<Country> {
