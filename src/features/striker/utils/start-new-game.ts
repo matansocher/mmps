@@ -4,9 +4,9 @@ import { formatHintMessage, getPlayerName } from './format-messages';
 import { getRandomPlayer } from './get-random-player';
 
 const DIFFICULTY_RATING_MAP = {
-  [DifficultyLevel.EASY]: undefined,
+  [DifficultyLevel.EASY]: 85,
   [DifficultyLevel.MEDIUM]: 83,
-  [DifficultyLevel.HARD]: 85,
+  [DifficultyLevel.HARD]: undefined,
 };
 
 export async function startNewGame(
