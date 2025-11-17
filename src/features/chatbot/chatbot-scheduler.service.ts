@@ -4,7 +4,18 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import {
+  cokeQuitReminder,
+  cokeQuitStreakIncrement,
+  cokeQuitWeeklySummary,
+  dailySummary,
+  earthquakeMonitor,
+  exerciseReminder,
+  footballUpdate,
+  reminderCheck,
+  sportsCalendar,
+  weeklyExerciseSummary,
+} from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
 @Injectable()
@@ -24,6 +35,9 @@ export class ChatbotSchedulerService implements OnModuleInit {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
+      // this.handleCokeQuitReminder(); // for testing purposes
+      // this.handleCokeQuitWeeklySummary(); // for testing purposes
+      // this.handleCokeQuitStreakIncrement(); // for testing purposes
     }, 8000);
   }
 
@@ -70,5 +84,20 @@ export class ChatbotSchedulerService implements OnModuleInit {
   @Cron(`*/${LOOKBACK_MINUTES} * * * *`, { name: 'chatbot-earthquake-monitor', timeZone: DEFAULT_TIMEZONE })
   async handleEarthquakeMonitor(): Promise<void> {
     await earthquakeMonitor(this.bot);
+  }
+
+  @Cron(`10 0,22,23 * * *`, { name: 'chatbot-coke-quit-reminder', timeZone: DEFAULT_TIMEZONE })
+  async handleCokeQuitReminder(): Promise<void> {
+    await cokeQuitReminder(this.bot, this.chatbotService);
+  }
+
+  @Cron(`0 22 * * 6`, { name: 'chatbot-coke-quit-weekly-summary', timeZone: DEFAULT_TIMEZONE })
+  async handleCokeQuitWeeklySummary(): Promise<void> {
+    await cokeQuitWeeklySummary(this.bot, this.chatbotService);
+  }
+
+  @Cron(`0 0 * * *`, { name: 'chatbot-coke-quit-streak-increment', timeZone: DEFAULT_TIMEZONE })
+  async handleCokeQuitStreakIncrement(): Promise<void> {
+    await cokeQuitStreakIncrement();
   }
 }

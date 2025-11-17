@@ -7,3 +7,6 @@ export { footballPredictionsResults } from './football-predictions-results';
 export { reminderCheck } from './reminder-check';
 export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
+export { cokeQuitReminder } from './coke-quit-reminder';
+export { cokeQuitWeeklySummary } from './coke-quit-weekly-summary';
+export { cokeQuitStreakIncrement } from './coke-quit-streak-increment';
