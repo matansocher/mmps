@@ -65,6 +65,7 @@ export class ChatbotController implements OnModuleInit {
   private async handleBotResponse(chatId: number, replyText: string, toolResults: any[]): Promise<void> {
     const ttsResult = toolResults.find((result) => result.toolName === 'text_to_speech');
     const mapsResult = toolResults.find((result) => result.toolName === 'google_maps_place');
+    const cokeQuitResult = toolResults.find((result) => result.toolName === 'coke_quit_tracker');
 
     if (ttsResult && !ttsResult.error) {
       const audioFilePath = ttsResult.data;
@@ -85,6 +86,17 @@ export class ChatbotController implements OnModuleInit {
         deleteFile(imageFilePath);
       } catch (err) {
         this.logger.error(`Error sending voice message: ${err}`);
+        await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+      }
+    } else if (cokeQuitResult && !cokeQuitResult.error && cokeQuitResult.data?.imageUrl) {
+      const imageUrl = cokeQuitResult.data.imageUrl;
+      try {
+        await this.bot.sendPhoto(chatId, imageUrl, { caption: replyText }).catch((err) => {
+          this.logger.error(`Error sending coke image: ${err}. Sending as text message instead.`);
+          this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' }).catch(() => {});
+        });
+      } catch (err) {
+        this.logger.error(`Error sending coke quit image: ${err}`);
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
     } else {
