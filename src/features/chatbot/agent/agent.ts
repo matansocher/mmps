@@ -11,6 +11,7 @@ import {
   githubTool,
   matchPredictionTool,
   matchSummaryTool,
+  preferencesTool,
   recipesTool,
   reminderTool,
   topMatchesForPredictionTool,
@@ -22,7 +23,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -48,6 +49,7 @@ Available capabilities:
 - Earthquake monitor tool: Get real-time earthquake data from USGS. Check recent earthquakes or query by magnitude threshold. Useful for seismic activity updates.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
 - Smart Reminders tool: Save reminders for specific dates/times and get notified when they're due. Supports creating, listing, editing, completing, deleting, and snoozing reminders.
+- Preferences tool: Save and retrieve personal preferences and information. Remember things the user wants you to know about them (favorite things, dietary restrictions, personal details, etc.) and proactively retrieve relevant preferences during conversations.
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Football Match Prediction tools: Get prediction data for specific matches and identify top matches worth predicting. Use comprehensive data including betting odds, recent form, and statistics to make informed predictions.
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
@@ -74,6 +76,26 @@ Smart Reminders Guidelines:
 - Snooze defaults to 60 minutes but users can specify custom durations (e.g., "snooze for 2 hours" → snoozeMinutes: 120).
 - Format reminder lists clearly with numbering, showing the message and due date for each.
 - Use emojis (🔔, ⏰, ✅, 🗑️, ⏸️) to make reminder interactions more engaging.
+
+Preferences Guidelines:
+- When the user shares personal information they want you to remember, use the preferences tool to save it.
+- Natural language variations to recognize: "remember that I", "save this preference", "I prefer", "my favorite", "I like", "I don't like", "keep in mind that", "note that I", "for future reference".
+- Use descriptive, lowercase keys with underscores (e.g., "favorite_color", "dietary_restrictions", "preferred_language", "coffee_order", "workout_time").
+- PROACTIVE RETRIEVAL: When answering questions where preferences might be relevant, proactively use action "search" or "list" to check if there are saved preferences that could personalize your response.
+- Examples of proactive retrieval:
+  * User asks "What should I eat?" → Search for "food", "diet", "allerg" preferences
+  * User asks "Recommend a movie" → Search for "movie", "genre", "favorite" preferences
+  * User asks about scheduling → Search for "time", "schedule", "availability" preferences
+- Actions available:
+  * "save" - Save or update a preference (requires key and value)
+  * "get" - Retrieve a specific preference by key
+  * "list" - List all saved preferences
+  * "search" - Search preferences by keyword (searches both keys and values)
+  * "delete" - Remove a preference by key
+- After saving a preference, confirm what was saved in a natural way.
+- When user asks "what do you know about me" or "my preferences", use action "list" to show all saved preferences.
+- Format preference lists clearly and naturally, grouping related preferences when possible.
+- IMPORTANT: This is a personal bot - preferences are global and not tied to specific chat IDs.
 
 Exercise Tracking Guidelines:
 - When I mention exercising, working out, or completing fitness activities, use the exercise_tracker tool to log my exercise.
@@ -109,6 +131,7 @@ Guidelines:
 - Audio transcription: When provided with an audio file path, use the audio transcriber tool to convert speech to text.
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
 - Smart Reminders: When users want to save information for later, set reminders, or be notified about something, use the smart_reminders tool with natural language date parsing in ${DEFAULT_TIMEZONE} timezone. CRITICAL: Always use 18:00 (6 PM) as the default time when no specific time is mentioned. Follow the Smart Reminders Guidelines above for all reminder-related interactions.
+- Preferences: When users share personal information to remember or when answering questions that could benefit from personalization, use the preferences tool. Save preferences with descriptive keys and proactively search for relevant preferences during conversations. Follow the Preferences Guidelines above for all preference-related interactions.
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - GitHub Automation (MCP): When users need to work with GitHub repositories, use the github tool with the appropriate operation:
@@ -182,6 +205,7 @@ export function agent(): AgentDescriptor {
     woltTool,
     worldlyTool,
     cokeQuitTool,
+    preferencesTool,
   ];
 
   return {
