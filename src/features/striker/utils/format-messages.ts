@@ -33,9 +33,8 @@ I'll give you hints about a football player, and you need to guess who it is!
 • 1st hint (Position + League) = 5 points
 • 2nd hint (+ Nationality) = 4 points
 • 3rd hint (+ Age) = 3 points
-• 4th hint (+ Height + Weight) = 2 points
-• 5th hint (+ Club) = 1 point
-• 6th hint (+ Preferred Foot) = 1 point
+• 4th hint (+ Club) = 2 points
+• 5th hint (+ Preferred Foot) = 1 point
 
 📊 Commands:
 /play - Start a new game
@@ -84,8 +83,7 @@ The earlier you guess, the more points you earn:
 • Position + League = 5 pts ⭐⭐⭐⭐⭐
 • + Nationality = 4 pts ⭐⭐⭐⭐
 • + Age = 3 pts ⭐⭐⭐
-• + Height + Weight = 2 pts ⭐⭐
-• + Club = 1 pt ⭐
+• + Club = 2 pts ⭐⭐
 • + Preferred Foot = 1 pt ⭐
 
 📊 Track your progress with /stats
@@ -104,8 +102,6 @@ The answer was: ${getPlayerName(player)}
 • League: ${player.league}
 • Nationality: ${player.nationality}
 • Age: ${age} years old
-• Height: ${player.height} cm
-• Weight: ${player.weight} kg
 • Club: ${player.team}
 • Preferred Foot: ${player.preferredFoot}
 
@@ -132,21 +128,16 @@ export function formatHintMessage(player: Player, hintsRevealed: number): string
   }
 
   if (hintsRevealed >= 4) {
-    message += `5️⃣ Height: ${player.height} cm\n`;
-    message += `6️⃣ Weight: ${player.weight} kg\n`;
+    message += `5️⃣ Club: ${player.team}\n`;
   }
 
   if (hintsRevealed >= 5) {
-    message += `7️⃣ Club: ${player.team}\n`;
-  }
-
-  if (hintsRevealed >= 6) {
-    message += `8️⃣ Preferred Foot: ${player.preferredFoot}\n`;
+    message += `6️⃣ Preferred Foot: ${player.preferredFoot}\n`;
   }
 
   message += `\n\n🔢 Clues used: ${hintsRevealed}`;
 
-  if (hintsRevealed < 6) {
+  if (hintsRevealed < 5) {
     message += '\n\n💡 Need more info? Use /clue for the next hint';
   } else {
     message += '\n\n⚠️ This is the last hint!';
@@ -196,7 +187,7 @@ export function formatSuccessMessage(player: Player, score: number, hintsUsed: n
   else scoreEmoji = '⭐';
 
   message += `${scoreEmoji} Score: ${score} points\n`;
-  message += `💡 Hints used: ${hintsUsed}/6\n`;
+  message += `💡 Hints used: ${hintsUsed}/5\n`;
   message += `🎯 Attempts: ${guesses.length}\n\n`;
 
   if (score === 5) {
@@ -219,7 +210,7 @@ export function formatSuccessMessage(player: Player, score: number, hintsUsed: n
 export function formatWrongGuessMessage(guess: string, hintsRevealed: number): string {
   let message = `❌ Not quite! "${guess}" is incorrect.\n\n`;
 
-  if (hintsRevealed < 6) {
+  if (hintsRevealed < 5) {
     message += `💡 Use /clue to reveal the next hint, or keep guessing!`;
   } else {
     message += `⚠️ All hints revealed! Keep trying or /giveup`;

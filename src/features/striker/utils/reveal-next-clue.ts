@@ -8,7 +8,7 @@ export async function revealNextClue(chatId: number): Promise<{ success: boolean
     return { success: false, message: NO_ACTIVE_GAME_MESSAGE };
   }
 
-  if (currentGame.hintsRevealed >= 6) {
+  if (currentGame.hintsRevealed >= 5) {
     return { success: false, message: NO_MORE_CLUES_MESSAGE };
   }
 

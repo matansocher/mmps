@@ -101,45 +101,45 @@ describe('Format Messages', () => {
       expect(message).not.toContain('Club');
     });
 
-    it('should show all hints except club and preferred foot for 4 hints', () => {
+    it('should show all hints except preferred foot for 4 hints', () => {
       const message = formatHintMessage(mockPlayer, 4);
       expect(message).toContain('Position: Forward');
       expect(message).toContain('League: La Liga');
       expect(message).toContain('Nationality: France');
       expect(message).toContain('Age:');
       expect(message).toContain('years old');
-      expect(message).toContain('Height: 178 cm');
-      expect(message).toContain('Weight: 73 kg');
-      expect(message).not.toContain('Club: Real Madrid');
+      expect(message).toContain('Club: Real Madrid');
+      expect(message).not.toContain('Height');
+      expect(message).not.toContain('Weight');
       expect(message).not.toContain('Preferred Foot');
     });
 
-    it('should show all hints for 6 hints', () => {
-      const message = formatHintMessage(mockPlayer, 6);
+    it('should show all hints for 5 hints', () => {
+      const message = formatHintMessage(mockPlayer, 5);
       expect(message).toContain('Position: Forward');
       expect(message).toContain('League: La Liga');
       expect(message).toContain('Nationality: France');
       expect(message).toContain('Age:');
       expect(message).toContain('years old');
-      expect(message).toContain('Height: 178 cm');
-      expect(message).toContain('Weight: 73 kg');
       expect(message).toContain('Club: Real Madrid');
       expect(message).toContain('Preferred Foot: Right');
+      expect(message).not.toContain('Height');
+      expect(message).not.toContain('Weight');
     });
 
-    it('should suggest /clue when hints < 6', () => {
+    it('should suggest /clue when hints < 5', () => {
       const message = formatHintMessage(mockPlayer, 3);
       expect(message).toContain('/clue');
     });
 
-    it('should show "last hint" message when hints = 6', () => {
-      const message = formatHintMessage(mockPlayer, 6);
+    it('should show "last hint" message when hints = 5', () => {
+      const message = formatHintMessage(mockPlayer, 5);
       expect(message).toContain('This is the last hint');
       expect(message).not.toContain('/clue');
     });
 
     it('should suggest /giveup when all hints are revealed', () => {
-      const message = formatHintMessage(mockPlayer, 6);
+      const message = formatHintMessage(mockPlayer, 5);
       expect(message).toContain('/giveup');
       expect(message).toContain('reveal the answer');
     });
@@ -177,7 +177,7 @@ describe('Format Messages', () => {
 
     it('should show hints used', () => {
       const message = formatSuccessMessage(mockPlayer, 3, 3, ['guess1', 'guess2', 'guess3']);
-      expect(message).toContain('3/6');
+      expect(message).toContain('3/5');
     });
 
     it('should show number of attempts', () => {
@@ -237,8 +237,8 @@ describe('Format Messages', () => {
       expect(message).toContain('Club: Al Nassr');
       expect(message).toContain('Age:');
       expect(message).toContain('years old');
-      expect(message).toContain('Height: 187 cm');
-      expect(message).toContain('Weight: 83 kg');
+      expect(message).not.toContain('Height');
+      expect(message).not.toContain('Weight');
       expect(message).toContain('Preferred Foot: Right');
     });
 
@@ -255,13 +255,13 @@ describe('Format Messages', () => {
       expect(message).toContain('incorrect');
     });
 
-    it('should suggest /clue when hints < 6', () => {
+    it('should suggest /clue when hints < 5', () => {
       const message = formatWrongGuessMessage('guess', 3);
       expect(message).toContain('/clue');
     });
 
-    it('should show "all hints revealed" when hints >= 6', () => {
-      const message = formatWrongGuessMessage('guess', 6);
+    it('should show "all hints revealed" when hints >= 5', () => {
+      const message = formatWrongGuessMessage('guess', 5);
       expect(message).toContain('All hints revealed');
       expect(message).toContain('/giveup');
     });
