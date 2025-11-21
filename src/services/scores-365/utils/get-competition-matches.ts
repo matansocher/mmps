@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { pick as _pick } from 'lodash';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { type Competition, CompetitionDetails, type MatchDetails } from '../interface';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
@@ -20,6 +19,6 @@ export async function getCompetitionMatches(competitionId: number): Promise<Comp
   }
   const enrichedMatches = await Promise.all(matchesRes.map((matchRes: MatchDetails) => getMatchDetails(matchRes.id)));
   const competitionRes = result.data?.competitions[0];
-  const competition: Competition = _pick(competitionRes, ['id', 'name']);
+  const competition: Competition = { id: competitionRes.id, name: competitionRes.name };
   return { competition, matches: enrichedMatches.filter(Boolean).filter((m) => m.gameTime === -1) };
 }

@@ -1,5 +1,5 @@
-import { chunk as _chunk } from 'lodash';
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from 'node-telegram-bot-api';
+import { chunk } from '@core/utils';
 
 const MAXIMUM_CHARS_FOR_INLINE_KEYBOARD_BUTTON = 64;
 
@@ -14,7 +14,7 @@ export function getInlineKeyboardMarkup(inlineKeyboardButtons: InlineKeyboardBut
     return button;
   });
 
-  const inlineKeyboard = { inline_keyboard: _chunk(processedButtons, numberOfColumnsPerRow) };
+  const inlineKeyboard = { inline_keyboard: chunk(processedButtons, numberOfColumnsPerRow) };
   return { reply_markup: inlineKeyboard };
 }
 

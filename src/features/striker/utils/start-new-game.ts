@@ -9,10 +9,7 @@ const DIFFICULTY_RATING_MAP = {
   [DifficultyLevel.HARD]: undefined,
 };
 
-export async function startNewGame(
-  chatId: number,
-  difficulty?: DifficultyLevel
-): Promise<{ message: string; player: Player; gameId: string; playerId: number; playerName: string }> {
+export async function startNewGame(chatId: number, difficulty?: DifficultyLevel): Promise<{ message: string; player: Player; gameId: string; playerId: number; playerName: string }> {
   const currentGame = await getCurrentGame(chatId);
 
   // If there's an active game, end it as incomplete with answeredAt set

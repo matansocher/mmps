@@ -1,3 +1,4 @@
+export { chunk } from './chunk';
 export { deleteFile } from './delete-file';
 export { extractAudioFromVideo } from './extract-audio-from-video';
 export { formatNumber } from './format-number';
@@ -21,4 +22,5 @@ export { shuffleArray } from './shuffle-array';
 export { sleep } from './sleep';
 export { getStreak, getStreakOfCorrectAnswers, getLongestStreak } from './streak-calc';
 export { stringify } from './stringify';
+export { throttle } from './throttle';
 export { writeFile } from './write-file';

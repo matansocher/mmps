@@ -3,7 +3,7 @@ import type { Quote, StockDataSummary, StockSearchResult } from './interface';
 import { parseStockDetails, parseStockSearchResults } from './utils';
 
 export async function getStockDetailsBySymbol(symbol: string): Promise<StockDataSummary> {
-  const quote = await yahooFinance.quote(symbol);
+  const quote = await (yahooFinance as any).quote(symbol);
   if (!quote) {
     return null;
   }
@@ -11,7 +11,7 @@ export async function getStockDetailsBySymbol(symbol: string): Promise<StockData
 }
 
 export async function getStockDetailsByName(name: string, numOfResults: number): Promise<StockSearchResult[]> {
-  const searchResults = await yahooFinance.search(name);
+  const searchResults = await (yahooFinance as any).search(name);
   if (!searchResults) {
     return null;
   }
