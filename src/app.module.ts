@@ -5,11 +5,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { isProd } from '@core/config';
 import { BOT_CONFIG as chatbotBotConfig, ChatbotModule } from '@features/chatbot';
 import { BOT_CONFIG as coachBotConfig, CoachModule } from '@features/coach';
-import { BOT_CONFIG as educatorBotConfig, EducatorModule } from '@features/educator';
 import { BOT_CONFIG as langlyBotConfig, LanglyModule } from '@features/langly';
 import { BOT_CONFIG as magisterBotConfig, MagisterModule } from '@features/magister';
-import { BOT_CONFIG as strikerBotConfig, StrikerModule } from '@features/striker';
-// import { BOT_CONFIG as twitterBotConfig, TwitterModule } from '@features/twitter';
 import { BOT_CONFIG as woltBotConfig, WoltModule } from '@features/wolt';
 import { BOT_CONFIG as worldlyBotConfig, WorldlyModule } from '@features/worldly';
 
@@ -23,11 +20,8 @@ const registerBotModule = (module: any, config: { id: string }) => {
     ScheduleModule.forRoot(),
     registerBotModule(ChatbotModule, chatbotBotConfig),
     registerBotModule(CoachModule, coachBotConfig),
-    registerBotModule(EducatorModule, educatorBotConfig),
-    registerBotModule(StrikerModule, strikerBotConfig),
     registerBotModule(LanglyModule, langlyBotConfig),
     registerBotModule(MagisterModule, magisterBotConfig),
-    // registerBotModule(TwitterModule, twitterBotConfig),
     registerBotModule(WoltModule, woltBotConfig),
     registerBotModule(WorldlyModule, worldlyBotConfig),
   ],

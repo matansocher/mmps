@@ -47,10 +47,8 @@ To start the NestJS application:
 ## Available Bots
 **Chatbot** - An AI-powered conversational bot with advanced features
 **Coach** - Sports scheduler and predictions bot with game recommendations
-**Educator** - Educational bot that teaches interesting topics with daily lessons
 **Langly** - Language learning assistant bot
 **Magister** - A bot with various utility features
-**Twitter** - Twitter integration bot for automated interactions
 **Wolt** - Restaurant availability notifier for Wolt delivery service
 **Worldly** - Geography teacher and quiz bot
 

@@ -58,7 +58,7 @@ This document provides comprehensive guidance for working with the MMPS codebase
 ```
 src/
 ├── core/           # Core utilities, config, mongo setup
-├── features/       # Bot features (chatbot, coach, educator, etc.)
+├── features/       # Bot features (chatbot, coach, etc.)
 ├── services/       # External service integrations (openai, twitter, weather, etc.)
 ├── shared/         # Shared business logic used across features
 ├── main.ts         # Application entry point
@@ -502,7 +502,6 @@ async function initializeConnections(): Promise<void> {
   await Promise.all([
     createMongoConnection('chatbot-db'),
     createMongoConnection('coach-db'),
-    createMongoConnection('educator-db'),
   ]);
 }
 
