@@ -19,7 +19,6 @@ export async function getCompetitionMatches(competitionId: number): Promise<Comp
   }
   const enrichedMatches = await Promise.all(matchesRes.map((matchRes: MatchDetails) => getMatchDetails(matchRes.id)));
   const competitionRes = result.data?.competitions[0];
-  const { id, name } = competitionRes;
-  const competition: Competition = { id, name };
+  const competition: Competition = { id: competitionRes.id, name: competitionRes.name };
   return { competition, matches: enrichedMatches.filter(Boolean).filter((m) => m.gameTime === -1) };
 }

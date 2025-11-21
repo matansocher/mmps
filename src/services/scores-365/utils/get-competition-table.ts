@@ -25,7 +25,6 @@ export async function getCompetitionTable(competitionId: number): Promise<Compet
     gamesPlayed: gamePlayed,
   }));
   const competitionRawDetails = COMPETITIONS.find((c) => c.id === competitionId);
-  const { id, name } = relevantCompetitionData;
-  const competition = { id, name, icon: competitionRawDetails.icon };
+  const competition = { id: relevantCompetitionData.id, name: relevantCompetitionData.name, icon: competitionRawDetails.icon };
   return { competition, competitionTable } as CompetitionTableDetails;
 }

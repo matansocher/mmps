@@ -12,8 +12,7 @@ export async function getCompetitions(): Promise<Competition[]> {
       if (!relevantCompetition) {
         return undefined;
       }
-      const { id, name } = relevantCompetition;
-      return { id, name, icon: competition.icon, hasTable: competition.hasTable } as unknown as Competition;
+      return { id: relevantCompetition.id, name: relevantCompetition.name, icon: competition.icon, hasTable: competition.hasTable } as unknown as Competition;
     }),
   );
   return results.filter(Boolean);
