@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_OPUS_MODEL } from '../constants';
 import { provideAnthropicClient } from '../provide-anthropic-client';
 

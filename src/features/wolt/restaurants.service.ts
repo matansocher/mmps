@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 import { RestaurantsList, WoltRestaurant } from '@shared/wolt';
 import { getRestaurantsList } from './utils';
 import { TOO_OLD_LIST_THRESHOLD_MS } from './wolt.config';

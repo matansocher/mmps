@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 
 const logger = new Logger('ReactToMessage');
 

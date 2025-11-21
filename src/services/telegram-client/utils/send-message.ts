@@ -1,5 +1,5 @@
 import { Api } from 'telegram';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 import { Peer } from '../interface';
 import { provideTelegramClient } from '../provide-telegram-client';
 

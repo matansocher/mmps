@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
+import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { getAudioFromText } from '@services/openai';

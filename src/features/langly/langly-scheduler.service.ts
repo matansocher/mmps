@@ -1,6 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { Logger } from '@core/utils';
 import { getActiveUsers } from '@shared/langly';
 import { DAILY_CHALLENGE_HOURS } from './langly.config';
 import { LanglyService } from './langly.service';

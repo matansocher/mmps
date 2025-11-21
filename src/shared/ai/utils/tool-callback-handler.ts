@@ -1,6 +1,6 @@
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import { Serialized } from '@langchain/core/load/serializable';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 
 export type ToolCallbackOptions = {
   onToolStart?: (toolName: string, input: any, metadata?: Record<string, unknown>) => void | Promise<void>;

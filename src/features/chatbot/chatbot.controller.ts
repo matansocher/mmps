@@ -1,7 +1,8 @@
 import { Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
+import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';

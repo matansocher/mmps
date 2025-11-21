@@ -1,6 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { MY_USER_ID } from '@core/config';
+import { Logger } from '@core/utils';
 import { COURSE_LESSON_HOURS_OF_DAY, COURSE_REMINDER_HOUR_OF_DAY } from './magister.config';
 import { MagisterService } from './magister.service';
 import { getActiveCourseParticipation, getCourse, getParticipationsReadyForNextLesson } from './mongo';

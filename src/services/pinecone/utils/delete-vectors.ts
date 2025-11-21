@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 import { providePineconeClient } from './provide-pinecone-client';
 
 const logger = new Logger('PineconeDelete');

@@ -1,7 +1,8 @@
 import { toZonedTime } from 'date-fns-tz';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';

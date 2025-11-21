@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 import { VectorMetadata } from '../types';
 import { providePineconeClient } from './provide-pinecone-client';
 

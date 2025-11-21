@@ -1,10 +1,10 @@
 import * as bodyParser from 'body-parser';
 import { configDotenv } from 'dotenv';
 import { env } from 'node:process';
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from '@core/utils';
 
 configDotenv();
 

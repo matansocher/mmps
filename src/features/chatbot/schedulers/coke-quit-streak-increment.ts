@@ -1,5 +1,5 @@
-import { Logger } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
+import { Logger } from '@core/utils';
 import { getOrCreateTracker, incrementStreak } from '@shared/coke-quit';
 
 const logger = new Logger('CokeQuitStreakIncrementScheduler');

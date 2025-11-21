@@ -1,5 +1,5 @@
 import TelegramBot, { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 import { handleCommand } from '.';
 import { TELEGRAM_EVENTS, TelegramEventHandler } from '../constants';
 

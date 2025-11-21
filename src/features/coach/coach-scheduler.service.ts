@@ -1,6 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
 import { notify } from '@services/notifier';
 import { BLOCKED_ERROR, provideTelegramBot, sendShortenedMessage } from '@services/telegram';

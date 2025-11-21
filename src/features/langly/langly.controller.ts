@@ -1,6 +1,7 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
+import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
 import { createUserPreference, DifficultyLevel, getUserPreference, Language, saveUserDetails, updateUserPreference } from '@shared/langly';
