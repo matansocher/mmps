@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { pick as _pick } from 'lodash';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CompetitionTableDetails } from '../interface';
 import { APP_TYPE_ID, COMPETITIONS, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
@@ -26,6 +25,7 @@ export async function getCompetitionTable(competitionId: number): Promise<Compet
     gamesPlayed: gamePlayed,
   }));
   const competitionRawDetails = COMPETITIONS.find((c) => c.id === competitionId);
-  const competition = { ..._pick(relevantCompetitionData, ['id', 'name']), icon: competitionRawDetails.icon };
+  const { id, name } = relevantCompetitionData;
+  const competition = { id, name, icon: competitionRawDetails.icon };
   return { competition, competitionTable } as CompetitionTableDetails;
 }

@@ -1,3 +1,4 @@
+export { chunk } from './chunk';
 export { deleteFile } from './delete-file';
 export { extractAudioFromVideo } from './extract-audio-from-video';
 export { formatNumber } from './format-number';
