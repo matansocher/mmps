@@ -1,4 +1,4 @@
-import { chunk as _chunk } from 'lodash';
+import { chunk } from '@core/utils';
 import { CHAT_COMPLETIONS_MODEL } from '../constants';
 import { provideOpenAiClient } from '../provide-openai-client';
 
@@ -9,7 +9,7 @@ export async function getChatCompletion(prompt: string, userText: string = ''): 
     userMessages = [userText].filter(Boolean);
   } else {
     // array
-    userMessages = _chunk(userText, 100);
+    userMessages = chunk(userText, 100);
   }
   const result = await client.chat.completions.create({
     messages: [

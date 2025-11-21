@@ -1,4 +1,4 @@
-import { throttle } from 'lodash';
+import { throttle } from '@core/utils';
 import { TELEGRAM_MAX_MESSAGE_LENGTH } from '../constants';
 
 type StreamCallback = (content: string) => Promise<void> | void;

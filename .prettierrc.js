@@ -1,6 +1,12 @@
-module.exports = {
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export default {
   importOrderParserPlugins: ['typescript', 'decorators-legacy'],
-  plugins: [require.resolve('@trivago/prettier-plugin-sort-imports')],
+  plugins: ['@trivago/prettier-plugin-sort-imports'],
   printWidth: 200,
   tabWidth: 2,
   singleQuote: true,
