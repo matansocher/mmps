@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { pick as _pick } from 'lodash';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import type { ExpectedMatch, MatchDetails, Team } from '../interface';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
@@ -23,7 +22,7 @@ export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
 function parseExpectedMatch(match: ExpectedMatch): MatchDetails {
   const { id, startTime, statusText, gameTime, venue, stageName: stage, homeCompetitor, awayCompetitor, tvNetworks = [] } = match;
   const channel = tvNetworks[0]?.name;
-  const fields = ['id', 'name', 'symbolicName', 'score', 'color'];
+  const pickTeamFields = ({ id, name, symbolicName, score, color }: Team): Team => ({ id, name, symbolicName, score, color });
   return {
     id,
     startTime,
@@ -31,8 +30,8 @@ function parseExpectedMatch(match: ExpectedMatch): MatchDetails {
     gameTime,
     stage,
     venue: venue?.name,
-    homeCompetitor: _pick(homeCompetitor, fields) as Team,
-    awayCompetitor: _pick(awayCompetitor, fields) as Team,
+    homeCompetitor: pickTeamFields(homeCompetitor),
+    awayCompetitor: pickTeamFields(awayCompetitor),
     ...(channel ? { channel } : {}),
   } as MatchDetails;
 }
