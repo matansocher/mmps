@@ -16,7 +16,7 @@ export class MagisterSchedulerService {
       async () => {
         await this.handleCourseProgression();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -24,7 +24,7 @@ export class MagisterSchedulerService {
       async () => {
         await this.sendCourseReminders();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     setTimeout(() => {

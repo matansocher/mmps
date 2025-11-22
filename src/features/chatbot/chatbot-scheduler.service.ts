@@ -17,7 +17,7 @@ export class ChatbotSchedulerService {
       async () => {
         await this.handleDailySummary();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -25,7 +25,7 @@ export class ChatbotSchedulerService {
       async () => {
         await this.handleFootballUpdate();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -33,7 +33,7 @@ export class ChatbotSchedulerService {
       async () => {
         await this.handleSportsCalendar();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -41,7 +41,7 @@ export class ChatbotSchedulerService {
       async () => {
         await this.handleExerciseReminder();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -49,7 +49,7 @@ export class ChatbotSchedulerService {
       async () => {
         await this.handleWeeklyExerciseSummary();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -57,7 +57,7 @@ export class ChatbotSchedulerService {
       async () => {
         await this.handleReminderCheck();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -65,7 +65,7 @@ export class ChatbotSchedulerService {
       async () => {
         await this.handleEarthquakeMonitor();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     setTimeout(() => {

@@ -1,7 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { shouldNotifyAboutEarthquake } from '@features/chatbot';
-import { formatEarthquake, getEarthquakesAboveMagnitude, getRecentEarthquakes } from '@services/earthquake-api';
+import { formatEarthquake, getEarthquakesAboveMagnitude, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 
 const schema = z.object({
   action: z.enum(['recent', 'magnitude']).describe('Action to perform: "recent" for recent earthquakes, "magnitude" for earthquakes above a threshold'),

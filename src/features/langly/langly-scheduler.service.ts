@@ -16,7 +16,7 @@ export class LanglyBotSchedulerService {
       async () => {
         await this.handleDailyChallenge();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     setTimeout(() => {

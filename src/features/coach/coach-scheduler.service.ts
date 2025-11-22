@@ -20,7 +20,7 @@ export class CoachBotSchedulerService {
       async () => {
         await this.handleIntervalFlow();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     cron.schedule(
@@ -28,7 +28,7 @@ export class CoachBotSchedulerService {
       async () => {
         await this.handlePredictionsFlow();
       },
-      { timezone: DEFAULT_TIMEZONE }
+      { timezone: DEFAULT_TIMEZONE },
     );
 
     setTimeout(() => {
