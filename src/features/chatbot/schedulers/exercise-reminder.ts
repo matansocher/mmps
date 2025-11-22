@@ -1,6 +1,6 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { Logger } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
+import { Logger } from '@core/utils';
 import { getTodayExercise } from '@shared/trainer';
 import type { ChatbotService } from '../chatbot.service';
 

@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import ffmpeg from 'fluent-ffmpeg';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 
 export function setFfmpegPath() {
   const logger = new Logger(setFfmpegPath.name);

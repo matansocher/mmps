@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs';
 import { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
+import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
 import {
@@ -26,15 +26,14 @@ import { formatLessonProgress } from './utils';
 const loaderMessage = '📚 Give me a few moments to prepare your lesson...';
 const transcribeLoaderMessage = '🎧 Give me a few moments to transcribe it...';
 
-@Injectable()
-export class MagisterController implements OnModuleInit {
+export class MagisterController {
   private readonly logger = new Logger(MagisterController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(private readonly magisterService: MagisterService) {}
 
-  onModuleInit(): void {
+  init(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, COURSE, STATUS, NEXT } = BOT_CONFIG.commands;
 

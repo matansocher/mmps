@@ -1,2 +1,2 @@
-export { CoachModule } from './coach.module';
+export { initCoach } from './coach.init';
 export { BOT_CONFIG } from './coach.config';

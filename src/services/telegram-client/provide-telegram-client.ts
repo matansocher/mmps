@@ -1,7 +1,7 @@
 import { env } from 'node:process';
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 
 const logger = new Logger('TelegramClientProvider');
 let client: TelegramClient;
@@ -16,7 +16,7 @@ export async function provideTelegramClient(): Promise<TelegramClient> {
       phoneNumber: null,
       password: null,
       phoneCode: null,
-      onError: (err) => logger.error(err),
+      onError: (err) => logger.error(`${err}`),
     });
     return client;
   }

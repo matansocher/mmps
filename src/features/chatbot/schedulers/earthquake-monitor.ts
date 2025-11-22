@@ -1,9 +1,8 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { Logger } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
-import { type Earthquake, formatEarthquake, getRecentEarthquakes } from '@services/earthquake-api';
+import { Logger } from '@core/utils';
+import { type Earthquake, formatEarthquake, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 import { sendShortenedMessage } from '@services/telegram';
-import { shouldNotifyAboutEarthquake } from '../earthquake-filter.utils';
 
 const logger = new Logger('EarthquakeMonitorScheduler');
 

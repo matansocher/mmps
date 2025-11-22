@@ -1,7 +1,7 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
+import { Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
@@ -36,15 +36,14 @@ const getKeyboardOptions = () => {
   };
 };
 
-@Injectable()
-export class CoachController implements OnModuleInit {
+export class CoachController {
   private readonly logger = new Logger(CoachController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(private readonly coachService: CoachService) {}
 
-  onModuleInit(): void {
+  init(): void {
     const { COMMAND, TEXT, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, TABLES, MATCHES, ACTIONS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [

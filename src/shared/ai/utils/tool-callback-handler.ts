@@ -1,6 +1,6 @@
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import { Serialized } from '@langchain/core/load/serializable';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 
 export type ToolCallbackOptions = {
   onToolStart?: (toolName: string, input: any, metadata?: Record<string, unknown>) => void | Promise<void>;
@@ -28,19 +28,14 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
     this.toolStartTimes.set(runId, Date.now());
 
     if (this.options.enableLogging) {
-      this.logger.log(`🔧 Tool started: ${toolName}`, {
-        input: this.truncateInput(input),
-        runId,
-        parentRunId,
-        tags,
-      });
+      this.logger.log(`🔧 Tool started: ${toolName}, runId: ${runId}, parentRunId: ${parentRunId}, tags: ${tags}, input: ${this.truncateInput(input)}`);
     }
 
     if (this.options.onToolStart) {
       try {
         await this.options.onToolStart(toolName, input, metadata);
-      } catch (error) {
-        this.logger.error(`Error in onToolStart callback for ${toolName}:`, error);
+      } catch (err) {
+        this.logger.error(`Error in onToolStart callback for ${toolName}: ${err}`);
       }
     }
   }
@@ -53,19 +48,14 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
     const toolName = this.extractToolNameFromTags(tags);
 
     if (this.options.enableLogging) {
-      this.logger.log(`✅ Tool completed: ${toolName || 'unknown'}`, {
-        output: this.truncateOutput(output),
-        duration: duration ? `${duration}ms` : 'unknown',
-        runId,
-        parentRunId,
-      });
+      this.logger.log(`✅ Tool completed: ${toolName || 'unknown'}, runId: ${runId}, parentRunId: ${parentRunId}, duration: ${duration}, output: ${this.truncateOutput(output)}`);
     }
 
     if (this.options.onToolEnd) {
       try {
         await this.options.onToolEnd(toolName || 'unknown', output, { duration });
-      } catch (error) {
-        this.logger.error(`Error in onToolEnd callback for ${toolName}:`, error);
+      } catch (err) {
+        this.logger.error(`Error in onToolEnd callback for ${toolName}: ${err}`);
       }
     }
   }
@@ -78,19 +68,14 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
     const toolName = this.extractToolNameFromTags(tags);
 
     if (this.options.enableLogging) {
-      this.logger.error(`❌ Tool failed: ${toolName || 'unknown'}`, {
-        error: error.message,
-        duration: duration ? `${duration}ms` : 'unknown',
-        runId,
-        parentRunId,
-      });
+      this.logger.error(`❌ Tool failed: ${toolName || 'unknown'}, runId: ${runId}, parentRunId: ${parentRunId}, duration: ${duration}, error: ${error.message}`);
     }
 
     if (this.options.onToolError) {
       try {
         await this.options.onToolError(toolName || 'unknown', error, { duration });
-      } catch (callbackError) {
-        this.logger.error(`Error in onToolError callback for ${toolName}:`, callbackError);
+      } catch (err) {
+        this.logger.error(`Error in onToolError callback for ${toolName}: ${err}`);
       }
     }
   }

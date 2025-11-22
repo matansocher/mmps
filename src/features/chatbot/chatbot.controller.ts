@@ -1,7 +1,7 @@
 import { Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
+import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
@@ -9,15 +9,14 @@ import { downloadAudio, getBotToken, getMessageData, MessageLoader, provideTeleg
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
-@Injectable()
-export class ChatbotController implements OnModuleInit {
+export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(private readonly chatbotService: ChatbotService) {}
 
-  onModuleInit(): void {
+  init(): void {
     const { COMMAND, TEXT, PHOTO, AUDIO, VOICE } = TELEGRAM_EVENTS;
     const { START, HELP } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [
@@ -65,7 +64,6 @@ export class ChatbotController implements OnModuleInit {
   private async handleBotResponse(chatId: number, replyText: string, toolResults: any[]): Promise<void> {
     const ttsResult = toolResults.find((result) => result.toolName === 'text_to_speech');
     const mapsResult = toolResults.find((result) => result.toolName === 'google_maps_place');
-    const cokeQuitResult = toolResults.find((result) => result.toolName === 'coke_quit_tracker');
 
     if (ttsResult && !ttsResult.error) {
       const audioFilePath = ttsResult.data;
@@ -86,17 +84,6 @@ export class ChatbotController implements OnModuleInit {
         deleteFile(imageFilePath);
       } catch (err) {
         this.logger.error(`Error sending voice message: ${err}`);
-        await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
-      }
-    } else if (cokeQuitResult && !cokeQuitResult.error && cokeQuitResult.data?.imageUrl) {
-      const imageUrl = cokeQuitResult.data.imageUrl;
-      try {
-        await this.bot.sendPhoto(chatId, imageUrl, { caption: replyText }).catch((err) => {
-          this.logger.error(`Error sending coke image: ${err}. Sending as text message instead.`);
-          this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' }).catch(() => {});
-        });
-      } catch (err) {
-        this.logger.error(`Error sending coke quit image: ${err}`);
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
     } else {

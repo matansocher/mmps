@@ -10,7 +10,7 @@ module.exports = {
   importOrderSeparation: false,
   importOrderSortSpecifiers: true,
   importOrderCaseInsensitive: true,
-  importOrder: ['<THIRD_PARTY_MODULES>', '^@nestjs/(.*)$', '^@core/(.*)$', '^@decorators/(.*)$', '^@features/(.*)$', '^@mocks/(.*)$', '^@services/(.*)$', '^@shared/(.*)$', '^@test/(.*)$', '^[./]'],
+  importOrder: ['<THIRD_PARTY_MODULES>', '^@core/(.*)$', '^@decorators/(.*)$', '^@features/(.*)$', '^@mocks/(.*)$', '^@services/(.*)$', '^@shared/(.*)$', '^@test/(.*)$', '^[./]'],
   overrides: [
     {
       files: '*.json',

@@ -1,6 +1,6 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
 import { notify } from '@services/notifier';
 import { BLOCKED_ERROR, provideTelegramBot, sendShortenedMessage } from '@services/telegram';
@@ -8,14 +8,29 @@ import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@sha
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
-@Injectable()
-export class CoachBotSchedulerService implements OnModuleInit {
+export class CoachBotSchedulerService {
   private readonly logger = new Logger(CoachBotSchedulerService.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   constructor(private readonly coachService: CoachService) {}
 
-  onModuleInit(): void {
+  init(): void {
+    cron.schedule(
+      `59 12,23 * * *`,
+      async () => {
+        await this.handleIntervalFlow();
+      },
+      { timezone: DEFAULT_TIMEZONE },
+    );
+
+    cron.schedule(
+      `0 13 * * *`,
+      async () => {
+        await this.handlePredictionsFlow();
+      },
+      { timezone: DEFAULT_TIMEZONE },
+    );
+
     setTimeout(() => {
       // this.handleIntervalFlow(); // for testing purposes
       // this.handlePredictionsFlow(); // for testing purposes
@@ -23,8 +38,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     }, 8000);
   }
 
-  @Cron(`59 12,23 * * *`, { name: 'coach-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handleIntervalFlow(): Promise<void> {
+  private async handleIntervalFlow(): Promise<void> {
     try {
       const subscriptions = await getActiveSubscriptions();
       if (!subscriptions?.length) {
@@ -55,8 +69,7 @@ export class CoachBotSchedulerService implements OnModuleInit {
     }
   }
 
-  @Cron(`0 13 * * *`, { name: 'coach-predictions-scheduler', timeZone: DEFAULT_TIMEZONE })
-  async handlePredictionsFlow(): Promise<void> {
+  private async handlePredictionsFlow(): Promise<void> {
     try {
       const subscriptions = await getActiveSubscriptions();
       if (!subscriptions?.length) {

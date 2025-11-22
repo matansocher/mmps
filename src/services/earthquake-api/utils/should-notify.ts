@@ -1,4 +1,4 @@
-import { Earthquake } from '@services/earthquake-api';
+import { Earthquake } from '../types';
 
 // Jerusalem coordinates for proximity checking
 const JERUSALEM_COORDS = {

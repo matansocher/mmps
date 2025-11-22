@@ -1,6 +1,6 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import { Logger } from '@nestjs/common';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { Logger } from '@core/utils';
 import { getDueReminders, reactivateSnoozedReminders, updateReminderStatus } from '@shared/reminders';
 
 const logger = new Logger('ReminderCheckScheduler');

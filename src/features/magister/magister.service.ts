@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@core/utils';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
 import { getInlineKeyboardMarkup, provideTelegramBot, sendStyledMessage } from '@services/telegram';
@@ -53,7 +53,6 @@ const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) =>
   return getInlineKeyboardMarkup(inlineKeyboardButtons);
 };
 
-@Injectable()
 export class MagisterService {
   private readonly logger = new Logger(MagisterService.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);

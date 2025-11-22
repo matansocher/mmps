@@ -1,5 +1,5 @@
 import { Earthquake } from '@services/earthquake-api';
-import { shouldNotifyAboutEarthquake } from './earthquake-filter.utils';
+import { shouldNotifyAboutEarthquake } from './should-notify';
 
 describe('Earthquake filtering logic', () => {
   describe('shouldNotifyAboutEarthquake()', () => {

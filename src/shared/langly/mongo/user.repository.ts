@@ -1,5 +1,5 @@
-import { Logger } from '@nestjs/common';
 import { getMongoCollection, User } from '@core/mongo';
+import { Logger } from '@core/utils';
 import { DB_NAME } from './index';
 
 const logger = new Logger('LanglyUserRepository');
