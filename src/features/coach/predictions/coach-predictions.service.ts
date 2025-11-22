@@ -3,14 +3,12 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { MemorySaver } from '@langchain/langgraph';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { env } from 'node:process';
-import { Injectable } from '@nestjs/common';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
 import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
 import { coachPredictionsAgent } from './agent';
 
-@Injectable()
 export class CoachPredictionsService {
   private readonly logger = new Logger(CoachPredictionsService.name);
   private readonly agent: any;

@@ -2,8 +2,7 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
-import { Injectable } from '@nestjs/common';
-import { DEFAULT_TIMEZONE } from '@core/config/main.config';
+import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
 import { ToolCallbackOptions } from '@shared/ai';
@@ -12,7 +11,6 @@ import { AiService, createAgent } from './agent';
 import { ChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
-@Injectable()
 export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
   private readonly aiService: AiService;
@@ -46,7 +44,8 @@ export class ChatbotService {
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
-      const result = await this.aiService.invoke(contextualMessage, { threadId: chatId.toString() });
+      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+      const result = await this.aiService.invoke(contextualMessage, { threadId });
       return formatAgentResponse(result);
     } catch (err) {
       this.logger.error(`Error processing message for user ${chatId}: ${err}`);

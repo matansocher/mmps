@@ -1,5 +1,4 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
@@ -8,14 +7,13 @@ import { createUserPreference, DifficultyLevel, getUserPreference, Language, sav
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 import { LanglyService } from './langly.service';
 
-@Injectable()
-export class LanglyController implements OnModuleInit {
+export class LanglyController {
   private readonly logger = new Logger(LanglyController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   constructor(private readonly langlyService: LanglyService) {}
 
-  onModuleInit(): void {
+  init(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, CHALLENGE, ACTIONS } = BOT_CONFIG.commands;
 

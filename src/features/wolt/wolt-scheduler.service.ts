@@ -1,6 +1,4 @@
 import { toZonedTime } from 'date-fns-tz';
-import { Injectable } from '@nestjs/common';
-import { SchedulerRegistry } from '@nestjs/schedule';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
@@ -13,20 +11,19 @@ export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANAL
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
-@Injectable()
 export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
-
-  constructor(private readonly schedulerRegistry: SchedulerRegistry) {}
+  private timeouts: Map<string, NodeJS.Timeout> = new Map();
 
   async scheduleInterval(): Promise<void> {
     const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];
 
     // Clear existing timeout if it exists
-    try {
-      this.schedulerRegistry.deleteTimeout(JOB_NAME);
-    } catch {}
+    const existingTimeout = this.timeouts.get(JOB_NAME);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
 
     await this.handleIntervalFlow();
 
@@ -34,7 +31,7 @@ export class WoltSchedulerService {
       this.scheduleInterval();
     }, secondsToNextRefresh * 1000);
 
-    this.schedulerRegistry.addTimeout(JOB_NAME, timeout);
+    this.timeouts.set(JOB_NAME, timeout);
   }
 
   async handleIntervalFlow(): Promise<void> {

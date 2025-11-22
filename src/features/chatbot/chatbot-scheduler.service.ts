@@ -1,5 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
@@ -18,18 +17,95 @@ import {
 } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
-@Injectable()
-export class ChatbotSchedulerService implements OnModuleInit {
+export class ChatbotSchedulerService {
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   constructor(private readonly chatbotService: ChatbotService) {}
 
-  onModuleInit(): void {
+  init(): void {
+    cron.schedule(
+      `00 23 * * *`,
+      async () => {
+        await this.handleDailySummary();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `59 12,23 * * *`,
+      async () => {
+        await this.handleFootballUpdate();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `00 10 * * 0,3`,
+      async () => {
+        await this.handleSportsCalendar();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `0 19 * * *`,
+      async () => {
+        await this.handleExerciseReminder();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `0 22 * * 6`,
+      async () => {
+        await this.handleWeeklyExerciseSummary();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `15 * * * *`,
+      async () => {
+        await this.handleReminderCheck();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `*/${LOOKBACK_MINUTES} * * * *`,
+      async () => {
+        await this.handleEarthquakeMonitor();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `10 0,22,23 * * *`,
+      async () => {
+        await this.handleCokeQuitReminder();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `0 22 * * 6`,
+      async () => {
+        await this.handleCokeQuitWeeklySummary();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    cron.schedule(
+      `0 0 * * *`,
+      async () => {
+        await this.handleCokeQuitStreakIncrement();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
-      // this.handleFootballPredictionsResults(); // for testing purposes
-      // this.handleFootballPredictions(); // for testing purposes
       // this.handleSportsCalendar(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
       // this.handleWeeklyExerciseSummary(); // for testing purposes
@@ -41,63 +117,43 @@ export class ChatbotSchedulerService implements OnModuleInit {
     }, 8000);
   }
 
-  @Cron(`00 23 * * *`, { name: 'chatbot-daily-summary', timeZone: DEFAULT_TIMEZONE })
-  async handleDailySummary(): Promise<void> {
+  private async handleDailySummary(): Promise<void> {
     await dailySummary(this.bot, this.chatbotService);
   }
 
-  @Cron(`59 12,23 * * *`, { name: 'chatbot-football-update-midday', timeZone: DEFAULT_TIMEZONE })
-  async handleFootballUpdate(): Promise<void> {
+  private async handleFootballUpdate(): Promise<void> {
     await footballUpdate(this.bot, this.chatbotService);
   }
 
-  // @Cron(`00 13 * * *`, { name: 'chatbot-football-predictions', timeZone: DEFAULT_TIMEZONE })
-  // async handleFootballPredictions(): Promise<void> {
-  //   await footballPredictions(this.bot, this.chatbotService);
-  // }
-
-  // @Cron(`59 23 * * *`, { name: 'chatbot-football-update-evening', timeZone: DEFAULT_TIMEZONE })
-  // async handleFootballPredictionsResults(): Promise<void> {
-  //   await footballPredictionsResults(this.bot, this.chatbotService);
-  // }
-
-  @Cron(`00 10 * * 0,3`, { name: 'chatbot-important-games-calendar', timeZone: DEFAULT_TIMEZONE })
-  async handleSportsCalendar(): Promise<void> {
+  private async handleSportsCalendar(): Promise<void> {
     await sportsCalendar(this.bot, this.chatbotService);
   }
 
-  @Cron(`0 19 * * *`, { name: 'chatbot-exercise-reminder', timeZone: DEFAULT_TIMEZONE })
-  async handleExerciseReminder(): Promise<void> {
+  private async handleExerciseReminder(): Promise<void> {
     await exerciseReminder(this.bot, this.chatbotService);
   }
 
-  @Cron(`0 22 * * 6`, { name: 'chatbot-weekly-exercise-summary', timeZone: DEFAULT_TIMEZONE })
-  async handleWeeklyExerciseSummary(): Promise<void> {
+  private async handleWeeklyExerciseSummary(): Promise<void> {
     await weeklyExerciseSummary(this.bot, this.chatbotService);
   }
 
-  @Cron(`15 * * * *`, { name: 'chatbot-reminder-check', timeZone: DEFAULT_TIMEZONE })
-  async handleReminderCheck(): Promise<void> {
+  private async handleReminderCheck(): Promise<void> {
     await reminderCheck(this.bot);
   }
 
-  @Cron(`*/${LOOKBACK_MINUTES} * * * *`, { name: 'chatbot-earthquake-monitor', timeZone: DEFAULT_TIMEZONE })
-  async handleEarthquakeMonitor(): Promise<void> {
+  private async handleEarthquakeMonitor(): Promise<void> {
     await earthquakeMonitor(this.bot);
   }
 
-  @Cron(`10 0,22,23 * * *`, { name: 'chatbot-coke-quit-reminder', timeZone: DEFAULT_TIMEZONE })
-  async handleCokeQuitReminder(): Promise<void> {
+  private async handleCokeQuitReminder(): Promise<void> {
     await cokeQuitReminder(this.bot, this.chatbotService);
   }
 
-  @Cron(`0 22 * * 6`, { name: 'chatbot-coke-quit-weekly-summary', timeZone: DEFAULT_TIMEZONE })
-  async handleCokeQuitWeeklySummary(): Promise<void> {
+  private async handleCokeQuitWeeklySummary(): Promise<void> {
     await cokeQuitWeeklySummary(this.bot, this.chatbotService);
   }
 
-  @Cron(`0 0 * * *`, { name: 'chatbot-coke-quit-streak-increment', timeZone: DEFAULT_TIMEZONE })
-  async handleCokeQuitStreakIncrement(): Promise<void> {
+  private async handleCokeQuitStreakIncrement(): Promise<void> {
     await cokeQuitStreakIncrement();
   }
 }

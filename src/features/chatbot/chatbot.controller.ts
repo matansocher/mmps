@@ -1,6 +1,5 @@
 import { Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
@@ -10,15 +9,14 @@ import { downloadAudio, getBotToken, getMessageData, MessageLoader, provideTeleg
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
-@Injectable()
-export class ChatbotController implements OnModuleInit {
+export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(private readonly chatbotService: ChatbotService) {}
 
-  onModuleInit(): void {
+  init(): void {
     const { COMMAND, TEXT, PHOTO, AUDIO, VOICE } = TELEGRAM_EVENTS;
     const { START, HELP } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [

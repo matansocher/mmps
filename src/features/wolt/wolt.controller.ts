@@ -1,5 +1,4 @@
 import { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
-import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
@@ -22,12 +21,11 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATO
 
 const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר לנסות שוב מאוחר יותר 😥`;
 
-@Injectable()
-export class WoltController implements OnModuleInit {
+export class WoltController {
   private readonly logger = new Logger(WoltController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  onModuleInit(): void {
+  init(): void {
     const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, LIST, CONTACT } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [

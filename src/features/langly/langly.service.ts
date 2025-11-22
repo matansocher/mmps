@@ -1,5 +1,4 @@
 import { promises as fs } from 'fs';
-import { Injectable } from '@nestjs/common';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
@@ -19,7 +18,6 @@ import {
 } from '@shared/langly';
 import { BOT_ACTIONS, BOT_CONFIG, getDifficultyPrompt, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 
-@Injectable()
 export class LanglyService {
   private readonly logger = new Logger(LanglyService.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);

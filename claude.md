@@ -25,16 +25,17 @@ This document provides comprehensive guidance for working with the MMPS codebase
 ## Tech Stack
 
 ### Core Framework
-- **NestJS v10.0.0** - TypeScript framework for scalable server-side applications
+- **Plain TypeScript** - No framework, direct Node.js application
 - **Node.js 20.x**
 - **TypeScript 5.1.3** with ES2021 target
-- **Express** as HTTP server
+- **node-cron** for scheduled tasks
 
 ### Key Dependencies
 - **AI/LLM**: Anthropic SDK, OpenAI, Google Generative AI, Langchain, LangGraph
 - **Database**: MongoDB with native driver
 - **Bot Platform**: Telegram Bot API (node-telegram-bot-api)
 - **Date Handling**: date-fns, date-fns-tz
+- **Scheduling**: node-cron
 - **Testing**: Jest with ts-jest
 - **Code Quality**: ESLint, Prettier with import sorting plugin
 - **Git Hooks**: Husky, Commitlint (conventional commits)
@@ -61,17 +62,16 @@ src/
 ├── features/       # Bot features (chatbot, coach, etc.)
 ├── services/       # External service integrations (openai, twitter, weather, etc.)
 ├── shared/         # Shared business logic used across features
-├── main.ts         # Application entry point
-└── app.module.ts   # Root module with conditional bot loading
+└── main.ts         # Application entry point with conditional bot loading
 ```
 
-### Feature Module Pattern
+### Feature Pattern
 
 Each feature follows a consistent structure:
 
 ```
 features/{name}/
-├── {name}.module.ts              # NestJS module
+├── {name}.init.ts                # Initialization with manual DI
 ├── {name}.controller.ts          # Telegram bot handlers
 ├── {name}.service.ts             # Business logic
 ├── {name}-scheduler.service.ts   # Scheduled tasks (if needed)
@@ -198,14 +198,13 @@ export async function createReminder(data: CreateReminderData): Promise<InsertOn
 ```
 
 #### Use Classes For:
-- NestJS services (with `@Injectable()`)
-- NestJS controllers (with `@Injectable()`)
+- Services with state management
+- Controllers (Telegram bot handlers)
 - Base/abstract classes for shared behavior
 - When state management is required
 
 ```typescript
-// ✅ Classes for NestJS services
-@Injectable()
+// ✅ Classes for services
 export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
   private readonly aiService: AiService;
@@ -258,14 +257,16 @@ export class BaseCache<T> {
   }
 }
 
-// ✅ Classes for NestJS controllers
-@Injectable()
+// ✅ Classes for controllers
 export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
   private readonly bot: TelegramBot;
 
   constructor(private readonly chatbotService: ChatbotService) {
     this.bot = new TelegramBot(env.TELEGRAM_BOT_TOKEN, { polling: true });
+  }
+
+  init(): void {
     this.registerHandlers();
   }
 
@@ -311,9 +312,9 @@ export type Reminder = {
 ### Files
 - **Kebab-case** for all files: `chatbot-scheduler.service.ts`, `get-chat-completion.ts`
 - **Suffixes**:
-  - `.service.ts` - NestJS services
-  - `.controller.ts` - NestJS controllers
-  - `.module.ts` - NestJS modules
+  - `.service.ts` - Service classes
+  - `.controller.ts` - Controller classes (Telegram bot handlers)
+  - `.init.ts` - Initialization files with manual dependency injection
   - `.config.ts` - Configuration files
   - `.spec.ts` - Test files
 - **Special names**:
@@ -369,8 +370,9 @@ export type UpdateUserData = { /* ... */ };
 
 ### Classes
 - **PascalCase**: `ChatbotService`, `BaseCache`, `MessageLoader`
-- Service suffix for NestJS services: `ChatbotService`, `WeatherService`
-- Controller suffix for NestJS controllers: `ChatbotController`
+- Service suffix for service classes: `ChatbotService`, `WeatherService`
+- Controller suffix for controller classes: `ChatbotController`
+- Scheduler suffix for scheduler classes: `ChatbotSchedulerService`
 
 ---
 
@@ -410,7 +412,6 @@ Use `import type` for type-only imports:
 
 ```typescript
 import type { ObjectId } from 'mongodb';
-import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { TelegramBot } from 'node-telegram-bot-api';
 ```
 
@@ -618,10 +619,9 @@ await connectGithubMcp().catch((err) => console.error(err));
 
 ### 4. Logger Usage
 
-Use NestJS Logger for debugging and error tracking:
+Use the custom Logger class for debugging and error tracking:
 
 ```typescript
-@Injectable()
 export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
 
@@ -753,45 +753,56 @@ describe('hasHebrew()', () => {
 
 ## Architecture Patterns
 
-### 1. NestJS Module Architecture
+### 1. Manual Dependency Injection with Init Functions
 
-Each bot/feature is a self-contained NestJS module:
+Each bot/feature has an initialization function with manual dependency injection:
 
 ```typescript
-@Module({
-  imports: [],
-  controllers: [],
-  providers: [ChatbotService, ChatbotController],
-  exports: [ChatbotService],
-})
-export class ChatbotModule implements OnModuleInit {
-  private readonly logger = new Logger(ChatbotModule.name);
+// features/chatbot/chatbot.init.ts
+export async function initChatbot(): Promise<void> {
+  // Connect to required databases
+  const mongoDbNames = [TRAINER_DB_NAME, COACH_DB_NAME, COKE_DB_NAME, COOKER_DB_NAME];
+  await Promise.all([
+    ...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)),
+    connectGithubMcp().catch((err) => {
+      console.error(`Failed to connect to GitHub MCP: ${err}`);
+    }),
+  ]);
 
-  constructor(private readonly chatbotController: ChatbotController) {}
+  // Manual dependency injection - instantiate in correct order
+  const chatbotService = new ChatbotService();
+  const chatbotController = new ChatbotController(chatbotService);
+  const chatbotScheduler = new ChatbotSchedulerService(chatbotService);
 
-  async onModuleInit() {
-    this.logger.log('ChatbotModule initialized');
-  }
+  // Initialize controller and scheduler
+  chatbotController.init();
+  chatbotScheduler.init();
 }
 ```
 
-**Root module with conditional loading:**
+**Main.ts with conditional loading:**
 
 ```typescript
-const activeModules = [];
+async function bootstrap() {
+  const logger = new Logger('main.ts');
+  logger.log(`NODE_VERSION: ${process.versions.node}`);
 
-if (env.LOCAL_ACTIVE_BOT_ID === 'chatbot' || !env.LOCAL_ACTIVE_BOT_ID) {
-  activeModules.push(ChatbotModule);
+  const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
+
+  if (shouldInitBot(chatbotBotConfig)) {
+    await initChatbot();
+    logger.log(`${chatbotBotConfig.name} initialized`);
+  }
+
+  if (shouldInitBot(coachBotConfig)) {
+    await initCoach();
+    logger.log(`${coachBotConfig.name} initialized`);
+  }
+
+  logger.log('MMPS service is running');
 }
 
-if (env.LOCAL_ACTIVE_BOT_ID === 'coach' || !env.LOCAL_ACTIVE_BOT_ID) {
-  activeModules.push(CoachModule);
-}
-
-@Module({
-  imports: activeModules,
-})
-export class AppModule {}
+bootstrap();
 ```
 
 ### 2. Repository Pattern
@@ -849,15 +860,74 @@ export const BOT_CONFIG = {
 };
 ```
 
-### 4. Service Layer Architecture
+### 4. Cron Scheduler Pattern
+
+Scheduler services use `node-cron` for periodic tasks:
+
+```typescript
+import cron from 'node-cron';
+import { DEFAULT_TIMEZONE } from '@core/config';
+
+export class ChatbotSchedulerService {
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
+  constructor(private readonly chatbotService: ChatbotService) {}
+
+  init(): void {
+    // Daily summary at 23:00
+    cron.schedule(
+      `00 23 * * *`,
+      async () => {
+        await this.handleDailySummary();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    // Football update at 12:59 and 23:59
+    cron.schedule(
+      `59 12,23 * * *`,
+      async () => {
+        await this.handleFootballUpdate();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+
+    // Exercise reminder every day at 19:00
+    cron.schedule(
+      `0 19 * * *`,
+      async () => {
+        await this.handleExerciseReminder();
+      },
+      { timezone: DEFAULT_TIMEZONE }
+    );
+  }
+
+  private async handleDailySummary(): Promise<void> {
+    await dailySummary(this.bot, this.chatbotService);
+  }
+
+  private async handleFootballUpdate(): Promise<void> {
+    await footballUpdate(this.bot, this.chatbotService);
+  }
+
+  private async handleExerciseReminder(): Promise<void> {
+    await exerciseReminder(this.bot, this.chatbotService);
+  }
+}
+```
+
+### 5. Service Layer Architecture
 
 **Controller → Service → Repository/External API**
 
 ```typescript
 // Controller handles Telegram bot interactions
-@Injectable()
 export class ChatbotController {
   constructor(private readonly chatbotService: ChatbotService) {}
+
+  init(): void {
+    this.registerHandlers();
+  }
 
   private async handleMessage(msg: TelegramBot.Message): Promise<void> {
     const response = await this.chatbotService.processMessage(msg.text, msg.chat.id);
@@ -866,7 +936,6 @@ export class ChatbotController {
 }
 
 // Service contains business logic
-@Injectable()
 export class ChatbotService {
   async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {
     const user = await getUserByChatId(chatId); // Repository call
@@ -876,22 +945,21 @@ export class ChatbotService {
 }
 ```
 
-### 5. Barrel Exports Pattern
+### 6. Barrel Exports Pattern
 
 Every directory has an `index.ts` for clean imports:
 
 ```typescript
 // features/chatbot/index.ts
-export { ChatbotModule } from './chatbot.module';
-export { ChatbotService } from './chatbot.service';
+export { initChatbot } from './chatbot.init';
 export { BOT_CONFIG } from './chatbot.config';
 export * from './types';
 
 // Enables clean imports:
-import { ChatbotModule, BOT_CONFIG } from '@features/chatbot';
+import { initChatbot, BOT_CONFIG } from '@features/chatbot';
 ```
 
-### 6. Caching Pattern
+### 7. Caching Pattern
 
 Base cache class for inheritance:
 
@@ -1099,7 +1167,7 @@ import { DEFAULT_TIMEZONE } from '../../../core/config/main.config';
 1. **Use `type` keyword exclusively** - NEVER use `interface`
 2. **Mark types as `readonly`** for immutability
 3. **Use functions for utilities** and stateless operations
-4. **Use classes for NestJS services** and stateful logic
+4. **Use classes for services and controllers** with state management
 5. **Export via barrel `index.ts` files** in every directory
 6. **Use async/await** exclusively (NEVER `.then()` chains)
 7. **Keep functions small and focused** - single responsibility
@@ -1112,10 +1180,12 @@ import { DEFAULT_TIMEZONE } from '../../../core/config/main.config';
 14. **Use path aliases** (`@core/*`, `@features/*`, etc.)
 15. **Validate inputs and throw errors** for invalid data
 16. **Use repository functions** (not classes) for database operations
-17. **Follow the feature module pattern** for new features
+17. **Follow the init function pattern** for new features
 18. **Use `import type`** for type-only imports
 19. **Use `env` from `node:process`** for environment variables
 20. **Use `date-fns` and `date-fns-tz`** for date operations
+21. **Use `node-cron`** for scheduled tasks with timezone support
+22. **Create `init()` methods** in controllers and schedulers for setup
 
 ### ❌ DON'T:
 
@@ -1151,7 +1221,8 @@ When creating new code, ask yourself:
 - [ ] Am I using functions for utilities and classes for services?
 - [ ] Are my file names in kebab-case?
 - [ ] Do I have a `types.ts` file for type definitions?
-- [ ] Do I have an `index.ts` file for barrel exports?
+- [ ] Do I have an `index.ts` file with barrel exports?
+- [ ] Do I have an `init.ts` file for feature initialization?
 - [ ] Am I using async/await instead of `.then()` chains?
 - [ ] Are my Promise return types explicitly typed?
 - [ ] Am I using named exports (not default exports)?
@@ -1162,6 +1233,8 @@ When creating new code, ask yourself:
 - [ ] Is my code self-documenting (no JSDoc needed)?
 - [ ] Am I following the repository pattern for DB operations?
 - [ ] Am I using `env` from `node:process` for environment variables?
+- [ ] Do controllers and schedulers have `init()` methods?
+- [ ] Am I using `node-cron` with timezone for scheduled tasks?
 
 ---
 
@@ -1177,7 +1250,7 @@ Conditional bot loading based on `LOCAL_ACTIVE_BOT_ID` environment variable allo
 Heavy use of LangChain, Anthropic, and OpenAI for AI-powered features. Tool/plugin architecture for extensibility.
 
 ### Scheduler Services
-Many features have separate scheduler services for periodic tasks (e.g., sending reminders, fetching updates).
+Many features have separate scheduler services using `node-cron` for periodic tasks (e.g., sending reminders, fetching updates). Each scheduler has an `init()` method that registers all cron jobs.
 
 ### Message Loaders
 Custom pattern for showing loading states in Telegram while processing AI requests.
@@ -1194,9 +1267,10 @@ This codebase follows a **pragmatic, readable style** with consistent patterns a
 - **Developer velocity** through clear conventions
 - **Type safety** through extensive use of TypeScript types (not interfaces)
 - **Immutability** through `readonly` properties
-- **Simplicity** through functional programming for utilities
-- **Modularity** through NestJS architecture
+- **Simplicity** through functional programming for utilities and manual dependency injection
+- **Modularity** through feature-based architecture with init functions
 - **Maintainability** through self-documenting code
 - **Consistency** through automated formatting and linting
+- **No framework overhead** - plain TypeScript with node-cron for scheduling
 
 When in doubt, look at existing code in the `features/` or `services/` directories for examples that match these patterns.

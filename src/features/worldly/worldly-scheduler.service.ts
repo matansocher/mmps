@@ -1,5 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import cron from 'node-cron';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getHourInTimezone } from '@core/utils';
 import { notify } from '@services/notifier';
@@ -9,15 +8,24 @@ import { WorldlyService } from './worldly.service';
 
 const INTERVAL_HOURS_BY_PRIORITY = [12, 17, 20];
 
-@Injectable()
-export class WorldlyBotSchedulerService implements OnModuleInit {
+export class WorldlyBotSchedulerService {
   constructor(private readonly worldlyService: WorldlyService) {}
 
-  onModuleInit(): void {
-    // this.handleIntervalFlow(); // for testing purposes
+  init(): void {
+    cron.schedule(
+      `0 ${INTERVAL_HOURS_BY_PRIORITY.join(',')} * * *`,
+      async () => {
+        await this.handleIntervalFlow();
+      },
+      { timezone: DEFAULT_TIMEZONE },
+    );
+
+    // For testing
+    setTimeout(() => {
+      // this.handleIntervalFlow();
+    }, 8000);
   }
 
-  @Cron(`0 ${INTERVAL_HOURS_BY_PRIORITY.join(',')} * * *`, { name: 'worldly-scheduler', timeZone: DEFAULT_TIMEZONE })
   async handleIntervalFlow(): Promise<void> {
     try {
       const subscriptions = await getActiveSubscriptions();

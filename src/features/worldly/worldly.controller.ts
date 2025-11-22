@@ -1,6 +1,5 @@
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { env } from 'node:process';
-import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { sleep } from '@core/utils';
@@ -25,15 +24,14 @@ import { WorldlyService } from './worldly.service';
 
 const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
 
-@Injectable()
-export class WorldlyController implements OnModuleInit {
+export class WorldlyController {
   private readonly logger = new Logger(WorldlyController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
   private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(private readonly worldlyService: WorldlyService) {}
 
-  onModuleInit(): void {
+  init(): void {
     const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
     const handlers: TelegramEventHandler[] = [

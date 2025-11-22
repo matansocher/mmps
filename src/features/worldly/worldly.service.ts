@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import { Injectable } from '@nestjs/common';
 import { generateRandomString, shuffleArray } from '@core/utils';
 import { notify } from '@services/notifier';
 import { BLOCKED_ERROR, getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
@@ -7,7 +6,6 @@ import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomStat
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 
-@Injectable()
 export class WorldlyService {
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 

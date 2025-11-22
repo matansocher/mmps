@@ -1,4 +1,3 @@
-import { Module, OnModuleInit } from '@nestjs/common';
 import { createMongoConnection } from '@core/mongo';
 import { connectGithubMcp } from '@shared/ai';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
@@ -12,17 +11,19 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 
-@Module({
-  providers: [ChatbotController, ChatbotSchedulerService, ChatbotService],
-})
-export class ChatbotModule implements OnModuleInit {
-  async onModuleInit() {
-    const mongoDbNames = [TRAINER_DB_NAME, COACH_DB_NAME, COKE_DB_NAME, COOKER_DB_NAME, WOLT_DB_NAME, WORLDLY_DB_NAME, REMINDERS_DB_NAME];
-    await Promise.all([
-      ...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)),
-      await connectGithubMcp().catch((err) => {
-        console.error(`[ChatbotModule] Failed to connect to GitHub MCP: ${err}`);
-      }),
-    ]);
-  }
+export async function initChatbot(): Promise<void> {
+  const mongoDbNames = [TRAINER_DB_NAME, COACH_DB_NAME, COKE_DB_NAME, COOKER_DB_NAME, WOLT_DB_NAME, WORLDLY_DB_NAME, REMINDERS_DB_NAME];
+  await Promise.all([
+    ...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)),
+    connectGithubMcp().catch((err) => {
+      console.error(`[ChatbotModule] Failed to connect to GitHub MCP: ${err}`);
+    }),
+  ]);
+
+  const chatbotService = new ChatbotService();
+  const chatbotController = new ChatbotController(chatbotService);
+  const chatbotScheduler = new ChatbotSchedulerService(chatbotService);
+
+  chatbotController.init();
+  chatbotScheduler.init();
 }

@@ -16,7 +16,7 @@ export async function provideTelegramClient(): Promise<TelegramClient> {
       phoneNumber: null,
       password: null,
       phoneCode: null,
-      onError: (err) => logger.error(err),
+      onError: (err) => logger.error(`${err}`),
     });
     return client;
   }
