@@ -761,7 +761,7 @@ Each bot/feature has an initialization function with manual dependency injection
 // features/chatbot/chatbot.init.ts
 export async function initChatbot(): Promise<void> {
   // Connect to required databases
-  const mongoDbNames = [TRAINER_DB_NAME, COACH_DB_NAME, COKE_DB_NAME, COOKER_DB_NAME];
+  const mongoDbNames = [TRAINER_DB_NAME, COACH_DB_NAME, COOKER_DB_NAME];
   await Promise.all([
     ...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName)),
     connectGithubMcp().catch((err) => {

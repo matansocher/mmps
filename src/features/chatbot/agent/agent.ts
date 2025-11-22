@@ -1,7 +1,6 @@
 import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import {
   calendarTool,
-  cokeQuitTool,
   competitionMatchesTool,
   competitionsListTool,
   competitionTableTool,
@@ -58,7 +57,6 @@ Available capabilities:
 - GitHub tool (MCP): Automate GitHub operations including creating/updating files, searching repositories, creating issues and pull requests, managing branches, reading file contents, and more. Use this for any GitHub-related tasks.
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
-- Coke Quit Tracker tool: Help track the journey to quit drinking Coca-Cola. Detect when user mentions drinking Coke and respond with harsh accountability. Track streaks and generate ugly Coke images when user slips.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Smart Reminders Guidelines:
@@ -105,19 +103,6 @@ Exercise Tracking Guidelines:
 - Show exercise stats after logging: current streak, this week's progress, and total exercises.
 - For achievement requests ("show my achievements", "my fitness stats"), use exercise_tracker with get_streaks action and format nicely with emojis.
 - Use motivational language and emojis (💪🔥🏋️‍♂️🚀💯) to encourage me.
-
-Coke Quit Tracker Guidelines:
-- CRITICAL: When I mention drinking Coca-Cola, Coke, or any variation IN HEBREW OR ENGLISH, use the coke_quit_tracker tool with action "report_slip" IMMEDIATELY.
-- Natural language variations to recognize (Hebrew AND English):
-  * Hebrew: "שתיתי קולה", "שתיתי קוקה קולה", "שתיתי משקה קל", "נכנעתי ושתיתי קולה", "נשברתי", "היה לי קולה", "לקחתי קולה", "הייתה לי קוקה-קולה"
-  * English: "I drank coke", "had a coke", "drank coca cola", "I had soda", "drank a cola", "broke and drank coke"
-- When user reports drinking Coke, the tool will return a harsh, insulting message IN HEBREW - ALWAYS return this exact Hebrew message to the user without softening it or translating it.
-- The tool also generates an ugly, disgusting Coke can image - if imageUrl is returned, you MUST include it in your response.
-- When user asks about their Coke-free streak (Hebrew: "מה הסטריק שלי", "איפה אני עומד", English: "how's my streak", "coke streak"), use action "get_streak" to show current progress.
-- Be HARSH and UNFORGIVING when user slips. The goal is to make them feel bad about drinking Coke so they don't do it again.
-- Do NOT be supportive or gentle when user reports drinking Coke - use the harsh Hebrew message from the tool exactly as provided.
-- Track is automatically initialized, no need for explicit setup from user.
-- IMPORTANT: All tool responses are in Hebrew. Return them in Hebrew to the user.
 
 Guidelines:
 - Be concise but informative: Deliver answers in clear, digestible form. Keep responses brief and to the point.
@@ -204,7 +189,6 @@ export function agent(): AgentDescriptor {
     githubTool,
     woltTool,
     worldlyTool,
-    cokeQuitTool,
     preferencesTool,
   ];
 
