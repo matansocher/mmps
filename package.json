@@ -9,7 +9,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "build": "tsc --sourceMap false",
+    "build": "tsc --sourceMap false && tsc-alias",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --cache --check --ignore-unknown \"src/**/*.ts\"",
     "start": "node dist/main.js",
@@ -18,7 +18,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "postinstall": "tsc --sourceMap false",
+    "postinstall": "tsc --sourceMap false && tsc-alias",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -91,6 +91,7 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.1.0",
     "ts-loader": "^9.4.3",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.1.3"
   },

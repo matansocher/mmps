@@ -383,13 +383,12 @@ export type UpdateUserData = { /* ... */ };
 **Imports are automatically sorted by Prettier plugin in this order:**
 
 1. Third-party modules
-2. `@nestjs/*` imports
-3. `@core/*` imports
-4. `@decorators/*` imports
-5. `@features/*` imports
-6. `@services/*` imports
-7. `@shared/*` imports
-8. Relative imports (`./`, `../`)
+2. `@core/*` imports
+3. `@decorators/*` imports
+4. `@features/*` imports
+5. `@services/*` imports
+6. `@shared/*` imports
+7. Relative imports (`./`, `../`)
 
 ```typescript
 // ✅ Correct import order (auto-sorted by Prettier)
@@ -397,7 +396,6 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
-import { Injectable } from '@nestjs/common';
 import { Logger } from '@core/utils';
 import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
