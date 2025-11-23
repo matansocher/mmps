@@ -12,3 +12,5 @@ export const DEFAULT_TIMEZONE = 'Asia/Jerusalem';
 export const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export const LOCAL_FILES_PATH = './assets/downloads';
+
+export const PORT = Number(env.PORT) || 3000;

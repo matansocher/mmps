@@ -1,4 +1,5 @@
 import { configDotenv } from 'dotenv';
+import express from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
 import { Logger } from '@core/utils';
@@ -24,7 +25,15 @@ async function bootstrap() {
   shouldInitBot(woltBotConfig) && (await initWolt());
   shouldInitBot(worldlyBotConfig) && (await initWorldly());
 
-  logger.log('MMPS service is running');
+  const app = express();
+
+  app.get('/', (_req, res) => res.json({ success: true }));
+  app.get('/health', (_req, res) => res.json({ success: true }));
+
+  const port = env.PORT || 3000;
+  app.listen(port, () => {
+    logger.log(`MMPS service is running on port ${port}`);
+  });
 }
 
 bootstrap();
