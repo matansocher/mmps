@@ -17,29 +17,12 @@ async function bootstrap() {
 
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
 
-  if (shouldInitBot(chatbotBotConfig)) {
-    await initChatbot();
-  }
-
-  if (shouldInitBot(coachBotConfig)) {
-    await initCoach();
-  }
-
-  if (shouldInitBot(langlyBotConfig)) {
-    await initLangly();
-  }
-
-  if (shouldInitBot(magisterBotConfig)) {
-    await initMagister();
-  }
-
-  if (shouldInitBot(woltBotConfig)) {
-    await initWolt();
-  }
-
-  if (shouldInitBot(worldlyBotConfig)) {
-    await initWorldly();
-  }
+  shouldInitBot(chatbotBotConfig) && (await initChatbot());
+  shouldInitBot(coachBotConfig) && (await initCoach());
+  shouldInitBot(langlyBotConfig) && (await initLangly());
+  shouldInitBot(magisterBotConfig) && (await initMagister());
+  shouldInitBot(woltBotConfig) && (await initWolt());
+  shouldInitBot(worldlyBotConfig) && (await initWorldly());
 
   logger.log('MMPS service is running');
 }
