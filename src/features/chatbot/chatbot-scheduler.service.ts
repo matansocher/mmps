@@ -3,7 +3,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, rainAlert, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
 export class ChatbotSchedulerService {
@@ -68,6 +68,14 @@ export class ChatbotSchedulerService {
       { timezone: DEFAULT_TIMEZONE },
     );
 
+    cron.schedule(
+      `0 * * * *`,
+      async () => {
+        await this.handleRainAlert();
+      },
+      { timezone: DEFAULT_TIMEZONE },
+    );
+
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
@@ -76,6 +84,7 @@ export class ChatbotSchedulerService {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
+      this.handleRainAlert(); // for testing purposes
     }, 8000);
   }
 
@@ -105,5 +114,9 @@ export class ChatbotSchedulerService {
 
   private async handleEarthquakeMonitor(): Promise<void> {
     await earthquakeMonitor(this.bot);
+  }
+
+  private async handleRainAlert(): Promise<void> {
+    await rainAlert(this.bot);
   }
 }

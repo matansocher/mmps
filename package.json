@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
+    "@distube/ytdl-core": "^4.16.12",
     "@langchain/anthropic": "^0.3.26",
     "@langchain/core": "^0.3.58",
     "@langchain/langgraph": "^0.4.5",
@@ -61,6 +62,7 @@
     "ts-node": "^10.9.1",
     "twilio": "^5.7.2",
     "yahoo-finance2": "^2.11.3",
+    "ytdl-core": "^4.11.5",
     "zod": "^3.25.67"
   },
   "devDependencies": {

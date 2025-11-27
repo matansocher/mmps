@@ -3,6 +3,8 @@ export { cryptoTool } from './crypto/crypto.tool';
 
 export { weatherTool } from './weather/weather.tool';
 
+export { rainRadarTool } from './rain-radar';
+
 export { earthquakeTool } from './earthquake';
 
 export { imageAnalyzerTool } from './image/image-analyzer.tool';
