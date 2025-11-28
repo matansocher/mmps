@@ -20,7 +20,8 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "validate:cron-names": "node .github/scripts/validate-cron-names.mjs"
   },
   "keywords": [
     "express",
