@@ -4,21 +4,21 @@ import { CurrentWeather, DayForecast, HourlyWeather, TomorrowForecast } from './
 
 const baseURL = 'https://api.weatherapi.com/v1';
 
-export async function getTomorrowHourlyForecast(location: string): Promise<TomorrowForecast> {
+export async function getHourlyForecast(location: string, daysAhead: number = 0): Promise<TomorrowForecast> {
   const apiKey = env.WEATHERAPI_KEY;
   if (!apiKey) {
     throw new Error('WeatherAPI key not configured');
   }
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowDateStr = tomorrow.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + daysAhead);
+  const targetDateStr = targetDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
   const response = await axios.get(`${baseURL}/forecast.json`, {
     params: {
       key: apiKey,
       q: location,
-      days: 2,
+      days: Math.max(daysAhead + 1, 1),
       aqi: 'no',
       alerts: 'no',
     },
@@ -26,13 +26,13 @@ export async function getTomorrowHourlyForecast(location: string): Promise<Tomor
 
   const data = response.data;
 
-  const tomorrowForecast = data.forecast.forecastday.find((day: any) => day.date === tomorrowDateStr);
+  const dayForecast = data.forecast.forecastday.find((day: any) => day.date === targetDateStr);
 
-  if (!tomorrowForecast) {
-    throw new Error('Tomorrow forecast not available');
+  if (!dayForecast) {
+    throw new Error(`Forecast not available for ${targetDateStr}`);
   }
 
-  const hourlyForecast: HourlyWeather[] = tomorrowForecast.hour.map((hour: any) => ({
+  const hourlyForecast: HourlyWeather[] = dayForecast.hour.map((hour: any) => ({
     time: hour.time,
     hour: new Date(hour.time).getHours(),
     temperature: Math.round(hour.temp_c),
@@ -51,9 +51,17 @@ export async function getTomorrowHourlyForecast(location: string): Promise<Tomor
       lat: data.location.lat,
       lon: data.location.lon,
     },
-    date: tomorrowDateStr,
+    date: targetDateStr,
     hourly: hourlyForecast,
   };
+}
+
+export async function getTomorrowHourlyForecast(location: string): Promise<TomorrowForecast> {
+  return getHourlyForecast(location, 1);
+}
+
+export async function getTodayHourlyForecast(location: string): Promise<TomorrowForecast> {
+  return getHourlyForecast(location, 0);
 }
 
 export async function getSpecificHourWeather(location: string, hour: number): Promise<HourlyWeather | null> {

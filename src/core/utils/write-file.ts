@@ -4,6 +4,6 @@ export async function writeFile(filePath: string, fileContent: string): Promise<
   try {
     await fs.writeFile(filePath, fileContent);
   } catch (err) {
-    return null;
+    return;
   }
 }

@@ -44,7 +44,7 @@ Available capabilities:
 - Weather tool: Get weather information with three actions:
   * "current" - Get current weather conditions for any location
   * "forecast" - Get weather forecast for a specific date (up to 14 days ahead, requires date in YYYY-MM-DD format)
-  * "tomorrow_hourly" - Get detailed 24-hour forecast for tomorrow with temperature, conditions, humidity, wind speed, and rain chance for each hour
+  * "tomorrow_hourly" - Get detailed 24-hour forecast for tomorrow with temperature, conditions, humidity, wind speed, and rain chance for each hour.
 - Earthquake monitor tool: Get real-time earthquake data from USGS. Check recent earthquakes or query by magnitude threshold. Useful for seismic activity updates.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
 - Smart Reminders tool: Save reminders for specific dates/times and get notified when they're due. Supports creating, listing, editing, completing, deleting, and snoozing reminders.

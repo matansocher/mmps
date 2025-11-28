@@ -9,7 +9,7 @@ import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
 // import { CHAT_COMPLETIONS_MODEL } from '@services/openai';
 import { ToolCallbackOptions } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgent } from './agent';
+import { AiService, createAgentService } from './agent';
 import { ChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
@@ -18,8 +18,8 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor() {
-    const llm = new ChatAnthropic({ model: ANTHROPIC_OPUS_MODEL, temperature: 0.2, apiKey: env.ANTHROPIC_API_KEY });
-    // const llm = new ChatOpenAI({ model: CHAT_COMPLETIONS_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
+    const model = new ChatAnthropic({ model: ANTHROPIC_OPUS_MODEL, temperature: 0.2, apiKey: env.ANTHROPIC_API_KEY });
+    // const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,
@@ -34,7 +34,7 @@ export class ChatbotService {
       },
     };
 
-    this.aiService = createAgent(agent(), { llm, toolCallbackOptions });
+    this.aiService = createAgentService(agent(), { model, toolCallbackOptions });
   }
 
   async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {
