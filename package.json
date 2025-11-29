@@ -12,7 +12,7 @@
     "node": "24.x"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "dev:build": "tsc --watch",
@@ -84,6 +84,7 @@
     "prettier": "^3.6.2",
     "semantic-release": "^25.0.2",
     "ts-jest": "^29.4.5",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }
