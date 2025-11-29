@@ -3,7 +3,7 @@ import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
-import { createUserPreference, DifficultyLevel, getUserPreference, Language, saveUserDetails, updateUserPreference } from '@shared/langly';
+import { createUserPreference, DifficultyLevel, getUserPreference, Language, LANGUAGES, saveUserDetails, updateUserPreference } from '@shared/langly';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 import { LanglyService } from './langly.service';
 
@@ -60,7 +60,7 @@ export class LanglyController {
     const { chatId, messageId } = getMessageData(message);
     const userPreferences = await getUserPreference(chatId);
     const currentDifficulty = userPreferences?.difficulty ?? DifficultyLevel.INTERMEDIATE;
-    const currentLanguage = userPreferences?.language ?? Language.SPANISH;
+    const currentLanguage = userPreferences?.language ?? LANGUAGES.SPANISH;
 
     const inlineKeyboardButtons = [
       userPreferences?.isStopped
@@ -112,21 +112,23 @@ export class LanglyController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE }, userDetails);
           break;
 
-        case BOT_ACTIONS.ANSWER:
+        case BOT_ACTIONS.ANSWER: {
           const [answerIndex, isCorrect] = params;
           const answerResult = await this.answerHandler(chatId, messageId, parseInt(answerIndex), isCorrect === 'true');
           if (answerResult) {
             notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, word: answerResult.word, type: answerResult.type, isCorrect: answerResult.isCorrect ? '✅' : '❌' }, userDetails);
           }
           break;
+        }
 
-        case BOT_ACTIONS.AUDIO:
+        case BOT_ACTIONS.AUDIO: {
           const [challengeKey] = params;
           await this.audioHandler(chatId, messageId, challengeKey);
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.AUDIO }, userDetails);
           break;
+        }
 
-        case BOT_ACTIONS.LANGUAGE:
+        case BOT_ACTIONS.LANGUAGE: {
           if (params.length === 0) {
             await this.languageHandler(chatId);
           } else {
@@ -136,8 +138,9 @@ export class LanglyController {
           }
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           break;
+        }
 
-        case BOT_ACTIONS.DIFFICULTY:
+        case BOT_ACTIONS.DIFFICULTY: {
           if (params.length === 0) {
             await this.difficultyHandler(chatId);
           } else {
@@ -147,6 +150,7 @@ export class LanglyController {
           }
           await this.bot.deleteMessage(chatId, messageId).catch(() => {});
           break;
+        }
 
         case BOT_ACTIONS.CONTACT:
           await this.contactHandler(chatId);
@@ -205,7 +209,7 @@ export class LanglyController {
 
   async languageHandler(chatId: number, selectedLanguage?: Language): Promise<void> {
     if (!selectedLanguage) {
-      const languageButtons = Object.values(Language).map((l) => ({ text: LANGUAGE_LABELS[l], callback_data: [BOT_ACTIONS.LANGUAGE, l].join(INLINE_KEYBOARD_SEPARATOR) }));
+      const languageButtons = Object.values(LANGUAGES).map((l) => ({ text: LANGUAGE_LABELS[l], callback_data: [BOT_ACTIONS.LANGUAGE, l].join(INLINE_KEYBOARD_SEPARATOR) }));
 
       await this.bot.sendMessage(chatId, '🌍 Select your preferred language:', { ...getInlineKeyboardMarkup(languageButtons) });
     } else {

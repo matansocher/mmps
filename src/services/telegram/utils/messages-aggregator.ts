@@ -4,7 +4,7 @@ const TIMEOUT_MS = 100;
 
 type MessageAggregatorData = {
   readonly message: Message;
-  readonly timeoutId: NodeJS.Timeout | number;
+  readonly timeoutId: ReturnType<typeof setTimeout> | number;
   readonly processMessageCallback: (message: Message) => void;
 };
 
@@ -23,7 +23,7 @@ export class MessagesAggregator {
     this.messagesCache[chatId] = { message: combinedMessage, timeoutId, processMessageCallback };
   }
 
-  private startOrResetTimeout(chatId: number): NodeJS.Timeout | number {
+  private startOrResetTimeout(chatId: number): ReturnType<typeof setTimeout> | number {
     if (this.messagesCache[chatId]?.timeoutId) {
       clearTimeout(this.messagesCache[chatId].timeoutId);
     }

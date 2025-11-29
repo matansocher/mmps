@@ -1,5 +1,5 @@
-import { configDotenv } from 'dotenv';
-import express from 'express';
+import dotenv from 'dotenv';
+import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
 import { Logger } from '@core/utils';
@@ -10,11 +10,18 @@ import { initMagister, BOT_CONFIG as magisterBotConfig } from '@features/magiste
 import { initWolt, BOT_CONFIG as woltBotConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyBotConfig } from '@features/worldly';
 
-configDotenv();
+dotenv.config();
 
-async function bootstrap() {
+async function main() {
+  const app = express();
+  const port = env.PORT || 3000;
   const logger = new Logger('main.ts');
-  logger.log(`NODE_VERSION: ${process.versions.node}`);
+
+  app.use(express.json());
+
+  app.get('/', (_req: Request, res: Response) => {
+    res.json({ success: true });
+  });
 
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
 
@@ -25,15 +32,10 @@ async function bootstrap() {
   shouldInitBot(woltBotConfig) && (await initWolt());
   shouldInitBot(worldlyBotConfig) && (await initWorldly());
 
-  const app = express();
-
-  app.get('/', (_req, res) => res.json({ success: true }));
-  app.get('/health', (_req, res) => res.json({ success: true }));
-
-  const port = env.PORT || 3000;
+  logger.log(`NODE_VERSION: ${process.versions.node}`);
   app.listen(port, () => {
-    logger.log(`MMPS service is running on port ${port}`);
+    logger.log(`Server is running on http://localhost:${port}/`);
   });
 }
 
-bootstrap();
+main();

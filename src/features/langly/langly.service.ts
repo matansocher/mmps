@@ -11,7 +11,7 @@ import {
   DifficultyLevel,
   getActiveChallenge,
   getUserPreference,
-  Language,
+  LANGUAGES,
   LanguageChallenge,
   LanguageChallengeSchema,
   updatePreviousResponseId,
@@ -26,7 +26,7 @@ export class LanglyService {
     const userPreference = await getUserPreference(chatId);
     const previousResponseId = userPreference?.previousResponseId;
     const difficulty = userPreference?.difficulty ?? DifficultyLevel.INTERMEDIATE;
-    const language = userPreference?.language ?? Language.SPANISH;
+    const language = userPreference?.language ?? LANGUAGES.SPANISH;
 
     const prompt = getDifficultyPrompt(difficulty, language);
 
@@ -46,7 +46,7 @@ export class LanglyService {
   async sendChallenge(chatId: number): Promise<void> {
     const challenge = await this.generateChallenge(chatId);
     const userPreference = await getUserPreference(chatId);
-    const language = userPreference?.language ?? Language.SPANISH;
+    const language = userPreference?.language ?? LANGUAGES.SPANISH;
     const languageLabel = LANGUAGE_LABELS[language] || 'Language';
 
     const inlineKeyboardButtons = challenge.options.map((option, index) => ({
@@ -74,7 +74,7 @@ export class LanglyService {
     const selectedAnswer = challenge.options[answerIndex];
 
     const userPreference = await getUserPreference(chatId);
-    const language = userPreference?.language ?? Language.SPANISH;
+    const language = userPreference?.language ?? LANGUAGES.SPANISH;
     const languageLabel = LANGUAGE_LABELS[language] || 'Language';
 
     const resultMessage = [`${challenge.emoji} *${languageLabel} Challenge*`, '', `📝 *${challenge.question}*`, '', `Your answer: *${selectedAnswer.text}* ${isCorrect ? '✅' : '❌'}`].join('\n');

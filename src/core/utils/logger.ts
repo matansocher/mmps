@@ -2,18 +2,18 @@ export class Logger {
   constructor(private context: string) {}
 
   log(message: string): void {
-    console.log(`${this.context} | ${message}`);
+    console.log(`${new Date().toISOString()} | ${this.context} | ${message}`);
   }
 
   error(message: string): void {
-    console.error(`${this.context} | ${message}`);
+    console.error(`${new Date().toISOString()} | ${this.context} | ${message}`);
   }
 
   warn(message: string): void {
-    console.warn(`${this.context} | ${message}`);
+    console.warn(`${new Date().toISOString()} | ${this.context} | ${message}`);
   }
 
   debug(message: string): void {
-    console.debug(`${this.context} | ${message}`);
+    console.debug(`${new Date().toISOString()} | ${this.context} | ${message}`);
   }
 }

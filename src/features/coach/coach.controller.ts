@@ -144,7 +144,7 @@ export class CoachController {
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
         break;
-      case BOT_ACTIONS.MATCH:
+      case BOT_ACTIONS.MATCH: {
         await this.competitionMatchesHandler(chatId, Number(resource));
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
         const leagueName = Object.entries(COMPETITION_IDS_MAP)
@@ -152,6 +152,7 @@ export class CoachController {
           .map(([key]) => key)[0];
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
         break;
+      }
       case BOT_ACTIONS.CUSTOM_LEAGUES:
         await this.customLeaguesHandler(chatId);
         await this.bot.deleteMessage(chatId, messageId).catch(() => {});
