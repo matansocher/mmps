@@ -21,6 +21,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "prepare": "husky",
+    "semantic-release": "semantic-release",
     "validate:cron-names": "node .github/scripts/validate-cron-names.mjs"
   },
   "keywords": [
@@ -39,7 +40,6 @@
     "@modelcontextprotocol/sdk": "^1.23.0",
     "@modelcontextprotocol/server-github": "^2025.4.8",
     "@pinecone-database/pinecone": "^6.1.3",
-    "@semantic-release/git": "^10.0.1",
     "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.13.2",
     "canvas": "^3.2.0",
@@ -62,8 +62,13 @@
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.0",
     "@types/express": "^5.0.5",
+    "@types/fluent-ffmpeg": "^2.1.28",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "@types/node-telegram-bot-api": "^0.64.13",
