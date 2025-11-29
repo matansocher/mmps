@@ -4,7 +4,7 @@ import { CITIES_SLUGS_SUPPORTED } from '../wolt.config';
 function normalize(str: string): string {
   return str
     .toLowerCase()
-    .replace(/['"`\-]/g, '') // remove common special characters
+    .replace(/['"`-]/g, '') // remove common special characters
     .replace(/\s+/g, ' ') // normalize whitespace (optional)
     .trim();
 }

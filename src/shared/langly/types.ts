@@ -8,7 +8,7 @@ export enum DifficultyLevel {
   NATIVE = 4,
 }
 
-export const Language = {
+export const LANGUAGES = {
   HEBREW: 'hebrew',
   ENGLISH: 'english',
   SPANISH: 'spanish',
@@ -16,7 +16,7 @@ export const Language = {
   ARABIC: 'arabic',
 } as const;
 
-export type Language = (typeof Language)[keyof typeof Language];
+export type Language = (typeof LANGUAGES)[keyof typeof LANGUAGES];
 
 export type UserPreferences = {
   readonly _id: ObjectId;

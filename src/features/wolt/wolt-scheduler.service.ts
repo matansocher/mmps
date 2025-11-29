@@ -14,7 +14,7 @@ const JOB_NAME = 'wolt-scheduler-job-interval';
 export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
-  private timeouts: Map<string, NodeJS.Timeout> = new Map();
+  private timeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   async scheduleInterval(): Promise<void> {
     const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];

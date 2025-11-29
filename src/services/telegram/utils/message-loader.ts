@@ -20,7 +20,7 @@ export class MessageLoader {
   private readonly reactionEmoji: string;
   private readonly loadingAction: BOT_BROADCAST_ACTIONS;
 
-  private timeoutId?: NodeJS.Timeout;
+  private timeoutId?: ReturnType<typeof setTimeout>;
   private loaderMessageId?: number;
 
   constructor(bot: TelegramBot, botToken: string, chatId: number, messageId: number, options: MessageLoaderOptions) {

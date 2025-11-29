@@ -1,5 +1,5 @@
 import { TelegramBotConfig } from '@services/telegram';
-import { Language } from '@shared/langly';
+import { Language, LANGUAGES } from '@shared/langly';
 
 export const BOT_CONFIG: TelegramBotConfig = {
   id: 'LANGLY',
@@ -126,8 +126,8 @@ The explanation should be concise but informative, helping the learner understan
 The example sentence should sound natural and demonstrate real-world usage.
 `;
 
-export const getDifficultyPrompt = (difficulty: number, language: Language = Language.SPANISH): string => {
-  const languageInstruction = LANGUAGE_SPECIFIC_INSTRUCTIONS[language] || LANGUAGE_SPECIFIC_INSTRUCTIONS[Language.SPANISH];
+export const getDifficultyPrompt = (difficulty: number, language: Language = LANGUAGES.SPANISH): string => {
+  const languageInstruction = LANGUAGE_SPECIFIC_INSTRUCTIONS[language] || LANGUAGE_SPECIFIC_INSTRUCTIONS[LANGUAGES.SPANISH];
   return `${BASE_PROMPT}
 
 LANGUAGE: ${language.toUpperCase()}

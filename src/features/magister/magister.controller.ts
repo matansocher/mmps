@@ -158,11 +158,12 @@ export class MagisterController {
         await this.handleCallbackQuiz(chatId, courseParticipationId);
         break;
 
-      case BOT_ACTIONS.QUIZ_ANSWER:
+      case BOT_ACTIONS.QUIZ_ANSWER: {
         const questionIndex = parseInt(responseParts[2], 10);
         const answerIndex = parseInt(responseParts[3], 10);
         await this.handleCallbackQuizAnswer(chatId, messageId, courseParticipationId, questionIndex, answerIndex);
         break;
+      }
 
       default:
         throw new Error('Invalid action');
