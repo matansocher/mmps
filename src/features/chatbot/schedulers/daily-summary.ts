@@ -15,18 +15,17 @@ export async function dailySummary(bot: TelegramBot, chatbotService: ChatbotServ
 
 **Weather for Tomorrow:**
 Use the weather tool with action "tomorrow_hourly" for location "Kfar Saba" to get tomorrow's hourly weather forecast.
-Display a general description sentence about tomorrow's weather, then show the temperatures for these specific hours: 09:00, 12:00, 15:00, 18:00, and 21:00 with relevant weather emojis based on the conditions.
 
 **Additional Information:**
 1. **Calendar**: Check my calendar events for tomorrow. Format as:
-   - List each event (just the name and time)
-   - If no events, write "- no events"
+   - List each event with the time and name data only
+   - If no events, dont add the calendar section.
 2. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
    - Extract the person's name from the event title
    - Create a reminder using the reminders tool for 4 PM (16:00) tomorrow with the message: "Today is [Name]'s birthday! Remember to wish them happy birthday."
    - Mention in the summary that you've added the reminder(s)
+   - If there are birthdays tomorrows, dont add the birthday section.
 3. **Exercises**: Mention if I exercised today or not. Keep it brief (1-2 sentences max).
-4. **Fun Fact**: End with a fun fact related to todays date or if no something interesting, just a random fun fact.
 
 Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
 
