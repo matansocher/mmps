@@ -2,6 +2,7 @@ export { stocksTool } from './stocks/stocks.tool';
 export { cryptoTool } from './crypto/crypto.tool';
 
 export { weatherTool } from './weather/weather.tool';
+export { rainRadarTool } from './rain-radar';
 
 export { earthquakeTool } from './earthquake';
 
