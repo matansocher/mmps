@@ -64,6 +64,7 @@ export class ChatbotController {
   private async handleBotResponse(chatId: number, replyText: string, toolResults: any[]): Promise<void> {
     const ttsResult = toolResults.find((result) => result.toolName === 'text_to_speech');
     const mapsResult = toolResults.find((result) => result.toolName === 'google_maps_place');
+    const rainRadarResult = toolResults.find((result) => result.toolName === 'rain_radar');
 
     if (ttsResult && !ttsResult.error) {
       const audioFilePath = ttsResult.data;
@@ -74,8 +75,8 @@ export class ChatbotController {
         this.logger.error(`Error sending voice message: ${err}`);
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
-    } else if (mapsResult && !mapsResult.error) {
-      const imageFilePath = mapsResult.data;
+    } else if ((mapsResult && !mapsResult.error) || (rainRadarResult && !rainRadarResult.error)) {
+      const imageFilePath = mapsResult.data || rainRadarResult.data;
       try {
         await this.bot.sendPhoto(chatId, imageFilePath, { caption: replyText }).catch((err) => {
           this.logger.error(`Error sending photo: ${err}. Sending as text message instead.`);
@@ -83,7 +84,7 @@ export class ChatbotController {
         });
         deleteFile(imageFilePath);
       } catch (err) {
-        this.logger.error(`Error sending voice message: ${err}`);
+        this.logger.error(`Error sending photo message: ${err}`);
         await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
       }
     } else {
