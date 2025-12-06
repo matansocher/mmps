@@ -1,8 +1,11 @@
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { RunnableConfig } from '@langchain/core/runnables';
 import { CompiledStateGraph } from '@langchain/langgraph';
+import { Logger } from '@core/utils';
 import { CHATBOT_CONFIG } from '../chatbot.config';
 import { AiServiceOptions, InvokeOptions, MessageState } from '../types';
+
+const logger = new Logger('AiService');
 
 function createMessage(message: string, opts: Partial<InvokeOptions> = {}): MessageState {
   const messages: BaseMessage[] = [];
@@ -94,9 +97,9 @@ export class AiService {
 
       await this.agent.updateState({ configurable: { thread_id: threadId } }, { messages: messagesToKeep });
 
-      console.log(`[AiService] Thread ${threadId} truncated from ${messages.length} to ${messagesToKeep.length} messages`);
+      logger.log(`[AiService] Thread ${threadId} truncated from ${messages.length} to ${messagesToKeep.length} messages`);
     } catch (err) {
-      console.error(`[AiService] Error truncating thread ${threadId}: ${err}`);
+      logger.error(`[AiService] Error truncating thread ${threadId}: ${err}`);
     }
   }
 

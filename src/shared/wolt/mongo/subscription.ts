@@ -1,6 +1,9 @@
 import { getMongoCollection } from '@core/mongo';
+import { Logger } from '@core/utils';
 import { Subscription } from '../types';
 import { DB_NAME } from './index';
+
+const logger = new Logger('subscription');
 
 const getCollection = () => getMongoCollection<Subscription>(DB_NAME, 'Subscription');
 
@@ -11,7 +14,7 @@ export async function getActiveSubscriptions(chatId: number = null): Promise<Sub
     if (chatId) filter['chatId'] = chatId;
     return subscriptionCollection.find(filter).toArray();
   } catch (err) {
-    console.error(`getActiveSubscriptions - err: ${err}`);
+    logger.error(`getActiveSubscriptions - err: ${err}`);
     return [];
   }
 }
