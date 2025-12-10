@@ -43,10 +43,10 @@ async function main() {
       }
     }
 
-    logger.log('restaurantsCount');
-    logger.log(restaurantsCount);
-    logger.log('areasCount');
-    logger.log(areasCount);
+    // logger.log('restaurantsCount');
+    // logger.log(restaurantsCount);
+    // logger.log('areasCount');
+    // logger.log(areasCount);
   } catch (err) {
     logger.error(`Error during insertion: ${err}`);
   } finally {

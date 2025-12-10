@@ -3,6 +3,12 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
 
+
+
+
+
+
+
 const logger = new Logger('github-mcp-client');
 
 let client: Client | null = null;
@@ -58,12 +64,12 @@ export async function callGithubMcpTool(name: string, args: Record<string, any>)
   }
 
   try {
-    logger.log(`[GitHub MCP] Calling tool: ${name} with args:`, JSON.stringify(args, null, 2));
+    logger.log(`[GitHub MCP] Calling tool: ${name} with args: ${JSON.stringify(args, null, 2)}`);
     const result = await client.callTool({ name, arguments: args });
     logger.log(`[GitHub MCP] Tool ${name} succeeded`);
     return result;
   } catch (error: any) {
-    logger.error(`[GitHub MCP] Tool ${name} failed:`, error);
+    logger.error(`[GitHub MCP] Tool ${name} failed: ${error}`);
     throw new Error(`GitHub MCP tool ${name} failed: ${error.message || error}`);
   }
 }
