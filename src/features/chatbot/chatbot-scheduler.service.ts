@@ -6,75 +6,47 @@ import { ChatbotService } from './chatbot.service';
 import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
+function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
+  cron.schedule(expression, handler, { timezone });
+}
+
 export class ChatbotSchedulerService {
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   constructor(private readonly chatbotService: ChatbotService) {}
 
   init(): void {
-    cron.schedule(
-      `00 23 * * *`,
-      async () => {
-        await this.handleDailySummary();
-      },
-      { timezone: DEFAULT_TIMEZONE },
-    );
+    createSchedule(`00 23 * * *`, async () => {
+      await this.handleDailySummary();
+    });
 
-    cron.schedule(
-      `59 12,23 * * *`,
-      async () => {
-        await this.handleFootballUpdate();
-      },
-      { timezone: DEFAULT_TIMEZONE },
-    );
+    createSchedule(`59 12,23 * * *`, async () => {
+      await this.handleFootballUpdate();
+    });
 
-    cron.schedule(
-      `00 10 * * 0,3`,
-      async () => {
-        await this.handleSportsCalendar();
-      },
-      { timezone: DEFAULT_TIMEZONE },
-    );
+    createSchedule(`00 10 * * 0,3`, async () => {
+      await this.handleSportsCalendar();
+    });
 
-    cron.schedule(
-      `0 19 * * *`,
-      async () => {
-        await this.handleExerciseReminder();
-      },
-      { timezone: DEFAULT_TIMEZONE },
-    );
+    createSchedule(`0 19 * * *`, async () => {
+      await this.handleExerciseReminder();
+    });
 
-    cron.schedule(
-      `0 22 * * 6`,
-      async () => {
-        await this.handleWeeklyExerciseSummary();
-      },
-      { timezone: DEFAULT_TIMEZONE },
-    );
+    createSchedule(`0 22 * * 6`, async () => {
+      await this.handleWeeklyExerciseSummary();
+    });
 
-    cron.schedule(
-      `15 * * * *`,
-      async () => {
-        await this.handleReminderCheck();
-      },
-      { timezone: DEFAULT_TIMEZONE },
-    );
+    createSchedule(`15 * * * *`, async () => {
+      await this.handleReminderCheck();
+    });
 
-    cron.schedule(
-      `*/${LOOKBACK_MINUTES} * * * *`,
-      async () => {
-        await this.handleEarthquakeMonitor();
-      },
-      { timezone: DEFAULT_TIMEZONE },
-    );
+    createSchedule(`*/${LOOKBACK_MINUTES} * * * *`, async () => {
+      await this.handleEarthquakeMonitor();
+    });
 
-    // cron.schedule(
-    //   `0 9-23,0-2 * * *`,
-    //   async () => {
-    //     await this.handleRainRadarUpdate();
-    //   },
-    //   { timezone: DEFAULT_TIMEZONE },
-    // );
+    // createSchedule(`0 9-23,0-2 * * *`, async () => {
+    //   await this.handleRainRadarUpdate();
+    // });
 
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
