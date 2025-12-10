@@ -66,6 +66,8 @@ export class ChatbotController {
     const mapsResult = toolResults.find((result) => result.toolName === 'google_maps_place');
     const rainRadarResult = toolResults.find((result) => result.toolName === 'rain_radar');
 
+    this.logger.log(`bot response for chatId ${chatId}: ${replyText}, rainRadarResult: ${JSON.stringify(rainRadarResult || {})}`);
+
     if (ttsResult && !ttsResult.error) {
       const audioFilePath = ttsResult.data;
       try {
