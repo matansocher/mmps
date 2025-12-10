@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { env } from 'node:process';
+import { Logger } from '@core/utils';
 import { YouTubeSearchResult, YouTubeVideo } from './types';
+
+const logger = new Logger('searchYouTubeVideos');
 
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -40,7 +43,7 @@ export async function searchYouTubeVideos(query: string, maxResults: number = 5)
       };
     }
   } catch (err) {
-    console.error(`Error searching YouTube videos: ${err}`);
+    logger.error(`Error searching YouTube videos: ${err}`);
     return {
       success: false,
       error: err.response?.data?.error?.message || err.message || 'Unknown error occurred while searching YouTube.',

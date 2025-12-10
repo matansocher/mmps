@@ -2,8 +2,11 @@ import { config } from 'dotenv';
 import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
+import { Logger } from '@core/utils';
 import { DB_NAME, Subscription } from '@shared/wolt';
 import { getRestaurantsList } from '../utils';
+
+const logger = new Logger('check-subscriptions-areas');
 
 async function main() {
   config({ path: join(cwd(), '.env.serve') });
@@ -11,7 +14,7 @@ async function main() {
 
   try {
     await client.connect();
-    console.log('Connected to MongoDB.');
+    logger.log('Connected to MongoDB.');
 
     const subscriptionsCollection = client.db(DB_NAME).collection('Subscription');
 
@@ -40,16 +43,16 @@ async function main() {
       }
     }
 
-    console.log('restaurantsCount');
-    console.log(restaurantsCount);
-    console.log('areasCount');
-    console.log(areasCount);
+    logger.log('restaurantsCount');
+    logger.log(restaurantsCount);
+    logger.log('areasCount');
+    logger.log(areasCount);
   } catch (err) {
-    console.error(`Error during insertion: ${err}`);
+    logger.error(`Error during insertion: ${err}`);
   } finally {
     await client.close();
-    console.log('Disconnected from MongoDB.');
+    logger.log('Disconnected from MongoDB.');
   }
 }
 
-main().catch(console.error);
+main().catch((err) => logger.error(err));

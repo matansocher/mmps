@@ -1,11 +1,13 @@
 import { env } from 'node:process';
 import * as path from 'path';
 import { LOCAL_FILES_PATH } from '@core/config';
-import { deleteFile } from '@core/utils';
+import { deleteFile, Logger } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { downloadImage } from './download-image';
 import { findPlace, PlaceInfo } from './find-place';
 import { getStaticMapUrl } from './get-static-map-url';
+
+const logger = new Logger('get-map-images');
 
 export type MapImagesResult = {
   success: boolean;
@@ -39,7 +41,7 @@ export async function getMapImages(placeName: string): Promise<MapImagesResult> 
 
     return { success: true, placeName, placeInfo, mapImageUrl };
   } catch (err) {
-    console.error(`Error getting map images: ${err}`);
+    logger.error(`Error getting map images: ${err}`);
     return { success: false, placeName, error: err.message || 'Unknown error occurred' };
   }
 }

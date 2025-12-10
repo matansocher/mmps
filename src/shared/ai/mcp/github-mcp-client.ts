@@ -1,6 +1,9 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { env } from 'node:process';
+import { Logger } from '@core/utils';
+
+const logger = new Logger('github-mcp-client');
 
 let client: Client | null = null;
 let transport: StdioClientTransport | null = null;
@@ -23,9 +26,9 @@ export async function connectGithubMcp(): Promise<void> {
     await client.connect(transport);
     connected = true;
 
-    console.log('[GitHub MCP] Connected to GitHub MCP server');
+    logger.log('[GitHub MCP] Connected to GitHub MCP server');
   } catch (err) {
-    console.error(`[GitHub MCP] Failed to connect: ${err}`);
+    logger.error(`[GitHub MCP] Failed to connect: ${err}`);
     connected = false;
     throw err;
   }
@@ -35,9 +38,9 @@ export async function disconnectGithubMcp(): Promise<void> {
   if (client) {
     try {
       await client.close();
-      console.log('[GitHub MCP] Disconnected from GitHub MCP server');
+      logger.log('[GitHub MCP] Disconnected from GitHub MCP server');
     } catch (err) {
-      console.error(`[GitHub MCP] Error disconnecting: ${err}`);
+      logger.error(`[GitHub MCP] Error disconnecting: ${err}`);
     }
   }
   client = null;
@@ -55,12 +58,12 @@ export async function callGithubMcpTool(name: string, args: Record<string, any>)
   }
 
   try {
-    console.log(`[GitHub MCP] Calling tool: ${name} with args:`, JSON.stringify(args, null, 2));
+    logger.log(`[GitHub MCP] Calling tool: ${name} with args:`, JSON.stringify(args, null, 2));
     const result = await client.callTool({ name, arguments: args });
-    console.log(`[GitHub MCP] Tool ${name} succeeded`);
+    logger.log(`[GitHub MCP] Tool ${name} succeeded`);
     return result;
   } catch (error: any) {
-    console.error(`[GitHub MCP] Tool ${name} failed:`, error);
+    logger.error(`[GitHub MCP] Tool ${name} failed:`, error);
     throw new Error(`GitHub MCP tool ${name} failed: ${error.message || error}`);
   }
 }

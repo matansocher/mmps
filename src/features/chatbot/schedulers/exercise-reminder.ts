@@ -16,7 +16,9 @@ export async function exerciseReminder(bot: TelegramBot, chatbotService: Chatbot
     const prompt = `Generate a motivational exercise reminder for me. I haven't exercised today yet.
     Use the exercise_analytics tool with action "generate_reminder" to get a motivational meme if available.
     Keep the message short, fun, and encouraging. Use emojis to make it engaging.
-    If a meme URL is available, send it along with a short motivational message.`;
+    If a meme URL is available, send it along with a short motivational message.
+
+    IMPORTANT: Respond in Hebrew only.`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
