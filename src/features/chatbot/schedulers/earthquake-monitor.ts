@@ -2,6 +2,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { type Earthquake, formatEarthquake, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
+import { generateEarthquakeMapImage } from '@services/earthquake-map';
 import { sendShortenedMessage } from '@services/telegram';
 
 const logger = new Logger('EarthquakeMonitorScheduler');
@@ -34,11 +35,32 @@ export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
     for (const quake of newEarthquakes) {
       try {
         const message = formatAlertMessage(quake);
-        await sendShortenedMessage(bot, MY_USER_ID, message, { parse_mode: 'Markdown' });
+        const [lon, lat] = quake.geometry.coordinates;
+
+        let mapPath: string | null = null;
+        try {
+          mapPath = await generateEarthquakeMapImage({
+            lat,
+            lon,
+            magnitude: quake.properties.mag,
+            place: quake.properties.place,
+          });
+        } catch (mapErr) {
+          logger.error(`Failed to generate map for earthquake ${quake.id}: ${mapErr.message}`);
+        }
+
+        if (mapPath) {
+          await bot.sendPhoto(MY_USER_ID, mapPath, {
+            caption: message,
+            parse_mode: 'Markdown',
+          });
+          logger.log(`Sent alert with map for earthquake ${quake.id}: M${quake.properties.mag.toFixed(1)} - ${quake.properties.place}`);
+        } else {
+          await sendShortenedMessage(bot, MY_USER_ID, message, { parse_mode: 'Markdown' });
+          logger.log(`Sent text-only alert for earthquake ${quake.id}: M${quake.properties.mag.toFixed(1)} - ${quake.properties.place}`);
+        }
 
         seenEarthquakeIds.add(quake.id);
-
-        logger.log(`Sent alert for earthquake ${quake.id}: M${quake.properties.mag.toFixed(1)} - ${quake.properties.place}`);
       } catch (err) {
         logger.error(`Failed to send alert for earthquake ${quake.id}: ${err.message}`);
       }
