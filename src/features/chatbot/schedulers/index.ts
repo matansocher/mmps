@@ -5,6 +5,7 @@ export { rainRadarUpdate } from './rain-radar-update';
 export { footballPredictions } from './football-predictions';
 export { footballUpdate } from './football-update';
 export { footballPredictionsResults } from './football-predictions-results';
+export { makavdiaUpdate } from './makavdia-update';
 export { reminderCheck } from './reminder-check';
 export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
