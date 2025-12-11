@@ -1,6 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { formatEarthquake, getEarthquakesAboveMagnitude, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
+import { generateEarthquakeMapImage } from '@services/earthquake-map';
 
 const schema = z.object({
   action: z.enum(['recent', 'magnitude']).describe('Action to perform: "recent" for recent earthquakes, "magnitude" for earthquakes above a threshold'),
@@ -39,13 +40,34 @@ async function runner({ action, limit, minMagnitude, hoursBack }: z.infer<typeof
       return `No significant earthquakes found (magnitude > 6 globally OR any magnitude within 1000km of Israel) in the specified time range.`;
     }
 
+    let mapPath: string | null = null;
+    const firstQuake = relevantEarthquakes[0];
+    const [lon, lat] = firstQuake.geometry.coordinates;
+
+    try {
+      mapPath = await generateEarthquakeMapImage({
+        lat,
+        lon,
+        magnitude: firstQuake.properties.mag,
+        place: firstQuake.properties.place,
+      });
+    } catch (err) {
+      console.error(`Failed to generate earthquake map: ${err}`);
+    }
+
     const formattedQuakes = relevantEarthquakes.map((quake, index) => {
       const header = `\n${'─'.repeat(50)}\n*Earthquake #${index + 1}*\n`;
       return header + formatEarthquake(quake);
     });
 
     const summary = `Found ${relevantEarthquakes.length} significant earthquake(s):\n`;
-    return summary + formattedQuakes.join('\n');
+    let response = summary + formattedQuakes.join('\n');
+
+    if (mapPath) {
+      response += `\n\n📍 Map generated for first earthquake: ${mapPath}`;
+    }
+
+    return response;
   } catch (error) {
     return `Error fetching earthquake data: ${error instanceof Error ? error.message : 'Unknown error'}`;
   }
@@ -73,6 +95,7 @@ The tool returns detailed information including:
 - Tsunami warnings (if applicable)
 - Alert levels
 - Number of felt reports
-- Link to USGS details`,
+- Link to USGS details
+- Map image showing the epicenter location (for first earthquake only)`,
   schema,
 });

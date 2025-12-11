@@ -3,14 +3,14 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { Logger } from '@core/utils';
-import { fetchBuffer, latLonToTile } from './utils';
+import { fetchBuffer, latLonToTile } from '@shared/map-service/utils';
 
-export interface RainRadarOptions {
-  lat?: number;
-  lon?: number;
-  zoom?: number;
-  tileRange?: number; // Number of tiles in each direction (e.g., 1 = 3x3 grid)
-}
+export type RainRadarOptions = {
+  readonly lat?: number;
+  readonly lon?: number;
+  readonly zoom?: number;
+  readonly tileRange?: number;
+};
 
 const logger = new Logger('RainRadarService');
 
