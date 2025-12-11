@@ -47,7 +47,7 @@ export class ChatbotService {
     } catch (err) {
       this.logger.error(`Error processing message for user ${chatId}: ${err}`);
       return {
-        message: 'I apologize, but I encountered an error while processing your request. Please try again.',
+        message: 'מצטער, אבל נתקלתי בשגיאה בעיבוד הבקשה שלך. אנא נסה שוב.',
         toolResults: [],
         timestamp: new Date().toISOString(),
       };
