@@ -3,7 +3,7 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { generateRainRadarImage } from '@services/rain-radar';
-import { getTodayHourlyForecast } from '@services/weather-api';
+import { getTodayHourlyForecast } from '@services/weather';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('RainRadarUpdateScheduler');

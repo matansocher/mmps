@@ -97,6 +97,7 @@ export async function getCurrentWeather(location: string): Promise<CurrentWeathe
     conditionCode: data.current.condition.code,
     humidity: data.current.humidity,
     windSpeed: data.current.wind_kph,
+    chanceOfRain: 0, // Current weather doesn't include forecast probability
     date: new Date().toISOString(),
   };
 }

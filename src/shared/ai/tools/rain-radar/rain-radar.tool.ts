@@ -1,7 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { generateRainRadarImage } from '@services/rain-radar';
-import { getCurrentWeather } from '@services/weather-api';
+import { getCurrentWeather } from '@services/weather';
 
 const schema = z.object({
   location: z.string().optional().describe('The location for the radar (defaults to Kfar Saba)'),
