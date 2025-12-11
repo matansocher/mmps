@@ -74,3 +74,29 @@ export type CompetitionTableRow = {
   readonly points: number;
   readonly gamesPlayed: number;
 };
+
+export type AthleteGame = {
+  readonly id: number;
+  readonly startTime: string;
+  readonly statusText: string;
+  readonly homeCompetitor: Team;
+  readonly awayCompetitor: Team;
+  readonly gameTime: string;
+  readonly venue: string;
+  readonly playerStats: any;
+};
+
+export type AthleteLastMatches = {
+  readonly games: AthleteGame[];
+  readonly headers: any[];
+};
+
+export type AthleteData = {
+  readonly id: number;
+  readonly name: string;
+  readonly lastMatches: AthleteLastMatches;
+};
+
+export type AthleteApiResponse = {
+  readonly athletes: AthleteData[];
+};

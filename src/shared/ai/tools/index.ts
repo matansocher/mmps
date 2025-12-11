@@ -15,6 +15,8 @@ export { textToSpeechTool } from './audio/text-to-speech.tool';
 
 export { competitionMatchesTool, competitionTableTool, competitionsListTool, matchSummaryTool, matchPredictionTool, topMatchesForPredictionTool } from './sports';
 
+export { makavdiaTool } from './makavdia';
+
 export { calendarTool } from './calendar/calendar.tool';
 
 export { reminderTool } from './reminders/reminder.tool';
