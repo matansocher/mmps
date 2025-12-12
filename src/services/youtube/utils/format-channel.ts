@@ -13,13 +13,3 @@ export function formatChannel(data: SupadataChannelResponse): YouTubeChannel {
     customUrl: data.customUrl,
   };
 }
-
-export function buildChannelUrl(channelIdOrHandle: string): string {
-  if (channelIdOrHandle.startsWith('@')) {
-    return `https://www.youtube.com/${channelIdOrHandle}`;
-  }
-  if (channelIdOrHandle.startsWith('UC')) {
-    return `https://www.youtube.com/channel/${channelIdOrHandle}`;
-  }
-  return `https://www.youtube.com/@${channelIdOrHandle}`;
-}

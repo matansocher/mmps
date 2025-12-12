@@ -1,5 +1,9 @@
 import type { RapidAPIVideoItem, TikTokVideo } from '../types';
 
+function buildVideoUrl(username: string, videoId: string): string {
+  return `https://www.tiktok.com/@${username}/video/${videoId}`;
+}
+
 export function formatVideo(item: RapidAPIVideoItem, username?: string): TikTokVideo {
   const createTime = item.createTime ? new Date(item.createTime * 1000).toISOString() : new Date().toISOString();
   const authorUsername = item.author?.uniqueId || username || '';
@@ -30,8 +34,4 @@ export function formatVideo(item: RapidAPIVideoItem, username?: string): TikTokV
         }
       : undefined,
   };
-}
-
-export function buildVideoUrl(username: string, videoId: string): string {
-  return `https://www.tiktok.com/@${username}/video/${videoId}`;
 }

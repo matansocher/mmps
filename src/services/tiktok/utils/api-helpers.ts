@@ -1,4 +1,5 @@
 import { env } from 'node:process';
+import { sleep } from '@core/utils';
 import type { RapidAPIUserInfoResponse, TikTokTranscript, TranscriptJobResponse } from '../types';
 
 const TIKTOK_API_HOST = 'tiktok-api23.p.rapidapi.com';
@@ -28,10 +29,6 @@ export function validateSupadataApiKey(): void {
   if (!env.SUPADATA_API_KEY) {
     throw new Error('SUPADATA_API_KEY is not configured. Sign up at https://supadata.ai');
   }
-}
-
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function getTikTokApiBaseUrl(): string {

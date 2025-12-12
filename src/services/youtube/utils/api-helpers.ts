@@ -1,4 +1,5 @@
 import { env } from 'node:process';
+import { sleep } from '@core/utils';
 import type { TranscriptJobResponse, YouTubeTranscript } from '../types';
 
 const SUPADATA_API_BASE_URL = 'https://api.supadata.ai/v1';
@@ -13,10 +14,6 @@ export function validateSupadataApiKey(): void {
   if (!env.SUPADATA_API_KEY) {
     throw new Error('SUPADATA_API_KEY is not configured. Sign up at https://supadata.ai');
   }
-}
-
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function getSupadataApiBaseUrl(): string {

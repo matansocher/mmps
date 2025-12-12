@@ -1,5 +1,27 @@
 import type { SupadataVideoResponse, YouTubeVideo } from '../types';
 
+function formatDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
+
+function truncateDescription(description: string, maxLength: number): string {
+  if (description.length <= maxLength) {
+    return description;
+  }
+  return description.substring(0, maxLength) + '...';
+}
+
+export function buildVideoUrl(videoId: string): string {
+  return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
 export function formatVideo(data: SupadataVideoResponse): YouTubeVideo {
   return {
     id: data.id || '',
@@ -24,26 +46,4 @@ export function formatVideo(data: SupadataVideoResponse): YouTubeVideo {
     transcriptLanguages: data.transcriptLanguages || [],
     thumbnailUrl: data.thumbnail,
   };
-}
-
-export function buildVideoUrl(videoId: string): string {
-  return `https://www.youtube.com/watch?v=${videoId}`;
-}
-
-export function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  }
-  return `${minutes}:${String(secs).padStart(2, '0')}`;
-}
-
-export function truncateDescription(description: string, maxLength: number): string {
-  if (description.length <= maxLength) {
-    return description;
-  }
-  return description.substring(0, maxLength) + '...';
 }
