@@ -3,7 +3,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, makavdiaUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, makavdiaUpdate, rainRadarUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
@@ -48,9 +48,9 @@ export class ChatbotSchedulerService {
       await this.handleEarthquakeMonitor();
     });
 
-    // createSchedule(`0 9-23,0-2 * * *`, async () => {
-    //   await this.handleRainRadarUpdate();
-    // });
+    createSchedule(`40 0-1,9-23 * * *`, async () => {
+      await this.handleRainRadarUpdate();
+    });
 
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
@@ -61,6 +61,7 @@ export class ChatbotSchedulerService {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
+      // this.handleRainRadarUpdate(); // for testing purposes
     }, 8000);
   }
 
@@ -96,7 +97,7 @@ export class ChatbotSchedulerService {
     await earthquakeMonitor(this.bot);
   }
 
-  // private async handleRainRadarUpdate(): Promise<void> {
-  //   await rainRadarUpdate(this.bot, this.chatbotService);
-  // }
+  private async handleRainRadarUpdate(): Promise<void> {
+    await rainRadarUpdate(this.bot, this.chatbotService);
+  }
 }

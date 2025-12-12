@@ -3,11 +3,12 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { generateRainRadarImage } from '@services/rain-radar';
-import { getTodayHourlyForecast } from '@services/weather-api';
+import { getTodayHourlyForecast } from '@services/weather';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('RainRadarUpdateScheduler');
 const LOCATION = 'Kfar Saba';
+const RAIN_CHANCE_THRESHOLD = 50;
 
 export async function rainRadarUpdate(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
   try {
@@ -15,18 +16,19 @@ export async function rainRadarUpdate(bot: TelegramBot, chatbotService: ChatbotS
     const currentHour = new Date().getHours();
     const upcomingHours = forecast.hourly.filter((h) => h.hour >= currentHour && h.hour <= currentHour + 3);
 
-    const hasRain = upcomingHours.some((h) => h.willItRain || h.chanceOfRain > 40);
+    // Check if any upcoming hour has rain chance above threshold
+    const hasRain = upcomingHours.some((h) => h.willItRain || h.chanceOfRain >= RAIN_CHANCE_THRESHOLD);
 
     if (!hasRain) {
-      logger.log('No rain expected in the next 3 hours, skipping radar update');
+      logger.log(`No rain expected (threshold: ${RAIN_CHANCE_THRESHOLD}%) in the next 3 hours, skipping radar update`);
       return;
     }
 
-    logger.log('Rain expected, generating radar image');
+    logger.log(`Rain expected (>=${RAIN_CHANCE_THRESHOLD}%), generating radar image`);
     const imageFilePath = await generateRainRadarImage();
 
     const rainInfo = upcomingHours
-      .filter((h) => h.willItRain || h.chanceOfRain > 40)
+      .filter((h) => h.willItRain || h.chanceOfRain >= RAIN_CHANCE_THRESHOLD)
       .map((h) => `${h.hour}:00 - ${h.chanceOfRain}% chance`)
       .join(', ');
 
@@ -37,7 +39,7 @@ export async function rainRadarUpdate(bot: TelegramBot, chatbotService: ChatbotS
 
     await bot.sendPhoto(MY_USER_ID, imageFilePath, { caption }).catch((err) => {
       logger.error(`Failed to send rain radar image: ${err}`);
-      this.bot.sendMessage(MY_USER_ID, `I failed to send you the image\n${caption}`);
+      bot.sendMessage(MY_USER_ID, `I failed to send you the image\n${caption}`);
     });
 
     deleteFile(imageFilePath);

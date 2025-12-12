@@ -1,6 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { getCurrentWeather, getForecastWeather, getTomorrowHourlyForecast } from '@services/weather-api';
+import { getCurrentWeather, getForecastWeather, getTomorrowHourlyForecast } from '@services/weather';
 
 const schema = z.object({
   action: z
@@ -22,6 +22,7 @@ async function runner({ action, location, date }: z.infer<typeof schema>) {
         condition: weather.condition,
         humidity: `${weather.humidity}%`,
         windSpeed: `${weather.windSpeed} km/h`,
+        chanceOfRain: `${weather.chanceOfRain}%`,
         date: weather.date,
       };
     }

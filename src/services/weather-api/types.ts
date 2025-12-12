@@ -33,6 +33,7 @@ export type CurrentWeather = {
   readonly conditionCode: number;
   readonly humidity: number;
   readonly windSpeed: number;
+  readonly chanceOfRain: number;
   readonly date: string; // ISO timestamp
 };
 

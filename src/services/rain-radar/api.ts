@@ -3,103 +3,112 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { Logger } from '@core/utils';
-import { fetchBuffer, latLonToTile } from '@shared/map-service/utils';
-
-export type RainRadarOptions = {
-  readonly lat?: number;
-  readonly lon?: number;
-  readonly zoom?: number;
-  readonly tileRange?: number;
-};
+import { DEFAULT_VIEW, IMS_RADAR_CONFIG } from './constants';
+import { extractRadarForViewport, fetchMapTiles } from './map-utils';
+import type { ImsRadarResponse, RainRadarOptions } from './types';
 
 const logger = new Logger('RainRadarService');
 
-// Default Configuration (Kfar Saba, Israel)
-const DEFAULT_CONFIG = {
-  lat: 32.1782049,
-  lon: 34.9123794,
-  zoom: 10,
-  tileRange: 1, // 3x3 Grid
-  tileSize: 256,
-};
-
+/**
+ * Generate a rain radar image with map overlay for Israel.
+ * By default, shows Israel's Central District (Haifa to Beer Sheva).
+ */
 export async function generateRainRadarImage(options: RainRadarOptions = {}): Promise<string> {
-  const config = { ...DEFAULT_CONFIG, ...options };
-  const { lat, lon, zoom, tileRange, tileSize } = config;
+  const {
+    location = 'Israel Central District',
+    centerLat = DEFAULT_VIEW.centerLat,
+    centerLon = DEFAULT_VIEW.centerLon,
+    zoom = DEFAULT_VIEW.zoom,
+    width = DEFAULT_VIEW.width,
+    height = DEFAULT_VIEW.height,
+  } = options;
 
-  logger.log(`Generating Rain Radar Image for Lat: ${lat}, Lon: ${lon}, Zoom: ${zoom}`);
+  logger.log(`Generating IMS Rain Radar Image for ${location}`);
+  logger.log(`Center: ${centerLat}°N, ${centerLon}°E, Zoom: ${zoom}, Size: ${width}x${height}`);
 
-  // 1. Fetch RainViewer Metadata
-  const metaResponse = await axios.get('https://api.rainviewer.com/public/weather-maps.json');
-  const meta = metaResponse.data;
+  try {
+    // 1. Fetch radar metadata
+    logger.log('Fetching IMS radar data...');
+    const radarMetadata = await axios.get<ImsRadarResponse>(`${IMS_RADAR_CONFIG.baseUrl}${IMS_RADAR_CONFIG.endpoint}`, {
+      headers: {
+        'User-Agent': IMS_RADAR_CONFIG.userAgent,
+        Accept: 'application/json',
+      },
+    });
 
-  // Get latest radar path
-  if (!meta.radar || !meta.radar.past || meta.radar.past.length === 0) {
-    throw new Error('No radar data available from RainViewer API');
-  }
+    // Try IMSRadar first (PNG, more frequent updates), fallback to radar composite
+    const radarImages = radarMetadata.data?.data?.types?.IMSRadar || radarMetadata.data?.data?.types?.radar;
 
-  const latest = meta.radar.past[meta.radar.past.length - 1];
-  const host = meta.host || 'https://tile.rainviewer.com';
-  const radarPathBase = `${host}${latest.path}/${tileSize}/${zoom}`;
-  const timestamp = latest.time;
-
-  // 2. Calculate Grid
-  const center = latLonToTile(lat, lon, zoom);
-  const tilesX = tileRange * 2 + 1;
-  const tilesY = tileRange * 2 + 1;
-  const width = tilesX * tileSize;
-  const height = tilesY * tileSize;
-
-  // 3. Fetch Tiles (Parallel)
-  const mapLayers: { input: Buffer; left: number; top: number }[] = [];
-  const radarLayers: { input: Buffer; left: number; top: number }[] = [];
-
-  const gridPromises = [];
-  for (let dy = -tileRange; dy <= tileRange; dy++) {
-    for (let dx = -tileRange; dx <= tileRange; dx++) {
-      gridPromises.push(
-        (async () => {
-          const tx = center.x + dx;
-          const ty = center.y + dy;
-          const left = (dx + tileRange) * tileSize;
-          const top = (dy + tileRange) * tileSize;
-
-          const mapUrl = `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
-          const radarUrl = `${radarPathBase}/${tx}/${ty}/2/1_1.png`;
-
-          logger.log(`Fetching: ${mapUrl}`);
-
-          const [mapBuf, radarBuf] = await Promise.all([fetchBuffer(mapUrl, { 'User-Agent': 'MMPS-RainRadar/1.0' }), fetchBuffer(radarUrl)]);
-
-          if (mapBuf) mapLayers.push({ input: mapBuf, left, top });
-          if (radarBuf) radarLayers.push({ input: radarBuf, left, top });
-        })(),
-      );
+    if (!radarImages || radarImages.length === 0) {
+      throw new Error('No radar images available from IMS');
     }
+
+    // 2. Get latest radar image (sort by modified time)
+    const sortedImages = [...radarImages].sort((a, b) => new Date(b.modified).getTime() - new Date(a.modified).getTime());
+
+    const latestImage = sortedImages[0];
+    const imageUrl = `${IMS_RADAR_CONFIG.baseUrl}${latestImage.file_name}`;
+
+    logger.log(`Latest radar image: ${imageUrl}`);
+    logger.log(`Forecast time: ${latestImage.forecast_time}, Modified: ${latestImage.modified}`);
+
+    // 3. Download radar image
+    const radarResponse = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+      headers: {
+        'User-Agent': IMS_RADAR_CONFIG.userAgent,
+      },
+    });
+
+    const radarBuffer = Buffer.from(radarResponse.data);
+
+    // 4. Fetch map tiles and extract radar for viewport
+    const [mapBuffer, radarOverlay] = await Promise.all([fetchMapTiles(centerLat, centerLon, zoom, width, height), extractRadarForViewport(radarBuffer, centerLat, centerLon, zoom, width, height)]);
+
+    // 5. Composite radar on top of map
+    logger.log('Compositing radar overlay on map...');
+    const compositeImage = await sharp(mapBuffer)
+      .composite([
+        {
+          input: radarOverlay,
+          blend: 'over',
+        },
+      ])
+      .png()
+      .toBuffer();
+
+    // 6. Save to assets/radar directory
+    const assetsDir = path.resolve(process.cwd(), 'assets', 'radar');
+    if (!fs.existsSync(assetsDir)) {
+      fs.mkdirSync(assetsDir, { recursive: true });
+    }
+
+    const timestamp = Date.now();
+    const filename = `ims_radar_${timestamp}.png`;
+    const outputPath = path.join(assetsDir, filename);
+
+    fs.writeFileSync(outputPath, compositeImage);
+
+    logger.log(`IMS radar image with map saved to: ${outputPath}`);
+    return outputPath;
+  } catch (err) {
+    logger.error(`Failed to generate IMS radar image: ${err}`);
+    throw new Error('IMS radar service is currently unavailable. Please try again later.');
   }
+}
 
-  await Promise.all(gridPromises);
+/**
+ * Generate a radar image for a specific location (convenience function)
+ */
+export async function generateRadarForLocation(lat: number, lon: number, options: { zoom?: number; width?: number; height?: number } = {}): Promise<string> {
+  const { zoom = 10, width = 800, height = 800 } = options;
 
-  // 4. Composite
-  // Layer order: All Maps (Background) -> All Radar (Overlay)
-  const allLayers = [...mapLayers, ...radarLayers];
-
-  if (allLayers.length === 0) {
-    throw new Error('Failed to fetch any tiles');
-  }
-
-  const assetsDir = path.resolve(process.cwd(), 'assets', 'radar');
-  if (!fs.existsSync(assetsDir)) {
-    fs.mkdirSync(assetsDir, { recursive: true });
-  }
-
-  const filename = `radar_${timestamp}.png`;
-  const outputPath = path.join(assetsDir, filename);
-
-  await sharp({ create: { width, height, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } } })
-    .composite(allLayers)
-    .toFile(outputPath);
-
-  logger.log(`Radar image saved to: ${outputPath}`);
-  return outputPath;
+  return generateRainRadarImage({
+    location: `${lat},${lon}`,
+    centerLat: lat,
+    centerLon: lon,
+    zoom,
+    width,
+    height,
+  });
 }
