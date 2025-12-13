@@ -1,4 +1,4 @@
-import type { RapidAPIUserPostsResponse, RapidAPIVideoItem, TikTokMetadata, TikTokTranscript, TikTokUserInfo, TikTokVideo, TranscriptResponse, UserVideosResponse } from './types';
+import type { RapidAPIUserPostsResponse, TikTokTranscript, TikTokUserInfo, TikTokVideo, TranscriptResponse, UserVideosResponse } from './types';
 import {
   extractSecUid,
   fetchUserInfo,
@@ -52,7 +52,7 @@ export async function getUserSecUid(username: string): Promise<string> {
   return secUid;
 }
 
-export async function getUserVideosBySecUid(secUid: string, count = 20, cursor?: string): Promise<UserVideosResponse> {
+export async function getUserVideosBySecUid(secUid: string, count = 5, cursor?: string): Promise<UserVideosResponse> {
   validateRapidApiKey();
 
   const url = new URL(`${getTikTokApiBaseUrl()}/api/user/posts`);
@@ -76,47 +76,19 @@ export async function getUserVideosBySecUid(secUid: string, count = 20, cursor?:
   return parseVideosResponse(data);
 }
 
-export async function getUserVideos(username: string, count = 20, cursor?: string): Promise<UserVideosResponse> {
+export async function getUserVideos(username: string, count = 5, cursor?: string): Promise<UserVideosResponse> {
   const secUid = await getUserSecUid(username);
   return getUserVideosBySecUid(secUid, count, cursor);
 }
 
-export async function getVideo(videoId: string): Promise<TikTokVideo | null> {
-  validateRapidApiKey();
-
-  const url = new URL(`${getTikTokApiBaseUrl()}/api/post/detail`);
-  url.searchParams.append('videoId', videoId);
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: getRapidApiHeaders(),
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      return null;
-    }
-    const errorText = await response.text();
-    throw new Error(`Failed to get video: ${response.status} - ${errorText}`);
-  }
-
-  const data = (await response.json()) as { itemInfo?: { itemStruct?: RapidAPIVideoItem } };
-
-  if (!data.itemInfo?.itemStruct) {
-    return null;
-  }
-
-  return formatVideo(data.itemInfo.itemStruct);
-}
-
-export async function getNewVideosSince(username: string, lastKnownVideoId: string, maxCount = 50): Promise<TikTokVideo[]> {
+export async function getNewVideosSince(username: string, lastKnownVideoId: string, maxCount = 5): Promise<TikTokVideo[]> {
   const newVideos: TikTokVideo[] = [];
   let cursor: string | undefined;
   let found = false;
   let totalFetched = 0;
 
   while (!found && totalFetched < maxCount) {
-    const response = await getUserVideos(username, 20, cursor);
+    const response = await getUserVideos(username, 5, cursor);
 
     for (const video of response.videos) {
       if (video.id === lastKnownVideoId) {
@@ -179,23 +151,4 @@ export async function getTranscriptText(videoUrl: string): Promise<string> {
   }
 
   return '';
-}
-
-export async function getMetadata(videoUrl: string): Promise<TikTokMetadata> {
-  validateSupadataApiKey();
-
-  const url = new URL(`${getSupadataApiBaseUrl()}/metadata`);
-  url.searchParams.append('url', videoUrl);
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: getSupadataHeaders(),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to get metadata: ${response.status} - ${errorText}`);
-  }
-
-  return (await response.json()) as TikTokMetadata;
 }

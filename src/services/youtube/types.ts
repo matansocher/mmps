@@ -62,14 +62,6 @@ export type ChannelVideosResponse = {
   readonly liveIds: readonly string[];
 };
 
-export type UserVideosResponse = {
-  readonly videos: readonly YouTubeVideo[];
-  readonly hasMore?: boolean;
-  readonly cursor?: string;
-};
-
-// ==================== Internal API Response Types ====================
-
 export type SupadataChannelResponse = {
   readonly id?: string;
   readonly name?: string;

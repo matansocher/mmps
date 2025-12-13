@@ -55,42 +55,12 @@ export type TranscriptChunk = {
   readonly end: number;
 };
 
-export type TikTokMetadata = {
-  readonly platform: 'tiktok';
-  readonly type: 'video';
-  readonly id: string;
-  readonly url: string;
-  readonly title: string | null;
-  readonly description: string | null;
-  readonly author: {
-    readonly username: string;
-    readonly displayName: string;
-    readonly avatarUrl: string;
-    readonly verified: boolean;
-  };
-  readonly stats: {
-    readonly views: number | null;
-    readonly likes: number | null;
-    readonly comments: number | null;
-    readonly shares: number | null;
-  };
-  readonly media: {
-    readonly type: 'video';
-    readonly duration: number;
-    readonly thumbnailUrl: string;
-  };
-  readonly tags: readonly string[];
-  readonly createdAt: string;
-};
-
 export type UserVideosResponse = {
   readonly videos: readonly TikTokVideo[];
   readonly hasMore: boolean;
   readonly cursor: string;
   readonly totalCount?: number;
 };
-
-// ==================== Internal API Response Types ====================
 
 export type RapidAPIVideoItem = {
   readonly id: string;
