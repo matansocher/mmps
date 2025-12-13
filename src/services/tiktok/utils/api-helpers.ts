@@ -8,7 +8,7 @@ const SUPADATA_API_BASE_URL = 'https://api.supadata.ai/v1';
 
 export function getRapidApiHeaders(): Record<string, string> {
   return {
-    'x-rapidapi-key': env.RAPIDAPI_KEY,
+    'x-rapidapi-key': env.RAPIDAPI_TIKTOK_KEY,
     'x-rapidapi-host': TIKTOK_API_HOST,
   };
 }
@@ -20,8 +20,8 @@ export function getSupadataHeaders(): Record<string, string> {
 }
 
 export function validateRapidApiKey(): void {
-  if (!env.RAPIDAPI_KEY) {
-    throw new Error('RAPIDAPI_KEY is not configured. Sign up at https://rapidapi.com');
+  if (!env.RAPIDAPI_TIKTOK_KEY) {
+    throw new Error('RAPIDAPI_TIKTOK_KEY is not configured. Sign up at https://rapidapi.com');
   }
 }
 
