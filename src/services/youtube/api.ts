@@ -125,10 +125,11 @@ export async function getTranscript(videoUrl: string, lang?: string): Promise<Yo
     return await pollTranscriptJob(data.jobId);
   }
 
+  const content = (data.content as any)?.map((c) => c.text).join(' ') || '';
+
   return {
-    content: data.content || '',
+    content,
     lang: data.lang,
-    duration: data.duration,
   };
 }
 

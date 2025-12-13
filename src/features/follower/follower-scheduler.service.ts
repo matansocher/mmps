@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
-import { provideTelegramBot } from '@services/telegram';
+import { provideTelegramBot, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 import { getActiveSubscriptions, getNotifiedVideoIds, PLATFORM_CONFIG, Subscription } from '@shared/follower';
 import { BOT_CONFIG } from './follower.config';
 import { getVideoNotificationMessage } from './utils';
@@ -74,19 +74,11 @@ export class FollowerSchedulerService {
   private async notifyNewVideo(video: any, subscription: Subscription): Promise<void> {
     try {
       const message = await getVideoNotificationMessage(video, subscription);
-
-      if (message) {
-        const platformConfig = PLATFORM_CONFIG[subscription.platform];
-        const thumbnailUrl = platformConfig.getVideoThumbnail(video);
-
-        if (thumbnailUrl) {
-          await this.bot.sendPhoto(subscription.chatId, thumbnailUrl, { caption: message });
-        } else {
-          await this.bot.sendMessage(subscription.chatId, message);
-        }
-
-        this.logger.log(`Notified chat ${subscription.chatId} about video ${video.id}`);
+      const shortenedMessage = message?.length > TELEGRAM_MAX_MESSAGE_LENGTH ? message?.slice(0, TELEGRAM_MAX_MESSAGE_LENGTH) + '...' : message;
+      if (!shortenedMessage) {
+        return;
       }
+      await this.bot.sendMessage(subscription.chatId, shortenedMessage);
     } catch (err) {
       this.logger.error(`Error notifying video ${video.id}: ${err}`);
     }
