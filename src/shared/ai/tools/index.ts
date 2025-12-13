@@ -37,6 +37,4 @@ export { woltTool } from './wolt/wolt.tool';
 
 export { worldlyTool } from './worldly/worldly.tool';
 
-export { youtubeTool } from './youtube/youtube.tool';
-
 export { preferencesTool } from './preferences';
