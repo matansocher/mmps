@@ -14,10 +14,10 @@ export async function rainRadarUpdate(bot: TelegramBot, chatbotService: ChatbotS
   try {
     const forecast = await getTodayHourlyForecast(LOCATION);
     const currentHour = new Date().getHours();
-    const upcomingHours = forecast.hourly.filter((h) => h.hour >= currentHour && h.hour <= currentHour + 3);
+    const upcomingHours = forecast.hourly.filter((h) => h.hour >= currentHour && h.hour <= currentHour + 2);
 
     // Check if any upcoming hour has rain chance above threshold
-    const hasRain = upcomingHours.some((h) => h.willItRain || h.chanceOfRain >= RAIN_CHANCE_THRESHOLD);
+    const hasRain = upcomingHours.some((h) => h.willItRain && h.chanceOfRain > RAIN_CHANCE_THRESHOLD);
 
     if (!hasRain) {
       logger.log(`No rain expected (threshold: ${RAIN_CHANCE_THRESHOLD}%) in the next 3 hours, skipping radar update`);
