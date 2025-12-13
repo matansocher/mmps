@@ -1,6 +1,7 @@
 import { isVideoNotified, markVideoAsNotified, PLATFORM_CONFIG, Subscription, updateSubscription } from '@shared/follower';
 import { VideoNotification } from '../types';
 import { formatVideoMessage } from './format-video-message';
+import { generateSummary } from './generate-summary';
 
 export async function getVideoNotificationMessage(video: any, subscription: Subscription): Promise<string | null> {
   const { chatId, platform, channelId, channelName } = subscription;
@@ -18,7 +19,7 @@ export async function getVideoNotificationMessage(video: any, subscription: Subs
       const transcriptText = await platformConfig.getTranscript(video.url);
 
       if (transcriptText) {
-        summary = await this.generateSummary(transcriptText);
+        summary = await generateSummary(transcriptText);
       }
     } catch {}
 

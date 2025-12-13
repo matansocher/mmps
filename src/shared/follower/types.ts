@@ -20,6 +20,8 @@ export type PlatformConfig = {
   readonly getVideoTitle: (video: any) => string;
   readonly getVideoDescription: (video: any) => string;
   readonly getVideoPublishedAt: (video: any) => string;
+  readonly getVideoThumbnail: (video: any) => string | undefined;
+  readonly getVideoTimestamp: (video: any) => number;
 };
 
 export const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
@@ -34,6 +36,8 @@ export const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
     getVideoTitle: (video) => video.description || 'TikTok Video',
     getVideoDescription: (video) => video.description,
     getVideoPublishedAt: (video) => video.createdAt,
+    getVideoThumbnail: (video) => video.thumbnailUrl,
+    getVideoTimestamp: (video) => new Date(video.createdAt).getTime(),
   },
   [PLATFORMS.YOUTUBE]: {
     name: 'YouTube',
@@ -46,6 +50,8 @@ export const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
     getVideoTitle: (video) => video.title,
     getVideoDescription: (video) => video.description,
     getVideoPublishedAt: (video) => video.publishedAt,
+    getVideoThumbnail: (video) => video.thumbnailUrl,
+    getVideoTimestamp: (video) => new Date(video.publishedAt).getTime(),
   },
 };
 
@@ -82,11 +88,4 @@ export type CreateSubscriptionData = {
 export type UpdateSubscriptionData = {
   readonly lastNotifiedVideoId?: string;
   readonly updatedAt?: Date;
-};
-
-export type UserPreferences = {
-  readonly _id: ObjectId;
-  readonly chatId: number;
-  readonly isNotificationsEnabled: boolean;
-  readonly createdAt: Date;
 };

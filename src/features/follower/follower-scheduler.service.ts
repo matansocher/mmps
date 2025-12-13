@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
-import { getActiveSubscriptions, getUserPreferences, PLATFORM_CONFIG, Subscription } from '@shared/follower';
+import { getActiveSubscriptions, isVideoNotified, PLATFORM_CONFIG, Subscription } from '@shared/follower';
 import { BOT_CONFIG } from './follower.config';
 import { getVideoNotificationMessage } from './utils';
 
@@ -28,27 +28,38 @@ export class FollowerSchedulerService {
     const subscriptions = await getActiveSubscriptions();
 
     for (const subscription of subscriptions) {
-      const { platform, channelId, lastNotifiedVideoId, channelName } = subscription;
+      const { platform, channelId, channelName, chatId } = subscription;
 
       try {
         const platformConfig = PLATFORM_CONFIG[platform];
-        let newVideos: any[] = [];
 
-        if (lastNotifiedVideoId) {
-          newVideos = await platformConfig.getNewVideosSince(channelId, lastNotifiedVideoId, 3);
-        } else {
-          const allVideos = await platformConfig.getNewVideosSince(channelId, '', 1);
-          newVideos = allVideos.slice(0, 1);
+        const allVideos = await platformConfig.getNewVideosSince(channelId, '', 20);
+
+        if (allVideos.length === 0) {
+          this.logger.log(`No videos found for ${channelName}`);
+          continue;
         }
 
-        if (newVideos.length === 0) {
+        const unnotifiedVideos: any[] = [];
+        for (const video of allVideos) {
+          const alreadyNotified = await isVideoNotified(chatId, video.id, platform);
+          if (!alreadyNotified) {
+            unnotifiedVideos.push(video);
+          }
+        }
+
+        if (unnotifiedVideos.length === 0) {
           this.logger.log(`No new videos for ${channelName}`);
-          return;
+          continue;
         }
 
-        this.logger.log(`Found ${newVideos.length} new videos for ${channelName}`);
+        const sortedVideos = unnotifiedVideos.sort((a, b) => platformConfig.getVideoTimestamp(b) - platformConfig.getVideoTimestamp(a));
 
-        for (const video of newVideos.reverse()) {
+        const latestVideos = sortedVideos.slice(0, 3);
+
+        this.logger.log(`Found ${latestVideos.length} new videos for ${channelName}`);
+
+        for (const video of latestVideos.reverse()) {
           await this.notifyNewVideo(video, subscription);
         }
       } catch (err) {
@@ -59,17 +70,18 @@ export class FollowerSchedulerService {
 
   private async notifyNewVideo(video: any, subscription: Subscription): Promise<void> {
     try {
-      const userPreferences = await getUserPreferences(subscription.chatId);
-
-      if (!userPreferences?.isNotificationsEnabled) {
-        this.logger.log(`Notifications disabled for chat ${subscription.chatId}, skipping video ${video.id}`);
-        return;
-      }
-
       const message = await getVideoNotificationMessage(video, subscription);
 
       if (message) {
-        await this.bot.sendMessage(subscription.chatId, message);
+        const platformConfig = PLATFORM_CONFIG[subscription.platform];
+        const thumbnailUrl = platformConfig.getVideoThumbnail(video);
+
+        if (thumbnailUrl) {
+          await this.bot.sendPhoto(subscription.chatId, thumbnailUrl, { caption: message });
+        } else {
+          await this.bot.sendMessage(subscription.chatId, message);
+        }
+
         this.logger.log(`Notified chat ${subscription.chatId} about video ${video.id}`);
       }
     } catch (err) {
