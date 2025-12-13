@@ -27,7 +27,9 @@ export async function addSubscription(chatId: number, url: string): Promise<stri
     };
 
     await createSubscription(data);
-    return [`✅ Successfully added ${channelName} channel from ${parsed.platform}!`, `This channel has ${channelInfo.followerCount}`, `I'll notify you when new videos are posted.`].join('\n\n');
+    return [`✅ Successfully added ${channelName} channel from ${parsed.platform}!`, `This channel has ${channelInfo.followerCount} followers`, `I'll notify you when new videos are posted.`].join(
+      '\n\n',
+    );
   } catch {
     return MESSAGES.ERROR;
   }

@@ -9,7 +9,7 @@ import type {
   YouTubeTranscript,
   YouTubeVideo,
 } from './types';
-import { buildRSSFeedUrl, buildVideoUrl, formatChannel, formatVideo, getSupadataApiBaseUrl, getSupadataHeaders, parseRSSFeed, pollTranscriptJob, validateSupadataApiKey } from './utils';
+import { buildRSSFeedUrl, formatChannel, formatVideo, getSupadataApiBaseUrl, getSupadataHeaders, parseRSSFeed, pollTranscriptJob, validateSupadataApiKey } from './utils';
 
 export async function getChannelInfo(channelIdOrHandle: string): Promise<YouTubeChannel> {
   validateSupadataApiKey();
@@ -31,7 +31,7 @@ export async function getChannelInfo(channelIdOrHandle: string): Promise<YouTube
   return formatChannel(data);
 }
 
-export async function getChannelVideoIds(channelIdOrHandle: string, limit = 20, type: 'all' | 'video' | 'short' | 'live' = 'video'): Promise<ChannelVideosResponse> {
+export async function getChannelVideoIds(channelIdOrHandle: string, limit = 5, type: 'all' | 'video' | 'short' | 'live' = 'video'): Promise<ChannelVideosResponse> {
   validateSupadataApiKey();
 
   const url = new URL(`${getSupadataApiBaseUrl()}/youtube/channel/videos`);
@@ -58,33 +58,6 @@ export async function getChannelVideoIds(channelIdOrHandle: string, limit = 20, 
   };
 }
 
-export async function getChannelVideos(channelIdOrHandle: string, limit = 20): Promise<YouTubeVideo[]> {
-  const { videoIds } = await getChannelVideoIds(channelIdOrHandle, limit, 'video');
-
-  const videos: YouTubeVideo[] = [];
-  for (const videoId of videoIds) {
-    try {
-      const video = await getVideoMetadata(videoId);
-      if (video) {
-        videos.push(video);
-      }
-    } catch {
-      // Skip videos that fail to load
-      videos.push({
-        id: videoId,
-        url: buildVideoUrl(videoId),
-        title: '',
-        duration: 0,
-        durationFormatted: '0:00',
-        publishedAt: '',
-        stats: { views: 0, likes: 0 },
-      });
-    }
-  }
-
-  return videos;
-}
-
 export async function getVideoMetadata(videoId: string): Promise<YouTubeVideo> {
   validateSupadataApiKey();
 
@@ -105,7 +78,7 @@ export async function getVideoMetadata(videoId: string): Promise<YouTubeVideo> {
   return formatVideo(data);
 }
 
-export async function getNewVideosSince(channelIdOrHandle: string, lastKnownVideoId: string, maxCount = 50): Promise<YouTubeVideo[]> {
+export async function getNewVideosSince(channelIdOrHandle: string, lastKnownVideoId: string, maxCount = 5): Promise<YouTubeVideo[]> {
   const newVideos: YouTubeVideo[] = [];
 
   const { videoIds } = await getChannelVideoIds(channelIdOrHandle, maxCount, 'video');
@@ -184,18 +157,4 @@ export async function getVideosFromRSS(channelId: string): Promise<YouTubeRSSVid
 
   const xmlText = await response.text();
   return parseRSSFeed(xmlText);
-}
-
-export async function getNewVideosFromRSS(channelId: string, lastKnownVideoId: string): Promise<YouTubeRSSVideo[]> {
-  const videos = await getVideosFromRSS(channelId);
-  const newVideos: YouTubeRSSVideo[] = [];
-
-  for (const video of videos) {
-    if (video.id === lastKnownVideoId) {
-      break;
-    }
-    newVideos.push(video);
-  }
-
-  return newVideos;
 }

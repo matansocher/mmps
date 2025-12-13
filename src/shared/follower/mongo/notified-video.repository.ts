@@ -1,25 +1,23 @@
 import type { InsertOneResult } from 'mongodb';
-
 import { getMongoCollection } from '@core/mongo';
 import { Logger } from '@core/utils';
-
 import type { NotifiedVideo, Platform } from '../types';
 import { DB_NAME } from './index';
 
 const logger = new Logger('notified-video.repository');
 
 function getCollection() {
-  return getMongoCollection<NotifiedVideo>(DB_NAME, 'notified_videos');
+  return getMongoCollection<NotifiedVideo>(DB_NAME, 'NotifiedVideo');
 }
 
-export async function isVideoNotified(chatId: number, videoId: string, platform: Platform): Promise<boolean> {
+export async function getNotifiedVideoIds(chatId: number, platform: Platform): Promise<Set<string>> {
   try {
     const collection = getCollection();
-    const count = await collection.countDocuments({ chatId, videoId, platform });
-    return count > 0;
+    const notifiedVideos = await collection.find({ chatId, platform }, { projection: { videoId: 1 } }).toArray();
+    return new Set(notifiedVideos.map((video) => video.videoId));
   } catch (err) {
-    logger.error(`isVideoNotified - err: ${err}`);
-    return false;
+    logger.error(`getNotifiedVideoIds - err: ${err}`);
+    return new Set();
   }
 }
 

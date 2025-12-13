@@ -1,4 +1,4 @@
-import { isVideoNotified, markVideoAsNotified, PLATFORM_CONFIG, Subscription, updateSubscription } from '@shared/follower';
+import { markVideoAsNotified, PLATFORM_CONFIG, Subscription, updateSubscription } from '@shared/follower';
 import { VideoNotification } from '../types';
 import { formatVideoMessage } from './format-video-message';
 import { generateSummary } from './generate-summary';
@@ -7,11 +7,6 @@ export async function getVideoNotificationMessage(video: any, subscription: Subs
   const { chatId, platform, channelId, channelName } = subscription;
 
   try {
-    const alreadyNotified = await isVideoNotified(chatId, video.id, platform);
-    if (alreadyNotified) {
-      return null;
-    }
-
     const platformConfig = PLATFORM_CONFIG[platform];
 
     let summary: string | undefined;

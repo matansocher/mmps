@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
-import { getActiveSubscriptions, isVideoNotified, PLATFORM_CONFIG, Subscription } from '@shared/follower';
+import { getActiveSubscriptions, getNotifiedVideoIds, PLATFORM_CONFIG, Subscription } from '@shared/follower';
 import { BOT_CONFIG } from './follower.config';
 import { getVideoNotificationMessage } from './utils';
 
@@ -26,6 +26,7 @@ export class FollowerSchedulerService {
 
   private async checkForNewVideos(): Promise<void> {
     const subscriptions = await getActiveSubscriptions();
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
 
     for (const subscription of subscriptions) {
       const { platform, channelId, channelName, chatId } = subscription;
@@ -33,20 +34,22 @@ export class FollowerSchedulerService {
       try {
         const platformConfig = PLATFORM_CONFIG[platform];
 
-        const allVideos = await platformConfig.getNewVideosSince(channelId, '', 20);
+        const allVideos = await platformConfig.getNewVideosSince(channelId, '', 5);
 
         if (allVideos.length === 0) {
           this.logger.log(`No videos found for ${channelName}`);
           continue;
         }
 
-        const unnotifiedVideos: any[] = [];
-        for (const video of allVideos) {
-          const alreadyNotified = await isVideoNotified(chatId, video.id, platform);
-          if (!alreadyNotified) {
-            unnotifiedVideos.push(video);
-          }
+        const recentVideos = allVideos.filter((video) => platformConfig.getVideoTimestamp(video) >= oneDayAgo);
+
+        if (recentVideos.length === 0) {
+          this.logger.log(`No videos from last 24 hours for ${channelName}`);
+          continue;
         }
+
+        const notifiedVideoIds = await getNotifiedVideoIds(chatId, platform);
+        const unnotifiedVideos = recentVideos.filter((video) => !notifiedVideoIds.has(video.id));
 
         if (unnotifiedVideos.length === 0) {
           this.logger.log(`No new videos for ${channelName}`);

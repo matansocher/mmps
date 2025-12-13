@@ -7,7 +7,7 @@ import { DB_NAME } from './index';
 const logger = new Logger('subscription.repository');
 
 function getCollection() {
-  return getMongoCollection<Subscription>(DB_NAME, 'subscriptions');
+  return getMongoCollection<Subscription>(DB_NAME, 'Subscription');
 }
 
 export async function getActiveSubscriptions(chatId?: number): Promise<Subscription[]> {

@@ -6,8 +6,8 @@ export async function generateSummary(transcript: string): Promise<string> {
       return transcript;
     }
 
-    const systemPrompt = 'You are a helpful assistant that summarizes video transcripts concisely.';
-    const userMessage = `Summarize this video transcript in 2-3 concise sentences:\n\n${transcript.substring(0, 2000)}`;
+    const systemPrompt = 'You are a helpful assistant that summarizes video transcripts concisely. Always summarize in the same language as the transcript provided.';
+    const userMessage = `Summarize this video transcript in 1-2 paragraphs:\n\n${transcript}`;
 
     const summary = await getChatCompletion(systemPrompt, userMessage);
     return summary.trim();
