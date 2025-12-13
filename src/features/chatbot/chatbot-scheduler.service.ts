@@ -48,10 +48,6 @@ export class ChatbotSchedulerService {
       await this.handleEarthquakeMonitor();
     });
 
-    // createSchedule(`40 0-1,9-23 * * *`, async () => {
-      // await this.handleRainRadarUpdate();
-    // });
-
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
@@ -61,7 +57,6 @@ export class ChatbotSchedulerService {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
-      // this.handleRainRadarUpdate(); // for testing purposes
     }, 8000);
   }
 
@@ -96,8 +91,4 @@ export class ChatbotSchedulerService {
   private async handleEarthquakeMonitor(): Promise<void> {
     await earthquakeMonitor(this.bot);
   }
-
-  // private async handleRainRadarUpdate(): Promise<void> {
-    // await rainRadarUpdate(this.bot, this.chatbotService);
-  // }
 }
