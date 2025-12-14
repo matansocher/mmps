@@ -16,6 +16,7 @@ export async function footballUpdate(bot: TelegramBot, chatbotService: ChatbotSe
         - Include all matches (completed, ongoing, and upcoming)
         - Use the formatted text from the tool as it contains proper markdown
         - Keep it concise and informative
+        - In the end of the message, point out the most exciting matches of the day
         - If no matches are found, say "אין משחקים היום"`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
