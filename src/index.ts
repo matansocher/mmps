@@ -5,7 +5,7 @@ import { isProd } from '@core/config';
 import { Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotBotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as coachBotConfig, initCoach } from '@features/coach';
-import { BOT_CONFIG as followerBotConfig, initFollower } from '@features/follower';
+// import { BOT_CONFIG as followerBotConfig, initFollower } from '@features/follower';
 import { initLangly, BOT_CONFIG as langlyBotConfig } from '@features/langly';
 import { initMagister, BOT_CONFIG as magisterBotConfig } from '@features/magister';
 import { initWolt, BOT_CONFIG as woltBotConfig } from '@features/wolt';
@@ -28,7 +28,7 @@ async function main() {
 
   shouldInitBot(chatbotBotConfig) && (await initChatbot());
   shouldInitBot(coachBotConfig) && (await initCoach());
-  shouldInitBot(followerBotConfig) && (await initFollower());
+  // shouldInitBot(followerBotConfig) && (await initFollower());
   shouldInitBot(langlyBotConfig) && (await initLangly());
   shouldInitBot(magisterBotConfig) && (await initMagister());
   shouldInitBot(woltBotConfig) && (await initWolt());
