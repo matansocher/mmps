@@ -1,12 +1,10 @@
-import { ChatAnthropic } from '@langchain/anthropic';
-// import { ChatOpenAI } from '@langchain/openai';
+import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { Logger } from '@core/utils';
-import { ANTHROPIC_OPUS_MODEL } from '@services/anthropic/constants';
-// import { CHAT_COMPLETIONS_MODEL } from '@services/openai';
+import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { ToolCallbackOptions } from '@shared/ai';
 import { agent } from './agent';
 import { AiService, createAgentService } from './agent';
@@ -18,8 +16,7 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor() {
-    const model = new ChatAnthropic({ model: ANTHROPIC_OPUS_MODEL, temperature: 0.2, apiKey: env.ANTHROPIC_API_KEY });
-    // const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
+    const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,
