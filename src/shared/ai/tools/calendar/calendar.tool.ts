@@ -1,4 +1,5 @@
 import { tool } from '@langchain/core/tools';
+import { endOfDay, startOfDay } from 'date-fns';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CalendarEvent, createEvent, deleteEvent, formatEvent, getUpcomingEvents, listEvents } from '@services/google-calendar';
@@ -13,6 +14,8 @@ const schema = z.object({
   description: z.string().optional().describe('Description or notes for the event'),
   // For listing/searching events
   searchQuery: z.string().optional().describe('Search query to filter events when listing'),
+  startDate: z.string().optional().describe('Start date to filter events from (ISO format: "2024-01-15" or "2024-01-15T00:00:00")'),
+  endDate: z.string().optional().describe('End date to filter events until (ISO format: "2024-01-15" or "2024-01-15T23:59:59")'),
   days: z.number().optional().describe('Number of days to look ahead for upcoming events (default: 7)'),
   // For deleting events
   eventId: z.string().optional().describe('The ID of an event (for delete action)'),
@@ -45,8 +48,23 @@ async function createEventInternal(params: Pick<SchemaType, 'title' | 'descripti
   };
 }
 
-async function listEventsInternal(searchQuery?: string): Promise<any> {
-  const options = searchQuery ? { q: searchQuery, maxResults: 10 } : { maxResults: 10 };
+async function listEventsInternal(searchQuery?: string, startDate?: string, endDate?: string): Promise<any> {
+  const options: any = { maxResults: 50 };
+
+  if (searchQuery) {
+    options.q = searchQuery;
+  }
+
+  if (startDate) {
+    const parsedStartDate = new Date(startDate);
+    options.timeMin = startOfDay(parsedStartDate).toISOString();
+  }
+
+  if (endDate) {
+    const parsedEndDate = new Date(endDate);
+    options.timeMax = endOfDay(parsedEndDate).toISOString();
+  }
+
   const events = await listEvents(options);
 
   if (events.length === 0) {
@@ -88,7 +106,7 @@ async function deleteEventInternal(eventId: string): Promise<any> {
   };
 }
 
-async function runner({ action, title, startDateTime, endDateTime, location, description, eventId, days, searchQuery }: SchemaType) {
+async function runner({ action, title, startDateTime, endDateTime, location, description, eventId, days, searchQuery, startDate, endDate }: SchemaType) {
   switch (action) {
     case 'create':
       if (!title || !startDateTime || !endDateTime) {
@@ -97,7 +115,7 @@ async function runner({ action, title, startDateTime, endDateTime, location, des
       return await createEventInternal({ title, startDateTime, endDateTime, location, description });
 
     case 'list':
-      return await listEventsInternal(searchQuery);
+      return await listEventsInternal(searchQuery, startDate, endDate);
 
     case 'upcoming':
       return await getUpcomingEventsInternal(days || 7);
