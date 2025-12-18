@@ -1,6 +1,5 @@
 import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { fetchUserEmails, sendEmail } from '@services/gmail';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
@@ -58,7 +57,6 @@ export class ChatbotSchedulerService {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
-      this.test(); // for testing purposes
     }, 8000);
   }
 
@@ -92,15 +90,5 @@ export class ChatbotSchedulerService {
 
   private async handleEarthquakeMonitor(): Promise<void> {
     await earthquakeMonitor(this.bot);
-  }
-
-  private async test(): Promise<void> {
-    const emails = await fetchUserEmails('in:inbox is:unread', 5);
-    const emailSubjects = emails.map((email) => email.subject).join('\n');
-    await sendEmail({
-      recipient: 'matansocher@gmail.com',
-      subject: 'Test Email from ChatbotSchedulerService',
-      body: `<p>This is a test email. Here are the subjects of your unread emails:</p><pre>${emailSubjects}</pre>`,
-    });
   }
 }
