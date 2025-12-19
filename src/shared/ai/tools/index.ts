@@ -19,6 +19,8 @@ export { makavdiaTool } from './makavdia';
 
 export { calendarTool } from './calendar/calendar.tool';
 
+export { gmailTool } from './gmail/gmail.tool';
+
 export { reminderTool } from './reminders/reminder.tool';
 
 export { exerciseTool } from './exercise/exercise.tool';

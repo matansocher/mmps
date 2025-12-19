@@ -8,6 +8,7 @@ import {
   exerciseAnalyticsTool,
   exerciseTool,
   githubTool,
+  gmailTool,
   makavdiaTool,
   matchPredictionTool,
   matchSummaryTool,
@@ -23,7 +24,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, and Worldly game statistics';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -50,6 +51,10 @@ Available capabilities:
   * "tomorrow_hourly" - Get detailed 24-hour forecast for tomorrow with temperature, conditions, humidity, wind speed, and rain chance for each hour.
 - Earthquake monitor tool: Get real-time earthquake data from USGS. Check recent earthquakes or query by magnitude threshold. Useful for seismic activity updates.
 - Calendar tool: Create, list, and manage Google Calendar events. Understands natural language for scheduling (e.g., "Schedule a meeting tomorrow at 3pm").
+- Gmail tool: List, send, and delete Gmail emails with three actions:
+  * "list" - Fetch emails with optional search query (e.g., "is:unread", "from:sender@example.com")
+  * "send" - Send HTML emails to recipients
+  * "delete" - Move emails to trash by ID
 - Smart Reminders tool: Save reminders for specific dates/times and get notified when they're due. Supports creating, listing, editing, completing, deleting, and snoozing reminders.
 - Preferences tool: Save and retrieve personal preferences and information. Remember things the user wants you to know about them (favorite things, dietary restrictions, personal details, etc.) and proactively retrieve relevant preferences during conversations.
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
@@ -119,6 +124,26 @@ Guidelines:
 - Format weather information clearly with temperature, conditions, and location, and any relevant links.
 - Audio transcription: When provided with an audio file path, use the audio transcriber tool to convert speech to text.
 - Calendar events: When users want to schedule meetings, create events, or check their calendar, use the calendar tool. It understands natural language like "meeting tomorrow at 3pm" or "what's on my calendar this week".
+- Gmail Guidelines:
+  * When users want to check, send, or manage emails, use the gmail tool.
+  * IMPORTANT: The user's email address is matansocher@gmail.com. When the user says "send to me", "send to myself", "my email", or similar references, use this email address.
+  * Natural language variations to recognize: "check my emails", "any new emails", "send an email to", "email [person]", "delete that email", "move to trash", "show unread emails".
+  * Three actions available:
+    - "list": Fetch emails with optional search query and maxResults
+      • Default query: "is:unread" (shows unread emails)
+      • Search query examples: "from:sender@example.com", "subject:invoice", "is:starred", "has:attachment"
+      • Default maxResults: 10, maximum: 50
+      • Returns email ID, from, subject, and snippet for each email
+    - "send": Send HTML emails (requires recipient, subject, and body)
+      • Body supports HTML formatting
+      • Always confirm details before sending
+      • Example: "Send an email to john@example.com with subject 'Meeting' and body 'Let's meet tomorrow'"
+    - "delete": Move an email to trash (requires emailId from list results)
+      • Users can reference emails by their position in a list or by ID
+      • Example: "Delete the first email" or "Delete email with ID abc123"
+  * After listing emails, format them clearly with numbering, showing sender, subject, and a snippet.
+  * When users ask to send emails, confirm the recipient, subject, and body before executing.
+  * Use emojis (📧, ✉️, 📨, 🗑️) to make email interactions more engaging.
 - Smart Reminders: When users want to save information for later, set reminders, or be notified about something, use the smart_reminders tool with natural language date parsing in ${DEFAULT_TIMEZONE} timezone. CRITICAL: Always use 18:00 (6 PM) as the default time when no specific time is mentioned. Follow the Smart Reminders Guidelines above for all reminder-related interactions.
 - Preferences: When users share personal information to remember or when answering questions that could benefit from personalization, use the preferences tool. Save preferences with descriptive keys and proactively search for relevant preferences during conversations. Follow the Preferences Guidelines above for all preference-related interactions.
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
@@ -188,6 +213,7 @@ export function agent(): AgentDescriptor {
     matchPredictionTool,
     makavdiaTool,
     calendarTool,
+    gmailTool,
     reminderTool,
     exerciseTool,
     exerciseAnalyticsTool,
