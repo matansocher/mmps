@@ -3,7 +3,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, makavdiaUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import { dailySummary, earthquakeMonitor, emailSummary, exerciseReminder, footballUpdate, makavdiaUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
@@ -40,6 +40,10 @@ export class ChatbotSchedulerService {
       await this.handleWeeklyExerciseSummary();
     });
 
+    createSchedule(`35 23 * * *`, async () => {
+      await this.handleEmailSummary();
+    });
+
     createSchedule(`15 * * * *`, async () => {
       await this.handleReminderCheck();
     });
@@ -50,6 +54,7 @@ export class ChatbotSchedulerService {
 
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
+      // this.handleEmailSummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
       // this.handleMakavdiaUpdate(); // for testing purposes
       // this.handleSportsCalendar(); // for testing purposes
@@ -62,6 +67,10 @@ export class ChatbotSchedulerService {
 
   private async handleDailySummary(): Promise<void> {
     await dailySummary(this.bot, this.chatbotService);
+  }
+
+  private async handleEmailSummary(): Promise<void> {
+    await emailSummary(this.bot, this.chatbotService);
   }
 
   private async handleFootballUpdate(): Promise<void> {

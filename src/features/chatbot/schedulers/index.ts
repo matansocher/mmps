@@ -1,5 +1,6 @@
 export { dailySummary } from './daily-summary';
 export { earthquakeMonitor } from './earthquake-monitor';
+export { emailSummary } from './email-summary';
 export { exerciseReminder } from './exercise-reminder';
 export { footballPredictions } from './football-predictions';
 export { footballUpdate } from './football-update';
