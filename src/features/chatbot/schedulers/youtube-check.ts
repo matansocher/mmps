@@ -1,76 +1,78 @@
 import { startOfDay } from 'date-fns';
 import type TelegramBot from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { Logger, shuffleArray } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { fetchTranscript, getRecentVideos } from '@services/youtube-v3';
 import type { Video } from '@services/youtube-v3/types';
-import { getAllActiveSubscriptions, getNotifiedVideoIds, markVideoAsNotified, Subscription, updateSubscription } from '@shared/youtube-follower';
+import { getAllActiveSubscriptions, getNotifiedVideoIds, markVideoAsNotified, updateSubscription } from '@shared/youtube-follower';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('YoutubeCheckScheduler');
 
 const chatId = MY_USER_ID;
 
+type NextVideoToNotify = {
+  readonly video: Video;
+  readonly channelId: string;
+  readonly channelName: string;
+};
+
+async function getNextVideoToNotify(): Promise<NextVideoToNotify | null> {
+  const subscriptions = await getAllActiveSubscriptions();
+
+  if (subscriptions.length === 0) {
+    return null;
+  }
+
+  const notifiedVideoIds = await getNotifiedVideoIds();
+  const cutoffTime = startOfDay(new Date());
+
+  const shuffledSubscriptions = shuffleArray(subscriptions);
+  for (const subscription of shuffledSubscriptions) {
+    try {
+      const recentVideos = await getRecentVideos(subscription.channelId, 3);
+
+      const nextVideo = recentVideos
+        .filter((video) => new Date(video.publishedAt) >= cutoffTime)
+        .filter((video) => !notifiedVideoIds.has(video.id))
+        .find((video) => video);
+
+      if (nextVideo) {
+        return {
+          video: nextVideo,
+          channelId: subscription.channelId,
+          channelName: subscription.channelName,
+        };
+      }
+    } catch (err) {
+      logger.error(`Failed to check channel ${subscription.channelName}: ${err.message}`);
+    }
+  }
+
+  return null;
+}
+
 export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
   try {
-    const subscriptions = await getAllActiveSubscriptions();
+    const nextVideo = await getNextVideoToNotify();
 
-    if (subscriptions.length === 0) {
-      logger.log('No active subscriptions found');
+    if (!nextVideo) {
+      logger.log('No videos to notify');
       return;
     }
 
-    const notifiedVideoIds = await getNotifiedVideoIds();
-    for (const subscription of subscriptions) {
-      try {
-        const videoProcessed = await processSubscription(bot, chatbotService, subscription, notifiedVideoIds);
-        if (videoProcessed) {
-          return;
-        }
-      } catch (err) {
-        logger.error(`Failed to process subscription for channel ${subscription.channelName}: ${err.message}`);
-      }
-    }
+    await processVideo(bot, chatbotService, nextVideo.channelName, nextVideo.video);
+
+    await Promise.all([
+      markVideoAsNotified(nextVideo.video.id, `https://www.youtube.com/watch?v=${nextVideo.video.id}`),
+      updateSubscription(nextVideo.channelId, { lastNotifiedVideoId: nextVideo.video.id }),
+    ]);
+
+    logger.log(`Successfully processed video ${nextVideo.video.id}`);
   } catch (err) {
     logger.error(`YouTube check failed: ${err.message}`);
   }
-}
-
-async function processSubscription(bot: TelegramBot, chatbotService: ChatbotService, subscription: Subscription, notifiedVideoIds: Set<string>): Promise<boolean> {
-  const { channelId, channelName } = subscription;
-
-  const recentVideos = await getRecentVideos(channelId, 3);
-
-  if (recentVideos.length === 0) {
-    logger.log(`No videos found for channel ${channelName}`);
-    return false;
-  }
-
-  const cutoffTime = startOfDay(new Date());
-  const newVideos = recentVideos.filter((video) => new Date(video.publishedAt) >= cutoffTime).filter((video) => !notifiedVideoIds.has(video.id));
-
-  if (newVideos.length === 0) {
-    logger.log(`No new videos for channel ${channelName}`);
-    return false;
-  }
-
-  for (const video of newVideos) {
-    const videoId = video.id;
-
-    try {
-      await processVideo(bot, chatbotService, channelName, video);
-
-      await Promise.all([markVideoAsNotified(videoId, `https://www.youtube.com/watch?v=${videoId}`), updateSubscription(channelId, { lastNotifiedVideoId: videoId })]);
-
-      logger.log(`Successfully processed video ${videoId}`);
-      return true;
-    } catch (err) {
-      logger.error(`Failed to process video ${videoId}: ${err.message}`);
-    }
-  }
-
-  return false;
 }
 
 async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, channelName: string, video: Video): Promise<void> {
