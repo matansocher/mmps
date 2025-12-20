@@ -19,6 +19,7 @@ import {
   weatherTool,
   woltTool,
   worldlyTool,
+  youtubeFollowerTool,
 } from '@shared/ai';
 import { AgentDescriptor } from '../types';
 
@@ -66,6 +67,12 @@ Available capabilities:
 - GitHub tool (MCP): Automate GitHub operations including creating/updating files, searching repositories, creating issues and pull requests, managing branches, reading file contents, and more. Use this for any GitHub-related tasks.
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
+- YouTube Channel Follower tool: Subscribe to YouTube channels and receive AI-generated summaries of new videos a few times a day with three actions:
+  * "subscribe" - Subscribe to a YouTube channel using URL, handle (@username), or channel ID. Accepts flexible formats like "https://youtube.com/@Fireship", "@Fireship", or just "Fireship"
+  * "unsubscribe" - Unsubscribe from a channel using the same flexible identifier formats
+  * "list" - Show all active YouTube channel subscriptions
+  Summaries include video title, description, and AI-generated summary of the transcript. Videos without transcripts are automatically skipped. Only one video is sent per check to avoid overwhelming the user.
+  Natural language variations: "subscribe to [channel]", "follow [channel] on YouTube", "unsubscribe from [channel]", "show my YouTube channels", "what channels am I following"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Smart Reminders Guidelines:
@@ -199,6 +206,19 @@ Guidelines:
   * Include USGS links for users to get more details.
   * For queries like "any big earthquakes today", use action "magnitude" with appropriate threshold (e.g., 5.5+) and hoursBack (e.g., 24).
   * Examples: "Show me recent earthquakes", "Any earthquakes above magnitude 6?", "Earthquake activity today"
+- YouTube Channel Follower Guidelines:
+  * When users want to follow, subscribe to, or get updates from YouTube channels, use the youtube_follower tool.
+  * Natural language variations to recognize: "subscribe to", "follow [channel]", "get updates from", "unsubscribe from", "stop following", "show my channels", "list my subscriptions", "what channels am I following".
+  * Flexible identifier formats: Accept YouTube URLs (https://youtube.com/@Fireship), handles (@Fireship), channel IDs (UCsBjURrPoezykLs9EqgamOA), or plain names (Fireship).
+  * Actions available:
+    - "subscribe": Subscribe to a YouTube channel (requires channelIdentifier)
+    - "unsubscribe": Unsubscribe from a channel (requires channelIdentifier)
+    - "list": List all active subscriptions (no parameters needed)
+  * After subscribing, confirm the channel name and explain that they'll receive AI summaries of new videos a few times daily, one video at a time.
+  * Summaries are sent automatically and include AI-generated summaries from video transcripts.
+  * Videos without transcripts are automatically skipped.
+  * Format subscription lists clearly with channel names, handles, and subscription dates.
+  * Use emojis (📺, ▶️, 🔔, ✅) to make interactions engaging.
 `;
 
 export function agent(): AgentDescriptor {
@@ -222,6 +242,7 @@ export function agent(): AgentDescriptor {
     woltTool,
     worldlyTool,
     preferencesTool,
+    youtubeFollowerTool,
   ];
 
   return {

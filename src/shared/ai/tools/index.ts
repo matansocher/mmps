@@ -40,3 +40,5 @@ export { woltTool } from './wolt/wolt.tool';
 export { worldlyTool } from './worldly/worldly.tool';
 
 export { preferencesTool } from './preferences';
+
+export { youtubeFollowerTool } from './youtube-follower';
