@@ -60,13 +60,13 @@ export class ChatbotSchedulerService {
       // this.handleDailySummary(); // for testing purposes
       // this.handleEmailSummary(); // for testing purposes
       // this.handleFootballUpdate(); // for testing purposes
-      // this.handleMakavdiaUpdate(); // for testing purposes
+      this.handleMakavdiaUpdate(); // for testing purposes
       // this.handleSportsCalendar(); // for testing purposes
       // this.handleExerciseReminder(); // for testing purposes
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
-      this.handleYoutubeCheck(); // for testing purposes
+      // this.handleYoutubeCheck(); // for testing purposes
     }, 8000);
   }
 

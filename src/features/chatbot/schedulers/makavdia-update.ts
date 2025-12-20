@@ -12,12 +12,14 @@ export async function makavdiaUpdate(bot: TelegramBot, chatbotService: ChatbotSe
     const prompt = `Generate a summary of Deni Avdija's (מעקבדיה) latest NBA performance for today (${getDateString()}).
         Use the makavdia tool that will return his latest 5 games with comprehensive statistics. Use only the latest game to report to the user.
 
-        Format the message as follows:
+        The response from the tool will always return the latest 5 games, so check if the latest game was played today or not.
+        If the last game was not played today or the latest game's date is not today's date, inform the user that there was no game today.
+        
+        If the latest game was played today, Format the message as follows:
         - Start with "🏀 מעקבדיה - ${getDateString()}"
         - Focus on the most recent game (check if it was played today or recently)
         - Mention the opponent team, final score, and game outcome (win/loss)
         - Include key statistics: points, rebounds, assists, shooting percentages
-        - You will always get the latest 5 games, no matter if the last game was not today, so if no game today, tell the user that there was no game today
         - Write in Hebrew for better engagement`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
