@@ -1,4 +1,4 @@
-import { subHours } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import type TelegramBot from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
@@ -53,7 +53,7 @@ async function processSubscription(bot: TelegramBot, chatbotService: ChatbotServ
     return false;
   }
 
-  const cutoffTime = subHours(new Date(), 4);
+  const cutoffTime = startOfDay(new Date());
   const newVideos = recentVideos.filter((video) => {
     const publishedAt = new Date(video.publishedAt);
     return publishedAt >= cutoffTime;
