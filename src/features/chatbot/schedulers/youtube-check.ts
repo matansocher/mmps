@@ -27,37 +27,41 @@ export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotServ
     const notifiedVideoIds = await getNotifiedVideoIds();
     for (const subscription of subscriptions) {
       try {
-        await processSubscription(bot, chatbotService, subscription, notifiedVideoIds);
+        const videoProcessed = await processSubscription(bot, chatbotService, subscription, notifiedVideoIds);
+        if (videoProcessed) {
+          logger.log('Successfully sent one video notification, stopping for this run');
+          return;
+        }
       } catch (err) {
         logger.error(`Failed to process subscription for channel ${subscription.channelName}: ${err.message}`);
       }
     }
 
-    logger.log('YouTube check completed');
+    logger.log('YouTube check completed - no new videos to notify');
   } catch (err) {
     logger.error(`YouTube check failed: ${err.message}`);
   }
 }
 
-async function processSubscription(bot: TelegramBot, chatbotService: ChatbotService, subscription: Subscription, notifiedVideoIds: Set<string>): Promise<void> {
+async function processSubscription(bot: TelegramBot, chatbotService: ChatbotService, subscription: Subscription, notifiedVideoIds: Set<string>): Promise<boolean> {
   const { channelId, channelName } = subscription;
 
   const recentVideos = await getRecentVideos(channelId, 3);
 
   if (recentVideos.length === 0) {
     logger.log(`No videos found for channel ${channelName}`);
-    return;
+    return false;
   }
 
-  const cutoffTime = subHours(new Date(), 8);
+  const cutoffTime = subHours(new Date(), 4);
   const newVideos = recentVideos.filter((video) => {
     const publishedAt = new Date(video.publishedAt);
     return publishedAt >= cutoffTime;
   });
 
   if (newVideos.length === 0) {
-    logger.log(`No new videos in last 8 hours for channel ${channelName}`);
-    return;
+    logger.log(`No new videos for channel ${channelName}`);
+    return false;
   }
 
   logger.log(`Found ${newVideos.length} new video(s) for channel ${channelName}`);
@@ -76,10 +80,13 @@ async function processSubscription(bot: TelegramBot, chatbotService: ChatbotServ
       await Promise.all([markVideoAsNotified(videoId, `https://www.youtube.com/watch?v=${videoId}`), updateSubscription(channelId, { lastNotifiedVideoId: videoId })]);
 
       logger.log(`Successfully processed video ${videoId}`);
+      return true;
     } catch (err) {
       logger.error(`Failed to process video ${videoId}: ${err.message}`);
     }
   }
+
+  return false;
 }
 
 async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, channelName: string, video: Video): Promise<void> {
@@ -99,7 +106,7 @@ async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, ch
     return;
   }
 
-  const summaryPrompt = `Generate a concise summary for this YouTube video. Include the key points, main topics, and important takeaways.
+  const summaryPrompt = `Generate a detailed, comprehensive summary for this YouTube video. Include the key points, main topics, important takeaways, and actionable insights.
 
 **Video Details:**
 - Title: ${video.title}
@@ -110,13 +117,16 @@ async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, ch
 ${transcript}
 
 **Instructions:**
-1. Provide a brief 2-3 sentence summary of the video
-2. List 3-5 key points or main topics covered
-3. Keep it concise and informative
-4. Use Hebrew for the response
-5. Format nicely with markdown and emojis
+1. Provide a detailed summary (4-6 sentences) that captures the essence and context of the video
+2. List 5-8 key points or main topics covered, with brief explanations for each
+3. Include any actionable insights, tips, or recommendations mentioned
+4. Highlight important quotes or statements if relevant
+5. Make it comprehensive and informative while remaining readable
+6. Use Hebrew for the response
+7. Format nicely with markdown, bullet points, and emojis for better readability
+8. Use section headers if it helps organize the content (e.g., "סיכום", "נקודות מרכזיות", "מסקנות")
 
-DO NOT include any tool calls or ask questions - just provide the summary directly.`;
+DO NOT include any tool calls or ask questions - just provide the detailed summary directly.`;
 
   const summaryResponse = await chatbotService.processMessage(summaryPrompt, chatId);
 

@@ -52,7 +52,7 @@ export class ChatbotSchedulerService {
       await this.handleEarthquakeMonitor();
     });
 
-    createSchedule(`0 8,13,18 * * *`, async () => {
+    createSchedule(`12 12,14,16,17,20,22,23 * * *`, async () => {
       await this.handleYoutubeCheck();
     });
 
@@ -66,7 +66,7 @@ export class ChatbotSchedulerService {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
-      this.handleYoutubeCheck(); // for testing purposes
+      // this.handleYoutubeCheck(); // for testing purposes
     }, 8000);
   }
 
