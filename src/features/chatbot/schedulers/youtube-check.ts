@@ -14,8 +14,6 @@ const chatId = MY_USER_ID;
 
 export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
   try {
-    logger.log('Starting YouTube check...');
-
     const subscriptions = await getAllActiveSubscriptions();
 
     if (subscriptions.length === 0) {
@@ -23,21 +21,17 @@ export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotServ
       return;
     }
 
-    logger.log(`Processing ${subscriptions.length} subscription(s)`);
     const notifiedVideoIds = await getNotifiedVideoIds();
     for (const subscription of subscriptions) {
       try {
         const videoProcessed = await processSubscription(bot, chatbotService, subscription, notifiedVideoIds);
         if (videoProcessed) {
-          logger.log('Successfully sent one video notification, stopping for this run');
           return;
         }
       } catch (err) {
         logger.error(`Failed to process subscription for channel ${subscription.channelName}: ${err.message}`);
       }
     }
-
-    logger.log('YouTube check completed - no new videos to notify');
   } catch (err) {
     logger.error(`YouTube check failed: ${err.message}`);
   }
@@ -54,25 +48,15 @@ async function processSubscription(bot: TelegramBot, chatbotService: ChatbotServ
   }
 
   const cutoffTime = startOfDay(new Date());
-  const newVideos = recentVideos.filter((video) => {
-    const publishedAt = new Date(video.publishedAt);
-    return publishedAt >= cutoffTime;
-  });
+  const newVideos = recentVideos.filter((video) => new Date(video.publishedAt) >= cutoffTime).filter((video) => !notifiedVideoIds.has(video.id));
 
   if (newVideos.length === 0) {
     logger.log(`No new videos for channel ${channelName}`);
     return false;
   }
 
-  logger.log(`Found ${newVideos.length} new video(s) for channel ${channelName}`);
-
   for (const video of newVideos) {
     const videoId = video.id;
-
-    if (notifiedVideoIds.has(videoId)) {
-      logger.log(`Video ${videoId} already notified`);
-      continue;
-    }
 
     try {
       await processVideo(bot, chatbotService, channelName, video);

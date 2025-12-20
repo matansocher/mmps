@@ -17,20 +17,13 @@ export async function handleSubscribe(channelIdentifier: string): Promise<string
       return JSON.stringify({
         success: false,
         error: `Already subscribed to ${existingSubscription.channelName}`,
-        channel: {
-          name: existingSubscription.channelName,
-          handle: existingSubscription.channelHandle,
-          url: existingSubscription.channelUrl,
-        },
+        channel: { name: existingSubscription.channelName, handle: existingSubscription.channelHandle, url: existingSubscription.channelUrl },
       });
     }
 
     const recentVideos = await getRecentVideos(channelId, 1);
     if (recentVideos.length === 0) {
-      return JSON.stringify({
-        success: false,
-        error: 'Could not fetch channel information. Channel may not have any videos.',
-      });
+      return JSON.stringify({ success: false, error: 'Could not fetch channel information. Channel may not have any videos.' });
     }
 
     const channelName = recentVideos[0].channelTitle;
@@ -41,16 +34,9 @@ export async function handleSubscribe(channelIdentifier: string): Promise<string
     return JSON.stringify({
       success: true,
       message: `Successfully subscribed to ${channelName}`,
-      channel: {
-        name: channelName,
-        handle: channelHandle,
-        url: `https://www.youtube.com/channel/${channelId}`,
-      },
+      channel: { name: channelName, handle: channelHandle, url: `https://www.youtube.com/channel/${channelId}` },
     });
   } catch (err) {
-    return JSON.stringify({
-      success: false,
-      error: `Failed to subscribe: ${err.message}`,
-    });
+    return JSON.stringify({ success: false, error: `Failed to subscribe: ${err.message}` });
   }
 }

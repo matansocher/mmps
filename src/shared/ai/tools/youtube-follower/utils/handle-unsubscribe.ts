@@ -18,10 +18,7 @@ export async function handleUnsubscribe(channelIdentifier: string): Promise<stri
       const matchingSubscription = subscriptions.find((sub) => sub.channelId === channelId);
 
       if (!matchingSubscription) {
-        return JSON.stringify({
-          success: false,
-          error: `Not subscribed to this channel`,
-        });
+        return JSON.stringify({ success: false, error: `Not subscribed to this channel` });
       }
 
       channelName = matchingSubscription.channelName;
@@ -32,10 +29,7 @@ export async function handleUnsubscribe(channelIdentifier: string): Promise<stri
       );
 
       if (!matchingSubscription) {
-        return JSON.stringify({
-          success: false,
-          error: `Could not find subscription for "${channelIdentifier}"`,
-        });
+        return JSON.stringify({ success: false, error: `Could not find subscription for "${channelIdentifier}"` });
       }
 
       channelId = matchingSubscription.channelId;
@@ -45,20 +39,11 @@ export async function handleUnsubscribe(channelIdentifier: string): Promise<stri
     const result = await removeSubscription(channelId);
 
     if (result.modifiedCount === 0) {
-      return JSON.stringify({
-        success: false,
-        error: `Not subscribed to ${channelName}`,
-      });
+      return JSON.stringify({ success: false, error: `Not subscribed to ${channelName}` });
     }
 
-    return JSON.stringify({
-      success: true,
-      message: `Successfully unsubscribed from ${channelName}`,
-    });
+    return JSON.stringify({ success: true, message: `Successfully unsubscribed from ${channelName}` });
   } catch (err) {
-    return JSON.stringify({
-      success: false,
-      error: `Failed to unsubscribe: ${err.message}`,
-    });
+    return JSON.stringify({ success: false, error: `Failed to unsubscribe: ${err.message}` });
   }
 }

@@ -30,9 +30,3 @@ export async function markVideoAsNotified(videoId: string, videoUrl: string): Pr
   };
   return collection.insertOne(notifiedVideo as NotifiedVideo);
 }
-
-export async function createIndexes(): Promise<void> {
-  const collection = getCollection();
-  await collection.createIndex({ videoId: 1 }, { unique: true });
-  await collection.createIndex({ notifiedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 });
-}

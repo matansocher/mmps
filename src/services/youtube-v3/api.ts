@@ -43,15 +43,9 @@ export async function getRecentVideos(channelId: string, limit = 2): Promise<Vid
   }
 
   return data.items.map((v) => {
-    return {
-      id: v.id.videoId,
-      etag: v.etag,
-      channelTitle: v.snippet.channelTitle,
-      title: v.snippet.title,
-      description: v.snippet.description,
-      publishedAt: v.snippet.publishedAt,
-      thumbnail: v.snippet.thumbnails.high.url,
-    };
+    const { id, etag, snippet } = v;
+    const { channelTitle, title, description, publishedAt, thumbnails } = snippet;
+    return { id: id.videoId, etag, channelTitle, title, description, publishedAt, thumbnail: thumbnails.high.url };
   });
 }
 

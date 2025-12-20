@@ -5,18 +5,14 @@ export async function handleListSubscriptions(): Promise<string> {
     const subscriptions = await getActiveSubscriptions();
 
     if (subscriptions.length === 0) {
-      return JSON.stringify({
-        success: true,
-        message: 'No active YouTube subscriptions',
-        subscriptions: [],
-      });
+      return JSON.stringify({ success: true, message: 'No active YouTube subscriptions', subscriptions: [] });
     }
 
-    const subscriptionsList = subscriptions.map((sub) => ({
-      channelName: sub.channelName,
-      channelHandle: sub.channelHandle,
-      channelUrl: sub.channelUrl,
-      subscribedSince: sub.createdAt.toISOString(),
+    const subscriptionsList = subscriptions.map(({ channelName, channelHandle, channelUrl, createdAt }) => ({
+      channelName,
+      channelHandle,
+      channelUrl,
+      subscribedSince: createdAt.toISOString(),
     }));
 
     return JSON.stringify({
@@ -25,9 +21,6 @@ export async function handleListSubscriptions(): Promise<string> {
       subscriptions: subscriptionsList,
     });
   } catch (err) {
-    return JSON.stringify({
-      success: false,
-      error: `Failed to list subscriptions: ${err.message}`,
-    });
+    return JSON.stringify({ success: false, error: `Failed to list subscriptions: ${err.message}` });
   }
 }
