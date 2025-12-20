@@ -46,6 +46,7 @@
     "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.13.2",
     "canvas": "^3.2.0",
+    "cheerio": "^1.1.2",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^17.2.3",

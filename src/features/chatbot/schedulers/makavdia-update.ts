@@ -17,7 +17,7 @@ export async function makavdiaUpdate(bot: TelegramBot, chatbotService: ChatbotSe
         - Focus on the most recent game (check if it was played today or recently)
         - Mention the opponent team, final score, and game outcome (win/loss)
         - Include key statistics: points, rebounds, assists, shooting percentages
-        - If no game today, tell the user that there was no game today
+        - You will always get the latest 5 games, no matter if the last game was not today, so if no game today, tell the user that there was no game today
         - Write in Hebrew for better engagement`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
