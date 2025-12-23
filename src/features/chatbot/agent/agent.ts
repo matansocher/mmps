@@ -7,7 +7,6 @@ import {
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
-  githubTool,
   gmailTool,
   makavdiaTool,
   matchPredictionTool,
@@ -64,7 +63,6 @@ Available capabilities:
 - Exercise Tracker tool: Log my daily exercises, check exercise history, calculate streaks, and track fitness progress. Understands natural language like "I exercised today" or "I just finished my workout".
 - Exercise Analytics tool: Generate weekly summaries, view achievements, get motivational content, and celebrate streak records with special images.
 - Recipes tool: Access your personal cooking recipe collection. List all recipes or get specific recipe details including ingredients, instructions, tags, and links.
-- GitHub tool (MCP): Automate GitHub operations including creating/updating files, searching repositories, creating issues and pull requests, managing branches, reading file contents, and more. Use this for any GitHub-related tasks.
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
 - YouTube Channel Follower tool: Subscribe to YouTube channels and receive AI-generated summaries of new videos a few times a day with three actions:
@@ -156,20 +154,6 @@ Guidelines:
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - Makavdia Stats: When users ask about Deni Avdija, מעקבדיה, his NBA stats, recent games, or performance, use the makavdia tool. It returns JSON data with the latest 5 games including scores, opponents, venues, game times, and detailed player statistics. Parse and format the data clearly for the user.
-- GitHub Automation (MCP): When users need to work with GitHub repositories, use the github tool with the appropriate operation:
-  * IMPORTANT: The owner defaults to "matansocher" when not specified. So "mmps repo" means "matansocher/mmps".
-  * create_or_update_file: Create or modify files in repos
-  * search_repositories: Find repositories
-  * create_repository: Create new repos
-  * get_file_contents: Read file contents
-  * push_files: Push multiple files
-  * create_issue: Create issues
-  * create_pull_request: Create PRs (requires: owner, repo, title, head branch, base branch)
-  * fork_repository: Fork repos
-  * create_branch: Create branches
-  * list_commits: View commit history
-  * list_issues: View repository issues
-  Use cases: "Create a new issue in mmps", "Read the README from my repo", "Create a PR from feature-branch to main", "List my recent commits".
 - Recipes Guidelines:
   * When users ask about recipes, cooking, or food, use the recipes tool.
   * Natural language variations: "show me recipes", "what can I cook", "recipe for", "show me the [recipe name] recipe", "what recipes do I have".
@@ -238,7 +222,6 @@ export function agent(): AgentDescriptor {
     exerciseTool,
     exerciseAnalyticsTool,
     recipesTool,
-    githubTool,
     woltTool,
     worldlyTool,
     preferencesTool,
