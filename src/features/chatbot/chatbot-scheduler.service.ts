@@ -66,7 +66,7 @@ export class ChatbotSchedulerService {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
-      // this.handleYoutubeCheck(); // for testing purposes
+      this.handleYoutubeCheck(); // for testing purposes
     }, 8000);
   }
 
@@ -107,6 +107,7 @@ export class ChatbotSchedulerService {
   }
 
   private async handleYoutubeCheck(): Promise<void> {
+    console.log(`[ChatbotScheduler] 🎬 YouTube check triggered at ${new Date().toISOString()}`);
     await youtubeCheck(this.bot, this.chatbotService);
   }
 }
