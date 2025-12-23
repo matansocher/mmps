@@ -54,11 +54,13 @@ export async function fetchTranscript(videoId: string): Promise<string> {
     const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
 
     if (!transcript || transcript.length === 0) {
+      console.log(`fetchTranscript: No transcript found for videoId: ${videoId}`);
       return '';
     }
 
     return transcript.map((entry) => entry.text).join(' ');
-  } catch {
+  } catch (error) {
+    console.error(`fetchTranscript error for videoId ${videoId}:`, error instanceof Error ? error.message : error);
     return '';
   }
 }

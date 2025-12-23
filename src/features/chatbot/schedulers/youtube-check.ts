@@ -77,7 +77,12 @@ export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotServ
     }
 
     logger.log(`🎬 Processing video: "${nextVideo.video.title}" from ${nextVideo.channelName}`);
-    await processVideo(bot, chatbotService, nextVideo.channelName, nextVideo.video);
+    const wasProcessed = await processVideo(bot, chatbotService, nextVideo.channelName, nextVideo.video);
+
+    if (!wasProcessed) {
+      logger.log(`⚠️ Video ${nextVideo.video.id} was not processed, skipping notification marking`);
+      return;
+    }
 
     logger.log(`💾 Marking video as notified and updating subscription...`);
     await Promise.all([
@@ -92,7 +97,7 @@ export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotServ
   }
 }
 
-async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, channelName: string, video: Video): Promise<void> {
+async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, channelName: string, video: Video): Promise<boolean> {
   const videoId = video.id;
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
@@ -103,12 +108,12 @@ async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, ch
 
     if (!transcript || transcript.trim().length === 0) {
       logger.log(`⚠️ Video ${videoId} has no transcript, skipping`);
-      return;
+      return false;
     }
     logger.log(`✅ Transcript fetched successfully (${transcript.length} characters)`);
   } catch (err) {
     logger.log(`❌ Video ${videoId} transcript fetch failed, skipping: ${err.message}`);
-    return;
+    return false;
   }
 
   const summaryPrompt = `Generate a detailed, comprehensive summary for this YouTube video. Include the key points, main topics, important takeaways, and actionable insights.
@@ -148,4 +153,5 @@ ${summaryResponse.message}
   logger.log(`📤 Sending notification to chat ${chatId}...`);
   await sendShortenedMessage(bot, chatId, notificationMessage, { parse_mode: 'Markdown' });
   logger.log(`✅ Notification sent successfully`);
+  return true;
 }
