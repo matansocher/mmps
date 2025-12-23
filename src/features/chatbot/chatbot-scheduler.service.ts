@@ -52,9 +52,9 @@ export class ChatbotSchedulerService {
       await this.handleEarthquakeMonitor();
     });
 
-    createSchedule(`12 12,14,16,17,20,22,23 * * *`, async () => {
-      await this.handleYoutubeCheck();
-    });
+    // createSchedule(`12 12,14,16,17,20,22,23 * * *`, async () => {
+    //   await this.handleYoutubeCheck();
+    // });
 
     setTimeout(() => {
       // this.handleDailySummary(); // for testing purposes
