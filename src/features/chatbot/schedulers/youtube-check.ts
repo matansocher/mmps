@@ -19,22 +19,16 @@ type NextVideoToNotify = {
 };
 
 async function getNextVideoToNotify(): Promise<NextVideoToNotify | null> {
-  logger.log('🔍 Starting getNextVideoToNotify...');
   const subscriptions = await getAllActiveSubscriptions();
-  logger.log(`📊 Found ${subscriptions.length} active subscriptions`);
 
   if (subscriptions.length === 0) {
-    logger.log('⚠️ No active subscriptions found, exiting');
     return null;
   }
 
   const notifiedVideoIds = await getNotifiedVideoIds();
-  logger.log(`📝 Already notified video IDs count: ${notifiedVideoIds.size}`);
   const cutoffTime = startOfDay(new Date());
-  logger.log(`📅 Cutoff time for videos: ${cutoffTime.toISOString()}`);
 
   const shuffledSubscriptions = shuffleArray(subscriptions);
-  logger.log(`🔀 Shuffled subscriptions, checking ${shuffledSubscriptions.length} channels`);
 
   for (const subscription of shuffledSubscriptions) {
     try {
