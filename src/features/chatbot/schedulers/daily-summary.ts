@@ -15,6 +15,8 @@ export async function dailySummary(bot: TelegramBot, chatbotService: ChatbotServ
 
 **Weather for Tomorrow:**
 Use the weather tool with action "tomorrow_hourly" for location "Kfar Saba" to get tomorrow's hourly weather forecast.
+Format the weather data as: hour - degrees (e.g., "08:00 - 18°C")
+Show 4 different times throughout the day (morning, noon, afternoon, and evening - e.g., 10:00, 14:00, 18:00, 22:00).
 
 **Additional Information:**
 1. **Calendar**: Check my calendar events for tomorrow. Format as:
