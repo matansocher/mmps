@@ -22,8 +22,6 @@ Use the weather tool with action "tomorrow_hourly" for location "Kfar Saba" to g
    - If no events, dont add the calendar section.
 2. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
    - Extract the person's name from the event title
-   - Create a reminder using the reminders tool for 4 PM (16:00) tomorrow with the message: "היום יום ההולדת של [שם]! תזכור לאחל לו/לה יום הולדת שמח."
-   - Mention in the summary that you've added the reminder(s)
    - If there are birthdays tomorrows, dont add the birthday section.
 3. **Exercises**: Mention if I exercised today or not. Keep it brief (1-2 sentences max).
 
