@@ -88,8 +88,8 @@ export async function fetchTranscript(videoId: string): Promise<string> {
     }
 
     console.log(`fetchTranscript: No captions found in metadata for videoId: ${videoId}. Trying fallback...`);
-  } catch (error) {
-    console.warn(`fetchTranscript: Innertube direct fetch failed for videoId: ${videoId}:`, error instanceof Error ? error.message : error);
+  } catch (err) {
+    console.warn(`fetchTranscript: Innertube direct fetch failed for videoId: ${videoId}: ${err}`);
     return null;
   }
 }
