@@ -1,23 +1,8 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { YoutubeTranscript } from 'youtube-transcript-plus';
-import { Innertube, UniversalCache } from 'youtubei.js';
-import { parseTranscriptXml } from '@services/youtube-v3/utils';
 import type { Video, YouTubeChannelResponse, YouTubeSearchResponse } from './types';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
-
-let innertube: Innertube | null = null;
-
-async function getInnertube(): Promise<Innertube> {
-  if (!innertube) {
-    innertube = await Innertube.create({
-      cache: new UniversalCache(false),
-      generate_session_locally: true,
-    });
-  }
-  return innertube;
-}
 
 export async function getChannelIdFromHandle(handle: string): Promise<string> {
   const apiKey = env.YOUTUBE_API_KEY;
@@ -65,31 +50,40 @@ export async function getRecentVideos(channelId: string, limit = 2): Promise<Vid
 }
 
 export async function fetchTranscript(videoId: string): Promise<string> {
-  try {
-    console.log(`fetchTranscript: Fetching transcript for videoId: ${videoId} using Innertube direct URL`);
-    const yt = await getInnertube();
-    const info = await yt.getInfo(videoId);
+  const rapidApiKey = env.RAPIDAPI_KEY;
+  if (!rapidApiKey) {
+    throw new Error('RAPIDAPI_KEY not configured');
+  }
 
-    if (info.captions?.caption_tracks?.length <= 0) {
-      console.log(`fetchTranscript: No captions found for videoId: ${videoId}`);
+  try {
+    console.log(`fetchTranscript: Fetching transcript for videoId: ${videoId} using RapidAPI`);
+
+    const response = await axios.get('https://youtube-transcriptor.p.rapidapi.com/transcript', {
+      params: {
+        video_id: videoId,
+        lang: 'en',
+      },
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'youtube-transcriptor.p.rapidapi.com',
+      },
+    });
+
+    if (!response.data || response.data.error) {
+      console.log(`fetchTranscript: No transcript available for videoId: ${videoId}`);
       return null;
     }
-    const track = info.captions.caption_tracks.find((t) => t.language_code === 'en') || info.captions.caption_tracks[0];
 
-    console.log(`fetchTranscript: Found caption track: ${track.name.text} (${track.language_code})`);
-
-    const response = await axios.get(track.base_url);
-    const fullText = parseTranscriptXml(response.data);
-
-    console.log(`fetchTranscript: Successfully fetched and parsed transcript for videoId: ${videoId}, transcript: ${fullText.substring(0, 100)}...`);
-
-    if (fullText) {
+    if (Array.isArray(response.data)) {
+      const fullText = response.data[0].transcriptionAsText;
+      console.log(`fetchTranscript: Successfully fetched transcript for videoId: ${videoId}, length: ${fullText.length} characters`);
       return fullText;
     }
 
-    console.log(`fetchTranscript: No captions found in metadata for videoId: ${videoId}. Trying fallback...`);
+    console.log(`fetchTranscript: Unexpected response format for videoId: ${videoId}`);
+    return null;
   } catch (err) {
-    console.warn(`fetchTranscript: Innertube direct fetch failed for videoId: ${videoId}: ${err}`);
+    console.error(`fetchTranscript: Failed to fetch transcript for videoId: ${videoId}: ${err.message}`);
     return null;
   }
 }
