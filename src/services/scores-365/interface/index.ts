@@ -86,9 +86,78 @@ export type AthleteGame = {
   readonly playerStats: any;
 };
 
+export type MakavdiaHeader = {
+  readonly title?: string;
+  readonly description?: string;
+  readonly type: number;
+  readonly category: number;
+};
+
+export type MakavdiaAthleteStat = {
+  readonly type: number;
+  readonly value: string;
+  readonly logo?: boolean;
+};
+
+export type MakavdiaCompetitor = {
+  readonly id: number;
+  readonly countryId: number;
+  readonly sportId: number;
+  readonly name: string;
+  readonly shortName: string;
+  readonly score: number;
+  readonly isWinner: boolean;
+  readonly nameForURL: string;
+  readonly type: number;
+  readonly popularityRank: number;
+  readonly imageVersion: number;
+  readonly color: string;
+  readonly awayColor: string;
+  readonly hasSquad: boolean;
+  readonly hasTransfers: boolean;
+  readonly competitorNum: number;
+  readonly hideOnSearch: boolean;
+  readonly hideOnCatalog: boolean;
+};
+
+export type MakavdiaGame = {
+  readonly id: number;
+  readonly sportId: number;
+  readonly competitionId: number;
+  readonly seasonNum: number;
+  readonly stageNum: number;
+  readonly groupNum: number;
+  readonly competitionDisplayName: string;
+  readonly startTime: string;
+  readonly statusGroup: number;
+  readonly statusText: string;
+  readonly shortStatusText: string;
+  readonly gameTimeAndStatusDisplayType: number;
+  readonly homeCompetitor: MakavdiaCompetitor;
+  readonly awayCompetitor: MakavdiaCompetitor;
+  readonly winner: number;
+  readonly scores: readonly number[];
+  readonly homeAwayTeamOrder: number;
+  readonly hasPointByPoint: boolean;
+  readonly hasVideo: boolean;
+};
+
+export type MakavdiaGameResult = {
+  readonly game: MakavdiaGame;
+  readonly played: boolean;
+  readonly hasStats: boolean;
+  readonly athleteStats: readonly MakavdiaAthleteStat[];
+  readonly relatedCompetitor: number;
+};
+
 export type AthleteLastMatches = {
   readonly games: AthleteGame[];
   readonly headers: any[];
+};
+
+export type MakavdiaLastMatches = {
+  readonly games: readonly MakavdiaGameResult[];
+  readonly headers: readonly MakavdiaHeader[];
 };
 
 export type AthleteData = {
@@ -97,6 +166,16 @@ export type AthleteData = {
   readonly lastMatches: AthleteLastMatches;
 };
 
+export type MakavdiaAthleteData = {
+  readonly id: number;
+  readonly name: string;
+  readonly lastMatches: MakavdiaLastMatches;
+};
+
 export type AthleteApiResponse = {
   readonly athletes: AthleteData[];
+};
+
+export type MakavdiaApiResponse = {
+  readonly athletes: readonly MakavdiaAthleteData[];
 };

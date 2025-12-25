@@ -7,11 +7,16 @@ const schema = z.object({});
 async function runner() {
   const makavdiaResults = await getMakavdiaResults();
 
-  if (!makavdiaResults?.length) {
+  if (!makavdiaResults) {
     return `לא נמצאו משחקים`;
   }
 
-  return makavdiaResults;
+  const todayGame = makavdiaResults.games.find((game) => {
+    const gameDate = new Date(game.game.startTime);
+    const today = new Date();
+    return gameDate.getDate() === today.getDate() && gameDate.getMonth() === today.getMonth() && gameDate.getFullYear() === today.getFullYear();
+  });
+  return todayGame ? JSON.stringify(todayGame, null, 2) : 'לא היה משחק היום';
 }
 
 export const makavdiaTool = tool(runner, {
