@@ -11,7 +11,6 @@ import type { ChatbotService } from '../chatbot.service';
 const logger = new Logger('YoutubeCheckScheduler');
 
 const chatId = MY_USER_ID;
-const stopProcess = true;
 
 type NextVideoToNotify = {
   readonly video: Video;
@@ -62,15 +61,6 @@ async function getNextVideoToNotify(): Promise<NextVideoToNotify | null> {
 }
 
 export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
-  if (stopProcess) {
-    const videoId = 'uXxb4MFJj7I';
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const transcript = await fetchTranscript(videoId);
-    const text = `Transcript for video ${videoId} (${videoUrl}):\n${transcript.slice(0, 500)}...`;
-    logger.log(text);
-    await bot.sendMessage(chatId, text);
-    return;
-  }
   logger.log('🚀 YouTube check started');
   try {
     const nextVideo = await getNextVideoToNotify();
