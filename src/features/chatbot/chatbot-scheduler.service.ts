@@ -66,7 +66,7 @@ export class ChatbotSchedulerService {
       // this.handleWeeklyExerciseSummary(); // for testing purposes
       // this.handleReminderCheck(); // for testing purposes
       // this.handleEarthquakeMonitor(); // for testing purposes
-      this.handleYoutubeCheck(); // for testing purposes
+      // this.handleYoutubeCheck(); // for testing purposes
     }, 8000);
   }
 
