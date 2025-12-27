@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
-import { Logger } from '@core/utils';
+import { initConsoleOverride, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotBotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as coachBotConfig, initCoach } from '@features/coach';
 import { initLangly, BOT_CONFIG as langlyBotConfig } from '@features/langly';
@@ -13,6 +13,7 @@ import { initWorldly, BOT_CONFIG as worldlyBotConfig } from '@features/worldly';
 dotenv.config();
 
 async function main() {
+  await initConsoleOverride();
   const app = express();
   const port = env.PORT || 3000;
   const logger = new Logger('main.ts');
