@@ -27,14 +27,20 @@ To run this application, ensure you have Node.js 20.x installed. Each bot operat
    Create a .env file in the root directory and define the required environment variables:
    ```bash
    IS_PROD=false
-    
+
    OPENAI_API_KEY=
 
    MONGO_DB_URL=
-   
+
    LOCAL_ACTIVE_BOT_ID=#the id of the bot that you want to run (in BOT_CONFIG of each bot)
    PLAYGROUNDS_TELEGRAM_BOT_TOKEN=#a bot token to work with
    NOTIFIER_TELEGRAM_BOT_TOKEN=#another bot token to work with
+
+   # Optional: Google Sheets Logging (Production only)
+   # These credentials enable automatic logging of console output to Google Sheets
+   SHEETS_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
+   SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+   SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
    ```
 
 
