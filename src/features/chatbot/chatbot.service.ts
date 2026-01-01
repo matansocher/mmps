@@ -20,12 +20,12 @@ export class ChatbotService {
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,
-      onToolStart: async (toolName, input) => {
-        this.logger.log(`🔧 Tool Start: ${toolName}, Parameters: ${JSON.stringify(input)}`);
-      },
-      onToolEnd: async (toolName, output, metadata) => {
-        this.logger.log(`✅ Tool End: ${toolName} (${metadata?.duration}ms)`);
-      },
+      // onToolStart: async (toolName, input) => {
+      //   this.logger.log(`🔧 Tool Start: ${toolName}, Parameters: ${JSON.stringify(input)}`);
+      // },
+      // onToolEnd: async (toolName, output, metadata) => {
+      //   this.logger.log(`✅ Tool End: ${toolName} (${metadata?.duration}ms)`);
+      // },
       onToolError: async (toolName, error, metadata) => {
         this.logger.error(`❌ Tool Error: ${toolName} (${metadata?.duration}ms), Error: ${error.message}`);
       },

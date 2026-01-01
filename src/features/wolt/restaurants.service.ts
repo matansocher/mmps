@@ -25,7 +25,7 @@ export class RestaurantsService {
       const restaurants = await getRestaurantsList();
       if (restaurants.length) {
         restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
-        this.logger.log(`${this.refreshRestaurants.name} - Restaurants list was refreshed successfully`);
+        // this.logger.log(`${this.refreshRestaurants.name} - Restaurants list was refreshed successfully`);
       }
     } catch (err) {
       this.logger.error(`${this.refreshRestaurants.name} - error - ${err}`);

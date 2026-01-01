@@ -32,9 +32,7 @@ async function getNextVideoToNotify(): Promise<NextVideoToNotify | null> {
 
   for (const subscription of shuffledSubscriptions) {
     try {
-      logger.log(`🎥 Checking channel: ${subscription.channelName} (${subscription.channelId})`);
       const recentVideos = await getRecentVideos(subscription.channelId, 3);
-      logger.log(`  📹 Found ${recentVideos.length} recent videos for ${subscription.channelName}`);
 
       const nextVideo = recentVideos
         .filter((video) => new Date(video.publishedAt) >= cutoffTime)
@@ -42,49 +40,39 @@ async function getNextVideoToNotify(): Promise<NextVideoToNotify | null> {
         .find((video) => video);
 
       if (nextVideo) {
-        logger.log(`  ✅ Found new video to notify: "${nextVideo.title}" (${nextVideo.id})`);
         return {
           video: nextVideo,
           channelId: subscription.channelId,
           channelName: subscription.channelName,
         };
       } else {
-        logger.log(`  ⏭️ No new videos for ${subscription.channelName} (filtered by date/already notified)`);
       }
     } catch (err) {
       logger.error(`  ❌ Failed to check channel ${subscription.channelName}: ${err.message}`);
     }
   }
 
-  logger.log('🔚 No new videos found across all channels');
   return null;
 }
 
 export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
-  logger.log('🚀 YouTube check started');
   try {
     const nextVideo = await getNextVideoToNotify();
 
     if (!nextVideo) {
-      logger.log('⚠️ No videos to notify');
       return;
     }
 
-    logger.log(`🎬 Processing video: "${nextVideo.video.title}" from ${nextVideo.channelName}`);
     const wasProcessed = await processVideo(bot, chatbotService, nextVideo.channelName, nextVideo.video);
 
     if (!wasProcessed) {
-      logger.log(`⚠️ Video ${nextVideo.video.id} was not processed, skipping notification marking`);
       return;
     }
 
-    logger.log(`💾 Marking video as notified and updating subscription...`);
     await Promise.all([
       markVideoAsNotified(nextVideo.video.id, `https://www.youtube.com/watch?v=${nextVideo.video.id}`),
       updateSubscription(nextVideo.channelId, { lastNotifiedVideoId: nextVideo.video.id }),
     ]);
-
-    logger.log(`✅ Successfully processed video ${nextVideo.video.id}`);
   } catch (err) {
     logger.error(`❌ YouTube check failed: ${err.message}`);
     logger.error(`Stack trace: ${err.stack}`);
@@ -95,18 +83,14 @@ async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, ch
   const videoId = video.id;
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-  logger.log(`📝 Fetching transcript for video ${videoId}...`);
   let transcript: string;
   try {
     transcript = await fetchTranscript(videoId);
 
     if (!transcript || transcript.trim().length === 0) {
-      logger.log(`⚠️ Video ${videoId} has no transcript, skipping`);
       return false;
     }
-    logger.log(`✅ Transcript fetched successfully (${transcript.length} characters)`);
-  } catch (err) {
-    logger.log(`❌ Video ${videoId} transcript fetch failed, skipping: ${err.message}`);
+  } catch {
     return false;
   }
 
@@ -132,9 +116,7 @@ ${transcript}
 
 DO NOT include any tool calls or ask questions - just provide the detailed summary directly.`;
 
-  logger.log(`🤖 Generating AI summary for video ${videoId}...`);
   const summaryResponse = await chatbotService.processMessage(summaryPrompt, chatId);
-  logger.log(`✅ AI summary generated (${summaryResponse.message.length} characters)`);
 
   const notificationMessage = `📺 *סרטון חדש מ-${channelName}*
 
@@ -144,8 +126,6 @@ ${summaryResponse.message}
 
 🔗 [צפה בסרטון](${videoUrl})`;
 
-  logger.log(`📤 Sending notification to chat ${chatId}...`);
   await sendShortenedMessage(bot, chatId, notificationMessage, { parse_mode: 'Markdown' });
-  logger.log(`✅ Notification sent successfully`);
   return true;
 }
