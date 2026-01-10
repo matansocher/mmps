@@ -3,7 +3,19 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, earthquakeMonitor, emailSummary, exerciseReminder, footballUpdate, makavdiaUpdate, reminderCheck, sportsCalendar, weeklyExerciseSummary, youtubeCheck } from './schedulers';
+import {
+  dailySummary,
+  earthquakeMonitor,
+  emailSummary,
+  exerciseReminder,
+  footballUpdate,
+  makavdiaUpdate,
+  polymarketUpdate,
+  reminderCheck,
+  sportsCalendar,
+  weeklyExerciseSummary,
+  youtubeCheck,
+} from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
@@ -52,21 +64,26 @@ export class ChatbotSchedulerService {
       await this.handleEarthquakeMonitor();
     });
 
+    createSchedule(`5 16 * * *`, async () => {
+      await this.handlePolymarketUpdate();
+    });
+
     // createSchedule(`12 12,14,16,17,20,22,23 * * *`, async () => {
     //   await this.handleYoutubeCheck();
     // });
 
     setTimeout(() => {
-      // this.handleDailySummary(); // for testing purposes
-      // this.handleEmailSummary(); // for testing purposes
-      // this.handleFootballUpdate(); // for testing purposes
-      // this.handleMakavdiaUpdate(); // for testing purposes
-      // this.handleSportsCalendar(); // for testing purposes
-      // this.handleExerciseReminder(); // for testing purposes
-      // this.handleWeeklyExerciseSummary(); // for testing purposes
-      // this.handleReminderCheck(); // for testing purposes
-      // this.handleEarthquakeMonitor(); // for testing purposes
-      // this.handleYoutubeCheck(); // for testing purposes
+      // this.handleDailySummary();
+      // this.handleEmailSummary();
+      // this.handleFootballUpdate();
+      // this.handleMakavdiaUpdate();
+      // this.handleSportsCalendar();
+      // this.handleExerciseReminder();
+      // this.handleWeeklyExerciseSummary();
+      // this.handleReminderCheck();
+      // this.handleEarthquakeMonitor();
+      // this.handleYoutubeCheck();
+      // this.handlePolymarketUpdate();
     }, 8000);
   }
 
@@ -108,5 +125,9 @@ export class ChatbotSchedulerService {
 
   private async handleYoutubeCheck(): Promise<void> {
     await youtubeCheck(this.bot, this.chatbotService);
+  }
+
+  private async handlePolymarketUpdate(): Promise<void> {
+    await polymarketUpdate(this.bot);
   }
 }

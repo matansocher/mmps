@@ -10,3 +10,4 @@ export { reminderCheck } from './reminder-check';
 export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
 export { youtubeCheck } from './youtube-check';
+export { polymarketUpdate } from './polymarket-update';
