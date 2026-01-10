@@ -15,10 +15,11 @@ This document provides comprehensive guidance for working with the MMPS codebase
 7. [Error Handling](#error-handling)
 8. [Documentation Style](#documentation-style)
 9. [Testing Patterns](#testing-patterns)
-10. [Architecture Patterns](#architecture-patterns)
+10. [Architecture Patterns](#architecture-patterns) (includes LangGraph Agents, MessageLoader, ToolCallbackHandler, MCP, AI Tools with Zod)
 11. [MongoDB Patterns](#mongodb-patterns)
 12. [Notable Conventions](#notable-conventions)
 13. [Do's and Don'ts](#dos-and-donts)
+14. [Project-Specific Patterns](#project-specific-patterns)
 
 ---
 
@@ -26,29 +27,31 @@ This document provides comprehensive guidance for working with the MMPS codebase
 
 ### Core Framework
 - **Plain TypeScript** - No framework, direct Node.js application
-- **Node.js 20.x**
-- **TypeScript 5.1.3** with ES2021 target
+- **Node.js 24.x**
+- **TypeScript 5.9.x** with ES2022 target
 - **node-cron** for scheduled tasks
 
 ### Key Dependencies
-- **AI/LLM**: Anthropic SDK, OpenAI, Google Generative AI, Langchain, LangGraph
+- **AI/LLM**: Anthropic SDK, OpenAI, LangChain, LangGraph (with MemorySaver checkpointer)
 - **Database**: MongoDB with native driver
 - **Bot Platform**: Telegram Bot API (node-telegram-bot-api)
 - **Date Handling**: date-fns, date-fns-tz
 - **Scheduling**: node-cron
-- **Testing**: Jest with ts-jest
-- **Code Quality**: ESLint, Prettier with import sorting plugin
+- **Schema Validation**: Zod
+- **MCP**: Model Context Protocol SDK for tool integrations
+- **Testing**: Jest 30.x with ts-jest
+- **Code Quality**: ESLint 9.x (flat config), Prettier with import sorting plugin
 - **Git Hooks**: Husky, Commitlint (conventional commits)
 - **Release Management**: Semantic Release
 
 ### TypeScript Configuration
 - **Non-strict mode** (strictNullChecks, noImplicitAny, strictBindCallApply all disabled)
-- ESLint: `@typescript-eslint/no-explicit-any` turned OFF (any types allowed)
-- ES2021 target with CommonJS modules
+- ESLint: `@typescript-eslint/no-explicit-any` set to 'warn' (any types discouraged but allowed)
+- ES2022 target with CommonJS modules
 
 ### Code Formatting
-- **Prettier**: 200 character line width, single quotes, trailing commas
-- **Path Aliases**: `@core/*`, `@features/*`, `@services/*`, `@shared/*`
+- **Prettier**: 200 character line width, single quotes, trailing commas, **semicolons required**
+- **Path Aliases**: `@src/*`, `@core/*`, `@features/*`, `@services/*`, `@shared/*`, `@config/*`, `@mocks`, `@test/*`
 
 ---
 
@@ -989,6 +992,258 @@ export class BaseCache<T> {
 }
 ```
 
+### 8. LangGraph Agent Architecture
+
+AI agents use LangGraph with a factory pattern and descriptor objects:
+
+**Agent Descriptor Pattern:**
+
+```typescript
+// types.ts
+export type AgentDescriptor = {
+  readonly name: string;
+  readonly prompt: string;
+  readonly description: string;
+  readonly tools: StructuredTool[];
+};
+
+// agent.ts - Define the agent configuration
+export function agent(): AgentDescriptor {
+  const tools = [weatherTool, reminderTool, calendarTool];
+
+  return {
+    name: 'CHATBOT',
+    prompt: `You are a helpful AI assistant...`,
+    description: 'A helpful AI assistant with access to various tools',
+    tools,
+  };
+}
+```
+
+**Agent Factory Pattern:**
+
+```typescript
+// factory.ts
+import { MemorySaver } from '@langchain/langgraph';
+import { createAgent } from 'langchain';
+import { ToolCallbackHandler } from '@shared/ai';
+
+export function createAgentService(
+  descriptor: AgentDescriptor,
+  opts: CreateAgentOptions
+): AiService {
+  const { name, tools = [] } = descriptor;
+  const { model, checkpointer = new MemorySaver(), toolCallbackOptions } = opts;
+  const callbacks = toolCallbackOptions ? [new ToolCallbackHandler(toolCallbackOptions)] : undefined;
+  const reactAgent = createAgent({ model, tools, systemPrompt: descriptor.prompt, checkpointer });
+  return new AiService(reactAgent.graph, { name, callbacks });
+}
+```
+
+**Usage in Service:**
+
+```typescript
+// chatbot.service.ts
+export class ChatbotService {
+  private readonly aiService: AiService;
+
+  constructor() {
+    this.aiService = createAgentService(agent(), {
+      model: new ChatAnthropic({ model: ANTHROPIC_SONNET_MODEL }),
+      toolCallbackOptions: { enableLogging: true },
+    });
+  }
+
+  async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {
+    const threadId = `chat-${chatId}`; // Thread-based conversation history
+    const result = await this.aiService.invoke(message, { threadId });
+    return formatAgentResponse(result);
+  }
+}
+```
+
+### 9. MessageLoader Pattern
+
+Loading indicator for Telegram while processing long-running AI operations:
+
+```typescript
+import { MessageLoader } from '@services/telegram';
+
+export class MessageLoader {
+  constructor(
+    bot: TelegramBot,
+    botToken: string,
+    chatId: number,
+    messageId: number,
+    options: MessageLoaderOptions
+  ) {}
+
+  async handleMessageWithLoader(action: () => Promise<void>): Promise<void> {
+    // Shows reaction emoji immediately
+    // Shows "typing..." action
+    // After 3 seconds, shows loader message if action not complete
+    // After 15 seconds, auto-deletes loader message
+    // Cleans up when action completes
+  }
+}
+
+// Usage in controller
+const loader = new MessageLoader(this.bot, this.botToken, chatId, messageId, {
+  loaderMessage: 'Processing your request...',
+  reactionEmoji: '👀',
+  loadingAction: BOT_BROADCAST_ACTIONS.TYPING,
+});
+
+await loader.handleMessageWithLoader(async () => {
+  const response = await this.chatbotService.processMessage(text, chatId);
+  await this.bot.sendMessage(chatId, response.message);
+});
+```
+
+### 10. ToolCallbackHandler Pattern
+
+Custom LangChain callback handler for monitoring tool execution:
+
+```typescript
+import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
+
+export type ToolCallbackOptions = {
+  onToolStart?: (toolName: string, input: any, metadata?: Record<string, unknown>) => void | Promise<void>;
+  onToolEnd?: (toolName: string, output: any, metadata?: Record<string, unknown>) => void | Promise<void>;
+  onToolError?: (toolName: string, error: Error, metadata?: Record<string, unknown>) => void | Promise<void>;
+  enableLogging?: boolean;
+};
+
+export class ToolCallbackHandler extends BaseCallbackHandler {
+  name = 'ToolCallbackHandler';
+
+  async handleToolStart(tool, input, runId, parentRunId, tags, metadata, runName): Promise<void> {
+    // Log tool start, track timing
+  }
+
+  async handleToolEnd(output, runId, parentRunId, tags): Promise<void> {
+    // Log completion, calculate duration
+  }
+
+  async handleToolError(error, runId, parentRunId, tags): Promise<void> {
+    // Log errors with context
+  }
+}
+```
+
+### 11. MCP (Model Context Protocol) Integration
+
+External tool integration using MCP SDK:
+
+```typescript
+// shared/ai/mcp/github-mcp-client.ts
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+
+let mcpClient: Client | null = null;
+
+export async function connectGithubMcp(): Promise<void> {
+  const transport = new StdioClientTransport({
+    command: 'npx',
+    args: ['-y', '@modelcontextprotocol/server-github'],
+    env: { GITHUB_PERSONAL_ACCESS_TOKEN: env.GITHUB_TOKEN },
+  });
+
+  mcpClient = new Client({ name: 'mmps-client', version: '1.0.0' }, { capabilities: {} });
+  await mcpClient.connect(transport);
+}
+
+export function getMcpClient(): Client | null {
+  return mcpClient;
+}
+```
+
+**Usage in init:**
+
+```typescript
+// chatbot.init.ts
+export async function initChatbot(): Promise<void> {
+  await Promise.all([
+    createMongoConnection('chatbot-db'),
+    connectGithubMcp().catch((err) => {
+      console.error(`Failed to connect to GitHub MCP: ${err}`);
+    }),
+  ]);
+  // ... rest of initialization
+}
+```
+
+### 12. AI Tool Pattern with Zod
+
+LangChain tools are created using Zod schemas for input validation:
+
+```typescript
+// shared/ai/tools/weather/weather.tool.ts
+import { tool } from '@langchain/core/tools';
+import { z } from 'zod';
+
+// Define schema with Zod
+const schema = z.object({
+  action: z
+    .enum(['current', 'forecast', 'tomorrow_hourly'])
+    .describe('Action to perform'),
+  location: z.string().describe('The city or location'),
+  date: z.string().optional().describe('Date in YYYY-MM-DD format'),
+});
+
+// Runner function with inferred types
+async function runner({ action, location, date }: z.infer<typeof schema>) {
+  switch (action) {
+    case 'current': {
+      const weather = await getCurrentWeather(location);
+      return { action: 'current', location: weather.location, temperature: `${weather.temperature}°C` };
+    }
+    case 'forecast': {
+      if (!date) throw new Error('Date parameter is required for forecast action');
+      const forecast = await getForecastWeather(location, date);
+      return { action: 'forecast', location: forecast.location, date: forecast.date };
+    }
+    default:
+      throw new Error(`Unknown action: ${action}`);
+  }
+}
+
+// Export the tool
+export const weatherTool = tool(runner, {
+  name: 'weather',
+  description: 'Get weather information for a location',
+  schema,
+});
+```
+
+**Tool Directory Structure:**
+
+```
+shared/ai/tools/
+├── weather/
+│   └── weather.tool.ts
+├── reminders/
+│   ├── reminder.tool.ts
+│   └── utils/
+│       ├── create-reminder.ts
+│       ├── list-reminders.ts
+│       └── index.ts
+├── polymarket/
+│   ├── polymarket.tool.ts
+│   └── utils/
+│       ├── handle-subscribe.ts
+│       ├── handle-trending.ts
+│       └── index.ts
+└── index.ts              # Barrel exports all tools
+```
+
+**Tool Patterns:**
+- Use Zod for schema definition with `.describe()` for LLM context
+- Use `z.infer<typeof schema>` for type-safe runner functions
+- Support multiple actions via `z.enum()` pattern
+- Organize complex tools with `utils/` subdirectory
+- Export individual tools and re-export from `index.ts`
+
 ---
 
 ## MongoDB Patterns
@@ -1104,8 +1359,8 @@ const formatted = format(zonedDate, 'yyyy-MM-dd HH:mm');
 - 200 character line width (wider than typical 80/100)
 - Configured in Prettier
 
-### 5. No Semicolons
-Semicolons are omitted (automatic via Prettier)
+### 5. Semicolons Required
+Semicolons are required (enforced via Prettier with `"semi": true`)
 
 ### 6. Enum Usage
 Mix of const objects and TypeScript enums:
@@ -1184,6 +1439,11 @@ import { DEFAULT_TIMEZONE } from '../../../core/config/main.config';
 20. **Use `date-fns` and `date-fns-tz`** for date operations
 21. **Use `node-cron`** for scheduled tasks with timezone support
 22. **Create `init()` methods** in controllers and schedulers for setup
+23. **Use Zod schemas for AI tool input validation** with `.describe()` for LLM context
+24. **Use the Agent Descriptor pattern** for new AI agents
+25. **Use MessageLoader** for long-running Telegram operations
+26. **Use ToolCallbackHandler** for monitoring AI tool execution
+27. **Use semicolons** (enforced by Prettier)
 
 ### ❌ DON'T:
 
@@ -1203,10 +1463,12 @@ import { DEFAULT_TIMEZONE } from '../../../core/config/main.config';
 14. **Use magic numbers** - extract to named constants
 15. **Mix concerns in controllers** - delegate to services
 16. **Create files without types** - always create `types.ts` if needed
-17. **Use `any` without consideration** - although allowed, prefer specific types when possible
+17. **Use `any` without consideration** - although warned by ESLint, prefer specific types when possible
 18. **Skip validation** - validate inputs and throw descriptive errors
 19. **Create overly complex types** - keep them simple and readable
 20. **Forget about immutability** - use `readonly` in types
+21. **Omit semicolons** - they are required by Prettier config
+22. **Create AI tools without Zod schemas** - always use Zod for type-safe tool inputs
 
 ---
 
@@ -1214,25 +1476,47 @@ import { DEFAULT_TIMEZONE } from '../../../core/config/main.config';
 
 When creating new code, ask yourself:
 
+**General Code Style:**
 - [ ] Am I using `type` instead of `interface`?
 - [ ] Are my type properties marked as `readonly`?
 - [ ] Am I using functions for utilities and classes for services?
 - [ ] Are my file names in kebab-case?
+- [ ] Am I using semicolons? (required by Prettier)
+
+**File Organization:**
 - [ ] Do I have a `types.ts` file for type definitions?
 - [ ] Do I have an `index.ts` file with barrel exports?
 - [ ] Do I have an `init.ts` file for feature initialization?
+- [ ] Am I using path aliases (`@core/*`, `@features/*`, `@shared/*`)?
+- [ ] Am I using named exports (not default exports)?
+
+**Async & Error Handling:**
 - [ ] Am I using async/await instead of `.then()` chains?
 - [ ] Are my Promise return types explicitly typed?
-- [ ] Am I using named exports (not default exports)?
-- [ ] Am I using path aliases (`@core/*`, `@features/*`)?
-- [ ] Am I validating inputs and throwing descriptive errors?
 - [ ] Am I using try-catch in service methods?
+- [ ] Am I using inline `.catch()` for non-critical errors?
 - [ ] Am I using Logger for errors and debugging?
-- [ ] Is my code self-documenting (no JSDoc needed)?
+- [ ] Am I validating inputs and throwing descriptive errors?
+
+**Features & Architecture:**
+- [ ] Do controllers and schedulers have `init()` methods?
 - [ ] Am I following the repository pattern for DB operations?
 - [ ] Am I using `env` from `node:process` for environment variables?
-- [ ] Do controllers and schedulers have `init()` methods?
 - [ ] Am I using `node-cron` with timezone for scheduled tasks?
+
+**AI Tools (if applicable):**
+- [ ] Am I using Zod for tool input schema definition?
+- [ ] Do my Zod fields have `.describe()` for LLM context?
+- [ ] Am I using the Agent Descriptor pattern for new agents?
+- [ ] Am I using ToolCallbackHandler for monitoring?
+
+**Telegram Features (if applicable):**
+- [ ] Am I using MessageLoader for long-running operations?
+- [ ] Am I handling Markdown parsing fallbacks?
+
+**Code Quality:**
+- [ ] Is my code self-documenting (no JSDoc needed)?
+- [ ] Am I avoiding `any` where possible? (ESLint warns on this)
 
 ---
 
@@ -1244,14 +1528,51 @@ Most features are Telegram bot controllers with specific patterns for handling m
 ### Multi-Bot System
 Conditional bot loading based on `LOCAL_ACTIVE_BOT_ID` environment variable allows running individual bots in development.
 
+### Current Features (7 bots)
+- **chatbot** - Main AI assistant with extensive tool integrations (weather, reminders, calendar, Gmail, sports, recipes, Polymarket, YouTube follower, exercise tracking, etc.)
+- **coach** - Fitness/wellness coaching bot
+- **langly** - Language learning bot
+- **magister** - Academic/education bot
+- **wolt** - Food delivery tracking bot
+- **worldly** - Game statistics bot
+- **striker** - Minimal utility feature
+
 ### AI Integration
-Heavy use of LangChain, Anthropic, and OpenAI for AI-powered features. Tool/plugin architecture for extensibility.
+Heavy use of LangChain, LangGraph with MemorySaver, Anthropic Claude, and OpenAI models:
+- **Agent Pattern**: Descriptor-based configuration with factory functions
+- **Tool System**: 20+ AI tools in `shared/ai/tools/` covering weather, sports, maps, audio, image, reminders, calendar, email, recipes, crypto, stocks, Polymarket, YouTube, and more
+- **MCP Integration**: Model Context Protocol for external tool connections (GitHub)
+- **Callback Handlers**: Custom ToolCallbackHandler for logging and monitoring
+
+### External Services (30+ integrations)
+Weather, earthquake monitoring, sports data (scores-365), Google services (calendar, Gmail, translate, sheets), OpenAI, Anthropic, Twitter, TikTok, YouTube, Spotify, Polymarket, Twilio, Pinecone, and more.
+
+### Shared Business Logic
+Located in `shared/` directory:
+- **ai/** - AI tools, MCP clients, callback handlers
+- **polymarket-follower/** - Prediction market subscription tracking
+- **youtube-follower/** - YouTube channel subscription management
+- **reminders/** - Smart reminder system
+- **preferences/** - User preferences storage
+- **trainer/** - Exercise tracking
+- **cooker/** - Recipe management
+- **sports/** - Sports data utilities
 
 ### Scheduler Services
-Many features have separate scheduler services using `node-cron` for periodic tasks (e.g., sending reminders, fetching updates). Each scheduler has an `init()` method that registers all cron jobs.
+Many features have separate scheduler services using `node-cron` for periodic tasks:
+- Daily summaries at specific times
+- Polymarket price updates
+- YouTube video notifications
+- Exercise reminders
+- Football match updates
+Each scheduler has an `init()` method that registers all cron jobs with timezone support.
 
 ### Message Loaders
-Custom pattern for showing loading states in Telegram while processing AI requests.
+Custom `MessageLoader` pattern for showing loading states in Telegram while processing AI requests:
+- Immediate reaction emoji feedback
+- "Typing..." indicator
+- Delayed loader message (after 3 seconds)
+- Auto-cleanup (after 15 seconds)
 
 ### Bilingual Support
 Mix of Hebrew and English in configuration and messages, with utilities to detect Hebrew text.
@@ -1263,12 +1584,20 @@ Mix of Hebrew and English in configuration and messages, with utilities to detec
 This codebase follows a **pragmatic, readable style** with consistent patterns across all modules. The focus is on:
 
 - **Developer velocity** through clear conventions
-- **Type safety** through extensive use of TypeScript types (not interfaces)
+- **Type safety** through extensive use of TypeScript types (not interfaces) and Zod schemas for AI tools
 - **Immutability** through `readonly` properties
 - **Simplicity** through functional programming for utilities and manual dependency injection
 - **Modularity** through feature-based architecture with init functions
 - **Maintainability** through self-documenting code
-- **Consistency** through automated formatting and linting
+- **Consistency** through automated formatting (Prettier with semicolons) and linting (ESLint flat config)
 - **No framework overhead** - plain TypeScript with node-cron for scheduling
+- **AI-First Design** - LangGraph agents with MemorySaver, 20+ tools, and MCP integrations
+
+**Key Technologies:**
+- Node.js 24.x, TypeScript 5.9.x (ES2022 target)
+- LangChain/LangGraph for AI agents
+- MongoDB for persistence
+- Telegram Bot API for user interaction
+- Zod for schema validation
 
 When in doubt, look at existing code in the `features/` or `services/` directories for examples that match these patterns.
