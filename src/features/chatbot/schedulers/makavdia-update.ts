@@ -19,8 +19,7 @@ export async function makavdiaUpdate(bot: TelegramBot, chatbotService: ChatbotSe
         - Start with "🏀 Makavdia - ${getDateString()}"
         - Focus on the most recent game (check if it was played today or recently)
         - Mention the opponent team, final score, and game outcome (win/loss)
-        - Include key statistics: points, rebounds, assists, shooting percentages
-        - Write in English for better engagement`;
+        - Include key statistics: points, rebounds, assists, shooting percentages`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 

@@ -87,7 +87,7 @@ If no important matches found:
   * Say "No particularly important matches today 🤷‍♂️"
   * You can add a friendly note like "Enjoy your day!" or similar
 
-Keep it concise and in English.
+Keep it concise.
 
 Important: Do NOT include any internal thoughts, reasoning about your process, or meta-commentary (such as "I got all the data I needed", "Now I will address the predictions", etc.) in your final response. Your response should ONLY contain the formatted predictions message for the user, starting directly with "⚽ Today's matches and predictions:" or "No particularly important matches today 🤷‍♂️" if there are no matches. This is a user-facing message - skip any internal processing notes.`;
 

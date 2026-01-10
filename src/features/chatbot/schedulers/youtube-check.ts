@@ -110,9 +110,8 @@ ${transcript}
 3. Include any actionable insights, tips, or recommendations mentioned
 4. Highlight important quotes or statements if relevant
 5. Make it comprehensive and informative while remaining readable
-6. Use English for the response
-7. Format nicely with markdown, bullet points, and emojis for better readability
-8. Use section headers if it helps organize the content (e.g., "Summary", "Key Points", "Conclusions")
+6. Format nicely with markdown, bullet points, and emojis for better readability
+7. Use section headers if it helps organize the content (e.g., "Summary", "Key Points", "Conclusions")
 
 DO NOT include any tool calls or ask questions - just provide the detailed summary directly.`;
 

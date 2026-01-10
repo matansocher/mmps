@@ -49,7 +49,7 @@ IMPORTANT: Look back in our conversation history from earlier today to find the 
    - Just show today's results without the prediction comparison
    - Say "No predictions today, but here are the results:"
 
-IMPORTANT: Respond in English only. Keep it engaging, honest about mistakes, and celebrate successes!`;
+Keep it engaging, honest about mistakes, and celebrate successes!`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
