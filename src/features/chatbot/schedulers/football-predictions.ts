@@ -55,7 +55,7 @@ export async function footballPredictions(bot: TelegramBot, chatbotService: Chat
 
 Format the message as:
 **SECTION 1: Regular Predictions**
-- Start with "⚽ משחקי היום וניבויים:"
+- Start with "⚽ Today's matches and predictions:"
 - For each match:
   * Match info: Competition, teams, time
   * Betting Odds: 🏠 X.XX | 🤝 Y.YY | 🚌 Z.ZZ
@@ -64,14 +64,14 @@ Format the message as:
 
 **SECTION 2: Value Betting Recommendations** (ONLY if value bets exist)
 - Add a separator line: "\n---\n"
-- Start with "💰 המלצות הימורים - ערך טוב:"
+- Start with "💰 Betting recommendations - good value:"
 - For EACH value bet:
   * Match info: Competition, teams
-  * Recommended outcome (e.g., "המלצה: ניצחון סיטי בבית 🏠")
-  * Betting odds: "סיכויים: X.XX"
-  * AI confidence: "הניבוי שלי: X%"
-  * Expected value: "ערך צפוי: +X% 💰"
-  * Risk rating: "דירוג סיכון: 🟢 נמוך" or "🟡 בינוני"
+  * Recommended outcome (e.g., "Recommendation: City home win 🏠")
+  * Betting odds: "Odds: X.XX"
+  * AI confidence: "My prediction: X%"
+  * Expected value: "Expected value: +X% 💰"
+  * Risk rating: "Risk rating: 🟢 Low" or "🟡 Medium"
   * Brief reasoning (1-2 sentences explaining why it's a value bet)
 
 - If NO value bets found, do NOT include Section 2 at all
@@ -81,15 +81,15 @@ Format the message as:
 - Expected Value formula is critical for identifying true value
 - Only positive EV bets should be recommended
 - Risk rating helps users manage their betting strategy
-- Keep Hebrew language throughout
+- Keep English language throughout
 
 If no important matches found:
-  * Say "אין משחקים חשובים במיוחד היום 🤷‍♂️"
-  * You can add a friendly note like "נהנה מהיום!" or similar
+  * Say "No particularly important matches today 🤷‍♂️"
+  * You can add a friendly note like "Enjoy your day!" or similar
 
-Keep it concise and in Hebrew.
+Keep it concise.
 
-Important: Do NOT include any internal thoughts, reasoning about your process, or meta-commentary (such as "I got all the data I needed", "Now I will address the predictions", etc.) in your final response. Your response should ONLY contain the formatted predictions message for the user, starting directly with "⚽ משחקי היום וניבויים:" or "אין משחקים חשובים במיוחד היום 🤷‍♂️" if there are no matches. This is a user-facing message - skip any internal processing notes.`;
+Important: Do NOT include any internal thoughts, reasoning about your process, or meta-commentary (such as "I got all the data I needed", "Now I will address the predictions", etc.) in your final response. Your response should ONLY contain the formatted predictions message for the user, starting directly with "⚽ Today's matches and predictions:" or "No particularly important matches today 🤷‍♂️" if there are no matches. This is a user-facing message - skip any internal processing notes.`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
