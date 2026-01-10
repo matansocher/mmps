@@ -27,7 +27,7 @@ Show 4 different times throughout the day (morning, noon, afternoon, and evening
    - If there are birthdays tomorrows, dont add the birthday section.
 3. **Exercises**: Mention if I exercised today or not. Keep it brief (1-2 sentences max).
 
-Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 לילה טוב!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
+Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
@@ -35,7 +35,7 @@ Please format the response nicely with emojis and make it feel like a friendly g
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    await bot.sendMessage(MY_USER_ID, '⚠️ נכשל ביצירת הסיכום הלילי שלך.');
+    await bot.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.');
     logger.error(`Failed to generate/send daily summary: ${err}`);
   }
 }

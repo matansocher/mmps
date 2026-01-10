@@ -84,13 +84,13 @@ export async function sportsCalendar(bot: TelegramBot, chatbotService: ChatbotSe
    - startDateTime and endDateTime: Use the match's actual start time, add 2 hours for end time
    - location: The venue from the match data
 
-7. After creating calendar events, send me a summary message in Hebrew:
-   - If events were created: "✅ הוספתי [X] משחקים חשובים ללוח השנה:" followed by the list grouped by day with brief explanation why each is important
-   - If no important matches: "אין משחקים חשובים במיוחד בתקופה הקרובה 🤷‍♂️"
+7. After creating calendar events, send me a summary message in English:
+   - If events were created: "✅ Added [X] important matches to the calendar:" followed by the list grouped by day with brief explanation why each is important
+   - If no important matches: "No particularly important matches coming up 🤷‍♂️"
 
 **Remember**: Quality over quantity. It's better to add zero matches than to add matches that aren't truly important.
 
-Keep the message concise and in Hebrew.`;
+Keep the message concise and in English.`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 

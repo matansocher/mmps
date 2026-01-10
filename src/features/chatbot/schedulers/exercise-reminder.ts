@@ -18,7 +18,7 @@ export async function exerciseReminder(bot: TelegramBot, chatbotService: Chatbot
     Keep the message short, fun, and encouraging. Use emojis to make it engaging.
     If a meme URL is available, send it along with a short motivational message.
 
-    IMPORTANT: Respond in Hebrew only.`;
+    IMPORTANT: Respond in English only.`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 

@@ -28,28 +28,28 @@ IMPORTANT: Look back in our conversation history from earlier today to find the 
    - The actual result
    - How close your prediction was
 
-4. Format the message in Hebrew as:
-   - Start with "⚽ תוצאות היום והערכת הניבויים:"
+4. Format the message in English as:
+   - Start with "⚽ Today's results and prediction assessment:"
    - For each match that was predicted:
      * Match info and final score
-     * Betting odds from morning: "סיכויי ההימורים: 🏠 X.XX | 🤝 Y.YY | 🚌 Z.ZZ"
-     * Your prediction: "ניבאתי: [outcome] ([percentage]%)"
-     * Actual result: "התוצאה: [actual outcome]"
+     * Betting odds from morning: "Betting odds: 🏠 X.XX | 🤝 Y.YY | 🚌 Z.ZZ"
+     * Your prediction: "I predicted: [outcome] ([percentage]%)"
+     * Actual result: "Result: [actual outcome]"
      * Accuracy comment:
-       - If correct: "✅ ניבוי מדויק!" or "🎯 פגעתי במטרה!"
-       - If close (e.g., predicted draw, ended 1-1): "🤏 קרוב מאוד!"
-       - If wrong: "❌ טעיתי הפעם" or "😅 לא היה יום טוב לניבויים"
+       - If correct: "✅ Accurate prediction!" or "🎯 Nailed it!"
+       - If close (e.g., predicted draw, ended 1-1): "🤏 Very close!"
+       - If wrong: "❌ I was wrong this time" or "😅 Not a good day for predictions"
    - For matches that completed but weren't predicted:
      * Just show the result briefly
    - End with a summary:
-     * "סיכום: X/Y ניבויים נכונים" (if you made predictions)
+     * "Summary: X/Y correct predictions" (if you made predictions)
      * Add a humble/confident note based on accuracy
 
 5. If you didn't make predictions today or cannot find them in history:
    - Just show today's results without the prediction comparison
-   - Say "היום לא היו ניבויים, אבל הנה התוצאות:"
+   - Say "No predictions today, but here are the results:"
 
-IMPORTANT: Respond in Hebrew only. Keep it engaging, honest about mistakes, and celebrate successes!`;
+IMPORTANT: Respond in English only. Keep it engaging, honest about mistakes, and celebrate successes!`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 

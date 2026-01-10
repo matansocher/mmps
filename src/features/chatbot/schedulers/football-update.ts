@@ -12,12 +12,12 @@ export async function footballUpdate(bot: TelegramBot, chatbotService: ChatbotSe
     const prompt = `Generate a midday football update for today (${getDateString()}).
         Use the match_summary tool to get today's match results and ongoing matches.
         Format the message as:
-        - Start with "⚽ המצב הנוכחי של משחקי היום:"
+        - Start with "⚽ Current status of today's matches:"
         - Include all matches (completed, ongoing, and upcoming)
         - Use the formatted text from the tool as it contains proper markdown
         - Keep it concise and informative
         - In the end of the message, point out the most exciting matches of the day
-        - If no matches are found, say "אין משחקים היום"`;
+        - If no matches are found, say "No matches today"`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
