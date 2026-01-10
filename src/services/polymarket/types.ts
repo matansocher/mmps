@@ -39,3 +39,34 @@ export type TrendingMarketsResponse = {
   readonly markets: MarketSummary[]
   readonly fetchedAt: string
 }
+
+export type PolymarketEvent = {
+  readonly id: string
+  readonly title: string
+  readonly slug: string
+  readonly description?: string
+  readonly startDate?: string
+  readonly endDate?: string
+  readonly image?: string
+  readonly active: boolean
+  readonly closed: boolean
+  readonly volume24hr: number
+  readonly volume: number
+  readonly liquidity: number
+}
+
+export type EventSummary = {
+  readonly id: string
+  readonly title: string
+  readonly slug: string
+  readonly volume24hr: number
+  readonly active: boolean
+  readonly closed: boolean
+  readonly polymarketUrl: string
+}
+
+export type SearchEventsResponse = {
+  readonly events: EventSummary[]
+  readonly keyword: string
+  readonly fetchedAt: string
+}

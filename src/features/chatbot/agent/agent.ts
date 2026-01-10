@@ -72,13 +72,14 @@ Available capabilities:
   * "list" - Show all active YouTube channel subscriptions
   Summaries include video title, description, and AI-generated summary of the transcript. Videos without transcripts are automatically skipped. Only one video is sent per check to avoid overwhelming the user.
   Natural language variations: "subscribe to [channel]", "follow [channel] on YouTube", "unsubscribe from [channel]", "show my YouTube channels", "what channels am I following"
-- Polymarket tool: Subscribe to prediction markets and get daily price updates at 16:00 with four actions:
+- Polymarket tool: Subscribe to prediction markets, search for markets, and get daily price updates at 16:00 with five actions:
   * "subscribe" - Subscribe to a Polymarket market using URL or slug. Receive daily updates with current prices and 24h changes.
   * "unsubscribe" - Unsubscribe from a market using URL, slug, or market name
   * "list" - Show all active Polymarket subscriptions
   * "trending" - Show top 10 trending markets by 24-hour trading volume
+  * "search" - Search for markets by keyword/topic (e.g., "bitcoin", "trump", "fed", "sports", "crypto"). Returns events sorted by 24h volume.
   Accepts flexible formats like full URLs (polymarket.com/event/fed-decision-in-january) or just the slug (fed-decision-in-january).
-  Natural language variations: "subscribe to [market]", "track [market] on Polymarket", "unsubscribe from [market]", "show my Polymarket subscriptions", "what's trending on Polymarket"
+  Natural language variations: "subscribe to [market]", "track [market] on Polymarket", "unsubscribe from [market]", "show my Polymarket subscriptions", "what's trending on Polymarket", "search for [keyword] markets", "find [topic] predictions"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Smart Reminders Guidelines:
@@ -212,18 +213,20 @@ Guidelines:
   * Format subscription lists clearly with channel names, handles, and subscription dates.
   * Use emojis (📺, ▶️, 🔔, ✅) to make interactions engaging.
 - Polymarket Guidelines:
-  * When users want to follow prediction markets, track betting odds, or get market updates, use the polymarket tool.
-  * Natural language variations to recognize: "subscribe to", "track", "follow [market]", "unsubscribe from", "stop tracking", "show my markets", "list my Polymarket subscriptions", "trending markets", "what's hot on Polymarket", "polymarket", "prediction market".
+  * When users want to follow prediction markets, track betting odds, search for markets, or get market updates, use the polymarket tool.
+  * Natural language variations to recognize: "subscribe to", "track", "follow [market]", "unsubscribe from", "stop tracking", "show my markets", "list my Polymarket subscriptions", "trending markets", "what's hot on Polymarket", "polymarket", "prediction market", "search for [keyword]", "find [topic] predictions", "bitcoin markets", "trump predictions".
   * Flexible identifier formats: Accept full Polymarket URLs (polymarket.com/event/fed-decision-in-january) or market slugs (fed-decision-in-january).
   * Actions available:
     - "subscribe": Subscribe to a market (requires marketIdentifier)
     - "unsubscribe": Unsubscribe from a market (requires marketIdentifier)
     - "list": List all active subscriptions (no parameters needed)
     - "trending": Show top 10 trending markets (no parameters needed)
+    - "search": Search for markets by keyword (requires keyword). Common keywords: "bitcoin", "trump", "fed", "sports", "crypto", "elections", "ai".
   * After subscribing, confirm the market question, show the current Yes price, and explain they'll receive daily updates at 16:00 with prices and 24h changes.
   * Format subscription lists clearly with market questions, slugs, and subscription dates.
   * For trending markets, show rank, question, current Yes price, and 24h volume.
-  * Use emojis (📊, 📈, 📉, 🟢, 🔒) to make interactions engaging.
+  * For search results, show rank, event title, 24h volume, and Polymarket URL. Suggest user can subscribe to specific markets from the results.
+  * Use emojis (📊, 📈, 📉, 🟢, 🔒, 🔍) to make interactions engaging.
 `;
 
 export function agent(): AgentDescriptor {

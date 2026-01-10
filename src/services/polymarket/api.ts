@@ -1,7 +1,8 @@
-import type { MarketSummary, PolymarketMarket, TrendingMarketsResponse } from './types';
+import type { EventSummary, MarketSummary, PolymarketEvent, PolymarketMarket, SearchEventsResponse, TrendingMarketsResponse } from './types';
 import { buildPolymarketUrl, parseOutcomePrices } from './utils';
 
 const BASE_URL = 'https://gamma-api.polymarket.com/markets';
+const EVENTS_URL = 'https://gamma-api.polymarket.com/events';
 
 export async function getTrendingMarkets(limit: number = 10): Promise<TrendingMarketsResponse> {
   const params = new URLSearchParams({
@@ -51,6 +52,32 @@ export async function getMarketById(id: string): Promise<MarketSummary> {
   return toMarketSummary(market);
 }
 
+export async function searchEventsByTag(keyword: string, limit: number = 10): Promise<SearchEventsResponse> {
+  const params = new URLSearchParams({
+    tag_slug: keyword.toLowerCase(),
+    active: 'true',
+    closed: 'false',
+    limit: limit.toString(),
+    order: 'volume24hr',
+    ascending: 'false',
+  });
+
+  const url = `${EVENTS_URL}?${params.toString()}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to search events: ${response.status}`);
+  }
+
+  const events = (await response.json()) as PolymarketEvent[];
+
+  return {
+    events: events.map(toEventSummary),
+    keyword,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
 function toMarketSummary(market: PolymarketMarket): MarketSummary {
   const { yesPrice, noPrice } = parseOutcomePrices(market.outcomePrices);
 
@@ -66,5 +93,17 @@ function toMarketSummary(market: PolymarketMarket): MarketSummary {
     active: market.active,
     closed: market.closed,
     polymarketUrl: buildPolymarketUrl(market.slug),
+  };
+}
+
+function toEventSummary(event: PolymarketEvent): EventSummary {
+  return {
+    id: event.id,
+    title: event.title,
+    slug: event.slug,
+    volume24hr: event.volume24hr,
+    active: event.active,
+    closed: event.closed,
+    polymarketUrl: buildPolymarketUrl(event.slug),
   };
 }
