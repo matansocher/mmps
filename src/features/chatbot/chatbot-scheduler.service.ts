@@ -64,7 +64,7 @@ export class ChatbotSchedulerService {
       await this.handleEarthquakeMonitor();
     });
 
-    createSchedule(`5 16 * * *`, async () => {
+    createSchedule(`5 12,16,23 * * *`, async () => {
       await this.handlePolymarketUpdate();
     });
 
