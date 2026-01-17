@@ -31,7 +31,7 @@ export async function calendarSummary(bot: TelegramBot, chatbotService: ChatbotS
     const events = await getTodayEvents();
 
     if (events.length === 0) {
-      await sendShortenedMessage(bot, MY_USER_ID, '☀️ Good morning! You have no calendar events scheduled for today. Enjoy your free day!');
+      await sendShortenedMessage(bot, MY_USER_ID, '🌝 Good night! You have no calendar events scheduled for today. Enjoy your free day!');
       return;
     }
 
