@@ -1,3 +1,4 @@
+export { calendarSummary } from './calendar-summary';
 export { dailySummary } from './daily-summary';
 export { earthquakeMonitor } from './earthquake-monitor';
 export { emailSummary } from './email-summary';

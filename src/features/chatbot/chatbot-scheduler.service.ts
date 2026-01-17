@@ -4,6 +4,7 @@ import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import {
+  calendarSummary,
   dailySummary,
   earthquakeMonitor,
   emailSummary,
@@ -30,6 +31,10 @@ export class ChatbotSchedulerService {
   init(): void {
     createSchedule(`00 23 * * *`, async () => {
       await this.handleDailySummary();
+    });
+
+    createSchedule(`45 0 * * *`, async () => {
+      await this.handleCalendarSummary();
     });
 
     createSchedule(`59 12,23 * * *`, async () => {
@@ -73,6 +78,7 @@ export class ChatbotSchedulerService {
     // });
 
     setTimeout(() => {
+      // this.handleCalendarSummary();
       // this.handleDailySummary();
       // this.handleEmailSummary();
       // this.handleFootballUpdate();
@@ -89,6 +95,10 @@ export class ChatbotSchedulerService {
 
   private async handleDailySummary(): Promise<void> {
     await dailySummary(this.bot, this.chatbotService);
+  }
+
+  private async handleCalendarSummary(): Promise<void> {
+    await calendarSummary(this.bot, this.chatbotService);
   }
 
   private async handleEmailSummary(): Promise<void> {
