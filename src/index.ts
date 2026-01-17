@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
+import { registerSwaggerRoutes } from '@core/openapi';
 import { Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotBotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as coachBotConfig, initCoach } from '@features/coach';
@@ -24,9 +25,11 @@ async function main() {
     res.json({ success: true });
   });
 
+  registerSwaggerRoutes(app);
+
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
 
-  shouldInitBot(chatbotBotConfig) && (await initChatbot());
+  shouldInitBot(chatbotBotConfig) && (await initChatbot(app));
   shouldInitBot(coachBotConfig) && (await initCoach());
   shouldInitBot(langlyBotConfig) && (await initLangly());
   shouldInitBot(magisterBotConfig) && (await initMagister());
