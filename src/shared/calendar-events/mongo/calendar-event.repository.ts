@@ -1,3 +1,6 @@
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { getMongoCollection } from '@core/mongo';
 import { DB_NAME } from '.';
 import type { CalendarEvent, CreateCalendarEventData, UpsertCalendarEventsResult } from '../types';
@@ -28,7 +31,7 @@ export async function upsertCalendarEvents(events: CreateCalendarEventData[]): P
           createdAt: now,
         },
       },
-      { upsert: true }
+      { upsert: true },
     );
 
     if (result.upsertedCount > 0) {
@@ -41,24 +44,14 @@ export async function upsertCalendarEvents(events: CreateCalendarEventData[]): P
   return { inserted, updated, total: events.length };
 }
 
-export async function getUpcomingEvents(fromDate: Date = new Date(), limit = 10): Promise<CalendarEvent[]> {
-  const collection = getCollection();
-
-  return collection
-    .find({
-      $or: [{ 'start.dateTime': { $gte: fromDate.toISOString() } }, { 'start.date': { $gte: fromDate.toISOString().split('T')[0] } }],
-    })
-    .sort({ 'start.dateTime': 1, 'start.date': 1 })
-    .limit(limit)
-    .toArray();
-}
-
 export async function getEventsForDate(date: Date = new Date()): Promise<CalendarEvent[]> {
   const collection = getCollection();
 
-  // Format date as YYYY-MM-DD for comparison
-  const dateStr = date.toISOString().split('T')[0];
-  const nextDateStr = new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  // Convert to Israel timezone before extracting date string
+  const zonedDate = toZonedTime(date, DEFAULT_TIMEZONE);
+  const dateStr = format(zonedDate, 'yyyy-MM-dd');
+  const nextDay = new Date(zonedDate.getTime() + 24 * 60 * 60 * 1000);
+  const nextDateStr = format(nextDay, 'yyyy-MM-dd');
 
   return collection
     .find({
