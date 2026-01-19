@@ -1,5 +1,7 @@
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import type TelegramBot from 'node-telegram-bot-api';
-import { MY_USER_ID } from '@core/config';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { type CalendarEvent, getTodayEvents } from '@shared/calendar-events';
@@ -9,8 +11,10 @@ const logger = new Logger('CalendarSummaryScheduler');
 
 function formatEventTime({ start, end }: CalendarEvent): string {
   if (start.dateTime && end.dateTime) {
-    const startTime = new Date(start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const endTime = new Date(end.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const startZoned = toZonedTime(new Date(start.dateTime), DEFAULT_TIMEZONE);
+    const endZoned = toZonedTime(new Date(end.dateTime), DEFAULT_TIMEZONE);
+    const startTime = format(startZoned, 'HH:mm');
+    const endTime = format(endZoned, 'HH:mm');
     return `${startTime}-${endTime}`;
   }
   return 'All day';
