@@ -1,17 +1,18 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
-import { handleListSubscriptions, handleSearch, handleSubscribe, handleTrending, handleUnsubscribe } from './utils';
+import { handleEvent, handleListSubscriptions, handleSearch, handleSubscribe, handleTrending, handleUnsubscribe } from './utils';
 
 const chatId = MY_USER_ID;
 
 const schema = z.object({
-  action: z.enum(['subscribe', 'unsubscribe', 'list', 'trending', 'search']).describe('The action to perform'),
+  action: z.enum(['subscribe', 'unsubscribe', 'list', 'trending', 'search', 'event']).describe('The action to perform'),
   marketIdentifier: z.string().optional().describe('Polymarket URL or market slug - required for subscribe and unsubscribe'),
   keyword: z.string().optional().describe('Search keyword/tag - required for search action (e.g., "bitcoin", "trump", "fed", "sports")'),
+  slug: z.string().optional().describe('Event slug - required for event action (e.g., "israel-strikes-iran-by-february-28-2026")'),
 });
 
-async function runner({ action, marketIdentifier, keyword }: z.infer<typeof schema>): Promise<string> {
+async function runner({ action, marketIdentifier, keyword, slug }: z.infer<typeof schema>): Promise<string> {
   try {
     switch (action) {
       case 'subscribe':
@@ -28,6 +29,9 @@ async function runner({ action, marketIdentifier, keyword }: z.infer<typeof sche
 
       case 'search':
         return handleSearch(keyword);
+
+      case 'event':
+        return handleEvent(slug);
 
       default:
         return JSON.stringify({ success: false, error: `Unknown action: ${action}` });
@@ -47,6 +51,7 @@ Actions:
 - list: List all active Polymarket subscriptions.
 - trending: Show top 10 trending markets by 24-hour trading volume.
 - search: Search for markets by keyword/topic. Returns events sorted by 24h volume. Common keywords: "bitcoin", "trump", "fed", "sports", "crypto", "elections".
+- event: Get all markets under a specific event by its slug. Returns detailed market info including prices and volume.
 
 When users mention following/tracking prediction markets, betting odds, or want market updates, use this tool.
 
@@ -57,6 +62,7 @@ Examples:
 - "Show my Polymarket subscriptions" -> list
 - "What's trending on Polymarket?" -> trending
 - "Search for bitcoin markets" -> search with keyword "bitcoin"
-- "Find Trump-related predictions" -> search with keyword "trump"`,
+- "Find Trump-related predictions" -> search with keyword "trump"
+- "What markets are under israel-strikes-iran-by-february-28-2026?" -> event with slug`,
   schema,
 });
