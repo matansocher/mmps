@@ -1,5 +1,6 @@
-export { handleSubscribe } from './handle-subscribe'
-export { handleUnsubscribe } from './handle-unsubscribe'
-export { handleListSubscriptions } from './handle-list-subscriptions'
-export { handleTrending } from './handle-trending'
-export { handleSearch } from './handle-search'
+export { handleSubscribe } from './handle-subscribe';
+export { handleUnsubscribe } from './handle-unsubscribe';
+export { handleListSubscriptions } from './handle-list-subscriptions';
+export { handleTrending } from './handle-trending';
+export { handleSearch } from './handle-search';
+export { handleEvent } from './handle-event';

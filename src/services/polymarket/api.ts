@@ -1,4 +1,13 @@
-import type { EventSummary, MarketSummary, PolymarketEvent, PolymarketMarket, SearchEventsResponse, TrendingMarketsResponse } from './types';
+import type {
+  EventSummary,
+  EventWithMarketsResponse,
+  MarketSummary,
+  PolymarketEvent,
+  PolymarketEventWithMarkets,
+  PolymarketMarket,
+  SearchEventsResponse,
+  TrendingMarketsResponse,
+} from './types';
 import { buildPolymarketUrl, parseOutcomePrices } from './utils';
 
 const BASE_URL = 'https://gamma-api.polymarket.com/markets';
@@ -50,6 +59,23 @@ export async function getMarketById(id: string): Promise<MarketSummary> {
 
   const market = (await response.json()) as PolymarketMarket;
   return toMarketSummary(market);
+}
+
+export async function getEventBySlug(slug: string): Promise<EventWithMarketsResponse> {
+  const url = `${EVENTS_URL}/slug/${slug}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Event not found: ${response.status}`);
+  }
+
+  const event = (await response.json()) as PolymarketEventWithMarkets;
+
+  return {
+    event: toEventSummary(event),
+    markets: (event.markets || []).map(toMarketSummary),
+    fetchedAt: new Date().toISOString(),
+  };
 }
 
 export async function searchEventsByTag(keyword: string, limit: number = 10): Promise<SearchEventsResponse> {

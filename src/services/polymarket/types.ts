@@ -70,3 +70,13 @@ export type SearchEventsResponse = {
   readonly keyword: string
   readonly fetchedAt: string
 }
+
+export type PolymarketEventWithMarkets = PolymarketEvent & {
+  readonly markets: PolymarketMarket[]
+}
+
+export type EventWithMarketsResponse = {
+  readonly event: EventSummary
+  readonly markets: MarketSummary[]
+  readonly fetchedAt: string
+}
