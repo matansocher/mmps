@@ -70,6 +70,14 @@ export async function getTodayEvents(): Promise<CalendarEvent[]> {
   return getEventsForDate(new Date());
 }
 
+export async function getTomorrowEvents(): Promise<CalendarEvent[]> {
+  const now = new Date();
+  const zonedNow = toZonedTime(now, DEFAULT_TIMEZONE);
+  const tomorrow = new Date(zonedNow);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return getEventsForDate(tomorrow);
+}
+
 export async function getEventByGoogleId(googleEventId: string): Promise<CalendarEvent | null> {
   const collection = getCollection();
   return collection.findOne({ googleEventId });

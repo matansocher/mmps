@@ -2,14 +2,16 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
+import { getTomorrowEvents } from '@shared/calendar-events';
 import type { ChatbotService } from '../chatbot.service';
+import { formatEventsForPrompt } from './utils/events';
 
 const logger = new Logger('DailySummaryScheduler');
 
 export async function dailySummary(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
   try {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const events = await getTomorrowEvents();
+    const calendarSection = events.length > 0 ? `Here are my calendar events for tomorrow:\n${formatEventsForPrompt(events)}` : 'No events scheduled for tomorrow.';
 
     const prompt = `Good evening! Please create my nightly summary with the following information:
 
@@ -19,9 +21,8 @@ Format the weather data as: hour - degrees (e.g., "08:00 - 18°C")
 Show 4 different times throughout the day (morning, noon, afternoon, and evening - e.g., 10:00, 14:00, 18:00, 22:00).
 
 **Additional Information:**
-1. **Calendar**: Check my calendar events for tomorrow. Format as:
-   - List each event with the time and name data only
-   - If no events, dont add the calendar section.
+1. **Calendar**: ${calendarSection}
+   Format as a bulleted list where each event has its own bullet point.
 2. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
    - Extract the person's name from the event title
    - If there are birthdays tomorrows, dont add the birthday section.
