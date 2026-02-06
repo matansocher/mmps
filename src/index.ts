@@ -10,7 +10,6 @@ import { initLangly, BOT_CONFIG as langlyBotConfig } from '@features/langly';
 import { initMagister, BOT_CONFIG as magisterBotConfig } from '@features/magister';
 import { initWolt, BOT_CONFIG as woltBotConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyBotConfig } from '@features/worldly';
-import { initSugar, BOT_CONFIG as sugarBotConfig } from '@features/sugar';
 
 dotenv.config();
 
@@ -36,7 +35,6 @@ async function main() {
   shouldInitBot(magisterBotConfig) && (await initMagister());
   shouldInitBot(woltBotConfig) && (await initWolt());
   shouldInitBot(worldlyBotConfig) && (await initWorldly());
-  shouldInitBot(sugarBotConfig) && (await initSugar());
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
   app.listen(port, () => {
