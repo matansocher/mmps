@@ -7,6 +7,12 @@ export type MarketUpdate = {
   readonly market: MarketSummary;
 };
 
+export type ExpiredMarketInfo = {
+  readonly question: string;
+  readonly slug: string;
+  readonly finalPrice: string;
+};
+
 export function formatDailyUpdateMessage(updates: MarketUpdate[]): string {
   const header = `*Polymarket Daily Update*\n\n`;
 
@@ -21,6 +27,17 @@ export function formatDailyUpdateMessage(updates: MarketUpdate[]): string {
   });
 
   return header + marketLines.join('\n\n');
+}
+
+export function formatExpiredMarketsSection(expiredMarkets: ExpiredMarketInfo[]): string {
+  if (expiredMarkets.length === 0) {
+    return '';
+  }
+
+  const header = `\n\n*Closed Markets Removed:*\n`;
+  const lines = expiredMarkets.map(({ question, finalPrice, slug }) => `   ${question} (Final: ${finalPrice}) - [View](${buildPolymarketUrl(slug)})`);
+
+  return header + lines.join('\n');
 }
 
 export function formatPriceChange(oneDayPriceChange: number | null, lastNotifiedPrice: number | null, currentPrice: number): string {

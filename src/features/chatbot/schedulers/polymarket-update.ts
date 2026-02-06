@@ -2,10 +2,10 @@ import type TelegramBot from 'node-telegram-bot-api';
 import { Logger } from '@core/utils';
 import { getMarketById } from '@services/polymarket';
 import { sendShortenedMessage } from '@services/telegram';
-import { getSubscriptionsGroupedByChatId, updateSubscription } from '@shared/polymarket-follower';
+import { getSubscriptionsGroupedByChatId, removeSubscription, updateSubscription } from '@shared/polymarket-follower';
 import type { Subscription } from '@shared/polymarket-follower';
-import { formatDailyUpdateMessage } from './utils';
-import type { MarketUpdate } from './utils';
+import { formatDailyUpdateMessage, formatExpiredMarketsSection } from './utils';
+import type { ExpiredMarketInfo, MarketUpdate } from './utils';
 
 const logger = new Logger('PolymarketUpdateScheduler');
 
@@ -23,24 +23,34 @@ export async function polymarketUpdate(bot: TelegramBot): Promise<void> {
 
 async function processSubscriptionsForChat(bot: TelegramBot, chatId: number, subscriptions: Subscription[]): Promise<void> {
   const updates: MarketUpdate[] = [];
+  const expiredMarkets: ExpiredMarketInfo[] = [];
 
   for (const subscription of subscriptions) {
     try {
       const market = await getMarketById(subscription.marketId);
-      updates.push({ subscription, market });
 
-      // Update last notified price
+      if (market.closed) {
+        const yesPct = (market.yesPrice * 100).toFixed(1);
+        await removeSubscription(subscription.marketId, chatId);
+        expiredMarkets.push({ question: market.question, slug: market.slug, finalPrice: `${yesPct}% Yes` });
+        continue;
+      }
+
+      updates.push({ subscription, market });
       await updateSubscription(subscription.marketId, chatId, { lastNotifiedPrice: market.yesPrice, marketQuestion: market.question });
     } catch (err) {
       logger.error(`Failed to fetch market ${subscription.marketSlug}: ${err.message}`);
     }
   }
 
-  if (updates.length === 0) {
+  if (updates.length === 0 && expiredMarkets.length === 0) {
     return;
   }
 
-  const message = formatDailyUpdateMessage(updates);
+  const activeSection = updates.length > 0 ? formatDailyUpdateMessage(updates) : '';
+  const expiredSection = formatExpiredMarketsSection(expiredMarkets);
+  const message = activeSection ? `${activeSection}${expiredSection}` : `*Polymarket Update*${expiredSection}`;
+
   await sendShortenedMessage(bot, chatId, message, { parse_mode: 'Markdown' }).catch(() => {
     sendShortenedMessage(bot, chatId, message.replace(/[*_`[\]]/g, ''));
   });
