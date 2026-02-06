@@ -44,5 +44,3 @@ export { preferencesTool } from './preferences';
 export { youtubeFollowerTool } from './youtube-follower';
 
 export { polymarketTool } from './polymarket';
-
-export { sugarTool } from './sugar';
