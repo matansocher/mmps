@@ -14,7 +14,9 @@ async function runner({ action, countryName }: z.infer<typeof schema>): Promise<
   try {
     switch (action) {
       case 'check': {
-        if (!countryName) return JSON.stringify({ success: false, error: 'Country name is required for check action' });
+        if (!countryName) {
+          return JSON.stringify({ success: false, error: 'Country name is required for check action' });
+        }
         const result = await getFlightsAboveCountry(countryName);
         return JSON.stringify({
           success: true,
