@@ -20,7 +20,7 @@ async function runner({ action, countryName }: z.infer<typeof schema>): Promise<
           success: true,
           country: { name: result.country.name, emoji: result.country.emoji },
           flightCount: result.flightCount,
-          topOriginCountries: getTopOriginCountries(result.flights.map((f) => f.originCountry)),
+          flights: result.flights,
         });
       }
 
@@ -39,17 +39,6 @@ async function runner({ action, countryName }: z.infer<typeof schema>): Promise<
   } catch (err) {
     return JSON.stringify({ success: false, error: `Failed to ${action}: ${err.message}` });
   }
-}
-
-function getTopOriginCountries(originCountries: string[]): { country: string; count: number }[] {
-  const counts = new Map<string, number>();
-  for (const country of originCountries) {
-    counts.set(country, (counts.get(country) || 0) + 1);
-  }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([country, count]) => ({ country, count }));
 }
 
 export const flightsTool = tool(runner, {

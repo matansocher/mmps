@@ -11,7 +11,7 @@ export type FlightsAboveCountryResult = {
   readonly flights: FlightState[];
 };
 
-function computeBoundingBox(geometry: NonNullable<Country['geometry']>): BoundingBox {
+export function computeBoundingBox(geometry: NonNullable<Country['geometry']>): BoundingBox {
   let minLat = Infinity;
   let maxLat = -Infinity;
   let minLon = Infinity;
@@ -44,7 +44,7 @@ function computeBoundingBox(geometry: NonNullable<Country['geometry']>): Boundin
   return { lamin: minLat, lomin: minLon, lamax: maxLat, lomax: maxLon };
 }
 
-function isFlightInCountry(flight: FlightState, geometry: NonNullable<Country['geometry']>): boolean {
+export function isFlightInCountry(flight: FlightState, geometry: NonNullable<Country['geometry']>): boolean {
   const pt = point([flight.longitude, flight.latitude]);
 
   if (geometry.type === 'Polygon') {
@@ -56,6 +56,7 @@ function isFlightInCountry(flight: FlightState, geometry: NonNullable<Country['g
   return coords.some((polyCoords) => booleanPointInPolygon(pt, polygon(polyCoords)));
 }
 
+// $$$$$$$$$$$$$$ not working well, flights api is not accurate enough
 export async function getFlightsAboveCountry(countryName: string): Promise<FlightsAboveCountryResult> {
   const allCountries = await getAllCountries();
   const country = allCountries.find((c) => c.name.toLowerCase() === countryName.toLowerCase());
