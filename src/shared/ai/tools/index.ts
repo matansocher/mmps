@@ -44,3 +44,5 @@ export { preferencesTool } from './preferences';
 export { youtubeFollowerTool } from './youtube-follower';
 
 export { polymarketTool } from './polymarket';
+
+export { flightsTool } from './flights/flights.tool';
