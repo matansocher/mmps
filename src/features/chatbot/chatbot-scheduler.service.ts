@@ -69,7 +69,7 @@ export class ChatbotSchedulerService {
       await this.handlePolymarketUpdate();
     });
 
-    createSchedule(`0 * * * *`, async () => {
+    createSchedule(`11 * * * *`, async () => {
       await this.handleFlightsUpdate();
     });
 
