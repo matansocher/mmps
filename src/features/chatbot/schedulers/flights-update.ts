@@ -19,6 +19,8 @@ export async function flightsUpdate(bot: TelegramBot): Promise<void> {
   }
 }
 
+const LOW_FLIGHT_THRESHOLD = 3;
+
 async function processFlightSubscriptionsForChat(bot: TelegramBot, chatId: number, subscriptions: FlightSubscription[]): Promise<void> {
   const results: { emoji: string; name: string; count: number }[] = [];
 
@@ -28,16 +30,22 @@ async function processFlightSubscriptionsForChat(bot: TelegramBot, chatId: numbe
       results.push({ emoji: subscription.countryEmoji, name: subscription.countryName, count: result.flightCount });
     } catch (err) {
       logger.error(`Failed to fetch flights for ${subscription.countryName}: ${err.message}`);
-      results.push({ emoji: subscription.countryEmoji, name: subscription.countryName, count: -1 });
     }
   }
 
-  if (results.length === 0) {
+  const lowActivity = results.filter((r) => r.count <= LOW_FLIGHT_THRESHOLD);
+  if (lowActivity.length === 0) {
     return;
   }
 
-  const lines = results.map((r) => (r.count >= 0 ? `${r.emoji} ${r.name}: ${r.count} flights` : `${r.emoji} ${r.name}: unavailable`));
-  const message = `✈️ *Flight Tracker Update*\n\n${lines.join('\n')}\n\n`;
+  const normalActivity = results.filter((r) => r.count > LOW_FLIGHT_THRESHOLD);
+  const alertLines = lowActivity.map((r) => `${r.emoji} ${r.name}: ${r.count} flights ⚠️`);
+  const normalLines = normalActivity.map((r) => `${r.emoji} ${r.name}: ${r.count} flights ✅`);
+
+  let message = `✈️ *Low Flight Activity Alert*\n\n${alertLines.join('\n')}`;
+  if (normalLines.length > 0) {
+    message += `\n\nNormal activity:\n${normalLines.join('\n')}`;
+  }
 
   await sendShortenedMessage(bot, chatId, message, { parse_mode: 'Markdown' }).catch(() => {
     sendShortenedMessage(bot, chatId, message.replace(/[*_`[\]]/g, ''));
