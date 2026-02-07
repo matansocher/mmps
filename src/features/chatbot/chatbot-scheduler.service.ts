@@ -89,7 +89,7 @@ export class ChatbotSchedulerService {
       // this.handleEarthquakeMonitor();
       // this.handleYoutubeCheck();
       // this.handlePolymarketUpdate();
-      this.handleFlightsUpdate();
+      // this.handleFlightsUpdate();
     }, 8000);
   }
 
