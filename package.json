@@ -44,6 +44,8 @@
     "@modelcontextprotocol/sdk": "^1.24.3",
     "@modelcontextprotocol/server-github": "^2025.4.8",
     "@pinecone-database/pinecone": "^6.1.3",
+    "@turf/boolean-point-in-polygon": "^7.3.3",
+    "@turf/helpers": "^7.3.3",
     "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.13.2",
     "canvas": "^3.2.0",
