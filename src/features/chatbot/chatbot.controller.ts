@@ -4,9 +4,10 @@ import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
+import { analyzeImage } from '@services/openai/utils/analyze-image';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getMessageData, MessageLoader, provideTelegramBot, sendStyledMessage } from '@services/telegram-grammy';
-import { BOT_CONFIG } from './chatbot.config';
+import { BOT_CONFIG, IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
 export class ChatbotController {
@@ -66,8 +67,8 @@ export class ChatbotController {
 
       deleteFile(imageLocalPath);
 
-      const imageAnalysisPrompt = `Please analyze this image: ${imageUrl}`;
-      const { message } = await this.chatbotService.processMessage(imageAnalysisPrompt, chatId);
+      const analysis = await analyzeImage(IMAGE_ANALYSIS_PROMPT, imageUrl);
+      const { message } = await this.chatbotService.processMessage(`Here is an analysis of an image I sent: ${analysis}\n\nPlease provide a helpful response based on this analysis.`, chatId);
 
       await sendStyledMessage(this.bot, chatId, message);
     });
