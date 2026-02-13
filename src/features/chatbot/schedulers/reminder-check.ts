@@ -1,11 +1,11 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDueReminders, reactivateSnoozedReminders, updateReminderStatus } from '@shared/reminders';
 
 const logger = new Logger('ReminderCheckScheduler');
 
-export async function reminderCheck(bot: TelegramBot): Promise<void> {
+export async function reminderCheck(bot: Bot): Promise<void> {
   try {
     await reactivateSnoozedReminders();
 
@@ -25,7 +25,7 @@ export async function reminderCheck(bot: TelegramBot): Promise<void> {
           timeStyle: 'short',
         })}_`;
 
-        await bot.sendMessage(reminder.chatId, message, { parse_mode: 'Markdown' });
+        await bot.api.sendMessage(reminder.chatId, message, { parse_mode: 'Markdown' });
 
         await updateReminderStatus(reminder._id, reminder.chatId, 'completed');
 

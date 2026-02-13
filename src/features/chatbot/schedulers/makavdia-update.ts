@@ -1,13 +1,13 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('MakavdiaUpdateScheduler');
 
-export async function makavdiaUpdate(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function makavdiaUpdate(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const prompt = `Generate a summary of Deni Avdija's latest NBA performance for today (${getDateString()}).
         Use the makavdia tool that will return his latest 5 games with comprehensive statistics. Use only the latest game to report to the user.

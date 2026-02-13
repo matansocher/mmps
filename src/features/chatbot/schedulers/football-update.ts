@@ -1,13 +1,13 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('FootballUpdateScheduler');
 
-export async function footballUpdate(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function footballUpdate(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const prompt = `Generate a midday football update for today (${getDateString()}).
         Use the match_summary tool to get today's match results and ongoing matches.

@@ -1,12 +1,12 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('EmailSummaryScheduler');
 
-export async function emailSummary(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function emailSummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const prompt = `Create my nightly email summary:
 
@@ -40,7 +40,7 @@ Use the gmail tool with action "list" to fetch my 10 most recent unread emails (
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    await bot.sendMessage(MY_USER_ID, '⚠️ Failed to create your email summary.');
+    await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your email summary.');
     logger.error(`Failed to generate/send email summary: ${err}`);
   }
 }
