@@ -379,6 +379,14 @@ The coach bot was the second bot migrated. It also required porting shared utili
 | `replyMarkup` field | `telegram-grammy/utils/get-callback-query-data.ts` | Added `replyMarkup` to `CallbackQueryData` type, extracted from callback query message |
 | `loadingAction` option | `telegram-grammy/utils/message-loader.ts` | Optional `loadingAction` param for `MessageLoader` (defaults to `'typing'`, supports `'upload_voice'` etc.) |
 
+### Reference: wolt bot
+
+| File | Changes |
+|---|---|
+| `features/wolt/wolt.config.ts` | Import `TelegramBotConfig` from `@services/telegram-grammy` |
+| `features/wolt/wolt.controller.ts` | Full migration: `ctx` handlers, `ctx.reply()`, `ctx.answerCallbackQuery()`, `buildInlineKeyboard`, `new InlineKeyboard().url()` for URL buttons, `new InlineKeyboard().text().row()` for pagination (replaces `getCustomInlineKeyboardMarkup`), `bot.api.editMessageReplyMarkup` |
+| `features/wolt/wolt-scheduler.service.ts` | `provideTelegramBot` from `@services/telegram-grammy`, `bot.api.sendPhoto/sendMessage`, `new InlineKeyboard().url()` for URL buttons |
+
 ### Migration status
 
 | Bot | Status |
@@ -387,6 +395,6 @@ The coach bot was the second bot migrated. It also required porting shared utili
 | coach | Migrated |
 | worldly | Migrated |
 | magister | Migrated |
+| wolt | Migrated |
 | chatbot | Pending |
-| wolt | Pending |
 | striker | Pending |
