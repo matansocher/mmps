@@ -41,13 +41,17 @@ The `src/services/telegram-grammy/` folder provides grammy equivalents for the u
 
 ```
 services/telegram-grammy/
-├── provide-telegram-bot.ts     # Bot factory (grammy Bot instead of TelegramBot)
-├── get-bot-token.ts            # Token resolution (unchanged logic)
-├── get-message-data.ts         # Extracts message data from grammy Context
-├── get-callback-query-data.ts  # Extracts callback query data from grammy Context
-├── build-inline-keyboard.ts    # Builds InlineKeyboard from a simple array
-├── types.ts                    # TelegramBotConfig, UserDetails
-└── index.ts                    # Barrel exports
+├── utils/
+│   ├── provide-telegram-bot.ts     # Bot factory (grammy Bot instead of TelegramBot)
+│   ├── get-bot-token.ts            # Token resolution (unchanged logic)
+│   ├── get-message-data.ts         # Extracts message data from grammy Context
+│   ├── get-callback-query-data.ts  # Extracts callback query data from grammy Context
+│   ├── build-inline-keyboard.ts    # Builds InlineKeyboard from a simple array
+│   ├── message-loader.ts           # Loading state while processing (typing, reaction, loader message)
+│   └── send-message.ts             # sendShortenedMessage - truncates to Telegram max length
+├── constants.ts                    # BLOCKED_ERROR, TELEGRAM_MAX_MESSAGE_LENGTH
+├── types.ts                        # TelegramBotConfig, UserDetails
+└── index.ts                        # Barrel exports
 ```
 
 ### getMessageData
@@ -127,7 +131,8 @@ await ctx.reply('Choose:', { reply_markup: keyboard });
 Key differences:
 - Property is `data` instead of `callback_data`
 - Returns an `InlineKeyboard` instance, passed as `{ reply_markup: keyboard }`
-- Each button is placed on its own row automatically
+- Each button is placed on its own row by default
+- Optional `columnsPerRow` parameter for multi-column layouts: `buildInlineKeyboard(buttons, 2)`
 
 ---
 
@@ -256,16 +261,19 @@ await this.bot.editMessageReplyMarkup(markup, { chat_id: chatId, message_id: mes
 await this.bot.sendVoice(chatId, filePath, opts);
 
 // After (grammY)
+import { InputFile } from 'grammy';
+
 await this.bot.api.sendMessage(chatId, text, opts);
 await this.bot.api.editMessageText(chatId, messageId, text, opts);
 await this.bot.api.editMessageReplyMarkup(chatId, messageId, opts);
-await this.bot.api.sendVoice(chatId, filePath, opts);
+await this.bot.api.sendVoice(chatId, new InputFile(filePath), opts);
 ```
 
 Key differences in the grammy API methods:
 - All methods are on `this.bot.api` (not directly on `this.bot`)
 - `editMessageText` takes `(chatId, messageId, text, opts)` instead of `(text, { chat_id, message_id, ...opts })`
 - `editMessageReplyMarkup` takes `(chatId, messageId, opts)` instead of `(markup, { chat_id, message_id })`
+- **File sending** (`sendVoice`, `sendPhoto`, `sendDocument`, etc.): Raw file path strings are **not accepted** — wrap with `new InputFile(path)` from `grammy`
 
 Also replace `getInlineKeyboardMarkup` with `buildInlineKeyboard` in services (same pattern as controllers).
 
@@ -283,8 +291,8 @@ Also replace `getInlineKeyboardMarkup` with `buildInlineKeyboard` in services (s
 | `bot.answerCallbackQuery(id, opts)` | `ctx.answerCallbackQuery(opts)` | `bot.api.answerCallbackQuery(id, opts)` |
 | `bot.editMessageText(text, { chat_id, message_id, ...opts })` | - | `bot.api.editMessageText(chatId, messageId, text, opts)` |
 | `bot.editMessageReplyMarkup(markup, { chat_id, message_id })` | - | `bot.api.editMessageReplyMarkup(chatId, messageId, opts)` |
-| `bot.sendVoice(chatId, path, opts)` | `ctx.replyWithVoice(path, opts)` | `bot.api.sendVoice(chatId, path, opts)` |
-| `bot.sendPhoto(chatId, photo, opts)` | `ctx.replyWithPhoto(photo, opts)` | `bot.api.sendPhoto(chatId, photo, opts)` |
+| `bot.sendVoice(chatId, path, opts)` | `ctx.replyWithVoice(new InputFile(path), opts)` | `bot.api.sendVoice(chatId, new InputFile(path), opts)` |
+| `bot.sendPhoto(chatId, photo, opts)` | `ctx.replyWithPhoto(new InputFile(photo), opts)` | `bot.api.sendPhoto(chatId, new InputFile(photo), opts)` |
 
 ### Handler Registration
 
@@ -323,13 +331,34 @@ The langly bot was fully migrated. Use these files as a reference when migrating
 | `features/langly/langly.controller.ts` | Full migration: `ctx` handlers, `ctx.reply()`, `buildInlineKeyboard`, `getMessageData(ctx)`, `getCallbackQueryData(ctx)` |
 | `features/langly/langly.service.ts` | `this.bot.api.*` calls, `buildInlineKeyboard`, removed `@services/telegram` imports |
 
+### Reference: coach bot
+
+The coach bot was the second bot migrated. It also required porting shared utilities (`MessageLoader`, `sendShortenedMessage`, `BLOCKED_ERROR`) and moving `getTableTemplate` to `@core/utils`.
+
+| File | Changes |
+|---|---|
+| `features/coach/coach.config.ts` | Import `TelegramBotConfig` from `@services/telegram-grammy` |
+| `features/coach/coach.controller.ts` | Full migration: `ctx` handlers, `ctx.reply()`, `ctx.deleteMessage()`, `ctx.answerCallbackQuery()`, `buildInlineKeyboard` with `columnsPerRow`, `MessageLoader`, `getMessageData(ctx)`, `getCallbackQueryData(ctx)` |
+| `features/coach/coach.service.ts` | Import `getTableTemplate` from `@core/utils` instead of `@services/telegram` |
+| `features/coach/coach-scheduler.service.ts` | Import `BLOCKED_ERROR`, `provideTelegramBot`, `sendShortenedMessage` from `@services/telegram-grammy` |
+
+### Shared code added during coach migration
+
+| Utility | Location | Description |
+|---|---|---|
+| `buildInlineKeyboard` `columnsPerRow` param | `telegram-grammy/utils/build-inline-keyboard.ts` | Optional second parameter to place multiple buttons per row using `chunk()` |
+| `MessageLoader` | `telegram-grammy/utils/message-loader.ts` | Shows typing action, reaction emoji, and delayed loader message while processing. Uses `bot.api.*` instead of raw axios |
+| `sendShortenedMessage` | `telegram-grammy/utils/send-message.ts` | Truncates message to Telegram's max length before sending via `bot.api.sendMessage` |
+| `BLOCKED_ERROR` | `telegram-grammy/constants.ts` | Error string constant for detecting blocked bots |
+| `getTableTemplate` | `core/utils/get-table-template.ts` | Moved from `@services/telegram` - pure formatting function with no telegram dependency |
+
 ### Migration status
 
 | Bot | Status |
 |---|---|
 | langly | Migrated |
+| coach | Migrated |
 | chatbot | Pending |
-| coach | Pending |
 | magister | Pending |
 | wolt | Pending |
 | worldly | Pending |
