@@ -1,7 +1,7 @@
 import { Logger } from '@core/utils';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
-import { buildInlineKeyboard, provideTelegramBot, sendStyledMessage } from '@services/telegram-grammy';
+import { buildInlineKeyboard, provideTelegramBot, sendStyledMessage } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,

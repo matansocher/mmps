@@ -2,7 +2,7 @@ import { startOfDay } from 'date-fns';
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger, shuffleArray } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram-grammy';
+import { sendShortenedMessage } from '@services/telegram';
 import { fetchTranscript, getRecentVideos } from '@services/youtube-v3';
 import type { Video } from '@services/youtube-v3/types';
 import { getAllActiveSubscriptions, getNotifiedVideoIds, markVideoAsNotified, updateSubscription } from '@shared/youtube-follower';

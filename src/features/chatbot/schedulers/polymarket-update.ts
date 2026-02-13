@@ -1,7 +1,7 @@
 import type { Bot } from 'grammy';
 import { Logger } from '@core/utils';
 import { getMarketById } from '@services/polymarket';
-import { sendShortenedMessage } from '@services/telegram-grammy';
+import { sendShortenedMessage } from '@services/telegram';
 import { getSubscriptionsGroupedByChatId, removeSubscription, updateSubscription } from '@shared/polymarket-follower';
 import type { Subscription } from '@shared/polymarket-follower';
 import { formatDailyUpdateMessage, formatExpiredMarketsSection } from './utils';

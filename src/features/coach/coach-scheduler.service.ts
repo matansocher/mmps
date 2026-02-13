@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getDateString } from '@core/utils';
 import { notify } from '@services/notifier';
-import { BLOCKED_ERROR, provideTelegramBot, sendShortenedMessage } from '@services/telegram-grammy';
+import { BLOCKED_ERROR, provideTelegramBot, sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';

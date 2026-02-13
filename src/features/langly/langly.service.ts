@@ -5,7 +5,7 @@ import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { getAudioFromText } from '@services/openai';
-import { buildInlineKeyboard, provideTelegramBot } from '@services/telegram-grammy';
+import { buildInlineKeyboard, provideTelegramBot } from '@services/telegram';
 import {
   cleanupOldChallenges,
   createActiveChallenge,

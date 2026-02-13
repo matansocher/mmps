@@ -1,7 +1,7 @@
-import type { Message } from 'node-telegram-bot-api';
-import { UserDetails } from '../types';
+import type { Context } from 'grammy';
+import type { UserDetails } from '../types';
 
-type TelegramMessageData = {
+export type MessageData = {
   readonly chatId: number;
   readonly messageId: number;
   readonly replyToMessageId: number;
@@ -19,18 +19,19 @@ type TelegramMessageData = {
   };
 };
 
-export function getMessageData(message: Message): TelegramMessageData {
+export function getMessageData(ctx: Context): MessageData {
+  const message = ctx.message ?? ctx.editedMessage;
   return {
-    chatId: message?.chat?.id ?? null,
+    chatId: ctx.chat?.id ?? null,
     messageId: message?.message_id ?? null,
     replyToMessageId: message?.reply_to_message?.message_id ?? null,
     replyToMessageText: message?.reply_to_message?.text ?? null,
     userDetails: {
-      chatId: message?.chat?.id ?? null,
-      telegramUserId: message?.from?.id ?? null,
-      firstName: message?.from?.first_name ?? null,
-      lastName: message?.from?.last_name ?? null,
-      username: message?.from?.username ?? null,
+      chatId: ctx.chat?.id ?? null,
+      telegramUserId: ctx.from?.id ?? null,
+      firstName: ctx.from?.first_name ?? null,
+      lastName: ctx.from?.last_name ?? null,
+      username: ctx.from?.username ?? null,
     },
     text: message?.text ?? message?.caption ?? '',
     audio: message?.audio ?? message?.voice ?? null,

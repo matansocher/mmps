@@ -4,7 +4,7 @@ import { Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, UserDetails } from '@services/telegram-grammy';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, UserDetails } from '@services/telegram';
 import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';

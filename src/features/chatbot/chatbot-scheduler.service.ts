@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { provideTelegramBot } from '@services/telegram-grammy';
+import { provideTelegramBot } from '@services/telegram';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import {

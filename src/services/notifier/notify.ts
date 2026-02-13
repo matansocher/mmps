@@ -33,5 +33,5 @@ export function notify(bot: TelegramBotConfig, options: NotifyOptions, userDetai
   }
   const notyMessageText = getNotyMessageText(bot.name, options, userDetails);
   const botInstance = provideTelegramBot(botConfig);
-  botInstance.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
+  botInstance.api.sendMessage(NOTIFIER_CHAT_ID, notyMessageText);
 }

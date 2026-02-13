@@ -1,4 +1,4 @@
-import type { TelegramBotConfig } from '@services/telegram-grammy';
+import type { TelegramBotConfig } from '@services/telegram';
 import { Language, LANGUAGES } from '@shared/langly';
 
 export const BOT_CONFIG: TelegramBotConfig = {

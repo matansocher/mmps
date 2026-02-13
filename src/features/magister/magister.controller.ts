@@ -5,7 +5,7 @@ import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
-import { getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, removeItemFromInlineKeyboardMarkup } from '@services/telegram-grammy';
+import { getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, removeItemFromInlineKeyboardMarkup } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './magister.config';
 import { MagisterService } from './magister.service';
 import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
