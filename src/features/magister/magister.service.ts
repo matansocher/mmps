@@ -1,7 +1,7 @@
 import { Logger } from '@core/utils';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
-import { getInlineKeyboardMarkup, provideTelegramBot, sendStyledMessage } from '@services/telegram';
+import { buildInlineKeyboard, provideTelegramBot, sendStyledMessage } from '@services/telegram-grammy';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,
@@ -23,34 +23,34 @@ import {
 import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema, QuizAnswer, QuizSchema } from './types';
 import { formatLessonProgress, generateSummaryMessage, getScoreMessage } from './utils';
 
-const getBotInlineKeyboardMarkup = (courseParticipation: CourseParticipation) => {
+const getBotInlineKeyboard = (courseParticipation: CourseParticipation) => {
   const isLastLesson = courseParticipation.currentLesson >= courseParticipation.totalLessons;
 
-  const inlineKeyboardButtons = [
+  const buttons = [
     {
       text: '🎧 Transcribe 🎧',
-      callback_data: [BOT_ACTIONS.TRANSCRIBE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+      data: [BOT_ACTIONS.TRANSCRIBE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
     },
     ...(isLastLesson
       ? [
           {
             text: '🎯 Take Quiz 🎯',
-            callback_data: [BOT_ACTIONS.QUIZ, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+            data: [BOT_ACTIONS.QUIZ, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
           },
           {
             text: '🎓 Complete Course 🎓',
-            callback_data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+            data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
           },
         ]
       : [
           {
             text: '✅ Complete Lesson ✅',
-            callback_data: [BOT_ACTIONS.COMPLETE_LESSON, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+            data: [BOT_ACTIONS.COMPLETE_LESSON, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
           },
         ]),
   ];
 
-  return getInlineKeyboardMarkup(inlineKeyboardButtons);
+  return buildInlineKeyboard(buttons);
 };
 
 export class MagisterService {
@@ -58,7 +58,7 @@ export class MagisterService {
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   async handleCourseReminders(courseParticipation: CourseParticipation) {
-    await this.bot.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails));
+    await this.bot.api.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails));
     await saveSummarySent(courseParticipation._id.toString());
   }
 
@@ -67,7 +67,7 @@ export class MagisterService {
     if (!course || !courseParticipation) {
       this.logger.error('No new courses found');
       if (onDemand) {
-        await this.bot.sendMessage(chatId, `I see no courses available. Please upload some materials first.`);
+        await this.bot.api.sendMessage(chatId, `I see no courses available. Please upload some materials first.`);
       }
       return null;
     }
@@ -81,7 +81,7 @@ export class MagisterService {
       `Let's begin! 🚀`,
     ].join('\n');
 
-    await this.bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown' });
+    await this.bot.api.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown' });
 
     return { course, courseParticipation };
   }
@@ -102,15 +102,12 @@ export class MagisterService {
   async processNextLesson(chatId: number): Promise<void> {
     const courseParticipation = await getActiveCourseParticipation(chatId);
     if (!courseParticipation) {
-      await this.bot.sendMessage(chatId, `I see no active course. You can always start a new one with /course.`);
+      await this.bot.api.sendMessage(chatId, `I see no active course. You can always start a new one with /course.`);
       return;
     }
 
-    // Check if user needs to complete previous lesson first
-    // currentLesson is always 1 ahead after markLessonSent
-    // So if currentLesson=2 and lessonsCompleted=0, user needs to complete lesson 1 first
     if (courseParticipation.lessonsCompleted < courseParticipation.currentLesson - 1) {
-      await this.bot.sendMessage(
+      await this.bot.api.sendMessage(
         chatId,
         `Please complete your current lesson (Lesson ${courseParticipation.currentLesson - 1}) before moving to the next one. Click "✅ Complete Lesson" when you're done!`,
       );
@@ -118,7 +115,7 @@ export class MagisterService {
     }
 
     if (courseParticipation.currentLesson > courseParticipation.totalLessons) {
-      await this.bot.sendMessage(chatId, `🎉 You've completed all lessons! Use the "🎓 Complete Course" button to finish and get your summary.`);
+      await this.bot.api.sendMessage(chatId, `🎉 You've completed all lessons! Use the "🎓 Complete Course" button to finish and get your summary.`);
       return;
     }
 
@@ -133,7 +130,6 @@ export class MagisterService {
 
     let matches: Awaited<ReturnType<typeof queryVectors>>;
     if (lessonOutline?.suggestedChunkIndexes?.length) {
-      // Use pre-planned chunks for this lesson
       const query = `Lesson ${lessonNumber}: ${lessonOutline.topics.join(', ')}`;
       const embedding = await generateEmbedding(query);
       matches = await queryVectors(PINECONE_INDEX_NAME, embedding, 10, {
@@ -141,7 +137,6 @@ export class MagisterService {
         chunkIndex: { $in: lessonOutline.suggestedChunkIndexes },
       });
     } else {
-      // Fallback: query without pre-planning
       const query = `Lesson ${lessonNumber} of ${courseParticipation.totalLessons} on ${course.topic}`;
       const embedding = await generateEmbedding(query);
       matches = await queryVectors(PINECONE_INDEX_NAME, embedding, 5, { courseId: { $eq: course._id.toString() } });
@@ -180,7 +175,8 @@ export class MagisterService {
 
     const fullMessage = `${progressText}\n\n${result.text}`;
 
-    const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, fullMessage, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation));
+    const keyboard = getBotInlineKeyboard(courseParticipation);
+    const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, fullMessage, 'Markdown', { reply_markup: keyboard });
 
     await saveMessageId(courseParticipation._id.toString(), messageId);
     await markLessonSent(courseParticipation._id.toString());
@@ -193,9 +189,9 @@ export class MagisterService {
     const isLastLesson = courseParticipation.lessonsCompleted >= courseParticipation.totalLessons;
 
     if (isLastLesson) {
-      await this.bot.sendMessage(chatId, `✅ Final lesson completed! 🎉\n\nClick "🎓 Complete Course" to finish and receive your comprehensive summary.`);
+      await this.bot.api.sendMessage(chatId, `✅ Final lesson completed! 🎉\n\nClick "🎓 Complete Course" to finish and receive your comprehensive summary.`);
     } else {
-      await this.bot.sendMessage(
+      await this.bot.api.sendMessage(
         chatId,
         [
           `✅ Lesson ${courseParticipation.lessonsCompleted}/${courseParticipation.totalLessons} completed!`,
@@ -238,7 +234,8 @@ Please answer the question based on the course materials and your expertise. If 
 
     await updatePreviousResponseId(courseParticipation._id.toString(), responseId);
 
-    const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, result.text, 'Markdown', getBotInlineKeyboardMarkup(courseParticipation));
+    const keyboard = getBotInlineKeyboard(courseParticipation);
+    const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, result.text, 'Markdown', { reply_markup: keyboard });
 
     await saveMessageId(courseParticipation._id.toString(), messageId);
   }
@@ -301,7 +298,7 @@ Please answer the question based on the course materials and your expertise. If 
       },
     ]);
 
-    await this.bot.sendMessage(chatId, questionText, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: buttonLayout } });
+    await this.bot.api.sendMessage(chatId, questionText, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: buttonLayout } });
   }
 
   async checkQuizAnswer(courseParticipationId: string, questionIndex: number, userAnswerIndex: number, chatId: number, messageId: number): Promise<void> {
@@ -316,13 +313,13 @@ Please answer the question based on the course materials and your expertise. If 
     const answer: QuizAnswer = { questionIndex, userAnswer: userAnswerIndex, isCorrect, answeredAt: new Date() };
     await saveQuizAnswer(courseParticipationId, answer);
 
-    await this.bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId }).catch(() => {});
+    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
 
     if (isCorrect) {
-      await this.bot.sendMessage(chatId, `✅ Correct! Well done! 🎉`);
+      await this.bot.api.sendMessage(chatId, `✅ Correct! Well done! 🎉`);
     } else {
       const correctAnswerText = question.options[question.correctAnswer];
-      await this.bot.sendMessage(chatId, [`❌ Not quite...`, '', `The correct answer is: ${correctAnswerText}`, '', `💡 ${question.explanation}`].join('\n'));
+      await this.bot.api.sendMessage(chatId, [`❌ Not quite...`, '', `The correct answer is: ${correctAnswerText}`, '', `💡 ${question.explanation}`].join('\n'));
     }
 
     const updatedParticipation = await getCourseParticipation(courseParticipationId);
@@ -342,7 +339,7 @@ Please answer the question based on the course materials and your expertise. If 
         callback_data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
       };
 
-      await this.bot.sendMessage(chatId, scoreMessage, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[completeButton]] } });
+      await this.bot.api.sendMessage(chatId, scoreMessage, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[completeButton]] } });
     }
   }
 }

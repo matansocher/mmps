@@ -1,4 +1,5 @@
 import type { Context } from 'grammy';
+import type { InlineKeyboardMarkup } from 'grammy/types';
 import type { UserDetails } from '../types';
 
 export type CallbackQueryData = {
@@ -9,6 +10,7 @@ export type CallbackQueryData = {
   readonly userDetails: UserDetails;
   readonly text: string;
   readonly data: string;
+  readonly replyMarkup: InlineKeyboardMarkup;
 };
 
 export function getCallbackQueryData(ctx: Context): CallbackQueryData {
@@ -28,5 +30,6 @@ export function getCallbackQueryData(ctx: Context): CallbackQueryData {
     },
     text: message && 'text' in message ? message.text : null,
     data: callbackQuery?.data ?? null,
+    replyMarkup: message && 'reply_markup' in message ? message.reply_markup : null,
   };
 }

@@ -352,8 +352,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Langly',
   token: 'LANGLY_TELEGRAM_BOT_TOKEN',
   commands: {
-    START: { command: 'start', description: 'Start', hide: true },
-    CHALLENGE: { command: 'challenge', description: 'Start a challenge' },
+    START: { command: '/start', description: 'Start', hide: true },
+    CHALLENGE: { command: '/challenge', description: 'Start a challenge' },
   },
 };
 ```
