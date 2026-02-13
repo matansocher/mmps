@@ -1,5 +1,5 @@
 import { env } from 'node:process';
-import { TelegramBotConfig } from '@services/telegram';
+import type { TelegramBotConfig } from '@services/telegram-grammy';
 
 export const BOT_CONFIG: TelegramBotConfig = {
   id: 'CHATBOT',

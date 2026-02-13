@@ -1,9 +1,10 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
+import { InputFile } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { type Earthquake, formatEarthquake, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 import { generateEarthquakeMapImage } from '@services/earthquake-map';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 
 const logger = new Logger('EarthquakeMonitorScheduler');
 
@@ -11,7 +12,7 @@ const seenEarthquakeIds = new Set<string>();
 
 export const LOOKBACK_MINUTES = 15;
 
-export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
+export async function earthquakeMonitor(bot: Bot): Promise<void> {
   try {
     const startTime = new Date(Date.now() - LOOKBACK_MINUTES * 60 * 1000);
 
@@ -50,7 +51,7 @@ export async function earthquakeMonitor(bot: TelegramBot): Promise<void> {
         }
 
         if (mapPath) {
-          await bot.sendPhoto(MY_USER_ID, mapPath, {
+          await bot.api.sendPhoto(MY_USER_ID, new InputFile(mapPath), {
             caption: message,
             parse_mode: 'Markdown',
           });

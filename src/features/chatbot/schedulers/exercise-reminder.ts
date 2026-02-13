@@ -1,4 +1,4 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getTodayExercise } from '@shared/trainer';
@@ -6,7 +6,7 @@ import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('ExerciseReminderScheduler');
 
-export async function exerciseReminder(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function exerciseReminder(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const todayExercise = await getTodayExercise(MY_USER_ID);
     if (todayExercise) {
@@ -21,7 +21,7 @@ export async function exerciseReminder(bot: TelegramBot, chatbotService: Chatbot
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
     if (response?.message) {
-      await bot.sendMessage(MY_USER_ID, response.message, { parse_mode: 'Markdown' });
+      await bot.api.sendMessage(MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
     logger.error(`Failed to send exercise reminder: ${err}`);
