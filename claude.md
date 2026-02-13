@@ -27,7 +27,7 @@
 ### Key Dependencies
 - **AI/LLM**: Anthropic SDK, OpenAI, LangChain, LangGraph (with MemorySaver)
 - **Database**: MongoDB with native driver
-- **Bot Platform**: Telegram Bot API (node-telegram-bot-api)
+- **Bot Platform**: grammY (migrating from node-telegram-bot-api, see `GRAMMY_MIGRATION.md`)
 - **Date Handling**: date-fns, date-fns-tz (default timezone: `Asia/Jerusalem`)
 - **Schema Validation**: Zod
 - **MCP**: Model Context Protocol SDK for tool integrations
@@ -303,20 +303,28 @@ if (shouldInitBot(chatbotBotConfig)) await initChatbot();
 #### Service Layer: Controller → Service → Repository
 
 ```typescript
-// Controller - Telegram interactions
-export class ChatbotController {
-  constructor(private readonly chatbotService: ChatbotService) {}
-  private async handleMessage(msg: TelegramBot.Message): Promise<void> {
-    const response = await this.chatbotService.processMessage(msg.text, msg.chat.id);
-    await this.bot.sendMessage(msg.chat.id, response.message);
+// Controller - Telegram interactions (grammY)
+export class LanglyController {
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
+  constructor(private readonly langlyService: LanglyService) {}
+
+  init(): void {
+    this.bot.command('start', (ctx) => this.startHandler(ctx));
+    this.bot.on('callback_query', (ctx) => this.callbackQueryHandler(ctx));
+  }
+
+  private async startHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
+    await ctx.reply(welcomeMessage);
   }
 }
 
-// Service - Business logic
-export class ChatbotService {
-  async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {
-    const user = await getUserByChatId(chatId);
-    return this.aiService.invoke(message);
+// Service - Business logic (uses bot.api when no ctx available)
+export class LanglyService {
+  private readonly bot = provideTelegramBot(BOT_CONFIG);
+  async sendChallenge(chatId: number): Promise<void> {
+    const keyboard = buildInlineKeyboard([...]);
+    await this.bot.api.sendMessage(chatId, message, { reply_markup: keyboard });
   }
 }
 ```
@@ -339,12 +347,14 @@ export class ChatbotSchedulerService {
 
 #### Configuration Pattern
 ```typescript
-export const BOT_CONFIG = {
-  name: 'Chatbot',
-  commands: [
-    { command: 'start', description: 'Start chatting' },
-    { command: 'help', description: 'Show help' },
-  ],
+export const BOT_CONFIG: TelegramBotConfig = {
+  id: 'LANGLY',
+  name: 'Langly',
+  token: 'LANGLY_TELEGRAM_BOT_TOKEN',
+  commands: {
+    START: { command: 'start', description: 'Start', hide: true },
+    CHALLENGE: { command: 'challenge', description: 'Start a challenge' },
+  },
 };
 ```
 
@@ -433,6 +443,19 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
 ```
 
 ### Feature-Specific Patterns
+
+#### Inline Keyboard Helper (grammY)
+Use `buildInlineKeyboard` to create inline keyboards from a simple array:
+```typescript
+import { buildInlineKeyboard } from '@services/telegram-grammy';
+
+const keyboard = buildInlineKeyboard([
+  { text: 'Subscribe', data: 'subscribe' },
+  { text: 'Settings', data: 'settings' },
+]);
+await ctx.reply('Menu:', { reply_markup: keyboard });
+```
+Each button is placed on its own row. The `data` field maps to `callback_data`.
 
 #### MessageLoader (Telegram)
 Shows loading state while processing AI operations:
@@ -562,6 +585,10 @@ export async function updateReminderStatus(id: ObjectId, status: Reminder['statu
 - Use Logger in services
 - Use Zod schemas for AI tools with `.describe()`
 - Use semicolons (Prettier enforced)
+- Use grammY `ctx.*` methods in controllers (`ctx.reply()`, `ctx.deleteMessage()`, etc.)
+- Use `buildInlineKeyboard([{ text, data }])` for inline keyboards
+- Use `getMessageData(ctx)` / `getCallbackQueryData(ctx)` from `@services/telegram-grammy`
+- Import bot utilities from `@services/telegram-grammy` for migrated bots
 
 ### DON'T
 - Use interfaces
@@ -573,6 +600,9 @@ export async function updateReminderStatus(id: ObjectId, status: Reminder['statu
 - Skip error handling
 - Forget barrel `index.ts` exports
 - Use magic numbers
+- Use `this.bot.api.*` in controllers when `ctx` is available (use `ctx.reply()` etc. instead)
+- Use `getInlineKeyboardMarkup` from `@services/telegram` in migrated bots (use `buildInlineKeyboard` instead)
+- Import from `node-telegram-bot-api` in migrated bots
 
 ### Environment Variables
 ```typescript
@@ -592,5 +622,6 @@ const zonedDate = toZonedTime(new Date(), 'Asia/Jerusalem');
 - **20+ AI tools** in `shared/ai/tools/`
 - **30+ external services** (weather, sports, Google services, OpenAI, etc.)
 - **Multi-bot development**: Use `LOCAL_ACTIVE_BOT_ID` env var to run individual bots
+- **grammY migration**: In progress. langly is fully migrated. See `GRAMMY_MIGRATION.md` for the full guide. Use `features/langly/` as reference when migrating other bots.
 
 When in doubt, look at existing code in `features/` or `services/` directories.
