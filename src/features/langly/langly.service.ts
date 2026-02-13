@@ -4,16 +4,16 @@ import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { getAudioFromText } from '@services/openai';
-import { getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
+import { buildInlineKeyboard, provideTelegramBot } from '@services/telegram-grammy';
 import {
   cleanupOldChallenges,
   createActiveChallenge,
   DifficultyLevel,
   getActiveChallenge,
   getUserPreference,
-  LANGUAGES,
   LanguageChallenge,
   LanguageChallengeSchema,
+  LANGUAGES,
   updatePreviousResponseId,
 } from '@shared/langly';
 import { BOT_ACTIONS, BOT_CONFIG, getDifficultyPrompt, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
@@ -49,13 +49,10 @@ export class LanglyService {
     const language = userPreference?.language ?? LANGUAGES.SPANISH;
     const languageLabel = LANGUAGE_LABELS[language] || 'Language';
 
-    const inlineKeyboardButtons = challenge.options.map((option, index) => ({
-      text: option.text,
-      callback_data: [BOT_ACTIONS.ANSWER, index, option.isCorrect].join(INLINE_KEYBOARD_SEPARATOR),
-    }));
+    const keyboard = buildInlineKeyboard(challenge.options.map((option, index) => ({ text: option.text, data: [BOT_ACTIONS.ANSWER, index, option.isCorrect].join(INLINE_KEYBOARD_SEPARATOR) })));
 
     const questionMessage = [`${challenge.emoji} *${languageLabel} Challenge*`, '', `📝 *${challenge.question}*`, '', `💡 _Choose the correct answer:_`].join('\n');
-    const sentMessage = await this.bot.sendMessage(chatId, questionMessage, { parse_mode: 'Markdown', ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
+    const sentMessage = await this.bot.api.sendMessage(chatId, questionMessage, { parse_mode: 'Markdown', reply_markup: keyboard });
 
     await createActiveChallenge(chatId, sentMessage.message_id, challenge);
 
@@ -78,7 +75,7 @@ export class LanglyService {
     const languageLabel = LANGUAGE_LABELS[language] || 'Language';
 
     const resultMessage = [`${challenge.emoji} *${languageLabel} Challenge*`, '', `📝 *${challenge.question}*`, '', `Your answer: *${selectedAnswer.text}* ${isCorrect ? '✅' : '❌'}`].join('\n');
-    await this.bot.editMessageText(resultMessage, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown' });
+    await this.bot.api.editMessageText(chatId, messageId, resultMessage, { parse_mode: 'Markdown' });
 
     const explanationMessage = [
       `${isCorrect ? '🎉 Correct!' : '💭 Not quite right!'}`,
@@ -94,12 +91,9 @@ export class LanglyService {
     ].join('\n');
 
     const challengeKey = `${chatId}_${messageId}`;
-    const audioButton = {
-      text: '🔊 Listen to pronunciation',
-      callback_data: [BOT_ACTIONS.AUDIO, challengeKey].join(INLINE_KEYBOARD_SEPARATOR),
-    };
+    const audioKeyboard = buildInlineKeyboard([{ text: '🔊 Listen to pronunciation', data: [BOT_ACTIONS.AUDIO, challengeKey].join(INLINE_KEYBOARD_SEPARATOR) }]);
 
-    await this.bot.sendMessage(chatId, explanationMessage, { parse_mode: 'Markdown', ...getInlineKeyboardMarkup([audioButton]) });
+    await this.bot.api.sendMessage(chatId, explanationMessage, { parse_mode: 'Markdown', reply_markup: audioKeyboard });
 
     return { word: challenge.word, type: challenge.type, isCorrect };
   }
@@ -118,7 +112,7 @@ export class LanglyService {
     const { challenge } = activeChallenge;
 
     try {
-      await this.bot.editMessageReplyMarkup(undefined, { message_id: originalMessageId, chat_id: chatId }).catch(() => {});
+      await this.bot.api.editMessageReplyMarkup(chatId, originalMessageId).catch(() => {});
 
       const audioPath = `${LOCAL_FILES_PATH}/langly_audio_${Date.now()}.mp3`;
       const audioResponse = await getAudioFromText(challenge.exampleSentence);
@@ -126,12 +120,12 @@ export class LanglyService {
       const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
       await fs.writeFile(audioPath, audioBuffer);
 
-      await this.bot.sendVoice(chatId, audioPath, { caption: `🔊 "${challenge.exampleSentence}"` });
+      await this.bot.api.sendVoice(chatId, audioPath, { caption: `🔊 "${challenge.exampleSentence}"` });
 
       await deleteFile(audioPath);
     } catch (err) {
       this.logger.error(`Failed to generate audio ${err}`);
-      await this.bot.sendMessage(chatId, '❌ Failed to generate audio. Please try again.');
+      await this.bot.api.sendMessage(chatId, '❌ Failed to generate audio. Please try again.');
     }
   }
 }

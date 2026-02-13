@@ -4,12 +4,12 @@ import { env } from 'node:process';
 import { isProd } from '@core/config';
 import { registerSwaggerRoutes } from '@core/openapi';
 import { Logger } from '@core/utils';
-import { BOT_CONFIG as chatbotBotConfig, initChatbot } from '@features/chatbot';
-import { BOT_CONFIG as coachBotConfig, initCoach } from '@features/coach';
-import { initLangly, BOT_CONFIG as langlyBotConfig } from '@features/langly';
-import { initMagister, BOT_CONFIG as magisterBotConfig } from '@features/magister';
-import { initWolt, BOT_CONFIG as woltBotConfig } from '@features/wolt';
-import { initWorldly, BOT_CONFIG as worldlyBotConfig } from '@features/worldly';
+import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
+import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
+import { initLangly, BOT_CONFIG as langlyConfig } from '@features/langly';
+import { initMagister, BOT_CONFIG as magisterConfig } from '@features/magister';
+import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
+import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 
 dotenv.config();
 
@@ -29,12 +29,12 @@ async function main() {
 
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
 
-  shouldInitBot(chatbotBotConfig) && (await initChatbot(app));
-  shouldInitBot(coachBotConfig) && (await initCoach());
-  shouldInitBot(langlyBotConfig) && (await initLangly());
-  shouldInitBot(magisterBotConfig) && (await initMagister());
-  shouldInitBot(woltBotConfig) && (await initWolt());
-  shouldInitBot(worldlyBotConfig) && (await initWorldly());
+  shouldInitBot(chatbotConfig) && (await initChatbot(app));
+  shouldInitBot(coachConfig) && (await initCoach());
+  shouldInitBot(langlyConfig) && (await initLangly());
+  shouldInitBot(magisterConfig) && (await initMagister());
+  shouldInitBot(woltConfig) && (await initWolt());
+  shouldInitBot(worldlyConfig) && (await initWorldly());
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
   app.listen(port, () => {
