@@ -1,8 +1,9 @@
 import { toZonedTime } from 'date-fns-tz';
+import { InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { getInlineKeyboardMarkup, provideTelegramBot } from '@services/telegram';
+import { provideTelegramBot } from '@services/telegram-grammy';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
@@ -46,15 +47,15 @@ export class WoltSchedulerService {
     try {
       const { name, link } = restaurant;
       const { chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
-      const inlineKeyboardMarkup = getInlineKeyboardMarkup([{ text: `🍽️ ${name} 🍽️`, url: link }]);
+      const keyboard = new InlineKeyboard().url(`🍽️ ${name} 🍽️`, link);
       const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, 'אפשר להזמין עכשיו! 📱'].join('\n');
 
       try {
-        await this.bot.sendPhoto(chatId, restaurantPhoto, { ...inlineKeyboardMarkup, caption: replyText });
+        await this.bot.api.sendPhoto(chatId, restaurantPhoto, { reply_markup: keyboard, caption: replyText });
       } catch (err) {
         this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
-        await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
+        await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
       }
 
       await archiveSubscription(chatId, restaurantName, true);
@@ -86,7 +87,7 @@ export class WoltSchedulerService {
       if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
         // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER
         const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n');
-        await this.bot.sendMessage(chatId, messageText);
+        await this.bot.api.sendMessage(chatId, messageText);
       }
       this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
