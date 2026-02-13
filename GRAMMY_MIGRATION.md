@@ -261,16 +261,19 @@ await this.bot.editMessageReplyMarkup(markup, { chat_id: chatId, message_id: mes
 await this.bot.sendVoice(chatId, filePath, opts);
 
 // After (grammY)
+import { InputFile } from 'grammy';
+
 await this.bot.api.sendMessage(chatId, text, opts);
 await this.bot.api.editMessageText(chatId, messageId, text, opts);
 await this.bot.api.editMessageReplyMarkup(chatId, messageId, opts);
-await this.bot.api.sendVoice(chatId, filePath, opts);
+await this.bot.api.sendVoice(chatId, new InputFile(filePath), opts);
 ```
 
 Key differences in the grammy API methods:
 - All methods are on `this.bot.api` (not directly on `this.bot`)
 - `editMessageText` takes `(chatId, messageId, text, opts)` instead of `(text, { chat_id, message_id, ...opts })`
 - `editMessageReplyMarkup` takes `(chatId, messageId, opts)` instead of `(markup, { chat_id, message_id })`
+- **File sending** (`sendVoice`, `sendPhoto`, `sendDocument`, etc.): Raw file path strings are **not accepted** — wrap with `new InputFile(path)` from `grammy`
 
 Also replace `getInlineKeyboardMarkup` with `buildInlineKeyboard` in services (same pattern as controllers).
 
@@ -288,8 +291,8 @@ Also replace `getInlineKeyboardMarkup` with `buildInlineKeyboard` in services (s
 | `bot.answerCallbackQuery(id, opts)` | `ctx.answerCallbackQuery(opts)` | `bot.api.answerCallbackQuery(id, opts)` |
 | `bot.editMessageText(text, { chat_id, message_id, ...opts })` | - | `bot.api.editMessageText(chatId, messageId, text, opts)` |
 | `bot.editMessageReplyMarkup(markup, { chat_id, message_id })` | - | `bot.api.editMessageReplyMarkup(chatId, messageId, opts)` |
-| `bot.sendVoice(chatId, path, opts)` | `ctx.replyWithVoice(path, opts)` | `bot.api.sendVoice(chatId, path, opts)` |
-| `bot.sendPhoto(chatId, photo, opts)` | `ctx.replyWithPhoto(photo, opts)` | `bot.api.sendPhoto(chatId, photo, opts)` |
+| `bot.sendVoice(chatId, path, opts)` | `ctx.replyWithVoice(new InputFile(path), opts)` | `bot.api.sendVoice(chatId, new InputFile(path), opts)` |
+| `bot.sendPhoto(chatId, photo, opts)` | `ctx.replyWithPhoto(new InputFile(photo), opts)` | `bot.api.sendPhoto(chatId, new InputFile(photo), opts)` |
 
 ### Handler Registration
 

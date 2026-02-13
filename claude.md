@@ -589,6 +589,7 @@ export async function updateReminderStatus(id: ObjectId, status: Reminder['statu
 - Use `buildInlineKeyboard([{ text, data }])` for inline keyboards
 - Use `getMessageData(ctx)` / `getCallbackQueryData(ctx)` from `@services/telegram-grammy`
 - Import bot utilities from `@services/telegram-grammy` for migrated bots
+- Use `new InputFile(path)` from `grammy` when sending files (`sendVoice`, `sendPhoto`, `sendDocument`, etc.) — raw file path strings are not accepted
 
 ### DON'T
 - Use interfaces
