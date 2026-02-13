@@ -1,14 +1,14 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { ChatbotService } from '../chatbot.service';
 import { formatEventsForPrompt } from './utils/events';
 
 const logger = new Logger('DailySummaryScheduler');
 
-export async function dailySummary(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function dailySummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const events = await getTomorrowEvents();
     const calendarSection = events.length > 0 ? `Here are my calendar events for tomorrow:\n${formatEventsForPrompt(events)}` : 'No events scheduled for tomorrow.';
@@ -36,7 +36,7 @@ Please format the response nicely with emojis and make it feel like a friendly g
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    await bot.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.');
+    await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.');
     logger.error(`Failed to generate/send daily summary: ${err}`);
   }
 }

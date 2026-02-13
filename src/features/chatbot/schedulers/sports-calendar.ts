@@ -1,8 +1,8 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 import type { ChatbotService } from '../chatbot.service';
 
 export const LIKED_TEAMS: string[] = ['Real Madrid', 'Barcelona', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Manchester City FC', 'Maccabi Haifa'];
@@ -32,7 +32,7 @@ const handleDates = (): { dayOfWeek: number; startDate: string; endDate: string 
   return { dayOfWeek, startDate, endDate };
 };
 
-export async function sportsCalendar(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const { dayOfWeek, startDate, endDate } = handleDates();
     const dateRangeLabel = dayOfWeek === 0 ? 'the next 3 days (Sunday-Tuesday)' : 'the next 4 days (Wednesday-Saturday)';

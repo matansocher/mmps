@@ -1,8 +1,8 @@
 import { startOfDay } from 'date-fns';
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger, shuffleArray } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 import { fetchTranscript, getRecentVideos } from '@services/youtube-v3';
 import type { Video } from '@services/youtube-v3/types';
 import { getAllActiveSubscriptions, getNotifiedVideoIds, markVideoAsNotified, updateSubscription } from '@shared/youtube-follower';
@@ -55,7 +55,7 @@ async function getNextVideoToNotify(): Promise<NextVideoToNotify | null> {
   return null;
 }
 
-export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotService): Promise<void> {
+export async function youtubeCheck(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const nextVideo = await getNextVideoToNotify();
 
@@ -79,7 +79,7 @@ export async function youtubeCheck(bot: TelegramBot, chatbotService: ChatbotServ
   }
 }
 
-async function processVideo(bot: TelegramBot, chatbotService: ChatbotService, channelName: string, video: Video): Promise<boolean> {
+async function processVideo(bot: Bot, chatbotService: ChatbotService, channelName: string, video: Video): Promise<boolean> {
   const videoId = video.id;
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 

@@ -387,6 +387,15 @@ The coach bot was the second bot migrated. It also required porting shared utili
 | `features/wolt/wolt.controller.ts` | Full migration: `ctx` handlers, `ctx.reply()`, `ctx.answerCallbackQuery()`, `buildInlineKeyboard`, `new InlineKeyboard().url()` for URL buttons, `new InlineKeyboard().text().row()` for pagination (replaces `getCustomInlineKeyboardMarkup`), `bot.api.editMessageReplyMarkup` |
 | `features/wolt/wolt-scheduler.service.ts` | `provideTelegramBot` from `@services/telegram-grammy`, `bot.api.sendPhoto/sendMessage`, `new InlineKeyboard().url()` for URL buttons |
 
+### Reference: chatbot bot
+
+| File | Changes |
+|---|---|
+| `features/chatbot/chatbot.config.ts` | Import `TelegramBotConfig` from `@services/telegram-grammy` (already done) |
+| `features/chatbot/chatbot.controller.ts` | Full migration: `ctx` handlers, `ctx.reply()`, `sendStyledMessage`, `MessageLoader` (no `botToken` param), `downloadFile` from `@services/telegram-grammy` (replaces `downloadAudio` and `bot.downloadFile`), `new InputFile()` for `sendVoice`/`sendPhoto`, removed `registerHandlers`/`TELEGRAM_EVENTS`/`TelegramEventHandler` pattern |
+| `features/chatbot/chatbot-scheduler.service.ts` | `provideTelegramBot` from `@services/telegram-grammy` |
+| `features/chatbot/schedulers/*.ts` (13 files) | `Bot` type from `grammy` (replaces `TelegramBot` from `node-telegram-bot-api`), `sendShortenedMessage` from `@services/telegram-grammy`, `bot.api.sendMessage/sendPhoto` (replaces `bot.sendMessage/sendPhoto`), `new InputFile()` for earthquake map photos |
+
 ### Migration status
 
 | Bot | Status |
@@ -396,5 +405,5 @@ The coach bot was the second bot migrated. It also required porting shared utili
 | worldly | Migrated |
 | magister | Migrated |
 | wolt | Migrated |
-| chatbot | Pending |
+| chatbot | Migrated |
 | striker | Pending |

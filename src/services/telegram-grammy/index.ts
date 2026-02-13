@@ -1,4 +1,5 @@
 export { buildInlineKeyboard } from './utils/build-inline-keyboard';
+export { downloadFile } from './utils/download-file';
 export { MessageLoader } from './utils/message-loader';
 export type { MessageLoaderOptions } from './utils/message-loader';
 export { provideTelegramBot } from './utils/provide-telegram-bot';

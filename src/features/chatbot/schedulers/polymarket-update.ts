@@ -1,7 +1,7 @@
-import type TelegramBot from 'node-telegram-bot-api';
+import type { Bot } from 'grammy';
 import { Logger } from '@core/utils';
 import { getMarketById } from '@services/polymarket';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram-grammy';
 import { getSubscriptionsGroupedByChatId, removeSubscription, updateSubscription } from '@shared/polymarket-follower';
 import type { Subscription } from '@shared/polymarket-follower';
 import { formatDailyUpdateMessage, formatExpiredMarketsSection } from './utils';
@@ -9,7 +9,7 @@ import type { ExpiredMarketInfo, MarketUpdate } from './utils';
 
 const logger = new Logger('PolymarketUpdateScheduler');
 
-export async function polymarketUpdate(bot: TelegramBot): Promise<void> {
+export async function polymarketUpdate(bot: Bot): Promise<void> {
   const subscriptionsByChatId = await getSubscriptionsGroupedByChatId();
 
   if (subscriptionsByChatId.size === 0) {
@@ -21,7 +21,7 @@ export async function polymarketUpdate(bot: TelegramBot): Promise<void> {
   }
 }
 
-async function processSubscriptionsForChat(bot: TelegramBot, chatId: number, subscriptions: Subscription[]): Promise<void> {
+async function processSubscriptionsForChat(bot: Bot, chatId: number, subscriptions: Subscription[]): Promise<void> {
   const updates: MarketUpdate[] = [];
   const expiredMarkets: ExpiredMarketInfo[] = [];
 
