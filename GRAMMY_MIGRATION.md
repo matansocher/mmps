@@ -352,14 +352,41 @@ The coach bot was the second bot migrated. It also required porting shared utili
 | `BLOCKED_ERROR` | `telegram-grammy/constants.ts` | Error string constant for detecting blocked bots |
 | `getTableTemplate` | `core/utils/get-table-template.ts` | Moved from `@services/telegram` - pure formatting function with no telegram dependency |
 
+### Reference: worldly bot
+
+| File | Changes |
+|---|---|
+| `features/worldly/worldly.config.ts` | Import `TelegramBotConfig` from `@services/telegram-grammy` |
+| `features/worldly/worldly.controller.ts` | Full migration: `ctx` handlers, `ctx.reply()`, `ctx.deleteMessage()`, `buildInlineKeyboard`, `bot.api.editMessageReplyMarkup/editMessageCaption/editMessageText/setMessageReaction` (inline, no `reactToMessage` utility), `bot.catch()` for error handling |
+| `features/worldly/worldly.service.ts` | `bot.api.sendPhoto` with `new InputFile(fs.createReadStream(...))`, `bot.api.sendMessage`, `buildInlineKeyboard`, `BLOCKED_ERROR` from `@services/telegram-grammy` |
+| `features/worldly/worldly-scheduler.service.ts` | No changes needed (no `@services/telegram` imports) |
+
+### Reference: magister bot
+
+| File | Changes |
+|---|---|
+| `features/magister/magister.config.ts` | Import `TelegramBotConfig` from `@services/telegram-grammy` |
+| `features/magister/magister.controller.ts` | Full migration: `ctx` handlers, `ctx.reply()`, `ctx.answerCallbackQuery()`, `MessageLoader` with `loadingAction: 'upload_voice'`, `removeItemFromInlineKeyboardMarkup`, `bot.api.setMessageReaction` (inline), `new InputFile()` for `sendVoice`, removed `getBotToken`/`botToken` |
+| `features/magister/magister.service.ts` | `bot.api.sendMessage/editMessageReplyMarkup`, `buildInlineKeyboard`, `sendStyledMessage` from `@services/telegram-grammy`, renamed `getBotInlineKeyboardMarkup` to `getBotInlineKeyboard` |
+| `features/magister/magister-scheduler.service.ts` | No changes needed (no `@services/telegram` imports) |
+
+### Shared code added during worldly/magister migration
+
+| Utility | Location | Description |
+|---|---|---|
+| `sendStyledMessage` | `telegram-grammy/utils/send-message.ts` | Sends with parse_mode, truncates to max length, falls back to plain text on error |
+| `removeItemFromInlineKeyboardMarkup` | `telegram-grammy/utils/remove-item-from-inline-keyboard-markup.ts` | Filters out buttons matching a search query from an inline keyboard |
+| `replyMarkup` field | `telegram-grammy/utils/get-callback-query-data.ts` | Added `replyMarkup` to `CallbackQueryData` type, extracted from callback query message |
+| `loadingAction` option | `telegram-grammy/utils/message-loader.ts` | Optional `loadingAction` param for `MessageLoader` (defaults to `'typing'`, supports `'upload_voice'` etc.) |
+
 ### Migration status
 
 | Bot | Status |
 |---|---|
 | langly | Migrated |
 | coach | Migrated |
+| worldly | Migrated |
+| magister | Migrated |
 | chatbot | Pending |
-| magister | Pending |
 | wolt | Pending |
-| worldly | Pending |
 | striker | Pending |
