@@ -1,4 +1,5 @@
 import { promises as fs } from 'fs';
+import { InputFile } from 'grammy';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
@@ -120,7 +121,7 @@ export class LanglyService {
       const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
       await fs.writeFile(audioPath, audioBuffer);
 
-      await this.bot.api.sendVoice(chatId, audioPath, { caption: `🔊 "${challenge.exampleSentence}"` });
+      await this.bot.api.sendVoice(chatId, new InputFile(audioPath), { caption: `🔊 "${challenge.exampleSentence}"` });
 
       await deleteFile(audioPath);
     } catch (err) {

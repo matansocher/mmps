@@ -118,6 +118,7 @@ export class LanglyController {
 
         case BOT_ACTIONS.AUDIO: {
           const [challengeKey] = params;
+          await ctx.replyWithChatAction('upload_voice');
           await this.audioHandler(chatId, messageId, challengeKey);
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.AUDIO }, userDetails);
           break;
