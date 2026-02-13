@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { InputFile } from 'grammy';
 import { generateRandomString, shuffleArray } from '@core/utils';
 import { notify } from '@services/notifier';
-import { BLOCKED_ERROR, buildInlineKeyboard, provideTelegramBot } from '@services/telegram-grammy';
+import { BLOCKED_ERROR, buildInlineKeyboard, provideTelegramBot } from '@services/telegram';
 import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, State, updateSubscription } from '@shared/worldly';
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
@@ -40,9 +40,7 @@ export class WorldlyService {
     const otherOptions = getMapDistractors(allCountries, randomCountry);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(
-      options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.MAP, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
-    );
+    const keyboard = buildInlineKeyboard(options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.MAP, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })));
 
     await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: 'נחשו את המדינה' });
 
@@ -58,9 +56,7 @@ export class WorldlyService {
     const otherOptions = getMapStateDistractors(allStates, randomState);
     const options = shuffleArray([randomState, ...otherOptions]);
     const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(
-      options.map((state) => ({ text: state.hebrewName, data: [BOT_ACTIONS.US_MAP, state.name, randomState.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
-    );
+    const keyboard = buildInlineKeyboard(options.map((state) => ({ text: state.hebrewName, data: [BOT_ACTIONS.US_MAP, state.name, randomState.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })));
 
     await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: 'נחשו את המדינה בארצות הברית' });
 
@@ -75,9 +71,7 @@ export class WorldlyService {
     const otherOptions = getFlagDistractors(allCountries, randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(
-      options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.FLAG, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
-    );
+    const keyboard = buildInlineKeyboard(options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.FLAG, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })));
 
     await this.bot.api.sendMessage(chatId, randomCountry.emoji, { reply_markup: keyboard });
 

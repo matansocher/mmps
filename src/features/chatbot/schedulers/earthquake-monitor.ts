@@ -4,7 +4,7 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { type Earthquake, formatEarthquake, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 import { generateEarthquakeMapImage } from '@services/earthquake-map';
-import { sendShortenedMessage } from '@services/telegram-grammy';
+import { sendShortenedMessage } from '@services/telegram';
 
 const logger = new Logger('EarthquakeMonitorScheduler');
 

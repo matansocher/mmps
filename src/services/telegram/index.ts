@@ -1,5 +1,14 @@
+export { buildInlineKeyboard } from './utils/build-inline-keyboard';
+export { downloadFile } from './utils/download-file';
+export { MessageLoader } from './utils/message-loader';
+export type { MessageLoaderOptions } from './utils/message-loader';
+export { provideTelegramBot } from './utils/provide-telegram-bot';
+export { getBotToken } from './utils/get-bot-token';
+export { getMessageData } from './utils/get-message-data';
+export type { MessageData } from './utils/get-message-data';
+export { getCallbackQueryData } from './utils/get-callback-query-data';
+export type { CallbackQueryData } from './utils/get-callback-query-data';
+export { removeItemFromInlineKeyboardMarkup } from './utils/remove-item-from-inline-keyboard-markup';
+export { sendShortenedMessage, sendStyledMessage } from './utils/send-message';
 export * from './constants';
-export type * from './types';
-export * from './utils';
-export { getBotToken } from './telegram-bots-factory/get-bot-token';
-export { provideTelegramBot } from './telegram-bots-factory/provide-telegram-bot';
+export * from './types';
