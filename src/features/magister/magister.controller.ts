@@ -1,23 +1,11 @@
 import { promises as fs } from 'fs';
-import { CallbackQuery, InlineKeyboardMarkup, Message } from 'node-telegram-bot-api';
-import { env } from 'node:process';
+import type { Context } from 'grammy';
+import { InputFile } from 'grammy';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
-import {
-  BOT_BROADCAST_ACTIONS,
-  getBotToken,
-  getCallbackQueryData,
-  getMessageData,
-  MessageLoader,
-  provideTelegramBot,
-  reactToMessage,
-  registerHandlers,
-  removeItemFromInlineKeyboardMarkup,
-  TELEGRAM_EVENTS,
-  TelegramEventHandler,
-} from '@services/telegram';
+import { getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, removeItemFromInlineKeyboardMarkup } from '@services/telegram-grammy';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './magister.config';
 import { MagisterService } from './magister.service';
 import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
@@ -29,28 +17,23 @@ const transcribeLoaderMessage = '🎧 Give me a few moments to transcribe it...'
 export class MagisterController {
   private readonly logger = new Logger(MagisterController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
-  private readonly botToken = getBotToken(BOT_CONFIG.id, env[BOT_CONFIG.token]);
 
   constructor(private readonly magisterService: MagisterService) {}
 
   init(): void {
-    const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, COURSE, STATUS, NEXT } = BOT_CONFIG.commands;
 
-    const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: COURSE.command, handler: (message) => this.courseHandler.call(this, message) },
-      { event: COMMAND, regex: STATUS.command, handler: (message) => this.statusHandler.call(this, message) },
-      { event: COMMAND, regex: NEXT.command, handler: (message) => this.nextHandler.call(this, message) },
-      { event: MESSAGE, handler: (message) => this.messageHandler.call(this, message) },
-      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
-    ];
-
-    registerHandlers({ bot: this.bot, logger: this.logger, handlers, isBlocked: true });
+    this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
+    this.bot.command(COURSE.command.replace('/', ''), (ctx) => this.courseHandler(ctx));
+    this.bot.command(STATUS.command.replace('/', ''), (ctx) => this.statusHandler(ctx));
+    this.bot.command(NEXT.command.replace('/', ''), (ctx) => this.nextHandler(ctx));
+    this.bot.on('message:text', (ctx) => this.messageHandler(ctx));
+    this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
+    this.bot.catch((err) => this.logger.error(`${err}`));
   }
 
-  async startHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+  async startHandler(ctx: Context): Promise<void> {
+    const { chatId } = getMessageData(ctx);
 
     const replyText = [
       `Hey There 👋`,
@@ -65,11 +48,11 @@ export class MagisterController {
       `Ready to start? Use /course to begin! 🚀`,
     ].join('\n');
 
-    await this.bot.sendMessage(chatId, replyText, { parse_mode: 'Markdown' });
+    await ctx.reply(replyText, { parse_mode: 'Markdown' });
   }
 
-  private async courseHandler(message: Message): Promise<void> {
-    const { chatId, messageId } = getMessageData(message);
+  private async courseHandler(ctx: Context): Promise<void> {
+    const { chatId, messageId } = getMessageData(ctx);
     const activeCourse = await getActiveCourseParticipation(chatId);
 
     if (activeCourse?._id) {
@@ -81,7 +64,7 @@ export class MagisterController {
 
     const { course, courseParticipation } = result;
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.magisterService.sendLesson(chatId, courseParticipation, course).catch((err) => {
         this.logger.error(`Error sending lesson after course start ${err}`);
@@ -89,12 +72,12 @@ export class MagisterController {
     });
   }
 
-  private async statusHandler(message: Message): Promise<void> {
-    const { chatId } = getMessageData(message);
+  private async statusHandler(ctx: Context): Promise<void> {
+    const { chatId } = getMessageData(ctx);
     const activeCourse = await getActiveCourseParticipation(chatId);
 
     if (!activeCourse) {
-      await this.bot.sendMessage(chatId, `📚 No active course\n\nUse /course to start your learning journey!`);
+      await ctx.reply(`📚 No active course\n\nUse /course to start your learning journey!`);
       return;
     }
 
@@ -103,40 +86,40 @@ export class MagisterController {
 
     const statusMessage = [`📚 *Course: ${course.topic}*`, ``, progressText].join('\n');
 
-    await this.bot.sendMessage(chatId, statusMessage, { parse_mode: 'Markdown' });
+    await ctx.reply(statusMessage, { parse_mode: 'Markdown' });
   }
 
-  private async nextHandler(message: Message): Promise<void> {
-    const { chatId, messageId } = getMessageData(message);
+  private async nextHandler(ctx: Context): Promise<void> {
+    const { chatId, messageId } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.magisterService.processNextLesson(chatId);
     });
   }
 
-  async messageHandler(message: Message): Promise<void> {
-    const { chatId, messageId, text } = getMessageData(message);
+  async messageHandler(ctx: Context): Promise<void> {
+    const { chatId, messageId, text } = getMessageData(ctx);
 
     // Prevent built-in commands from being processed here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
     const activeCourseParticipation = await getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
-      await this.bot.sendMessage(chatId, `I see you don't have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);
+      await ctx.reply(`I see you don't have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, { reactionEmoji: '🤔', loaderMessage: '💭 Let me think about your question...' });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔', loaderMessage: '💭 Let me think about your question...' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.magisterService.processQuestion(chatId, activeCourseParticipation, text);
     });
   }
 
-  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, messageId, data: response, text, replyMarkup } = getCallbackQueryData(callbackQuery);
+  private async callbackQueryHandler(ctx: Context): Promise<void> {
+    const { chatId, messageId, data: response, text, replyMarkup } = getCallbackQueryData(ctx);
 
-    await this.bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+    await ctx.answerCallbackQuery().catch(() => {});
 
     const responseParts = response.split(INLINE_KEYBOARD_SEPARATOR);
     const [action, courseParticipationId] = responseParts;
@@ -170,17 +153,19 @@ export class MagisterController {
     }
   }
 
-  private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: InlineKeyboardMarkup): Promise<void> {
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, messageId, {
-      loadingAction: BOT_BROADCAST_ACTIONS.UPLOADING_VOICE,
+  private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: any): Promise<void> {
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, {
+      loadingAction: 'upload_voice',
       loaderMessage: transcribeLoaderMessage,
     });
 
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-      await this.bot.editMessageReplyMarkup(filteredInlineKeyboardMarkup, { message_id: messageId, chat_id: chatId }).catch(() => {});
+      if (replyMarkup) {
+        const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
+        await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: filteredInlineKeyboardMarkup }).catch(() => {});
+      }
 
-      await reactToMessage(this.botToken, chatId, messageId, '🤯');
+      await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: '🤯' }]).catch(() => {});
 
       const result = await getAudioFromText(text);
 
@@ -188,7 +173,7 @@ export class MagisterController {
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
 
-      await this.bot.sendVoice(chatId, audioFilePath);
+      await this.bot.api.sendVoice(chatId, new InputFile(audioFilePath));
       await deleteFile(audioFilePath);
     });
   }
@@ -199,7 +184,10 @@ export class MagisterController {
 
     await Promise.all(
       messagesToUpdate.map(async (message) => {
-        await Promise.all([this.bot.editMessageReplyMarkup(undefined, { message_id: message, chat_id: chatId }).catch(() => {}), reactToMessage(this.botToken, chatId, message, '✅')]);
+        await Promise.all([
+          this.bot.api.editMessageReplyMarkup(chatId, message, { reply_markup: undefined }).catch(() => {}),
+          this.bot.api.setMessageReaction(chatId, message, [{ type: 'emoji', emoji: '✅' as any }]).catch(() => {}),
+        ]);
       }),
     );
 
@@ -212,29 +200,32 @@ export class MagisterController {
 
     await Promise.all(
       messagesToUpdate.map(async (message) => {
-        await Promise.all([this.bot.editMessageReplyMarkup(undefined, { message_id: message, chat_id: chatId }).catch(() => {}), reactToMessage(this.botToken, chatId, message, '🎓')]);
+        await Promise.all([
+          this.bot.api.editMessageReplyMarkup(chatId, message, { reply_markup: undefined }).catch(() => {}),
+          this.bot.api.setMessageReaction(chatId, message, [{ type: 'emoji', emoji: '🎓' as any }]).catch(() => {}),
+        ]);
       }),
     );
 
-    await this.bot.sendMessage(chatId, `🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
+    await this.bot.api.sendMessage(chatId, `🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
 
     await this.magisterService.generateCourseSummary(courseParticipationId);
   }
 
   private async handleCallbackQuiz(chatId: number, courseParticipationId: string): Promise<void> {
     const quizLoaderMessage = '🎯 Generating your quiz...';
-    const messageLoaderService = new MessageLoader(this.bot, this.botToken, chatId, undefined, { reactionEmoji: '🤔', loaderMessage: quizLoaderMessage });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, undefined, { reactionEmoji: '🤔', loaderMessage: quizLoaderMessage });
 
     await messageLoaderService.handleMessageWithLoader(async () => {
       await this.magisterService.generateQuiz(courseParticipationId);
 
       const courseParticipation = await getCourseParticipation(courseParticipationId);
       if (!courseParticipation) {
-        await this.bot.sendMessage(chatId, 'Something went wrong... Could not generate the quiz. Please try again later.');
+        await this.bot.api.sendMessage(chatId, 'Something went wrong... Could not generate the quiz. Please try again later.');
         return;
       }
 
-      await this.bot.sendMessage(chatId, [`🎯 *Final Quiz!*`, '', `5 questions to test your understanding of the entire course 🚀`].join('\n'), { parse_mode: 'Markdown' });
+      await this.bot.api.sendMessage(chatId, [`🎯 *Final Quiz!*`, '', `5 questions to test your understanding of the entire course 🚀`].join('\n'), { parse_mode: 'Markdown' });
 
       await this.magisterService.sendQuizQuestion(chatId, courseParticipation, 0);
     });

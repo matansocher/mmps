@@ -7,6 +7,7 @@ const DELETE_AFTER_NO_RESPONSE_MS = 15000;
 export type MessageLoaderOptions = {
   readonly loaderMessage?: string;
   readonly reactionEmoji?: ReactionTypeEmoji['emoji'];
+  readonly loadingAction?: string;
 };
 
 export class MessageLoader {
@@ -15,6 +16,7 @@ export class MessageLoader {
   private readonly messageId: number;
   private readonly loaderMessage: string;
   private readonly reactionEmoji: ReactionTypeEmoji['emoji'];
+  private readonly loadingAction: string;
 
   private timeoutId?: ReturnType<typeof setTimeout>;
   private loaderMessageId?: number;
@@ -25,6 +27,7 @@ export class MessageLoader {
     this.messageId = messageId;
     this.loaderMessage = options.loaderMessage;
     this.reactionEmoji = options.reactionEmoji;
+    this.loadingAction = options.loadingAction ?? 'typing';
   }
 
   async handleMessageWithLoader(action: () => Promise<void>): Promise<void> {
@@ -42,7 +45,7 @@ export class MessageLoader {
     if (this.reactionEmoji) {
       await this.bot.api.setMessageReaction(this.chatId, this.messageId, [{ type: 'emoji', emoji: this.reactionEmoji }]).catch(() => {});
     }
-    await this.bot.api.sendChatAction(this.chatId, 'typing');
+    await this.bot.api.sendChatAction(this.chatId, this.loadingAction as any);
 
     this.timeoutId = setTimeout(async () => {
       if (this.loaderMessage) {
