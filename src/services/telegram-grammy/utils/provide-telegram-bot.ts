@@ -28,7 +28,11 @@ export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
   });
 
   if (botConfig.commands) {
-    bot.api.setMyCommands(Object.values(botConfig.commands).filter((command) => !command.hide));
+    bot.api.setMyCommands(
+      Object.values(botConfig.commands)
+        .filter((command) => !command.hide)
+        .map((command) => ({ ...command, command: command.command.replace('/', '') })),
+    );
   }
 
   botInstances.set(botConfig.id, bot);

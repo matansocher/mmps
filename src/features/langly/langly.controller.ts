@@ -16,9 +16,9 @@ export class LanglyController {
   init(): void {
     const { START, CHALLENGE, ACTIONS } = BOT_CONFIG.commands;
 
-    this.bot.command(START.command, (ctx) => this.startHandler(ctx));
-    this.bot.command(CHALLENGE.command, (ctx) => this.challengeHandler(ctx));
-    this.bot.command(ACTIONS.command, (ctx) => this.actionsHandler(ctx));
+    this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
+    this.bot.command(CHALLENGE.command.replace('/', ''), (ctx) => this.challengeHandler(ctx));
+    this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('callback_query', (ctx) => this.callbackQueryHandler(ctx));
   }
 
