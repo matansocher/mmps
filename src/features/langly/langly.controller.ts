@@ -1,8 +1,8 @@
-import { CallbackQuery, Message } from 'node-telegram-bot-api';
+import type { Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData, provideTelegramBot, registerHandlers, TELEGRAM_EVENTS, TelegramEventHandler, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram-grammy';
 import { createUserPreference, DifficultyLevel, getUserPreference, Language, LANGUAGES, saveUserDetails, updateUserPreference } from '@shared/langly';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 import { LanglyService } from './langly.service';
@@ -14,21 +14,16 @@ export class LanglyController {
   constructor(private readonly langlyService: LanglyService) {}
 
   init(): void {
-    const { COMMAND, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, CHALLENGE, ACTIONS } = BOT_CONFIG.commands;
 
-    const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: CHALLENGE.command, handler: (message) => this.challengeHandler.call(this, message) },
-      { event: COMMAND, regex: ACTIONS.command, handler: (message) => this.actionsHandler.call(this, message) },
-      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
-    ];
-
-    registerHandlers({ bot: this.bot, logger: this.logger, handlers });
+    this.bot.command(START.command, (ctx) => this.startHandler(ctx));
+    this.bot.command(CHALLENGE.command, (ctx) => this.challengeHandler(ctx));
+    this.bot.command(ACTIONS.command, (ctx) => this.actionsHandler(ctx));
+    this.bot.on('callback_query', (ctx) => this.callbackQueryHandler(ctx));
   }
 
-  async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+  private async startHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
     await createUserPreference(chatId);
     await saveUserDetails(userDetails);
 
@@ -52,45 +47,45 @@ export class LanglyController {
       '/actions - Manage your subscription, language, and difficulty level',
     ].join('\n');
 
-    await this.bot.sendMessage(chatId, welcomeMessage);
+    await ctx.reply(welcomeMessage);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
-  private async actionsHandler(message: Message): Promise<void> {
-    const { chatId, messageId } = getMessageData(message);
+  private async actionsHandler(ctx: Context): Promise<void> {
+    const { chatId } = getMessageData(ctx);
     const userPreferences = await getUserPreference(chatId);
     const currentDifficulty = userPreferences?.difficulty ?? DifficultyLevel.INTERMEDIATE;
     const currentLanguage = userPreferences?.language ?? LANGUAGES.SPANISH;
 
-    const inlineKeyboardButtons = [
+    const keyboard = buildInlineKeyboard([
       userPreferences?.isStopped
-        ? { text: '🔔 Subscribe to daily challenges', callback_data: `${BOT_ACTIONS.SUBSCRIBE}` }
-        : { text: '🔕 Unsubscribe from daily challenges', callback_data: `${BOT_ACTIONS.UNSUBSCRIBE}` },
-      { text: `🌍 Change Language (Current: ${LANGUAGE_LABELS[currentLanguage]})`, callback_data: `${BOT_ACTIONS.LANGUAGE}` },
-      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, callback_data: `${BOT_ACTIONS.DIFFICULTY}` },
-      { text: '📬 Contact', callback_data: `${BOT_ACTIONS.CONTACT}` },
-    ];
+        ? { text: '🔔 Subscribe to daily challenges', data: `${BOT_ACTIONS.SUBSCRIBE}` }
+        : { text: '🔕 Unsubscribe from daily challenges', data: `${BOT_ACTIONS.UNSUBSCRIBE}` },
+      { text: `🌍 Change Language (Current: ${LANGUAGE_LABELS[currentLanguage]})`, data: `${BOT_ACTIONS.LANGUAGE}` },
+      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, data: `${BOT_ACTIONS.DIFFICULTY}` },
+      { text: '📬 Contact', data: `${BOT_ACTIONS.CONTACT}` },
+    ]);
 
-    await this.bot.sendMessage(chatId, '⚙️ How can I help you?', { ...getInlineKeyboardMarkup(inlineKeyboardButtons) });
-    await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+    await ctx.reply('⚙️ How can I help you?', { reply_markup: keyboard });
+    await ctx.deleteMessage().catch(() => {});
   }
 
-  private async challengeHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+  private async challengeHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
 
     try {
-      await this.bot.sendChatAction(chatId, 'typing');
+      await ctx.replyWithChatAction('typing');
       await this.langlyService.sendChallenge(chatId);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHALLENGE }, userDetails);
     } catch (err) {
       this.logger.error(`Error sending challenge:, ${err}`);
-      await this.bot.sendMessage(chatId, '❌ Sorry, something went wrong. Please try again.');
+      await ctx.reply('❌ Sorry, something went wrong. Please try again.');
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHALLENGE, error: `❗️ ${err}` }, userDetails);
     }
   }
 
-  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, messageId, data, userDetails } = getCallbackQueryData(callbackQuery);
+  private async callbackQueryHandler(ctx: Context): Promise<void> {
+    const { chatId, messageId, data, userDetails } = getCallbackQueryData(ctx);
 
     if (!data) {
       return;
@@ -101,14 +96,14 @@ export class LanglyController {
     try {
       switch (action) {
         case BOT_ACTIONS.SUBSCRIBE:
-          await this.subscribeHandler(chatId, userDetails);
-          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+          await this.subscribeHandler(ctx, chatId, userDetails);
+          await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, userDetails);
           break;
 
         case BOT_ACTIONS.UNSUBSCRIBE:
-          await this.unsubscribeHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+          await this.unsubscribeHandler(ctx, chatId);
+          await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE }, userDetails);
           break;
 
@@ -130,46 +125,46 @@ export class LanglyController {
 
         case BOT_ACTIONS.LANGUAGE: {
           if (params.length === 0) {
-            await this.languageHandler(chatId);
+            await this.languageHandler(ctx, chatId);
           } else {
             const selectedLanguage = params[0] as Language;
-            await this.languageHandler(chatId, selectedLanguage);
+            await this.languageHandler(ctx, chatId, selectedLanguage);
             notify(BOT_CONFIG, { action: 'LANGUAGE_CHANGED', language: LANGUAGE_LABELS[selectedLanguage] }, userDetails);
           }
-          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+          await ctx.deleteMessage().catch(() => {});
           break;
         }
 
         case BOT_ACTIONS.DIFFICULTY: {
           if (params.length === 0) {
-            await this.difficultyHandler(chatId);
+            await this.difficultyHandler(ctx, chatId);
           } else {
             const selectedDifficulty = parseInt(params[0]);
-            await this.difficultyHandler(chatId, selectedDifficulty);
+            await this.difficultyHandler(ctx, chatId, selectedDifficulty);
             notify(BOT_CONFIG, { action: 'DIFFICULTY_CHANGED', difficulty: DIFFICULTY_LABELS[selectedDifficulty] }, userDetails);
           }
-          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+          await ctx.deleteMessage().catch(() => {});
           break;
         }
 
         case BOT_ACTIONS.CONTACT:
-          await this.contactHandler(chatId);
-          await this.bot.deleteMessage(chatId, messageId).catch(() => {});
+          await this.contactHandler(ctx);
+          await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
 
         default:
-          await this.bot.answerCallbackQuery(callbackQuery.id, { text: 'Unknown action' });
+          await ctx.answerCallbackQuery({ text: 'Unknown action' });
       }
 
-      await this.bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+      await ctx.answerCallbackQuery().catch(() => {});
     } catch (err) {
       this.logger.error(`Error handling callback query, ${err}`);
-      await this.bot.answerCallbackQuery(callbackQuery.id, { text: 'Something went wrong. Please try again.', show_alert: true });
+      await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true });
     }
   }
 
-  async subscribeHandler(chatId: number, userDetails: UserDetails): Promise<void> {
+  private async subscribeHandler(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
     await saveUserDetails(userDetails);
     await createUserPreference(chatId);
 
@@ -181,10 +176,10 @@ export class LanglyController {
       'Use /actions to manage your subscription.',
     ].join('\n');
 
-    await this.bot.sendMessage(chatId, subscribeMessage);
+    await ctx.reply(subscribeMessage);
   }
 
-  async unsubscribeHandler(chatId: number): Promise<void> {
+  private async unsubscribeHandler(ctx: Context, chatId: number): Promise<void> {
     await updateUserPreference(chatId, { isStopped: true });
 
     const unsubscribeMessage = [
@@ -196,54 +191,51 @@ export class LanglyController {
       'Use /actions to subscribe again.',
     ].join('\n');
 
-    await this.bot.sendMessage(chatId, unsubscribeMessage);
+    await ctx.reply(unsubscribeMessage);
   }
 
-  async answerHandler(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<{ word: string; type: string; isCorrect: boolean } | null> {
+  private async answerHandler(chatId: number, messageId: number, answerIndex: number, isCorrect: boolean): Promise<{ word: string; type: string; isCorrect: boolean } | null> {
     return await this.langlyService.handleAnswer(chatId, messageId, answerIndex, isCorrect);
   }
 
-  async audioHandler(chatId: number, messageId: number, challengeKey: string): Promise<void> {
+  private async audioHandler(chatId: number, messageId: number, challengeKey: string): Promise<void> {
     await this.langlyService.sendAudioPronunciation(chatId, messageId, challengeKey);
   }
 
-  async languageHandler(chatId: number, selectedLanguage?: Language): Promise<void> {
+  private async languageHandler(ctx: Context, chatId: number, selectedLanguage?: Language): Promise<void> {
     if (!selectedLanguage) {
-      const languageButtons = Object.values(LANGUAGES).map((l) => ({ text: LANGUAGE_LABELS[l], callback_data: [BOT_ACTIONS.LANGUAGE, l].join(INLINE_KEYBOARD_SEPARATOR) }));
+      const keyboard = buildInlineKeyboard(Object.values(LANGUAGES).map((l) => ({ text: LANGUAGE_LABELS[l], data: [BOT_ACTIONS.LANGUAGE, l].join(INLINE_KEYBOARD_SEPARATOR) })));
 
-      await this.bot.sendMessage(chatId, '🌍 Select your preferred language:', { ...getInlineKeyboardMarkup(languageButtons) });
+      await ctx.reply('🌍 Select your preferred language:', { reply_markup: keyboard });
     } else {
-      // Save selected language
       await updateUserPreference(chatId, { language: selectedLanguage });
 
       const confirmationMessage = [`✅ Language updated to: ${LANGUAGE_LABELS[selectedLanguage]}`, '', 'Your next challenges will be in this language!'].join('\n');
 
-      await this.bot.sendMessage(chatId, confirmationMessage);
+      await ctx.reply(confirmationMessage);
     }
   }
 
-  async difficultyHandler(chatId: number, selectedDifficulty?: number): Promise<void> {
+  private async difficultyHandler(ctx: Context, chatId: number, selectedDifficulty?: number): Promise<void> {
     if (!selectedDifficulty) {
-      // Show difficulty selection menu
-      const difficultyButtons = [
-        { text: DIFFICULTY_LABELS[DifficultyLevel.BEGINNER], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.BEGINNER].join(INLINE_KEYBOARD_SEPARATOR) },
-        { text: DIFFICULTY_LABELS[DifficultyLevel.INTERMEDIATE], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.INTERMEDIATE].join(INLINE_KEYBOARD_SEPARATOR) },
-        { text: DIFFICULTY_LABELS[DifficultyLevel.ADVANCED], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.ADVANCED].join(INLINE_KEYBOARD_SEPARATOR) },
-        { text: DIFFICULTY_LABELS[DifficultyLevel.NATIVE], callback_data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.NATIVE].join(INLINE_KEYBOARD_SEPARATOR) },
-      ];
+      const keyboard = buildInlineKeyboard([
+        { text: DIFFICULTY_LABELS[DifficultyLevel.BEGINNER], data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.BEGINNER].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.INTERMEDIATE], data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.INTERMEDIATE].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.ADVANCED], data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.ADVANCED].join(INLINE_KEYBOARD_SEPARATOR) },
+        { text: DIFFICULTY_LABELS[DifficultyLevel.NATIVE], data: [BOT_ACTIONS.DIFFICULTY, DifficultyLevel.NATIVE].join(INLINE_KEYBOARD_SEPARATOR) },
+      ]);
 
-      await this.bot.sendMessage(chatId, '📊 Select your difficulty level:', { ...getInlineKeyboardMarkup(difficultyButtons) });
+      await ctx.reply('📊 Select your difficulty level:', { reply_markup: keyboard });
     } else {
-      // Save selected difficulty
       await updateUserPreference(chatId, { difficulty: selectedDifficulty });
 
       const confirmationMessage = [`✅ Difficulty level updated to: ${DIFFICULTY_LABELS[selectedDifficulty]}`, '', 'Your next challenges will be at this difficulty level!'].join('\n');
 
-      await this.bot.sendMessage(chatId, confirmationMessage);
+      await ctx.reply(confirmationMessage);
     }
   }
 
-  private async contactHandler(chatId: number): Promise<void> {
-    await this.bot.sendMessage(chatId, ['Happy to help! 🤝', '', 'You can reach the creator at:', MY_USER_NAME].join('\n'));
+  private async contactHandler(ctx: Context): Promise<void> {
+    await ctx.reply(['Happy to help! 🤝', '', 'You can reach the creator at:', MY_USER_NAME].join('\n'));
   }
 }

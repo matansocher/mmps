@@ -1,4 +1,4 @@
-import { TelegramBotConfig } from '@services/telegram';
+import type { TelegramBotConfig } from '@services/telegram-grammy';
 import { Language, LANGUAGES } from '@shared/langly';
 
 export const BOT_CONFIG: TelegramBotConfig = {
@@ -6,9 +6,9 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Langly 🌎',
   token: 'LANGLY_TELEGRAM_BOT_TOKEN',
   commands: {
-    START: { command: '/start', description: 'Start', hide: true },
-    CHALLENGE: { command: '/challenge', description: '🎯 Start a challenge' },
-    ACTIONS: { command: '/actions', description: '⚙️ Actions ⚙️' },
+    START: { command: 'start', description: 'Start', hide: true },
+    CHALLENGE: { command: 'challenge', description: '🎯 Start a challenge' },
+    ACTIONS: { command: 'actions', description: '⚙️ Actions ⚙️' },
   },
 };
 
