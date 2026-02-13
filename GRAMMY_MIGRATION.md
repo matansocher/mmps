@@ -69,7 +69,7 @@ private async handler(message: Message): Promise<void> {
 
 **After (grammY):**
 ```typescript
-import { getMessageData } from '@services/telegram-grammy';
+import { getMessageData } from '@services/telegram';
 
 private async handler(ctx: Context): Promise<void> {
   const { chatId, userDetails, text } = getMessageData(ctx);
@@ -93,7 +93,7 @@ private async handler(callbackQuery: CallbackQuery): Promise<void> {
 
 **After:**
 ```typescript
-import { getCallbackQueryData } from '@services/telegram-grammy';
+import { getCallbackQueryData } from '@services/telegram';
 
 private async handler(ctx: Context): Promise<void> {
   const { chatId, messageId, data, userDetails } = getCallbackQueryData(ctx);
@@ -119,7 +119,7 @@ await this.bot.sendMessage(chatId, 'Choose:', { ...getInlineKeyboardMarkup(butto
 
 **After:**
 ```typescript
-import { buildInlineKeyboard } from '@services/telegram-grammy';
+import { buildInlineKeyboard } from '@services/telegram';
 
 const keyboard = buildInlineKeyboard([
   { text: 'Option A', data: 'action_a' },
@@ -147,7 +147,7 @@ Change the `TelegramBotConfig` import from `@services/telegram` to `@services/te
 import { TelegramBotConfig } from '@services/telegram';
 
 // After
-import type { TelegramBotConfig } from '@services/telegram-grammy';
+import type { TelegramBotConfig } from '@services/telegram';
 ```
 
 The type is identical - this is just changing the import source.
@@ -160,11 +160,11 @@ The type is identical - this is just changing the import source.
 // Before
 import { CallbackQuery, Message } from 'node-telegram-bot-api';
 import { getCallbackQueryData, getInlineKeyboardMarkup, getMessageData } from '@services/telegram';
-import { provideTelegramBot, UserDetails } from '@services/telegram-grammy';
+import { provideTelegramBot, UserDetails } from '@services/telegram';
 
 // After
 import type { Context } from 'grammy';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram-grammy';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
 ```
 
 #### 2b. Update handler registrations

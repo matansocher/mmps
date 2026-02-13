@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 import { z } from 'zod';
-import { TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram-grammy';
+import { TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 
 export const LessonResponseSchema = z.object({
   text: z.string().max(TELEGRAM_MAX_MESSAGE_LENGTH).describe('The lesson content text that will be displayed to the user'),

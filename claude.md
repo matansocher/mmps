@@ -447,7 +447,7 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
 #### Inline Keyboard Helper (grammY)
 Use `buildInlineKeyboard` to create inline keyboards from a simple array:
 ```typescript
-import { buildInlineKeyboard } from '@services/telegram-grammy';
+import { buildInlineKeyboard } from '@services/telegram';
 
 const keyboard = buildInlineKeyboard([
   { text: 'Subscribe', data: 'subscribe' },

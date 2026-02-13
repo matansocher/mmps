@@ -2,7 +2,7 @@ import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram-grammy';
+import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('MakavdiaUpdateScheduler');

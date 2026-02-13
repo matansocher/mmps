@@ -3,7 +3,7 @@ import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { sleep } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram-grammy';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
 import { generateStatisticsMessage } from './utils';
@@ -44,9 +44,7 @@ export class WorldlyController {
     const subscription = await getSubscription(chatId);
     const keyboard = buildInlineKeyboard([
       { text: '📊 סטטיסטיקות 📊', data: `${BOT_ACTIONS.STATISTICS}` },
-      !subscription?.isActive
-        ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', data: `${BOT_ACTIONS.START}` }
-        : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}` },
+      !subscription?.isActive ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', data: `${BOT_ACTIONS.START}` } : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}` },
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
     await ctx.reply('איך אני יכול לעזור? 👨‍🏫', { reply_markup: keyboard });

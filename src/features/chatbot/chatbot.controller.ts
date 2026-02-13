@@ -6,7 +6,7 @@ import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { analyzeImage } from '@services/openai/utils/analyze-image';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
-import { downloadFile, getMessageData, MessageLoader, provideTelegramBot, sendStyledMessage } from '@services/telegram-grammy';
+import { downloadFile, getMessageData, MessageLoader, provideTelegramBot, sendStyledMessage } from '@services/telegram';
 import { BOT_CONFIG, IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 

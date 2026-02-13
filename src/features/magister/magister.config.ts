@@ -1,4 +1,4 @@
-import type { TelegramBotConfig } from '@services/telegram-grammy';
+import type { TelegramBotConfig } from '@services/telegram';
 
 export const BOT_CONFIG: TelegramBotConfig = {
   id: 'MAGISTER',

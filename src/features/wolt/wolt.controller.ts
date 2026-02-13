@@ -4,7 +4,7 @@ import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram-grammy';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';

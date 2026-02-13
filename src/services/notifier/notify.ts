@@ -1,5 +1,5 @@
 import { MY_USER_ID } from '@core/config';
-import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/telegram-grammy';
+import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/telegram';
 
 const NOTIFIER_CHAT_ID = 862305226;
 const botConfig = {

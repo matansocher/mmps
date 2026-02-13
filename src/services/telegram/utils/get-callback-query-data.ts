@@ -1,7 +1,8 @@
-import { CallbackQuery, InlineKeyboardMarkup } from 'node-telegram-bot-api';
-import { UserDetails } from '../types';
+import type { Context } from 'grammy';
+import type { InlineKeyboardMarkup } from 'grammy/types';
+import type { UserDetails } from '../types';
 
-type TelegramCallbackQueryData = {
+export type CallbackQueryData = {
   readonly messageId: number;
   readonly callbackQueryId: string;
   readonly chatId: number;
@@ -12,21 +13,23 @@ type TelegramCallbackQueryData = {
   readonly replyMarkup: InlineKeyboardMarkup;
 };
 
-export function getCallbackQueryData(callbackQuery: CallbackQuery): TelegramCallbackQueryData {
+export function getCallbackQueryData(ctx: Context): CallbackQueryData {
+  const callbackQuery = ctx.callbackQuery;
+  const message = callbackQuery?.message;
   return {
-    messageId: callbackQuery?.message?.message_id ?? null,
+    messageId: message?.message_id ?? null,
     callbackQueryId: callbackQuery?.id ?? null,
-    chatId: callbackQuery?.from?.id ?? null,
-    date: callbackQuery?.message?.date ?? null,
+    chatId: ctx.chat?.id ?? null,
+    date: message?.date ?? null,
     userDetails: {
-      chatId: callbackQuery?.from?.id ?? null,
-      telegramUserId: callbackQuery?.from?.id ?? null,
-      firstName: callbackQuery?.from?.first_name ?? null,
-      lastName: callbackQuery?.from?.last_name ?? null,
-      username: callbackQuery?.from?.username ?? null,
+      chatId: ctx.chat?.id ?? null,
+      telegramUserId: ctx.from?.id ?? null,
+      firstName: ctx.from?.first_name ?? null,
+      lastName: ctx.from?.last_name ?? null,
+      username: ctx.from?.username ?? null,
     },
-    text: callbackQuery?.message?.text ?? null,
+    text: message && 'text' in message ? message.text : null,
     data: callbackQuery?.data ?? null,
-    replyMarkup: callbackQuery?.message?.reply_markup ?? null,
+    replyMarkup: message && 'reply_markup' in message ? message.reply_markup : null,
   };
 }

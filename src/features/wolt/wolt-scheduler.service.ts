@@ -3,7 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { provideTelegramBot } from '@services/telegram-grammy';
+import { provideTelegramBot } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
