@@ -1,45 +1,31 @@
-import { BotCommand, CallbackQuery, Message } from 'node-telegram-bot-api';
+import type { Context } from 'grammy';
+import { InlineKeyboard } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
-import {
-  getCallbackQueryData,
-  getCustomInlineKeyboardMarkup,
-  getInlineKeyboardMarkup,
-  getMessageData,
-  provideTelegramBot,
-  registerHandlers,
-  TELEGRAM_EVENTS,
-  TelegramEventHandler,
-  UserDetails,
-} from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram-grammy';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
-
-const customErrorMessage = `מצטער, אבל קרתה לי תקלה. אפשר לנסות שוב מאוחר יותר 😥`;
 
 export class WoltController {
   private readonly logger = new Logger(WoltController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   init(): void {
-    const { COMMAND, MESSAGE, CALLBACK_QUERY } = TELEGRAM_EVENTS;
     const { START, LIST, CONTACT } = BOT_CONFIG.commands;
-    const handlers: TelegramEventHandler[] = [
-      { event: COMMAND, regex: START.command, handler: (message) => this.startHandler.call(this, message) },
-      { event: COMMAND, regex: LIST.command, handler: (message) => this.listHandler.call(this, message) },
-      { event: COMMAND, regex: CONTACT.command, handler: (message) => this.contactHandler.call(this, message) },
-      { event: MESSAGE, handler: (message) => this.textHandler.call(this, message) },
-      { event: CALLBACK_QUERY, handler: (callbackQuery) => this.callbackQueryHandler.call(this, callbackQuery) },
-    ];
-    registerHandlers({ bot: this.bot, logger: this.logger, handlers, customErrorMessage });
+    this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
+    this.bot.command(LIST.command.replace('/', ''), (ctx) => this.listHandler(ctx));
+    this.bot.command(CONTACT.command.replace('/', ''), (ctx) => this.contactHandler(ctx));
+    this.bot.on('message:text', (ctx) => this.textHandler(ctx));
+    this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
+    this.bot.catch((err) => this.logger.error(`${err}`));
   }
 
-  async startHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+  async startHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
 
     const userExists = await saveUserDetails(userDetails);
 
@@ -52,38 +38,37 @@ export class WoltController {
       .join('\n')
       .replace('{firstName}', userDetails.firstName || userDetails.username || '');
     const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
-    await this.bot.sendMessage(chatId, userExists ? existingUserReplyText : newUserReplyText);
+    await ctx.reply(userExists ? existingUserReplyText : newUserReplyText);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: !userExists }, userDetails);
   }
 
-  async contactHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+  async contactHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
 
-    await this.bot.sendMessage(chatId, [`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
+    await ctx.reply([`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
   }
 
-  async listHandler(message: Message): Promise<void> {
-    const { chatId, userDetails } = getMessageData(message);
+  async listHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
 
     try {
       const subscriptions = await getActiveSubscriptions(chatId);
       if (!subscriptions.length) {
         const replyText = `אין לך התראות פתוחות`;
-        await this.bot.sendMessage(chatId, replyText);
+        await ctx.reply(replyText);
         return;
       }
 
       const promisesArr = subscriptions.map((subscription: Subscription) => {
-        const inlineKeyboardButtons = [
+        const keyboard = buildInlineKeyboard([
           {
             text: '⛔️ הסרה ⛔️',
-            callback_data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
+            data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
           },
-        ];
-        const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
+        ]);
         const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
-        return this.bot.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, inlineKeyboardMarkup);
+        return this.bot.api.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
       });
       await Promise.all(promisesArr);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
@@ -93,16 +78,16 @@ export class WoltController {
     }
   }
 
-  async textHandler(message: Message): Promise<void> {
-    const { chatId, userDetails, text: rawRestaurant } = getMessageData(message);
+  async textHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails, text: rawRestaurant } = getMessageData(ctx);
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     // prevent built in options to be processed also here
-    if (Object.values(BOT_CONFIG.commands).some((command: BotCommand) => restaurant.includes(command.command))) return;
+    if (Object.values(BOT_CONFIG.commands).some((command) => restaurant.includes(command.command))) return;
 
     try {
       if (hasHebrew(restaurant)) {
-        await this.bot.sendMessage(chatId, 'אני מדבר עברית שוטף, אבל אני יכול לחפש מסעדות רק באנגלית 🇺🇸');
+        await ctx.reply('אני מדבר עברית שוטף, אבל אני יכול לחפש מסעדות רק באנגלית 🇺🇸');
         return;
       }
 
@@ -110,26 +95,26 @@ export class WoltController {
       const matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
         const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
-        await this.bot.sendMessage(chatId, replyText);
+        await ctx.reply(replyText);
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
         return;
       }
 
-      let inlineKeyboardButtons = matchedRestaurants.map((restaurant) => {
+      let buttons = matchedRestaurants.map((restaurant) => {
         return {
           text: `${restaurant.name} - ${restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`,
-          callback_data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
+          data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
         };
       });
 
       if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
-        inlineKeyboardButtons = [...inlineKeyboardButtons.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW)];
-        inlineKeyboardButtons.push({ text: 'דף הבא (2) ➡️', callback_data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, 2].join(INLINE_KEYBOARD_SEPARATOR) });
+        buttons = [...buttons.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW)];
+        buttons.push({ text: 'דף הבא (2) ➡️', data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, 2].join(INLINE_KEYBOARD_SEPARATOR) });
       }
 
-      const inlineKeyboardMarkup = getInlineKeyboardMarkup(inlineKeyboardButtons);
+      const keyboard = buildInlineKeyboard(buttons);
       const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
-      await this.bot.sendMessage(chatId, replyText, inlineKeyboardMarkup);
+      await ctx.reply(replyText, { reply_markup: keyboard });
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
       notify(BOT_CONFIG, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
@@ -137,8 +122,8 @@ export class WoltController {
     }
   }
 
-  private async callbackQueryHandler(callbackQuery: CallbackQuery): Promise<void> {
-    const { chatId, userDetails, messageId, data } = getCallbackQueryData(callbackQuery);
+  private async callbackQueryHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails, messageId, data } = getCallbackQueryData(ctx);
 
     const [action, restaurant, page] = data.split(INLINE_KEYBOARD_SEPARATOR);
     const restaurantName = restaurant.replace(BOT_ACTIONS.REMOVE, '').replace(INLINE_KEYBOARD_SEPARATOR, '');
@@ -146,11 +131,11 @@ export class WoltController {
     try {
       switch (action) {
         case BOT_ACTIONS.REMOVE: {
-          await this.removeSubscription(chatId, userDetails, messageId, restaurantName, activeSubscriptions);
+          await this.removeSubscription(ctx, chatId, userDetails, messageId, restaurantName, activeSubscriptions);
           break;
         }
         case BOT_ACTIONS.ADD: {
-          await this.addSubscription(chatId, userDetails, restaurantName, activeSubscriptions);
+          await this.addSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
           break;
         }
         case BOT_ACTIONS.CHANGE_PAGE: {
@@ -158,8 +143,8 @@ export class WoltController {
           break;
         }
         default: {
-          await this.bot.answerCallbackQuery(callbackQuery.id, { text: 'לא הבנתי את הבקשה שלך 😕' });
-          await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'לא הבנתי את הבקשה שלך 😕' });
+          await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
           break;
         }
       }
@@ -170,49 +155,48 @@ export class WoltController {
     }
   }
 
-  async addSubscription(chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
+  async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
-      await this.bot.sendMessage(chatId, replyText);
+      await ctx.reply(replyText);
       return;
     }
 
     if (activeSubscriptions?.length >= MAX_NUM_OF_SUBSCRIPTIONS_PER_USER) {
-      await this.bot.sendMessage(chatId, ['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', 'יש לי הגבלה של עד 3 התראות למשתמש 😥'].join('\n'));
+      await ctx.reply(['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', 'יש לי הגבלה של עד 3 התראות למשתמש 😥'].join('\n'));
       return;
     }
 
     const restaurants = await restaurantsService.getRestaurants();
     const restaurantDetails = restaurants.find((r: WoltRestaurant): boolean => r.name === restaurant);
     if (!restaurantDetails) {
-      await this.bot.sendMessage(chatId, 'אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
+      await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
       return;
     }
     if (restaurantDetails.isOnline) {
       const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
-      const inlineKeyboardButtons = [{ text: restaurantDetails.name, url: restaurantDetails.link }];
-      const form = getInlineKeyboardMarkup(inlineKeyboardButtons);
-      await this.bot.sendMessage(chatId, replyText, form);
+      const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link);
+      await ctx.reply(replyText, { reply_markup: keyboard });
       return;
     }
 
     const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
     await addSubscription(chatId, restaurant, restaurantDetails?.photo);
-    await this.bot.sendMessage(chatId, replyText);
+    await ctx.reply(replyText);
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
-  async removeSubscription(chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
+  async removeSubscription(ctx: Context, chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       await archiveSubscription(chatId, restaurant, false);
-      await this.bot.sendMessage(chatId, [`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n'));
+      await ctx.reply([`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n'));
     } else {
-      await this.bot.sendMessage(chatId, [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n'));
+      await ctx.reply([`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n'));
     }
-    await this.bot.editMessageReplyMarkup(undefined, { message_id: messageId, chat_id: chatId }).catch(() => {});
+    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
   }
@@ -223,24 +207,22 @@ export class WoltController {
     const from = MAX_NUM_OF_RESTAURANTS_TO_SHOW * (page - 1);
     const to = from + MAX_NUM_OF_RESTAURANTS_TO_SHOW;
     const newPageRestaurants = matchedRestaurants.slice(from, to);
-    const newInlineKeyboardMarkup = newPageRestaurants.map((restaurant) => {
-      return {
-        text: `${restaurant.name} - ${restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`,
-        callback_data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
-      };
-    });
+
+    const keyboard = new InlineKeyboard();
+    for (const r of newPageRestaurants) {
+      keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR)).row();
+    }
 
     const previousPageExists = page > 1;
-    if (previousPageExists) {
-      newInlineKeyboardMarkup.push({ text: ['⬅️', `(${page - 1})`, 'דף הקודם'].join(' '), callback_data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, page - 1].join(INLINE_KEYBOARD_SEPARATOR) });
-    }
     const nextPageExists = to < matchedRestaurants.length;
-    if (nextPageExists) {
-      newInlineKeyboardMarkup.push({ text: ['➡️', `(${page + 1})`, 'דף הבא'].join(' '), callback_data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, page + 1].join(INLINE_KEYBOARD_SEPARATOR) });
+    if (previousPageExists) {
+      keyboard.text(['⬅️', `(${page - 1})`, 'דף הקודם'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, restaurant, page - 1].join(INLINE_KEYBOARD_SEPARATOR));
     }
-    const columnsPerRow: number[] = [...newPageRestaurants.map(() => 1), previousPageExists && nextPageExists ? 2 : 1];
-    const inlineKeyboardMarkup = getCustomInlineKeyboardMarkup(newInlineKeyboardMarkup, columnsPerRow);
-    await this.bot.editMessageReplyMarkup(inlineKeyboardMarkup.reply_markup, { message_id: messageId, chat_id: chatId });
+    if (nextPageExists) {
+      keyboard.text(['➡️', `(${page + 1})`, 'דף הבא'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, restaurant, page + 1].join(INLINE_KEYBOARD_SEPARATOR));
+    }
+
+    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: keyboard });
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, restaurant }, userDetails);
   }
