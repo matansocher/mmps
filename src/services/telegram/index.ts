@@ -10,6 +10,5 @@ export { getCallbackQueryData } from './utils/get-callback-query-data';
 export type { CallbackQueryData } from './utils/get-callback-query-data';
 export { removeItemFromInlineKeyboardMarkup } from './utils/remove-item-from-inline-keyboard-markup';
 export { sendShortenedMessage, sendStyledMessage } from './utils/send-message';
-export { createUserTrackingMiddleware, isExistingUser } from './utils/user-tracking-middleware';
 export * from './constants';
 export * from './types';

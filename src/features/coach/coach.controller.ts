@@ -1,10 +1,10 @@
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
-import { buildInlineKeyboard, createUserTrackingMiddleware, getCallbackQueryData, getMessageData, isExistingUser, MessageLoader, provideTelegramBot } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
 import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -25,12 +25,10 @@ const getKeyboardOptions = () => {
 
 export class CoachController {
   private readonly logger = new Logger(CoachController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(private readonly coachService: CoachService) {}
+  constructor(private readonly coachService: CoachService, private readonly bot: Bot) {}
 
   init(): void {
-    this.bot.use(createUserTrackingMiddleware(saveUserDetails));
     const { START, TABLES, MATCHES, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
@@ -43,7 +41,7 @@ export class CoachController {
 
   private async startHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails } = getMessageData(ctx);
-    await this.userStart(ctx, chatId);
+    await this.userStart(ctx, chatId, userDetails);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
@@ -113,7 +111,7 @@ export class CoachController {
     try {
       switch (action) {
         case BOT_ACTIONS.START:
-          await this.userStart(ctx, chatId);
+          await this.userStart(ctx, chatId, userDetails);
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
@@ -163,8 +161,8 @@ export class CoachController {
     }
   }
 
-  private async userStart(ctx: Context, chatId: number): Promise<void> {
-    const userExists = isExistingUser(ctx);
+  private async userStart(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
+    const userExists = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
     if (subscription) {

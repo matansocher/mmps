@@ -1,10 +1,10 @@
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { InlineKeyboard } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, createUserTrackingMiddleware, getCallbackQueryData, getMessageData, isExistingUser, provideTelegramBot, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
@@ -12,10 +12,10 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATO
 
 export class WoltController {
   private readonly logger = new Logger(WoltController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
+  constructor(private readonly bot: Bot) {}
 
   init(): void {
-    this.bot.use(createUserTrackingMiddleware(saveUserDetails));
     const { START, LIST, CONTACT } = BOT_CONFIG.commands;
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.command(LIST.command.replace('/', ''), (ctx) => this.listHandler(ctx));
@@ -27,7 +27,7 @@ export class WoltController {
 
   async startHandler(ctx: Context): Promise<void> {
     const { userDetails } = getMessageData(ctx);
-    const userExists = isExistingUser(ctx);
+    const userExists = await saveUserDetails(userDetails);
 
     const newUserReplyText = [
       `שלום {firstName}!`,

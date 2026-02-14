@@ -1,9 +1,9 @@
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { sleep } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, createUserTrackingMiddleware, getCallbackQueryData, getMessageData, isExistingUser, provideTelegramBot } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
 import { generateStatisticsMessage } from './utils';
@@ -12,12 +12,10 @@ import { WorldlyService } from './worldly.service';
 
 export class WorldlyController {
   private readonly logger = new Logger(WorldlyController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(private readonly worldlyService: WorldlyService) {}
+  constructor(private readonly worldlyService: WorldlyService, private readonly bot: Bot) {}
 
   init(): void {
-    this.bot.use(createUserTrackingMiddleware(saveUserDetails));
     const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
@@ -34,7 +32,7 @@ export class WorldlyController {
 
   async startHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails } = getMessageData(ctx);
-    await this.userStart(ctx, chatId);
+    await this.userStart(ctx, chatId, userDetails);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
@@ -127,7 +125,7 @@ export class WorldlyController {
     try {
       switch (action) {
         case BOT_ACTIONS.START:
-          await this.userStart(ctx, chatId);
+          await this.userStart(ctx, chatId, userDetails);
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
@@ -190,8 +188,8 @@ export class WorldlyController {
     }
   }
 
-  private async userStart(ctx: Context, chatId: number): Promise<void> {
-    const userExists = isExistingUser(ctx);
+  private async userStart(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
+    const userExists = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
     if (subscription) {
