@@ -127,12 +127,12 @@ export class CoachController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.TABLE:
-          await this.tableHandler(ctx, chatId, Number(resource));
+          await this.tableHandler(ctx, Number(resource));
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
           break;
         case BOT_ACTIONS.MATCH: {
-          await this.competitionMatchesHandler(ctx, chatId, Number(resource));
+          await this.competitionMatchesHandler(ctx, Number(resource));
           await ctx.deleteMessage().catch(() => {});
           const leagueName = Object.entries(COMPETITION_IDS_MAP)
             .filter(([, value]) => value === Number(resource))
@@ -188,12 +188,12 @@ export class CoachController {
     await ctx.reply([`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
   }
 
-  private async tableHandler(ctx: Context, chatId: number, competitionId: number): Promise<void> {
+  private async tableHandler(ctx: Context, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionTableMessage(competitionId);
     await ctx.reply(resultText, { parse_mode: 'Markdown', ...getKeyboardOptions() });
   }
 
-  private async competitionMatchesHandler(ctx: Context, chatId: number, competitionId: number): Promise<void> {
+  private async competitionMatchesHandler(ctx: Context, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionMatchesMessage(competitionId);
     if (!resultText) {
       await ctx.reply('לא מצאתי משחקים בליגה הזאת 😔', { ...getKeyboardOptions() });

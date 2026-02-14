@@ -129,11 +129,11 @@ export class MagisterController {
         break;
 
       case BOT_ACTIONS.COMPLETE_COURSE:
-        await this.handleCallbackCompleteCourse(chatId, messageId, courseParticipationId);
+        await this.handleCallbackCompleteCourse(ctx, chatId, messageId, courseParticipationId);
         break;
 
       case BOT_ACTIONS.QUIZ:
-        await this.handleCallbackQuiz(chatId, courseParticipationId);
+        await this.handleCallbackQuiz(ctx, chatId, courseParticipationId);
         break;
 
       case BOT_ACTIONS.QUIZ_ANSWER: {
@@ -168,7 +168,7 @@ export class MagisterController {
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
 
-      await this.bot.api.sendVoice(chatId, new InputFile(audioFilePath));
+      await ctx.replyWithVoice(new InputFile(audioFilePath));
       await deleteFile(audioFilePath);
     });
   }
@@ -189,7 +189,7 @@ export class MagisterController {
     await this.magisterService.handleLessonCompletion(chatId, courseParticipationId);
   }
 
-  private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
+  private async handleCallbackCompleteCourse(ctx: Context, chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
     const courseParticipation = await markCourseParticipationCompleted(courseParticipationId);
     const messagesToUpdate = [messageId, ...(courseParticipation?.threadMessages || [])];
 
@@ -202,12 +202,12 @@ export class MagisterController {
       }),
     );
 
-    await this.bot.api.sendMessage(chatId, `🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
+    await ctx.reply(`🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
 
     await this.magisterService.generateCourseSummary(courseParticipationId);
   }
 
-  private async handleCallbackQuiz(chatId: number, courseParticipationId: string): Promise<void> {
+  private async handleCallbackQuiz(ctx: Context, chatId: number, courseParticipationId: string): Promise<void> {
     const quizLoaderMessage = '🎯 Generating your quiz...';
     const messageLoaderService = new MessageLoader(this.bot, chatId, undefined, { reactionEmoji: '🤔', loaderMessage: quizLoaderMessage });
 
@@ -216,11 +216,11 @@ export class MagisterController {
 
       const courseParticipation = await getCourseParticipation(courseParticipationId);
       if (!courseParticipation) {
-        await this.bot.api.sendMessage(chatId, 'Something went wrong... Could not generate the quiz. Please try again later.');
+        await ctx.reply('Something went wrong... Could not generate the quiz. Please try again later.');
         return;
       }
 
-      await this.bot.api.sendMessage(chatId, [`🎯 *Final Quiz!*`, '', `5 questions to test your understanding of the entire course 🚀`].join('\n'), { parse_mode: 'Markdown' });
+      await ctx.reply([`🎯 *Final Quiz!*`, '', `5 questions to test your understanding of the entire course 🚀`].join('\n'), { parse_mode: 'Markdown' });
 
       await this.magisterService.sendQuizQuestion(chatId, courseParticipation, 0);
     });

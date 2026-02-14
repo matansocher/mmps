@@ -69,7 +69,7 @@ export class WoltController {
           },
         ]);
         const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
-        return this.bot.api.sendMessage(chatId, `${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
+        return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
       });
       await Promise.all(promisesArr);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
