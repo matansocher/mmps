@@ -7,7 +7,7 @@ import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { getRestaurantsByName } from './utils';
+import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
 export class WoltController {
@@ -92,12 +92,17 @@ export class WoltController {
       }
 
       const restaurants = await restaurantsService.getRestaurants();
-      const matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
+      let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
         const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
         await ctx.reply(replyText);
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
         return;
+      }
+
+      if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
+        await ctx.replyWithChatAction('typing');
+        matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
       }
 
       let buttons = matchedRestaurants.map((restaurant) => {
@@ -203,7 +208,10 @@ export class WoltController {
 
   async changePage(chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, page: number): Promise<void> {
     const restaurants = await restaurantsService.getRestaurants();
-    const matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
+    let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
+    if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
+      matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
+    }
     const from = MAX_NUM_OF_RESTAURANTS_TO_SHOW * (page - 1);
     const to = from + MAX_NUM_OF_RESTAURANTS_TO_SHOW;
     const newPageRestaurants = matchedRestaurants.slice(from, to);
