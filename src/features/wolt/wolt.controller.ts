@@ -138,7 +138,7 @@ export class WoltController {
     try {
       switch (action) {
         case BOT_ACTIONS.REMOVE: {
-          await this.removeSubscription(ctx, chatId, userDetails, messageId, restaurantName, activeSubscriptions);
+          await this.removeSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
           break;
         }
         case BOT_ACTIONS.ADD: {
@@ -146,12 +146,12 @@ export class WoltController {
           break;
         }
         case BOT_ACTIONS.CHANGE_PAGE: {
-          await this.changePage(chatId, userDetails, messageId, restaurantName, parseInt(page));
+          await this.changePage(ctx, chatId, userDetails, restaurantName, parseInt(page));
           break;
         }
         default: {
           await ctx.answerCallbackQuery({ text: 'לא הבנתי את הבקשה שלך 😕' });
-          await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
+          await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
           break;
         }
       }
@@ -195,7 +195,7 @@ export class WoltController {
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
-  async removeSubscription(ctx: Context, chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
+  async removeSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       await archiveSubscription(chatId, restaurant, false);
@@ -203,12 +203,12 @@ export class WoltController {
     } else {
       await ctx.reply([`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n'));
     }
-    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
   }
 
-  async changePage(chatId: number, userDetails: UserDetails, messageId: number, restaurant: string, page: number): Promise<void> {
+  async changePage(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, page: number): Promise<void> {
     const restaurants = await restaurantsService.getRestaurants();
     let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
     if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
@@ -234,7 +234,7 @@ export class WoltController {
       keyboard.text(['➡️', `(${page + 1})`, 'דף הבא'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, restaurant, page + 1].join(INLINE_KEYBOARD_SEPARATOR));
     }
 
-    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: keyboard });
+    await ctx.editMessageReplyMarkup({ reply_markup: keyboard });
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, restaurant }, userDetails);
   }

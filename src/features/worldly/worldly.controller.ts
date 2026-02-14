@@ -148,12 +148,12 @@ export class WorldlyController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STATISTICS }, userDetails);
           break;
         case BOT_ACTIONS.MAP:
-          await this.mapAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.mapAnswerHandler(ctx, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🗺️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.US_MAP:
-          await this.USMapAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.USMapAnswerHandler(ctx, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
           notify(
             BOT_CONFIG,
@@ -162,12 +162,12 @@ export class WorldlyController {
           );
           break;
         case BOT_ACTIONS.FLAG:
-          await this.flagAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.flagAnswerHandler(ctx, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏁', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName }, userDetails);
           break;
         case BOT_ACTIONS.CAPITAL:
-          await this.capitalAnswerHandler(chatId, messageId, selectedName, correctName);
+          await this.capitalAnswerHandler(ctx, selectedName, correctName);
           await updateGameLog({ chatId, gameId, selected: selectedName });
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, game: '🏛️', isCorrect: correctName === selectedName ? '🟢' : '🔴', correct: correctName, selected: selectedName }, userDetails);
           break;
@@ -228,35 +228,35 @@ export class WorldlyController {
     await ctx.reply(replyText);
   }
 
-  private async mapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
+  private async mapAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await this.bot.api.editMessageCaption(chatId, messageId, { caption: replyText }).catch(() => {});
-    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: selectedName !== correctName ? '👎' : '👍' }]).catch(() => {});
+    await ctx.editMessageCaption({ caption: replyText }).catch(() => {});
+    await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
-  private async USMapAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
+  private async USMapAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctState = await getStateByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctState.hebrewName}`;
-    await this.bot.api.editMessageCaption(chatId, messageId, { caption: replyText }).catch(() => {});
-    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: selectedName !== correctName ? '👎' : '👍' }]).catch(() => {});
+    await ctx.editMessageCaption({ caption: replyText }).catch(() => {});
+    await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
-  private async flagAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
+  private async flagAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await this.bot.api.editMessageText(chatId, messageId, replyText).catch(() => {});
-    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: selectedName !== correctName ? '👎' : '👍' }]).catch(() => {});
+    await ctx.editMessageText(replyText).catch(() => {});
+    await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
-  private async capitalAnswerHandler(chatId: number, messageId: number, selectedName: string, correctName: string): Promise<void> {
-    await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: undefined }).catch(() => {});
+  private async capitalAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
-    await this.bot.api.editMessageText(chatId, messageId, replyText).catch(() => {});
-    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: selectedName !== correctName ? '👎' : '👍' }]).catch(() => {});
+    await ctx.editMessageText(replyText).catch(() => {});
+    await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 }

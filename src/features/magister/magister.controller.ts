@@ -130,7 +130,7 @@ export class MagisterController {
         break;
 
       case BOT_ACTIONS.TRANSCRIBE:
-        await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
+        await this.handleCallbackTranscribeMessage(ctx, chatId, messageId, text, replyMarkup);
         break;
 
       case BOT_ACTIONS.COMPLETE_COURSE:
@@ -153,7 +153,7 @@ export class MagisterController {
     }
   }
 
-  private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: any): Promise<void> {
+  private async handleCallbackTranscribeMessage(ctx: Context, chatId: number, messageId: number, text: string, replyMarkup: any): Promise<void> {
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, {
       loadingAction: 'upload_voice',
       loaderMessage: transcribeLoaderMessage,
@@ -162,10 +162,10 @@ export class MagisterController {
     await messageLoaderService.handleMessageWithLoader(async () => {
       if (replyMarkup) {
         const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-        await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: filteredInlineKeyboardMarkup }).catch(() => {});
+        await ctx.editMessageReplyMarkup({ reply_markup: filteredInlineKeyboardMarkup }).catch(() => {});
       }
 
-      await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: '🤯' }]).catch(() => {});
+      await ctx.react('🤯').catch(() => {});
 
       const result = await getAudioFromText(text);
 
