@@ -4,7 +4,7 @@ import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, createUserTrackingMiddleware, getCallbackQueryData, getMessageData, isExistingUser, provideTelegramBot, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
@@ -15,6 +15,7 @@ export class WoltController {
   private readonly bot = provideTelegramBot(BOT_CONFIG);
 
   init(): void {
+    this.bot.use(createUserTrackingMiddleware(saveUserDetails));
     const { START, LIST, CONTACT } = BOT_CONFIG.commands;
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.command(LIST.command.replace('/', ''), (ctx) => this.listHandler(ctx));
@@ -26,8 +27,7 @@ export class WoltController {
 
   async startHandler(ctx: Context): Promise<void> {
     const { userDetails } = getMessageData(ctx);
-
-    const userExists = await saveUserDetails(userDetails);
+    const userExists = isExistingUser(ctx);
 
     const newUserReplyText = [
       `שלום {firstName}!`,

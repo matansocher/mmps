@@ -4,7 +4,7 @@ import { Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, createUserTrackingMiddleware, getCallbackQueryData, getMessageData, isExistingUser, MessageLoader, provideTelegramBot } from '@services/telegram';
 import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -30,6 +30,7 @@ export class CoachController {
   constructor(private readonly coachService: CoachService) {}
 
   init(): void {
+    this.bot.use(createUserTrackingMiddleware(saveUserDetails));
     const { START, TABLES, MATCHES, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
@@ -42,7 +43,7 @@ export class CoachController {
 
   private async startHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails } = getMessageData(ctx);
-    await this.userStart(ctx, chatId, userDetails);
+    await this.userStart(ctx, chatId);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
@@ -112,7 +113,7 @@ export class CoachController {
     try {
       switch (action) {
         case BOT_ACTIONS.START:
-          await this.userStart(ctx, chatId, userDetails);
+          await this.userStart(ctx, chatId);
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
           break;
@@ -162,11 +163,15 @@ export class CoachController {
     }
   }
 
-  private async userStart(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
-    const userExists = await saveUserDetails(userDetails);
+  private async userStart(ctx: Context, chatId: number): Promise<void> {
+    const userExists = isExistingUser(ctx);
 
     const subscription = await getSubscription(chatId);
-    subscription ? await updateSubscription(chatId, { isActive: true }) : await addSubscription(chatId);
+    if (subscription) {
+      await updateSubscription(chatId, { isActive: true });
+    } else {
+      await addSubscription(chatId);
+    }
 
     const newUserReplyText = [
       `שלום 👋`,

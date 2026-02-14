@@ -2,7 +2,7 @@ import type { Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, createUserTrackingMiddleware, getCallbackQueryData, getMessageData, provideTelegramBot } from '@services/telegram';
 import { createUserPreference, DifficultyLevel, getUserPreference, Language, LANGUAGES, saveUserDetails, updateUserPreference } from '@shared/langly';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 import { LanglyService } from './langly.service';
@@ -14,6 +14,7 @@ export class LanglyController {
   constructor(private readonly langlyService: LanglyService) {}
 
   init(): void {
+    this.bot.use(createUserTrackingMiddleware(saveUserDetails));
     const { START, CHALLENGE, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
@@ -25,7 +26,6 @@ export class LanglyController {
   private async startHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails } = getMessageData(ctx);
     await createUserPreference(chatId);
-    await saveUserDetails(userDetails);
 
     const welcomeMessage = [
       '👋 Welcome to Langly - Your Language Learning Bot!',
@@ -96,7 +96,7 @@ export class LanglyController {
     try {
       switch (action) {
         case BOT_ACTIONS.SUBSCRIBE:
-          await this.subscribeHandler(ctx, chatId, userDetails);
+          await this.subscribeHandler(ctx, chatId);
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE }, userDetails);
           break;
@@ -166,8 +166,7 @@ export class LanglyController {
     }
   }
 
-  private async subscribeHandler(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
-    await saveUserDetails(userDetails);
+  private async subscribeHandler(ctx: Context, chatId: number): Promise<void> {
     await createUserPreference(chatId);
 
     const subscribeMessage = [
