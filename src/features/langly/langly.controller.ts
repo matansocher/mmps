@@ -59,10 +59,10 @@ export class LanglyController {
 
     const keyboard = buildInlineKeyboard([
       userPreferences?.isStopped
-        ? { text: '🔔 Subscribe to daily challenges', data: `${BOT_ACTIONS.SUBSCRIBE}` }
-        : { text: '🔕 Unsubscribe from daily challenges', data: `${BOT_ACTIONS.UNSUBSCRIBE}` },
-      { text: `🌍 Change Language (Current: ${LANGUAGE_LABELS[currentLanguage]})`, data: `${BOT_ACTIONS.LANGUAGE}` },
-      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, data: `${BOT_ACTIONS.DIFFICULTY}` },
+        ? { text: '🔔 Subscribe to daily challenges', data: `${BOT_ACTIONS.SUBSCRIBE}`, style: 'success' as const }
+        : { text: '🔕 Unsubscribe from daily challenges', data: `${BOT_ACTIONS.UNSUBSCRIBE}`, style: 'danger' as const },
+      { text: `🌍 Change Language (Current: ${LANGUAGE_LABELS[currentLanguage]})`, data: `${BOT_ACTIONS.LANGUAGE}`, style: 'primary' },
+      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, data: `${BOT_ACTIONS.DIFFICULTY}`, style: 'primary' },
       { text: '📬 Contact', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
 

@@ -53,7 +53,7 @@ export class CoachController {
     const keyboard = buildInlineKeyboard(
       competitionsWithTables.map((competition) => {
         const { id, name, icon } = competition;
-        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.TABLE} - ${id}` };
+        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.TABLE} - ${id}`, style: 'primary' as const };
       }),
       2,
     );
@@ -66,7 +66,7 @@ export class CoachController {
     const keyboard = buildInlineKeyboard(
       competitions.map((competition) => {
         const { id, name, icon } = competition;
-        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.MATCH} - ${id}` };
+        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.MATCH} - ${id}`, style: 'primary' as const };
       }),
       2,
     );
@@ -77,8 +77,10 @@ export class CoachController {
     const { chatId } = getMessageData(ctx);
     const subscription = await getSubscription(chatId);
     const keyboard = buildInlineKeyboard([
-      { text: '⚽️ הגדרת ליגות למעקב ⚽️', data: `${BOT_ACTIONS.CUSTOM_LEAGUES}` },
-      !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', data: `${BOT_ACTIONS.STOP}` },
+      { text: '⚽️ הגדרת ליגות למעקב ⚽️', data: `${BOT_ACTIONS.CUSTOM_LEAGUES}`, style: 'primary' },
+      !subscription?.isActive
+        ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', data: `${BOT_ACTIONS.START}`, style: 'success' as const }
+        : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
     await ctx.reply('👨‍🏫 איך אני יכול לעזור?', { reply_markup: keyboard });
@@ -215,7 +217,7 @@ export class CoachController {
         const isFollowing = userCustomLeagues.includes(id) || userCustomLeagues.length === 0;
         const actionIcon = isFollowing ? 'הסר ✅' : 'עקוב ❌';
         const subAction = isFollowing ? 0 : 1;
-        return { text: `${name} - ${actionIcon}`, data: `${BOT_ACTIONS.CUSTOM_LEAGUES_SELECT} - ${id} - ${subAction}` };
+        return { text: `${name} - ${actionIcon}`, data: `${BOT_ACTIONS.CUSTOM_LEAGUES_SELECT} - ${id} - ${subAction}`, style: (isFollowing ? 'success' : 'danger') as 'success' | 'danger' };
       }),
     );
 

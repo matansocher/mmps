@@ -44,7 +44,9 @@ export class WorldlyController {
     const subscription = await getSubscription(chatId);
     const keyboard = buildInlineKeyboard([
       { text: '📊 סטטיסטיקות 📊', data: `${BOT_ACTIONS.STATISTICS}` },
-      !subscription?.isActive ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', data: `${BOT_ACTIONS.START}` } : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}` },
+      !subscription?.isActive
+        ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', data: `${BOT_ACTIONS.START}`, style: 'success' as const }
+        : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
     await ctx.reply('איך אני יכול לעזור? 👨‍🏫', { reply_markup: keyboard });

@@ -65,6 +65,7 @@ export class WoltController {
           {
             text: '⛔️ הסרה ⛔️',
             data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
+            style: 'danger',
           },
         ]);
         const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
@@ -105,10 +106,11 @@ export class WoltController {
         matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
       }
 
-      let buttons = matchedRestaurants.map((restaurant) => {
+      let buttons: { text: string; data: string; style?: 'danger' | 'success' | 'primary' }[] = matchedRestaurants.map((restaurant) => {
         return {
           text: `${restaurant.name} - ${restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`,
           data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
+          style: (restaurant.isOnline ? 'success' : 'danger') as 'success' | 'danger',
         };
       });
 
@@ -181,7 +183,7 @@ export class WoltController {
     }
     if (restaurantDetails.isOnline) {
       const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
-      const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link);
+      const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link).success();
       await ctx.reply(replyText, { reply_markup: keyboard });
       return;
     }
@@ -218,7 +220,9 @@ export class WoltController {
 
     const keyboard = new InlineKeyboard();
     for (const r of newPageRestaurants) {
-      keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR)).row();
+      keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR));
+      r.isOnline ? keyboard.success() : keyboard.danger();
+      keyboard.row();
     }
 
     const previousPageExists = page > 1;
