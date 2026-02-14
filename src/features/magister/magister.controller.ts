@@ -165,7 +165,7 @@ export class MagisterController {
         await ctx.editMessageReplyMarkup({ reply_markup: filteredInlineKeyboardMarkup }).catch(() => {});
       }
 
-      await ctx.react('🤯').catch(() => {});
+      await ctx.react('👌').catch(() => {});
 
       const result = await getAudioFromText(text);
 

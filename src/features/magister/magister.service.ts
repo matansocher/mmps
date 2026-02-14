@@ -318,6 +318,7 @@ Please answer the question based on the course materials and your expertise. If 
     await saveQuizAnswer(courseParticipationId, answer);
 
     await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
+    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: isCorrect ? '👍' : '👎' }]).catch(() => {});
 
     if (isCorrect) {
       await this.bot.api.sendMessage(chatId, `✅ Correct! Well done! 🎉`);

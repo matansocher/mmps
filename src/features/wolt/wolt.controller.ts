@@ -191,6 +191,7 @@ export class WoltController {
     const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
     await addSubscription(chatId, restaurant, restaurantDetails?.photo);
     await ctx.reply(replyText);
+    await ctx.react('🤝').catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
@@ -204,6 +205,7 @@ export class WoltController {
       await ctx.reply([`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n'));
     }
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx.react('👌').catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
   }

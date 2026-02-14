@@ -110,6 +110,7 @@ export class LanglyController {
         case BOT_ACTIONS.ANSWER: {
           const [answerIndex, isCorrect] = params;
           const answerResult = await this.answerHandler(chatId, messageId, parseInt(answerIndex), isCorrect === 'true');
+          await ctx.react(isCorrect === 'true' ? '👍' : '👎').catch(() => {});
           if (answerResult) {
             notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, word: answerResult.word, type: answerResult.type, isCorrect: answerResult.isCorrect ? '✅' : '❌' }, userDetails);
           }

@@ -93,7 +93,7 @@ export class CoachController {
     // prevent built in options to be processed also here
     if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { loaderMessage });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { loaderMessage, reactionEmoji: '👀' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const date = getDateFromUserInput(text);
       const subscription = await getSubscription(chatId);
