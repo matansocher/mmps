@@ -127,7 +127,7 @@ export class WoltController {
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails, messageId, data } = getCallbackQueryData(ctx);
+    const { chatId, userDetails, data } = getCallbackQueryData(ctx);
 
     const [action, restaurant, page] = data.split(INLINE_KEYBOARD_SEPARATOR);
     const restaurantName = restaurant.replace(BOT_ACTIONS.REMOVE, '').replace(INLINE_KEYBOARD_SEPARATOR, '');
@@ -143,7 +143,7 @@ export class WoltController {
           break;
         }
         case BOT_ACTIONS.CHANGE_PAGE: {
-          await this.changePage(ctx, chatId, userDetails, restaurantName, parseInt(page));
+          await this.changePage(ctx, userDetails, restaurantName, parseInt(page));
           break;
         }
         default: {
@@ -207,7 +207,7 @@ export class WoltController {
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
   }
 
-  async changePage(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, page: number): Promise<void> {
+  async changePage(ctx: Context, userDetails: UserDetails, restaurant: string, page: number): Promise<void> {
     const restaurants = await restaurantsService.getRestaurants();
     let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
     if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
@@ -220,7 +220,11 @@ export class WoltController {
     const keyboard = new InlineKeyboard();
     for (const r of newPageRestaurants) {
       keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR));
-      r.isOnline ? keyboard.success() : keyboard.danger();
+      if (r.isOnline) {
+        keyboard.success();
+      } else {
+        keyboard.danger();
+      }
       keyboard.row();
     }
 
