@@ -8,7 +8,7 @@ function getLocalAreaMap(areaName: string): string {
   try {
     fs.readFileSync(path.join(__dirname, `../assets/images/${simplifyAreaName(areaName)}.png`), 'utf8');
     return path.join(__dirname, `../assets/images/${simplifyAreaName(areaName)}.png`);
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }

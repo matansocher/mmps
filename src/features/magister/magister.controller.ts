@@ -33,8 +33,6 @@ export class MagisterController {
   }
 
   async startHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
-
     const replyText = [
       `Hey There 👋`,
       ``,
@@ -101,9 +99,6 @@ export class MagisterController {
   async messageHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, text } = getMessageData(ctx);
 
-    // Prevent built-in commands from being processed here
-    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
-
     const activeCourseParticipation = await getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
       await ctx.reply(`I see you don't have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);
@@ -130,15 +125,15 @@ export class MagisterController {
         break;
 
       case BOT_ACTIONS.TRANSCRIBE:
-        await this.handleCallbackTranscribeMessage(chatId, messageId, text, replyMarkup);
+        await this.handleCallbackTranscribeMessage(ctx, chatId, messageId, text, replyMarkup);
         break;
 
       case BOT_ACTIONS.COMPLETE_COURSE:
-        await this.handleCallbackCompleteCourse(chatId, messageId, courseParticipationId);
+        await this.handleCallbackCompleteCourse(ctx, chatId, messageId, courseParticipationId);
         break;
 
       case BOT_ACTIONS.QUIZ:
-        await this.handleCallbackQuiz(chatId, courseParticipationId);
+        await this.handleCallbackQuiz(ctx, chatId, courseParticipationId);
         break;
 
       case BOT_ACTIONS.QUIZ_ANSWER: {
@@ -153,7 +148,7 @@ export class MagisterController {
     }
   }
 
-  private async handleCallbackTranscribeMessage(chatId: number, messageId: number, text: string, replyMarkup: any): Promise<void> {
+  private async handleCallbackTranscribeMessage(ctx: Context, chatId: number, messageId: number, text: string, replyMarkup: any): Promise<void> {
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, {
       loadingAction: 'upload_voice',
       loaderMessage: transcribeLoaderMessage,
@@ -162,10 +157,10 @@ export class MagisterController {
     await messageLoaderService.handleMessageWithLoader(async () => {
       if (replyMarkup) {
         const filteredInlineKeyboardMarkup = removeItemFromInlineKeyboardMarkup(replyMarkup, BOT_ACTIONS.TRANSCRIBE);
-        await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: filteredInlineKeyboardMarkup }).catch(() => {});
+        await ctx.editMessageReplyMarkup({ reply_markup: filteredInlineKeyboardMarkup }).catch(() => {});
       }
 
-      await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: '🤯' }]).catch(() => {});
+      await ctx.react('👌').catch(() => {});
 
       const result = await getAudioFromText(text);
 
@@ -173,7 +168,7 @@ export class MagisterController {
       const buffer = Buffer.from(await result.arrayBuffer());
       await fs.writeFile(audioFilePath, buffer);
 
-      await this.bot.api.sendVoice(chatId, new InputFile(audioFilePath));
+      await ctx.replyWithVoice(new InputFile(audioFilePath));
       await deleteFile(audioFilePath);
     });
   }
@@ -194,7 +189,7 @@ export class MagisterController {
     await this.magisterService.handleLessonCompletion(chatId, courseParticipationId);
   }
 
-  private async handleCallbackCompleteCourse(chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
+  private async handleCallbackCompleteCourse(ctx: Context, chatId: number, messageId: number, courseParticipationId: string): Promise<void> {
     const courseParticipation = await markCourseParticipationCompleted(courseParticipationId);
     const messagesToUpdate = [messageId, ...(courseParticipation?.threadMessages || [])];
 
@@ -207,12 +202,12 @@ export class MagisterController {
       }),
     );
 
-    await this.bot.api.sendMessage(chatId, `🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
+    await ctx.reply(`🎉 Congratulations! You've completed the course!\n\nGenerating your comprehensive summary...`);
 
     await this.magisterService.generateCourseSummary(courseParticipationId);
   }
 
-  private async handleCallbackQuiz(chatId: number, courseParticipationId: string): Promise<void> {
+  private async handleCallbackQuiz(ctx: Context, chatId: number, courseParticipationId: string): Promise<void> {
     const quizLoaderMessage = '🎯 Generating your quiz...';
     const messageLoaderService = new MessageLoader(this.bot, chatId, undefined, { reactionEmoji: '🤔', loaderMessage: quizLoaderMessage });
 
@@ -221,11 +216,11 @@ export class MagisterController {
 
       const courseParticipation = await getCourseParticipation(courseParticipationId);
       if (!courseParticipation) {
-        await this.bot.api.sendMessage(chatId, 'Something went wrong... Could not generate the quiz. Please try again later.');
+        await ctx.reply('Something went wrong... Could not generate the quiz. Please try again later.');
         return;
       }
 
-      await this.bot.api.sendMessage(chatId, [`🎯 *Final Quiz!*`, '', `5 questions to test your understanding of the entire course 🚀`].join('\n'), { parse_mode: 'Markdown' });
+      await ctx.reply([`🎯 *Final Quiz!*`, '', `5 questions to test your understanding of the entire course 🚀`].join('\n'), { parse_mode: 'Markdown' });
 
       await this.magisterService.sendQuizQuestion(chatId, courseParticipation, 0);
     });

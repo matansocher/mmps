@@ -1,4 +1,5 @@
 import { Bot } from 'grammy';
+import { hydrate } from '@grammyjs/hydrate';
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
 import type { TelegramBotConfig } from '../types';
@@ -20,6 +21,7 @@ export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
   }
 
   const bot = new Bot(token);
+  bot.use(hydrate());
 
   bot.catch((err) => {
     const ctx = err.ctx;

@@ -59,10 +59,10 @@ export class LanglyController {
 
     const keyboard = buildInlineKeyboard([
       userPreferences?.isStopped
-        ? { text: '🔔 Subscribe to daily challenges', data: `${BOT_ACTIONS.SUBSCRIBE}` }
-        : { text: '🔕 Unsubscribe from daily challenges', data: `${BOT_ACTIONS.UNSUBSCRIBE}` },
-      { text: `🌍 Change Language (Current: ${LANGUAGE_LABELS[currentLanguage]})`, data: `${BOT_ACTIONS.LANGUAGE}` },
-      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, data: `${BOT_ACTIONS.DIFFICULTY}` },
+        ? { text: '🔔 Subscribe to daily challenges', data: `${BOT_ACTIONS.SUBSCRIBE}`, style: 'success' as const }
+        : { text: '🔕 Unsubscribe from daily challenges', data: `${BOT_ACTIONS.UNSUBSCRIBE}`, style: 'danger' as const },
+      { text: `🌍 Change Language (Current: ${LANGUAGE_LABELS[currentLanguage]})`, data: `${BOT_ACTIONS.LANGUAGE}`, style: 'primary' },
+      { text: `📊 Change Difficulty (Current: ${DIFFICULTY_LABELS[currentDifficulty]})`, data: `${BOT_ACTIONS.DIFFICULTY}`, style: 'primary' },
       { text: '📬 Contact', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
 
@@ -110,6 +110,7 @@ export class LanglyController {
         case BOT_ACTIONS.ANSWER: {
           const [answerIndex, isCorrect] = params;
           const answerResult = await this.answerHandler(chatId, messageId, parseInt(answerIndex), isCorrect === 'true');
+          await ctx.react(isCorrect === 'true' ? '👍' : '👎').catch(() => {});
           if (answerResult) {
             notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ANSWERED, word: answerResult.word, type: answerResult.type, isCorrect: answerResult.isCorrect ? '✅' : '❌' }, userDetails);
           }

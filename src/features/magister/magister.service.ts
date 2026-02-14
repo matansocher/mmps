@@ -36,16 +36,19 @@ const getBotInlineKeyboard = (courseParticipation: CourseParticipation) => {
           {
             text: '🎯 Take Quiz 🎯',
             data: [BOT_ACTIONS.QUIZ, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+            style: 'primary' as const,
           },
           {
             text: '🎓 Complete Course 🎓',
             data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+            style: 'success' as const,
           },
         ]
       : [
           {
             text: '✅ Complete Lesson ✅',
             data: [BOT_ACTIONS.COMPLETE_LESSON, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+            style: 'success' as const,
           },
         ]),
   ];
@@ -291,14 +294,15 @@ Please answer the question based on the course materials and your expertise. If 
 
     const questionText = [`*Question ${questionNumber} of ${totalQuestions}:*`, '', question.question].join('\n');
 
-    const buttonLayout = question.options.map((option, index) => [
-      {
+    const keyboard = buildInlineKeyboard(
+      question.options.map((option, index) => ({
         text: option,
-        callback_data: [BOT_ACTIONS.QUIZ_ANSWER, courseParticipation._id, questionIndex, index].join(INLINE_KEYBOARD_SEPARATOR),
-      },
-    ]);
+        data: [BOT_ACTIONS.QUIZ_ANSWER, courseParticipation._id, questionIndex, index].join(INLINE_KEYBOARD_SEPARATOR),
+        style: 'primary' as const,
+      })),
+    );
 
-    await this.bot.api.sendMessage(chatId, questionText, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: buttonLayout } });
+    await this.bot.api.sendMessage(chatId, questionText, { parse_mode: 'Markdown', reply_markup: keyboard });
   }
 
   async checkQuizAnswer(courseParticipationId: string, questionIndex: number, userAnswerIndex: number, chatId: number, messageId: number): Promise<void> {
@@ -314,6 +318,7 @@ Please answer the question based on the course materials and your expertise. If 
     await saveQuizAnswer(courseParticipationId, answer);
 
     await this.bot.api.editMessageReplyMarkup(chatId, messageId, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
+    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: isCorrect ? '👍' : '👎' }]).catch(() => {});
 
     if (isCorrect) {
       await this.bot.api.sendMessage(chatId, `✅ Correct! Well done! 🎉`);
@@ -334,12 +339,15 @@ Please answer the question based on the course materials and your expertise. If 
 
       const scoreMessage = getScoreMessage(correctAnswers, totalQuestions);
 
-      const completeButton = {
-        text: '🎓 Complete Course 🎓',
-        callback_data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
-      };
+      const keyboard = buildInlineKeyboard([
+        {
+          text: '🎓 Complete Course 🎓',
+          data: [BOT_ACTIONS.COMPLETE_COURSE, courseParticipation._id].join(INLINE_KEYBOARD_SEPARATOR),
+          style: 'success',
+        },
+      ]);
 
-      await this.bot.api.sendMessage(chatId, scoreMessage, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[completeButton]] } });
+      await this.bot.api.sendMessage(chatId, scoreMessage, { parse_mode: 'Markdown', reply_markup: keyboard });
     }
   }
 }

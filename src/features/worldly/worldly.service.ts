@@ -40,7 +40,7 @@ export class WorldlyService {
     const otherOptions = getMapDistractors(allCountries, randomCountry);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.MAP, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })));
+    const keyboard = buildInlineKeyboard(options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.MAP, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR), style: 'primary' as const })));
 
     await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: 'נחשו את המדינה' });
 
@@ -56,7 +56,7 @@ export class WorldlyService {
     const otherOptions = getMapStateDistractors(allStates, randomState);
     const options = shuffleArray([randomState, ...otherOptions]);
     const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(options.map((state) => ({ text: state.hebrewName, data: [BOT_ACTIONS.US_MAP, state.name, randomState.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })));
+    const keyboard = buildInlineKeyboard(options.map((state) => ({ text: state.hebrewName, data: [BOT_ACTIONS.US_MAP, state.name, randomState.name, gameId].join(INLINE_KEYBOARD_SEPARATOR), style: 'primary' as const })));
 
     await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: 'נחשו את המדינה בארצות הברית' });
 
@@ -71,7 +71,7 @@ export class WorldlyService {
     const otherOptions = getFlagDistractors(allCountries, randomCountry, gameFilter);
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.FLAG, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR) })));
+    const keyboard = buildInlineKeyboard(options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.FLAG, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR), style: 'primary' as const })));
 
     await this.bot.api.sendMessage(chatId, randomCountry.emoji, { reply_markup: keyboard });
 
@@ -87,7 +87,7 @@ export class WorldlyService {
     const options = shuffleArray([randomCountry, ...otherOptions]);
     const gameId = generateRandomString(5);
     const keyboard = buildInlineKeyboard(
-      options.map((country) => ({ text: country.hebrewCapital, data: [BOT_ACTIONS.CAPITAL, country.hebrewCapital, randomCountry.hebrewCapital, gameId].join(INLINE_KEYBOARD_SEPARATOR) })),
+      options.map((country) => ({ text: country.hebrewCapital, data: [BOT_ACTIONS.CAPITAL, country.hebrewCapital, randomCountry.hebrewCapital, gameId].join(INLINE_KEYBOARD_SEPARATOR), style: 'primary' as const })),
     );
 
     const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
