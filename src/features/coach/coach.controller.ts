@@ -47,13 +47,12 @@ export class CoachController {
   }
 
   private async tablesHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
     const competitions = await this.coachService.getCompetitions();
     const competitionsWithTables = competitions.filter((competition) => competition.hasTable);
     const keyboard = buildInlineKeyboard(
       competitionsWithTables.map((competition) => {
         const { id, name, icon } = competition;
-        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.TABLE} - ${id}` };
+        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.TABLE} - ${id}`, style: 'primary' as const };
       }),
       2,
     );
@@ -61,12 +60,11 @@ export class CoachController {
   }
 
   private async matchesHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
     const competitions = await this.coachService.getCompetitions();
     const keyboard = buildInlineKeyboard(
       competitions.map((competition) => {
         const { id, name, icon } = competition;
-        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.MATCH} - ${id}` };
+        return { text: `${icon} ${name} ${icon}`, data: `${BOT_ACTIONS.MATCH} - ${id}`, style: 'primary' as const };
       }),
       2,
     );
@@ -77,8 +75,10 @@ export class CoachController {
     const { chatId } = getMessageData(ctx);
     const subscription = await getSubscription(chatId);
     const keyboard = buildInlineKeyboard([
-      { text: '⚽️ הגדרת ליגות למעקב ⚽️', data: `${BOT_ACTIONS.CUSTOM_LEAGUES}` },
-      !subscription?.isActive ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', data: `${BOT_ACTIONS.START}` } : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', data: `${BOT_ACTIONS.STOP}` },
+      { text: '⚽️ הגדרת ליגות למעקב ⚽️', data: `${BOT_ACTIONS.CUSTOM_LEAGUES}`, style: 'primary' },
+      !subscription?.isActive
+        ? { text: '🟢 התחל לקבל עדכונים יומיים 🟢', data: `${BOT_ACTIONS.START}`, style: 'success' as const }
+        : { text: '🛑 הפסק לקבל עדכונים יומיים 🛑', data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
     await ctx.reply('👨‍🏫 איך אני יכול לעזור?', { reply_markup: keyboard });
@@ -88,10 +88,7 @@ export class CoachController {
   private async textHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, userDetails, text } = getMessageData(ctx);
 
-    // prevent built in options to be processed also here
-    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
-
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { loaderMessage });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { loaderMessage, reactionEmoji: '👀' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const date = getDateFromUserInput(text);
       const subscription = await getSubscription(chatId);
@@ -109,7 +106,7 @@ export class CoachController {
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
-    const { chatId, messageId, userDetails, data: response } = getCallbackQueryData(ctx);
+    const { chatId, userDetails, data: response } = getCallbackQueryData(ctx);
 
     const [action, resource, subAction] = response.split(' - ');
     try {
@@ -130,15 +127,15 @@ export class CoachController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.TABLE:
-          await this.tableHandler(ctx, chatId, Number(resource));
+          await this.tableHandler(ctx, Number(resource));
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
           break;
         case BOT_ACTIONS.MATCH: {
-          await this.competitionMatchesHandler(ctx, chatId, Number(resource));
+          await this.competitionMatchesHandler(ctx, Number(resource));
           await ctx.deleteMessage().catch(() => {});
           const leagueName = Object.entries(COMPETITION_IDS_MAP)
-            .filter(([_, value]) => value === Number(resource))
+            .filter(([, value]) => value === Number(resource))
             .map(([key]) => key)[0];
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
           break;
@@ -191,12 +188,12 @@ export class CoachController {
     await ctx.reply([`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
   }
 
-  private async tableHandler(ctx: Context, chatId: number, competitionId: number): Promise<void> {
+  private async tableHandler(ctx: Context, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionTableMessage(competitionId);
     await ctx.reply(resultText, { parse_mode: 'Markdown', ...getKeyboardOptions() });
   }
 
-  private async competitionMatchesHandler(ctx: Context, chatId: number, competitionId: number): Promise<void> {
+  private async competitionMatchesHandler(ctx: Context, competitionId: number): Promise<void> {
     const resultText = await this.coachService.getCompetitionMatchesMessage(competitionId);
     if (!resultText) {
       await ctx.reply('לא מצאתי משחקים בליגה הזאת 😔', { ...getKeyboardOptions() });
@@ -215,7 +212,7 @@ export class CoachController {
         const isFollowing = userCustomLeagues.includes(id) || userCustomLeagues.length === 0;
         const actionIcon = isFollowing ? 'הסר ✅' : 'עקוב ❌';
         const subAction = isFollowing ? 0 : 1;
-        return { text: `${name} - ${actionIcon}`, data: `${BOT_ACTIONS.CUSTOM_LEAGUES_SELECT} - ${id} - ${subAction}` };
+        return { text: `${name} - ${actionIcon}`, data: `${BOT_ACTIONS.CUSTOM_LEAGUES_SELECT} - ${id} - ${subAction}`, style: (isFollowing ? 'success' : 'danger') as 'success' | 'danger' };
       }),
     );
 

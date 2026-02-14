@@ -31,7 +31,7 @@ export class ChatbotController {
   private async helpHandler(ctx: Context): Promise<void> {
     const { chatId, messageId } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👌' });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const prompt = `List all your available tools with a short and concise explanation for each. Keep each tool description to 1-2 sentences maximum. Format as a clear, easy-to-scan list.`;
       const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId);
@@ -41,9 +41,6 @@ export class ChatbotController {
 
   private async messageHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, text } = getMessageData(ctx);
-
-    // prevent built in options to be processed also here
-    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
@@ -77,7 +74,7 @@ export class ChatbotController {
   private async audioHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, audio } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🎉' });
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const audioFileLocalPath = await downloadFile(this.bot, audio.file_id, LOCAL_FILES_PATH);
 
