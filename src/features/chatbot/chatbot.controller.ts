@@ -42,9 +42,6 @@ export class ChatbotController {
   private async messageHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, text } = getMessageData(ctx);
 
-    // prevent built in options to be processed also here
-    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
-
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const { message: replyText, toolResults } = await this.chatbotService.processMessage(text, chatId);

@@ -83,9 +83,6 @@ export class WoltController {
     const { chatId, userDetails, text: rawRestaurant } = getMessageData(ctx);
     const restaurant = rawRestaurant.toLowerCase().trim();
 
-    // prevent built in options to be processed also here
-    if (Object.values(BOT_CONFIG.commands).some((command) => restaurant.includes(command.command))) return;
-
     try {
       if (hasHebrew(restaurant)) {
         await ctx.reply('אני מדבר עברית שוטף, אבל אני יכול לחפש מסעדות רק באנגלית 🇺🇸');

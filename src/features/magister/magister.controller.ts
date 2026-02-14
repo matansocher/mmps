@@ -101,9 +101,6 @@ export class MagisterController {
   async messageHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, text } = getMessageData(ctx);
 
-    // Prevent built-in commands from being processed here
-    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
-
     const activeCourseParticipation = await getActiveCourseParticipation(chatId);
     if (!activeCourseParticipation) {
       await ctx.reply(`I see you don't have an active course\nIf you want to start a new one, just use the ${BOT_CONFIG.commands.COURSE.command} command`);

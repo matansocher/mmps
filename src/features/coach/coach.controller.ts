@@ -90,9 +90,6 @@ export class CoachController {
   private async textHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, userDetails, text } = getMessageData(ctx);
 
-    // prevent built in options to be processed also here
-    if (Object.values(BOT_CONFIG.commands).some((command) => text.includes(command.command))) return;
-
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { loaderMessage, reactionEmoji: '👀' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const date = getDateFromUserInput(text);
