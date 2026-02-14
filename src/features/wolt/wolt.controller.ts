@@ -25,7 +25,7 @@ export class WoltController {
   }
 
   async startHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails } = getMessageData(ctx);
+    const { userDetails } = getMessageData(ctx);
 
     const userExists = await saveUserDetails(userDetails);
 
@@ -43,7 +43,7 @@ export class WoltController {
   }
 
   async contactHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails } = getMessageData(ctx);
+    const { userDetails } = getMessageData(ctx);
 
     await ctx.reply([`בשמחה, אפשר לדבר עם מי שיצר אותי, הוא בטח יוכל לעזור 📬`, MY_USER_NAME].join('\n'));
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
@@ -80,7 +80,7 @@ export class WoltController {
   }
 
   async textHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails, text: rawRestaurant } = getMessageData(ctx);
+    const { userDetails, text: rawRestaurant } = getMessageData(ctx);
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     try {

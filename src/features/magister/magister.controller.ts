@@ -33,8 +33,6 @@ export class MagisterController {
   }
 
   async startHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
-
     const replyText = [
       `Hey There 👋`,
       ``,

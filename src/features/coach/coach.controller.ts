@@ -47,7 +47,6 @@ export class CoachController {
   }
 
   private async tablesHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
     const competitions = await this.coachService.getCompetitions();
     const competitionsWithTables = competitions.filter((competition) => competition.hasTable);
     const keyboard = buildInlineKeyboard(
@@ -61,7 +60,6 @@ export class CoachController {
   }
 
   private async matchesHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
     const competitions = await this.coachService.getCompetitions();
     const keyboard = buildInlineKeyboard(
       competitions.map((competition) => {
@@ -108,7 +106,7 @@ export class CoachController {
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
-    const { chatId, messageId, userDetails, data: response } = getCallbackQueryData(ctx);
+    const { chatId, userDetails, data: response } = getCallbackQueryData(ctx);
 
     const [action, resource, subAction] = response.split(' - ');
     try {
@@ -137,7 +135,7 @@ export class CoachController {
           await this.competitionMatchesHandler(ctx, chatId, Number(resource));
           await ctx.deleteMessage().catch(() => {});
           const leagueName = Object.entries(COMPETITION_IDS_MAP)
-            .filter(([_, value]) => value === Number(resource))
+            .filter(([, value]) => value === Number(resource))
             .map(([key]) => key)[0];
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
           break;

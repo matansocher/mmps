@@ -10,8 +10,6 @@ import { generateStatisticsMessage } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
-const customErrorMessage = 'אופס, קרתה לי תקלה, אבל אפשר לנסות שוב מאוחר יותר 🙁';
-
 export class WorldlyController {
   private readonly logger = new Logger(WorldlyController.name);
   private readonly bot = provideTelegramBot(BOT_CONFIG);
@@ -122,7 +120,7 @@ export class WorldlyController {
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails, messageId, data: response } = getCallbackQueryData(ctx);
+    const { chatId, userDetails, data: response } = getCallbackQueryData(ctx);
 
     const [action, selectedName, correctName, gameId] = response.split(INLINE_KEYBOARD_SEPARATOR);
     try {
@@ -138,7 +136,7 @@ export class WorldlyController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.STOP }, userDetails);
           break;
         case BOT_ACTIONS.CONTACT:
-          await this.contactHandler(ctx, chatId);
+          await this.contactHandler(ctx);
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
@@ -195,7 +193,11 @@ export class WorldlyController {
     const userExists = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
-    subscription ? await updateSubscription(chatId, { isActive: true }) : await addSubscription(chatId);
+    if (subscription) {
+      await updateSubscription(chatId, { isActive: true });
+    } else {
+      await addSubscription(chatId);
+    }
 
     const newUserReplyText = [
       `היי 👋`,
@@ -213,7 +215,7 @@ export class WorldlyController {
     await ctx.reply(`אין בעיה, אני אפסיק לשלוח משחקים בכל יום 🛑`);
   }
 
-  private async contactHandler(ctx: Context, chatId: number): Promise<void> {
+  private async contactHandler(ctx: Context): Promise<void> {
     await ctx.reply(['אשמח לעזור', 'אפשר לדבר עם מי שיצר אותי, הוא בטח ידע לעזור', MY_USER_NAME].join('\n'));
   }
 
