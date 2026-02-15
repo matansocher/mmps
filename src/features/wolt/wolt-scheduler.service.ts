@@ -1,9 +1,8 @@
 import { toZonedTime } from 'date-fns-tz';
-import { InlineKeyboard } from 'grammy';
+import { type Bot, InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { provideTelegramBot } from '@services/telegram';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
@@ -14,8 +13,9 @@ const JOB_NAME = 'wolt-scheduler-job-interval';
 
 export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
   private timeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+
+  constructor(private readonly bot: Bot) {}
 
   async scheduleInterval(): Promise<void> {
     const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];

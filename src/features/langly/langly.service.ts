@@ -1,11 +1,11 @@
 import { promises as fs } from 'fs';
-import { InputFile } from 'grammy';
+import { type Bot, InputFile } from 'grammy';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { getAudioFromText } from '@services/openai';
-import { buildInlineKeyboard, provideTelegramBot } from '@services/telegram';
+import { buildInlineKeyboard } from '@services/telegram';
 import {
   cleanupOldChallenges,
   createActiveChallenge,
@@ -17,11 +17,12 @@ import {
   LANGUAGES,
   updatePreviousResponseId,
 } from '@shared/langly';
-import { BOT_ACTIONS, BOT_CONFIG, getDifficultyPrompt, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
+import { BOT_ACTIONS, getDifficultyPrompt, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 
 export class LanglyService {
   private readonly logger = new Logger(LanglyService.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
+  constructor(private readonly bot: Bot) {}
 
   async generateChallenge(chatId: number): Promise<LanguageChallenge> {
     const userPreference = await getUserPreference(chatId);

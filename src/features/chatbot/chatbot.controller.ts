@@ -1,4 +1,4 @@
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { env } from 'node:process';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
@@ -6,15 +6,14 @@ import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { analyzeImage } from '@services/openai/utils/analyze-image';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
-import { downloadFile, getMessageData, MessageLoader, provideTelegramBot, sendStyledMessage } from '@services/telegram';
-import { BOT_CONFIG, IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
+import { downloadFile, getMessageData, MessageLoader, sendStyledMessage } from '@services/telegram';
+import { IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 
 export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(private readonly chatbotService: ChatbotService) {}
+  constructor(private readonly chatbotService: ChatbotService, private readonly bot: Bot) {}
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));

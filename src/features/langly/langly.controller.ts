@@ -1,17 +1,16 @@
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { createUserPreference, DifficultyLevel, getUserPreference, Language, LANGUAGES, saveUserDetails, updateUserPreference } from '@shared/langly';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DAILY_CHALLENGE_HOURS, DIFFICULTY_LABELS, INLINE_KEYBOARD_SEPARATOR, LANGUAGE_LABELS } from './langly.config';
 import { LanglyService } from './langly.service';
 
 export class LanglyController {
   private readonly logger = new Logger(LanglyController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(private readonly langlyService: LanglyService) {}
+  constructor(private readonly langlyService: LanglyService, private readonly bot: Bot) {}
 
   init(): void {
     const { START, CHALLENGE, ACTIONS } = BOT_CONFIG.commands;
