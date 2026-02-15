@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { Recipe } from '../types';
-import { DB_NAME } from './index';
+import { DB_NAME } from './constants';
 
 const getCollection = () => getMongoCollection<Recipe>(DB_NAME, 'Recipe');
 

@@ -1,4 +1,4 @@
-export const DB_NAME = 'Trainer';
+export { DB_NAME } from './constants';
 
 export { addExercise, getTodayExercise, getExercises } from './exercise.repository';
 export { saveUserDetails, getUserDetails } from './user.repository';

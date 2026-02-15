@@ -1,5 +1,4 @@
-// Database configuration
-export { DB_NAME } from './subscription.repository';
+export { DB_NAME } from './constants';
 
 // Subscription repository functions
 export { getActiveSubscriptions, getSubscription, addSubscription, updateSubscription } from './subscription.repository';

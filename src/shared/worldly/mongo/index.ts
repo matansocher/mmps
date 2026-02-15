@@ -1,4 +1,4 @@
-export const DB_NAME = 'Worldly';
+export { DB_NAME } from './constants';
 
 export * from './country';
 export * from './game-log';

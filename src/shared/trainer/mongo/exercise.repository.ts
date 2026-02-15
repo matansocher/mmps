@@ -1,7 +1,7 @@
 import { endOfDay, startOfDay } from 'date-fns';
 import { InsertOneResult, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from '.';
+import { DB_NAME } from './constants';
 import { Exercise } from '../types';
 
 const getCollection = () => getMongoCollection<Exercise>(DB_NAME, 'Exercise');

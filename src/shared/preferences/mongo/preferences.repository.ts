@@ -1,6 +1,6 @@
 import type { DeleteResult, InsertOneResult, UpdateResult } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from '.';
+import { DB_NAME } from './constants';
 import type { CreatePreferenceData, Preference, UpdatePreferenceData } from '../types';
 
 const getCollection = () => getMongoCollection<Preference>(DB_NAME, 'Preferences');

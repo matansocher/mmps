@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from '.';
+import { DB_NAME } from './constants';
 import { UserPreferences } from '../types';
 
 const getCollection = () => getMongoCollection<UserPreferences>(DB_NAME, 'UserPreferences');

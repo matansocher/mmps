@@ -1,6 +1,6 @@
 import { getMongoCollection } from '@core/mongo';
 import { Country } from '../types';
-import { DB_NAME } from './index';
+import { DB_NAME } from './constants';
 
 let countries: Country[] = [];
 

@@ -1,7 +1,7 @@
 import type { InsertOneResult, UpdateResult } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import type { CreateSubscriptionData, Subscription, UpdateSubscriptionData } from '../types';
-import { DB_NAME } from './index';
+import { DB_NAME } from './constants';
 
 function getCollection() {
   return getMongoCollection<Subscription>(DB_NAME, 'Subscription');
