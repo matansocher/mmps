@@ -1,11 +1,11 @@
 import { promises as fs } from 'fs';
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { InputFile } from 'grammy';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { getAudioFromText } from '@services/openai';
-import { getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, removeItemFromInlineKeyboardMarkup } from '@services/telegram';
+import { getCallbackQueryData, getMessageData, MessageLoader, removeItemFromInlineKeyboardMarkup } from '@services/telegram';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './magister.config';
 import { MagisterService } from './magister.service';
 import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
@@ -16,9 +16,8 @@ const transcribeLoaderMessage = '🎧 Give me a few moments to transcribe it...'
 
 export class MagisterController {
   private readonly logger = new Logger(MagisterController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(private readonly magisterService: MagisterService) {}
+  constructor(private readonly magisterService: MagisterService, private readonly bot: Bot) {}
 
   init(): void {
     const { START, COURSE, STATUS, NEXT } = BOT_CONFIG.commands;

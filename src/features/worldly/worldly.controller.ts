@@ -1,9 +1,9 @@
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { sleep } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
 import { generateStatisticsMessage } from './utils';
@@ -12,9 +12,8 @@ import { WorldlyService } from './worldly.service';
 
 export class WorldlyController {
   private readonly logger = new Logger(WorldlyController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(private readonly worldlyService: WorldlyService) {}
+  constructor(private readonly worldlyService: WorldlyService, private readonly bot: Bot) {}
 
   init(): void {
     const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;

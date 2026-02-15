@@ -1,8 +1,9 @@
+import type { Bot } from 'grammy';
 import { Logger } from '@core/utils';
 import { generateEmbedding, getResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
-import { buildInlineKeyboard, provideTelegramBot, sendStyledMessage } from '@services/telegram';
-import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
+import { buildInlineKeyboard, sendStyledMessage } from '@services/telegram';
+import { BOT_ACTIONS, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,
   getActiveCourseParticipation,
@@ -58,7 +59,8 @@ const getBotInlineKeyboard = (courseParticipation: CourseParticipation) => {
 
 export class MagisterService {
   private readonly logger = new Logger(MagisterService.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
+
+  constructor(private readonly bot: Bot) {}
 
   async handleCourseReminders(courseParticipation: CourseParticipation) {
     await this.bot.api.sendMessage(courseParticipation.chatId, generateSummaryMessage(courseParticipation.summaryDetails));

@@ -1,14 +1,14 @@
 import * as fs from 'fs';
-import { InputFile } from 'grammy';
+import { type Bot, InputFile } from 'grammy';
 import { generateRandomString, shuffleArray } from '@core/utils';
 import { notify } from '@services/notifier';
-import { BLOCKED_ERROR, buildInlineKeyboard, provideTelegramBot } from '@services/telegram';
+import { BLOCKED_ERROR, buildInlineKeyboard } from '@services/telegram';
 import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, State, updateSubscription } from '@shared/worldly';
 import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 
 export class WorldlyService {
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
+  constructor(private readonly bot: Bot) {}
 
   async randomGameHandler(chatId: number): Promise<void> {
     const handlers = [

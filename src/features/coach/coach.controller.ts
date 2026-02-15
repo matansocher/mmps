@@ -1,10 +1,10 @@
-import type { Context } from 'grammy';
+import type { Bot, Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, provideTelegramBot, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
 import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
@@ -25,9 +25,8 @@ const getKeyboardOptions = () => {
 
 export class CoachController {
   private readonly logger = new Logger(CoachController.name);
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
 
-  constructor(private readonly coachService: CoachService) {}
+  constructor(private readonly coachService: CoachService, private readonly bot: Bot) {}
 
   init(): void {
     const { START, TABLES, MATCHES, ACTIONS } = BOT_CONFIG.commands;
@@ -166,7 +165,11 @@ export class CoachController {
     const userExists = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
-    subscription ? await updateSubscription(chatId, { isActive: true }) : await addSubscription(chatId);
+    if (subscription) {
+      await updateSubscription(chatId, { isActive: true });
+    } else {
+      await addSubscription(chatId);
+    }
 
     const newUserReplyText = [
       `שלום 👋`,
