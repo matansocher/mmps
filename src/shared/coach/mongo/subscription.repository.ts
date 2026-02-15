@@ -2,9 +2,7 @@ import { InsertOneResult } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { Subscription } from '../types';
 
-// Using 'Coach' as DB_NAME to maintain backward compatibility
-// This can be changed to 'Subscription' or 'Football' in the future if needed
-export const DB_NAME = 'Coach';
+import { DB_NAME } from './constants';
 
 const getCollection = () => getMongoCollection<Subscription>(DB_NAME, 'Subscription');
 

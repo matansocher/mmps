@@ -1,3 +1,3 @@
-export const DB_NAME = 'Cooker';
+export { DB_NAME } from './constants';
 
 export * from './recipe';

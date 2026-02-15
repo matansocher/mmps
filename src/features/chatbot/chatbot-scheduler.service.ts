@@ -69,9 +69,9 @@ export class ChatbotSchedulerService {
       await this.handlePolymarketUpdate();
     });
 
-    createSchedule(`11 * * * *`, async () => {
-      await this.handleFlightsUpdate();
-    });
+    // createSchedule(`11 * * * *`, async () => {
+    //   await this.handleFlightsUpdate();
+    // });
 
     // createSchedule(`12 12,14,16,17,20,22,23 * * *`, async () => {
     //   await this.handleYoutubeCheck();

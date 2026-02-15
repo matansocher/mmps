@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from '.';
+import { DB_NAME } from './constants';
 import type { CalendarEvent, CreateCalendarEventData, UpsertCalendarEventsResult } from '../types';
 
 const getCollection = () => getMongoCollection<CalendarEvent>(DB_NAME, 'events');

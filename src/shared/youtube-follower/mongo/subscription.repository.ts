@@ -2,7 +2,7 @@ import type { InsertOneResult, UpdateResult } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import type { CreateSubscriptionData, Subscription, UpdateSubscriptionData } from '../types';
-import { DB_NAME } from './index';
+import { DB_NAME } from './constants';
 
 const logger = new Logger('subscription.repository');
 

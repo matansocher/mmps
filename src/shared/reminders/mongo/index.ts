@@ -1,4 +1,4 @@
-export const DB_NAME = 'Reminders';
+export { DB_NAME } from './constants';
 
 export {
   createReminder,

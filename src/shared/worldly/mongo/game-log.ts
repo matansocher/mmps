@@ -1,6 +1,6 @@
 import { getMongoCollection } from '@core/mongo';
 import { GameLog } from '../types';
-import { DB_NAME } from './index';
+import { DB_NAME } from './constants';
 
 type SaveGameLogOptions = {
   readonly chatId: number;

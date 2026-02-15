@@ -2,7 +2,7 @@ import type { InsertOneResult } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import type { NotifiedVideo } from '../types';
-import { DB_NAME } from './index';
+import { DB_NAME } from './constants';
 
 const logger = new Logger('notified-video.repository');
 

@@ -1,7 +1,7 @@
 import { InsertOneResult } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { Subscription } from '../types';
-import { DB_NAME } from './index';
+import { DB_NAME } from './constants';
 
 const getCollection = () => getMongoCollection<Subscription>(DB_NAME, 'Subscription');
 

@@ -1,3 +1,3 @@
-export const DB_NAME = 'Preferences';
+export { DB_NAME } from './constants';
 
 export * from './preferences.repository';
