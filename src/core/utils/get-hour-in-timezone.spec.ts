@@ -33,13 +33,7 @@ describe('getHourInTimezone', () => {
   });
 
   it('should work with various valid timezone strings', () => {
-    const timezones = [
-      'America/New_York',
-      'Europe/London',
-      'Asia/Tokyo',
-      'Australia/Sydney',
-      'Pacific/Auckland',
-    ];
+    const timezones = ['America/New_York', 'Europe/London', 'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland'];
 
     for (const tz of timezones) {
       const hour = getHourInTimezone(tz);

@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
-import path from 'path';
 import type { Bot } from 'grammy';
+import path from 'path';
 
 export async function downloadFile(bot: Bot, fileId: string, destDir: string): Promise<string> {
   const file = await bot.api.getFile(fileId);

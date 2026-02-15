@@ -1,5 +1,5 @@
-import { CompetitionDetails } from '@services/scores-365';
 import { getTableTemplate } from '@core/utils';
+import { CompetitionDetails } from '@services/scores-365';
 import { generateCompetitionMatchesString, generateMatchResultsString, getSportsCompetitionMatches, getSportsCompetitions, getSportsCompetitionTable, getSportsMatchesSummary } from '@shared/sports';
 
 export class CoachService {

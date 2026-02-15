@@ -3,12 +3,6 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
 
-
-
-
-
-
-
 const logger = new Logger('github-mcp-client');
 
 let client: Client | null = null;

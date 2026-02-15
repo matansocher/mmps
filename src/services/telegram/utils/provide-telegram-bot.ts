@@ -1,5 +1,5 @@
-import { Bot } from 'grammy';
 import { hydrate } from '@grammyjs/hydrate';
+import { Bot } from 'grammy';
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
 import type { TelegramBotConfig } from '../types';

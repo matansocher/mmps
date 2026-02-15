@@ -1,8 +1,8 @@
 import { createMongoConnection } from '@core/mongo';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/wolt';
-import { BOT_CONFIG } from './wolt.config';
 import { WoltSchedulerService } from './wolt-scheduler.service';
+import { BOT_CONFIG } from './wolt.config';
 import { WoltController } from './wolt.controller';
 
 export async function initWolt(): Promise<void> {

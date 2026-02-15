@@ -8,7 +8,10 @@ describe('chunk()', () => {
 
   it('should handle arrays that divide evenly', () => {
     const result = chunk([1, 2, 3, 4, 5, 6], 3);
-    expect(result).toEqual([[1, 2, 3], [4, 5, 6]]);
+    expect(result).toEqual([
+      [1, 2, 3],
+      [4, 5, 6],
+    ]);
   });
 
   it('should return array with single chunk when size is larger than array length', () => {
@@ -38,7 +41,10 @@ describe('chunk()', () => {
 
   it('should handle strings array', () => {
     const result = chunk(['a', 'b', 'c', 'd'], 2);
-    expect(result).toEqual([['a', 'b'], ['c', 'd']]);
+    expect(result).toEqual([
+      ['a', 'b'],
+      ['c', 'd'],
+    ]);
   });
 
   it('should handle objects array', () => {

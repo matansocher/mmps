@@ -1,1 +1,1 @@
-export { polymarketTool } from './polymarket.tool'
+export { polymarketTool } from './polymarket.tool';

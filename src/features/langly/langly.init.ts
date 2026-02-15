@@ -1,8 +1,8 @@
 import { createMongoConnection } from '@core/mongo';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/langly';
-import { BOT_CONFIG } from './langly.config';
 import { LanglyBotSchedulerService } from './langly-scheduler.service';
+import { BOT_CONFIG } from './langly.config';
 import { LanglyController } from './langly.controller';
 import { LanglyService } from './langly.service';
 

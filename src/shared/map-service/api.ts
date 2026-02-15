@@ -1,7 +1,7 @@
 import path from 'path';
 import sharp from 'sharp';
 import { Logger } from '@core/utils';
-import { OPENSTREETMAP_TILE_URL, DEFAULT_TILE_SIZE, DEFAULT_ZOOM, DEFAULT_TILE_RANGE } from './constants';
+import { DEFAULT_TILE_RANGE, DEFAULT_TILE_SIZE, DEFAULT_ZOOM, OPENSTREETMAP_TILE_URL } from './constants';
 import type { MapOptions } from './types';
 import { fetchBuffer, latLonToTile } from './utils';
 

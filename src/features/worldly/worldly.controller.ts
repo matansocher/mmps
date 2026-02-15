@@ -13,7 +13,10 @@ import { WorldlyService } from './worldly.service';
 export class WorldlyController {
   private readonly logger = new Logger(WorldlyController.name);
 
-  constructor(private readonly worldlyService: WorldlyService, private readonly bot: Bot) {}
+  constructor(
+    private readonly worldlyService: WorldlyService,
+    private readonly bot: Bot,
+  ) {}
 
   init(): void {
     const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;

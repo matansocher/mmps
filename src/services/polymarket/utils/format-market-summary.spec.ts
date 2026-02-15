@@ -1,5 +1,5 @@
 import type { MarketSummary } from '../types';
-import { formatMarketSummary, formatMarketForList } from './format-market-summary';
+import { formatMarketForList, formatMarketSummary } from './format-market-summary';
 
 const createMockMarket = (overrides: Partial<MarketSummary> = {}): MarketSummary => ({
   id: 'test-id',
@@ -106,7 +106,7 @@ describe('formatMarketForList', () => {
   });
 
   it('should format market with negative price change', () => {
-    const market = createMockMarket({ oneDayPriceChange: -0.10 });
+    const market = createMockMarket({ oneDayPriceChange: -0.1 });
     const result = formatMarketForList(market);
 
     expect(result).toContain('(-10.0%)');

@@ -2,10 +2,12 @@ import type { Earthquake } from '../types';
 import { formatEarthquake } from './format-earthquake';
 
 describe('formatEarthquake', () => {
-  const createMockEarthquake = (overrides: Partial<{
-    properties: Partial<Earthquake['properties']>;
-    geometry: Partial<Earthquake['geometry']>;
-  }> = {}): Earthquake => ({
+  const createMockEarthquake = (
+    overrides: Partial<{
+      properties: Partial<Earthquake['properties']>;
+      geometry: Partial<Earthquake['geometry']>;
+    }> = {},
+  ): Earthquake => ({
     type: 'Feature',
     id: 'test-quake-123',
     properties: {

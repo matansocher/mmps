@@ -24,7 +24,7 @@ const createMockSubscription = (overrides: Partial<Subscription> = {}): Subscrip
     marketSlug: 'test-market-slug',
     marketQuestion: 'Will this test pass?',
     chatId: 12345,
-    lastNotifiedPrice: 0.70,
+    lastNotifiedPrice: 0.7,
     subscribedAt: new Date('2025-01-01'),
     ...overrides,
   }) as Subscription;
@@ -48,7 +48,7 @@ describe('formatPriceChange', () => {
     });
 
     it('should handle large negative change', () => {
-      expect(formatPriceChange(-0.50, null, 0.25)).toBe('📉 (-50.0%)');
+      expect(formatPriceChange(-0.5, null, 0.25)).toBe('📉 (-50.0%)');
     });
 
     it('should format decimal precision correctly', () => {
@@ -59,12 +59,12 @@ describe('formatPriceChange', () => {
   describe('when API 24h change is null (fallback to calculated)', () => {
     it('should calculate positive change from last notified price', () => {
       // currentPrice 0.75 - lastNotifiedPrice 0.70 = 0.05 = +5.0%
-      expect(formatPriceChange(null, 0.70, 0.75)).toBe('📈 (+5.0%)');
+      expect(formatPriceChange(null, 0.7, 0.75)).toBe('📈 (+5.0%)');
     });
 
     it('should calculate negative change from last notified price', () => {
       // currentPrice 0.75 - lastNotifiedPrice 0.80 = -0.05 = -5.0%
-      expect(formatPriceChange(null, 0.80, 0.75)).toBe('📉 (-5.0%)');
+      expect(formatPriceChange(null, 0.8, 0.75)).toBe('📉 (-5.0%)');
     });
 
     it('should calculate zero change when prices are equal', () => {
@@ -73,7 +73,7 @@ describe('formatPriceChange', () => {
 
     it('should handle small price differences', () => {
       // currentPrice 0.751 - lastNotifiedPrice 0.750 = 0.001 = +0.1%
-      expect(formatPriceChange(null, 0.750, 0.751)).toBe('📈 (+0.1%)');
+      expect(formatPriceChange(null, 0.75, 0.751)).toBe('📈 (+0.1%)');
     });
   });
 
@@ -180,7 +180,7 @@ describe('formatDailyUpdateMessage', () => {
   it('should use fallback price change when API change is null', () => {
     const updates: MarketUpdate[] = [
       {
-        subscription: createMockSubscription({ lastNotifiedPrice: 0.70 }),
+        subscription: createMockSubscription({ lastNotifiedPrice: 0.7 }),
         market: createMockMarket({ oneDayPriceChange: null, yesPrice: 0.75 }),
       },
     ];
