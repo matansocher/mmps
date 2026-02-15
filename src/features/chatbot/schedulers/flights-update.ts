@@ -7,7 +7,7 @@ import type { FlightSubscription } from '@shared/flights-tracker';
 
 const logger = new Logger('FlightsUpdateScheduler');
 
-const LOW_FLIGHT_THRESHOLD = 3;
+const LOW_FLIGHT_THRESHOLD = 4;
 
 export async function flightsUpdate(bot: Bot): Promise<void> {
   const subscriptionsByChatId = await getFlightSubscriptionsGroupedByChatId();
