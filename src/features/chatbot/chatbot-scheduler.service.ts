@@ -7,6 +7,7 @@ import {
   earthquakeMonitor,
   emailSummary,
   exerciseReminder,
+  flightsUpdate,
   footballUpdate,
   makavdiaUpdate,
   polymarketUpdate,
@@ -68,6 +69,10 @@ export class ChatbotSchedulerService {
       await this.handlePolymarketUpdate();
     });
 
+    createSchedule(`11 * * * *`, async () => {
+      await this.handleFlightsUpdate();
+    });
+
     // createSchedule(`12 12,14,16,17,20,22,23 * * *`, async () => {
     //   await this.handleYoutubeCheck();
     // });
@@ -84,6 +89,7 @@ export class ChatbotSchedulerService {
       // this.handleEarthquakeMonitor();
       // this.handleYoutubeCheck();
       // this.handlePolymarketUpdate();
+      // this.handleFlightsUpdate();
     }, 8000);
   }
 
@@ -129,5 +135,9 @@ export class ChatbotSchedulerService {
 
   private async handlePolymarketUpdate(): Promise<void> {
     await polymarketUpdate(this.bot);
+  }
+
+  private async handleFlightsUpdate(): Promise<void> {
+    await flightsUpdate(this.bot);
   }
 }
