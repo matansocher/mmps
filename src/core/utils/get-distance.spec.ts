@@ -18,7 +18,7 @@ describe('getDistance', () => {
 
   it('should calculate distance between Tel Aviv and Haifa (~82km)', () => {
     const telAviv = { lat: 32.0853, lon: 34.7818 };
-    const haifa = { lat: 32.7940, lon: 34.9896 };
+    const haifa = { lat: 32.794, lon: 34.9896 };
     const distance = getDistance(telAviv, haifa);
 
     // Approximately 82km, allow 5% tolerance

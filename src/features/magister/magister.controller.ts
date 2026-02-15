@@ -17,7 +17,10 @@ const transcribeLoaderMessage = '🎧 Give me a few moments to transcribe it...'
 export class MagisterController {
   private readonly logger = new Logger(MagisterController.name);
 
-  constructor(private readonly magisterService: MagisterService, private readonly bot: Bot) {}
+  constructor(
+    private readonly magisterService: MagisterService,
+    private readonly bot: Bot,
+  ) {}
 
   init(): void {
     const { START, COURSE, STATUS, NEXT } = BOT_CONFIG.commands;

@@ -13,7 +13,10 @@ import { ChatbotService } from './chatbot.service';
 export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
 
-  constructor(private readonly chatbotService: ChatbotService, private readonly bot: Bot) {}
+  constructor(
+    private readonly chatbotService: ChatbotService,
+    private readonly bot: Bot,
+  ) {}
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));

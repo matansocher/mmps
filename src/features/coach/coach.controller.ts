@@ -26,7 +26,10 @@ const getKeyboardOptions = () => {
 export class CoachController {
   private readonly logger = new Logger(CoachController.name);
 
-  constructor(private readonly coachService: CoachService, private readonly bot: Bot) {}
+  constructor(
+    private readonly coachService: CoachService,
+    private readonly bot: Bot,
+  ) {}
 
   init(): void {
     const { START, TABLES, MATCHES, ACTIONS } = BOT_CONFIG.commands;

@@ -1,5 +1,5 @@
-import cron from 'node-cron';
 import type { Bot } from 'grammy';
+import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getDateString } from '@core/utils';
 import { notify } from '@services/notifier';
@@ -9,7 +9,10 @@ import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
 
 export class CoachBotSchedulerService {
-  constructor(private readonly coachService: CoachService, private readonly bot: Bot) {}
+  constructor(
+    private readonly coachService: CoachService,
+    private readonly bot: Bot,
+  ) {}
 
   init(): void {
     cron.schedule(

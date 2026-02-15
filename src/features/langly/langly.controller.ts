@@ -10,7 +10,10 @@ import { LanglyService } from './langly.service';
 export class LanglyController {
   private readonly logger = new Logger(LanglyController.name);
 
-  constructor(private readonly langlyService: LanglyService, private readonly bot: Bot) {}
+  constructor(
+    private readonly langlyService: LanglyService,
+    private readonly bot: Bot,
+  ) {}
 
   init(): void {
     const { START, CHALLENGE, ACTIONS } = BOT_CONFIG.commands;

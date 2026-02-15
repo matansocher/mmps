@@ -25,7 +25,7 @@ describe('getImsLocationId', () => {
     expect(getImsLocationId('beer sheva')).toBe(8);
   });
 
-  it('should return location ID for Be\'er Sheva variant', () => {
+  it("should return location ID for Be'er Sheva variant", () => {
     expect(getImsLocationId("be'er sheva")).toBe(8);
   });
 

@@ -1,5 +1,5 @@
-import cron from 'node-cron';
 import type { Bot } from 'grammy';
+import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { ChatbotService } from './chatbot.service';
 import {
@@ -22,7 +22,10 @@ function createSchedule(expression: string, handler: () => Promise<void>, timezo
 }
 
 export class ChatbotSchedulerService {
-  constructor(private readonly chatbotService: ChatbotService, private readonly bot: Bot) {}
+  constructor(
+    private readonly chatbotService: ChatbotService,
+    private readonly bot: Bot,
+  ) {}
 
   init(): void {
     createSchedule(`00 23 * * *`, async () => {
