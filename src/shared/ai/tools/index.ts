@@ -31,8 +31,6 @@ export { googlePlaceDetailsTool } from './maps/google-place-details.tool';
 
 export { spotifyTool } from './music/spotify.tool';
 
-export { githubTool } from './github/github.tool';
-
 export { recipesTool } from './recipes/recipes.tool';
 
 export { woltTool } from './wolt/wolt.tool';

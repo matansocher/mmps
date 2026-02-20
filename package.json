@@ -1,5 +1,5 @@
 {
-  "name": "mmps-new",
+  "name": "mmps",
   "version": "1.0.0",
   "description": "Express TypeScript application",
   "main": "dist/index.js",
@@ -42,8 +42,6 @@
     "@langchain/core": "^1.1.19",
     "@langchain/langgraph": "^1.1.3",
     "@langchain/openai": "^1.2.5",
-    "@modelcontextprotocol/sdk": "^1.24.3",
-    "@modelcontextprotocol/server-github": "^2025.4.8",
     "@pinecone-database/pinecone": "^6.1.3",
     "@turf/boolean-point-in-polygon": "^7.3.4",
     "@turf/helpers": "^7.3.4",
