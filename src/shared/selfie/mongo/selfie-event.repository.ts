@@ -44,6 +44,14 @@ export async function searchEvents(query: string, limit = 50): Promise<SelfieEve
     .toArray();
 }
 
+export async function getEventsByDateRange(start: Date, end: Date): Promise<SelfieEvent[]> {
+  const collection = getCollection();
+  return collection
+    .find({ date: { $gte: start, $lte: end } })
+    .sort({ date: -1 })
+    .toArray();
+}
+
 export async function getRecentEvents(limit: number): Promise<SelfieEvent[]> {
   const collection = getCollection();
   return collection.find().sort({ date: -1 }).limit(limit).toArray();

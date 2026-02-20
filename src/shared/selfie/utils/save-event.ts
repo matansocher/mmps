@@ -1,7 +1,7 @@
 import { Logger } from '@core/utils';
 import type { ConversationDetails, SenderDetails, TelegramMessage } from '@services/telegram-client';
-import { saveEvent as saveEventToDb } from './mongo';
-import type { CreateSelfieEventData } from './types';
+import { saveEvent as saveEventToDb } from '../mongo';
+import type { CreateSelfieEventData } from '../types';
 
 const logger = new Logger('SelfieService');
 

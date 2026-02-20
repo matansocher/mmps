@@ -55,7 +55,7 @@ export async function getMessageData(client: TelegramClient, event): Promise<Tel
 }
 
 export async function getConversationDetails(telegramClient: TelegramClient, entityId: string): Promise<ConversationDetails | null> {
-  const channelDetails: any = await telegramClient.getEntity(entityId).catch((err) => {
+  const channelDetails = await telegramClient.getEntity(entityId).catch((err) => {
     logger.error(`Failed to get conversation details for entity ${entityId}: ${err}`);
     return null;
   });
@@ -71,7 +71,7 @@ export async function getConversationDetails(telegramClient: TelegramClient, ent
 }
 
 async function getSenderDetails(telegramClient: TelegramClient, userId: string): Promise<SenderDetails | null> {
-  const user: any = await telegramClient.getEntity(userId).catch((err) => {
+  const user = await telegramClient.getEntity(userId).catch((err) => {
     logger.error(`Failed to get sender details for user ${userId}: ${err}`);
     return null;
   });
