@@ -48,9 +48,9 @@ export async function getMessageData(client: TelegramClient, event): Promise<Tel
     text: event?.message?.message ?? event?.message ?? null,
     isVoice: event?.message?.media?.voice ?? false,
   };
-  if (data.isVoice) {
-    data.voice = await downloadVoice(client, event);
-  }
+  // if (data.isVoice) {
+  //   data.voice = await downloadVoice(client, event);
+  // }
   return data;
 }
 
