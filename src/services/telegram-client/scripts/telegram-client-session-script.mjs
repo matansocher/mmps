@@ -1,6 +1,6 @@
-const input = require('input');
-const { TelegramClient } = require('telegram');
-const { StringSession } = require('telegram/sessions');
+import input from 'input';
+import { TelegramClient } from 'telegram';
+import { StringSession } from 'telegram/sessions/index.js';
 
 // to get apiId and apiHash values, go here - https://my.telegram.org/auth
 // run the script and then get the stringSession value
