@@ -16,6 +16,7 @@ import {
   preferencesTool,
   recipesTool,
   reminderTool,
+  selfieTool,
   topMatchesForPredictionTool,
   weatherTool,
   woltTool,
@@ -26,7 +27,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, Worldly game statistics, and Polymarket prediction markets, and live flight tracking';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, live flight tracking, and Telegram message history';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -85,6 +86,14 @@ Available capabilities:
   * "unsubscribe" - Unsubscribe from flight updates for a country.
   * "list" - List all active flight subscriptions.
   Natural language variations: "how many flights are over Israel", "planes above Iran", "track flights above Germany", "subscribe to flight updates for France", "show my flight subscriptions", "air traffic over Japan".
+- Telegram Selfie tool: Query your personal Telegram message history with five actions:
+  * "recent" - Get the most recent messages across all conversations (default limit: 50)
+  * "by_date" - Get all messages from a specific date (requires date in YYYY-MM-DD format)
+  * "by_conversation" - Get messages from a specific conversation by ID
+  * "by_sender" - Get messages from a specific sender by their user ID
+  * "search" - Search messages by text content (case-insensitive regex match)
+  Each result includes the message text, conversation name, sender name, and their IDs so you can use them for follow-up queries.
+  Natural language variations: "who messaged me today", "what did [person/channel] say", "search my telegram for [keyword]", "show recent messages", "messages from yesterday", "what was said in [group]".
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Smart Reminders Guidelines:
@@ -256,6 +265,7 @@ export function agent(): AgentDescriptor {
     youtubeFollowerTool,
     polymarketTool,
     flightsTool,
+    selfieTool,
   ];
 
   return {

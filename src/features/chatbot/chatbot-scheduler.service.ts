@@ -12,6 +12,7 @@ import {
   makavdiaUpdate,
   polymarketUpdate,
   reminderCheck,
+  selfieSummary,
   sportsCalendar,
   weeklyExerciseSummary,
   youtubeCheck,
@@ -73,6 +74,10 @@ export class ChatbotSchedulerService {
       await this.handleFlightsUpdate();
     });
 
+    createSchedule(`1 0 * * *`, async () => {
+      await this.handleSelfieSummary();
+    });
+
     // createSchedule(`12 12,14,16,17,20,22,23 * * *`, async () => {
     //   await this.handleYoutubeCheck();
     // });
@@ -90,6 +95,7 @@ export class ChatbotSchedulerService {
       // this.handleYoutubeCheck();
       // this.handlePolymarketUpdate();
       // this.handleFlightsUpdate();
+      // this.handleSelfieSummary();
     }, 8000);
   }
 
@@ -139,5 +145,9 @@ export class ChatbotSchedulerService {
 
   private async handleFlightsUpdate(): Promise<void> {
     await flightsUpdate(this.bot);
+  }
+
+  private async handleSelfieSummary(): Promise<void> {
+    await selfieSummary(this.bot);
   }
 }
