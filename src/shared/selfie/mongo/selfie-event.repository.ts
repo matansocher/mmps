@@ -35,6 +35,15 @@ export async function getEventsByDate(date: string): Promise<SelfieEvent[]> {
     .toArray();
 }
 
+export async function searchEvents(query: string, limit = 50): Promise<SelfieEvent[]> {
+  const collection = getCollection();
+  return collection
+    .find({ text: { $regex: query, $options: 'i' } })
+    .sort({ date: -1 })
+    .limit(limit)
+    .toArray();
+}
+
 export async function getRecentEvents(limit: number): Promise<SelfieEvent[]> {
   const collection = getCollection();
   return collection.find().sort({ date: -1 }).limit(limit).toArray();
