@@ -21,7 +21,7 @@ export type SelfieEvent = {
   readonly text: string | null;
   readonly date: Date;
   readonly isVoice: boolean;
-  readonly voiceFileName: string | null;
+  // readonly voiceFileName: string | null;
   readonly conversation: SelfieEventConversation;
   readonly sender: SelfieEventSender | null;
   readonly createdAt: Date;

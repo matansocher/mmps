@@ -4,7 +4,7 @@ import type { CreateSelfieEventData, SelfieEvent } from '../types';
 
 export const DB_NAME = 'Selfie';
 
-const getCollection = () => getMongoCollection<SelfieEvent>(DB_NAME, 'events');
+const getCollection = () => getMongoCollection<SelfieEvent>(DB_NAME, 'Events');
 
 export async function saveEvent(data: CreateSelfieEventData): Promise<InsertOneResult<SelfieEvent>> {
   const collection = getCollection();

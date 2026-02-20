@@ -18,7 +18,7 @@ function formatEvent(event: SelfieEvent) {
     text: event.text,
     date: event.date instanceof Date ? event.date.toISOString() : event.date,
     isVoice: event.isVoice,
-    voiceFileName: event.voiceFileName,
+    // voiceFileName: event.voiceFileName,
     conversation: event.conversation.title || event.conversation.userName || event.conversation.firstName || event.conversation.id,
     conversationId: event.conversation.id,
     sender: event.sender ? event.sender.firstName || event.sender.userName || event.sender.id : null,

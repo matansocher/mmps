@@ -12,7 +12,7 @@ export async function saveEvent(message: TelegramMessage, conversationDetails: C
       text: message.text || null,
       date: new Date(message.date * 1000),
       isVoice: message.isVoice,
-      voiceFileName: message.voice?.fileName || null,
+      // voiceFileName: message.voice?.fileName || null,
       conversation: {
         id: conversationDetails.id,
         title: conversationDetails.title,
