@@ -24,7 +24,10 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "express",
@@ -65,6 +68,8 @@
     "swagger-ui-express": "^5.0.1",
     "telegram": "^2.26.22",
     "twilio": "^5.10.7",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.28",
     "yahoo-finance2": "^3.10.2",
     "youtube-transcript": "^1.2.1",
     "youtube-transcript-plus": "^1.1.1",
