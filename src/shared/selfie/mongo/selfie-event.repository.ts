@@ -1,5 +1,8 @@
 import type { InsertOneResult } from 'mongodb';
+import { startOfDay, endOfDay, parseISO } from 'date-fns';
+import { fromZonedTime } from 'date-fns-tz';
 import { getMongoCollection } from '@core/mongo';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import type { CreateSelfieEventData, SelfieEvent } from '../types';
 
 export const DB_NAME = 'Selfie';
@@ -27,8 +30,9 @@ export async function getEventsBySenderId(senderId: string): Promise<SelfieEvent
 
 export async function getEventsByDate(date: string): Promise<SelfieEvent[]> {
   const collection = getCollection();
-  const start = new Date(`${date}T00:00:00.000Z`);
-  const end = new Date(`${date}T23:59:59.999Z`);
+  const parsedDate = parseISO(date);
+  const start = fromZonedTime(startOfDay(parsedDate), DEFAULT_TIMEZONE);
+  const end = fromZonedTime(endOfDay(parsedDate), DEFAULT_TIMEZONE);
   return collection
     .find({ date: { $gte: start, $lte: end } })
     .sort({ date: -1 })
