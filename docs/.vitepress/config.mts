@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
+  base: '/mmps/',
   title: 'MMPS',
   description: 'Multi-Purpose Telegram Bots Documentation',
   lang: 'en-US',
