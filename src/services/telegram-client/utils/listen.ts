@@ -54,7 +54,7 @@ export async function getMessageData(client: TelegramClient, event): Promise<Tel
   return data;
 }
 
-export async function getConversationDetails(telegramClient: TelegramClient, entityId: string): Promise<ConversationDetails | null> {
+export async function getConversationDetails(telegramClient: TelegramClient, entityId: string | number): Promise<ConversationDetails | null> {
   const channelDetails = await telegramClient.getEntity(entityId).catch((err) => {
     logger.error(`Failed to get conversation details for entity ${entityId}: ${err}`);
     return null;
@@ -103,9 +103,21 @@ export async function listen({ conversationsIds = [] }: ListenerOptions, callbac
       if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
         return;
       }
-      const entityId = messageData.channelId ? `-100${messageData.channelId}` : messageData.userId.toString();
+      let entityId: string | number;
+      if (messageData.channelId) {
+        entityId = parseInt(messageData.channelId, 10);
+      } else if (messageData.userId) {
+        entityId = messageData.userId.toString();
+      } else {
+        logger.warn('No channelId or userId found in messageData');
+        return;
+      }
       const channelDetails = await getConversationDetails(telegramClient, entityId);
-      if (!channelDetails?.id || EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
+      if (!channelDetails?.id) {
+        logger.warn(`No conversation details found for entityId: ${entityId}, channelId: ${messageData.channelId}, userId: ${messageData.userId}`);
+        return;
+      }
+      if (EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
         return;
       }
       const senderDetails = messageData.userId ? await getSenderDetails(telegramClient, messageData.userId) : null;
