@@ -48,7 +48,7 @@ src/
 ├── features/       # Bot features (chatbot, coach, etc.)
 ├── services/       # External service integrations
 ├── shared/         # Shared business logic across features
-└── main.ts         # Entry point with conditional bot loading
+└── index.ts        # Entry point with conditional bot loading
 ```
 
 ### Feature Structure
@@ -293,10 +293,10 @@ export async function initChatbot(): Promise<void> {
 }
 ```
 
-**main.ts conditional loading:**
+**src/index.ts conditional loading:**
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
-if (shouldInitBot(chatbotBotConfig)) await initChatbot();
+if (shouldInitBot(chatbotBotConfig)) await initChatbot(app);
 ```
 
 #### Service Layer: Controller → Service → Repository
