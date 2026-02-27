@@ -85,7 +85,7 @@ This enables Node.js debugging on port 9229.
 - **[Architecture Overview](/architecture/overview)** - Understand the system design
 - **[Configuration Guide](/guide/environment-setup)** - Set up environment variables
 - **[Available Bots](/bots/overview)** - Learn about each bot
-- **[Contributing](/development/contributing)** - Start contributing
+- **[Contributing](/development/contributing)** - Start contributing (includes AI-powered code review and implementation)
 
 ## Troubleshooting
 

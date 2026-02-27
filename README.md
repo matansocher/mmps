@@ -52,6 +52,15 @@ npm run build             # Build for production
 
 See [Development Guide](https://matansocher.github.io/mmps/development/contributing) for more.
 
+### GitHub AI Features
+
+This repository includes automated AI-powered code review and implementation:
+
+- **Pull Request Review** - Comment `/review` on any PR to get AI-powered code analysis
+- **Issue Implementation** - Comment `/implement` on any issue to generate a pull request with code implementation
+
+Both features are triggered manually via comments and configured in `.github/workflows/pr-agent.yml`.
+
 ## Documentation
 
 Full documentation available at: **https://matansocher.github.io/mmps/**
