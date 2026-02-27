@@ -153,6 +153,32 @@ Each function has:
 - Logger instance
 - Consistent response format
 
+### GitHub AI Workflows
+
+The chatbot can trigger automated GitHub Actions workflows:
+
+**Code Review Workflow**
+- Trigger: Comment `/review` on a pull request
+- Action: Uses OpenAI to analyze code quality, suggest improvements, check for bugs
+- Use case: Request AI-powered code review with natural language like "review this PR" or "analyze this pull request"
+
+**Implementation Workflow**
+- Trigger: Comment `/implement` on an issue
+- Action: Uses OpenAI to generate implementation code and create a new pull request
+- Use case: Request implementation generation with natural language like "implement this issue" or "generate code for this"
+
+Both workflows are configured in `.github/workflows/pr-agent.yml` and use the qodo-ai PR Agent with OpenAI.
+
+When the chatbot recognizes these requests, it uses the GitHub tool to add the appropriate comment, triggering the automation:
+
+```typescript
+// For PR review request
+await createPullRequestComment(prNumber, '/review');
+
+// For issue implementation request
+await createIssueComment(issueNumber, '/implement');
+```
+
 ## Next Steps
 
 - [Contributing Guide](/development/contributing)
