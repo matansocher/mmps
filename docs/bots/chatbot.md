@@ -37,7 +37,8 @@ OPENAI_API_KEY=sk-...           # For ChatGPT
 ANTHROPIC_API_KEY=sk-ant-...    # For Claude (alternative)
 
 # Optional Tools
-GITHUB_TOKEN=ghp_...            # For GitHub integration
+GITHUB_APP_ID=123456                 # For GitHub App authentication
+GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----...  # GitHub App private key
 WEATHERAPI_KEY=...              # For weather data
 GOOGLE_SHEETS_CREDENTIALS=...   # For Sheets integration
 ```

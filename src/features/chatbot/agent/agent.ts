@@ -8,6 +8,7 @@ import {
   exerciseAnalyticsTool,
   exerciseTool,
   flightsTool,
+  githubTool,
   gmailTool,
   makavdiaTool,
   matchPredictionTool,
@@ -27,7 +28,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, live flight tracking, and Telegram message history';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, live flight tracking, and Telegram message history';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -94,7 +95,34 @@ Available capabilities:
   * "search" - Search messages by text content (case-insensitive regex match)
   Each result includes the message text, conversation name, sender name, and their IDs so you can use them for follow-up queries.
   Natural language variations: "who messaged me today", "what did [person/channel] say", "search my telegram for [keyword]", "show recent messages", "messages from yesterday", "what was said in [group]".
+- GitHub tool: Interact with the matansocher/mmps repository with seven actions:
+   * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
+   * "get_issue" - Get details of a specific issue by number
+   * "update_issue" - Update an existing issue (title, body, state, labels, assignees)
+   * "comment_issue" - Add a comment to an issue
+   * "comment_pr" - Add a comment to a pull request
+   * "list_issues" - List all issues (optionally filter by state: "open"/"closed" or labels)
+   * "list_prs" - List all pull requests (optionally filter by state: "open"/"closed")
+   SPECIAL COMMANDS (trigger automated workflows):
+   * To request AI-powered code review on a PR: comment "/review" on the pull request
+   * To request AI implementation for an issue: comment "/implement" on the issue
+   These commands trigger GitHub Actions workflows that use OpenAI to analyze code and generate implementations.
+   Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation"
 - General conversation & assistance: Provide helpful answers without tools when possible.
+
+GitHub AI Commands Guidelines:
+- The repository has automated GitHub Actions workflows for AI-powered features:
+  * /review - Triggers AI code review on pull requests
+  * /implement - Triggers AI implementation generation for issues
+- When user requests:
+  * "review this PR" / "request a code review" / "analyze this pull request" → Use comment_pr action to add "/review" comment
+  * "implement this issue" / "generate code for this issue" / "solve this issue" → Use comment_issue action to add "/implement" comment
+- These commands automatically trigger OpenAI-powered GitHub Actions that will:
+  * /review: Analyze PR code quality, suggest improvements, check for bugs
+  * /implement: Generate implementation code and create a pull request from the issue
+- Confirm to the user that the workflow has been triggered and they'll see results as a new comment/PR
+- Only use these commands when explicitly requested or when user mentions wanting AI code review/generation
+
 
 Smart Reminders Guidelines:
 - When users want to remember something, save information for later, or be reminded about something, use the smart_reminders tool.
@@ -266,6 +294,7 @@ export function agent(): AgentDescriptor {
     polymarketTool,
     flightsTool,
     selfieTool,
+    githubTool,
   ];
 
   return {

@@ -99,11 +99,42 @@ features/{bot}/
 
 ```
 services/{name}/
-├── api.ts or {name}.service.ts        # Main implementation
+├── constants.ts                       # Constants and configuration
 ├── types.ts                           # Type definitions
-├── constants.ts                       # Constants (if needed)
-└── index.ts                           # Barrel exports
+├── index.ts                           # Barrel exports
+└── utils/                             # Utility functions (optional)
+    ├── function-1.ts                  # Individual functions
+    ├── function-2.ts
+    ├── helpers.ts                     # Helper functions (e.g., mappers, validators)
+    └── index.ts                       # Barrel exports
 ```
+
+### Example: GitHub Service
+
+```
+services/github/
+├── constants.ts                       # Repo owner/name, default labels
+├── types.ts                           # Issue, PullRequest, IssueComment types
+├── index.ts                           # Re-exports from utils
+└── utils/
+    ├── octokit.ts                     # Octokit client initialization
+    ├── mappers.ts                     # Data transformation helpers
+    ├── create-issue.ts                # createIssue() function
+    ├── get-issue.ts                   # getIssue() function
+    ├── update-issue.ts                # updateIssue() function
+    ├── create-issue-comment.ts        # createIssueComment() function
+    ├── create-pull-request-comment.ts # createPullRequestComment() function
+    ├── list-issues.ts                 # listIssues() function
+    ├── list-pull-requests.ts          # listPullRequests() function
+    └── index.ts                       # Barrel exports
+```
+
+**Benefits of utils breakdown**:
+- Single responsibility per file
+- Easy to test individual functions
+- Clear separation of concerns
+- Scalable for adding more operations
+- Each function handles its own error logging
 
 ## AI Tools Structure
 

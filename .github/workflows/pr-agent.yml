@@ -1,4 +1,4 @@
-name: PR Agent - Manual Review & Issue Implementation
+name: Mmps Companion
 
 on:
   issue_comment:

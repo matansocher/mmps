@@ -99,6 +99,86 @@ The chatbot has 20+ tools:
 - Todo Lists
 - And more
 
+## GitHub Tool
+
+The GitHub tool enables AI-powered GitHub repository interactions.
+
+### Configuration
+
+Set GitHub App credentials in `.env`:
+
+```bash
+GITHUB_APP_ID=123456
+GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----
+```
+
+### Actions
+
+The GitHub tool supports 7 actions:
+
+- `create_issue` - Create a new issue with title, body, labels, assignees
+- `get_issue` - Get details of a specific issue
+- `update_issue` - Update issue (title, body, state, labels)
+- `comment_issue` - Add a comment to an issue
+- `comment_pr` - Add a comment to a pull request
+- `list_issues` - List issues (filter by state, labels)
+- `list_prs` - List pull requests (filter by state)
+
+### Service Architecture
+
+The GitHub service is organized into focused modules:
+
+```
+services/github/
+├── constants.ts              # Repo config (matansocher/mmps)
+├── types.ts                  # Type definitions
+├── index.ts                  # Barrel exports
+└── utils/
+    ├── octokit.ts            # Octokit client
+    ├── mappers.ts            # Data transformers
+    ├── create-issue.ts
+    ├── get-issue.ts
+    ├── update-issue.ts
+    ├── create-issue-comment.ts
+    ├── create-pull-request-comment.ts
+    ├── list-issues.ts
+    ├── list-pull-requests.ts
+    └── index.ts              # Barrel exports
+```
+
+Each function has:
+- Single responsibility
+- Proper Octokit type definitions
+- Individual error handling
+- Logger instance
+- Consistent response format
+
+### GitHub AI Workflows
+
+The chatbot can trigger automated GitHub Actions workflows:
+
+**Code Review Workflow**
+- Trigger: Comment `/review` on a pull request
+- Action: Uses OpenAI to analyze code quality, suggest improvements, check for bugs
+- Use case: Request AI-powered code review with natural language like "review this PR" or "analyze this pull request"
+
+**Implementation Workflow**
+- Trigger: Comment `/implement` on an issue
+- Action: Uses OpenAI to generate implementation code and create a new pull request
+- Use case: Request implementation generation with natural language like "implement this issue" or "generate code for this"
+
+Both workflows are configured in `.github/workflows/pr-agent.yml` and use the qodo-ai PR Agent with OpenAI.
+
+When the chatbot recognizes these requests, it uses the GitHub tool to add the appropriate comment, triggering the automation:
+
+```typescript
+// For PR review request
+await createPullRequestComment(prNumber, '/review');
+
+// For issue implementation request
+await createIssueComment(issueNumber, '/implement');
+```
+
 ## Next Steps
 
 - [Contributing Guide](/development/contributing)

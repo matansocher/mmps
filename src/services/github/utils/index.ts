@@ -1,0 +1,7 @@
+export { createIssue } from './create-issue';
+export { getIssue } from './get-issue';
+export { updateIssue } from './update-issue';
+export { createIssueComment } from './create-issue-comment';
+export { createPullRequestComment } from './create-pull-request-comment';
+export { listIssues } from './list-issues';
+export { listPullRequests } from './list-pull-requests';
