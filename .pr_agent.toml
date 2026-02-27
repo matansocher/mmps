@@ -1,0 +1,9 @@
+[pr_agent]
+# This is the critical line that unlocks the command
+enabled_tools = ["review", "ask", "improve", "describe", "implement"]
+
+[github_action_config]
+# Ensures the bot only speaks when you use a /command
+auto_review = false
+auto_describe = false
+auto_improve = false

@@ -24,9 +24,3 @@ jobs:
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # The fix: Enable the implement tool and keep others available
-          PR_AGENT__ENABLED_TOOLS: '["review", "ask", "improve", "describe", "implement"]'
-          # Force it to be silent on PR open (manual only)
-          GITHUB_ACTION_CONFIG__AUTO_REVIEW: "false"
-          GITHUB_ACTION_CONFIG__AUTO_DESCRIBE: "false"
-          GITHUB_ACTION_CONFIG__AUTO_IMPROVE: "false"
