@@ -39,6 +39,7 @@ ANTHROPIC_API_KEY=sk-ant-...    # For Claude (alternative)
 # Optional Tools
 GITHUB_APP_ID=123456                 # For GitHub App authentication
 GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----...  # GitHub App private key
+GITHUB_APP_INSTALLATION_ID=456789    # GitHub App installation ID for the repo
 WEATHERAPI_KEY=...              # For weather data
 GOOGLE_SHEETS_CREDENTIALS=...   # For Sheets integration
 ```
@@ -81,13 +82,36 @@ Choose either OpenAI or Anthropic:
 - Create an API key
 - Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-...`
 
-### 3. Run the Bot
+### 3. Set Up GitHub Integration (Optional)
+
+To enable GitHub repository interactions:
+
+1. **Create a GitHub App** at [github.com/settings/apps](https://github.com/settings/apps)
+2. **Configure permissions**:
+   - Issues: Read & Write
+   - Pull requests: Read & Write
+3. **Install the app** on your target repository
+4. **Get credentials**:
+   - App ID: Found in app settings
+   - Private Key: Generate in app settings
+   - Installation ID: 
+     - For personal account: Go to [github.com/settings/installations](https://github.com/settings/installations)
+     - For organization: Go to [github.com/organizations/{owner}/settings/installations](https://github.com/organizations)
+     - Click your app installation → Check the URL for the installation ID
+5. **Add to `.env`**:
+   ```bash
+   GITHUB_APP_ID=your-app-id
+   GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----
+   GITHUB_APP_INSTALLATION_ID=your-installation-id
+   ```
+
+### 4. Run the Bot
 
 ```bash
 LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
 ```
 
-### 4. Start Chatting
+### 5. Start Chatting
 
 Open Telegram and search for your bot. Send `/start` to begin!
 

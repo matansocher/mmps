@@ -110,7 +110,24 @@ Set GitHub App credentials in `.env`:
 ```bash
 GITHUB_APP_ID=123456
 GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----
+GITHUB_APP_INSTALLATION_ID=456789
 ```
+
+**Finding the Installation ID:**
+
+**For Personal Account:**
+1. Go to [github.com/settings/installations](https://github.com/settings/installations)
+2. Click on your GitHub App installation
+3. The URL will be: `https://github.com/settings/installations/{installation-id}`
+4. Copy the installation ID from the URL
+
+**For Organization:**
+1. Go to `https://github.com/organizations/{org-name}/settings/installations`
+2. Click on your GitHub App installation
+3. The URL will be: `https://github.com/organizations/{org-name}/settings/installations/{installation-id}`
+4. Copy the installation ID from the URL
+
+**Alternative:** Check your GitHub App's webhook payloads for `installation.id`
 
 ### Actions
 

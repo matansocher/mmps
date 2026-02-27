@@ -5,3 +5,4 @@ export { createIssueComment } from './create-issue-comment';
 export { createPullRequestComment } from './create-pull-request-comment';
 export { listIssues } from './list-issues';
 export { listPullRequests } from './list-pull-requests';
+export { initOctokit } from './octokit';

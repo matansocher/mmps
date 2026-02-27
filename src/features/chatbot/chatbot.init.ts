@@ -1,5 +1,6 @@
 import type { Express } from 'express';
 import { createMongoConnection } from '@core/mongo';
+import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { listen } from '@services/telegram-client';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
@@ -43,6 +44,8 @@ export async function initChatbot(app: Express): Promise<void> {
   chatbotController.init();
   chatbotScheduler.init();
   registerCalendarEventsRoutes(app);
+
+  initOctokit();
 
   listen({}, async (message, conversationDetails, sender) => {
     await saveEvent(message, conversationDetails, sender);

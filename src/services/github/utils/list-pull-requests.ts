@@ -1,8 +1,8 @@
 import { Logger } from '@core/utils';
-import { GITHUB_REPO_OWNER, GITHUB_REPO_NAME } from '../constants';
+import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequest } from '../types';
-import { getOctokit } from './octokit';
 import { mapPullRequest } from './mappers';
+import { getOctokit } from './octokit';
 
 const logger = new Logger('ListPullRequests');
 
@@ -10,8 +10,8 @@ type PRState = 'open' | 'closed' | 'all';
 
 export async function listPullRequests(state?: string): Promise<GitHubServiceResponse<readonly PullRequest[]>> {
   try {
-    const client = getOctokit();
-    const response = await client.pulls.list({
+    const octokit = getOctokit();
+    const response = await octokit.pulls.list({
       owner: GITHUB_REPO_OWNER,
       repo: GITHUB_REPO_NAME,
       state: (state as PRState) || 'open',

@@ -1,15 +1,15 @@
 import { Logger } from '@core/utils';
-import { GITHUB_REPO_OWNER, GITHUB_REPO_NAME } from '../constants';
+import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { CreateIssueInput, GitHubServiceResponse, Issue } from '../types';
-import { getOctokit } from './octokit';
 import { mapIssue } from './mappers';
+import { getOctokit } from './octokit';
 
 const logger = new Logger('CreateIssue');
 
 export async function createIssue(input: CreateIssueInput): Promise<GitHubServiceResponse<Issue>> {
   try {
-    const client = getOctokit();
-    const response = await client.issues.create({
+    const octokit = getOctokit();
+    const response = await octokit.issues.create({
       owner: GITHUB_REPO_OWNER,
       repo: GITHUB_REPO_NAME,
       title: input.title,
