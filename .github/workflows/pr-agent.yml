@@ -1,21 +1,37 @@
-name: Qodo Merge AI Reviewer
+name: PR Agent - Manual Review & Issue Implementation
 
 on:
-  pull_request:
-    types: [opened, reopened, ready_for_review, synchronize]
   issue_comment:
-    if: contains(github.event.comment.body, '/') # Triggers on commands like /review
+    types: [created, edited]
 
 jobs:
-  pr_agent_job:
+  handle_pr_review_command:
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '/review') && github.event.issue.pull_request && github.actor == 'matansocher'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Run PR Review
+        uses: qodo-ai/pr-agent@v0.32
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGER_TYPE: 'manual_review'
+
+  handle_issue_implement_command:
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '/implement') && !github.event.issue.pull_request && github.actor == 'matansocher'
     runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write
       contents: write
     steps:
-      - name: Run Qodo Merge
-        uses: qodo-ai/pr-agent@main
+      - name: Generate Implementation PR
+        uses: qodo-ai/pr-agent@v0.32
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGER_TYPE: 'issue_implement'
+          ISSUE_NUMBER: ${{ github.event.issue.number }}

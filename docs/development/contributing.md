@@ -138,6 +138,38 @@ Documentation lives in `/docs` with VitePress.
 5. Write clear PR description
 6. Link related issues
 
+## GitHub AI Features
+
+### PR Code Review
+
+Comment `/review` on any pull request to get AI-powered code analysis:
+
+```
+/review
+```
+
+The bot will analyze your code and provide:
+- Code quality assessment
+- Potential issues and bugs
+- Performance suggestions
+- Best practices recommendations
+
+### Issue Implementation
+
+Comment `/implement` on any issue to generate a pull request with code:
+
+```
+/implement
+```
+
+The bot will:
+- Analyze the issue requirements
+- Generate implementation code
+- Open a new pull request with the code
+- Reference the original issue
+
+Both features are configured in `.github/workflows/pr-agent.yml` and triggered only by explicit commands (never automatically).
+
 ## Questions?
 
 - Open an issue for bugs
