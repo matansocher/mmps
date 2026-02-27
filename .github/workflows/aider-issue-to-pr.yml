@@ -1,0 +1,71 @@
+name: Aider - Issue to PR
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  implement:
+    if: github.event.label.name == 'aider'   # ← change this label name if you want
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # important for git history / aider context
+
+      - name: Create branch name from issue title
+        id: branch
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          BRANCH=$(echo "aider-${TITLE}" | tr '[:upper:]' '[:lower:]' | tr -s ' ' '-' | tr -cd '[:alnum:]-' | cut -c1-50)
+          echo "name=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create branch
+        id: create_branch
+        uses: peter-evans/create-or-update-branch@v3  # or any branch creation action
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.branch.outputs.name }}
+          base: ${{ github.event.repository.default_branch }}
+
+      - name: Run Aider to implement the issue
+        uses: mirrajabi/aider-github-action@v1.1.0   # check for newer tag if available
+        timeout-minutes: 15
+        with:
+          # Required: your API key (choose one)
+          api_key_env_name: OPENAI_API_KEY
+          api_key_env_value: ${{ secrets.OPENAI_API_KEY }}
+          # OR for Claude: ANTHROPIC_API_KEY and ${{ secrets.ANTHROPIC_API_KEY }}
+
+          branch: ${{ steps.branch.outputs.name }}
+
+          model: gpt-4o
+
+          # Main prompt — Aider will see issue title + body
+          aider_args: |
+            --message "Implement this GitHub issue completely and correctly. Follow best practices for this codebase. Write tests if appropriate. Be concise but thorough. use the claude.md file in the root to understand the project and its conventions. If the issue is unclear, make a reasonable assumption and implement that. If you need to ask for clarification, leave a comment on the issue instead of making a PR."
+            --yes   # auto-apply without asking
+            --no-pretty   # sometimes helps in CI
+            --model gpt-4o   # or claude-3-5-sonnet-20241022, gemini-2.0-flash, etc.
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Aider implementation of #${{ github.event.issue.number }}"
+          title: "🤖 Aider: ${{ github.event.issue.title }}"
+          body: |
+            Closes #${{ github.event.issue.number }}
+
+            Implemented automatically by Aider.
+
+            Review carefully!
+          branch: ${{ steps.branch.outputs.name }}
+          base: ${{ github.event.repository.default_branch }}
+          labels: ai-generated, aider
