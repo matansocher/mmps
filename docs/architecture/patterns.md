@@ -356,6 +356,39 @@ const config: Readonly<BotConfig> = {
 };
 ```
 
+## Proper Typing with External Libraries
+
+Always use actual types from libraries instead of `any`. For Octokit:
+
+```typescript
+import { Octokit } from '@octokit/rest';
+
+// ✅ CORRECT - Use response types from actual API calls
+type GitHubIssueResponse = Awaited<ReturnType<Octokit['issues']['get']>>['data'];
+type GitHubCommentResponse = Awaited<ReturnType<Octokit['issues']['createComment']>>['data'];
+
+export function mapIssue(githubIssue: GitHubIssueResponse): Issue {
+  return {
+    id: githubIssue.id,
+    number: githubIssue.number,
+    title: githubIssue.title,
+    // ... rest of mapping
+  };
+}
+
+// ❌ WRONG - Avoid any
+export function mapIssue(githubIssue: any): Issue {
+  // ...
+}
+```
+
+**Benefits**:
+- Full IDE autocomplete
+- Type-safe property access
+- Catches refactoring errors
+- Self-documenting code
+- No runtime surprises
+
 ## Next Steps
 
 - [Database Patterns](/architecture/database)

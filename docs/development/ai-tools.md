@@ -99,6 +99,60 @@ The chatbot has 20+ tools:
 - Todo Lists
 - And more
 
+## GitHub Tool
+
+The GitHub tool enables AI-powered GitHub repository interactions.
+
+### Configuration
+
+Set GitHub App credentials in `.env`:
+
+```bash
+GITHUB_APP_ID=123456
+GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----
+```
+
+### Actions
+
+The GitHub tool supports 7 actions:
+
+- `create_issue` - Create a new issue with title, body, labels, assignees
+- `get_issue` - Get details of a specific issue
+- `update_issue` - Update issue (title, body, state, labels)
+- `comment_issue` - Add a comment to an issue
+- `comment_pr` - Add a comment to a pull request
+- `list_issues` - List issues (filter by state, labels)
+- `list_prs` - List pull requests (filter by state)
+
+### Service Architecture
+
+The GitHub service is organized into focused modules:
+
+```
+services/github/
+├── constants.ts              # Repo config (matansocher/mmps)
+├── types.ts                  # Type definitions
+├── index.ts                  # Barrel exports
+└── utils/
+    ├── octokit.ts            # Octokit client
+    ├── mappers.ts            # Data transformers
+    ├── create-issue.ts
+    ├── get-issue.ts
+    ├── update-issue.ts
+    ├── create-issue-comment.ts
+    ├── create-pull-request-comment.ts
+    ├── list-issues.ts
+    ├── list-pull-requests.ts
+    └── index.ts              # Barrel exports
+```
+
+Each function has:
+- Single responsibility
+- Proper Octokit type definitions
+- Individual error handling
+- Logger instance
+- Consistent response format
+
 ## Next Steps
 
 - [Contributing Guide](/development/contributing)

@@ -8,6 +8,7 @@ import {
   exerciseAnalyticsTool,
   exerciseTool,
   flightsTool,
+  githubTool,
   gmailTool,
   makavdiaTool,
   matchPredictionTool,
@@ -27,7 +28,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub automation via MCP, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, live flight tracking, and Telegram message history';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, live flight tracking, and Telegram message history';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -94,6 +95,15 @@ Available capabilities:
   * "search" - Search messages by text content (case-insensitive regex match)
   Each result includes the message text, conversation name, sender name, and their IDs so you can use them for follow-up queries.
   Natural language variations: "who messaged me today", "what did [person/channel] say", "search my telegram for [keyword]", "show recent messages", "messages from yesterday", "what was said in [group]".
+- GitHub tool: Interact with the matansocher/mmps repository with seven actions:
+   * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
+   * "get_issue" - Get details of a specific issue by number
+   * "update_issue" - Update an existing issue (title, body, state, labels, assignees)
+   * "comment_issue" - Add a comment to an issue
+   * "comment_pr" - Add a comment to a pull request
+   * "list_issues" - List all issues (optionally filter by state: "open"/"closed" or labels)
+   * "list_prs" - List all pull requests (optionally filter by state: "open"/"closed")
+   Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 Smart Reminders Guidelines:
@@ -266,6 +276,7 @@ export function agent(): AgentDescriptor {
     polymarketTool,
     flightsTool,
     selfieTool,
+    githubTool,
   ];
 
   return {
