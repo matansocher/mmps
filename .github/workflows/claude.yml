@@ -41,7 +41,16 @@ jobs:
             --model claude-sonnet-4-6
             --max-turns 10
           prompt: |
-            Use the /review command to review this pull request.
+            Review the PR diff for this pull request.
+
+            ## Instructions
+            - Focus on significant issues: bugs, security vulnerabilities, performance problems, logic errors
+            - Do NOT nitpick style, formatting, or naming unless it causes a real problem
+            - Use COMMENT action only — never APPROVE or REQUEST_CHANGES
+            - Do not block the merge process
+            - Reference specific files and line numbers in your comments
+            - If the code looks good, leave a brief positive comment and move on
+            - Follow conventional commits format in any suggestions you make
 
   claude-implement:
     runs-on: ubuntu-latest
@@ -79,4 +88,17 @@ jobs:
             --model claude-sonnet-4-6
             --max-turns 50
           prompt: |
-            Use the /implement command to implement the changes described in this issue.
+            Implement the changes described in this GitHub issue.
+
+            ## Instructions
+            1. Read the issue description thoroughly before starting
+            2. Create a branch prefixed with `claude/` for your changes
+            3. Implement the requested changes following the repository's coding standards and conventions
+            4. Run linting and type-checking before committing:
+               - `npm run lint`
+               - `npm run typecheck`
+            5. Use conventional commits format for all commits
+            6. Create a pull request with:
+               - A clear title summarizing the change
+               - A description that links to the original issue using `Closes #<issue-number>`
+               - A summary of what was changed and why
