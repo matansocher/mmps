@@ -14,6 +14,7 @@ import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
 import { DB_NAME as FOLLOWER_DB_NAME } from '@shared/youtube-follower';
+import { registerGithubWebhookRoutes } from '@services/github/webhook';
 import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
@@ -44,6 +45,7 @@ export async function initChatbot(app: Express): Promise<void> {
   chatbotController.init();
   chatbotScheduler.init();
   registerCalendarEventsRoutes(app);
+  registerGithubWebhookRoutes(app, bot);
 
   initOctokit();
 

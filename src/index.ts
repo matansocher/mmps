@@ -19,7 +19,7 @@ async function main() {
   const port = env.PORT || 3000;
   const logger = new Logger('main.ts');
 
-  app.use(express.json());
+  app.use(express.json({ verify: (req, _res, buf) => { (req as any).rawBody = buf; } }));
 
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
