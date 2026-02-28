@@ -30,7 +30,7 @@ export class ChatbotSchedulerService {
   ) {}
 
   init(): void {
-    createSchedule(`00 23 * * *`, async () => {
+    createSchedule(`00 00 * * *`, async () => {
       await this.handleDailySummary();
     });
 
