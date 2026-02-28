@@ -1,3 +1,4 @@
+export { addLabels } from './add-labels';
 export { createIssue } from './create-issue';
 export { getIssue } from './get-issue';
 export { updateIssue } from './update-issue';

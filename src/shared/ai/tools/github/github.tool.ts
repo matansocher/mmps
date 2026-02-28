@@ -1,6 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import {
+  addLabels,
   createIssue,
   createIssueComment,
   createPullRequestComment,
@@ -12,7 +13,7 @@ import {
 
 const schema = z.object({
   action: z
-    .enum(['create_issue', 'get_issue', 'update_issue', 'comment_issue', 'comment_pr', 'list_issues', 'list_prs'])
+    .enum(['create_issue', 'get_issue', 'update_issue', 'comment_issue', 'comment_pr', 'add_labels', 'list_issues', 'list_prs'])
     .describe('The GitHub action to perform'),
   title: z.string().optional().describe('Issue title (for create_issue and update_issue)'),
   body: z.string().optional().describe('Issue/comment body text'),
@@ -70,6 +71,15 @@ async function runner(input: z.infer<typeof schema>) {
       return JSON.stringify(result);
     }
 
+    case 'add_labels': {
+      const issueOrPrNumber = input.issueNumber || input.prNumber;
+      if (!issueOrPrNumber || !input.labels?.length) {
+        return JSON.stringify({ error: 'issueNumber (or prNumber) and labels are required for add_labels' });
+      }
+      const result = await addLabels(issueOrPrNumber, [...input.labels]);
+      return JSON.stringify(result);
+    }
+
     case 'list_issues': {
       const result = await listIssues(input.state, input.labels);
       return JSON.stringify(result);
@@ -88,6 +98,6 @@ async function runner(input: z.infer<typeof schema>) {
 export const githubTool = tool(runner, {
   name: 'github',
   description:
-    'Interact with GitHub repository (matansocher/mmps). Can create, read, update issues and PRs, and list them.',
+    'Interact with GitHub repository (matansocher/mmps). Can create, read, update issues and PRs, add labels, and list them.',
   schema,
 });

@@ -56,10 +56,10 @@ See [Development Guide](https://matansocher.github.io/mmps/development/contribut
 
 This repository includes automated AI-powered code review and implementation:
 
-- **Pull Request Review** - Comment `/review` on any PR to get AI-powered code analysis
-- **Issue Implementation** - Comment `/implement` on any issue to generate a pull request with code implementation
+- **Pull Request Review** - Add the `review` label to any PR to get AI-powered code analysis
+- **Issue Implementation** - Add the `implement` label to any issue to generate a pull request with code implementation
 
-Both features are triggered manually via comments and configured in `.github/workflows/pr-agent.yml`.
+Both features are triggered by labels and configured in `.github/workflows/claude.yml`.
 
 ## Documentation
 
