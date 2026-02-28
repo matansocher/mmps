@@ -1,0 +1,88 @@
+---
+name: '🪄 Claude Code Review & Implementation'
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event.sender.type != 'Bot' && 
+      (github.actor == 'matansocher' || contains(github.actor, 'mmps-companion')) &&
+      (
+        contains(github.event.comment.body, '/review') ||
+        contains(github.event.comment.body, '/implement')
+      )
+    steps:
+      - name: Get GitHub Token
+        id: get_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CLAUDE_GH_APP_ID }}
+          private-key: ${{ secrets.CLAUDE_GH_APP_PRIVATE_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.get_token.outputs.token }}
+
+      - name: Load Optional Instruction Files
+        id: load_instructions
+        continue-on-error: true
+        run: |
+          if [ -f .github/copilot-instructions.md ]; then
+            echo 'copilot_instructions_md<<EOF' >> "$GITHUB_OUTPUT"
+            echo '--- Begin .github/copilot-instructions.md ---' >> "$GITHUB_OUTPUT"
+            cat .github/copilot-instructions.md >> "$GITHUB_OUTPUT"
+            echo '--- End .github/copilot-instructions.md ---' >> "$GITHUB_OUTPUT"
+            echo 'EOF' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Claude Code Action
+        uses: anthropics/claude-code-action@v1.0.30
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ steps.get_token.outputs.token }}
+          branch_prefix: 'claude/'
+          use_commit_signing: true
+          claude_args: >
+            --allowedTools="Glob,Grep,Bash,WebFetch,Read,Write,Edit"
+            --disallowedTools="Read(./.env),Read(./secrets/**)"
+            --model claude-sonnet-4-6
+            --max-turns 50
+          prompt: |
+            # Context
+            You are helping with code review and implementation tasks for this repository.
+            
+            # Task Determination
+            {% if contains(github.event.comment.body, '/review') %}
+            ## Code Review
+            The user requested a review using `/review`. Review the pull request or code changes.
+            {% elsif contains(github.event.comment.body, '/implement') %}
+            ## Implement Issue
+            The user requested implementation using `/implement`. Create a pull request to implement the issue.
+            {% endif %}
+
+            # Rules to Follow
+            - **Branching**: Create new branches prefixed with `claude/` for any changes
+            - **No Direct Commits**: Always create a pull request for code changes
+            - **Conventional Commits**: Follow conventional commits format for all commits
+            - **Line Endings**: Always use Unix-style LF (\n) line endings
+            - **Code Review Guidelines**:
+              - Focus on significant issues, not nitpicks
+              - Use COMMENT action only in reviews (never APPROVE or REQUEST_CHANGES)
+              - Avoid blocking the merge process
+            - **Follow Repository Standards**: Adhere to the coding conventions and guidelines in this repository
+            - **Provide Context**: Include relevant links, references, and code snippets in your responses
+
+            # Optional Repository Instructions
+            The content of .github/copilot-instructions.md (if present) is included below.
+            Treat it as authoritative supplementary guidance:
+            ${{ steps.load_instructions.outputs.copilot_instructions_md }}
