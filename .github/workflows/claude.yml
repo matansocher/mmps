@@ -37,7 +37,7 @@ jobs:
           github_token: ${{ steps.get_token.outputs.token }}
           use_commit_signing: true
           claude_args: >
-            --allowedTools Glob,Grep,Bash,WebFetch,Read,Write,Edit
+            --allowedTools "Glob,Grep,Bash,WebFetch,Read,Write,Edit,mcp__github_file_ops__*"
             --disallowedTools "Read(./.env),Read(./secrets/**)"
             --model claude-sonnet-4-6
             --max-turns 15
@@ -95,7 +95,7 @@ jobs:
           branch_prefix: 'claude/'
           use_commit_signing: true
           claude_args: >
-            --allowedTools Glob,Grep,Bash,WebFetch,Read,Write,Edit
+            --allowedTools "Glob,Grep,Bash,WebFetch,Read,Write,Edit,mcp__github_file_ops__*"
             --disallowedTools "Read(./.env),Read(./secrets/**)"
             --model claude-sonnet-4-6
             --max-turns 50
