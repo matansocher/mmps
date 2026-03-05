@@ -478,6 +478,12 @@ await loader.handleMessageWithLoader(async () => {
 #### GitHub Automation
 GitHub automation is integrated into the chatbot agent. The chatbot can perform GitHub operations (issues, PRs, etc.) through AI-powered tools as part of its agent descriptor pattern.
 
+Two special labels trigger automated GitHub Actions workflows (configured in `.github/workflows/claude.yml`):
+- **`review`** label on a PR - Triggers AI-powered code review
+- **`implement`** label on an issue - Triggers AI implementation that creates a new PR
+
+The chatbot uses the `add_labels` action on the GitHub tool to trigger these workflows when requested by the user.
+
 #### Caching Pattern
 
 ```typescript

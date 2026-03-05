@@ -142,11 +142,7 @@ Documentation lives in `/docs` with VitePress.
 
 ### PR Code Review
 
-Comment `/review` on any pull request to get AI-powered code analysis:
-
-```
-/review
-```
+Add the `review` label to any pull request to get AI-powered code analysis.
 
 The bot will analyze your code and provide:
 - Code quality assessment
@@ -156,11 +152,7 @@ The bot will analyze your code and provide:
 
 ### Issue Implementation
 
-Comment `/implement` on any issue to generate a pull request with code:
-
-```
-/implement
-```
+Add the `implement` label to any issue to generate a pull request with code.
 
 The bot will:
 - Analyze the issue requirements
@@ -168,7 +160,7 @@ The bot will:
 - Open a new pull request with the code
 - Reference the original issue
 
-Both features are configured in `.github/workflows/pr-agent.yml` and triggered only by explicit commands (never automatically).
+Both features are triggered by labels and configured in `.github/workflows/claude.yml`.
 
 ## Questions?
 
