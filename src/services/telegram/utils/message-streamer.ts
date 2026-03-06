@@ -24,6 +24,7 @@ export class MessageStreamer {
   private lastUpdateTime = 0;
   private pendingText = '';
   private flushTimer?: ReturnType<typeof setTimeout>;
+  private flushInFlight?: Promise<void>;
 
   constructor(bot: Bot, options: MessageStreamerOptions) {
     this.bot = bot;
@@ -45,7 +46,9 @@ export class MessageStreamer {
       await this.flush();
     } else if (!this.flushTimer) {
       const delay = this.updateIntervalMs - timeSinceLastUpdate;
-      this.flushTimer = setTimeout(() => this.flush(), delay);
+      this.flushTimer = setTimeout(() => {
+        this.flushInFlight = this.flush();
+      }, delay);
     }
   }
 
@@ -53,6 +56,11 @@ export class MessageStreamer {
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);
       this.flushTimer = undefined;
+    }
+
+    // Wait for any in-flight flush to complete before sending the final draft
+    if (this.flushInFlight) {
+      await this.flushInFlight.catch(() => {});
     }
 
     // Send the final draft update — Telegram converts it into a real message
