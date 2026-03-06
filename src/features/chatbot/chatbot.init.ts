@@ -2,14 +2,12 @@ import type { Express } from 'express';
 import { createMongoConnection } from '@core/mongo';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
-import { listen } from '@services/telegram-client';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { DB_NAME as FLIGHTS_TRACKER_DB_NAME } from '@shared/flights-tracker';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
-import { saveEvent, DB_NAME as SELFIE_DB_NAME } from '@shared/selfie';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
@@ -31,7 +29,6 @@ export async function initChatbot(app: Express): Promise<void> {
     POLYMARKET_DB_NAME,
     CALENDAR_EVENTS_DB_NAME,
     FLIGHTS_TRACKER_DB_NAME,
-    SELFIE_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
@@ -46,8 +43,4 @@ export async function initChatbot(app: Express): Promise<void> {
   registerCalendarEventsRoutes(app);
 
   initOctokit();
-
-  listen({}, async (message, conversationDetails, sender) => {
-    await saveEvent(message, conversationDetails, sender);
-  });
 }
