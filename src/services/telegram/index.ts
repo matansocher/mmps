@@ -2,6 +2,8 @@ export { buildInlineKeyboard } from './utils/build-inline-keyboard';
 export { downloadFile } from './utils/download-file';
 export { MessageLoader } from './utils/message-loader';
 export type { MessageLoaderOptions } from './utils/message-loader';
+export { MessageStreamer } from './utils/message-streamer';
+export type { MessageStreamerOptions } from './utils/message-streamer';
 export { provideTelegramBot } from './utils/provide-telegram-bot';
 export { getBotToken } from './utils/get-bot-token';
 export { getMessageData } from './utils/get-message-data';

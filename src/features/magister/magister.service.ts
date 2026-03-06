@@ -1,8 +1,8 @@
 import type { Bot } from 'grammy';
 import { Logger } from '@core/utils';
-import { generateEmbedding, getResponse } from '@services/openai';
+import { generateEmbedding, getResponse, getStreamingResponse } from '@services/openai';
 import { queryVectors } from '@services/pinecone';
-import { buildInlineKeyboard, sendStyledMessage } from '@services/telegram';
+import { buildInlineKeyboard, MessageStreamer } from '@services/telegram';
 import { BOT_ACTIONS, INLINE_KEYBOARD_SEPARATOR, LESSON_PROMPT_TEMPLATE, PINECONE_INDEX_NAME, QUIZ_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT } from './magister.config';
 import {
   createCourseParticipation,
@@ -21,7 +21,7 @@ import {
   updatePreviousResponseId,
   updateQuizScore,
 } from './mongo';
-import { Course, CourseParticipation, CourseSummarySchema, LessonResponseSchema, QuizAnswer, QuizSchema } from './types';
+import { Course, CourseParticipation, CourseSummarySchema, QuizAnswer, QuizSchema } from './types';
 import { formatLessonProgress, generateSummaryMessage, getScoreMessage } from './utils';
 
 const getBotInlineKeyboard = (courseParticipation: CourseParticipation) => {
@@ -166,22 +166,27 @@ export class MagisterService {
       .replace('{previousLessonsContext}', previousLessonsContext)
       .replace('{materialContext}', materialContext);
 
-    const { id: responseId, result } = await getResponse<typeof LessonResponseSchema>({
-      instructions: SYSTEM_PROMPT,
-      previousResponseId: courseParticipation.previousResponseId,
-      input: lessonPrompt,
-      schema: LessonResponseSchema,
-      store: true,
-    });
+    const progressText = formatLessonProgress(courseParticipation.currentLesson, courseParticipation.totalLessons);
+
+    const streamer = new MessageStreamer(this.bot, { chatId });
+
+    const { id: responseId, result } = await getStreamingResponse(
+      {
+        instructions: SYSTEM_PROMPT,
+        previousResponseId: courseParticipation.previousResponseId,
+        input: lessonPrompt,
+        store: true,
+      },
+      (chunk) => streamer.updateDraft(`${progressText}\n\n${chunk.fullText}`),
+    );
+
+    const fullMessage = `${progressText}\n\n${result}`;
+    await streamer.finalize(fullMessage);
 
     await updatePreviousResponseId(courseParticipation._id.toString(), responseId);
 
-    const progressText = formatLessonProgress(courseParticipation.currentLesson, courseParticipation.totalLessons);
-
-    const fullMessage = `${progressText}\n\n${result.text}`;
-
     const keyboard = getBotInlineKeyboard(courseParticipation);
-    const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, fullMessage, 'Markdown', { reply_markup: keyboard });
+    const { message_id: messageId } = await this.bot.api.sendMessage(chatId, '👇', { reply_markup: keyboard });
 
     await saveMessageId(courseParticipation._id.toString(), messageId);
     await markLessonSent(courseParticipation._id.toString());
@@ -229,18 +234,23 @@ ${materialContext}
 Please answer the question based on the course materials and your expertise. If the materials don't contain enough information, use your knowledge but indicate this to the user.
 `;
 
-    const { id: responseId, result } = await getResponse<typeof LessonResponseSchema>({
-      instructions: SYSTEM_PROMPT,
-      previousResponseId: courseParticipation.previousResponseId,
-      input: enhancedQuestion,
-      schema: LessonResponseSchema,
-      store: true,
-    });
+    const streamer = new MessageStreamer(this.bot, { chatId });
 
+    const { id: responseId, result } = await getStreamingResponse(
+      {
+        instructions: SYSTEM_PROMPT,
+        previousResponseId: courseParticipation.previousResponseId,
+        input: enhancedQuestion,
+        store: true,
+      },
+      (chunk) => streamer.updateDraft(chunk.fullText),
+    );
+
+    await streamer.finalize(result);
     await updatePreviousResponseId(courseParticipation._id.toString(), responseId);
 
     const keyboard = getBotInlineKeyboard(courseParticipation);
-    const { message_id: messageId } = await sendStyledMessage(this.bot, chatId, result.text, 'Markdown', { reply_markup: keyboard });
+    const { message_id: messageId } = await this.bot.api.sendMessage(chatId, '👇', { reply_markup: keyboard });
 
     await saveMessageId(courseParticipation._id.toString(), messageId);
   }

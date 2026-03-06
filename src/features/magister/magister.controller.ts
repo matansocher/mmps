@@ -11,7 +11,6 @@ import { MagisterService } from './magister.service';
 import { getActiveCourseParticipation, getCourse, getCourseParticipation, markCourseParticipationCompleted } from './mongo';
 import { formatLessonProgress } from './utils';
 
-const loaderMessage = '📚 Give me a few moments to prepare your lesson...';
 const transcribeLoaderMessage = '🎧 Give me a few moments to transcribe it...';
 
 export class MagisterController {
@@ -64,11 +63,9 @@ export class MagisterController {
 
     const { course, courseParticipation } = result;
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.magisterService.sendLesson(chatId, courseParticipation, course).catch((err) => {
-        this.logger.error(`Error sending lesson after course start ${err}`);
-      });
+    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: '🤔' }]).catch(() => {});
+    await this.magisterService.sendLesson(chatId, courseParticipation, course).catch((err) => {
+      this.logger.error(`Error sending lesson after course start ${err}`);
     });
   }
 
@@ -92,10 +89,8 @@ export class MagisterController {
   private async nextHandler(ctx: Context): Promise<void> {
     const { chatId, messageId } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔', loaderMessage });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.magisterService.processNextLesson(chatId);
-    });
+    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: '🤔' }]).catch(() => {});
+    await this.magisterService.processNextLesson(chatId);
   }
 
   async messageHandler(ctx: Context): Promise<void> {
@@ -107,10 +102,8 @@ export class MagisterController {
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔', loaderMessage: '💭 Let me think about your question...' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.magisterService.processQuestion(chatId, activeCourseParticipation, text);
-    });
+    await this.bot.api.setMessageReaction(chatId, messageId, [{ type: 'emoji', emoji: '🤔' }]).catch(() => {});
+    await this.magisterService.processQuestion(chatId, activeCourseParticipation, text);
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {

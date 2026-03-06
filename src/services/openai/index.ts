@@ -1,4 +1,6 @@
 export { getResponse } from './utils/responses-api/get-response';
+export { getStreamingResponse } from './utils/responses-api/get-streaming-response';
+export type { StreamChunk } from './utils/responses-api/get-streaming-response';
 
 export { analyzeImage } from './utils/analyze-image';
 export { createImage } from './utils/create-image';
