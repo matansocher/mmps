@@ -7,7 +7,6 @@ import {
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
-  flightsTool,
   githubTool,
   gmailTool,
   makavdiaTool,
@@ -27,7 +26,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, and live flight tracking';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, and Polymarket prediction markets';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -80,12 +79,6 @@ Available capabilities:
   * "search" - Search for markets by keyword/topic (e.g., "bitcoin", "trump", "fed", "sports", "crypto"). Returns events sorted by 24h volume.
   Accepts flexible formats like full URLs (polymarket.com/event/fed-decision-in-january) or just the slug (fed-decision-in-january).
   Natural language variations: "subscribe to [market]", "track [market] on Polymarket", "unsubscribe from [market]", "show my Polymarket subscriptions", "what's trending on Polymarket", "search for [keyword] markets", "find [topic] predictions"
-- Flight Tracker tool: Track live flights above any country using real-time OpenSky Network data with four actions:
-  * "check" - Get the current number of flights flying above a specific country. Returns flight count and top origin countries.
-  * "subscribe" - Subscribe to hourly flight count updates for a country. Receive updates every hour showing flights above each subscribed country.
-  * "unsubscribe" - Unsubscribe from flight updates for a country.
-  * "list" - List all active flight subscriptions.
-  Natural language variations: "how many flights are over Israel", "planes above Iran", "track flights above Germany", "subscribe to flight updates for France", "show my flight subscriptions", "air traffic over Japan".
 - GitHub tool: Interact with the matansocher/mmps repository with eight actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
    * "get_issue" - Get details of a specific issue by number
@@ -284,7 +277,6 @@ export function agent(): AgentDescriptor {
     preferencesTool,
     youtubeFollowerTool,
     polymarketTool,
-    flightsTool,
     githubTool,
   ];
 
