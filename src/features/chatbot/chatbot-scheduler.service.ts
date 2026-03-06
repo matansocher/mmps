@@ -73,7 +73,7 @@ export class ChatbotSchedulerService {
     // });
 
     setTimeout(() => {
-      this.handleDailySummary();
+      // this.handleDailySummary();
       // this.handleEmailSummary();
       // this.handleFootballUpdate();
       // this.handleMakavdiaUpdate();
