@@ -22,7 +22,7 @@ Show 4 different times throughout the day (morning, noon, afternoon, and evening
 
 **Additional Information:**
 1. **Calendar**: ${calendarSection}
-   Format as a bulleted list where each event has its own bullet point.
+   Format as a bulleted list where each event has its own bullet point. Do NOT use the calendar tool — the data is already provided above.
 2. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
    - Extract the person's name from the event title
    - If there are birthdays tomorrows, dont add the birthday section.
