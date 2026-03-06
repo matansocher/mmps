@@ -2,9 +2,21 @@ export const TELEGRAM_CLIENT_TOKEN = 'TELEGRAM_CLIENT_TOKEN';
 
 export const FILTER_OUT_EVENTS = ['UpdateUserStatus', 'UpdateMessagePoll', 'UpdateReadChannelInbox', 'UpdateChannelWebPage', 'UpdateEditChannelMessage', 'UpdateDeleteChannelMessages'];
 
-export const LISTEN_TO_EVENTS = ['UpdateNewChannelMessage', 'UpdateNewMessage', 'UpdateShortMessage'];
+export const LISTEN_TO_EVENTS = [
+  'UpdateNewChannelMessage',
+  'UpdateNewMessage',
+  'UpdateShortMessage',
+  'UpdateNewMessageService',
+  'UpdateNewEncryptedMessage',
+  'UpdateNewEncryptedChatMessage',
+  'UpdateEditMessage',
+  'UpdateEditChannelMessage',
+  'UpdateDeleteMessages',
+  'UpdateDeleteChannelMessages',
+];
 
 export const CHANNELS = {
+  SHIGURIM: { id: '2374433519', name: `התרעות על שיגורים` },
   ISRAEL_TECH_FORUM: { id: '1083698033', name: `🇮🇱 Israel Tech & Innovation Forum` },
   TROLL_FOOTBALL: { id: '1120307181', name: `Troll Football` },
   OVADIA_TUBUL: { id: '1199892726', name: 'עובדיה טובול בטלגרם 🔞' },

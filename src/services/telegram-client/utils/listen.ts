@@ -1,8 +1,10 @@
 import { TelegramClient } from 'telegram';
+import type { EntityLike } from 'telegram/define';
 import { Logger } from '@core/utils';
 import { EXCLUDED_CHANNELS, LISTEN_TO_EVENTS } from '../constants';
 import { provideTelegramClient } from '../provide-telegram-client';
-import { downloadVoice } from './download-voice';
+
+// import { downloadVoice } from './download-voice';
 
 const logger = new Logger('TelegramClientListener');
 
@@ -54,7 +56,7 @@ export async function getMessageData(client: TelegramClient, event): Promise<Tel
   return data;
 }
 
-export async function getConversationDetails(telegramClient: TelegramClient, entityId: string | number): Promise<ConversationDetails | null> {
+export async function getConversationDetails(telegramClient: TelegramClient, entityId: EntityLike): Promise<ConversationDetails | null> {
   const channelDetails = await telegramClient.getEntity(entityId).catch((err) => {
     logger.error(`Failed to get conversation details for entity ${entityId}: ${err}`);
     return null;
@@ -103,13 +105,10 @@ export async function listen({ conversationsIds = [] }: ListenerOptions, callbac
       if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
         return;
       }
-      let entityId: string | number;
-      if (messageData.channelId) {
-        entityId = parseInt(messageData.channelId, 10);
-      } else if (messageData.userId) {
-        entityId = messageData.userId.toString();
-      } else {
-        logger.warn('No channelId or userId found in messageData');
+      const peerId = event?.message?.peerId;
+      const entityId = peerId ?? messageData.userId?.toString();
+      if (!entityId) {
+        logger.warn('No peerId or userId found in messageData');
         return;
       }
       const channelDetails = await getConversationDetails(telegramClient, entityId);
