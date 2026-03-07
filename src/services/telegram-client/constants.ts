@@ -1,3 +1,18 @@
+export const EXCLUDED_EVENTS = ['UpdateUserStatus', 'UpdateReadChannelInbox'];
+
+export const LISTEN_TO_EVENTS = [
+  'UpdateNewChannelMessage',
+  'UpdateNewMessage',
+  'UpdateShortMessage',
+  'UpdateNewMessageService',
+  'UpdateNewEncryptedMessage',
+  'UpdateNewEncryptedChatMessage',
+  'UpdateEditMessage',
+  'UpdateEditChannelMessage',
+  'UpdateDeleteMessages',
+  'UpdateDeleteChannelMessages',
+];
+
 export const CHANNELS = {
   SHIGURIM: { id: '2374433519', name: `התרעות על שיגורים` },
   TOODIE: { id: '1332013273', name: `Toodie 🦔` },

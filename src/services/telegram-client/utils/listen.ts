@@ -1,8 +1,7 @@
 import { TelegramClient } from 'telegram';
 import type { EntityLike } from 'telegram/define';
-import { NewMessage, type NewMessageEvent } from 'telegram/events';
 import { Logger } from '@core/utils';
-import { EXCLUDED_CHANNELS } from '../constants';
+import { EXCLUDED_CHANNELS, EXCLUDED_EVENTS, LISTEN_TO_EVENTS } from '../constants';
 import { provideTelegramClient } from '../provide-telegram-client';
 
 const logger = new Logger('TelegramClientListener');
@@ -11,19 +10,15 @@ type ListenerOptions = {
   readonly conversationsIds?: string[];
 };
 
-export type TelegramMessage = {
+type TelegramMessage = {
   readonly id: string;
   readonly userId: string;
   readonly channelId: string;
   readonly date: number;
   readonly text: string;
-  readonly isVoice: boolean;
-  voice?: {
-    readonly fileName: string;
-  };
 };
 
-export type ConversationDetails = {
+type ConversationDetails = {
   readonly id: string;
   readonly createdDate: number;
   readonly title: string;
@@ -33,48 +28,35 @@ export type ConversationDetails = {
   readonly photo?: string;
 };
 
-export type SenderDetails = {
+type SenderDetails = {
   readonly id: string;
   readonly firstName: string;
   readonly lastName: string;
   readonly userName: string;
 };
 
-function extractMessageData(event: NewMessageEvent): TelegramMessage {
-  const message = event.message;
-  let peerId = '';
-  if (message.peerId) {
-    if ('channelId' in message.peerId) {
-      peerId = message.peerId.channelId.toString();
-    } else if ('chatId' in message.peerId) {
-      peerId = message.peerId.chatId.toString();
-    } else if ('userId' in message.peerId) {
-      peerId = message.peerId.userId.toString();
-    }
-  }
-
+function getMessageData(event): TelegramMessage {
   return {
-    id: (message.id ?? null).toString(),
-    userId: (message.senderId ?? null)?.toString(),
-    channelId: peerId,
-    date: message.date ?? null,
-    text: message.text ?? null,
-    isVoice: (message.media as any)?.voice ?? false,
+    id: event?.message?.id ?? event?.id ?? null,
+    userId: event?.message?.fromId?.userId ?? event?.userId ?? event?.message?.peerId?.userId ?? null,
+    channelId: (event?.message?.peerId?.channelId ?? '').toString(),
+    date: event?.message?.date ?? event?.date ?? null,
+    text: event?.message?.message ?? event?.message ?? null,
   };
 }
 
-export async function getConversationDetails(telegramClient: TelegramClient, entityId: EntityLike): Promise<ConversationDetails | null> {
-  const entity = await telegramClient.getEntity(entityId).catch((err) => {
+async function getConversationDetails(telegramClient: TelegramClient, entityId: EntityLike): Promise<ConversationDetails | null> {
+  const channelDetails = await telegramClient.getEntity(entityId).catch((err) => {
     logger.error(`Failed to get conversation details for entity ${entityId}: ${err}`);
     return null;
   });
   return {
-    id: (entity?.id ?? null).toString(),
-    createdDate: entity?.date ?? null,
-    title: entity?.title ?? null,
-    firstName: entity?.firstName ?? null,
-    lastName: entity?.lastName ?? null,
-    userName: entity?.username ?? null,
+    id: (channelDetails?.id ?? null).toString(),
+    createdDate: channelDetails?.date ?? null,
+    title: channelDetails?.title ?? null,
+    firstName: channelDetails?.firstName ?? null,
+    lastName: channelDetails?.lastName ?? null,
+    userName: channelDetails?.username ?? null,
     photo: null,
   };
 }
@@ -97,44 +79,44 @@ type ListenCallback = (message: TelegramMessage, details: ConversationDetails, s
 
 export async function listen({ conversationsIds = [] }: ListenerOptions, callback: ListenCallback) {
   const telegramClient = await provideTelegramClient();
-
-  await telegramClient.getDialogs({});
-  logger.log('Loaded dialogs into entity cache');
-
-  telegramClient.addEventHandler(async (event: NewMessageEvent) => {
+  telegramClient.addEventHandler(async (event) => {
     try {
-      const messageData = extractMessageData(event);
-      if (!messageData?.text && !messageData?.voice) {
+      if (EXCLUDED_EVENTS.includes(event?.className)) {
         return;
       }
+      if (event.className) {
+        console.log(`Received event of type ${event.className}`);
+      } else {
+        console.warn('Received event without className, skipping, event:', event);
+      }
+      if (!LISTEN_TO_EVENTS.includes(event.className)) {
+        return;
+      }
+      const messageData = getMessageData(event);
 
-      const channelId = messageData.channelId;
-      const userId = messageData.userId;
+      const channelId = messageData?.channelId?.toString();
+      const userId = messageData?.userId?.toString();
       if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
         return;
       }
-
-      const chat = await event.message.getChat();
-      const entityId = chat ?? event.message.peerId ?? userId;
+      const peerId = event?.message?.peerId;
+      const entityId = peerId ?? messageData.userId?.toString();
       if (!entityId) {
-        logger.warn('No entityId found in message');
+        logger.warn('No peerId or userId found in messageData');
         return;
       }
-      const chatAny = chat as any;
-      const channelDetails = chat
-        ? { id: chat.id.toString(), createdDate: chatAny.date ?? null, title: chatAny.title ?? null, firstName: chatAny.firstName ?? null, lastName: chatAny.lastName ?? null, userName: chatAny.username ?? null, photo: null }
-        : await getConversationDetails(telegramClient, entityId);
-      if (!channelDetails?.id || channelDetails.id === 'null') {
-        logger.warn(`No conversation details found for channelId: ${channelId}, userId: ${userId}`);
+      const channelDetails = await getConversationDetails(telegramClient, entityId);
+      if (!channelDetails?.id) {
+        logger.warn(`No conversation details found for entityId: ${entityId}, channelId: ${messageData.channelId}, userId: ${messageData.userId}`);
         return;
       }
       if (EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
         return;
       }
-      const senderDetails = userId ? await getSenderDetails(telegramClient, userId) : null;
+      const senderDetails = messageData.userId ? await getSenderDetails(telegramClient, messageData.userId) : null;
       await callback(messageData, channelDetails, senderDetails);
     } catch (err) {
       logger.error(`Error handling telegram event: ${err}`);
     }
-  }, new NewMessage({ incoming: false }));
+  });
 }

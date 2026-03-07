@@ -1,5 +1,4 @@
-export * from './interface';
 export { disconnectTelegramClient } from './provide-telegram-client';
-export * from './utils/listen';
-export * from './utils/send-message';
-export * from './utils/edit-message';
+export * from './types';
+export { listen } from './utils/listen';
+export { sendMessage } from './utils/send-message';
