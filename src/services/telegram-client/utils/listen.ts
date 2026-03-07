@@ -1,7 +1,6 @@
-import { TelegramClient } from 'telegram';
-import type { EntityLike } from 'telegram/define';
+import { Api } from 'telegram';
+import { NewMessage, type NewMessageEvent } from 'telegram/events';
 import { Logger } from '@core/utils';
-import { EXCLUDED_CHANNELS, EXCLUDED_EVENTS, LISTEN_TO_EVENTS } from '../constants';
 import { provideTelegramClient } from '../provide-telegram-client';
 
 const logger = new Logger('TelegramClientListener');
@@ -11,11 +10,12 @@ type ListenerOptions = {
 };
 
 type TelegramMessage = {
-  readonly id: string;
-  readonly userId: string;
-  readonly channelId: string;
+  readonly id: number;
+  readonly senderId: string;
+  readonly chatId: string;
   readonly date: number;
   readonly text: string;
+  readonly senderName: string;
 };
 
 type ConversationDetails = {
@@ -35,88 +35,72 @@ type SenderDetails = {
   readonly userName: string;
 };
 
-function getMessageData(event): TelegramMessage {
-  return {
-    id: event?.message?.id ?? event?.id ?? null,
-    userId: event?.message?.fromId?.userId ?? event?.userId ?? event?.message?.peerId?.userId ?? null,
-    channelId: (event?.message?.peerId?.channelId ?? '').toString(),
-    date: event?.message?.date ?? event?.date ?? null,
-    text: event?.message?.message ?? event?.message ?? null,
-  };
+type ListenCallback = (message: TelegramMessage, conversation: ConversationDetails, sender: SenderDetails | null) => void | Promise<void>;
+
+function buildConversationDetails(chat: Awaited<ReturnType<Api.Message['getChat']>>): ConversationDetails {
+  if (!chat) return { id: '', createdDate: 0, title: '', firstName: '', lastName: '', userName: '' };
+  if (chat instanceof Api.Chat || chat instanceof Api.Channel) {
+    return {
+      id: chat.id.toString(),
+      createdDate: chat.date ?? 0,
+      title: chat.title ?? '',
+      firstName: '',
+      lastName: '',
+      userName: chat instanceof Api.Channel ? (chat.username ?? '') : '',
+      photo: chat.photo ? 'has_photo' : undefined,
+    };
+  }
+  return { id: chat.id?.toString() ?? '', createdDate: 0, title: '', firstName: '', lastName: '', userName: '' };
 }
 
-async function getConversationDetails(telegramClient: TelegramClient, entityId: EntityLike): Promise<ConversationDetails | null> {
-  const channelDetails = await telegramClient.getEntity(entityId).catch((err) => {
-    logger.error(`Failed to get conversation details for entity ${entityId}: ${err}`);
-    return null;
-  });
-  return {
-    id: (channelDetails?.id ?? null).toString(),
-    createdDate: channelDetails?.date ?? null,
-    title: channelDetails?.title ?? null,
-    firstName: channelDetails?.firstName ?? null,
-    lastName: channelDetails?.lastName ?? null,
-    userName: channelDetails?.username ?? null,
-    photo: null,
-  };
+function buildSenderDetails(sender: Awaited<ReturnType<Api.Message['getSender']>>): SenderDetails | null {
+  if (!sender) return null;
+  if (sender instanceof Api.User) {
+    return {
+      id: sender.id.toString(),
+      firstName: sender.firstName ?? '',
+      lastName: sender.lastName ?? '',
+      userName: sender.username ?? '',
+    };
+  }
+  if (sender instanceof Api.Channel || sender instanceof Api.Chat) {
+    return {
+      id: sender.id.toString(),
+      firstName: sender.title ?? '',
+      lastName: '',
+      userName: sender instanceof Api.Channel ? (sender.username ?? '') : '',
+    };
+  }
+  return null;
 }
-
-async function getSenderDetails(telegramClient: TelegramClient, userId: string): Promise<SenderDetails | null> {
-  const user = await telegramClient.getEntity(userId).catch((err) => {
-    logger.error(`Failed to get sender details for user ${userId}: ${err}`);
-    return null;
-  });
-  if (!user) return null;
-  return {
-    id: (user.id ?? null).toString(),
-    firstName: user.firstName ?? null,
-    lastName: user.lastName ?? null,
-    userName: user.username ?? null,
-  };
-}
-
-type ListenCallback = (message: TelegramMessage, details: ConversationDetails, sender: SenderDetails | null) => void | Promise<void>;
 
 export async function listen({ conversationsIds = [] }: ListenerOptions, callback: ListenCallback) {
   const telegramClient = await provideTelegramClient();
-  telegramClient.addEventHandler(async (event) => {
-    try {
-      if (EXCLUDED_EVENTS.includes(event?.className)) {
-        return;
-      }
-      if (event.className) {
-        console.log(`Received event of type ${event.className}`);
-      } else {
-        console.warn('Received event without className, skipping, event:', event);
-      }
-      if (!LISTEN_TO_EVENTS.includes(event.className)) {
-        return;
-      }
-      const messageData = getMessageData(event);
 
-      const channelId = messageData?.channelId?.toString();
-      const userId = messageData?.userId?.toString();
-      if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
-        return;
-      }
-      const peerId = event?.message?.peerId;
-      const entityId = peerId ?? messageData.userId?.toString();
-      if (!entityId) {
-        logger.warn('No peerId or userId found in messageData');
-        return;
-      }
-      const channelDetails = await getConversationDetails(telegramClient, entityId);
-      if (!channelDetails?.id) {
-        logger.warn(`No conversation details found for entityId: ${entityId}, channelId: ${messageData.channelId}, userId: ${messageData.userId}`);
-        return;
-      }
-      if (EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
-        return;
-      }
-      const senderDetails = messageData.userId ? await getSenderDetails(telegramClient, messageData.userId) : null;
-      await callback(messageData, channelDetails, senderDetails);
+  const chats = conversationsIds.length > 0 ? conversationsIds.map(Number) : undefined;
+
+  telegramClient.addEventHandler(async (event: NewMessageEvent) => {
+    const msg = event.message;
+    const [sender, chat] = await Promise.all([msg.getSender(), msg.getChat()]);
+
+    const senderDetails = buildSenderDetails(sender);
+    const senderName = senderDetails ? (senderDetails.userName || [senderDetails.firstName, senderDetails.lastName].filter(Boolean).join(' ') || 'Unknown') : 'Unknown';
+
+    const telegramMessage: TelegramMessage = {
+      id: msg.id,
+      senderId: (msg.senderId ?? '').toString(),
+      chatId: (msg.chatId ?? '').toString(),
+      date: msg.date,
+      text: msg.text,
+      senderName,
+    };
+
+    const conversationDetails = buildConversationDetails(chat);
+
+    try {
+      await callback(telegramMessage, conversationDetails, senderDetails);
     } catch (err) {
-      logger.error(`Error handling telegram event: ${err}`);
+      logger.error(`Error in listen callback: ${err}`);
     }
-  });
+  }, new NewMessage({ chats }));
 }

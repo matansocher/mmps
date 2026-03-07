@@ -33,8 +33,7 @@ export async function initChatbot(app: Express): Promise<void> {
 
   initOctokit();
 
-  listen({}, async (message, chat, sender) => {
-    const chatName = chat.type === 'private' ? chat.firstName : chat.title;
-    console.log(`Received message in ${chatName} (${chat.type}):`, 'text' in message ? message.text : '[non-text]');
+  listen({}, async (message, conversation, sender) => {
+    console.log(`Received message in (${message}):`, 'text' in message ? message.text : '[non-text]');
   });
 }
