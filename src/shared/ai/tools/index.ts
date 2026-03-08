@@ -43,4 +43,6 @@ export { youtubeFollowerTool } from './youtube-follower';
 
 export { polymarketTool } from './polymarket';
 
+export { selfieTool } from './selfie/selfie.tool';
+
 export { githubTool } from './github/github.tool';
