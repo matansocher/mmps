@@ -1,8 +1,10 @@
 import type { Express } from 'express';
+import { MY_USER_ID } from '@core/config';
 import { createMongoConnection } from '@core/mongo';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { listen } from '@services/telegram-client';
+import { CHANNELS } from '@services/telegram-client/constants';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
@@ -46,6 +48,11 @@ export async function initChatbot(app: Express): Promise<void> {
   initOctokit();
 
   listen({}, async (message, conversation, sender) => {
-    await saveEvent(message, conversationDetails, sender);
+    await saveEvent(message, conversation, sender);
+  });
+
+  listen({ conversationsIds: [CHANNELS.SHIGURIM.id] }, async (message) => {
+    if (!message.text) return;
+    await bot.api.sendMessage(MY_USER_ID, message.text);
   });
 }
