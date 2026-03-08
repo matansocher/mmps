@@ -8,6 +8,7 @@ import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
+import { saveEvent, DB_NAME as SELFIE_DB_NAME } from '@shared/selfie';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
@@ -18,7 +19,18 @@ import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 
 export async function initChatbot(app: Express): Promise<void> {
-  const mongoDbNames = [TRAINER_DB_NAME, COACH_DB_NAME, COOKER_DB_NAME, WOLT_DB_NAME, WORLDLY_DB_NAME, REMINDERS_DB_NAME, FOLLOWER_DB_NAME, POLYMARKET_DB_NAME, CALENDAR_EVENTS_DB_NAME];
+  const mongoDbNames = [
+    TRAINER_DB_NAME,
+    COACH_DB_NAME,
+    COOKER_DB_NAME,
+    WOLT_DB_NAME,
+    WORLDLY_DB_NAME,
+    REMINDERS_DB_NAME,
+    FOLLOWER_DB_NAME,
+    POLYMARKET_DB_NAME,
+    CALENDAR_EVENTS_DB_NAME,
+    SELFIE_DB_NAME,
+  ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
   const bot = provideTelegramBot(BOT_CONFIG);
@@ -34,6 +46,6 @@ export async function initChatbot(app: Express): Promise<void> {
   initOctokit();
 
   listen({}, async (message, conversation, sender) => {
-    console.log(`Received message in (${message}):`, 'text' in message ? message.text : '[non-text]');
+    await saveEvent(message, conversationDetails, sender);
   });
 }

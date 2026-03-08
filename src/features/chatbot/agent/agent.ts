@@ -16,6 +16,7 @@ import {
   preferencesTool,
   recipesTool,
   reminderTool,
+  selfieTool,
   topMatchesForPredictionTool,
   weatherTool,
   woltTool,
@@ -26,7 +27,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, and Polymarket prediction markets';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, and Telegram message history';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -79,6 +80,14 @@ Available capabilities:
   * "search" - Search for markets by keyword/topic (e.g., "bitcoin", "trump", "fed", "sports", "crypto"). Returns events sorted by 24h volume.
   Accepts flexible formats like full URLs (polymarket.com/event/fed-decision-in-january) or just the slug (fed-decision-in-january).
   Natural language variations: "subscribe to [market]", "track [market] on Polymarket", "unsubscribe from [market]", "show my Polymarket subscriptions", "what's trending on Polymarket", "search for [keyword] markets", "find [topic] predictions"
+- Telegram Selfie tool: Query your personal Telegram message history with five actions:
+  * "recent" - Get the most recent messages across all conversations (default limit: 50)
+  * "by_date" - Get all messages from a specific date (requires date in YYYY-MM-DD format)
+  * "by_conversation" - Get messages from a specific conversation by ID
+  * "by_sender" - Get messages from a specific sender by their user ID
+  * "search" - Search messages by text content (case-insensitive regex match)
+  Each result includes the message text, conversation name, sender name, and their IDs so you can use them for follow-up queries.
+  Natural language variations: "who messaged me today", "what did [person/channel] say", "search my telegram for [keyword]", "show recent messages", "messages from yesterday", "what was said in [group]".
 - GitHub tool: Interact with the matansocher/mmps repository with eight actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
    * "get_issue" - Get details of a specific issue by number
@@ -277,6 +286,7 @@ export function agent(): AgentDescriptor {
     preferencesTool,
     youtubeFollowerTool,
     polymarketTool,
+    selfieTool,
     githubTool,
   ];
 
