@@ -47,12 +47,12 @@ export async function initChatbot(app: Express): Promise<void> {
 
   initOctokit();
 
-  listen({}, async (message, conversation, sender) => {
-    await saveEvent(message, conversation, sender);
-  });
-
-  listen({ conversationsIds: [CHANNELS.SHIGURIM.id] }, async (message) => {
-    if (!message.text) return;
-    await bot.api.sendMessage(MY_USER_ID, message.text);
-  });
+  // listen({}, async (message, conversation, sender) => {
+  //   await saveEvent(message, conversation, sender);
+  // });
+  //
+  // listen({ conversationsIds: [CHANNELS.SHIGURIM.id] }, async (message) => {
+  //   if (!message.text) return;
+  //   await bot.api.sendMessage(MY_USER_ID, message.text);
+  // });
 }
