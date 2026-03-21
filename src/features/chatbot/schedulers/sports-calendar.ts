@@ -5,7 +5,7 @@ import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
-export const LIKED_TEAMS: string[] = ['Real Madrid', 'Barcelona', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Manchester City FC', 'Maccabi Haifa'];
+export const LIKED_TEAMS: string[] = ['Real Madrid', 'Barcelona', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Manchester City FC', 'Chelsea FC', 'Bayern Munich', 'Maccabi Haifa'];
 
 const logger = new Logger('SportsCalendarScheduler');
 
