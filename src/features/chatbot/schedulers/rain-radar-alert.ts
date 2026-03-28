@@ -21,12 +21,10 @@ export async function rainRadarAlert(bot: Bot): Promise<void> {
 
     logger.log(`Rain chance in Kfar Saba: ${weather.chanceOfRain}% — generating radar image`);
 
-    let radarPath: string | null = null;
-    try {
-      radarPath = await generateRainRadarImage();
-    } catch (err) {
+    const radarPath = await generateRainRadarImage().catch((err) => {
       logger.error(`Failed to generate radar image: ${err}`);
-    }
+      return undefined;
+    });
 
     const caption = `🌧 סיכוי לגשם בכפר סבא: ${weather.chanceOfRain}%`;
 

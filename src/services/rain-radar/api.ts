@@ -84,8 +84,3 @@ export async function generateRainRadarImage(options: RainRadarOptions = {}): Pr
     throw new Error('IMS radar service is currently unavailable. Please try again later.');
   }
 }
-
-export async function generateRadarForLocation(_lat: number, _lon: number, options: { zoom?: number; width?: number; height?: number } = {}): Promise<string> {
-  const { zoom = 10, width = 800, height = 800 } = options;
-  return generateRainRadarImage({ zoom, width, height });
-}

@@ -2,7 +2,18 @@ import type { Bot } from 'grammy';
 import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { ChatbotService } from './chatbot.service';
-import { dailySummary, earthquakeMonitor, exerciseReminder, footballUpdate, makavdiaUpdate, polymarketUpdate, rainRadarAlert, reminderCheck, sportsCalendar, weeklyExerciseSummary } from './schedulers';
+import {
+  dailySummary,
+  earthquakeMonitor,
+  exerciseReminder,
+  footballUpdate,
+  makavdiaUpdate,
+  polymarketUpdate,
+  rainRadarAlert,
+  reminderCheck,
+  sportsCalendar,
+  weeklyExerciseSummary,
+} from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
@@ -34,6 +45,6 @@ export class ChatbotSchedulerService {
 
     createSchedule(`5 12,16,23 * * *`, async () => polymarketUpdate(this.bot));
 
-    createSchedule(`0 9-23 * * *`, async () => rainRadarAlert(this.bot));
+    createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
   }
 }
