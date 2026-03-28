@@ -1,115 +1,69 @@
 import axios from 'axios';
 import sharp from 'sharp';
 import { Logger } from '@core/utils';
-import { IMS_RADAR_REF, TILE_SIZE } from './constants';
-import type { RadarBounds, TargetBounds, WorldPixel } from './types';
+import { RADAR_BOUNDS, RADAR_OPACITY, TILE_SIZE } from './constants';
 
 const logger = new Logger('RainRadarMapUtils');
 
 // ============================================================================
-// WEB MERCATOR PROJECTION UTILITIES
+// WEB MERCATOR PROJECTION
 // ============================================================================
 
-/**
- * Convert latitude/longitude to world pixel coordinates at a given zoom level.
- * Uses standard Web Mercator (EPSG:3857) projection.
- */
-export function latLonToWorldPixel(lat: number, lon: number, zoom: number): WorldPixel {
+export function latToY(lat: number, zoom: number): number {
   const scale = TILE_SIZE * Math.pow(2, zoom);
-
-  // Longitude to X (linear)
-  const x = ((lon + 180) / 360) * scale;
-
-  // Latitude to Y (Mercator projection)
   const latRad = (lat * Math.PI) / 180;
-  const mercatorY = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
-  const y = ((1 - mercatorY / Math.PI) / 2) * scale;
-
-  return { x, y };
+  return ((1 - Math.log(Math.tan(Math.PI / 4 + latRad / 2)) / Math.PI) / 2) * scale;
 }
 
-/**
- * Calculate the world pixel bounds of the IMS radar image.
- */
-export function getRadarWorldBounds(): RadarBounds {
-  const center = latLonToWorldPixel(IMS_RADAR_REF.centerLat, IMS_RADAR_REF.centerLon, IMS_RADAR_REF.zoom);
-  return {
-    left: center.x - IMS_RADAR_REF.width / 2,
-    top: center.y - IMS_RADAR_REF.height / 2,
-    right: center.x + IMS_RADAR_REF.width / 2,
-    bottom: center.y + IMS_RADAR_REF.height / 2,
-  };
-}
-
-/**
- * Convert target viewport bounds to IMS radar zoom level.
- */
-export function getTargetBoundsAtRadarZoom(centerLat: number, centerLon: number, targetZoom: number, width: number, height: number): TargetBounds {
-  // Scale factor between target zoom and radar zoom
-  const zoomDiff = targetZoom - IMS_RADAR_REF.zoom;
-  const scaleFactor = Math.pow(2, zoomDiff);
-
-  // Target viewport size in radar zoom pixels
-  const widthAtRadarZoom = width / scaleFactor;
-  const heightAtRadarZoom = height / scaleFactor;
-
-  // Convert target center to radar zoom level coordinates
-  const targetCenterAtRadarZoom = latLonToWorldPixel(centerLat, centerLon, IMS_RADAR_REF.zoom);
-
-  return {
-    left: targetCenterAtRadarZoom.x - widthAtRadarZoom / 2,
-    top: targetCenterAtRadarZoom.y - heightAtRadarZoom / 2,
-    width: widthAtRadarZoom,
-    height: heightAtRadarZoom,
-  };
+export function lonToX(lon: number, zoom: number): number {
+  const scale = TILE_SIZE * Math.pow(2, zoom);
+  return ((lon + 180) / 360) * scale;
 }
 
 // ============================================================================
 // MAP TILE FETCHING
 // ============================================================================
 
-/**
- * Fetch and composite map tiles for the specified viewport.
- */
-export async function fetchMapTiles(centerLat: number, centerLon: number, zoom: number, width: number, height: number): Promise<Buffer> {
-  logger.log(`Fetching map tiles: ${centerLat}°N, ${centerLon}°E (Zoom ${zoom}, ${width}x${height})`);
+export type ViewportInfo = {
+  readonly buffer: Buffer;
+  readonly viewLeft: number;
+  readonly viewTop: number;
+};
 
-  // Calculate viewport bounds in world pixels
-  const center = latLonToWorldPixel(centerLat, centerLon, zoom);
-  const viewLeft = center.x - width / 2;
-  const viewTop = center.y - height / 2;
+export async function fetchMapTiles(zoom: number, width: number, height: number): Promise<ViewportInfo> {
+  const topPx = latToY(RADAR_BOUNDS.north, zoom);
+  const bottomPx = latToY(RADAR_BOUNDS.south, zoom);
+  const leftPx = lonToX(RADAR_BOUNDS.west, zoom);
+  const rightPx = lonToX(RADAR_BOUNDS.east, zoom);
 
-  // Determine tile range needed
+  const centerX = (leftPx + rightPx) / 2;
+  const centerY = (topPx + bottomPx) / 2;
+
+  const viewLeft = centerX - width / 2;
+  const viewTop = centerY - height / 2;
+
   const startTileX = Math.floor(viewLeft / TILE_SIZE);
   const endTileX = Math.floor((viewLeft + width) / TILE_SIZE);
   const startTileY = Math.floor(viewTop / TILE_SIZE);
   const endTileY = Math.floor((viewTop + height) / TILE_SIZE);
+
+  logger.log(`Fetching ${(endTileX - startTileX + 1) * (endTileY - startTileY + 1)} map tiles (zoom ${zoom})`);
 
   const tiles: { input: Buffer; left: number; top: number }[] = [];
 
   for (let ty = startTileY; ty <= endTileY; ty++) {
     for (let tx = startTileX; tx <= endTileX; tx++) {
       const tileUrl = `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
-
       try {
         const res = await axios.get(tileUrl, {
           responseType: 'arraybuffer',
           headers: { 'User-Agent': 'MMPS-RainRadar/2.0' },
         });
-
-        // Calculate tile position relative to viewport
-        const tileWorldX = tx * TILE_SIZE;
-        const tileWorldY = ty * TILE_SIZE;
-        const left = Math.round(tileWorldX - viewLeft);
-        const top = Math.round(tileWorldY - viewTop);
-
         tiles.push({
           input: Buffer.from(res.data),
-          left,
-          top,
+          left: Math.round(tx * TILE_SIZE - viewLeft),
+          top: Math.round(ty * TILE_SIZE - viewTop),
         });
-
-        // Rate limiting for OSM
         await new Promise((r) => setTimeout(r, 100));
       } catch {
         logger.warn(`Failed to fetch tile: ${tileUrl}`);
@@ -121,64 +75,66 @@ export async function fetchMapTiles(centerLat: number, centerLon: number, zoom: 
     throw new Error('Failed to fetch any map tiles');
   }
 
-  // Create canvas and composite tiles (no resize to avoid shifting)
-  return sharp({
-    create: {
-      width,
-      height,
-      channels: 4,
-      background: { r: 240, g: 240, b: 240, alpha: 1 },
-    },
+  const buffer = await sharp({
+    create: { width, height, channels: 4, background: { r: 240, g: 240, b: 240, alpha: 1 } },
   })
     .composite(tiles)
     .png()
     .toBuffer();
+
+  return { buffer, viewLeft, viewTop };
 }
 
 // ============================================================================
-// RADAR EXTRACTION
+// RADAR OVERLAY
 // ============================================================================
 
-/**
- * Extract and scale radar data for the specified viewport.
- */
-export async function extractRadarForViewport(radarBuffer: Buffer, centerLat: number, centerLon: number, targetZoom: number, width: number, height: number): Promise<Buffer> {
-  logger.log(`Extracting radar for viewport: ${centerLat}°N, ${centerLon}°E (Zoom ${targetZoom})`);
+export async function createRadarOverlay(
+  radarBuffer: Buffer,
+  zoom: number,
+  viewLeft: number,
+  viewTop: number,
+  width: number,
+  height: number,
+): Promise<{ input: Buffer; left: number; top: number }> {
+  const radarTopPx = latToY(RADAR_BOUNDS.north, zoom);
+  const radarBottomPx = latToY(RADAR_BOUNDS.south, zoom);
+  const radarLeftPx = lonToX(RADAR_BOUNDS.west, zoom);
+  const radarRightPx = lonToX(RADAR_BOUNDS.east, zoom);
 
-  // Get radar bounds (in radar zoom coordinates)
-  const radarBounds = getRadarWorldBounds();
+  const radarWidthPx = Math.round(radarRightPx - radarLeftPx);
+  const radarHeightPx = Math.round(radarBottomPx - radarTopPx);
 
-  // Get target bounds (in radar zoom coordinates)
-  const targetBounds = getTargetBoundsAtRadarZoom(centerLat, centerLon, targetZoom, width, height);
+  const radarX = Math.round(radarLeftPx - viewLeft);
+  const radarY = Math.round(radarTopPx - viewTop);
 
-  // Calculate crop rectangle on the radar image
-  const cropX = targetBounds.left - radarBounds.left;
-  const cropY = targetBounds.top - radarBounds.top;
-  const cropWidth = targetBounds.width;
-  const cropHeight = targetBounds.height;
+  logger.log(`Radar overlay: ${radarWidthPx}x${radarHeightPx}px, position: (${radarX}, ${radarY})`);
 
-  // Clamp to valid bounds
-  const safeX = Math.max(0, Math.min(Math.round(cropX), IMS_RADAR_REF.width - 1));
-  const safeY = Math.max(0, Math.min(Math.round(cropY), IMS_RADAR_REF.height - 1));
-  const safeWidth = Math.min(Math.round(cropWidth), IMS_RADAR_REF.width - safeX);
-  const safeHeight = Math.min(Math.round(cropHeight), IMS_RADAR_REF.height - safeY);
-
-  logger.log(`Crop: x=${safeX}, y=${safeY}, w=${safeWidth}, h=${safeHeight}`);
-
-  // Convert radar to PNG (handles GIF input)
   const radarPng = await sharp(radarBuffer, { animated: false }).png().toBuffer();
+  const resized = await sharp(radarPng).resize(radarWidthPx, radarHeightPx, { kernel: sharp.kernel.lanczos3 }).ensureAlpha().toBuffer();
 
-  // Extract and scale the radar region
-  return sharp(radarPng)
-    .extract({
-      left: safeX,
-      top: safeY,
-      width: safeWidth,
-      height: safeHeight,
-    })
-    .resize(width, height, {
-      kernel: sharp.kernel.lanczos3,
-    })
+  // Apply opacity
+  const { data, info } = await sharp(resized).raw().toBuffer({ resolveWithObject: true });
+  for (let i = 3; i < data.length; i += 4) {
+    data[i] = Math.round(data[i] * RADAR_OPACITY);
+  }
+  const withOpacity = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
     .png()
     .toBuffer();
+
+  // Crop to visible portion within viewport
+  const cropLeft = Math.max(0, -radarX);
+  const cropTop = Math.max(0, -radarY);
+  const placeLeft = Math.max(0, radarX);
+  const placeTop = Math.max(0, radarY);
+  const visibleWidth = Math.min(radarWidthPx - cropLeft, width - placeLeft);
+  const visibleHeight = Math.min(radarHeightPx - cropTop, height - placeTop);
+
+  if (visibleWidth <= 0 || visibleHeight <= 0) {
+    throw new Error('Radar image does not overlap with the viewport');
+  }
+
+  const cropped = await sharp(withOpacity).extract({ left: cropLeft, top: cropTop, width: visibleWidth, height: visibleHeight }).png().toBuffer();
+
+  return { input: cropped, left: placeLeft, top: placeTop };
 }
