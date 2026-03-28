@@ -11,4 +11,5 @@ export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
 export { youtubeCheck } from './youtube-check';
 export { polymarketUpdate } from './polymarket-update';
+export { rainRadarAlert } from './rain-radar-alert';
 export { selfieSummary } from './selfie-summary';

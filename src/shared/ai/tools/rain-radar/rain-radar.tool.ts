@@ -6,9 +6,8 @@ const schema = z.object({
   location: z.string().optional().describe('The location for the radar (defaults to Israel)'),
 });
 
-async function runner({ location }: z.infer<typeof schema>) {
-  const locationName = location || 'Israel';
-  return generateRainRadarImage({ location: locationName });
+async function runner(_input: z.infer<typeof schema>) {
+  return generateRainRadarImage();
 }
 
 export const rainRadarTool = tool(runner, {
