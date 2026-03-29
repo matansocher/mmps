@@ -7,7 +7,8 @@ const schema = z.object({
 });
 
 async function runner(_input: z.infer<typeof schema>) {
-  return generateRainRadarImage();
+  const result = await generateRainRadarImage();
+  return result.path;
 }
 
 export const rainRadarTool = tool(runner, {

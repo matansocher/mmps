@@ -5,11 +5,11 @@ import sharp from 'sharp';
 import { Logger } from '@core/utils';
 import { DEFAULT_VIEW, IMS_RADAR_CONFIG } from './constants';
 import { createRadarOverlay, fetchMapTiles } from './map-utils';
-import type { ImsRadarResponse, RainRadarOptions } from './types';
+import type { GeneratedRadarImage, ImsRadarResponse, RainRadarOptions } from './types';
 
 const logger = new Logger('RainRadarService');
 
-export async function generateRainRadarImage(options: RainRadarOptions = {}): Promise<string> {
+export async function generateRainRadarImage(options: RainRadarOptions = {}): Promise<GeneratedRadarImage> {
   const { zoom = DEFAULT_VIEW.zoom, width = DEFAULT_VIEW.width, height = DEFAULT_VIEW.height } = options;
 
   logger.log(`Generating IMS Rain Radar Image (zoom ${zoom}, ${width}x${height})`);
@@ -78,7 +78,10 @@ export async function generateRainRadarImage(options: RainRadarOptions = {}): Pr
 
     fs.writeFileSync(outputPath, compositeImage);
     logger.log(`IMS radar image saved to: ${outputPath}`);
-    return outputPath;
+    return {
+      path: outputPath,
+      imageModified: latestImage.modified,
+    };
   } catch (err) {
     logger.error(`Failed to generate IMS radar image: ${err}`);
     throw new Error('IMS radar service is currently unavailable. Please try again later.');

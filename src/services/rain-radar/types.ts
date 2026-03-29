@@ -23,3 +23,8 @@ export type ImsRadarResponse = {
     };
   };
 };
+
+export type GeneratedRadarImage = {
+  readonly path: string;
+  readonly imageModified: string;
+};

@@ -1,5 +1,5 @@
-import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { addDays } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getMongoCollection } from '@core/mongo';
 import { DB_NAME } from './constants';
@@ -47,11 +47,8 @@ export async function upsertCalendarEvents(events: CreateCalendarEventData[]): P
 export async function getEventsForDate(date: Date = new Date()): Promise<CalendarEvent[]> {
   const collection = getCollection();
 
-  // Convert to Israel timezone before extracting date string
-  const zonedDate = toZonedTime(date, DEFAULT_TIMEZONE);
-  const dateStr = format(zonedDate, 'yyyy-MM-dd');
-  const nextDay = new Date(zonedDate.getTime() + 24 * 60 * 60 * 1000);
-  const nextDateStr = format(nextDay, 'yyyy-MM-dd');
+  const dateStr = formatInTimeZone(date, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
+  const nextDateStr = formatInTimeZone(addDays(date, 1), DEFAULT_TIMEZONE, 'yyyy-MM-dd');
 
   return collection
     .find({
@@ -71,11 +68,7 @@ export async function getTodayEvents(): Promise<CalendarEvent[]> {
 }
 
 export async function getTomorrowEvents(): Promise<CalendarEvent[]> {
-  const now = new Date();
-  const zonedNow = toZonedTime(now, DEFAULT_TIMEZONE);
-  const tomorrow = new Date(zonedNow);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return getEventsForDate(tomorrow);
+  return getEventsForDate(addDays(new Date(), 1));
 }
 
 export async function getEventByGoogleId(googleEventId: string): Promise<CalendarEvent | null> {

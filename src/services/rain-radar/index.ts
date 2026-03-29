@@ -1,2 +1,2 @@
 export { generateRainRadarImage } from './api';
-export type { RainRadarOptions } from './types';
+export type { GeneratedRadarImage, RainRadarOptions } from './types';
