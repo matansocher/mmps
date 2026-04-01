@@ -9,7 +9,7 @@ import {
   footballUpdate,
   makavdiaUpdate,
   polymarketUpdate,
-  rainRadarAlert,
+  // rainRadarAlert,
   reminderCheck,
   sportsCalendar,
   weeklyExerciseSummary,
@@ -45,6 +45,6 @@ export class ChatbotSchedulerService {
 
     createSchedule(`5 16 * * *`, async () => polymarketUpdate(this.bot));
 
-    createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
+    // createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
   }
 }
