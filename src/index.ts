@@ -5,6 +5,7 @@ import { isProd } from '@core/config';
 import { registerSwaggerRoutes } from '@core/openapi';
 import { Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
+import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initLangly, BOT_CONFIG as langlyConfig } from '@features/langly';
 import { initMagister, BOT_CONFIG as magisterConfig } from '@features/magister';
@@ -30,6 +31,7 @@ async function main() {
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
 
   shouldInitBot(chatbotConfig) && (await initChatbot(app));
+  shouldInitBot(chilliConfig) && (await initChilli());
   shouldInitBot(coachConfig) && (await initCoach());
   shouldInitBot(langlyConfig) && (await initLangly());
   shouldInitBot(magisterConfig) && (await initMagister());
