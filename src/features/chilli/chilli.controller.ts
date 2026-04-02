@@ -70,7 +70,8 @@ export class ChilliController {
   }
 
   private async messageHandler(ctx: Context): Promise<void> {
-    const { chatId, messageId, text, userDetails } = getMessageData(ctx);
+    const { chatId: rawChatId, messageId, text, userDetails } = getMessageData(ctx);
+    const chatId = userDetails?.telegramUserId || rawChatId;
 
     notify(BOT_CONFIG, { action: 'MESSAGE', message: text }, userDetails);
 
