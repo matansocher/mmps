@@ -5,6 +5,7 @@ export const isProd = env.IS_PROD === 'true';
 export const MMPS_BASE_URL = 'https://mmps-a9baabab2459.herokuapp.com';
 
 export const MY_USER_ID = 862305226;
+export const TOODIE_USER_ID = 1332013273;
 export const MY_USER_NAME = '@daninave1';
 
 export const DEFAULT_TIMEZONE = 'Asia/Jerusalem';
