@@ -1,7 +1,7 @@
 import { ChatOpenAI } from '@langchain/openai';
 import type { Bot, Context } from 'grammy';
 import { env } from 'node:process';
-import { MY_USER_ID } from '@core/config/main.config';
+import { isProd, MY_USER_ID } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { GPT_SMALL_MODEL } from '@services/openai/constants';
@@ -70,15 +70,25 @@ export class ChilliController {
   }
 
   private async messageHandler(ctx: Context): Promise<void> {
-    const { chatId: rawChatId, messageId, text, userDetails } = getMessageData(ctx);
+    const { chatId: rawChatId, messageId, text, userDetails, isGroup } = getMessageData(ctx);
     const chatId = userDetails?.telegramUserId || rawChatId;
+    const senderName = userDetails?.firstName || 'unknown';
+    const isBotTagged = text.includes(`@${ctx.me.username}`);
+    const threadId = isProd ? rawChatId.toString() : `dev-${rawChatId.toString()}`;
 
-    notify(BOT_CONFIG, { action: 'MESSAGE', message: text }, userDetails);
+    if (isGroup && !isBotTagged) {
+      await this.chilliService.addToHistory(text, senderName, threadId);
+      return;
+    }
+
+    const cleanText = text.replace(`@${ctx.me.username}`, '').trim();
+
+    notify(BOT_CONFIG, { action: 'MESSAGE', message: cleanText }, userDetails);
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '😁' });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const replyText = await this.chilliService.processMessage(text, chatId);
-      await sendStyledMessage(this.bot, chatId, replyText);
+      const replyText = await this.chilliService.processMessage(cleanText || text, chatId, threadId);
+      ctx.reply(replyText);
 
       notify(BOT_CONFIG, { action: 'REPLY', message: replyText }, userDetails);
     });

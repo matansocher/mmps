@@ -6,6 +6,7 @@ export type MessageData = {
   readonly messageId: number;
   readonly replyToMessageId: number;
   readonly replyToMessageText: string;
+  readonly isGroup: boolean;
   readonly userDetails: UserDetails;
   readonly text: string;
   readonly audio: any;
@@ -26,6 +27,7 @@ export function getMessageData(ctx: Context): MessageData {
     messageId: message?.message_id ?? null,
     replyToMessageId: message?.reply_to_message?.message_id ?? null,
     replyToMessageText: message?.reply_to_message?.text ?? null,
+    isGroup: ctx.hat?.type === 'group' || ctx.chat?.type === 'supergroup',
     userDetails: {
       chatId: ctx.chat?.id ?? null,
       telegramUserId: ctx.from?.id ?? null,
