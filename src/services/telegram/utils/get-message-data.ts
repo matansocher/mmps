@@ -27,7 +27,7 @@ export function getMessageData(ctx: Context): MessageData {
     messageId: message?.message_id ?? null,
     replyToMessageId: message?.reply_to_message?.message_id ?? null,
     replyToMessageText: message?.reply_to_message?.text ?? null,
-    isGroup: ctx.hat?.type === 'group' || ctx.chat?.type === 'supergroup',
+    isGroup: ctx.chat?.type === 'group' || ctx.chat?.type === 'supergroup',
     userDetails: {
       chatId: ctx.chat?.id ?? null,
       telegramUserId: ctx.from?.id ?? null,
