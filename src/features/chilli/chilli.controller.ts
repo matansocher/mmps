@@ -5,7 +5,7 @@ import { isProd, MY_USER_ID } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { GPT_SMALL_MODEL } from '@services/openai/constants';
-import { getMessageData, MessageLoader, sendStyledMessage } from '@services/telegram';
+import { getMessageData, MessageLoader } from '@services/telegram';
 import { BOT_CONFIG } from './chilli.config';
 import { ChilliService } from './chilli.service';
 import { getPrompt, insertPromptVersion } from './mongo';
@@ -88,7 +88,7 @@ export class ChilliController {
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '😁' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const replyText = await this.chilliService.processMessage(cleanText || text, chatId, threadId);
-      ctx.reply(replyText);
+      await ctx.reply(replyText);
 
       notify(BOT_CONFIG, { action: 'REPLY', message: replyText }, userDetails);
     });
