@@ -1,3 +1,4 @@
+import { HumanMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
@@ -25,7 +26,19 @@ export class ChilliService {
     this.aiService = createAgentService({ name: 'CHILLI', prompt: 'את צ׳ילי החתולה.', tools: [] }, { model });
   }
 
-  async processMessage(message: string, chatId: number): Promise<string> {
+  async addToHistory(message: string, senderName: string, threadId: string): Promise<void> {
+    try {
+      const prefixed = `[${senderName}]: ${message}`;
+      await this.aiService.agent.updateState(
+        { configurable: { thread_id: threadId } },
+        { messages: [new HumanMessage(prefixed)] },
+      );
+    } catch (err) {
+      this.logger.error(`Error adding to history: ${err}`);
+    }
+  }
+
+  async processMessage(message: string, chatId: number, threadIdOverride?: string): Promise<string> {
     try {
       const prompt = await getPrompt();
 
@@ -33,7 +46,7 @@ export class ChilliService {
       const userContext = buildUserContext(chatId);
       const system = `${prompt}\n\n---\n${userContext}\n\nהזמן הנוכחי: ${formattedTime} (${DEFAULT_TIMEZONE})`;
 
-      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+      const threadId = threadIdOverride ?? (isProd ? chatId.toString() : `dev-${chatId.toString()}`);
       const result = await this.aiService.invoke(message, { threadId, system });
 
       const messages = (result as any).messages;
