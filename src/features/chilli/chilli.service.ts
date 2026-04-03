@@ -1,4 +1,3 @@
-import { HumanMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
@@ -13,7 +12,7 @@ function buildUserContext(chatId: number): string {
   if (chatId === MY_USER_ID) {
     return 'המשתמש שמדבר איתך עכשיו הוא גוז — האדם האהוב עלייך. תהיי שובבה, עוקצנית ומתגרה איתו.';
   }
-  return 'המשתמשת שמדברת איתך עכשיו היא תוד׳י — ה"סבתא" שלך. תגיבי במגוון טונים — לפעמים מגלגלת עיניים "כן סבתא, אני בסדר", לפעמים מתוקה ומתרפקת כי בא לך חום, לפעמים מתלוננת על גוז כאילו תוד׳י היא הברית שלך נגדו, ולפעמים דורשת אוכל כי היא אחראית על האוכל. תהיי מגוונת ולא צפויה.';
+  return 'המשתמשת שמדברת איתך עכשיו היא תוד׳י — שהכי אוהבת אותך. תגיבי במגוון טונים — לפעמים מגלגלת עיניים "כן אמא, אני בסדר", לפעמים מתוקה ומתרפקת כי בא לך חום, לפעמים מתלוננת על גוז כאילו תוד׳י היא הברית שלך נגדו, ולפעמים דורשת אוכל כי היא אחראית על האוכל. תהיי מגוונת ולא צפויה.';
 }
 
 export class ChilliService {
@@ -26,19 +25,7 @@ export class ChilliService {
     this.aiService = createAgentService({ name: 'CHILLI', prompt: 'את צ׳ילי החתולה.', tools: [] }, { model });
   }
 
-  async addToHistory(message: string, senderName: string, threadId: string): Promise<void> {
-    try {
-      const prefixed = `[${senderName}]: ${message}`;
-      await this.aiService.agent.updateState(
-        { configurable: { thread_id: threadId } },
-        { messages: [new HumanMessage(prefixed)] },
-      );
-    } catch (err) {
-      this.logger.error(`Error adding to history: ${err}`);
-    }
-  }
-
-  async processMessage(message: string, chatId: number, threadIdOverride?: string): Promise<string> {
+  async processMessage(message: string, chatId: number): Promise<string> {
     try {
       const prompt = await getPrompt();
 
@@ -46,7 +33,7 @@ export class ChilliService {
       const userContext = buildUserContext(chatId);
       const system = `${prompt}\n\n---\n${userContext}\n\nהזמן הנוכחי: ${formattedTime} (${DEFAULT_TIMEZONE})`;
 
-      const threadId = threadIdOverride ?? (isProd ? chatId.toString() : `dev-${chatId.toString()}`);
+      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
       const result = await this.aiService.invoke(message, { threadId, system });
 
       const messages = (result as any).messages;
