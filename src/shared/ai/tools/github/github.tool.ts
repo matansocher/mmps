@@ -6,14 +6,18 @@ import {
   createIssueComment,
   createPullRequestComment,
   getIssue,
+  getPRChecks,
+  getPRReviews,
+  getPullRequest,
   listIssues,
+  listPRFiles,
   listPullRequests,
   updateIssue,
 } from '@services/github';
 
 const schema = z.object({
   action: z
-    .enum(['create_issue', 'get_issue', 'update_issue', 'comment_issue', 'comment_pr', 'add_labels', 'list_issues', 'list_prs'])
+    .enum(['create_issue', 'get_issue', 'update_issue', 'comment_issue', 'comment_pr', 'add_labels', 'list_issues', 'list_prs', 'get_pr_checks', 'get_pr', 'list_pr_files', 'get_pr_reviews'])
     .describe('The GitHub action to perform'),
   title: z.string().optional().describe('Issue title (for create_issue and update_issue)'),
   body: z.string().optional().describe('Issue/comment body text'),
@@ -90,6 +94,30 @@ async function runner(input: z.infer<typeof schema>) {
       return JSON.stringify(result);
     }
 
+    case 'get_pr_checks': {
+      if (!input.prNumber) return JSON.stringify({ error: 'prNumber is required for get_pr_checks' });
+      const result = await getPRChecks(input.prNumber);
+      return JSON.stringify(result);
+    }
+
+    case 'get_pr': {
+      if (!input.prNumber) return JSON.stringify({ error: 'prNumber is required for get_pr' });
+      const result = await getPullRequest(input.prNumber);
+      return JSON.stringify(result);
+    }
+
+    case 'list_pr_files': {
+      if (!input.prNumber) return JSON.stringify({ error: 'prNumber is required for list_pr_files' });
+      const result = await listPRFiles(input.prNumber);
+      return JSON.stringify(result);
+    }
+
+    case 'get_pr_reviews': {
+      if (!input.prNumber) return JSON.stringify({ error: 'prNumber is required for get_pr_reviews' });
+      const result = await getPRReviews(input.prNumber);
+      return JSON.stringify(result);
+    }
+
     default:
       return JSON.stringify({ error: `Unknown action: ${input.action}` });
   }
@@ -98,6 +126,6 @@ async function runner(input: z.infer<typeof schema>) {
 export const githubTool = tool(runner, {
   name: 'github',
   description:
-    'Interact with GitHub repository (matansocher/mmps). Can create, read, update issues and PRs, add labels, and list them.',
+    'Interact with GitHub repository (matansocher/mmps). Can create, read, update issues and PRs, add labels, list them, and check PR status checks.',
   schema,
 });

@@ -88,7 +88,7 @@ Available capabilities:
   * "search" - Search messages by text content (case-insensitive regex match)
   Each result includes the message text, conversation name, sender name, and their IDs so you can use them for follow-up queries.
   Natural language variations: "who messaged me today", "what did [person/channel] say", "search my telegram for [keyword]", "show recent messages", "messages from yesterday", "what was said in [group]".
-- GitHub tool: Interact with the matansocher/mmps repository with eight actions:
+- GitHub tool: Interact with the matansocher/mmps repository with these actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
    * "get_issue" - Get details of a specific issue by number
    * "update_issue" - Update an existing issue (title, body, state, labels, assignees)
@@ -97,11 +97,15 @@ Available capabilities:
    * "add_labels" - Add labels to an issue or pull request (uses issueNumber or prNumber)
    * "list_issues" - List all issues (optionally filter by state: "open"/"closed" or labels)
    * "list_prs" - List all pull requests (optionally filter by state: "open"/"closed")
+   * "get_pr_checks" - Get status checks for a pull request (CI/CD status, whether checks are running, passed, or failed)
+   * "get_pr" - Get details of a specific pull request by number
+   * "list_pr_files" - List files changed in a pull request (filename, additions, deletions)
+   * "get_pr_reviews" - Get reviews for a pull request (reviewer, state: approved/changes_requested/commented)
    SPECIAL LABELS (trigger automated workflows):
    * To request AI-powered code review on a PR: add the "review" label to the pull request
    * To request AI implementation for an issue: add the "implement" label to the issue
    These labels trigger GitHub Actions workflows that use Claude to analyze code and generate implementations.
-   Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation"
+   Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation", "check PR status", "are the checks passing", "is CI done", "show PR details", "what files changed in PR", "who reviewed the PR", "is the PR approved"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:

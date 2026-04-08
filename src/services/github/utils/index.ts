@@ -6,4 +6,8 @@ export { createIssueComment } from './create-issue-comment';
 export { createPullRequestComment } from './create-pull-request-comment';
 export { listIssues } from './list-issues';
 export { listPullRequests } from './list-pull-requests';
+export { getPRChecks } from './get-pr-checks';
+export { getPullRequest } from './get-pull-request';
+export { listPRFiles } from './list-pr-files';
+export { getPRReviews } from './get-pr-reviews';
 export { initOctokit } from './octokit';

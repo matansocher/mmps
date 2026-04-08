@@ -45,6 +45,32 @@ export type UpdateIssueInput = {
   readonly assignees?: readonly string[];
 };
 
+export type PullRequestFile = {
+  readonly filename: string;
+  readonly status: string;
+  readonly additions: number;
+  readonly deletions: number;
+  readonly changes: number;
+};
+
+export type PullRequestReview = {
+  readonly id: number;
+  readonly user: string | null;
+  readonly state: string;
+  readonly body: string;
+  readonly submittedAt: string | null;
+  readonly url: string;
+};
+
+export type PullRequestCheck = {
+  readonly name: string;
+  readonly status: string;
+  readonly conclusion: string | null;
+  readonly startedAt: string | null;
+  readonly completedAt: string | null;
+  readonly url: string | null;
+};
+
 export type GitHubServiceResponse<T> = {
   readonly success: boolean;
   readonly data?: T;
