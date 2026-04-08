@@ -52,19 +52,20 @@ export class MessageStreamer {
     }
   }
 
-  async finalize(text: string): Promise<void> {
+  async finalize(text: string): Promise<number> {
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);
       this.flushTimer = undefined;
     }
 
-    // Wait for any in-flight flush to complete before sending the final draft
+    // Wait for any in-flight flush to complete before sending the real message
     if (this.flushInFlight) {
       await this.flushInFlight.catch(() => {});
     }
 
-    // Send the final draft update — Telegram converts it into a real message
-    await this.sendDraft(text);
+    // Send the final content as a real message — drafts are ephemeral and auto-expire
+    const message = await this.bot.api.sendMessage(this.chatId, text, this.parseMode ? { parse_mode: this.parseMode } : undefined);
+    return message.message_id;
   }
 
   private async flush(): Promise<void> {
