@@ -1,6 +1,7 @@
 import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import {
   calendarTool,
+  chilliTool,
   competitionMatchesTool,
   competitionsListTool,
   competitionTableTool,
@@ -106,6 +107,10 @@ Available capabilities:
    * To request AI implementation for an issue: add the "implement" label to the issue
    These labels trigger GitHub Actions workflows that use Claude to analyze code and generate implementations.
    Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation", "check PR status", "are the checks passing", "is CI done", "show PR details", "what files changed in PR", "who reviewed the PR", "is the PR approved"
+- Chilli Message tool: Send a message as Chilli the cat bot in the family group chat (Guz, Todi, and Chilli).
+  * When the user asks to "send as chilli", "message as chilli", "write as chilli", or similar — use this tool.
+  * The message should be sent exactly as in the input.
+  * After sending, just confirm briefly that the message was sent. No need for a long response.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -292,6 +297,7 @@ export function agent(): AgentDescriptor {
     polymarketTool,
     selfieTool,
     githubTool,
+    chilliTool,
   ];
 
   return {
