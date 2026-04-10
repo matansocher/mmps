@@ -1,7 +1,7 @@
 import { tool } from '@langchain/core/tools';
+import { Api } from 'grammy';
+import { env } from 'node:process';
 import { z } from 'zod';
-import { BOT_CONFIG } from '@features/chilli/chilli.config';
-import { provideTelegramBot } from '@services/telegram';
 
 const CHILLI_GROUP_CHAT_ID = -5292792141;
 
@@ -11,8 +11,8 @@ const schema = z.object({
 
 async function runner({ message }: z.infer<typeof schema>) {
   try {
-    const bot = provideTelegramBot(BOT_CONFIG);
-    await bot.api.sendMessage(CHILLI_GROUP_CHAT_ID, message);
+    const api = new Api(env.CHILLI_TELEGRAM_BOT_TOKEN);
+    await api.sendMessage(CHILLI_GROUP_CHAT_ID, message);
     return 'Message sent successfully as Chilli.';
   } catch (error) {
     return `Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`;
