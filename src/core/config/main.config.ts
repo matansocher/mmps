@@ -2,7 +2,7 @@ import { env } from 'node:process';
 
 export const isProd = env.IS_PROD === 'true';
 
-export const MMPS_BASE_URL = 'https://mmps-a9baabab2459.herokuapp.com';
+export const MMPS_BASE_URL = env.MMPS_BASE_URL || 'https://mmps-a9baabab2459.herokuapp.com';
 
 export const MY_USER_ID = 862305226;
 export const TOODIE_USER_ID = 1332013273;
