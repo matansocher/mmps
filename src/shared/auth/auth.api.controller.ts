@@ -108,18 +108,41 @@ export function registerAuthRoutes(app: Express): void {
       const { code, state } = parseResult.data;
       const { token, callbackUrl } = await handleCallback(code, state);
 
-      // If a callback URL was provided (e.g. chrome extension), redirect there; otherwise use default
-      const baseRedirect = callbackUrl || `${req.protocol}://${req.get('host')}/api/auth/success`;
-      res.redirect(`${baseRedirect}#token=${token}`);
+      // callbackUrl is the extension_id for chrome extensions, or undefined for browser flow
+      const successUrl = `${req.protocol}://${req.get('host')}/api/auth/success`;
+      const fragment = callbackUrl ? `token=${token}&extension_id=${callbackUrl}` : `token=${token}`;
+      res.redirect(`${successUrl}#${fragment}`);
     } catch (err) {
       logger.error(`Auth callback failed: ${err}`);
       res.redirect(`${req.protocol}://${req.get('host')}/api/auth/success#error=auth_failed`);
     }
   });
 
-  // Success page — just needs to exist so the redirect URL resolves
+  // Success page — extracts token from hash and sends it to the extension
   app.get('/api/auth/success', (_req: Request, res: Response) => {
-    res.send('<html><body>Authentication complete. You can close this window.</body></html>');
+    res.send(`<!DOCTYPE html>
+<html><body>
+<p id="msg">Authenticating...</p>
+<script>
+  const params = new URLSearchParams(location.hash.slice(1));
+  const token = params.get('token');
+  const error = params.get('error');
+  const extensionId = params.get('extension_id');
+  const msg = document.getElementById('msg');
+
+  if (extensionId && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+    chrome.runtime.sendMessage(extensionId, { type: 'AUTH_CALLBACK', token, error }, (response) => {
+      if (response && response.success) {
+        msg.textContent = 'Logged in! You can close this tab.';
+      } else {
+        msg.textContent = token ? 'Logged in! You can close this tab.' : ('Error: ' + (error || 'unknown'));
+      }
+    });
+  } else {
+    msg.textContent = token ? 'Logged in! You can close this tab.' : ('Error: ' + (error || 'unknown'));
+  }
+</script>
+</body></html>`);
   });
 
   // Get current user
