@@ -38,12 +38,12 @@ function generateCodeChallenge(verifier: string): string {
 
 // --- Public API ---
 
-export async function startAuthFlow(app: AuthApp): Promise<string> {
+export async function startAuthFlow(app: AuthApp, callbackUrl?: string): Promise<string> {
   const state = crypto.randomBytes(16).toString('hex');
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
 
-  await savePendingAuth(state, codeVerifier, app);
+  await savePendingAuth(state, codeVerifier, app, callbackUrl);
 
   const params = new URLSearchParams({
     client_id: getClientId(),
@@ -58,7 +58,7 @@ export async function startAuthFlow(app: AuthApp): Promise<string> {
   return `${TELEGRAM_AUTH_URL}?${params.toString()}`;
 }
 
-export async function handleCallback(code: string, state: string): Promise<{ token: string; user: AuthUser }> {
+export async function handleCallback(code: string, state: string): Promise<{ token: string; user: AuthUser; callbackUrl?: string }> {
   const pending = await consumePendingAuth(state);
   if (!pending) {
     throw new Error('Invalid or expired auth state');
@@ -119,7 +119,7 @@ export async function handleCallback(code: string, state: string): Promise<{ tok
 
   logger.log(`User authenticated: ${claims.id} (@${claims.preferred_username}) for app: ${pending.app}`);
 
-  return { token: sessionToken, user };
+  return { token: sessionToken, user, callbackUrl: pending.callbackUrl };
 }
 
 export async function validateToken(token: string): Promise<AuthUser | null> {

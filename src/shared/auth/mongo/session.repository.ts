@@ -9,13 +9,13 @@ const getPendingCollection = () => getMongoCollection<PendingAuth>(DB_NAME, COLL
 
 // --- Pending Auth (PKCE state) ---
 
-export async function savePendingAuth(state: string, codeVerifier: string, app: AuthApp): Promise<void> {
+export async function savePendingAuth(state: string, codeVerifier: string, app: AuthApp, callbackUrl?: string): Promise<void> {
   try {
     const collection = getPendingCollection();
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes
 
-    await collection.insertOne({ state, codeVerifier, app, createdAt: now, expiresAt });
+    await collection.insertOne({ state, codeVerifier, app, callbackUrl, createdAt: now, expiresAt });
   } catch (err) {
     logger.error(`savePendingAuth - err: ${err}`);
     throw err;

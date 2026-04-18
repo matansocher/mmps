@@ -28,6 +28,7 @@ export type PendingAuth = {
   readonly state: string;
   readonly codeVerifier: string;
   readonly app: AuthApp;
+  readonly callbackUrl?: string;
   readonly createdAt: Date;
   readonly expiresAt: Date;
 };

@@ -87,7 +87,8 @@ export function registerAuthRoutes(app: Express): void {
   app.get('/api/auth/telegram', async (req: Request, res: Response) => {
     try {
       const appName = (req.query.app as string) || 'unknown';
-      const authUrl = await startAuthFlow(appName);
+      const callbackUrl = req.query.callback_url as string | undefined;
+      const authUrl = await startAuthFlow(appName, callbackUrl);
       res.redirect(authUrl);
     } catch (err) {
       logger.error(`Failed to start auth flow: ${err}`);
@@ -105,10 +106,11 @@ export function registerAuthRoutes(app: Express): void {
       }
 
       const { code, state } = parseResult.data;
-      const { token } = await handleCallback(code, state);
+      const { token, callbackUrl } = await handleCallback(code, state);
 
-      // Redirect with token as fragment — chrome.identity.launchWebAuthFlow will intercept this
-      res.redirect(`${req.protocol}://${req.get('host')}/api/auth/success#token=${token}`);
+      // If a callback URL was provided (e.g. chrome extension), redirect there; otherwise use default
+      const baseRedirect = callbackUrl || `${req.protocol}://${req.get('host')}/api/auth/success`;
+      res.redirect(`${baseRedirect}#token=${token}`);
     } catch (err) {
       logger.error(`Auth callback failed: ${err}`);
       res.redirect(`${req.protocol}://${req.get('host')}/api/auth/success#error=auth_failed`);
