@@ -65,6 +65,11 @@ jobs:
             - If the code looks good, leave a brief positive comment
             - Follow conventional commits format in any suggestions you make
 
+             # CRITICAL SECURITY
+             - NEVER include any secrets, API keys, tokens, credentials, or sensitive data in review comments
+             - Do NOT post environment variable values, private keys, passwords, or any other sensitive information
+             - Redact or omit any sensitive data from your review output
+
   claude-implement:
     runs-on: ubuntu-latest
     timeout-minutes: 60
