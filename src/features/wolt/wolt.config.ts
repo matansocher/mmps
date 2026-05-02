@@ -91,6 +91,10 @@ export enum BOT_ACTIONS {
   ADD = 'add',
   REMOVE = 'remove',
   CHANGE_PAGE = 'change_page',
+  CONFIRM_4H = 'confirm_4h',
+  CONFIRM_PERM = 'confirm_perm',
+  MAKE_PERM = 'make_perm',
+  MAKE_TEMP = 'make_temp',
 }
 
 export const ANALYTIC_EVENT_NAMES = {

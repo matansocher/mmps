@@ -34,4 +34,9 @@ export class RestaurantsService {
 }
 
 const restaurantsService = new RestaurantsService();
+
+export function getRestaurantsLastUpdated(): number {
+  return restaurantsList.lastUpdated;
+}
+
 export { restaurantsService };

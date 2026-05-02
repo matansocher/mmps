@@ -21,7 +21,10 @@ export type Subscription = {
   readonly restaurant: string;
   readonly restaurantPhoto: string;
   readonly isActive: boolean;
-  readonly isSuccess: boolean;
-  readonly finishedAt: Date;
+  readonly isSuccess?: boolean;
+  readonly finishedAt?: Date | null;
   readonly createdAt: Date;
+  readonly isPermanent?: boolean;
+  readonly expiresAt?: Date | null;
+  readonly lastNotifiedOpenAt?: number | null;
 };

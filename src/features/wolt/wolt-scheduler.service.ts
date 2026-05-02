@@ -58,7 +58,18 @@ export class WoltSchedulerService {
         await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
       }
 
-      await archiveSubscription(chatId, restaurantName, true);
+      // If subscription is permanent, do not archive it. Instead update lastNotifiedOpenAt to avoid duplicate notifications
+      if ((subscription as any)?.isPermanent) {
+        try {
+          const lastUpdated = restaurantsService && typeof (restaurantsService as any).getRestaurantsLastUpdated === 'function' ? (restaurantsService as any).getRestaurantsLastUpdated() : Date.now();
+          await (await import('@shared/wolt')).setLastNotifiedOpenAt(chatId, restaurantName, lastUpdated);
+        } catch (err) {
+          this.logger.error(`${this.alertSubscription.name} - failed to set lastNotifiedOpenAt - ${err}`);
+        }
+      } else {
+        await archiveSubscription(chatId, restaurantName, true);
+      }
+
       await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
       this.logger.error(`${this.alertSubscription.name} - error - ${err}`);

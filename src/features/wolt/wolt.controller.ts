@@ -8,7 +8,7 @@ import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails 
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
 export class WoltController {
   private readonly logger = new Logger(WoltController.name);
@@ -60,16 +60,36 @@ export class WoltController {
         return;
       }
 
-      const promisesArr = subscriptions.map((subscription: Subscription) => {
-        const keyboard = buildInlineKeyboard([
+      const promisesArr = subscriptions.map(async (subscription: Subscription) => {
+        // fetch fresh state from DB to ensure isPermanent is up-to-date
+        const latest = await (await import('@shared/wolt')).getSubscription(chatId, subscription.restaurant);
+        const isPermanent = Boolean((latest as any)?.isPermanent);
+
+        const buttons: { text: string; data: string; style?: 'danger' | 'success' | 'primary' }[] = [
           {
             text: '⛔️ הסרה ⛔️',
             data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
             style: 'danger',
           },
-        ]);
+        ];
+        if (isPermanent) {
+          buttons.push({
+            text: '🔁 הפוך לזמנית',
+            data: [BOT_ACTIONS.MAKE_TEMP, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
+            style: 'primary',
+          });
+        } else {
+          buttons.push({
+            text: '∞ הפוך לקבוע',
+            data: [BOT_ACTIONS.MAKE_PERM, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
+            style: 'primary',
+          });
+        }
+        const keyboard = buildInlineKeyboard(buttons);
         const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
-        return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
+        const badge = isPermanent ? ' ∞' : '';
+        const expiresText = !isPermanent && (subscription as any)?.createdAt ? ` (expires in ${Math.max(0, Math.round(((new Date((subscription as any).createdAt).getTime() + SUBSCRIPTION_EXPIRATION_HOURS * 60 * 60 * 1000) - Date.now()) / (60 * 1000)))}m)` : '';
+        return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}${badge}${expiresText}`, { reply_markup: keyboard });
       });
       await Promise.all(promisesArr);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
@@ -185,9 +205,13 @@ export class WoltController {
       return;
     }
 
-    const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await addSubscription(chatId, restaurant, restaurantDetails?.photo);
-    await ctx.reply(replyText);
+    const replyText = ['סגור, נרשמתי להתראה — אני אתריע ברגע שאגלה שהמסעדה נפתחת 🚨', restaurant].join('\n');
+    // Create a temporary 4-hour subscription immediately; offer one button to make it permanent
+    await addSubscription(chatId, restaurant, restaurantDetails?.photo, false);
+    const keyboard = new InlineKeyboard()
+      .text('∞ הפוך לקבוע', [BOT_ACTIONS.MAKE_PERM, restaurant].join(INLINE_KEYBOARD_SEPARATOR));
+
+    await ctx.reply(replyText, { reply_markup: keyboard });
     await ctx.react('🤝').catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
@@ -205,6 +229,59 @@ export class WoltController {
     await ctx.react('👌').catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
+  }
+
+  async handleConfirm(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, isPermanent: boolean): Promise<void> {
+    const restaurants = await restaurantsService.getRestaurants();
+    const restaurantDetails = restaurants.find((r: WoltRestaurant) => r.name === restaurant);
+    try {
+      await addSubscription(chatId, restaurant, restaurantDetails?.photo || '', isPermanent);
+      await ctx.answerCallbackQuery({ text: isPermanent ? 'התראה קבועה נוצרה' : 'התראה ל-4 שעות נוצרה' });
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+
+      if (isPermanent && restaurantDetails?.isOnline) {
+        const replyText = ['נראה שהמסעדה פתוחה ממש עכשיו 🟢', 'אפשר להזמין ממנה עכשיו! 🍴', restaurant].join('\n');
+        const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link);
+        await ctx.reply(replyText, { reply_markup: keyboard });
+        try {
+          const lastUpdated = (restaurantsService as any).getRestaurantsLastUpdated();
+          await (await import('@shared/wolt')).setLastNotifiedOpenAt(chatId, restaurant, lastUpdated);
+        } catch (err) {
+          // ignore
+        }
+      }
+
+      await ctx.react('🤝').catch(() => {});
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async makePermanent(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string): Promise<void> {
+    const existing = await (await import('@shared/wolt')).getSubscription(chatId, restaurant);
+    if (!existing) {
+      await ctx.answerCallbackQuery({ text: 'לא נמצאה התראה להפוך לקבוע' });
+      return;
+    }
+    await (await import('@shared/wolt')).setSubscriptionPermanent(chatId, restaurant, true);
+    await ctx.answerCallbackQuery({ text: 'התראה הוגדרה כקבועה' });
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx.reply(`התראה ל${restaurant} הוגדרה כקבועה (עד לביטול).`);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
+  }
+
+  async makeTemporary(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string): Promise<void> {
+    const existing = await (await import('@shared/wolt')).getSubscription(chatId, restaurant);
+    if (!existing) {
+      await ctx.answerCallbackQuery({ text: 'לא נמצאה התראה להפוך לזמנית' });
+      return;
+    }
+    await (await import('@shared/wolt')).setSubscriptionPermanent(chatId, restaurant, false);
+    await ctx.answerCallbackQuery({ text: 'התראה הוגדרה לזמנית (4 שעות)' });
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx.reply(`התראה ל${restaurant} הוגדרה לזמנית ל-4 שעות.`);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
   async changePage(ctx: Context, userDetails: UserDetails, restaurant: string, page: number): Promise<void> {
