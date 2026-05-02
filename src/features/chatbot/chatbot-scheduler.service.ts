@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { ChatbotService } from './chatbot.service';
 import {
+  birthdayReminder,
   dailySummary,
   earthquakeMonitor,
   exerciseReminder,
@@ -28,6 +29,8 @@ export class ChatbotSchedulerService {
 
   init(): void {
     createSchedule(`00 23 * * *`, async () => dailySummary(this.bot, this.chatbotService));
+
+    createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot));
 
     createSchedule(`59 12,23 * * *`, async () => footballUpdate(this.bot, this.chatbotService));
 

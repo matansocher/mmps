@@ -12,6 +12,7 @@ const logger = new Logger('CalendarEventsApiController');
 // Zod schemas for OpenAPI documentation
 const CalendarEventDateTimeSchema = z.object({
   dateTime: z.string().optional().openapi({ description: 'ISO 8601 format for timed events', example: '2026-01-20T10:00:00+02:00' }),
+  date: z.string().optional().openapi({ description: 'YYYY-MM-DD for all-day events', example: '2026-05-03' }),
   timeZone: z.string().optional().openapi({ description: 'Timezone identifier', example: 'Asia/Jerusalem' }),
 });
 
