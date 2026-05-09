@@ -3,13 +3,17 @@ import { type Bot, InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
+import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getPermanentSubscriptions, getUserDetails, Subscription, updatePermanentLastAlertedAt, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, PERMANENT_SUBSCRIPTION_ALERT_INTERVAL_HOURS, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
 
 const JOB_NAME = 'wolt-scheduler-job-interval';
+
+function wasAlertedRecently(date: Date): boolean {
+  return Date.now() - date.getTime() < PERMANENT_SUBSCRIPTION_ALERT_INTERVAL_HOURS * 60 * 60 * 1000;
+}
 
 export class WoltSchedulerService {
   private readonly logger = new Logger(WoltSchedulerService.name);
@@ -40,6 +44,10 @@ export class WoltSchedulerService {
     const subscriptions = (await getActiveSubscriptions()) as Subscription[];
     if (subscriptions?.length) {
       await this.alertSubscriptions(subscriptions);
+    }
+    const permanentSubscriptions = (await getPermanentSubscriptions()) as Subscription[];
+    if (permanentSubscriptions?.length) {
+      await this.alertPermanentSubscriptions(permanentSubscriptions);
     }
   }
 
@@ -75,6 +83,45 @@ export class WoltSchedulerService {
       const relevantSubscriptions = subscriptions.filter((subscription) => subscription.restaurant === restaurant.name);
       for (const subscription of relevantSubscriptions) {
         await this.alertSubscription(restaurant, subscription);
+      }
+    }
+  }
+
+  async alertPermanentSubscription(restaurant: WoltRestaurant, subscription: Subscription): Promise<void> {
+    try {
+      const { name, link } = restaurant;
+      const { chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
+      const keyboard = new InlineKeyboard().url(`🍽️ ${name} 🍽️`, link);
+      const replyText = ['📌 התראה קבועה - מסעדה פתוחה! 🍔🍕🍣', name, 'אפשר להזמין עכשיו! 📱'].join('\n');
+
+      try {
+        await this.bot.api.sendPhoto(chatId, restaurantPhoto, { reply_markup: keyboard, caption: replyText });
+      } catch (err) {
+        this.logger.error(`${this.alertPermanentSubscription.name} - error sending photo - ${err}`);
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
+        await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
+      }
+
+      await updatePermanentLastAlertedAt(chatId, restaurantName);
+      await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.PERMANENT_SUBSCRIPTION_FULFILLED);
+    } catch (err) {
+      this.logger.error(`${this.alertPermanentSubscription.name} - error - ${err}`);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
+    }
+  }
+
+  async alertPermanentSubscriptions(permanentSubscriptions: Subscription[]): Promise<void> {
+    const restaurantsNames = permanentSubscriptions.map((s) => s.restaurant);
+    const restaurants = await restaurantsService.getRestaurants();
+    const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
+
+    for (const restaurant of onlineRestaurants) {
+      const relevantSubs = permanentSubscriptions.filter((s) => s.restaurant === restaurant.name);
+      for (const sub of relevantSubs) {
+        const alreadyAlertedRecently = sub.lastAlertedAt && wasAlertedRecently(sub.lastAlertedAt);
+        if (!alreadyAlertedRecently) {
+          await this.alertPermanentSubscription(restaurant, sub);
+        }
       }
     }
   }

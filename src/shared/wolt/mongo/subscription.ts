@@ -10,7 +10,7 @@ const getCollection = () => getMongoCollection<Subscription>(DB_NAME, 'Subscript
 export async function getActiveSubscriptions(chatId: number = null): Promise<Subscription[]> {
   try {
     const subscriptionCollection = getCollection();
-    const filter = { isActive: true };
+    const filter = { isActive: true, isPermanent: { $ne: true } };
     if (chatId) filter['chatId'] = chatId;
     return subscriptionCollection.find(filter).toArray();
   } catch (err) {
@@ -39,7 +39,7 @@ export async function addSubscription(chatId: number, restaurant: string, restau
 
 export async function archiveSubscription(chatId: number, restaurant: string, isSuccess: boolean) {
   const subscriptionCollection = getCollection();
-  const filter = { chatId, restaurant, isActive: true };
+  const filter = { chatId, restaurant, isActive: true, isPermanent: { $ne: true } };
   const updateObj = { $set: { isActive: false, isSuccess, finishedAt: new Date() } } as Partial<Subscription>;
   return subscriptionCollection.updateOne(filter, updateObj);
 }
@@ -47,11 +47,48 @@ export async function archiveSubscription(chatId: number, restaurant: string, is
 export async function getExpiredSubscriptions(subscriptionExpirationHours: number): Promise<Subscription[]> {
   const subscriptionCollection = getCollection();
   const validLimitTimestamp = new Date(Date.now() - subscriptionExpirationHours * 60 * 60 * 1000);
-  const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
+  const filter = { isActive: true, isPermanent: { $ne: true }, createdAt: { $lt: validLimitTimestamp } };
   return subscriptionCollection.find(filter).toArray();
 }
 
 export async function getTopBy(topBy: 'restaurant' | 'chatId'): Promise<any[]> {
   const subscriptionCollection = getCollection();
   return subscriptionCollection.aggregate([{ $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
+}
+
+export async function getPermanentSubscriptions(chatId: number = null): Promise<Subscription[]> {
+  try {
+    const subscriptionCollection = getCollection();
+    const filter = { isActive: true, isPermanent: true };
+    if (chatId) filter['chatId'] = chatId;
+    return subscriptionCollection.find(filter).toArray();
+  } catch (err) {
+    logger.error(`getPermanentSubscriptions - err: ${err}`);
+    return [];
+  }
+}
+
+export async function addPermanentSubscription(chatId: number, restaurant: string, restaurantPhoto: string) {
+  const subscriptionCollection = getCollection();
+  const subscription = {
+    chatId,
+    restaurant,
+    restaurantPhoto,
+    isActive: true,
+    isPermanent: true,
+    createdAt: new Date(),
+  } as Subscription;
+  return subscriptionCollection.insertOne(subscription);
+}
+
+export async function updatePermanentLastAlertedAt(chatId: number, restaurant: string) {
+  const subscriptionCollection = getCollection();
+  const filter = { chatId, restaurant, isActive: true, isPermanent: true };
+  return subscriptionCollection.updateOne(filter, { $set: { lastAlertedAt: new Date() } });
+}
+
+export async function archivePermanentSubscription(chatId: number, restaurant: string) {
+  const subscriptionCollection = getCollection();
+  const filter = { chatId, restaurant, isActive: true, isPermanent: true };
+  return subscriptionCollection.updateOne(filter, { $set: { isActive: false, finishedAt: new Date() } });
 }
