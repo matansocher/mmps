@@ -24,4 +24,6 @@ export type Subscription = {
   readonly isSuccess: boolean;
   readonly finishedAt: Date;
   readonly createdAt: Date;
+  readonly isPermanent?: boolean;
+  readonly lastAlertedAt?: Date;
 };

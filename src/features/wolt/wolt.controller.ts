@@ -5,10 +5,10 @@ import { Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
-import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
+import { addPermanentSubscription, addSubscription, archivePermanentSubscription, archiveSubscription, getActiveSubscriptions, getPermanentSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_PERMANENT_SUBSCRIPTIONS_PER_USER, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
 export class WoltController {
   private readonly logger = new Logger(WoltController.name);
@@ -53,24 +53,29 @@ export class WoltController {
     const { chatId, userDetails } = getMessageData(ctx);
 
     try {
-      const subscriptions = await getActiveSubscriptions(chatId);
-      if (!subscriptions.length) {
-        const replyText = `אין לך התראות פתוחות`;
-        await ctx.reply(replyText);
+      const [subscriptions, permanentSubscriptions] = await Promise.all([getActiveSubscriptions(chatId), getPermanentSubscriptions(chatId)]);
+
+      if (!subscriptions.length && !permanentSubscriptions.length) {
+        await ctx.reply(`אין לך התראות פתוחות`);
         return;
       }
 
-      const promisesArr = subscriptions.map((subscription: Subscription) => {
-        const keyboard = buildInlineKeyboard([
-          {
-            text: '⛔️ הסרה ⛔️',
-            data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
-            style: 'danger',
-          },
-        ]);
-        const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
-        return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
-      });
+      const promisesArr: Promise<any>[] = [
+        ...subscriptions.map((subscription: Subscription) => {
+          const keyboard = buildInlineKeyboard([
+            { text: '⛔️ הסרה ⛔️', data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR), style: 'danger' },
+          ]);
+          const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
+          return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
+        }),
+        ...permanentSubscriptions.map((subscription: Subscription) => {
+          const keyboard = buildInlineKeyboard([
+            { text: '🗑️ ביטול התראה קבועה', data: [BOT_ACTIONS.REMOVE_PERMANENT, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR), style: 'danger' },
+          ]);
+          return ctx.reply(`🔔 ${subscription.restaurant} - התראה קבועה (כל 4 שעות)`, { reply_markup: keyboard });
+        }),
+      ];
+
       await Promise.all(promisesArr);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
     } catch (err) {
@@ -146,6 +151,14 @@ export class WoltController {
           await this.changePage(ctx, userDetails, restaurantName, parseInt(page));
           break;
         }
+        case BOT_ACTIONS.ADD_PERMANENT: {
+          await this.handleAddPermanent(ctx, chatId, userDetails, restaurantName);
+          break;
+        }
+        case BOT_ACTIONS.REMOVE_PERMANENT: {
+          await this.handleRemovePermanent(ctx, chatId, userDetails, restaurantName);
+          break;
+        }
         default: {
           await ctx.answerCallbackQuery({ text: 'לא הבנתי את הבקשה שלך 😕' });
           await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
@@ -162,8 +175,13 @@ export class WoltController {
   async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
-      const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
-      await ctx.reply(replyText);
+      await ctx.reply(['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n'));
+      return;
+    }
+
+    const permanentSubs = await getPermanentSubscriptions(chatId);
+    if (permanentSubs.some((s) => s.restaurant === restaurant)) {
+      await ctx.reply(['כבר יש לך התראה קבועה על המסעדה הזאת 🔔', restaurant, 'אני אתריע לך כל יום כשהיא תיפתח!'].join('\n'));
       return;
     }
 
@@ -178,17 +196,18 @@ export class WoltController {
       await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
       return;
     }
+
     if (restaurantDetails.isOnline) {
-      const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
-      const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link).success();
-      await ctx.reply(replyText, { reply_markup: keyboard });
+      const orderKeyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link).success();
+      await ctx.reply([`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n'), { reply_markup: orderKeyboard });
+      await this.sendPermanentSubscriptionOffer(ctx, restaurant);
       return;
     }
 
-    const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
     await addSubscription(chatId, restaurant, restaurantDetails?.photo);
-    await ctx.reply(replyText);
+    await ctx.reply(['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n'));
     await ctx.react('🤝').catch(() => {});
+    await this.sendPermanentSubscriptionOffer(ctx, restaurant);
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
@@ -205,6 +224,52 @@ export class WoltController {
     await ctx.react('👌').catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
+  }
+
+  private async handleAddPermanent(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string): Promise<void> {
+    const permanentSubs = await getPermanentSubscriptions(chatId);
+    if (permanentSubs.some((s) => s.restaurant === restaurant)) {
+      await ctx.answerCallbackQuery({ text: 'כבר יש לך התראה קבועה על המסעדה הזאת 🔔' });
+      return;
+    }
+    if (permanentSubs.length >= MAX_NUM_OF_PERMANENT_SUBSCRIPTIONS_PER_USER) {
+      await ctx.answerCallbackQuery({ text: `הגעת למגבלת ההתראות הקבועות (${MAX_NUM_OF_PERMANENT_SUBSCRIPTIONS_PER_USER})` });
+      return;
+    }
+
+    const restaurants = await restaurantsService.getRestaurants();
+    const restaurantDetails = restaurants.find((r: WoltRestaurant): boolean => r.name === restaurant);
+    if (!restaurantDetails) {
+      await ctx.answerCallbackQuery({ text: 'לא הצלחתי למצוא את המסעדה' });
+      return;
+    }
+
+    await addPermanentSubscription(chatId, restaurant, restaurantDetails.photo);
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx.reply(
+      [`✅ נהדר! אני אשלח לך התראה כל 4 שעות כשהמסעדה 📌 ${restaurant} תהיה פתוחה`, `ההתראה הקבועה תישאר פעילה עד שתבטל אותה דרך /list`].join('\n'),
+    );
+    await ctx.react('🤝').catch(() => {});
+
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.PERMANENT_SUBSCRIBE, restaurant }, userDetails);
+  }
+
+  private async handleRemovePermanent(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string): Promise<void> {
+    await archivePermanentSubscription(chatId, restaurant);
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx.reply([`סבבה, ביטלתי את ההתראה הקבועה ל:`, restaurant].join('\n'));
+    await ctx.react('👌').catch(() => {});
+
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.PERMANENT_UNSUBSCRIBE, restaurant }, userDetails);
+  }
+
+  private async sendPermanentSubscriptionOffer(ctx: Context, restaurant: string): Promise<void> {
+    const offerText = [
+      `🔔 רוצה לקבל התראה יומית בכל פעם שהמסעדה תיפתח?`,
+      `התראה קבועה תשלח לך כל 4 שעות כשהמסעדה פתוחה, ותישאר פעילה עד שתבטל אותה דרך /list`,
+    ].join('\n');
+    const keyboard = buildInlineKeyboard([{ text: '🔔 כן, אני רוצה התראה יומית', data: [BOT_ACTIONS.ADD_PERMANENT, restaurant].join(INLINE_KEYBOARD_SEPARATOR) }]);
+    await ctx.reply(offerText, { reply_markup: keyboard });
   }
 
   async changePage(ctx: Context, userDetails: UserDetails, restaurant: string, page: number): Promise<void> {
