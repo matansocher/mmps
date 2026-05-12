@@ -18,6 +18,7 @@ import {
   recipesTool,
   reminderTool,
   selfieTool,
+  spotifyTool,
   topMatchesForPredictionTool,
   weatherTool,
   woltTool,
@@ -28,7 +29,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Telegram message history, and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Telegram message history, Spotify music search and playlist management, and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -108,6 +109,20 @@ Available capabilities:
    These labels trigger GitHub Actions workflows that use Claude to analyze code and generate implementations.
    Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation", "check PR status", "are the checks passing", "is CI done", "show PR details", "what files changed in PR", "who reviewed the PR", "is the PR approved"
 - Contacts tool: Suggest 5 random friends to call or reach out to, or add/remove people from the personal friends list.
+- Spotify tool: Search music and manage the user's own Spotify account with these actions:
+  * "search_track" - Search for songs by name/artist (returns track IDs and URIs)
+  * "search_artist" - Search for artists
+  * "get_track_info" - Get detailed information for a specific track ID
+  * "search_playlist" - Search public playlists
+  * "get_artist_top_tracks" - Get top tracks for an artist ID
+  * "create_playlist" - Create a new playlist on the user's account (requires playlistName; optional playlistDescription, isPublic)
+  * "add_tracks_to_playlist" - Add tracks to a playlist (requires playlistId and trackUris like ["spotify:track:..."])
+  * "get_user_playlists" - List the user's own playlists
+  * "delete_playlist" - Delete (unfollow) a playlist from the user's account (requires playlistId)
+  * "remove_tracks_from_playlist" - Remove specific tracks from a playlist (requires playlistId and trackUris)
+  Natural language: "create a playlist called X", "add [song] to my [playlist] playlist", "remove [song] from my [playlist] playlist", "delete my [playlist] playlist", "what playlists do I have", "search Spotify for [song/artist]".
+  For "add/remove [song] to/from [playlist]" flows: first use search_track to resolve song names into track URIs, then use get_user_playlists to find the target playlist's ID by name, then call add_tracks_to_playlist or remove_tracks_from_playlist.
+  For "delete [playlist]": use get_user_playlists to find the ID by name, then delete_playlist. Always confirm with the user before deleting a playlist.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -302,6 +317,7 @@ export function agent(): AgentDescriptor {
     selfieTool,
     githubTool,
     contactsTool,
+    spotifyTool,
   ];
 
   return {

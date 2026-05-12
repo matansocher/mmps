@@ -1,5 +1,10 @@
+export { addTracksToPlaylist } from './add-tracks-to-playlist';
+export { createPlaylist } from './create-playlist';
+export { deletePlaylist } from './delete-playlist';
 export { getArtistTopTracks } from './get-artist-top-tracks';
 export { getTrackInfo } from './get-track-info';
+export { getUserPlaylists } from './get-user-playlists';
+export { removeTracksFromPlaylist } from './remove-tracks-from-playlist';
 export { searchArtists } from './search-artists';
 export { searchPlaylists } from './search-playlists';
 export { searchTracks } from './search-tracks';
