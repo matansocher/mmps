@@ -67,8 +67,8 @@ export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): 
 
 5. For each selected match, use the calendar tool to create an event:
    - title: "⚽ [Home Team] vs [Away Team]" (in English)
-   - description: Include league name and specific reason why it's important (1 sentence)
-   - startDateTime and endDateTime: Use the match's actual start time, add 2 hours for end time
+   - description: Include league name
+   - startDateTime: Use the match's actual start time
    - location: The venue from the match data
 
 6. After creating calendar events, send me a summary message in English:
