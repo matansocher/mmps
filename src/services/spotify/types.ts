@@ -54,3 +54,25 @@ export type SpotifyArtistTopTracksResponse = Readonly<{
   artistId: string;
   tracks: SpotifyTrack[];
 }>;
+
+export type SpotifyUserPlaylistsResponse = Readonly<{
+  playlists: SpotifyPlaylist[];
+  total: number;
+}>;
+
+export type SpotifyAddTracksResponse = Readonly<{
+  playlistId: string;
+  added: number;
+  snapshotId: string;
+}>;
+
+export type SpotifyRemoveTracksResponse = Readonly<{
+  playlistId: string;
+  removed: number;
+  snapshotId: string;
+}>;
+
+export type SpotifyDeletePlaylistResponse = Readonly<{
+  playlistId: string;
+  deleted: boolean;
+}>;
