@@ -4,6 +4,7 @@ import {
   competitionMatchesTool,
   competitionsListTool,
   competitionTableTool,
+  contactsTool,
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
@@ -27,7 +28,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, and Telegram message history';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Telegram message history, and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -106,6 +107,7 @@ Available capabilities:
    * To request AI implementation for an issue: add the "implement" label to the issue
    These labels trigger GitHub Actions workflows that use Claude to analyze code and generate implementations.
    Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation", "check PR status", "are the checks passing", "is CI done", "show PR details", "what files changed in PR", "who reviewed the PR", "is the PR approved"
+- Contacts tool: Suggest 5 random friends to call or reach out to, or add/remove people from the personal friends list.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -266,7 +268,14 @@ Guidelines:
   * For trending markets, show rank, question, current Yes price, and 24h volume.
   * For search results, show rank, event title, 24h volume, and Polymarket URL. Suggest user can subscribe to specific markets from the results.
   * Use emojis (📊, 📈, 📉, 🟢, 🔒, 🔍) to make interactions engaging.
+- Contacts Guidelines:
+  * When the user asks who to call, speak to, reach out to, or contact, use the contacts tool with action "suggest".
+  * Natural language variations to recognize: "who should I call?", "who should I speak to?", "who should I reach out to?", "suggest someone to talk to", "who can I call?".
+  * When the user wants to add someone to their friends list, use action "add" with the person's name.
+  * When the user wants to remove someone, ALWAYS call action "list" first to get the full friends list, then use your own judgment to identify the correct person (e.g. matching a first name or partial name to the right full name), then call action "remove" with their exact full name.
+  * Use emojis (📞, 👥, ✅, 🗑️) to make interactions engaging.
 `;
+
 
 export function agent(): AgentDescriptor {
   const tools = [
@@ -292,6 +301,7 @@ export function agent(): AgentDescriptor {
     polymarketTool,
     selfieTool,
     githubTool,
+    contactsTool,
   ];
 
   return {
