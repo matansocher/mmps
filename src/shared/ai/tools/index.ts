@@ -46,3 +46,5 @@ export { polymarketTool } from './polymarket';
 export { selfieTool } from './selfie/selfie.tool';
 
 export { githubTool } from './github/github.tool';
+
+export { contactsTool } from './contacts/contacts.tool';

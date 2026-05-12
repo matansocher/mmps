@@ -3,6 +3,7 @@ import { createMongoConnection } from '@core/mongo';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
+import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
@@ -29,6 +30,7 @@ export async function initChatbot(app: Express): Promise<void> {
     POLYMARKET_DB_NAME,
     CALENDAR_EVENTS_DB_NAME,
     SELFIE_DB_NAME,
+    FRIENDS_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
