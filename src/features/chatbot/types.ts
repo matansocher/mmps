@@ -3,6 +3,7 @@ import { BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
+import { z } from 'zod';
 import { ToolCallbackOptions } from '@shared/ai';
 
 export type AgentDescriptor = {
@@ -40,6 +41,11 @@ export type ChatbotResponse = {
   message: string;
   toolResults: ToolResult[];
   timestamp: string;
+};
+
+export type StructuredChatbotResponse<T extends z.ZodTypeAny> = {
+  readonly response: ChatbotResponse;
+  readonly structured: z.infer<T>;
 };
 
 export type ToolResult = {
