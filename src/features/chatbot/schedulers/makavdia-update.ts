@@ -1,4 +1,5 @@
 import type { Bot } from 'grammy';
+import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
@@ -6,6 +7,10 @@ import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('MakavdiaUpdateScheduler');
+
+const makavdiaResponseSchema = z.object({
+  hasGame: z.boolean().describe('Whether Deni Avdija had a game today'),
+});
 
 export async function makavdiaUpdate(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
@@ -21,9 +26,9 @@ export async function makavdiaUpdate(bot: Bot, chatbotService: ChatbotService): 
         - Mention the opponent team, final score, and game outcome (win/loss)
         - Include key statistics: points, rebounds, assists, shooting percentages`;
 
-    const response = await chatbotService.processMessage(prompt, MY_USER_ID);
+    const { response, structured } = await chatbotService.processMessage(prompt, MY_USER_ID, makavdiaResponseSchema);
 
-    if (response?.message) {
+    if (structured.hasGame && response.message) {
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
