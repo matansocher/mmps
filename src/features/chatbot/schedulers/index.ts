@@ -14,3 +14,4 @@ export { youtubeCheck } from './youtube-check';
 export { polymarketUpdate } from './polymarket-update';
 export { rainRadarAlert } from './rain-radar-alert';
 export { selfieSummary } from './selfie-summary';
+export { upcomingEventAlert } from './upcoming-event-alert';
