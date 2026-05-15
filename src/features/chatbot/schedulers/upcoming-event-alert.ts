@@ -6,6 +6,7 @@ import { CalendarEvent, listEvents } from '@services/google-calendar';
 const logger = new Logger('UpcomingEventAlertScheduler');
 
 export const WINDOW_MINUTES = 15;
+const GRACE_MS = 60 * 1000;
 
 const formatTime = (isoString: string) => new Date(isoString).toLocaleString('en-US', { timeZone: DEFAULT_TIMEZONE, hour: '2-digit', minute: '2-digit', hour12: false });
 
@@ -33,7 +34,7 @@ export async function upcomingEventAlert(bot: Bot): Promise<void> {
       if (!event.start?.dateTime) return false;
       if (event.status === 'cancelled') return false;
       const startTime = new Date(event.start.dateTime).getTime();
-      return startTime >= now.getTime() && startTime < windowEnd.getTime();
+      return startTime >= now.getTime() - GRACE_MS && startTime <= windowEnd.getTime();
     });
 
     if (!upcoming.length) {
