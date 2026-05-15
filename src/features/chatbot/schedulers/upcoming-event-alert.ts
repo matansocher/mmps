@@ -25,10 +25,7 @@ export async function upcomingEventAlert(bot: Bot): Promise<void> {
     const now = new Date();
     const windowEnd = new Date(now.getTime() + WINDOW_MINUTES * 60 * 1000);
 
-    logger.log(`Checking for events between ${now.toISOString()} and ${windowEnd.toISOString()}`);
     const events = await listEvents({ timeMin: now.toISOString(), timeMax: windowEnd.toISOString(), singleEvents: true, orderBy: 'startTime' });
-
-    logger.log(`Fetched ${events.length} events from Google Calendar`);
 
     const upcoming = (events || []).filter((event) => {
       if (!event.start?.dateTime) return false;
