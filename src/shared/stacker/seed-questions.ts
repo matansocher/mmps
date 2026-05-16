@@ -20,7 +20,7 @@ const SEED_QUESTIONS: readonly Question[] = [
     level: LEVELS.INTERMEDIATE,
     type: QUESTION_TYPES.CODE_OUTPUT,
     question: 'What does this code print?',
-    codeSnippet: ['console.log([1, 2, 3].map(Number.parseInt));'].join('\n'),
+    codeSnippet: 'console.log([1, 2, 3].map(Number.parseInt));',
     options: ['[1, 2, 3]', '[1, NaN, NaN]', '[NaN, NaN, NaN]', 'TypeError'],
     correctOptionIndex: 1,
     explanation: '`map` passes (value, index) to the callback. `parseInt("1", 0)` → 1; `parseInt("2", 1)` → NaN (radix 1 invalid); `parseInt("3", 2)` → NaN (3 not valid in base 2).',
