@@ -447,6 +447,7 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
 Use `buildInlineKeyboard` to create inline keyboards from a simple array:
 ```typescript
 import { buildInlineKeyboard } from '@services/telegram-grammy';
+import { buildInlineKeyboard } from '@services/telegram';
 
 const keyboard = buildInlineKeyboard([
   { text: 'Subscribe', data: 'subscribe' },
@@ -578,6 +579,8 @@ export async function updateReminderStatus(id: ObjectId, status: Reminder['statu
 - Use `buildInlineKeyboard([{ text, data }])` for inline keyboards
 - Use `getMessageData(ctx)` / `getCallbackQueryData(ctx)` from `@services/telegram-grammy`
 - Import bot utilities from `@services/telegram-grammy`
+- Use `getMessageData(ctx)` / `getCallbackQueryData(ctx)` from `@services/telegram`
+- Import bot utilities from `@services/telegram` (grammY-based — exports `provideTelegramBot`, `buildInlineKeyboard`, `getMessageData`, `getCallbackQueryData`, `MessageLoader`, etc.)
 - Use `new InputFile(path)` from `grammy` when sending files (`sendVoice`, `sendPhoto`, `sendDocument`, etc.) — raw file path strings are not accepted
 
 ### DON'T
@@ -593,6 +596,8 @@ export async function updateReminderStatus(id: ObjectId, status: Reminder['statu
 - Use `this.bot.api.*` in controllers when `ctx` is available (use `ctx.reply()` etc. instead)
 - Use `getInlineKeyboardMarkup` from `@services/telegram` (use `buildInlineKeyboard` from `@services/telegram-grammy` instead)
 - Import from `node-telegram-bot-api` or `@services/telegram`
+- Use `getInlineKeyboardMarkup` (use `buildInlineKeyboard` from `@services/telegram` instead)
+- Import from `node-telegram-bot-api` (use grammY via `@services/telegram` instead)
 
 ### Environment Variables
 ```typescript
@@ -613,6 +618,7 @@ const zonedDate = toZonedTime(new Date(), 'Asia/Jerusalem');
 - **30+ external services** (weather, sports, Google services, OpenAI, YouTube, etc.)
 - **Multi-bot development**: Use `LOCAL_ACTIVE_BOT_ID` env var to run individual bots during development
 - All bots use grammY via `@services/telegram-grammy` for Telegram integration
+- All bots use grammY via `@services/telegram` for Telegram integration
 - Main entry: `src/index.ts` with conditional bot initialization based on environment
 
 When in doubt, look at existing code in `features/` or `services/` directories.
