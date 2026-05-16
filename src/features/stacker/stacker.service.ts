@@ -100,7 +100,7 @@ export class StackerService {
 
   async gradeButtonAnswer(chatId: number, messageId: number, answerIndex: number): Promise<void> {
     const session = await getActiveSession(chatId);
-    if (!session || !session.currentQuestionId || session.currentMessageId !== messageId) {
+    if (!session || !session.currentQuestionId) {
       return;
     }
 
@@ -190,7 +190,6 @@ export class StackerService {
       queue,
       retakeQueue,
       currentQuestionId: question._id,
-      currentMessageId: sentMessageId,
     });
   }
 

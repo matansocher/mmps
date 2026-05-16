@@ -88,7 +88,6 @@ export type Session = {
   readonly queue: readonly ObjectId[];
   readonly retakeQueue: readonly ObjectId[];
   readonly currentQuestionId?: ObjectId;
-  readonly currentMessageId?: number;
   readonly correctCount: number;
   readonly wrongCount: number;
   readonly status: SessionStatus;
