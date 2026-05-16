@@ -1,5 +1,6 @@
 import { Logger } from '@core/utils';
-import { countQuestions, insertQuestions, LEVELS, Question, QUESTION_TYPES, TOPICS } from '@shared/stacker';
+import { countQuestions, insertQuestions } from './mongo';
+import { LEVELS, Question, QUESTION_TYPES, TOPICS } from './types';
 
 const logger = new Logger('seed-questions');
 

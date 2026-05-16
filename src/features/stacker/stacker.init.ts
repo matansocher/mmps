@@ -1,7 +1,6 @@
 import { createMongoConnection } from '@core/mongo';
 import { provideTelegramBot } from '@services/telegram';
-import { DB_NAME } from '@shared/stacker';
-import { seedQuestionsIfEmpty } from './seed-questions';
+import { DB_NAME, seedQuestionsIfEmpty } from '@shared/stacker';
 import { StackerSchedulerService } from './stacker-scheduler.service';
 import { BOT_CONFIG } from './stacker.config';
 import { StackerController } from './stacker.controller';
