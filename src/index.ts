@@ -11,6 +11,7 @@ import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initLangly, BOT_CONFIG as langlyConfig } from '@features/langly';
 // import { initMagister, BOT_CONFIG as magisterConfig } from '@features/magister';
+import { initStacker, BOT_CONFIG as stackerConfig } from '@features/stacker';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { DB_NAME as AUTH_DB_NAME, registerAuthRoutes } from '@shared/auth';
@@ -48,6 +49,7 @@ async function main() {
   shouldInitBot(coachConfig) && (await initCoach());
   shouldInitBot(langlyConfig) && (await initLangly());
   // shouldInitBot(magisterConfig) && (await initMagister());
+  shouldInitBot(stackerConfig) && (await initStacker());
   shouldInitBot(woltConfig) && (await initWolt());
   shouldInitBot(worldlyConfig) && (await initWorldly());
 
