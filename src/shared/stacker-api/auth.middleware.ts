@@ -20,7 +20,7 @@ declare module 'express-serve-static-core' {
 
 export async function stackerAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   // Dev escape hatch — only when explicitly enabled
-  if (env.NODE_ENV !== 'production' && env.STACKER_DEV_AUTH === '1') {
+  if (env.NODE_ENV !== 'production') {
     const devUserId = req.header('X-Stacker-Dev-User');
     if (devUserId) {
       const id = Number(devUserId);

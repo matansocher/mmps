@@ -13,7 +13,9 @@
     "node": "24.x"
   },
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build": "tsc && tsc-alias && npm run build:stacker-web",
+    "build:stacker-web": "npm run build --workspace=@mmps/stacker-web",
+    "dev:stacker-web": "npm run dev --workspace=@mmps/stacker-web",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "dev:build": "tsc --watch",

@@ -30,7 +30,7 @@ export async function initStacker(app: Express): Promise<void> {
   // Serve Vite-built SPA at /stacker/*
   const spaDist = path.resolve('apps/stacker-web/dist');
   app.use('/stacker', express.static(spaDist));
-  app.get('/stacker/*', (_req, res) => {
+  app.get('/stacker/*splat', (_req, res) => {
     res.sendFile(path.join(spaDist, 'index.html'));
   });
   logger.log(`Stacker SPA served from ${spaDist} at /stacker/*`);
