@@ -21,12 +21,12 @@ import {
 import { stackerAuthMiddleware } from './auth.middleware';
 import {
   AbandonResponse,
-  AnswerBody,
+  AnswerBodySchema,
   AnswerResponse,
   MeResponse,
   NextQuestionResponse,
   QuestionDto,
-  StartSessionBody,
+  StartSessionBodySchema,
   StartSessionResponse,
   TopicsResponse,
 } from './dto';
@@ -107,7 +107,7 @@ export function registerStackerApiRoutes(app: Express): void {
   // POST /api/stacker/sessions
   app.post('/api/stacker/sessions', async (req: Request, res: Response<StartSessionResponse>) => {
     const { chatId, telegramUserId, username } = req.stackerUser!;
-    const parsed = StartSessionBody.safeParse(req.body);
+    const parsed = StartSessionBodySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ ok: false, reason: 'no_questions' });
       return;
@@ -146,7 +146,7 @@ export function registerStackerApiRoutes(app: Express): void {
   // POST /api/stacker/sessions/:id/answer
   app.post('/api/stacker/sessions/:id/answer', async (req: Request, res: Response<AnswerResponse | { error: string }>) => {
     const { chatId } = req.stackerUser!;
-    const parsed = AnswerBody.safeParse(req.body);
+    const parsed = AnswerBodySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'invalid_body' });
       return;

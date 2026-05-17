@@ -3,18 +3,18 @@ import type { Level, Topic } from '@shared/stacker';
 
 // --- Request schemas ---
 
-export const StartSessionBody = z.object({
+export const StartSessionBodySchema = z.object({
   topic: z.string(),
   level: z.string(),
 });
-export type StartSessionBody = z.infer<typeof StartSessionBody>;
+export type StartSessionBody = z.infer<typeof StartSessionBodySchema>;
 
-export const AnswerBody = z.object({
+export const AnswerBodySchema = z.object({
   questionId: z.string(),
   selectedOption: z.number().int().optional(),
   text: z.string().optional(),
 });
-export type AnswerBody = z.infer<typeof AnswerBody>;
+export type AnswerBody = z.infer<typeof AnswerBodySchema>;
 
 // --- Response DTOs (UI-shaped; no Mongo internals) ---
 
