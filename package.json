@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Express TypeScript application",
   "main": "dist/index.js",
+  "workspaces": ["apps/*"],
   "type": "commonjs",
   "repository": {
     "type": "git",
