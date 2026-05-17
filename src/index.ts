@@ -49,7 +49,7 @@ async function main() {
   shouldInitBot(coachConfig) && (await initCoach());
   shouldInitBot(langlyConfig) && (await initLangly());
   // shouldInitBot(magisterConfig) && (await initMagister());
-  shouldInitBot(stackerConfig) && (await initStacker());
+  shouldInitBot(stackerConfig) && (await initStacker(app));
   shouldInitBot(woltConfig) && (await initWolt());
   shouldInitBot(worldlyConfig) && (await initWorldly());
 
