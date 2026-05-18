@@ -51,7 +51,7 @@ async function main() {
   // shouldInitBot(magisterConfig) && (await initMagister());
   shouldInitBot(stackerConfig) && (await initStacker(app));
   shouldInitBot(woltConfig) && (await initWolt());
-  shouldInitBot(worldlyConfig) && (await initWorldly());
+  shouldInitBot(worldlyConfig) && (await initWorldly(app));
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
   app.listen(port, () => {
