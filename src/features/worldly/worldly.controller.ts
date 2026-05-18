@@ -6,6 +6,7 @@ import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
+import { WorldlyLauncherService } from './launcher.service';
 import { generateStatisticsMessage } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
@@ -16,6 +17,7 @@ export class WorldlyController {
   constructor(
     private readonly worldlyService: WorldlyService,
     private readonly bot: Bot,
+    private readonly launcher: WorldlyLauncherService,
   ) {}
 
   init(): void {
@@ -49,6 +51,10 @@ export class WorldlyController {
         : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
+    const miniAppMarkup = this.launcher.buildKeyboard();
+    if (miniAppMarkup) {
+      keyboard.webApp(miniAppMarkup.inline_keyboard[0][0].text, miniAppMarkup.inline_keyboard[0][0].web_app.url).row();
+    }
     await ctx.reply('איך אני יכול לעזור? 👨‍🏫', { reply_markup: keyboard });
     await ctx.deleteMessage().catch(() => {});
   }

@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/components/answerbutton.tsx","./src/components/bottomnav.tsx","./src/components/emptystate.tsx","./src/components/modetile.tsx","./src/lib/api.ts","./src/lib/telegram.ts","./src/pages/gamepage.tsx","./src/pages/homepage.tsx","./src/pages/settingspage.tsx","./src/pages/statspage.tsx"],"version":"5.9.3"}

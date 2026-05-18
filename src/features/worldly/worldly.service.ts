@@ -1,27 +1,26 @@
 import * as fs from 'fs';
 import { type Bot, InputFile } from 'grammy';
-import { generateRandomString, shuffleArray } from '@core/utils';
 import { notify } from '@services/notifier';
 import { BLOCKED_ERROR, buildInlineKeyboard } from '@services/telegram';
-import { Country, getAllCountries, getAllStates, getRandomCountry, getRandomState, getUserDetails, saveGameLog, State, updateSubscription } from '@shared/worldly';
-import { getAreaMap, getCapitalDistractors, getFlagDistractors, getMapDistractors, getMapStateDistractors } from './utils';
+import { getAllCountries, getAllStates, getUserDetails, updateSubscription } from '@shared/worldly';
+import { buildQuestion, QuestionDescriptor } from './question-builder';
+import { getAreaMap } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
+
+const MODE_TO_BOT_ACTION: Record<QuestionDescriptor['mode'], BOT_ACTIONS> = {
+  map: BOT_ACTIONS.MAP,
+  us_map: BOT_ACTIONS.US_MAP,
+  flag: BOT_ACTIONS.FLAG,
+  capital: BOT_ACTIONS.CAPITAL,
+};
 
 export class WorldlyService {
   constructor(private readonly bot: Bot) {}
 
   async randomGameHandler(chatId: number): Promise<void> {
-    const handlers = [
-      (chatId: number) => this.mapHandler(chatId),
-      // (chatId: number) => this.USMapHandler(chatId),
-      (chatId: number) => this.flagHandler(chatId),
-      // (chatId: number) => this.capitalHandler(chatId),
-    ];
-
-    const randomGameIndex = Math.floor(Math.random() * handlers.length);
-
     try {
-      await handlers[randomGameIndex](chatId);
+      const descriptor = await buildQuestion('random', chatId);
+      await this.sendQuestion(chatId, descriptor);
     } catch (err) {
       if (err.message.includes(BLOCKED_ERROR)) {
         const userDetails = await getUserDetails(chatId);
@@ -32,77 +31,48 @@ export class WorldlyService {
   }
 
   async mapHandler(chatId: number): Promise<void> {
-    const gameFilter = (c: Country) => !!c.geometry;
-    const allCountries = await getAllCountries();
-    const randomCountry = await getRandomCountry(gameFilter);
-    const imagePath = getAreaMap(allCountries, randomCountry.name);
-
-    const otherOptions = getMapDistractors(allCountries, randomCountry);
-    const options = shuffleArray([randomCountry, ...otherOptions]);
-    const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(
-      options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.MAP, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR), style: 'primary' as const })),
-    );
-
-    await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: 'נחשו את המדינה' });
-
-    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.MAP, correct: randomCountry.name });
+    const descriptor = await buildQuestion('map', chatId);
+    await this.sendQuestion(chatId, descriptor);
   }
 
   async USMapHandler(chatId: number): Promise<void> {
-    const gameFilter = (c: State) => !!c.geometry;
-    const allStates = await getAllStates();
-    const randomState = await getRandomState(gameFilter);
-    const imagePath = getAreaMap(allStates, randomState.name, true);
-
-    const otherOptions = getMapStateDistractors(allStates, randomState);
-    const options = shuffleArray([randomState, ...otherOptions]);
-    const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(
-      options.map((state) => ({ text: state.hebrewName, data: [BOT_ACTIONS.US_MAP, state.name, randomState.name, gameId].join(INLINE_KEYBOARD_SEPARATOR), style: 'primary' as const })),
-    );
-
-    await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: 'נחשו את המדינה בארצות הברית' });
-
-    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.US_MAP, correct: randomState.name });
+    const descriptor = await buildQuestion('us_map', chatId);
+    await this.sendQuestion(chatId, descriptor);
   }
 
   async flagHandler(chatId: number): Promise<void> {
-    const gameFilter = (c: Country) => !!c.emoji;
-    const allCountries = await getAllCountries();
-    const randomCountry = await getRandomCountry(gameFilter);
-
-    const otherOptions = getFlagDistractors(allCountries, randomCountry, gameFilter);
-    const options = shuffleArray([randomCountry, ...otherOptions]);
-    const gameId = generateRandomString(5);
-    const keyboard = buildInlineKeyboard(
-      options.map((country) => ({ text: country.hebrewName, data: [BOT_ACTIONS.FLAG, country.name, randomCountry.name, gameId].join(INLINE_KEYBOARD_SEPARATOR), style: 'primary' as const })),
-    );
-
-    await this.bot.api.sendMessage(chatId, randomCountry.emoji, { reply_markup: keyboard });
-
-    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.FLAG, correct: randomCountry.name });
+    const descriptor = await buildQuestion('flag', chatId);
+    await this.sendQuestion(chatId, descriptor);
   }
 
   async capitalHandler(chatId: number): Promise<void> {
-    const gameFilter = (c: Country) => !!c.capital;
-    const allCountries = await getAllCountries();
-    const randomCountry = await getRandomCountry(gameFilter);
+    const descriptor = await buildQuestion('capital', chatId);
+    await this.sendQuestion(chatId, descriptor);
+  }
 
-    const otherOptions = getCapitalDistractors(allCountries, randomCountry, gameFilter);
-    const options = shuffleArray([randomCountry, ...otherOptions]);
-    const gameId = generateRandomString(5);
+  private async sendQuestion(chatId: number, descriptor: QuestionDescriptor): Promise<void> {
+    const action = MODE_TO_BOT_ACTION[descriptor.mode];
     const keyboard = buildInlineKeyboard(
-      options.map((country) => ({
-        text: country.hebrewCapital,
-        data: [BOT_ACTIONS.CAPITAL, country.hebrewCapital, randomCountry.hebrewCapital, gameId].join(INLINE_KEYBOARD_SEPARATOR),
+      descriptor.options.map((opt) => ({
+        text: opt.label,
+        data: [action, opt.id, descriptor.correct.id, descriptor.gameId].join(INLINE_KEYBOARD_SEPARATOR),
         style: 'primary' as const,
       })),
     );
 
-    const replyText = ['נחשו את עיר הבירה של:', `${randomCountry.emoji} ${randomCountry.hebrewName} ${randomCountry.emoji}`].join(' ');
-    await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
+    if (descriptor.mode === 'map' || descriptor.mode === 'us_map') {
+      const allAreas = descriptor.isState ? await getAllStates() : await getAllCountries();
+      const imagePath = getAreaMap(allAreas, descriptor.imageAreaName!, descriptor.isState);
+      await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: descriptor.captionText });
+      return;
+    }
 
-    await saveGameLog({ chatId, gameId, type: ANALYTIC_EVENT_NAMES.CAPITAL, correct: randomCountry.name });
+    if (descriptor.mode === 'flag') {
+      await this.bot.api.sendMessage(chatId, descriptor.flagEmoji!, { reply_markup: keyboard });
+      return;
+    }
+
+    // capital
+    await this.bot.api.sendMessage(chatId, descriptor.captionText!, { reply_markup: keyboard });
   }
 }
