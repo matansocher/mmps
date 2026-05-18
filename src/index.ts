@@ -46,7 +46,7 @@ async function main() {
 
   shouldInitBot(chatbotConfig) && (await initChatbot(app));
   shouldInitBot(chilliConfig) && (await initChilli());
-  shouldInitBot(coachConfig) && (await initCoach());
+  shouldInitBot(coachConfig) && (await initCoach(app));
   shouldInitBot(langlyConfig) && (await initLangly());
   // shouldInitBot(magisterConfig) && (await initMagister());
   shouldInitBot(stackerConfig) && (await initStacker(app));

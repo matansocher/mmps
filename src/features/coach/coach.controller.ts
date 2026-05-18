@@ -8,6 +8,7 @@ import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoade
 import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
+import { CoachLauncherService } from './launcher.service';
 import { getDateFromUserInput } from './utils';
 
 const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';
@@ -29,6 +30,7 @@ export class CoachController {
   constructor(
     private readonly coachService: CoachService,
     private readonly bot: Bot,
+    private readonly launcher: CoachLauncherService,
   ) {}
 
   init(): void {
@@ -84,6 +86,10 @@ export class CoachController {
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
     await ctx.reply('👨‍🏫 איך אני יכול לעזור?', { reply_markup: keyboard });
+    const launcherKeyboard = this.launcher.buildKeyboard();
+    if (launcherKeyboard) {
+      await this.bot.api.sendMessage(chatId, '📱 או פתח את האפליקציה', { reply_markup: launcherKeyboard });
+    }
     await ctx.deleteMessage().catch(() => {});
   }
 
@@ -183,6 +189,10 @@ export class CoachController {
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
     await ctx.reply(userExists ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
+    const launcherKeyboard = this.launcher.buildKeyboard();
+    if (launcherKeyboard) {
+      await this.bot.api.sendMessage(chatId, '📱 גם יש לי אפליקציה — לתצוגה ויזואלית:', { reply_markup: launcherKeyboard });
+    }
   }
 
   private async stopHandler(ctx: Context, chatId: number): Promise<void> {
