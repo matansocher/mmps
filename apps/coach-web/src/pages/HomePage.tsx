@@ -1,22 +1,58 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
 import type { TodayResponse } from '../types';
 import { LiveMatchCard } from '../components/LiveMatchCard';
 import { LeagueSection } from '../components/LeagueSection';
 import { EmptyState } from '../components/EmptyState';
 import { BottomNav } from '../components/BottomNav';
+import { RefreshButton } from '../components/RefreshButton';
 
 const DATE_FMT = new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' });
+const AUTO_REFRESH_MS = 60_000;
 
 export function HomePage() {
   const [data, setData] = useState<TodayResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const inFlight = useRef(false);
+
+  const loadToday = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setRefreshing(true);
+    try {
+      const next = await api.today();
+      setData(next);
+      setError(null);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      inFlight.current = false;
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     window.Telegram?.WebApp?.ready();
     window.Telegram?.WebApp?.expand();
-    api.today().then(setData).catch((e) => setError(String(e)));
-  }, []);
+    loadToday();
+  }, [loadToday]);
+
+  useEffect(() => {
+    const tick = () => {
+      if (document.hidden) return;
+      loadToday();
+    };
+    const id = window.setInterval(tick, AUTO_REFRESH_MS);
+    const onVis = () => {
+      if (!document.hidden) loadToday();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [loadToday]);
 
   const dateLabel = data ? DATE_FMT.format(new Date(data.date + 'T00:00:00')) : '';
   const hasAnything = data && (data.live.length > 0 || data.groups.some((g) => g.matches.length > 0));
@@ -25,11 +61,14 @@ export function HomePage() {
     <div className="min-h-full bg-bg-base flex flex-col">
       <header className="px-4 py-4 flex items-center justify-between sticky top-0 bg-bg-base/85 backdrop-blur border-b border-border-subtle z-10">
         <h1 className="text-text-primary font-bold text-lg">⚽ Coach</h1>
-        <span className="text-text-secondary text-sm">{dateLabel}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-text-secondary text-sm">{dateLabel}</span>
+          <RefreshButton busy={refreshing} onClick={loadToday} />
+        </div>
       </header>
 
       <main className="flex-1 p-4 space-y-6">
-        {error && <EmptyState title="לא הצלחתי לטעון נתונים" hint={error} />}
+        {error && !data && <EmptyState title="לא הצלחתי לטעון נתונים" hint={error} />}
         {!error && !data && <EmptyState title="טוען..." />}
         {data && (
           <>
