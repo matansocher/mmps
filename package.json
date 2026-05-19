@@ -13,13 +13,15 @@
     "node": "24.x"
   },
   "scripts": {
-    "build": "tsc && tsc-alias && npm run build:stacker-web && npm run build:coach-web && npm run build:worldly-web",
+    "build": "tsc && tsc-alias && npm run build:stacker-web && npm run build:coach-web && npm run build:worldly-web && npm run build:wolt-web",
     "build:stacker-web": "npm run build --workspace=@mmps/stacker-web",
     "build:coach-web": "npm run build --workspace=@mmps/coach-web",
     "build:worldly-web": "npm run build --workspace=@mmps/worldly-web",
+    "build:wolt-web": "npm run build --workspace=@mmps/wolt-web",
     "dev:stacker-web": "npm run dev --workspace=@mmps/stacker-web",
     "dev:coach-web": "npm run dev --workspace=@mmps/coach-web",
     "dev:worldly-web": "npm run dev --workspace=@mmps/worldly-web",
+    "dev:wolt-web": "npm run dev --workspace=@mmps/wolt-web",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "dev:build": "tsc --watch",

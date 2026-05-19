@@ -8,6 +8,11 @@ export type WoltRestaurant = {
   readonly area: string;
   readonly photo: string;
   readonly link: string;
+  readonly tags?: ReadonlyArray<string>;
+  readonly priceRange?: number; // 1-4
+  readonly rating?: number; // 0-10
+  readonly estimateMinutes?: number;
+  readonly shortDescription?: string;
 };
 
 export type RestaurantsList = {

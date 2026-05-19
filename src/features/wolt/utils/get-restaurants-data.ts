@@ -25,9 +25,22 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
 
     return restaurantsWithArea.map((restaurant) => {
       const { venue, title: name, area, image } = restaurant;
-      const { id, online: isOnline, slug } = venue;
+      const { id, online: isOnline, slug, tags, price_range: priceRange, rating, estimate, short_description: shortDescription } = venue;
       const link = RESTAURANT_LINK_BASE_URL.replace('{area}', area).replace('{slug}', slug);
-      return { id, name, isOnline, slug, area, photo: image.url, link } as WoltRestaurant;
+      return {
+        id,
+        name,
+        isOnline,
+        slug,
+        area,
+        photo: image.url,
+        link,
+        tags: Array.isArray(tags) ? tags : undefined,
+        priceRange: typeof priceRange === 'number' ? priceRange : undefined,
+        rating: rating && typeof rating.score === 'number' ? rating.score : undefined,
+        estimateMinutes: typeof estimate === 'number' ? estimate : undefined,
+        shortDescription: typeof shortDescription === 'string' ? shortDescription : undefined,
+      } as WoltRestaurant;
     });
   } catch (err) {
     logger.error(`${getRestaurantsList.name} - err - ${err}`);
