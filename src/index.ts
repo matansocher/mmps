@@ -50,7 +50,7 @@ async function main() {
   shouldInitBot(langlyConfig) && (await initLangly());
   // shouldInitBot(magisterConfig) && (await initMagister());
   shouldInitBot(stackerConfig) && (await initStacker(app));
-  shouldInitBot(woltConfig) && (await initWolt());
+  shouldInitBot(woltConfig) && (await initWolt(app));
   shouldInitBot(worldlyConfig) && (await initWorldly(app));
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
