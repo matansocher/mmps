@@ -44,6 +44,29 @@ function isToday(d: Date): boolean {
 }
 
 export function registerWorldlyApiRoutes(app: Express): void {
+  // Public route — must be registered before the auth middleware below so it stays unauthenticated.
+  // Browsers can't send custom headers on <img> requests, so this endpoint must be reachable without X-Telegram-Init-Data.
+  app.get('/api/worldly/area-map', async (req: Request, res: Response) => {
+    const name = String(req.query.name ?? '');
+    const isState = req.query.state === '1';
+    if (!name) {
+      res.status(400).json({ error: 'missing_name' });
+      return;
+    }
+    try {
+      const all = isState ? await getAllStates() : await getAllCountries();
+      const path = getAreaMap(all, name, isState);
+      if (!path) {
+        res.status(404).json({ error: 'area_map_not_found' });
+        return;
+      }
+      res.sendFile(path);
+    } catch (err) {
+      logger.error(`area-map failed name=${name}: ${err}`);
+      res.status(500).json({ error: 'area_map_failed' });
+    }
+  });
+
   app.use('/api/worldly', worldlyAuthMiddleware);
 
   app.post('/api/worldly/game', async (req: Request, res: Response<GameQuestionResponse | { error: string }>) => {
@@ -190,27 +213,6 @@ export function registerWorldlyApiRoutes(app: Express): void {
     } catch (err) {
       logger.error(`subscription update failed chatId=${chatId}: ${err}`);
       res.status(500).json({ error: 'update_failed' });
-    }
-  });
-
-  app.get('/api/worldly/area-map', async (req: Request, res: Response) => {
-    const name = String(req.query.name ?? '');
-    const isState = req.query.state === '1';
-    if (!name) {
-      res.status(400).json({ error: 'missing_name' });
-      return;
-    }
-    try {
-      const all = isState ? await getAllStates() : await getAllCountries();
-      const path = getAreaMap(all, name, isState);
-      if (!path) {
-        res.status(404).json({ error: 'area_map_not_found' });
-        return;
-      }
-      res.sendFile(path);
-    } catch (err) {
-      logger.error(`area-map failed name=${name}: ${err}`);
-      res.status(500).json({ error: 'area_map_failed' });
     }
   });
 
