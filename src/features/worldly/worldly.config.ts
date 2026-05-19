@@ -5,6 +5,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Worldly Bot 🌍',
   token: 'WORLDLY_TELEGRAM_BOT_TOKEN',
   commands: {
+    APP: { command: '/app', description: '📱 פתח אפליקציה 📱' },
     START: { command: '/start', description: 'התחל מהתחלה', hide: true },
     FIRE_MODE: { command: '/fire_mode', description: '🔥 משחק רצוף 🔥' },
     RANDOM: { command: '/random', description: '🌎 משחק אקראי 🌎' },

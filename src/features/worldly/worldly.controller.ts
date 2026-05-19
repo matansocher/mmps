@@ -21,9 +21,10 @@ export class WorldlyController {
   ) {}
 
   init(): void {
-    const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
+    const { START, APP, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
+    this.bot.command(APP.command.replace('/', ''), (ctx) => this.appHandler(ctx));
     this.bot.command(FIRE_MODE.command.replace('/', ''), (ctx) => this.fireModeHandler(ctx));
     this.bot.command(RANDOM.command.replace('/', ''), (ctx) => this.randomHandler(ctx));
     this.bot.command(MAP.command.replace('/', ''), (ctx) => this.mapHandler(ctx));
@@ -39,6 +40,11 @@ export class WorldlyController {
     const { chatId, userDetails } = getMessageData(ctx);
     await this.userStart(ctx, chatId, userDetails);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+  }
+
+  async appHandler(ctx: Context): Promise<void> {
+    const { chatId } = getMessageData(ctx);
+    await this.launcher.sendLauncher(chatId);
   }
 
   private async actionsHandler(ctx: Context): Promise<void> {
