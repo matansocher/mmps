@@ -1,5 +1,4 @@
 import cors from 'cors';
-import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
@@ -14,8 +13,6 @@ import { initLangly, BOT_CONFIG as langlyConfig } from '@features/langly';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { DB_NAME as AUTH_DB_NAME, registerAuthRoutes } from '@shared/auth';
-
-dotenv.config();
 
 async function main() {
   // await initConsoleOverride();

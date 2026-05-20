@@ -6,7 +6,9 @@ const connections: Map<string, Db> = new Map();
 export async function createMongoConnection(dbName: string): Promise<void> {
   const mongoUri = env.MONGO_DB_URL;
   const client = new MongoClient(mongoUri);
-  await client.connect();
+  await client.connect().catch((err) => {
+    console.error(err);
+  });
   connections.set(dbName, client.db(dbName));
 }
 

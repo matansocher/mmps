@@ -11,6 +11,7 @@ import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';
 import { CoachService } from './coach.service';
 import { CoachLauncherService } from './launcher.service';
+import { createCoachMatchesWorker } from './queue/coach-matches.worker';
 
 const logger = new Logger('initCoach');
 
@@ -21,10 +22,11 @@ export async function initCoach(app: Express): Promise<void> {
   const coachService = new CoachService();
   const launcher = new CoachLauncherService(bot);
   const coachController = new CoachController(coachService, bot, launcher);
-  const coachScheduler = new CoachBotSchedulerService(coachService, bot);
+  const coachScheduler = new CoachBotSchedulerService();
 
   coachController.init();
   coachScheduler.init();
+  createCoachMatchesWorker(coachService, bot);
 
   registerCoachApiRoutes(app, { botConfig: BOT_CONFIG });
 

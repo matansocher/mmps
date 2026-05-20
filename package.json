@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Express TypeScript application",
   "main": "dist/index.js",
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "type": "commonjs",
   "repository": {
     "type": "git",
@@ -21,9 +23,9 @@
     "dev:worldly-web": "npm run dev --workspace=@mmps/worldly-web",
     "dev:wolt-web": "npm run dev --workspace=@mmps/wolt-web",
     "start": "node dist/index.js",
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --require dotenv/config src/index.ts",
     "dev:build": "tsc --watch",
-    "dev:debug": "tsx watch --inspect src/index.ts",
+    "dev:debug": "tsx watch --inspect --require dotenv/config src/index.ts",
     "debug": "node --inspect dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -60,6 +62,7 @@
     "@turf/helpers": "^7.3.4",
     "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.13.2",
+    "bullmq": "^5.76.10",
     "canvas": "^3.2.0",
     "cheerio": "^1.1.2",
     "cors": "^2.8.6",
@@ -71,6 +74,7 @@
     "googleapis": "^169.0.0",
     "grammy": "^1.40.0",
     "input": "^1.0.1",
+    "ioredis": "^5.10.1",
     "jose": "^6.2.2",
     "langchain": "^1.2.18",
     "mongodb": "^7.1.0",
