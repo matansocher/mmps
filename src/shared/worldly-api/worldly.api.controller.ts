@@ -2,6 +2,8 @@ import type { Express, Request, Response } from 'express';
 import { getLongestStreak, getStreak, getStreakOfCorrectAnswers, Logger } from '@core/utils';
 import { buildQuestion, QuestionDescriptor, QuestionMode } from '@features/worldly/question-builder';
 import { getAreaMap } from '@features/worldly/utils';
+import { notify } from '@services/notifier';
+import type { TelegramBotConfig } from '@services/telegram';
 import { addSubscription, getAllCountries, getAllStates, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, updateGameLog, updateSubscription } from '@shared/worldly';
 import { worldlyAuthMiddleware } from './auth.middleware';
 import type { AnswerBody, AnswerResponse, GameMode, GameQuestionResponse, ModeStats, NewGameBody, StatsResponse, SubscriptionResponse, SubscriptionUpdateBody, WeakestEntry } from './dto';
@@ -43,7 +45,17 @@ function isToday(d: Date): boolean {
   return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 }
 
-export function registerWorldlyApiRoutes(app: Express): void {
+export type WorldlyApiDeps = {
+  readonly botConfig: TelegramBotConfig;
+};
+
+function userDetailsFromReq(req: Request) {
+  const { telegramUserId, chatId, username } = req.worldlyUser!;
+  return { telegramUserId, chatId, username: username ?? '', firstName: '', lastName: '' };
+}
+
+export function registerWorldlyApiRoutes(app: Express, deps: WorldlyApiDeps): void {
+  const { botConfig } = deps;
   // Public route — must be registered before the auth middleware below so it stays unauthenticated.
   // Browsers can't send custom headers on <img> requests, so this endpoint must be reachable without X-Telegram-Init-Data.
   app.get('/api/worldly/area-map', async (req: Request, res: Response) => {
@@ -76,8 +88,10 @@ export function registerWorldlyApiRoutes(app: Express): void {
       return;
     }
     const { chatId } = req.worldlyUser!;
+    const userDetails = userDetailsFromReq(req);
     try {
       const descriptor = await buildQuestion(body.mode as QuestionMode | 'random', chatId);
+      notify(botConfig, { action: 'GAME_START', mode: body.mode, source: 'mini_app' }, userDetails);
       res.json(toQuestionResponse(descriptor));
     } catch (err) {
       logger.error(`buildQuestion failed chatId=${chatId} mode=${body.mode}: ${err}`);
@@ -93,6 +107,7 @@ export function registerWorldlyApiRoutes(app: Express): void {
       return;
     }
     const { chatId } = req.worldlyUser!;
+    const userDetails = userDetailsFromReq(req);
     try {
       const logs = await getUserGameLogs(chatId);
       const game = logs.find((g) => g.gameId === gameId);
@@ -111,6 +126,7 @@ export function registerWorldlyApiRoutes(app: Express): void {
         isCorrect = body.selected === correctId;
       }
 
+      notify(botConfig, { action: 'GAME_ANSWER', mode: game.type.toLowerCase(), correct: isCorrect, source: 'mini_app' }, userDetails);
       res.json({
         correct: isCorrect,
         correctId,
@@ -201,6 +217,7 @@ export function registerWorldlyApiRoutes(app: Express): void {
       return;
     }
     const { chatId } = req.worldlyUser!;
+    const userDetails = userDetailsFromReq(req);
     try {
       const existing = await getSubscription(chatId);
       if (!existing) {
@@ -209,11 +226,18 @@ export function registerWorldlyApiRoutes(app: Express): void {
       } else {
         await updateSubscription(chatId, { isActive: body.isActive });
       }
+      notify(botConfig, { action: 'SUBSCRIPTION_UPDATE', isActive: body.isActive, source: 'mini_app' }, userDetails);
       res.json({ isActive: body.isActive });
     } catch (err) {
       logger.error(`subscription update failed chatId=${chatId}: ${err}`);
       res.status(500).json({ error: 'update_failed' });
     }
+  });
+
+  app.post('/api/worldly/open', async (req: Request, res: Response) => {
+    const userDetails = userDetailsFromReq(req);
+    notify(botConfig, { action: 'OPEN_APP', source: 'mini_app' }, userDetails);
+    res.status(204).end();
   });
 
   logger.log('Worldly API routes registered at /api/worldly/*');

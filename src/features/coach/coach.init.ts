@@ -26,7 +26,7 @@ export async function initCoach(app: Express): Promise<void> {
   coachController.init();
   coachScheduler.init();
 
-  registerCoachApiRoutes(app);
+  registerCoachApiRoutes(app, { botConfig: BOT_CONFIG });
 
   const spaDist = path.resolve('apps/coach-web/dist');
   app.use('/coach', express.static(spaDist));

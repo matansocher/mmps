@@ -27,7 +27,7 @@ export async function initWorldly(app: Express): Promise<void> {
   worldlyController.init();
   worldlyScheduler.init();
 
-  registerWorldlyApiRoutes(app);
+  registerWorldlyApiRoutes(app, { botConfig: BOT_CONFIG });
 
   const spaDist = path.resolve('apps/worldly-web/dist');
   app.use('/worldly', express.static(spaDist));
