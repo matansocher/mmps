@@ -3,7 +3,7 @@ import type { Express, Request, Response } from 'express';
 import { z } from 'zod';
 import { registry } from '@core/openapi';
 import { Logger } from '@core/utils';
-import { startAuthFlow, handleCallback, validateToken, logout } from './auth.service';
+import { handleCallback, logout, startAuthFlow, validateToken } from './auth.service';
 
 extendZodWithOpenApi(z);
 

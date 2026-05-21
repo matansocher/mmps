@@ -20,7 +20,7 @@ Sync VitePress documentation with recent code changes.
    | `src/services/{name}/` | Relevant architecture or service docs |
    | Architecture patterns, new patterns | `docs/architecture/*.md` |
    | Setup, config, env vars | `docs/guide/*.md` |
-   | `CLAUDE.md` conventions | `docs/architecture/*.md` or `docs/development/*.md` |
+   | `AGENTS.md` conventions (CLAUDE.md is a symlink) | `docs/architecture/*.md` or `docs/development/*.md` |
 
 3. **Read the existing doc pages** that need updating. Understand their current structure and style before making changes.
 
