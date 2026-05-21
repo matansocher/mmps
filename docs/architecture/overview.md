@@ -72,9 +72,8 @@ features/{bot-name}/
 
 1. **Chatbot** - AI assistant with 20+ tools
 2. **Coach** - Sports analytics and predictions
-3. **Langly** - Language learning
-4. **Wolt** - Restaurant notifications
-5. **Worldly** - Geography education
+3. **Wolt** - Restaurant notifications
+4. **Worldly** - Geography education
 
 ## Conditional Bot Loading
 

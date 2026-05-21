@@ -367,35 +367,6 @@ const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT
 if (shouldInitBot(chatbotBotConfig)) await initChatbot();
 ```
 
-#### Service Layer: Controller → Service → Repository
-
-```typescript
-// Controller - Telegram interactions (grammY)
-export class LanglyController {
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
-  constructor(private readonly langlyService: LanglyService) {}
-
-  init(): void {
-    this.bot.command('start', (ctx) => this.startHandler(ctx));
-    this.bot.on('callback_query', (ctx) => this.callbackQueryHandler(ctx));
-  }
-
-  private async startHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails } = getMessageData(ctx);
-    await ctx.reply(welcomeMessage);
-  }
-}
-
-// Service - Business logic (uses bot.api when no ctx available)
-export class LanglyService {
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
-  async sendChallenge(chatId: number): Promise<void> {
-    const keyboard = buildInlineKeyboard([...]);
-    await this.bot.api.sendMessage(chatId, message, { reply_markup: keyboard });
-  }
-}
-```
-
 #### Cron Scheduler Pattern
 
 ```typescript
@@ -410,19 +381,6 @@ export class ChatbotSchedulerService {
     cron.schedule(`59 12,23 * * *`, () => this.handleFootballUpdate(), { timezone: DEFAULT_TIMEZONE });
   }
 }
-```
-
-#### Configuration Pattern
-```typescript
-export const BOT_CONFIG: TelegramBotConfig = {
-  id: 'LANGLY',
-  name: 'Langly',
-  token: 'LANGLY_TELEGRAM_BOT_TOKEN',
-  commands: {
-    START: { command: '/start', description: 'Start', hide: true },
-    CHALLENGE: { command: '/challenge', description: 'Start a challenge' },
-  },
-};
 ```
 
 ### AI Patterns
@@ -681,7 +639,7 @@ const zonedDate = toZonedTime(new Date(), 'Asia/Jerusalem');
 ```
 
 ### Project Context
-- **6 active bots**: chatbot (main), coach, langly, wolt, worldly
+- **6 active bots**: chatbot (main), coach, wolt, worldly
 - **20+ AI tools** in `shared/ai/tools/`
 - **30+ external services** (weather, sports, Google services, OpenAI, YouTube, etc.)
 - **Multi-bot development**: Use `LOCAL_ACTIVE_BOT_ID` env var to run individual bots during development

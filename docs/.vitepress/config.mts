@@ -69,7 +69,6 @@ export default defineConfig({
             { text: 'Overview', link: '/bots/overview' },
             { text: 'Chatbot', link: '/bots/chatbot' },
             { text: 'Coach', link: '/bots/coach' },
-            { text: 'Langly', link: '/bots/langly' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },
           ],
