@@ -47,6 +47,11 @@ export function HomePage() {
   }, [selectedDate, loadDay]);
 
   useEffect(() => {
+    setData(null);
+    loadDay(selectedDate);
+  }, [selectedDate, loadDay]);
+
+  useEffect(() => {
     const tick = () => {
       if (document.hidden) return;
       loadDay(selectedDate);
