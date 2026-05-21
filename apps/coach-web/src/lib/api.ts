@@ -17,7 +17,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   open: () => request<void>('/api/coach/open', { method: 'POST' }),
-  today: () => request<TodayResponse>('/api/coach/today'),
+  today: (date?: string) => request<TodayResponse>(date ? `/api/coach/today?date=${encodeURIComponent(date)}` : '/api/coach/today'),
   competitions: () => request<CompetitionsListResponse>('/api/coach/competitions'),
   competition: (id: number) => request<CompetitionDetailResponse>(`/api/coach/competitions/${id}`),
   match: (id: number) => request<MatchDetailResponse>(`/api/coach/matches/${id}`),

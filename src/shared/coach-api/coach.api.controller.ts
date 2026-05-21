@@ -42,7 +42,9 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
 
   app.get('/api/coach/today', async (req: Request, res: Response<TodayResponse | { error: string }>) => {
     const { chatId } = req.coachUser!;
-    const date = getDateString();
+    const requested = typeof req.query.date === 'string' ? req.query.date : '';
+    const isValid = /^\d{4}-\d{2}-\d{2}$/.test(requested);
+    const date = isValid ? requested : getDateString();
     const [summaryDetails, subscription] = await Promise.all([getSportsMatchesSummary(date), getSubscription(chatId)]);
     if (!summaryDetails) {
       res.json({ date, live: [], groups: [] });

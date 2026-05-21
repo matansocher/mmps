@@ -89,7 +89,6 @@ export function CompetitionsPage() {
                   <span className="text-2xl shrink-0">{c.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-text-primary font-medium truncate">{c.name}</div>
-                    {!c.hasTable && <div className="text-text-muted text-xs">מחזור משחקים בלבד</div>}
                   </div>
                   <span className="text-text-muted text-lg">‹</span>
                 </button>

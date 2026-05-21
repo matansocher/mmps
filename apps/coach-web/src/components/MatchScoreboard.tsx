@@ -14,8 +14,10 @@ export function MatchScoreboard({ match }: { match: MatchSummary }) {
           <TeamColumn team={match.home} />
           <div className="text-center">
             {match.score ? (
-              <div className="score-font text-3xl text-text-primary leading-none">
-                {match.score.home}<span className="text-text-muted mx-2">-</span>{match.score.away}
+              <div className="score-font text-3xl text-text-primary leading-none flex items-center justify-center">
+                <span>{match.score.home}</span>
+                <span className="text-text-muted mx-2">-</span>
+                <span>{match.score.away}</span>
               </div>
             ) : (
               <div className="score-font text-2xl text-text-secondary">{kickoffTime}</div>
