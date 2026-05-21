@@ -1,70 +1,85 @@
-# MMPS - Multi-Purpose Telegram Bots
+# MMPS — Multi-Purpose Telegram Bots
 
-A comprehensive TypeScript application hosting 6 AI-powered Telegram bots with clean architecture and zero framework overhead.
+A TypeScript Node.js 24 app hosting **5 AI-powered Telegram bots** plus an Express HTTP server (Swagger, auth for the companion browser extension, mini-app endpoints). No framework — plain TS with manual DI.
 
-**📚 [Complete Documentation](https://matansocher.github.io/mmps/)** | **🤖 [6 Specialized Bots](#available-bots)** | **⚡ [Plain TypeScript](#architecture)**
+**📚 [Full Documentation](https://matansocher.github.io/mmps/)** &nbsp;·&nbsp; **🤖 [AGENTS.md](./AGENTS.md)** (canonical onboarding for AI agents and humans) &nbsp;·&nbsp; **⚡ [Quick Start](#quick-start)**
 
 ## Quick Start
 
 ```bash
-# Clone and setup
 git clone https://github.com/matansocher/mmps
 cd mmps
 npm install
 
 # Configure environment
-# See https://matansocher.github.io/mmps/guide/environment-setup for details
-cp .env.example .env
+cp .env.example .env          # then fill in values you need
+# At minimum: MONGO_DB_URL, LOCAL_ACTIVE_BOT_ID, the bot's *_TELEGRAM_BOT_TOKEN,
+# and one of OPENAI_API_KEY / ANTHROPIC_API_KEY.
 
-# Run a bot
-LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
+# Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, WOLT, WORLDLY)
+LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 ## Available Bots
 
-- **[Chatbot](https://matansocher.github.io/mmps/bots/chatbot)** - AI assistant with 20+ tools
-- **[Coach](https://matansocher.github.io/mmps/bots/coach)** - Sports analytics & predictions
-- **[Wolt](https://matansocher.github.io/mmps/bots/wolt)** - Restaurant notifications
-- **[Worldly](https://matansocher.github.io/mmps/bots/worldly)** - Geography education
+| ID         | Description                                                                 |
+|------------|-----------------------------------------------------------------------------|
+| `CHATBOT`  | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.) |
+| `CHILLI`   | Persona bot — replies as the user's cat in Hebrew                           |
+| `COACH`    | Sports analytics, predictions, schedules. Bundled mini-app (`apps/coach-web`) |
+| `WOLT`     | Wolt restaurant availability watcher + notifications. Mini-app (`apps/wolt-web`) |
+| `WORLDLY`  | Geography quiz / education. Mini-app (`apps/worldly-web`)                   |
+
+Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
 ## Architecture
 
-- **Node.js 24.x** - Latest Node.js runtime
-- **TypeScript 5.9** - Full type safety
-- **Manual DI** - Explicit, simple dependency injection
-- **MongoDB** - Native driver persistence
-- **AI/LLM** - OpenAI, Anthropic, LangChain, LangGraph
-- **grammY** - Modern Telegram bot framework
+- **Node.js 24.x** runtime, **TypeScript 5.9** (non-strict, ES2022).
+- **grammY** for Telegram. All bot code uses `@services/telegram`.
+- **LangChain / LangGraph** for agent + tool orchestration; `MemorySaver` for per-thread checkpoints.
+- **MongoDB** native driver (no ODM). Each bot has its own database (`chatbot-db`, `coach-db`, …).
+- **Express 5** runs alongside the bots — Swagger UI, auth endpoints, optional mini-app data routes per bot.
+- **Manual DI** via per-feature `init*` functions in `src/index.ts`.
 
-See [Architecture Guide](https://matansocher.github.io/mmps/architecture/overview) for details.
+Full architecture overview: <https://matansocher.github.io/mmps/architecture/overview>.
 
 ## Development
 
 ```bash
-npm run start:dev         # Start bot in watch mode
-npm test                  # Run tests
-npm run lint              # Lint code
-npm run format            # Format code
-npm run build             # Build for production
+npm run dev                # tsx watch — local dev (single bot via LOCAL_ACTIVE_BOT_ID)
+npm run dev:debug          # with --inspect
+npm test                   # Jest
+npm run lint               # ESLint
+npm run lint:fix
+npm run format             # Prettier
+npm run build              # tsc + tsc-alias + mini-app builds
+npm run docs:dev           # VitePress docs locally
+
+# Mini-app workspaces
+npm run dev:coach-web
+npm run dev:worldly-web
+npm run dev:wolt-web
 ```
 
-See [Development Guide](https://matansocher.github.io/mmps/development/contributing) for more.
+### For AI agents (Claude Code, Copilot, Cursor, …)
 
-### GitHub AI Features
+`AGENTS.md` at the repo root is the canonical onboarding doc — conventions, patterns, file layout, env vars, common gotchas. `CLAUDE.md` and `.github/copilot-instructions.md` are symlinks to it, so all agents read the same source.
 
-This repository includes automated AI-powered code review and implementation:
+If you change conventions or architecture, **update `AGENTS.md`** (the symlinks pick it up automatically).
 
-- **Pull Request Review** - Add the `review` label to any PR to get AI-powered code analysis
-- **Issue Implementation** - Add the `implement` label to any issue to generate a pull request with code implementation
+### GitHub AI workflows
 
-Both features are triggered by labels and configured in `.github/workflows/claude.yml`.
+Two labels in `.github/workflows/claude.yml` trigger automation:
+
+- **`review`** on a PR → AI code review.
+- **`implement`** on an issue → AI generates an implementation PR.
 
 ## Documentation
 
-Full documentation available at: **https://matansocher.github.io/mmps/**
+VitePress site at **<https://matansocher.github.io/mmps/>**:
 
-- **[Getting Started](https://matansocher.github.io/mmps/guide/getting-started)** - 5-minute setup
-- **[Architecture](https://matansocher.github.io/mmps/architecture/overview)** - System design
-- **[Bot Guides](https://matansocher.github.io/mmps/bots/overview)** - Individual bot docs
-- **[Development](https://matansocher.github.io/mmps/development/contributing)** - Contributing guide
-- **[Deployment](https://matansocher.github.io/mmps/deployment/production)** - Production setup
+- [Getting Started](https://matansocher.github.io/mmps/guide/getting-started)
+- [Architecture](https://matansocher.github.io/mmps/architecture/overview)
+- [Bot Guides](https://matansocher.github.io/mmps/bots/overview)
+- [Development](https://matansocher.github.io/mmps/development/contributing)
+- [Deployment](https://matansocher.github.io/mmps/deployment/production)

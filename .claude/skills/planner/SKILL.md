@@ -19,7 +19,7 @@ Plan a new feature or enhancement by exploring the codebase and producing an act
    - **New external service** — new directory under `src/services/{name}/`
    - **Enhancement** — changes to existing feature, shared, or service code
    - **Scheduler** — new or modified cron-based scheduled task
-3. Identify which existing bot(s) the feature belongs to (chatbot, coach, wolt, worldly) or whether it requires a new bot.
+3. Identify which existing bot(s) the feature belongs to (chatbot, chilli, coach, wolt, worldly) or whether it requires a new bot.
 
 ### Phase 2 — Explore the Codebase
 
@@ -30,7 +30,7 @@ Use the Agent tool with Explore subagents or direct file reads. Read actual file
 3. **Relevant shared modules**: Check `src/shared/` for reusable logic (AI tools, reminders, etc.).
 4. **Database**: If persistence is needed, find how similar features set up mongo collections — DB_NAME export, repository functions, connection init.
 5. **AI integration**: If the feature involves AI tools, read `src/features/chatbot/agent/agent.ts` for tool registration and an existing tool (e.g., `src/shared/ai/tools/weather/`) for the Zod schema + runner pattern.
-6. **Entry point**: Read `src/main.ts` or `src/index.ts` to understand how bots are conditionally initialized with `shouldInitBot`.
+6. **Entry point**: Read `src/index.ts` to understand how bots are conditionally initialized with `shouldInitBot`.
 
 ### Phase 3 — Identify Components
 
@@ -48,7 +48,7 @@ Build a table of every component the feature needs:
 | Mongo repository | new/modify | `src/features/{name}/mongo/{name}.repository.ts` |
 | AI tool | new/modify | `src/shared/ai/tools/{name}/{name}.tool.ts` |
 | External service | new/modify | `src/services/{name}/api.ts` |
-| Main entry | modify | `src/main.ts` or `src/index.ts` |
+| Main entry | modify | `src/index.ts` |
 
 Remove rows that don't apply.
 
@@ -101,8 +101,8 @@ Output a structured plan with these sections:
 
 ## Rules
 
-- Follow all CLAUDE.md conventions: `type` not `interface`, named exports, async/await, `readonly` properties, no JSDoc.
+- Follow all AGENTS.md conventions: `type` not `interface`, named exports, async/await, `readonly` properties, no JSDoc.
 - Reference a real existing file as the pattern to follow for each new file — never describe patterns abstractly.
-- Use grammY patterns via `@services/telegram-grammy` for Telegram interactions.
+- Use grammY patterns via `@services/telegram` for Telegram interactions (`@services/telegram-grammy` does NOT exist).
 - Use the agent descriptor pattern and Zod-based tool definitions for AI features.
 - Do NOT produce implementation code — only the plan.
