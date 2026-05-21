@@ -47,7 +47,6 @@ src/
 │   │
 │   ├── coach/             # Sports bot
 │   ├── langly/            # Language learning bot
-│   ├── magister/          # Course management bot
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot
 │

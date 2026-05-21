@@ -24,19 +24,13 @@ Interactive language learning companion.
 - **Status**: Production-ready
 - **[Learn more →](/bots/langly)**
 
-### 4. **Magister** - Course Management
-Learning management system for course tracking.
-- **Features**: Lesson reminders, progress tracking, course management
-- **Status**: Production-ready
-- **[Learn more →](/bots/magister)**
-
-### 5. **Wolt** - Restaurant Notifications
+### 4. **Wolt** - Restaurant Notifications
 Monitors and notifies about restaurant availability.
 - **Features**: Availability monitoring, push notifications
 - **Status**: Production-ready
 - **[Learn more →](/bots/wolt)**
 
-### 6. **Worldly** - Geography Education
+### 5. **Worldly** - Geography Education
 Geography teaching and trivia challenges.
 - **Features**: Trivia challenges, geography education, location-based content
 - **Status**: Production-ready
@@ -50,7 +44,7 @@ Geography teaching and trivia challenges.
 LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
 ```
 
-Replace `chatbot` with any of: `coach`, `langly`, `magister`, `wolt`, `worldly`
+Replace `chatbot` with any of: `coach`, `langly`, `wolt`, `worldly`
 
 ### Production Mode (All Bots)
 
@@ -93,7 +87,6 @@ Each bot has its own MongoDB database:
 - `chatbot-db` - Chatbot data
 - `coach-db` - Coach data
 - `langly-db` - Langly data
-- `magister-db` - Magister data
 - `wolt-db` - Wolt data
 - `worldly-db` - Worldly data
 
@@ -134,7 +127,6 @@ MONGO_URI=mongodb://...
 CHATBOT_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
 LANGLY_TELEGRAM_BOT_TOKEN=...
-MAGISTER_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 ```
@@ -145,7 +137,6 @@ Select a bot to explore:
 - **[Chatbot](/bots/chatbot)** - AI assistant with tools
 - **[Coach](/bots/coach)** - Sports analytics
 - **[Langly](/bots/langly)** - Language learning
-- **[Magister](/bots/magister)** - Course management
 - **[Wolt](/bots/wolt)** - Restaurant finder
 - **[Worldly](/bots/worldly)** - Geography education
 

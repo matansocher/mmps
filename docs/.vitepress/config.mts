@@ -70,7 +70,6 @@ export default defineConfig({
             { text: 'Chatbot', link: '/bots/chatbot' },
             { text: 'Coach', link: '/bots/coach' },
             { text: 'Langly', link: '/bots/langly' },
-            { text: 'Magister', link: '/bots/magister' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },
           ],
