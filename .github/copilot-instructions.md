@@ -608,7 +608,7 @@ const zonedDate = toZonedTime(new Date(), 'Asia/Jerusalem');
 ```
 
 ### Project Context
-- **6 active bots**: chatbot (main), coach, langly, magister, wolt, worldly
+- **6 active bots**: chatbot (main), coach, langly, wolt, worldly
 - **20+ AI tools** in `shared/ai/tools/`
 - **30+ external services** (weather, sports, Google services, OpenAI, YouTube, etc.)
 - **Multi-bot development**: Use `LOCAL_ACTIVE_BOT_ID` env var to run individual bots during development

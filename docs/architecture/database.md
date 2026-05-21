@@ -51,7 +51,6 @@ Each bot gets its own database:
 - `chatbot-db`
 - `coach-db`
 - `langly-db`
-- `magister-db`
 - `wolt-db`
 - `worldly-db`
 

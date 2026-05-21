@@ -57,7 +57,6 @@ LOCAL_ACTIVE_BOT_ID=chatbot
 # Bot tokens for other bots
 COACH_TELEGRAM_BOT_TOKEN=...
 LANGLY_TELEGRAM_BOT_TOKEN=...
-MAGISTER_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 ```
@@ -85,12 +84,6 @@ SCORES_365_API_KEY=required for sports data
 
 ```bash
 LANGLY_TELEGRAM_BOT_TOKEN=required
-```
-
-### Magister
-
-```bash
-MAGISTER_TELEGRAM_BOT_TOKEN=required
 ```
 
 ### Wolt

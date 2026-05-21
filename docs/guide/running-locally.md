@@ -20,7 +20,7 @@ By default, all bots run in production mode. In development, run one bot at a ti
 LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
 ```
 
-Available bot IDs: `chatbot`, `coach`, `langly`, `magister`, `wolt`, `worldly`
+Available bot IDs: `chatbot`, `coach`, `langly`, `wolt`, `worldly`
 
 ### Watch Mode for TypeScript Only
 
