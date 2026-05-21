@@ -24,7 +24,6 @@ LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
 
 - **[Chatbot](https://matansocher.github.io/mmps/bots/chatbot)** - AI assistant with 20+ tools
 - **[Coach](https://matansocher.github.io/mmps/bots/coach)** - Sports analytics & predictions
-- **[Langly](https://matansocher.github.io/mmps/bots/langly)** - Language learning companion
 - **[Wolt](https://matansocher.github.io/mmps/bots/wolt)** - Restaurant notifications
 - **[Worldly](https://matansocher.github.io/mmps/bots/worldly)** - Geography education
 

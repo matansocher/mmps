@@ -40,7 +40,7 @@ features:
 
 - **[Getting Started](/guide/getting-started)** - Set up MMPS in 5 minutes
 - **[Architecture](/architecture/overview)** - Understand the system design
-- **[Available Bots](/bots/overview)** - Explore all 6 bots and their features
+- **[Available Bots](/bots/overview)** - Explore all 4 bots and their features
 - **[Contributing](/development/contributing)** - Help improve MMPS
 - **[Deployment](/deployment/production)** - Deploy to production
 
@@ -57,13 +57,12 @@ features:
 
 MMPS is a multi-purpose Telegram bot platform built with plain TypeScript and Node.js. Each bot operates independently with its own database, services, and scheduled tasks. The application uses manual dependency injection for simplicity and control, with no external frameworks overhead.
 
-### The 6 Bots
+### The 4 Bots
 
 1. **Chatbot** - AI-powered conversational assistant with advanced features
 2. **Coach** - Sports predictions and analytics with real-time data
-3. **Langly** - Language learning companion with daily challenges
-4. **Wolt** - Restaurant availability notifications
-5. **Worldly** - Geography education and trivia challenges
+3. **Wolt** - Restaurant availability notifications
+4. **Worldly** - Geography education and trivia challenges
 
 ## Get Started
 
@@ -92,7 +91,7 @@ For detailed setup instructions, see the [Getting Started Guide](/guide/getting-
 
 - **Guide** - Installation, configuration, and getting started
 - **Architecture** - System design, patterns, and code guidelines
-- **Bots** - Detailed documentation for each of the 6 bots
+- **Bots** - Detailed documentation for each of the 4 bots
 - **Development** - Contributing guidelines, testing, and extending the platform
 - **Deployment** - Production deployment and monitoring
 

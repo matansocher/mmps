@@ -34,7 +34,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (6 bots)
+├── features/              # Bot implementations (4 bots)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── chatbot.init.ts              # Initialization
@@ -46,7 +46,6 @@ src/
 │   │   └── index.ts                     # Exports
 │   │
 │   ├── coach/             # Sports bot
-│   ├── langly/            # Language learning bot
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot
 │

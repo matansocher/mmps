@@ -19,7 +19,7 @@ Plan a new feature or enhancement by exploring the codebase and producing an act
    - **New external service** — new directory under `src/services/{name}/`
    - **Enhancement** — changes to existing feature, shared, or service code
    - **Scheduler** — new or modified cron-based scheduled task
-3. Identify which existing bot(s) the feature belongs to (chatbot, coach, langly, wolt, worldly) or whether it requires a new bot.
+3. Identify which existing bot(s) the feature belongs to (chatbot, coach, wolt, worldly) or whether it requires a new bot.
 
 ### Phase 2 — Explore the Codebase
 

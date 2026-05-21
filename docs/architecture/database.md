@@ -50,7 +50,6 @@ export async function initChatbot(): Promise<void> {
 Each bot gets its own database:
 - `chatbot-db`
 - `coach-db`
-- `langly-db`
 - `wolt-db`
 - `worldly-db`
 

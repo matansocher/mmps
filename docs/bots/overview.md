@@ -1,8 +1,8 @@
 # Bots Overview
 
-MMPS includes 6 specialized Telegram bots, each designed for specific purposes. All bots run independently with their own databases, services, and scheduled tasks.
+MMPS includes 5 specialized Telegram bots, each designed for specific purposes. All bots run independently with their own databases, services, and scheduled tasks.
 
-## The 6 Bots
+## The 4 Bots
 
 ### 1. **Chatbot** - AI-Powered Assistant
 The main conversational bot powered by OpenAI and Anthropic.
@@ -18,19 +18,13 @@ Real-time sports data with match analysis and predictions.
 - **Status**: Production-ready
 - **[Learn more →](/bots/coach)**
 
-### 3. **Langly** - Language Learning Assistant
-Interactive language learning companion.
-- **Features**: Daily challenges, vocabulary building, language practice
-- **Status**: Production-ready
-- **[Learn more →](/bots/langly)**
-
-### 4. **Wolt** - Restaurant Notifications
+### 3. **Wolt** - Restaurant Notifications
 Monitors and notifies about restaurant availability.
 - **Features**: Availability monitoring, push notifications
 - **Status**: Production-ready
 - **[Learn more →](/bots/wolt)**
 
-### 5. **Worldly** - Geography Education
+### 4. **Worldly** - Geography Education
 Geography teaching and trivia challenges.
 - **Features**: Trivia challenges, geography education, location-based content
 - **Status**: Production-ready
@@ -44,7 +38,7 @@ Geography teaching and trivia challenges.
 LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
 ```
 
-Replace `chatbot` with any of: `coach`, `langly`, `wolt`, `worldly`
+Replace `chatbot` with any of: `coach`, `wolt`, `worldly`
 
 ### Production Mode (All Bots)
 
@@ -86,7 +80,6 @@ export const BOT_CONFIG = {
 Each bot has its own MongoDB database:
 - `chatbot-db` - Chatbot data
 - `coach-db` - Coach data
-- `langly-db` - Langly data
 - `wolt-db` - Wolt data
 - `worldly-db` - Worldly data
 
@@ -126,7 +119,6 @@ MONGO_URI=mongodb://...
 # Bot tokens (add only for bots you want to run)
 CHATBOT_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
-LANGLY_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 ```
@@ -136,7 +128,6 @@ WORLDLY_TELEGRAM_BOT_TOKEN=...
 Select a bot to explore:
 - **[Chatbot](/bots/chatbot)** - AI assistant with tools
 - **[Coach](/bots/coach)** - Sports analytics
-- **[Langly](/bots/langly)** - Language learning
 - **[Wolt](/bots/wolt)** - Restaurant finder
 - **[Worldly](/bots/worldly)** - Geography education
 
