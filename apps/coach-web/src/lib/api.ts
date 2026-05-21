@@ -11,10 +11,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (!res.ok) throw new Error(`request_failed_${res.status}`);
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
 
 export const api = {
+  open: () => request<void>('/api/coach/open', { method: 'POST' }),
   today: (date?: string) => request<TodayResponse>(date ? `/api/coach/today?date=${encodeURIComponent(date)}` : '/api/coach/today'),
   competitions: () => request<CompetitionsListResponse>('/api/coach/competitions'),
   competition: (id: number) => request<CompetitionDetailResponse>(`/api/coach/competitions/${id}`),

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { api } from '../lib/api';
 import { BottomNav } from '../components/BottomNav';
 import { ModeTile } from '../components/ModeTile';
 
@@ -9,6 +10,7 @@ export function HomePage() {
   useEffect(() => {
     window.Telegram?.WebApp?.ready();
     window.Telegram?.WebApp?.expand();
+    api.open().catch(() => {});
   }, []);
 
   return (

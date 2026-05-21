@@ -160,11 +160,18 @@ export function registerWoltApiRoutes(app: Express, deps: WoltApiDeps): void {
     try {
       await saveUserDetails(userDetails);
       await setUserCity(chatId, body.city);
+      notify(botConfig, { action: 'UPDATE_PREFERENCES', city: body.city, source: 'mini_app' }, userDetails);
       res.json({ city: body.city });
     } catch (err) {
       logger.error(`preferences update failed for chatId=${chatId}: ${err}`);
       res.status(500).json({ error: 'update_failed' });
     }
+  });
+
+  app.post('/api/wolt/open', async (req: Request, res: Response) => {
+    const userDetails = userDetailsFromReq(req);
+    notify(botConfig, { action: 'OPEN_APP', source: 'mini_app' }, userDetails);
+    res.status(204).end();
   });
 
   logger.log('Wolt API routes registered at /api/wolt/*');

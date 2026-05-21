@@ -1,6 +1,8 @@
 import type { Express, Request, Response } from 'express';
 import { getDateString, Logger } from '@core/utils';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
+import { notify } from '@services/notifier';
+import type { TelegramBotConfig } from '@services/telegram';
 import { addSubscription, getSubscription, updateSubscription } from '@shared/coach';
 import { getSportsCompetitionMatches, getSportsCompetitionTable, getSportsCompetitions, getSportsMatchesSummary } from '@shared/sports';
 import { coachAuthMiddleware } from './auth.middleware';
@@ -24,7 +26,18 @@ async function ensureSubscription(chatId: number) {
   return await getSubscription(chatId);
 }
 
-export function registerCoachApiRoutes(app: Express): void {
+export type CoachApiDeps = {
+  readonly botConfig: TelegramBotConfig;
+};
+
+function userDetailsFromReq(req: Request) {
+  const { telegramUserId, chatId, username } = req.coachUser!;
+  return { telegramUserId, chatId, username: username ?? '', firstName: '', lastName: '' };
+}
+
+export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
+  const { botConfig } = deps;
+
   app.use('/api/coach', coachAuthMiddleware);
 
   app.get('/api/coach/today', async (req: Request, res: Response<TodayResponse | { error: string }>) => {
@@ -80,6 +93,7 @@ export function registerCoachApiRoutes(app: Express): void {
       return;
     }
     const { chatId } = req.coachUser!;
+    const userDetails = userDetailsFromReq(req);
     try {
       const sub = await ensureSubscription(chatId);
       const current = sub?.customLeagues ?? [];
@@ -91,6 +105,7 @@ export function registerCoachApiRoutes(app: Express): void {
         next = seed.filter((x) => x !== id);
       }
       await updateSubscription(chatId, { customLeagues: [...new Set(next)] });
+      notify(botConfig, { action: 'FOLLOW_LEAGUE', competitionId: id, follow: body.follow, source: 'mini_app' }, userDetails);
       res.json({ following: isFollowing(id, next) });
     } catch (err) {
       logger.error(`follow toggle failed for chatId=${chatId} id=${id}: ${err}`);
@@ -138,6 +153,12 @@ export function registerCoachApiRoutes(app: Express): void {
       ...(rich.homeLineup ? { homeLineup: rich.homeLineup } : {}),
       ...(rich.awayLineup ? { awayLineup: rich.awayLineup } : {}),
     });
+  });
+
+  app.post('/api/coach/open', async (req: Request, res: Response) => {
+    const userDetails = userDetailsFromReq(req);
+    notify(botConfig, { action: 'OPEN_APP', source: 'mini_app' }, userDetails);
+    res.status(204).end();
   });
 
   logger.log('Coach API routes registered at /api/coach/*');

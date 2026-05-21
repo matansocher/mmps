@@ -29,6 +29,7 @@ export function App() {
       w.ready();
       w.expand();
     }
+    api.open().catch(() => {});
   }, []);
 
   async function loadAll() {

@@ -38,6 +38,7 @@ export function HomePage() {
   useEffect(() => {
     window.Telegram?.WebApp?.ready();
     window.Telegram?.WebApp?.expand();
+    api.open().catch(() => {});
   }, []);
 
   useEffect(() => {
