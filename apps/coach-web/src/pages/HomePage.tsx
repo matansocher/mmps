@@ -1,27 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
+import { dateStringFromOffset } from '../lib/format';
 import type { TodayResponse } from '../types';
 import { LiveMatchCard } from '../components/LiveMatchCard';
 import { LeagueSection } from '../components/LeagueSection';
 import { EmptyState } from '../components/EmptyState';
 import { BottomNav } from '../components/BottomNav';
 import { RefreshButton } from '../components/RefreshButton';
+import { DayPicker } from '../components/DayPicker';
 
 const DATE_FMT = new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' });
 const AUTO_REFRESH_MS = 60_000;
 
 export function HomePage() {
+  const [selectedDate, setSelectedDate] = useState<string>(() => dateStringFromOffset(0));
   const [data, setData] = useState<TodayResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const inFlight = useRef(false);
 
-  const loadToday = useCallback(async () => {
+  const loadDay = useCallback(async (date: string) => {
     if (inFlight.current) return;
     inFlight.current = true;
     setRefreshing(true);
     try {
-      const next = await api.today();
+      const next = await api.today(date);
       setData(next);
       setError(null);
     } catch (e) {
@@ -35,35 +38,44 @@ export function HomePage() {
   useEffect(() => {
     window.Telegram?.WebApp?.ready();
     window.Telegram?.WebApp?.expand();
-    loadToday();
-  }, [loadToday]);
+  }, []);
+
+  useEffect(() => {
+    setData(null);
+    loadDay(selectedDate);
+  }, [selectedDate, loadDay]);
 
   useEffect(() => {
     const tick = () => {
       if (document.hidden) return;
-      loadToday();
+      loadDay(selectedDate);
     };
     const id = window.setInterval(tick, AUTO_REFRESH_MS);
     const onVis = () => {
-      if (!document.hidden) loadToday();
+      if (!document.hidden) loadDay(selectedDate);
     };
     document.addEventListener('visibilitychange', onVis);
     return () => {
       window.clearInterval(id);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [loadToday]);
+  }, [selectedDate, loadDay]);
 
   const dateLabel = data ? DATE_FMT.format(new Date(data.date + 'T00:00:00')) : '';
   const hasAnything = data && (data.live.length > 0 || data.groups.some((g) => g.matches.length > 0));
 
   return (
     <div className="min-h-full bg-bg-base flex flex-col">
-      <header className="px-4 py-4 flex items-center justify-between sticky top-0 bg-bg-base/85 backdrop-blur border-b border-border-subtle z-10">
-        <h1 className="text-text-primary font-bold text-lg">⚽ Coach</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-text-secondary text-sm">{dateLabel}</span>
-          <RefreshButton busy={refreshing} onClick={loadToday} />
+      <header className="sticky top-0 bg-bg-base/85 backdrop-blur border-b border-border-subtle z-10">
+        <div className="px-4 py-4 flex items-center justify-between">
+          <h1 className="text-text-primary font-bold text-lg">⚽ Coach</h1>
+          <div className="flex items-center gap-2">
+            <span className="text-text-secondary text-sm">{dateLabel}</span>
+            <RefreshButton busy={refreshing} onClick={() => loadDay(selectedDate)} />
+          </div>
+        </div>
+        <div className="px-4 pb-3">
+          <DayPicker selected={selectedDate} onSelect={setSelectedDate} />
         </div>
       </header>
 
@@ -88,7 +100,7 @@ export function HomePage() {
               <LeagueSection key={g.competition.id} competition={g.competition} matches={g.matches} />
             ))}
 
-            {!hasAnything && <EmptyState title="אין משחקים היום" hint="חזור מחר ⚽" />}
+            {!hasAnything && <EmptyState title="אין משחקים ביום זה" hint="נסה תאריך אחר ⚽" />}
           </>
         )}
       </main>

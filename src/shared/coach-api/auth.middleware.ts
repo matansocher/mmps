@@ -19,7 +19,8 @@ declare module 'express-serve-static-core' {
 
 export async function coachAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (env.NODE_ENV !== 'production') {
-    const devUserId = req.header('X-Coach-Dev-User');
+    // const devUserId = req.header('X-Coach-Dev-User');
+    const devUserId = '862305226'; // $$$$$$$$$$$$$$$$$$$$$
     if (devUserId) {
       const id = Number(devUserId);
       if (!Number.isFinite(id)) {

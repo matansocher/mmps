@@ -25,21 +25,48 @@ export function MatchCard({ match, showDate = false }: { match: MatchSummary; sh
           </div>
         )}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <TeamSide team={match.home} align="end" />
+          <TeamSide team={match.home} align="end" kind="home" />
           <CenterStatus match={match} kickoff={kickoff} />
-          <TeamSide team={match.away} align="start" />
+          <TeamSide team={match.away} align="start" kind="away" />
         </div>
       </div>
     </motion.button>
   );
 }
 
-function TeamSide({ team, align }: { team: TeamRef; align: 'start' | 'end' }) {
+function TeamSide({ team, align, kind }: { team: TeamRef; align: 'start' | 'end'; kind: 'home' | 'away' }) {
   const flex = align === 'end' ? 'flex-row' : 'flex-row-reverse';
   return (
     <div className={`flex items-center gap-2 min-w-0 ${flex}`}>
       <span className="text-text-primary text-sm font-medium truncate">{team.name}</span>
+      <SideIndicator kind={kind} />
       <img src={teamLogo(team.id)} alt="" loading="lazy" className="w-7 h-7 shrink-0" />
+    </div>
+  );
+}
+
+function SideIndicator({ kind }: { kind: 'home' | 'away' }) {
+  const common = 'w-3.5 h-3.5 shrink-0 text-text-muted';
+  if (kind === 'home') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="בית">
+        <path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5Z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="חוץ">
+      <path d="M17.8 19.2 16 11l3.5-3.5a2.121 2.121 0 0 0-3-3L13 8 4.8 6.2 3 8l8 4-4 4-3-1-1 1 4 2 2 4 1-1-1-3 4-4 4 8 1.8-1.8Z" />
+    </svg>
+  );
+}
+
+function ScorePair({ home, away, color }: { home: number; away: number; color: string }) {
+  return (
+    <div className={`score-font text-lg leading-none flex items-center justify-center ${color}`}>
+      <span>{home}</span>
+      <span className="text-text-muted mx-1">-</span>
+      <span>{away}</span>
     </div>
   );
 }
@@ -51,9 +78,7 @@ function CenterStatus({ match, kickoff }: { match: MatchSummary; kickoff: string
   if (match.status === 'finished' && match.score) {
     return (
       <div className="text-center">
-        <div className="score-font text-text-primary text-lg leading-none">
-          {match.score.home}<span className="text-text-muted mx-1">-</span>{match.score.away}
-        </div>
+        <ScorePair home={match.score.home} away={match.score.away} color="text-text-primary" />
         <div className="text-text-secondary text-[10px] mt-0.5">FT</div>
       </div>
     );
@@ -61,9 +86,7 @@ function CenterStatus({ match, kickoff }: { match: MatchSummary; kickoff: string
   if (match.status === 'live' && match.score) {
     return (
       <div className="text-center">
-        <div className="score-font text-accent-win text-lg leading-none">
-          {match.score.home}<span className="text-text-muted mx-1">-</span>{match.score.away}
-        </div>
+        <ScorePair home={match.score.home} away={match.score.away} color="text-accent-win" />
         <div className="text-accent-live text-[10px] mt-0.5 flex items-center gap-1 justify-center">
           <span className="w-1.5 h-1.5 rounded-full bg-accent-live animate-live-pulse" />
           {match.minute}'

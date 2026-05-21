@@ -22,8 +22,10 @@ export function LiveMatchCard({ match }: { match: MatchSummary }) {
           <img src={teamLogo(match.home.id, 80)} alt="" loading="lazy" className="w-10 h-10 shrink-0" />
         </div>
         <div className="text-center">
-          <div className="score-font text-3xl text-accent-win leading-none">
-            {match.score.home}<span className="text-text-muted mx-2">-</span>{match.score.away}
+          <div className="score-font text-3xl text-accent-win leading-none flex items-center justify-center">
+            <span>{match.score.home}</span>
+            <span className="text-text-muted mx-2">-</span>
+            <span>{match.score.away}</span>
           </div>
           <div className="text-accent-live text-xs mt-2 flex items-center gap-1 justify-center">
             <span className="w-2 h-2 rounded-full bg-accent-live animate-live-pulse" />
