@@ -19,7 +19,7 @@ declare module 'express-serve-static-core' {
 
 export async function worldlyAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (env.NODE_ENV !== 'production') {
-    const devUserId = req.header('X-Worldly-Dev-User') ?? env.WORLDLY_DEV_USER_ID;
+    const devUserId = req.header('X-Worldly-Dev-User') ?? env.DEV_USER_ID;
     if (devUserId) {
       const id = Number(devUserId);
       if (!Number.isFinite(id)) {
