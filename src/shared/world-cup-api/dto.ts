@@ -1,0 +1,64 @@
+import type { MatchDetails } from '@services/scores-365';
+import type { MatchStatus } from '@shared/sports';
+import type { Guess, LeaderboardEntry } from '@shared/world-cup';
+import { WORLD_CUP_TEAMS } from '@shared/world-cup';
+
+function getFlag(teamId: number): string {
+  return WORLD_CUP_TEAMS.find((t) => t.id === teamId)?.flag ?? '';
+}
+
+export type MatchDto = {
+  readonly id: number;
+  readonly startTime: string;
+  readonly status: MatchStatus;
+  readonly statusText: string;
+  readonly stage: string;
+  readonly venue: string;
+  readonly home: { readonly name: string; readonly flag: string; readonly score: number };
+  readonly away: { readonly name: string; readonly flag: string; readonly score: number };
+  readonly myGuess?: { readonly home: number; readonly away: number; readonly points?: number };
+};
+
+export type LeaderboardDto = {
+  readonly entries: LeaderboardEntry[];
+  readonly myRank?: number;
+};
+
+export type MatchdayDto = {
+  readonly matchdayKey: string;
+  readonly matches: MatchDto[];
+};
+
+export type ProfileDto = {
+  readonly telegramUserId: number;
+  readonly firstName: string;
+  readonly username?: string;
+  readonly totalPoints: number;
+  readonly guessCount: number;
+  readonly notificationsEnabled: boolean;
+};
+
+export type GuessBody = {
+  readonly matchId: number;
+  readonly home: number;
+  readonly away: number;
+};
+
+export type GuessResponse = {
+  readonly success: boolean;
+  readonly guess: Guess;
+};
+
+export function toMatchDto(m: MatchDetails, status: MatchStatus, guess?: Guess, points?: number): MatchDto {
+  return {
+    id: m.id,
+    startTime: m.startTime,
+    status,
+    statusText: m.statusText,
+    stage: m.stage,
+    venue: m.venue,
+    home: { name: m.homeCompetitor.name, flag: getFlag(m.homeCompetitor.id), score: m.homeCompetitor.score },
+    away: { name: m.awayCompetitor.name, flag: getFlag(m.awayCompetitor.id), score: m.awayCompetitor.score },
+    myGuess: guess ? { home: guess.home, away: guess.away, points } : undefined,
+  };
+}

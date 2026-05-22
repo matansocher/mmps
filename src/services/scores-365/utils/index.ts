@@ -1,3 +1,4 @@
+export { getAllCompetitionMatches } from './get-all-competition-matches';
 export { getCompetitionMatches } from './get-competition-matches';
 export { getCompetitionTable } from './get-competition-table';
 export { getCompetitions } from './get-competitions';

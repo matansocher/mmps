@@ -1,13 +1,9 @@
 import type { MatchDetails, CompetitionTableRow, Competition } from '@services/scores-365';
+import { classifyMatchStatus } from '@shared/sports';
 import type { CompetitionRef, MatchStatus, MatchSummary, TableRow } from './dto';
 
-const FINISHED_HINTS = ['הסתיים', 'הסתיימה', 'finished', 'ft', 'ended'];
-
 export function classifyStatus(m: MatchDetails): MatchStatus {
-  const lower = (m.statusText ?? '').toLowerCase();
-  if (FINISHED_HINTS.some((h) => lower.includes(h))) return 'finished';
-  if (m.gameTime > 0) return 'live';
-  return 'scheduled';
+  return classifyMatchStatus(m);
 }
 
 export function toMatchSummary(m: MatchDetails, competitionId: number): MatchSummary {
