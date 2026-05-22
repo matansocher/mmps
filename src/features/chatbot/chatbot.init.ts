@@ -1,8 +1,12 @@
 import type { Express } from 'express';
+import express from 'express';
+import path from 'node:path';
 import { createMongoConnection } from '@core/mongo';
+import { Logger } from '@core/utils';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
+import { registerChatbotApiRoutes } from '@shared/chatbot-api';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
@@ -17,6 +21,9 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
+import { ChatbotLauncherService } from './launcher.service';
+
+const logger = new Logger('initChatbot');
 
 export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [
@@ -37,12 +44,21 @@ export async function initChatbot(app: Express): Promise<void> {
   const bot = provideTelegramBot(BOT_CONFIG);
 
   const chatbotService = new ChatbotService();
-  const chatbotController = new ChatbotController(chatbotService, bot);
+  const launcher = new ChatbotLauncherService(bot);
+  const chatbotController = new ChatbotController(chatbotService, bot, launcher);
   const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot);
 
   chatbotController.init();
   chatbotScheduler.init();
   registerCalendarEventsRoutes(app);
+  registerChatbotApiRoutes(app);
 
   initOctokit();
+
+  const spaDist = path.resolve('apps/chatbot-web/dist');
+  app.use('/chatbot', express.static(spaDist));
+  app.get('/chatbot/*splat', (_req, res) => {
+    res.sendFile(path.join(spaDist, 'index.html'));
+  });
+  logger.log(`Chatbot SPA served from ${spaDist} at /chatbot/*`);
 }

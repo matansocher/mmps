@@ -8,6 +8,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
   commands: {
     START: { command: '/start', description: 'Start over', hide: true },
     HELP: { command: '/help', description: '❓ Show available tools' },
+    APP: { command: '/app', description: '📱 Open the app' },
+    EXERCISE: { command: '/exercise', description: '💪 Log a workout' },
   },
 };
 

@@ -1,11 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 import { env } from 'node:process';
+import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
-import { verifyCoachInitData } from './telegram-init-data';
+import { verifyChatbotInitData } from './telegram-init-data';
 
-const logger = new Logger('coachAuthMiddleware');
+const logger = new Logger('chatbotAuthMiddleware');
 
-export type CoachRequestUser = {
+export type ChatbotRequestUser = {
   readonly telegramUserId: number;
   readonly chatId: number;
   readonly username?: string;
@@ -13,20 +14,20 @@ export type CoachRequestUser = {
 
 declare module 'express-serve-static-core' {
   interface Request {
-    coachUser?: CoachRequestUser;
+    chatbotUser?: ChatbotRequestUser;
   }
 }
 
-export async function coachAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function chatbotAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (env.NODE_ENV !== 'production') {
-    const devUserId = req.header('X-Coach-Dev-User') || env.DEV_USER_ID;
+    const devUserId = req.header('X-Chatbot-Dev-User') || env.DEV_USER_ID;
     if (devUserId) {
       const id = Number(devUserId);
       if (!Number.isFinite(id)) {
         res.status(400).json({ error: 'invalid_dev_user' });
         return;
       }
-      req.coachUser = { telegramUserId: id, chatId: id, username: 'devuser' };
+      req.chatbotUser = { telegramUserId: id, chatId: id, username: 'devuser' };
       next();
       return;
     }
@@ -38,20 +39,20 @@ export async function coachAuthMiddleware(req: Request, res: Response, next: Nex
     return;
   }
 
-  const botToken = env.COACH_TELEGRAM_BOT_TOKEN;
+  const botToken = env.CHATBOT_TELEGRAM_BOT_TOKEN;
   if (!botToken) {
-    logger.error('COACH_TELEGRAM_BOT_TOKEN not configured');
+    logger.error('CHATBOT_TELEGRAM_BOT_TOKEN not configured');
     res.status(500).json({ error: 'bot_not_configured' });
     return;
   }
 
-  const verified = verifyCoachInitData(initData, botToken);
+  const verified = verifyChatbotInitData(initData, botToken);
   if (!verified) {
     res.status(401).json({ error: 'invalid_init_data' });
     return;
   }
 
-  req.coachUser = {
+  req.chatbotUser = {
     telegramUserId: verified.telegramUserId,
     chatId: verified.telegramUserId,
     username: verified.username,
