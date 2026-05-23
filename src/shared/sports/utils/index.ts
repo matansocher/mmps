@@ -1,3 +1,5 @@
+export { classifyMatchStatus } from './classify-match-status';
+export type { MatchStatus } from './classify-match-status';
 export { generateCompetitionMatchesString } from './generate-competition-matches-string';
 export { generateMatchResultsString } from './generate-match-details-string';
 export { getSportsCompetitionMatches } from './get-sports-competition-matches';
