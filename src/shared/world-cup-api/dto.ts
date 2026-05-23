@@ -29,6 +29,18 @@ export type MatchdayDto = {
   readonly matches: MatchDto[];
 };
 
+export type UserStatsDto = {
+  readonly accuracy: number;
+  readonly exactCount: number;
+  readonly gdCount: number;
+  readonly resultCount: number;
+  readonly wrongCount: number;
+  readonly currentStreak: number;
+  readonly bestStreak: number;
+  readonly bestTeam?: { readonly name: string; readonly flag: string; readonly accuracy: number };
+  readonly worstTeam?: { readonly name: string; readonly flag: string; readonly accuracy: number };
+};
+
 export type ProfileDto = {
   readonly telegramUserId: number;
   readonly firstName: string;
@@ -37,6 +49,19 @@ export type ProfileDto = {
   readonly totalPoints: number;
   readonly guessCount: number;
   readonly notificationsEnabled: boolean;
+  readonly stats?: UserStatsDto;
+};
+
+export type TeamStatRow = {
+  readonly name: string;
+  readonly homeValue: string;
+  readonly awayValue: string;
+};
+
+export type H2HDto = {
+  readonly teamStats: readonly TeamStatRow[];
+  readonly gamesPlayed: string;
+  readonly communityPrediction: { readonly home: number; readonly draw: number; readonly away: number };
 };
 
 export type GuessBody = {

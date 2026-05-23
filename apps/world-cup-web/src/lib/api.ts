@@ -1,5 +1,5 @@
 import { getInitData } from './telegram';
-import type { GroupStandings, GuessResponse, LeaderboardDto, MatchDetailResponse, MatchDto, ProfileDto } from './types';
+import type { GroupStandings, GuessResponse, H2HDto, LeaderboardDto, MatchDetailResponse, MatchDto, ProfileDto } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -18,6 +18,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   matches: () => request<{ matches: MatchDto[] }>('/api/world-cup/matches'),
   matchDetail: (id: number) => request<MatchDetailResponse>(`/api/world-cup/matches/${id}`),
+  matchH2H: (id: number) => request<H2HDto>(`/api/world-cup/matches/${id}/h2h`),
   upcoming: () => request<{ matches: MatchDto[] }>('/api/world-cup/matches/upcoming'),
   submitGuess: (matchId: number, home: number, away: number) =>
     request<GuessResponse>('/api/world-cup/guess', {

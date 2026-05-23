@@ -5,6 +5,7 @@ import type { MatchDetailResponse, MatchDto } from '../lib/types';
 import { EventsTimeline } from '../components/EventsTimeline';
 import { LineupsView } from '../components/LineupsView';
 import { GuessSheet } from '../components/GuessSheet';
+import { H2HSection } from '../components/H2HSection';
 import { getTeamImageUrl } from '../data/player-images';
 
 export function MatchDetailPage() {
@@ -103,6 +104,9 @@ export function MatchDetailPage() {
             {match.myGuess ? '✏️ עריכת ניחוש' : '🎯 ניחוש'}
           </button>
         )}
+
+        {/* H2H section for scheduled matches */}
+        {isScheduled && <H2HSection matchId={id} homeName={match.home.name} awayName={match.away.name} />}
 
         {/* Events */}
         {data.events.length > 0 && <EventsTimeline events={data.events} />}

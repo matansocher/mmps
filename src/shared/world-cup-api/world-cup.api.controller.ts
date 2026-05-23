@@ -12,6 +12,7 @@ import {
   getWorldCupStandings,
   findAllGuesses,
   findGuessesByUser,
+  findGuessesByMatchIds,
   findGuessByUserAndMatch,
   upsertGuess,
   upsertUser,
@@ -19,9 +20,11 @@ import {
   setDisplayName,
   findUserByTelegramId,
   findAllUsers,
+  WORLD_CUP_TEAMS,
 } from '@shared/world-cup';
+import { getPregameData } from '@services/scores-365';
 import { worldCupAuthMiddleware } from './auth.middleware';
-import type { GuessBody, GuessResponse, LeaderboardDto, MatchdayDto, MatchDetailDto, MatchDto, ProfileDto } from './dto';
+import type { GuessBody, GuessResponse, H2HDto, LeaderboardDto, MatchdayDto, MatchDetailDto, MatchDto, ProfileDto, UserStatsDto } from './dto';
 import { toMatchDto } from './dto';
 
 const logger = new Logger('WorldCupApiController');
@@ -175,12 +178,78 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
 
       let totalPoints = 0;
       let guessCount = 0;
+      let exactCount = 0;
+      let gdCount = 0;
+      let resultCount = 0;
+      let wrongCount = 0;
+      let currentStreak = 0;
+      let bestStreak = 0;
+      let tempStreak = 0;
+      const teamStats: Record<number, { correct: number; total: number }> = {};
+
+      const finishedGuesses: { points: number; matchId: number }[] = [];
       for (const guess of userGuesses) {
         const match = findMatchById(allMatches, guess.matchId);
         if (!match || classifyMatchStatus(match) !== 'finished') continue;
-        totalPoints += computePoints({ home: guess.home, away: guess.away }, { home: match.homeCompetitor.score, away: match.awayCompetitor.score });
+        const pts = computePoints({ home: guess.home, away: guess.away }, { home: match.homeCompetitor.score, away: match.awayCompetitor.score });
+        totalPoints += pts;
         guessCount++;
+        finishedGuesses.push({ points: pts, matchId: guess.matchId });
+
+        if (pts === 5) exactCount++;
+        else if (pts === 3) gdCount++;
+        else if (pts === 1) resultCount++;
+        else wrongCount++;
+
+        // Track team-level accuracy
+        for (const teamId of [match.homeCompetitor.id, match.awayCompetitor.id]) {
+          if (!teamStats[teamId]) teamStats[teamId] = { correct: 0, total: 0 };
+          teamStats[teamId].total++;
+          if (pts > 0) teamStats[teamId].correct++;
+        }
       }
+
+      // Compute streaks (sorted by match start time)
+      const sortedGuesses = finishedGuesses.sort((a, b) => {
+        const mA = findMatchById(allMatches, a.matchId);
+        const mB = findMatchById(allMatches, b.matchId);
+        return new Date(mA!.startTime).getTime() - new Date(mB!.startTime).getTime();
+      });
+      for (const g of sortedGuesses) {
+        if (g.points > 0) {
+          tempStreak++;
+          if (tempStreak > bestStreak) bestStreak = tempStreak;
+        } else {
+          tempStreak = 0;
+        }
+      }
+      currentStreak = tempStreak;
+
+      // Find best/worst team (min 2 guesses)
+      let bestTeam: UserStatsDto['bestTeam'];
+      let worstTeam: UserStatsDto['worstTeam'];
+      const teamEntries = Object.entries(teamStats).filter(([, s]) => s.total >= 2);
+      if (teamEntries.length > 0) {
+        const sorted = teamEntries.map(([id, s]) => ({ id: Number(id), accuracy: Math.round((s.correct / s.total) * 100) })).sort((a, b) => b.accuracy - a.accuracy);
+        const bestId = sorted[0].id;
+        const worstId = sorted[sorted.length - 1].id;
+        const bestInfo = WORLD_CUP_TEAMS.find((t) => t.id === bestId);
+        const worstInfo = WORLD_CUP_TEAMS.find((t) => t.id === worstId);
+        if (bestInfo) bestTeam = { name: bestInfo.name, flag: bestInfo.flag, accuracy: sorted[0].accuracy };
+        if (worstInfo && worstId !== bestId) worstTeam = { name: worstInfo.name, flag: worstInfo.flag, accuracy: sorted[sorted.length - 1].accuracy };
+      }
+
+      const stats: UserStatsDto = {
+        accuracy: guessCount > 0 ? Math.round(((guessCount - wrongCount) / guessCount) * 100) : 0,
+        exactCount,
+        gdCount,
+        resultCount,
+        wrongCount,
+        currentStreak,
+        bestStreak,
+        bestTeam,
+        worstTeam,
+      };
 
       const dto: ProfileDto = {
         telegramUserId: user.telegramUserId,
@@ -190,6 +259,7 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
         totalPoints,
         guessCount,
         notificationsEnabled: user.notificationsEnabled,
+        stats,
       };
       res.json(dto);
     } catch (err) {
@@ -312,6 +382,77 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
       res.json(dto);
     } catch (err) {
       logger.error(`GET ${prefix}/matches/:id error: ${err}`);
+      res.status(500).json({ error: 'internal_error' });
+    }
+  });
+
+  // GET /api/world-cup/matches/:id/h2h — head-to-head data for a match
+  app.get(`${prefix}/matches/:id/h2h`, async (req: Request, res: Response) => {
+    try {
+      const matchId = Number(req.params.id);
+      if (!Number.isFinite(matchId)) {
+        res.status(400).json({ error: 'invalid_id' });
+        return;
+      }
+
+      const allMatches = await getWorldCupMatches();
+      const match = findMatchById(allMatches, matchId);
+      if (!match) {
+        res.status(404).json({ error: 'match_not_found' });
+        return;
+      }
+
+      // Fetch pregame data from 365scores
+      const pregame = await getPregameData(matchId);
+
+      // Parse team statistics comparison
+      const teamStats: { name: string; homeValue: string; awayValue: string }[] = [];
+      let gamesPlayed = '';
+
+      if (pregame?.statisticGamesPlayed) {
+        gamesPlayed = pregame.statisticGamesPlayed.homeText || '';
+      }
+
+      if (pregame?.statistics) {
+        // Group stats by id — each stat id appears twice (once per competitor)
+        const statMap: Record<number, { name: string; home?: string; away?: string }> = {};
+        for (const stat of pregame.statistics) {
+          if (!statMap[stat.id]) statMap[stat.id] = { name: stat.name || '' };
+          if (stat.competitorId === match.homeCompetitor.id) {
+            statMap[stat.id].home = stat.value || '';
+          } else if (stat.competitorId === match.awayCompetitor.id) {
+            statMap[stat.id].away = stat.value || '';
+          }
+        }
+        // Only include stats that have both home and away values
+        for (const entry of Object.values(statMap)) {
+          if (entry.home && entry.away) {
+            teamStats.push({ name: entry.name, homeValue: entry.home, awayValue: entry.away });
+          }
+        }
+      }
+
+      // Community prediction from user guesses
+      const matchGuesses = await findGuessesByMatchIds([matchId]);
+      let homeWins = 0;
+      let draws = 0;
+      let awayWins = 0;
+      for (const g of matchGuesses) {
+        if (g.home > g.away) homeWins++;
+        else if (g.home === g.away) draws++;
+        else awayWins++;
+      }
+      const total = matchGuesses.length || 1;
+      const communityPrediction = {
+        home: Math.round((homeWins / total) * 100),
+        draw: Math.round((draws / total) * 100),
+        away: Math.round((awayWins / total) * 100),
+      };
+
+      const dto: H2HDto = { teamStats, gamesPlayed, communityPrediction };
+      res.json(dto);
+    } catch (err) {
+      logger.error(`GET ${prefix}/matches/:id/h2h error: ${err}`);
       res.status(500).json({ error: 'internal_error' });
     }
   });

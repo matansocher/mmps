@@ -35,6 +35,31 @@ export type ProfileDto = {
   totalPoints: number;
   guessCount: number;
   notificationsEnabled: boolean;
+  stats?: UserStatsDto;
+};
+
+export type UserStatsDto = {
+  accuracy: number;
+  exactCount: number;
+  gdCount: number;
+  resultCount: number;
+  wrongCount: number;
+  currentStreak: number;
+  bestStreak: number;
+  bestTeam?: { name: string; flag: string; accuracy: number };
+  worstTeam?: { name: string; flag: string; accuracy: number };
+};
+
+export type TeamStatRow = {
+  name: string;
+  homeValue: string;
+  awayValue: string;
+};
+
+export type H2HDto = {
+  teamStats: TeamStatRow[];
+  gamesPlayed: string;
+  communityPrediction: { home: number; draw: number; away: number };
 };
 
 export type GuessResponse = {
