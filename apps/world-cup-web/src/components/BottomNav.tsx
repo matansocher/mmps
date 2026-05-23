@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 type Tab = { path: string; label: string; icon: string };
 
 const TABS: Tab[] = [
-  { path: '/', label: 'משחקים', icon: '⚽' },
+  { path: '/', label: 'תוצאות', icon: '⚽' },
   { path: '/tournament', label: 'טורניר', icon: '🏟️' },
   { path: '/leaderboard', label: 'דירוג', icon: '🏆' },
   { path: '/profile', label: 'פרופיל', icon: '👤' },

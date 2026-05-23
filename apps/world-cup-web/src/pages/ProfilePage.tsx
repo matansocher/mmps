@@ -6,9 +6,14 @@ import { BottomNav } from '../components/BottomNav';
 export function ProfilePage() {
   const [profile, setProfile] = useState<ProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [nameInput, setNameInput] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
 
   useEffect(() => {
-    api.profile().then(setProfile).catch(() => setProfile(null)).finally(() => setLoading(false));
+    api.profile().then((p) => {
+      setProfile(p);
+      setNameInput(p.displayName ?? p.firstName);
+    }).catch(() => setProfile(null)).finally(() => setLoading(false));
   }, []);
 
   async function toggleNotifications() {
@@ -16,6 +21,16 @@ export function ProfilePage() {
     const newVal = !profile.notificationsEnabled;
     await api.setNotifications(newVal);
     setProfile({ ...profile, notificationsEnabled: newVal });
+  }
+
+  async function saveDisplayName() {
+    if (!profile || !nameInput.trim() || nameInput.trim() === (profile.displayName ?? profile.firstName)) return;
+    setNameSaving(true);
+    try {
+      const res = await api.setDisplayName(nameInput.trim());
+      setProfile({ ...profile, displayName: res.displayName });
+    } catch { /* ignore */ }
+    setNameSaving(false);
   }
 
   return (
@@ -29,6 +44,27 @@ export function ProfilePage() {
         {!loading && !profile && <p className="text-text-muted text-center py-8">שלחו /start בבוט כדי ליצור פרופיל.</p>}
         {!loading && profile && (
           <div className="space-y-4">
+            <div className="bg-bg-card rounded-xl p-4 border border-border-subtle">
+              <h2 className="text-sm text-text-secondary mb-3">שם תצוגה (בטבלת הדירוג)</h2>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  maxLength={30}
+                  className="flex-1 bg-bg-elevated border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-exact"
+                  dir="auto"
+                />
+                <button
+                  onClick={saveDisplayName}
+                  disabled={nameSaving || !nameInput.trim() || nameInput.trim() === (profile.displayName ?? profile.firstName)}
+                  className="px-3 py-2 text-sm bg-accent-exact text-white rounded-lg disabled:opacity-40"
+                >
+                  {nameSaving ? '...' : 'שמור'}
+                </button>
+              </div>
+            </div>
+
             <div className="bg-bg-card rounded-xl p-4 border border-border-subtle">
               <h2 className="text-sm text-text-secondary mb-3">הגדרות</h2>
               <div className="flex items-center justify-between">

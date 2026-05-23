@@ -27,6 +27,10 @@ export async function setNotifications(telegramUserId: number, enabled: boolean)
   await getCollection().updateOne({ telegramUserId }, { $set: { notificationsEnabled: enabled } });
 }
 
+export async function setDisplayName(telegramUserId: number, displayName: string): Promise<void> {
+  await getCollection().updateOne({ telegramUserId }, { $set: { displayName } });
+}
+
 export async function findUsersWithNotifications(): Promise<WorldCupUser[]> {
   return getCollection().find({ notificationsEnabled: true }).toArray();
 }

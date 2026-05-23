@@ -2,6 +2,7 @@ import type { Express, Request, Response } from 'express';
 import { Logger } from '@core/utils';
 import type { TelegramBotConfig } from '@services/telegram';
 import { classifyMatchStatus } from '@shared/sports';
+import { fetchRichMatch } from '@shared/coach-api/match-fetcher';
 import {
   computePoints,
   findMatchById,
@@ -15,11 +16,12 @@ import {
   upsertGuess,
   upsertUser,
   setNotifications,
+  setDisplayName,
   findUserByTelegramId,
   findAllUsers,
 } from '@shared/world-cup';
 import { worldCupAuthMiddleware } from './auth.middleware';
-import type { GuessBody, GuessResponse, LeaderboardDto, MatchdayDto, MatchDto, ProfileDto } from './dto';
+import type { GuessBody, GuessResponse, LeaderboardDto, MatchdayDto, MatchDetailDto, MatchDto, ProfileDto } from './dto';
 import { toMatchDto } from './dto';
 
 const logger = new Logger('WorldCupApiController');
@@ -142,6 +144,7 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
             firstName: user?.firstName ?? 'Unknown',
             lastName: user?.lastName,
             username: user?.username,
+            displayName: user?.displayName,
             points,
             guessCount,
           };
@@ -182,6 +185,7 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
       const dto: ProfileDto = {
         telegramUserId: user.telegramUserId,
         firstName: user.firstName,
+        displayName: user.displayName,
         username: user.username,
         totalPoints,
         guessCount,
@@ -211,6 +215,23 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
     }
   });
 
+  // PATCH /api/world-cup/profile/display-name — update display name for leaderboard
+  app.patch(`${prefix}/profile/display-name`, async (req: Request, res: Response) => {
+    try {
+      const { telegramUserId } = req.worldCupUser!;
+      const { displayName } = req.body as { displayName: string };
+      if (!displayName || typeof displayName !== 'string' || displayName.trim().length === 0 || displayName.trim().length > 30) {
+        res.status(400).json({ error: 'invalid_body' });
+        return;
+      }
+      await setDisplayName(telegramUserId, displayName.trim());
+      res.json({ success: true, displayName: displayName.trim() });
+    } catch (err) {
+      logger.error(`PATCH ${prefix}/profile/display-name error: ${err}`);
+      res.status(500).json({ error: 'internal_error' });
+    }
+  });
+
   // GET /api/world-cup/matchday/:key — matches for a specific matchday
   app.get(`${prefix}/matchday/:key`, async (req: Request, res: Response) => {
     try {
@@ -235,6 +256,62 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
       res.json(dto);
     } catch (err) {
       logger.error(`GET ${prefix}/matchday/:key error: ${err}`);
+      res.status(500).json({ error: 'internal_error' });
+    }
+  });
+
+  // GET /api/world-cup/matches/:id — single match detail with events & lineups
+  app.get(`${prefix}/matches/:id`, async (req: Request, res: Response) => {
+    try {
+      const { telegramUserId } = req.worldCupUser!;
+      const matchId = Number(req.params.id);
+      if (!Number.isFinite(matchId)) {
+        res.status(400).json({ error: 'invalid_id' });
+        return;
+      }
+
+      const allMatches = await getWorldCupMatches();
+      const match = findMatchById(allMatches, matchId);
+      if (!match) {
+        res.status(404).json({ error: 'match_not_found' });
+        return;
+      }
+
+      const status = classifyMatchStatus(match);
+      const guess = await findGuessByUserAndMatch(telegramUserId, matchId);
+      let points: number | undefined;
+      if (guess && status === 'finished') {
+        points = computePoints({ home: guess.home, away: guess.away }, { home: match.homeCompetitor.score, away: match.awayCompetitor.score });
+      }
+
+      const matchDto = toMatchDto(match, status, guess ?? undefined, points);
+      const rich = await fetchRichMatch(matchId);
+
+      const dto: MatchDetailDto = {
+        match: matchDto,
+        venue: rich?.venue,
+        stage: rich?.stage,
+        channel: rich?.channel,
+        events: rich?.events ?? [],
+        homeLineup: rich?.homeLineup
+          ? {
+              formation: rich.homeLineup.formation,
+              starting: rich.homeLineup.starting.map((p) => ({ memberId: p.memberId, athleteId: p.athleteId, name: p.name, shortName: p.shortName, jerseyNumber: p.jerseyNumber, position: p.position, isStarting: true })),
+              bench: rich.homeLineup.bench.map((p) => ({ memberId: p.memberId, athleteId: p.athleteId, name: p.name, shortName: p.shortName, jerseyNumber: p.jerseyNumber, position: p.position, isStarting: false })),
+            }
+          : undefined,
+        awayLineup: rich?.awayLineup
+          ? {
+              formation: rich.awayLineup.formation,
+              starting: rich.awayLineup.starting.map((p) => ({ memberId: p.memberId, athleteId: p.athleteId, name: p.name, shortName: p.shortName, jerseyNumber: p.jerseyNumber, position: p.position, isStarting: true })),
+              bench: rich.awayLineup.bench.map((p) => ({ memberId: p.memberId, athleteId: p.athleteId, name: p.name, shortName: p.shortName, jerseyNumber: p.jerseyNumber, position: p.position, isStarting: false })),
+            }
+          : undefined,
+      };
+
+      res.json(dto);
+    } catch (err) {
+      logger.error(`GET ${prefix}/matches/:id error: ${err}`);
       res.status(500).json({ error: 'internal_error' });
     }
   });

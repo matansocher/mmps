@@ -7,6 +7,7 @@ export type WorldCupUser = {
   readonly firstName: string;
   readonly lastName?: string;
   readonly username?: string;
+  readonly displayName?: string;
   readonly notificationsEnabled: boolean;
   readonly createdAt: Date;
 };
@@ -27,6 +28,7 @@ export type LeaderboardEntry = {
   readonly firstName: string;
   readonly lastName?: string;
   readonly username?: string;
+  readonly displayName?: string;
   readonly points: number;
   readonly guessCount: number;
 };

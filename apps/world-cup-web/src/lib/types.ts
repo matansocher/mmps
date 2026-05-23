@@ -7,8 +7,8 @@ export type MatchDto = {
   statusText: string;
   stage: string;
   venue: string;
-  home: { name: string; flag: string; score: number };
-  away: { name: string; flag: string; score: number };
+  home: { id: number; name: string; flag: string; score: number };
+  away: { id: number; name: string; flag: string; score: number };
   myGuess?: { home: number; away: number; points?: number };
 };
 
@@ -17,6 +17,7 @@ export type LeaderboardEntry = {
   firstName: string;
   lastName?: string;
   username?: string;
+  displayName?: string;
   points: number;
   guessCount: number;
 };
@@ -29,6 +30,7 @@ export type LeaderboardDto = {
 export type ProfileDto = {
   telegramUserId: number;
   firstName: string;
+  displayName?: string;
   username?: string;
   totalPoints: number;
   guessCount: number;
@@ -79,4 +81,45 @@ export type GroupStandings = {
   num: number;
   name: string;
   rows: StandingsRow[];
+};
+
+export type MatchSide = 'home' | 'away';
+
+export type MatchEvent = {
+  minute: number;
+  addedTime?: number;
+  minuteDisplay?: string;
+  side: MatchSide;
+  isMajor: boolean;
+  typeId: number;
+  typeName: string;
+  subTypeName?: string;
+  playerName?: string;
+  extraPlayerNames?: string[];
+};
+
+export type LineupPlayer = {
+  memberId: number;
+  athleteId: number;
+  name: string;
+  shortName?: string;
+  jerseyNumber?: number;
+  position?: string;
+  isStarting: boolean;
+};
+
+export type LineupSideData = {
+  formation?: string;
+  starting: LineupPlayer[];
+  bench: LineupPlayer[];
+};
+
+export type MatchDetailResponse = {
+  match: MatchDto;
+  venue?: string;
+  stage?: string;
+  channel?: string;
+  events: MatchEvent[];
+  homeLineup?: LineupSideData;
+  awayLineup?: LineupSideData;
 };

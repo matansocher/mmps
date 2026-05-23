@@ -27,7 +27,7 @@ export function LeaderboardPage() {
           <div className="space-y-2">
             {data.entries.map((entry, i) => {
               const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-              const name = entry.username ? `@${entry.username}` : entry.firstName;
+              const name = entry.displayName ?? (entry.lastName ? `${entry.firstName} ${entry.lastName}` : entry.firstName);
               return (
                 <div key={entry.telegramUserId} className="bg-bg-card rounded-lg p-3 flex items-center border border-border-subtle">
                   <span className="text-lg w-8">{medal}</span>

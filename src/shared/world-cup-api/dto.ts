@@ -14,8 +14,8 @@ export type MatchDto = {
   readonly statusText: string;
   readonly stage: string;
   readonly venue: string;
-  readonly home: { readonly name: string; readonly flag: string; readonly score: number };
-  readonly away: { readonly name: string; readonly flag: string; readonly score: number };
+  readonly home: { readonly id: number; readonly name: string; readonly flag: string; readonly score: number };
+  readonly away: { readonly id: number; readonly name: string; readonly flag: string; readonly score: number };
   readonly myGuess?: { readonly home: number; readonly away: number; readonly points?: number };
 };
 
@@ -32,6 +32,7 @@ export type MatchdayDto = {
 export type ProfileDto = {
   readonly telegramUserId: number;
   readonly firstName: string;
+  readonly displayName?: string;
   readonly username?: string;
   readonly totalPoints: number;
   readonly guessCount: number;
@@ -49,16 +50,57 @@ export type GuessResponse = {
   readonly guess: Guess;
 };
 
+export type MatchSide = 'home' | 'away';
+
+export type MatchEventDto = {
+  readonly minute: number;
+  readonly addedTime?: number;
+  readonly minuteDisplay?: string;
+  readonly side: MatchSide;
+  readonly isMajor: boolean;
+  readonly typeId: number;
+  readonly typeName: string;
+  readonly subTypeName?: string;
+  readonly playerName?: string;
+  readonly extraPlayerNames?: readonly string[];
+};
+
+export type LineupPlayerDto = {
+  readonly memberId: number;
+  readonly athleteId: number;
+  readonly name: string;
+  readonly shortName?: string;
+  readonly jerseyNumber?: number;
+  readonly position?: string;
+  readonly isStarting: boolean;
+};
+
+export type LineupSideDto = {
+  readonly formation?: string;
+  readonly starting: readonly LineupPlayerDto[];
+  readonly bench: readonly LineupPlayerDto[];
+};
+
+export type MatchDetailDto = {
+  readonly match: MatchDto;
+  readonly venue?: string;
+  readonly stage?: string;
+  readonly channel?: string;
+  readonly events: readonly MatchEventDto[];
+  readonly homeLineup?: LineupSideDto;
+  readonly awayLineup?: LineupSideDto;
+};
+
 export function toMatchDto(m: MatchDetails, status: MatchStatus, guess?: Guess, points?: number): MatchDto {
   return {
     id: m.id,
     startTime: m.startTime,
     status,
     statusText: m.statusText,
-    stage: m.stage,
+    stage: m.stage || '',
     venue: m.venue,
-    home: { name: m.homeCompetitor.name, flag: getFlag(m.homeCompetitor.id), score: m.homeCompetitor.score },
-    away: { name: m.awayCompetitor.name, flag: getFlag(m.awayCompetitor.id), score: m.awayCompetitor.score },
+    home: { id: m.homeCompetitor.id, name: m.homeCompetitor.name, flag: getFlag(m.homeCompetitor.id), score: m.homeCompetitor.score },
+    away: { id: m.awayCompetitor.id, name: m.awayCompetitor.name, flag: getFlag(m.awayCompetitor.id), score: m.awayCompetitor.score },
     myGuess: guess ? { home: guess.home, away: guess.away, points } : undefined,
   };
 }
