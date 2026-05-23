@@ -20,6 +20,7 @@ import {
   setDisplayName,
   findUserByTelegramId,
   findAllUsers,
+  getLeaderboardSnapshot,
   WORLD_CUP_TEAMS,
 } from '@shared/world-cup';
 import { getPregameData } from '@services/scores-365';
@@ -154,8 +155,11 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
         })
         .sort((a, b) => b.points - a.points);
 
-      const myRank = entries.findIndex((e) => e.telegramUserId === telegramUserId) + 1;
-      const dto: LeaderboardDto = { entries, myRank: myRank > 0 ? myRank : undefined };
+      // Fallback to snapshot data when no finished matches exist yet
+      const finalEntries = entries.length > 0 ? entries : await getLeaderboardSnapshot();
+
+      const myRank = finalEntries.findIndex((e) => e.telegramUserId === telegramUserId) + 1;
+      const dto: LeaderboardDto = { entries: finalEntries, myRank: myRank > 0 ? myRank : undefined };
       res.json(dto);
     } catch (err) {
       logger.error(`GET ${prefix}/leaderboard error: ${err}`);
