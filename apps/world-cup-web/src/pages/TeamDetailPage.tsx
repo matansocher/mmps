@@ -4,6 +4,7 @@ import { TEAMS_DATA } from '../data/teams';
 import { SQUADS_DATA } from '../data/squads';
 import { getPlayerImageUrl } from '../data/player-images';
 import { api } from '../lib/api';
+import { showBackButton } from '../lib/telegram';
 import type { MatchDto, PlayerDto } from '../lib/types';
 import { BottomNav } from '../components/BottomNav';
 
@@ -18,6 +19,10 @@ export function TeamDetailPage() {
   useEffect(() => {
     api.matches().then((res) => setMatches(res.matches));
   }, []);
+
+  useEffect(() => {
+    return showBackButton(() => navigate('/tournament'));
+  }, [navigate]);
 
   const teamMatches = useMemo(() => {
     if (!team) return [];
@@ -44,10 +49,13 @@ export function TeamDetailPage() {
     <div className="flex flex-col min-h-screen bg-bg-base">
       <div className="flex-1 overflow-y-auto pb-16">
         {/* Header */}
-        <div className="p-4 space-y-4">
+        <header className="sticky top-0 z-10 bg-bg-base/90 backdrop-blur px-4 py-3 border-b border-border-subtle">
           <button onClick={() => navigate('/tournament')} className="text-accent-exact text-sm font-medium">
             → חזרה לטורניר
           </button>
+        </header>
+
+        <div className="p-4 space-y-4">
 
           <div className="bg-bg-card rounded-xl p-5 border border-border-subtle text-center space-y-2">
             <span className="text-5xl block">{team.flag}</span>

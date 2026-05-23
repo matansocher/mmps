@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { api } from '../lib/api';
+import { showBackButton } from '../lib/telegram';
 import type { MatchDetailResponse, MatchDto } from '../lib/types';
 import { EventsTimeline } from '../components/EventsTimeline';
 import { LineupsView } from '../components/LineupsView';
@@ -23,6 +24,10 @@ export function MatchDetailPage() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  useEffect(() => {
+    return showBackButton(() => navigate('/'));
+  }, [navigate]);
 
   function handleGuessSubmitted() {
     load();
@@ -54,7 +59,7 @@ export function MatchDetailPage() {
         {/* Scoreboard */}
         <div className="bg-bg-card rounded-xl p-5 border border-border-subtle text-center">
           <div className="flex items-center justify-between">
-            <div className="flex-1 text-center cursor-pointer" onClick={() => navigate(`/team/${match.home.id}`)}>
+            <div className="flex-1 text-center cursor-pointer" onClick={() => navigate(`/teams/${match.home.id}`)}>
               <img src={getTeamImageUrl(match.home.id, 48)} alt="" className="w-12 h-12 rounded-full mx-auto mb-1" />
               <div className="text-base font-bold">{match.home.name}</div>
               {(isFinished || isLive) && <div className="score-font text-4xl mt-2">{match.home.score}</div>}
@@ -64,7 +69,7 @@ export function MatchDetailPage() {
               {isScheduled && <span className="text-text-muted text-xl">vs</span>}
               {isFinished && <span className="text-text-muted text-sm">FT</span>}
             </div>
-            <div className="flex-1 text-center cursor-pointer" onClick={() => navigate(`/team/${match.away.id}`)}>
+            <div className="flex-1 text-center cursor-pointer" onClick={() => navigate(`/teams/${match.away.id}`)}>
               <img src={getTeamImageUrl(match.away.id, 48)} alt="" className="w-12 h-12 rounded-full mx-auto mb-1" />
               <div className="text-base font-bold">{match.away.name}</div>
               {(isFinished || isLive) && <div className="score-font text-4xl mt-2">{match.away.score}</div>}

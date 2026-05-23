@@ -43,8 +43,15 @@ export function PlayerDetailPage() {
   return (
     <div className="flex flex-col min-h-screen bg-bg-base">
       <div className="flex-1 overflow-y-auto pb-16">
-        {/* Header with player image */}
-        <div className="flex flex-col items-center pt-8 pb-6 px-4">
+        {/* Header */}
+        <header className="sticky top-0 z-10 bg-bg-base/90 backdrop-blur px-4 py-3 border-b border-border-subtle">
+          <button onClick={() => navigate(`/teams/${teamId}`)} className="text-accent-exact text-sm font-medium">
+            → חזרה ל{team.name}
+          </button>
+        </header>
+
+        {/* Player image */}
+        <div className="flex flex-col items-center pt-6 pb-6 px-4">
           <div className="relative mb-4">
             {imageUrl ? (
               <img src={imageUrl} alt={player.name} className="w-28 h-28 rounded-full object-cover bg-bg-elevated border-2 border-border-subtle" />
@@ -65,18 +72,6 @@ export function PlayerDetailPage() {
             <InfoRow label="נבחרת" value={`${team.flag} ${team.name}`} />
             {player.age > 0 && <InfoRow label="גיל" value={String(player.age)} />}
           </div>
-
-          {/* Back to team button */}
-          <button
-            onClick={() => navigate(`/teams/${team.id}`)}
-            className="w-full bg-bg-card rounded-xl border border-border-subtle p-4 flex items-center gap-3 hover:border-accent-exact transition-colors"
-          >
-            <img src={getTeamImageUrl(team.id, 40)} alt={team.name} className="w-10 h-10 rounded-full bg-bg-elevated" />
-            <div className="text-right">
-              <div className="text-sm font-medium text-text-primary">{team.flag} {team.name}</div>
-              <div className="text-xs text-text-muted">דירוג FIFA: #{team.fifaRanking} · בית {team.group}</div>
-            </div>
-          </button>
         </div>
       </div>
       <BottomNav />
