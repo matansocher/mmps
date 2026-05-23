@@ -9,8 +9,10 @@ export class WorldCupSchedulerService {
   constructor(private readonly worldCupService: WorldCupService) {}
 
   init(): void {
-    // Daily reminder at 09:00 Asia/Jerusalem for today's matches
-    cron.schedule('0 9 * * *', () => this.handleDailyReminder(), { timezone: DEFAULT_TIMEZONE });
+    // 11:00 — summary of yesterday's finished matches (games played in US timezones finish late Israel time)
+    cron.schedule('0 11 * * *', () => this.handleDailyDigest(), { timezone: DEFAULT_TIMEZONE });
+    // 19:00 — reminder to set predictions for today's matches
+    cron.schedule('0 19 * * *', () => this.handleDailyReminder(), { timezone: DEFAULT_TIMEZONE });
     this.logger.log('World Cup schedulers initialized');
   }
 
@@ -19,6 +21,14 @@ export class WorldCupSchedulerService {
       await this.worldCupService.sendMatchdayReminders();
     } catch (err) {
       this.logger.error(`handleDailyReminder error: ${err}`);
+    }
+  }
+
+  private async handleDailyDigest(): Promise<void> {
+    try {
+      await this.worldCupService.sendDailyDigest();
+    } catch (err) {
+      this.logger.error(`handleDailyDigest error: ${err}`);
     }
   }
 }
