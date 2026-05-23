@@ -1,9 +1,9 @@
-import { Logger } from '@core/utils';
 import type { Context } from 'grammy';
+import { Logger } from '@core/utils';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, provideTelegramBot, sendShortenedMessage } from '@services/telegram';
 import { upsertUser } from '@shared/world-cup';
-import { BOT_CONFIG } from './world-cup.config';
 import { LauncherService } from './launcher.service';
+import { BOT_CONFIG } from './world-cup.config';
 import type { WorldCupService } from './world-cup.service';
 
 export class WorldCupController {
@@ -54,14 +54,12 @@ export class WorldCupController {
   }
 
   private async helpHandler(ctx: Context): Promise<void> {
-    await ctx.reply(
-      `פקודות הבוט:\n\n/start — הרשמה והודעת פתיחה\n/matches — משחקים קרובים\n/leaderboard — טבלת דירוג\n/help — עזרה\n\nלחצו על כפתור האפליקציה כדי לשלוח ניחושים ולראות סטטיסטיקות!`,
-    );
+    await ctx.reply(`פקודות הבוט:\n\n/start — הרשמה והודעת פתיחה\n/matches — משחקים קרובים\n/leaderboard — טבלת דירוג\n/help — עזרה\n\nלחצו על כפתור האפליקציה כדי לשלוח ניחושים ולראות סטטיסטיקות!`);
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
     const { data, chatId } = getCallbackQueryData(ctx);
-    await ctx.answerCallbackQuery();
+    await ctx.answerCallbackQuery().catch(() => {});
 
     switch (data) {
       case 'matches': {
