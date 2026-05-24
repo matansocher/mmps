@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import type { MatchDto } from '../lib/types';
 import { getTeamImageUrl } from '../data/player-images';
@@ -9,10 +10,8 @@ type Props = {
 
 function getStageLabel(stage: string | undefined): string {
   if (!stage) return '';
-  // Group stage: "בית A סיבוב 1" → "בית A"
   const groupMatch = stage.match(/בית\s+([A-Z])/);
   if (groupMatch) return `בית ${groupMatch[1]}`;
-  // Knockout rounds — return stage as-is (e.g. רבע גמר, חצי גמר)
   return stage;
 }
 
@@ -20,11 +19,49 @@ function getTimeLabel(startTime: string): string {
   return new Date(startTime).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', timeStyle: 'short' });
 }
 
+function getDateLabel(startTime: string): string {
+  const matchDate = new Date(startTime);
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem' });
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowStr = tomorrowDate.toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem' });
+  const matchStr = matchDate.toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem' });
+
+  if (matchStr === todayStr) return 'היום';
+  if (matchStr === tomorrowStr) return 'מחר';
+  const d = matchDate.toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit' });
+  return d;
+}
+
+function useCountdown(startTime: string): string | null {
+  const [label, setLabel] = useState<string | null>(() => calcCountdown(startTime));
+
+  useEffect(() => {
+    const interval = setInterval(() => setLabel(calcCountdown(startTime)), 60_000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return label;
+}
+
+function calcCountdown(startTime: string): string | null {
+  const diff = new Date(startTime).getTime() - Date.now();
+  if (diff <= 0) return null;
+  const hours = Math.floor(diff / 3_600_000);
+  const minutes = Math.floor((diff % 3_600_000) / 60_000);
+  if (hours >= 24) return null; // don't show countdown for 24h+
+  if (hours > 0) return `${hours}ש ${minutes}ד`;
+  return `${minutes}ד`;
+}
+
 export function MatchCard({ match, onGuessClick }: Props) {
   const [, navigate] = useLocation();
   const isScheduled = match.status === 'scheduled';
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
+  const countdown = useCountdown(match.startTime);
+  const dateLabel = getDateLabel(match.startTime);
 
   function getPointsBadge() {
     if (!match.myGuess || match.myGuess.points === undefined) return null;
@@ -58,7 +95,11 @@ export function MatchCard({ match, onGuessClick }: Props) {
         {/* Center: score / time */}
         <div className="flex flex-col items-center px-2 shrink-0">
           {isScheduled && (
-            <span className="text-text-secondary text-sm score-font">{getTimeLabel(match.startTime)}</span>
+            <>
+              <span className="text-text-secondary text-sm score-font">{getTimeLabel(match.startTime)}</span>
+              <span className="text-text-muted text-[10px]">{dateLabel}</span>
+              {countdown && <span className="text-accent-exact text-[10px] font-medium mt-0.5">⏱ {countdown}</span>}
+            </>
           )}
           {isLive && (
             <>
