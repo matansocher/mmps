@@ -17,13 +17,20 @@ export function MatchDetailPage() {
   const [guessMatch, setGuessMatch] = useState<MatchDto | null>(null);
   const id = Number(params?.id);
 
-  function load() {
+  function load(silent = false) {
     if (!Number.isFinite(id)) return;
-    setLoading(true);
-    api.matchDetail(id).then(setData).catch(() => setData(null)).finally(() => setLoading(false));
+    if (!silent) setLoading(true);
+    api.matchDetail(id).then(setData).catch(() => { if (!silent) setData(null); }).finally(() => { if (!silent) setLoading(false); });
   }
 
   useEffect(() => { load(); }, [id]);
+
+  // Auto-refresh every 20s when match is live
+  useEffect(() => {
+    if (!data || data.match.status !== 'live') return;
+    const interval = setInterval(() => load(true), 20_000);
+    return () => clearInterval(interval);
+  }, [data?.match.status, id]);
 
   useEffect(() => {
     return showBackButton(() => navigate('/'));

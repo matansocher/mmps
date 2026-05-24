@@ -1,6 +1,6 @@
 import { Logger } from '@core/utils';
 import type { MatchDetails } from '@services/scores-365';
-import { provideTelegramBot, sendShortenedMessage } from '@services/telegram';
+import { provideTelegramBot } from '@services/telegram';
 import { classifyMatchStatus } from '@shared/sports';
 import { computePoints, findMatchById, getWorldCupMatches, getWorldCupScheduledMatches, findGuessesByMatchIds, findUsersWithNotifications, findGuessesByUser, findAllGuesses, findAllUsers, WORLD_CUP_TEAMS } from '@shared/world-cup';
 import type { LeaderboardEntry } from '@shared/world-cup';
@@ -120,5 +120,83 @@ export class WorldCupService {
       return `${medal} ${name} — ${e.points} נק׳ (${e.guessCount} ניחושים)`;
     });
     return `🏆 טבלת דירוג\n\n${lines.join('\n')}`;
+  }
+
+  async sendDailyDigest(): Promise<void> {
+    const allMatches = await getWorldCupMatches();
+
+    // Look at yesterday's matches (digest runs at 11:00, games in US timezone finish late Israel time)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+
+    const finishedMatches = allMatches.filter((m) => {
+      const matchDate = new Date(m.startTime).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+      return matchDate === yesterdayStr && classifyMatchStatus(m) === 'finished';
+    });
+
+    if (!finishedMatches.length) return;
+
+    const users = await findUsersWithNotifications();
+    if (!users.length) return;
+
+    const allGuesses = await findAllGuesses();
+
+    // Build overall leaderboard for rank info
+    const pointsMap = new Map<number, { points: number; guessCount: number }>();
+    for (const guess of allGuesses) {
+      const match = findMatchById(allMatches, guess.matchId);
+      if (!match || classifyMatchStatus(match) !== 'finished') continue;
+      const pts = computePoints({ home: guess.home, away: guess.away }, { home: match.homeCompetitor.score, away: match.awayCompetitor.score });
+      const existing = pointsMap.get(guess.telegramUserId) ?? { points: 0, guessCount: 0 };
+      pointsMap.set(guess.telegramUserId, { points: existing.points + pts, guessCount: existing.guessCount + 1 });
+    }
+
+    const leaderboard = [...pointsMap.entries()]
+      .sort(([, a], [, b]) => b.points - a.points)
+      .map(([userId], i) => ({ userId, rank: i + 1 }));
+
+    const matchIds = finishedMatches.map((m) => m.id);
+    const dayGuesses = allGuesses.filter((g) => matchIds.includes(g.matchId));
+
+    for (const user of users) {
+      const userGuesses = dayGuesses.filter((g) => g.telegramUserId === user.telegramUserId);
+      let dayPoints = 0;
+
+      const resultLines = finishedMatches.map((match) => {
+        const guess = userGuesses.find((g) => g.matchId === match.id);
+        const actualScore = `${match.homeCompetitor.score}-${match.awayCompetitor.score}`;
+        const result = `${this.getFlag(match.homeCompetitor.id)} ${match.homeCompetitor.name} ${actualScore} ${match.awayCompetitor.name} ${this.getFlag(match.awayCompetitor.id)}`;
+
+        if (!guess) return `⬜ ${result} (לא ניחשת)`;
+
+        const pts = computePoints({ home: guess.home, away: guess.away }, { home: match.homeCompetitor.score, away: match.awayCompetitor.score });
+        dayPoints += pts;
+        const emoji = pts === 5 ? '🎯' : pts === 3 ? '✅' : pts === 1 ? '👍' : '❌';
+        return `${emoji} ${result}\n   ניחשת: ${guess.home}-${guess.away} (+${pts})`;
+      });
+
+      const rankEntry = leaderboard.find((e) => e.userId === user.telegramUserId);
+      const totalData = pointsMap.get(user.telegramUserId);
+      const rankLine = rankEntry ? `📊 מקום ${rankEntry.rank} מתוך ${leaderboard.length} | סה״כ ${totalData?.points ?? 0} נק׳` : '';
+
+      const displayDate = yesterdayStr.split('-').reverse().slice(0, 2).join('.');
+      const message = [
+        `📋 סיכום אתמול — ${displayDate}`,
+        '',
+        ...resultLines,
+        '',
+        dayPoints > 0 ? `💰 הרווחת אתמול: +${dayPoints} נקודות` : '😢 0 נקודות אתמול',
+        rankLine,
+      ].filter(Boolean).join('\n');
+
+      try {
+        await this.bot.api.sendMessage(user.chatId, message);
+      } catch (err: any) {
+        if (err.message?.includes('Forbidden')) {
+          this.logger.warn(`User ${user.telegramUserId} blocked the bot`);
+        }
+      }
+    }
   }
 }

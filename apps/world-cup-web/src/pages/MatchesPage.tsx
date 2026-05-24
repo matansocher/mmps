@@ -61,20 +61,28 @@ export function MatchesPage() {
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const didScroll = useRef(false);
 
-  async function load() {
-    setLoading(true);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const data = await api.matches();
       setAllMatches(data.matches);
     } catch {
-      setAllMatches([]);
+      if (!silent) setAllMatches([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   useEffect(() => { load(); }, []);
   useEffect(() => { api.profile().then(setProfile).catch(() => {}); }, []);
+
+  // Auto-refresh every 30s when any live match exists
+  const hasLive = useMemo(() => allMatches.some((m) => m.status === 'live'), [allMatches]);
+  useEffect(() => {
+    if (!hasLive) return;
+    const interval = setInterval(() => load(true), 30_000);
+    return () => clearInterval(interval);
+  }, [hasLive]);
 
   const groups = useMemo(() => groupByDate(allMatches), [allMatches]);
 
