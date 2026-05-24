@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { api } from '../lib/api';
 import { getTeamImageUrl } from '../data/player-images';
 import { BottomNav } from '../components/BottomNav';
-import type { GroupStandings, MatchDto } from '../lib/types';
+import type { GroupStandings, MatchDto, TournamentStats, PlayerStat } from '../lib/types';
 
 function groupNumToLetter(num: number): string {
   return String.fromCharCode(64 + num); // 1=A, 2=B, ...
@@ -11,7 +11,45 @@ function groupNumToLetter(num: number): string {
 
 const KNOCKOUT_STAGES = ['סיבוב 32', 'שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
 
+type SubTab = 'groups' | 'stats';
+
 export function TournamentPage() {
+  const [activeTab, setActiveTab] = useState<SubTab>('groups');
+
+  return (
+    <div className="flex flex-col min-h-screen bg-bg-base">
+      <div className="flex-1 overflow-y-auto pb-16">
+        {/* Sub-tabs */}
+        <div className="sticky top-0 z-10 bg-bg-base border-b border-border-subtle">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('groups')}
+              className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${activeTab === 'groups' ? 'text-accent-exact border-b-2 border-accent-exact' : 'text-text-muted'}`}
+            >
+              בתים
+            </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${activeTab === 'stats' ? 'text-accent-exact border-b-2 border-accent-exact' : 'text-text-muted'}`}
+            >
+              סטטיסטיקה
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'groups' && <GroupsTab />}
+        {activeTab === 'stats' && <StatsTab />}
+      </div>
+      <BottomNav />
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// Groups Tab (existing content)
+// ──────────────────────────────────────────────
+
+function GroupsTab() {
   const [standings, setStandings] = useState<GroupStandings[]>([]);
   const [knockoutMatches, setKnockoutMatches] = useState<MatchDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,41 +66,94 @@ export function TournamentPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex flex-col min-h-screen bg-bg-base">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-text-muted">טוען טבלאות...</div>
+    return <div className="flex items-center justify-center py-12"><div className="text-text-muted">טוען טבלאות...</div></div>;
+  }
+
+  return (
+    <>
+      <div className="px-4 pt-4 pb-2">
+        <h1 className="text-lg font-bold text-text-primary text-center">שלב הבתים</h1>
+      </div>
+
+      <div className="px-3 space-y-4 pb-6">
+        {standings.map((group) => (
+          <GroupTable key={group.num} group={group} onTeamClick={(id) => navigate(`/teams/${id}`)} />
+        ))}
+      </div>
+
+      {knockoutMatches.length > 0 && (
+        <div className="px-3 pb-6">
+          <h2 className="text-lg font-bold text-text-primary text-center mb-4">שלב הנוקאאוט</h2>
+          <BracketView matches={knockoutMatches} onMatchClick={(id) => navigate(`/match/${id}`)} />
         </div>
-        <BottomNav />
+      )}
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────
+// Stats Tab (new)
+// ──────────────────────────────────────────────
+
+function StatsTab() {
+  const [stats, setStats] = useState<TournamentStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.stats().then(setStats).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-12"><div className="text-text-muted">טוען סטטיסטיקה...</div></div>;
+  }
+
+  if (!stats || (stats.topScorers.length === 0 && stats.topAssisters.length === 0)) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-text-muted text-center">
+          <p className="text-2xl mb-2">📊</p>
+          <p>הסטטיסטיקה תתעדכן לאחר תחילת המשחקים</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-bg-base">
-      <div className="flex-1 overflow-y-auto pb-16">
-        <div className="px-4 pt-4 pb-2">
-          <h1 className="text-lg font-bold text-text-primary text-center">שלב הבתים</h1>
-        </div>
-
-        <div className="px-3 space-y-4 pb-6">
-          {standings.map((group) => (
-            <GroupTable key={group.num} group={group} onTeamClick={(id) => navigate(`/teams/${id}`)} />
-          ))}
-        </div>
-
-        {/* Knockout Bracket */}
-        {knockoutMatches.length > 0 && (
-          <div className="px-3 pb-6">
-            <h2 className="text-lg font-bold text-text-primary text-center mb-4">שלב הנוקאאוט</h2>
-            <BracketView matches={knockoutMatches} onMatchClick={(id) => navigate(`/match/${id}`)} />
-          </div>
-        )}
-      </div>
-      <BottomNav />
+    <div className="px-3 pt-4 pb-6 space-y-4">
+      {stats.topScorers.length > 0 && <StatSection title="מלך השערים ⚽" items={stats.topScorers} />}
+      {stats.topAssisters.length > 0 && <StatSection title="מלך הבישולים 🎯" items={stats.topAssisters} />}
+      {stats.topYellowCards.length > 0 && <StatSection title="כרטיסים צהובים 🟨" items={stats.topYellowCards} />}
+      {stats.topRedCards.length > 0 && <StatSection title="כרטיסים אדומים 🟥" items={stats.topRedCards} />}
     </div>
   );
 }
+
+function StatSection({ title, items }: { title: string; items: PlayerStat[] }) {
+  return (
+    <div className="bg-bg-card rounded-xl border border-border-subtle overflow-hidden">
+      <div className="px-3 py-2 border-b border-border-subtle">
+        <h2 className="text-sm font-bold text-text-primary">{title}</h2>
+      </div>
+      <div className="divide-y divide-border-subtle">
+        {items.map((item, idx) => (
+          <div key={`${item.playerName}-${item.teamName}`} className="flex items-center px-3 py-2.5 gap-3">
+            <span className="text-xs text-text-muted w-5 text-center font-medium">{idx + 1}</span>
+            <span className="text-base">{item.teamFlag}</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-text-primary font-medium truncate">{item.playerName}</div>
+              <div className="text-xs text-text-muted truncate">{item.teamName}</div>
+            </div>
+            <span className="text-sm font-bold text-accent-exact min-w-[24px] text-center">{item.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// Groups sub-components
+// ──────────────────────────────────────────────
 
 function GroupTable({ group, onTeamClick }: { group: GroupStandings; onTeamClick: (id: number) => void }) {
   return (
@@ -118,7 +209,10 @@ function GroupRow({ row, onTeamClick }: { row: GroupStandings['rows'][number]; o
   );
 }
 
+// ──────────────────────────────────────────────
 // Knockout Bracket
+// ──────────────────────────────────────────────
+
 function BracketView({ matches, onMatchClick }: { matches: MatchDto[]; onMatchClick: (id: number) => void }) {
   const stages = groupMatchesByStage(matches);
 
