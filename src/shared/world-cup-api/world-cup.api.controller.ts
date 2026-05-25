@@ -10,6 +10,7 @@ import {
   getWorldCupMatches,
   getWorldCupScheduledMatches,
   getWorldCupStandings,
+  getTournamentStats,
   findAllGuesses,
   findGuessesByUser,
   findGuessesByMatchIds,
@@ -468,6 +469,17 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
       res.json({ standings });
     } catch (err) {
       logger.error(`GET ${prefix}/standings error: ${err}`);
+      res.status(500).json({ error: 'internal_error' });
+    }
+  });
+
+  // GET /api/world-cup/stats — tournament statistics (top scorers, assists, cards)
+  app.get(`${prefix}/stats`, async (_req: Request, res: Response) => {
+    try {
+      const stats = await getTournamentStats();
+      res.json(stats);
+    } catch (err) {
+      logger.error(`GET ${prefix}/stats error: ${err}`);
       res.status(500).json({ error: 'internal_error' });
     }
   });

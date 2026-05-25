@@ -1,5 +1,5 @@
 import { getInitData } from './telegram';
-import type { GroupStandings, GuessResponse, H2HDto, LeaderboardDto, MatchDetailResponse, MatchDto, ProfileDto } from './types';
+import type { GroupStandings, GuessResponse, H2HDto, LeaderboardDto, MatchDetailResponse, MatchDto, ProfileDto, TournamentStats } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -38,4 +38,5 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ displayName }),
     }),
+  stats: () => request<TournamentStats>('/api/world-cup/stats'),
 };

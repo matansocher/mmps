@@ -148,3 +148,17 @@ export type MatchDetailResponse = {
   homeLineup?: LineupSideData;
   awayLineup?: LineupSideData;
 };
+
+export type PlayerStat = {
+  playerName: string;
+  teamName: string;
+  teamFlag: string;
+  count: number;
+};
+
+export type TournamentStats = {
+  topScorers: PlayerStat[];
+  topAssisters: PlayerStat[];
+  topYellowCards: PlayerStat[];
+  topRedCards: PlayerStat[];
+};
