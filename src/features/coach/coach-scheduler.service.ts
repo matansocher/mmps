@@ -19,7 +19,7 @@ export class CoachBotSchedulerService {
     );
 
     setTimeout(() => {
-      this.enqueueMatchesUpdate(); // for testing purposes
+      // this.enqueueMatchesUpdate(); // for testing purposes
     }, 8000);
   }
 
