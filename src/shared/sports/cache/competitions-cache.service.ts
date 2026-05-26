@@ -4,18 +4,18 @@ import { Competition } from '@services/scores-365';
 const validForMinutes = 200;
 
 export class CompetitionsCacheService extends BaseCache<Competition[]> {
-  private readonly key = 'competitions';
+  private readonly key = 'all';
 
   constructor() {
-    super(validForMinutes);
+    super(validForMinutes, 'sports:competitions');
   }
 
-  getCompetitions(): Competition[] | null {
+  async getCompetitions(): Promise<Competition[] | null> {
     return this.getFromCache(this.key);
   }
 
-  saveCompetitions(data: Competition[]): void {
-    this.saveToCache(this.key, data);
+  async saveCompetitions(data: Competition[]): Promise<void> {
+    await this.saveToCache(this.key, data);
   }
 }
 
