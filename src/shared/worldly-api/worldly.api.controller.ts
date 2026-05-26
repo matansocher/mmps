@@ -100,7 +100,7 @@ export function registerWorldlyApiRoutes(app: Express, deps: WorldlyApiDeps): vo
   });
 
   app.post('/api/worldly/game/:gameId/answer', async (req: Request, res: Response<AnswerResponse | { error: string }>) => {
-    const { gameId } = req.params;
+    const gameId = req.params.gameId as string;
     const body = req.body as AnswerBody | undefined;
     if (!body || typeof body.selected !== 'string') {
       res.status(400).json({ error: 'invalid_body' });

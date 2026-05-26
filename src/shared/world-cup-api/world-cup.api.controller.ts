@@ -311,7 +311,7 @@ export function registerWorldCupApiRoutes(app: Express, _deps: WorldCupApiDeps):
   app.get(`${prefix}/matchday/:key`, async (req: Request, res: Response) => {
     try {
       const { telegramUserId } = req.worldCupUser!;
-      const matchdayKey = req.params.key;
+      const matchdayKey = req.params.key as string;
       const allMatches = await getWorldCupMatches();
       const userGuesses = await findGuessesByUser(telegramUserId);
       const guessMap = new Map(userGuesses.map((g) => [g.matchId, g]));

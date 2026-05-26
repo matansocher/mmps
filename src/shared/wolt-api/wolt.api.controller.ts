@@ -119,7 +119,7 @@ export function registerWoltApiRoutes(app: Express, deps: WoltApiDeps): void {
   });
 
   app.delete('/api/wolt/subscriptions/:restaurant', async (req: Request, res: Response<UnsubscribeResponse | { error: string }>) => {
-    const restaurant = decodeURIComponent(req.params.restaurant);
+    const restaurant = decodeURIComponent(req.params.restaurant as string);
     const { chatId } = req.woltUser!;
     const userDetails = userDetailsFromReq(req);
     try {
