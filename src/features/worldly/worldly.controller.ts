@@ -69,7 +69,7 @@ export class WorldlyController {
     const { chatId, userDetails } = getMessageData(ctx);
     try {
       await ctx.reply('מצוין! עכשיו נשחק ברצף 🔥');
-      userPreferencesCacheService.saveUserPreferences(chatId, { onFireMode: true });
+      await userPreferencesCacheService.saveUserPreferences(chatId, { onFireMode: true });
       await this.worldlyService.randomGameHandler(chatId);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE }, userDetails);
     } catch (err) {
@@ -192,7 +192,7 @@ export class WorldlyController {
         return;
       }
       // If the user is in fire mode, send a new game immediately
-      const userPreferences = userPreferencesCacheService.getUserPreferences(chatId);
+      const userPreferences = await userPreferencesCacheService.getUserPreferences(chatId);
       if (userPreferences?.onFireMode) {
         await sleep(1000);
         await this.worldlyService.randomGameHandler(chatId);

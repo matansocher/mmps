@@ -5,15 +5,15 @@ const validForMinutes = 10;
 
 export class CompetitionMatchesCacheService extends BaseCache<CompetitionDetails> {
   constructor() {
-    super(validForMinutes);
+    super(validForMinutes, 'sports:competition-matches');
   }
 
-  getCompetitionMatches(competitionId: number): CompetitionDetails | null {
+  async getCompetitionMatches(competitionId: number): Promise<CompetitionDetails | null> {
     return this.getFromCache(competitionId.toString());
   }
 
-  saveCompetitionMatches(competitionId: number, data: CompetitionDetails): void {
-    this.saveToCache(competitionId.toString(), data);
+  async saveCompetitionMatches(competitionId: number, data: CompetitionDetails): Promise<void> {
+    await this.saveToCache(competitionId.toString(), data);
   }
 }
 

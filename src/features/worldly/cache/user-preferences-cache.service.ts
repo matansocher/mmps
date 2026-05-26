@@ -8,15 +8,15 @@ const validForMinutes = 30;
 
 export class UserPreferencesCacheService extends BaseCache<UserPreferences> {
   constructor() {
-    super(validForMinutes);
+    super(validForMinutes, 'worldly:preferences');
   }
 
-  getUserPreferences(chatId: number): UserPreferences | null {
+  async getUserPreferences(chatId: number): Promise<UserPreferences | null> {
     return this.getFromCache(chatId.toString());
   }
 
-  saveUserPreferences(chatId: number, data: UserPreferences): void {
-    this.saveToCache(chatId.toString(), data);
+  async saveUserPreferences(chatId: number, data: UserPreferences): Promise<void> {
+    await this.saveToCache(chatId.toString(), data);
   }
 }
 

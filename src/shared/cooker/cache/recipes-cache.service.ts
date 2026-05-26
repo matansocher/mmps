@@ -4,22 +4,23 @@ import { Recipe } from '../types';
 const validForMinutes = 200;
 
 export class RecipesCacheService extends BaseCache<Recipe[]> {
-  private readonly key = 'recipes';
+  private readonly key = 'all';
 
   constructor() {
-    super(validForMinutes);
+    super(validForMinutes, 'cooker:recipes');
   }
 
-  getAllRecipes(): Recipe[] | null {
-    return this.getFromCache(this.key) || [];
+  async getAllRecipes(): Promise<Recipe[]> {
+    return (await this.getFromCache(this.key)) || [];
   }
 
-  getARecipe(recipeId: string): Recipe | null {
-    return this.getAllRecipes().find((recipe) => recipe._id.toString() === recipeId);
+  async getARecipe(recipeId: string): Promise<Recipe | null> {
+    const recipes = await this.getAllRecipes();
+    return recipes.find((recipe) => recipe._id.toString() === recipeId) || null;
   }
 
-  saveRecipes(data: Recipe[]): void {
-    this.saveToCache(this.key, data);
+  async saveRecipes(data: Recipe[]): Promise<void> {
+    await this.saveToCache(this.key, data);
   }
 }
 
