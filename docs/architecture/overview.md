@@ -8,7 +8,7 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 - **Manual DI** - Simple and explicit dependency injection
 - **Modular design** - Each bot is independent
 - **Type safety** - Full TypeScript with non-strict mode
-- **Tested** - Jest 30.x for comprehensive testing
+- **Tested** - Vitest 4.x for comprehensive testing
 
 ## Tech Stack
 
@@ -39,7 +39,7 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 ### Code Quality
 - **ESLint 9.x** - Linting with flat config
 - **Prettier** - Formatting (200 char line width, single quotes, trailing commas, semicolons)
-- **Jest 30.x** - Testing framework with ts-jest
+- **Vitest 4.x** - Testing framework (unit, integration, and bot E2E suites)
 
 ## Project Structure
 

@@ -16,7 +16,9 @@ mmps/
 ├── scripts/                # Utility scripts
 ├── package.json            # Dependencies and scripts
 ├── tsconfig.json           # TypeScript config
-├── jest.config.cjs          # Test config
+├── vitest.config.ts        # Test config (unit)
+├── vitest.integration.config.ts # Test config (integration)
+├── vitest.e2e.config.ts    # Test config (bot E2E)
 ├── eslint.config.mjs       # Linting rules
 └── .prettierrc.json        # Code formatting
 ```
@@ -167,7 +169,10 @@ shared/ai/
 - **.prettierignore** - Files to skip formatting
 
 ### Testing
-- **jest.config.cjs** - Jest test configuration
+- **vitest.config.ts** - Vitest unit-test configuration (`src/**/*.spec.ts`)
+- **vitest.integration.config.ts** - Vitest integration suite (`test/integration/**/*.spec.ts`)
+- **vitest.e2e.config.ts** - Vitest bot E2E suite (`test/e2e/**/*.spec.ts`)
+- **test/e2e/harness/** - grammY mock harness for network-free bot tests
 - **coverage/** - Generated test coverage reports
 
 ### Git & CI/CD

@@ -83,7 +83,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **Bot Platform:** `grammy` (+ `@grammyjs/hydrate`)
 - **Date Handling:** `date-fns`, `date-fns-tz` (default timezone: `Asia/Jerusalem`)
 - **Schema Validation:** `zod`
-- **Testing:** Jest 30.x with `ts-jest`
+- **Testing:** Vitest 4.x (unit specs in `src/**/*.spec.ts`, integration specs under `test/integration/`, E2E bot specs under `test/e2e/`)
 - **Code Quality:** ESLint 9 (flat config), Prettier 3
 - **Vector DB:** `@pinecone-database/pinecone`
 - **Telegram MTProto:** `telegram` (for client-mode features, separate from bot)
@@ -721,8 +721,10 @@ npm run dev               # tsx watch src/index.ts — local bot dev
 npm run dev:debug         # with --inspect
 npm run build             # tsc + tsc-alias + build mini-apps
 npm start                 # node dist/index.js (production)
-npm test                  # Jest
+npm test                  # Vitest (unit)
 npm run test:watch
+npm run test:integration  # Vitest integration suite
+npm run test:e2e          # Vitest bot E2E suite (grammY mock harness)
 npm run lint
 npm run lint:fix
 npm run format
