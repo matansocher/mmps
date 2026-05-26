@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "ESNext",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
@@ -13,10 +13,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": false,

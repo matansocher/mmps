@@ -16,7 +16,7 @@ mmps/
 ├── scripts/                # Utility scripts
 ├── package.json            # Dependencies and scripts
 ├── tsconfig.json           # TypeScript config
-├── jest.config.js          # Test config
+├── jest.config.cjs          # Test config
 ├── eslint.config.mjs       # Linting rules
 └── .prettierrc.json        # Code formatting
 ```
@@ -167,13 +167,13 @@ shared/ai/
 - **.prettierignore** - Files to skip formatting
 
 ### Testing
-- **jest.config.js** - Jest test configuration
+- **jest.config.cjs** - Jest test configuration
 - **coverage/** - Generated test coverage reports
 
 ### Git & CI/CD
 - **.github/workflows/ci.yml** - GitHub Actions for testing and linting
 - **.husky/** - Git hooks
-- **commitlint.config.js** - Commit message validation
+- **commitlint.config.cjs** - Commit message validation
 
 ## Import Paths
 
