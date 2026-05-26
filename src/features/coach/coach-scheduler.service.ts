@@ -4,7 +4,7 @@ import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getActiveSubscriptions } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
-import { coachMatchesQueue } from './queue/coach-matches.queue';
+import { getCoachMatchesQueue } from './queue';
 
 export class CoachBotSchedulerService {
   private readonly logger = new Logger(CoachBotSchedulerService.name);
@@ -35,7 +35,8 @@ export class CoachBotSchedulerService {
           data: { chatId: sub.chatId, customLeagues: sub.customLeagues },
         }));
 
-      await coachMatchesQueue.addBulk(jobs);
+      const queue = getCoachMatchesQueue();
+      await queue.addBulk(jobs);
       this.logger.log(`Enqueued ${jobs.length} coach matches jobs`);
     } catch (err) {
       notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.ERROR}`, error: err });

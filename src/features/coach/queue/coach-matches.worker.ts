@@ -13,10 +13,10 @@ import type { CoachMatchesJobData } from './coach-matches.queue';
 
 const logger = new Logger('CoachMatchesWorker');
 
-const redisUrl = env.REDIS_URL;
-if (!redisUrl) throw new Error('REDIS_URL not defined');
-
 export function createCoachMatchesWorker(coachService: CoachService, bot: Bot): Worker<CoachMatchesJobData> {
+  const redisUrl = env.REDIS_URL;
+  if (!redisUrl) throw new Error('REDIS_URL not defined');
+
   const worker = new Worker<CoachMatchesJobData>(
     COACH_MATCHES_QUEUE,
     async (job) => {
