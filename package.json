@@ -32,8 +32,8 @@
     "dev:build": "tsc --watch",
     "dev:debug": "tsx watch --inspect src/index.ts",
     "debug": "node --inspect dist/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -107,7 +107,6 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/fluent-ffmpeg": "^2.1.28",
-    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
@@ -115,12 +114,11 @@
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "husky": "^9.1.7",
-    "jest": "^30.2.0",
     "prettier": "^3.6.2",
     "semantic-release": "^25.0.2",
-    "ts-jest": "^29.4.5",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "4.1.7"
   }
 }
