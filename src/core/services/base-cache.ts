@@ -1,33 +1,28 @@
-export type CacheEntry<T> = {
-  readonly lastUpdated: number;
-  readonly data: T;
-};
+import { getRedisConnection } from './redis';
 
 export class BaseCache<T> {
-  private cache: Record<string, CacheEntry<T>> = {};
-  private readonly validForMs: number;
+  private readonly ttlSeconds: number;
+  private readonly prefix: string;
 
-  constructor(validForMinutes: number) {
-    this.validForMs = validForMinutes * 60 * 1000;
+  constructor(validForMinutes: number, prefix: string) {
+    this.ttlSeconds = validForMinutes * 60;
+    this.prefix = prefix;
   }
 
-  protected getFromCache(key: string): T | null {
-    const entry = this.cache[key];
-    if (!entry) return null;
-
-    const isExpired = Date.now() - entry.lastUpdated > this.validForMs;
-    if (isExpired) {
-      delete this.cache[key];
-      return null;
-    }
-
-    return entry.data;
+  private buildKey(key: string): string {
+    return `${this.prefix}:${key}`;
   }
 
-  protected saveToCache(key: string, data: T): void {
-    this.cache[key] = {
-      lastUpdated: Date.now(),
-      data,
-    };
+  protected async getFromCache(key: string): Promise<T | null> {
+    const redis = getRedisConnection();
+    const raw = await redis.get(this.buildKey(key));
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  }
+
+  protected async saveToCache(key: string, data: T): Promise<void> {
+    const redis = getRedisConnection();
+    await redis.set(this.buildKey(key), JSON.stringify(data), 'EX', this.ttlSeconds);
   }
 }
+
