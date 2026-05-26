@@ -1,12 +1,14 @@
 import type { Express } from 'express';
-import path from 'node:path';
 import express from 'express';
+import { dirname } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createMongoConnection } from '@core/mongo';
 import { DB_NAME } from '@shared/world-cup';
 import { registerWorldCupApiRoutes } from '@shared/world-cup-api';
+import { WorldCupSchedulerService } from './world-cup-scheduler.service';
 import { BOT_CONFIG } from './world-cup.config';
 import { WorldCupController } from './world-cup.controller';
-import { WorldCupSchedulerService } from './world-cup-scheduler.service';
 import { WorldCupService } from './world-cup.service';
 
 export async function initWorldCup(app: Express): Promise<void> {
@@ -22,7 +24,7 @@ export async function initWorldCup(app: Express): Promise<void> {
   registerWorldCupApiRoutes(app, { botConfig: BOT_CONFIG });
 
   // Serve mini-app static files
-  const spaPath = path.join(__dirname, '../../../apps/world-cup-web/dist');
+  const spaPath = path.join(dirname(fileURLToPath(import.meta.url)), '../../../apps/world-cup-web/dist');
   app.use('/world-cup', express.static(spaPath));
   app.get('/world-cup/{*path}', (_req, res) => res.sendFile(path.join(spaPath, 'index.html')));
 }

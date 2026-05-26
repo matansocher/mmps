@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { registry } from '@core/openapi';
 import { Logger } from '@core/utils';
 import { upsertCalendarEvents } from './mongo';
+import type { CreateCalendarEventData } from './types';
 
 extendZodWithOpenApi(z);
 
@@ -11,22 +12,22 @@ const logger = new Logger('CalendarEventsApiController');
 
 // Zod schemas for OpenAPI documentation
 const CalendarEventDateTimeSchema = z.object({
-  dateTime: z.string().optional().openapi({ description: 'ISO 8601 format for timed events', example: '2026-01-20T10:00:00+02:00' }),
-  date: z.string().optional().openapi({ description: 'YYYY-MM-DD for all-day events', example: '2026-05-03' }),
-  timeZone: z.string().optional().openapi({ description: 'Timezone identifier', example: 'Asia/Jerusalem' }),
+  dateTime: z.string().openapi({ description: 'ISO 8601 format for timed events', example: '2026-01-20T10:00:00+02:00' }).optional(),
+  date: z.string().openapi({ description: 'YYYY-MM-DD for all-day events', example: '2026-05-03' }).optional(),
+  timeZone: z.string().openapi({ description: 'Timezone identifier', example: 'Asia/Jerusalem' }).optional(),
 });
 
 const CreateCalendarEventSchema = z.object({
   googleEventId: z.string().openapi({ description: 'Google Calendar event ID', example: 'abc123xyz' }),
   summary: z.string().openapi({ description: 'Event title', example: 'Team meeting' }),
-  description: z.string().optional().openapi({ description: 'Event description', example: 'Weekly sync' }),
-  location: z.string().optional().openapi({ description: 'Event location', example: 'Office Room A' }),
+  description: z.string().openapi({ description: 'Event description', example: 'Weekly sync' }).optional(),
+  location: z.string().openapi({ description: 'Event location', example: 'Office Room A' }).optional(),
   start: CalendarEventDateTimeSchema.openapi({ description: 'Event start time' }),
   end: CalendarEventDateTimeSchema.openapi({ description: 'Event end time' }),
 });
 
 const SyncCalendarEventsRequestSchema = z.object({
-  events: z.array(CreateCalendarEventSchema).min(1).openapi({ description: 'Array of calendar events to sync' }),
+  events: z.array(CreateCalendarEventSchema).openapi({ description: 'Array of calendar events to sync' }).min(1),
 });
 
 const SyncCalendarEventsResponseSchema = z.object({
@@ -38,7 +39,7 @@ const SyncCalendarEventsResponseSchema = z.object({
       total: z.number().openapi({ description: 'Total events processed', example: 7 }),
     })
     .optional(),
-  error: z.string().optional().openapi({ description: 'Error message if success is false' }),
+  error: z.string().openapi({ description: 'Error message if success is false' }).optional(),
 });
 
 // Register endpoint with OpenAPI registry
@@ -98,7 +99,7 @@ export function registerCalendarEventsRoutes(app: Express): void {
       }
 
       const { events } = parseResult.data;
-      const result = await upsertCalendarEvents(events);
+      const result = await upsertCalendarEvents(events as CreateCalendarEventData[]);
 
       logger.log(`Synced ${result.total} calendar events (inserted: ${result.inserted}, updated: ${result.updated})`);
 

@@ -1,9 +1,12 @@
 import { Canvas } from 'canvas';
 import * as fs from 'fs';
-import * as path from 'path';
+import { dirname } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { generateAreaMap, simplifyAreaName } from '.';
 import { Area } from './generate-area-map';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 function getLocalAreaMap(areaName: string): string {
   try {
     fs.readFileSync(path.join(__dirname, `../assets/images/${simplifyAreaName(areaName)}.png`), 'utf8');
