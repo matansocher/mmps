@@ -4,7 +4,11 @@ Testing guide for MMPS.
 
 ## Overview
 
-MMPS uses Jest 30.x for testing with ts-jest for TypeScript support.
+MMPS uses Vitest 4.x for testing. TypeScript runs natively via the Vite pipeline — no `ts-jest` setup required. Three suites live side by side:
+
+- **Unit** — `src/**/*.spec.ts`, run with `npm test`.
+- **Integration** — `test/integration/**/*.spec.ts`, run with `npm run test:integration`.
+- **E2E bot** — `test/e2e/**/*.spec.ts`, run with `npm run test:e2e` (uses the grammY mock harness in `test/e2e/harness/`).
 
 ## Running Tests
 
@@ -79,7 +83,9 @@ describe('fetchUser()', () => {
 ### Mocking
 
 ```typescript
-jest.mock('@services/openai/api');
+import { vi } from 'vitest';
+
+vi.mock('@services/openai/api');
 
 describe('ChatbotService', () => {
   test('should call OpenAI API', async () => {
@@ -177,7 +183,7 @@ describe('Reminder Repository', () => {
 
 ```bash
 # Run tests with debugging enabled
-node --inspect-brk node_modules/.bin/jest --runInBand
+node --inspect-brk node_modules/.bin/vitest run
 
 # Then open chrome://inspect in Chrome
 ```

@@ -80,6 +80,7 @@ export default defineConfig({
           items: [
             { text: 'Contributing', link: '/development/contributing' },
             { text: 'Testing', link: '/development/testing' },
+            { text: 'Bot E2E Testing', link: '/development/e2e-testing' },
             { text: 'Adding Features', link: '/development/adding-features' },
             { text: 'AI Tools', link: '/development/ai-tools' },
           ],

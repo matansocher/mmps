@@ -48,7 +48,7 @@ Full architecture overview: <https://matansocher.github.io/mmps/architecture/ove
 ```bash
 npm run dev                # tsx watch — local dev (single bot via LOCAL_ACTIVE_BOT_ID)
 npm run dev:debug          # with --inspect
-npm test                   # Jest
+npm test                   # Vitest
 npm run lint               # ESLint
 npm run lint:fix
 npm run format             # Prettier
