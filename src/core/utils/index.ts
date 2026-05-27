@@ -13,6 +13,7 @@ export { getQueryParams } from './get-query-params';
 export { getSpecialNumber } from './get-special-number';
 export { getStars } from './get-stars';
 export { getTableTemplate } from './get-table-template';
+export { gracefulShutdown } from './graceful-shutdown';
 export { hasHebrew } from './has-hebrew';
 export { isDateStringFormat } from './is-date-string-format';
 export { Logger } from './logger';
