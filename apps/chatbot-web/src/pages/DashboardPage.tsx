@@ -65,7 +65,12 @@ export function DashboardPage() {
       await api.updateReminder(reminder.id, { status: 'completed' });
       haptic('success');
       setData((prev) =>
-        prev ? { ...prev, reminders: prev.reminders.filter((r) => r.id !== reminder.id) } : prev,
+        prev
+          ? {
+              ...prev,
+              reminders: prev.reminders.map((r) => (r.id === reminder.id ? { ...r, status: 'completed' } : r)),
+            }
+          : prev,
       );
     } catch {
       setToast({ message: 'Failed to complete', kind: 'error' });

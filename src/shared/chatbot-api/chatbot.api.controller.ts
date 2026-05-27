@@ -139,7 +139,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       const [weather, googleEvents, reminders, activity] = await Promise.all([
         isToday ? buildWeatherSnapshot() : Promise.resolve(null),
         fetchEventsForDate(selectedDate),
-        getRemindersByUser(chatId, false),
+        getRemindersByUser(chatId, true),
         buildActivitySummary(chatId),
       ]);
 
