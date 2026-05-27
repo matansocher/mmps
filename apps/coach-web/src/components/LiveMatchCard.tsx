@@ -17,9 +17,9 @@ export function LiveMatchCard({ match }: { match: MatchSummary }) {
     >
       <div style={{ background: stripe }} className="w-1.5" />
       <div className="flex-1 p-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-text-primary font-semibold truncate">{match.home.name}</span>
+        <div className="flex items-center justify-between gap-2 min-w-0">
           <img src={teamLogo(match.home.id, 80)} alt="" loading="lazy" className="w-10 h-10 shrink-0" />
+          <span className="text-text-primary font-semibold truncate">{match.home.name}</span>
         </div>
         <div className="text-center">
           <div className="score-font text-3xl text-accent-win leading-none flex items-center justify-center">
@@ -32,9 +32,9 @@ export function LiveMatchCard({ match }: { match: MatchSummary }) {
             {match.minute}'
           </div>
         </div>
-        <div className="flex items-center gap-2 min-w-0 flex-row-reverse">
-          <span className="text-text-primary font-semibold truncate">{match.away.name}</span>
+        <div className="flex items-center justify-between gap-2 min-w-0 flex-row-reverse">
           <img src={teamLogo(match.away.id, 80)} alt="" loading="lazy" className="w-10 h-10 shrink-0" />
+          <span className="text-text-primary font-semibold truncate">{match.away.name}</span>
         </div>
       </div>
     </motion.button>

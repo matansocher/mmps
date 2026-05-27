@@ -1,3 +1,4 @@
+import { useLocation } from 'wouter';
 import type { MatchSummary } from '../types';
 import { leagueColor } from '../lib/league-themes';
 import { teamLogo } from '../lib/logos';
@@ -32,11 +33,15 @@ export function MatchScoreboard({ match }: { match: MatchSummary }) {
 }
 
 function TeamColumn({ team }: { team: MatchSummary['home'] }) {
+  const [, navigate] = useLocation();
   return (
-    <div className="flex flex-col items-center gap-2 text-center">
+    <button
+      onClick={() => navigate(`/team/${team.id}`)}
+      className="flex flex-col items-center gap-2 text-center hover:opacity-80 transition-opacity"
+    >
       <img src={teamLogo(team.id, 120)} alt="" loading="lazy" className="w-16 h-16" />
       <div className="text-text-primary font-bold text-sm leading-tight">{team.name}</div>
-    </div>
+    </button>
   );
 }
 

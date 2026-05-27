@@ -6,8 +6,10 @@ import type { TelegramBotConfig } from '@services/telegram';
 import { addSubscription, getSubscription, updateSubscription } from '@shared/coach';
 import { getSportsCompetitionMatches, getSportsCompetitionTable, getSportsCompetitions, getSportsMatchesSummary } from '@shared/sports';
 import { coachAuthMiddleware } from './auth.middleware';
-import type { CompetitionDetailResponse, CompetitionsListResponse, FollowUpdateBody, FollowUpdateResponse, MatchDetailResponse, MatchSummary, TodayResponse } from './dto';
+import type { AthleteDetailResponse, CompetitionDetailResponse, CompetitionsListResponse, FollowUpdateBody, FollowUpdateResponse, MatchDetailResponse, MatchSummary, TeamDetailResponse, TodayResponse } from './dto';
+import { fetchAthleteDetail } from './athlete-fetcher';
 import { fetchRichMatch } from './match-fetcher';
+import { fetchTeamDetail } from './team-fetcher';
 import { toCompetitionRef, toMatchSummary, toTableRows } from './transformers';
 
 const logger = new Logger('CoachApiController');
@@ -153,6 +155,34 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       ...(rich.homeLineup ? { homeLineup: rich.homeLineup } : {}),
       ...(rich.awayLineup ? { awayLineup: rich.awayLineup } : {}),
     });
+  });
+
+  app.get('/api/coach/teams/:id', async (req: Request, res: Response<TeamDetailResponse | { error: string }>) => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: 'invalid_id' });
+      return;
+    }
+    const team = await fetchTeamDetail(id);
+    if (!team) {
+      res.status(404).json({ error: 'team_not_found' });
+      return;
+    }
+    res.json(team);
+  });
+
+  app.get('/api/coach/athletes/:id', async (req: Request, res: Response<AthleteDetailResponse | { error: string }>) => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: 'invalid_id' });
+      return;
+    }
+    const athlete = await fetchAthleteDetail(id);
+    if (!athlete) {
+      res.status(404).json({ error: 'athlete_not_found' });
+      return;
+    }
+    res.json(athlete);
   });
 
   app.post('/api/coach/open', async (req: Request, res: Response) => {
