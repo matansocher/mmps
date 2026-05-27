@@ -45,3 +45,8 @@ export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
 
   return bot;
 };
+
+export async function stopAllTelegramBots(): Promise<void> {
+  await Promise.allSettled([...botInstances.values()].map((bot) => bot.stop()));
+  botInstances.clear();
+}

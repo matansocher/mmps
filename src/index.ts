@@ -3,9 +3,10 @@ import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
-import { createMongoConnection } from '@core/mongo';
+import { closeMongoConnections, createMongoConnection } from '@core/mongo';
 import { registerSwaggerRoutes } from '@core/openapi';
-import { Logger } from '@core/utils';
+import { gracefulShutdown, Logger } from '@core/utils';
+import { stopAllTelegramBots } from '@services/telegram';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
@@ -53,6 +54,8 @@ async function main() {
   app.listen(port, () => {
     logger.log(`Server is running on http://localhost:${port}/`);
   });
+
+  gracefulShutdown(stopAllTelegramBots, closeMongoConnections);
 }
 
 main();
