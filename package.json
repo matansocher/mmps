@@ -15,7 +15,7 @@
     "node": "24.x"
   },
   "scripts": {
-    "build": "tsc && tsc-alias && npm run build:web-apps",
+    "build": "tsc && tsc-alias --resolve-full-paths && npm run build:web-apps",
     "build:coach-web": "npm run build --workspace=@mmps/coach-web",
     "build:worldly-web": "npm run build --workspace=@mmps/worldly-web",
     "build:wolt-web": "npm run build --workspace=@mmps/wolt-web",
