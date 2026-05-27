@@ -21,3 +21,22 @@ export function dateStringFromOffset(offsetDays: number): string {
   d.setDate(d.getDate() + offsetDays);
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
+
+export function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+export function formatDateHeader(dateStr: string): string {
+  const today = dateStringFromOffset(0);
+  const tomorrow = dateStringFromOffset(1);
+  const yesterday = dateStringFromOffset(-1);
+  const [, m, d] = dateStr.split('-');
+  const ddmm = `${d}.${m}`;
+  if (dateStr === today) return `היום · ${ddmm}`;
+  if (dateStr === tomorrow) return `מחר · ${ddmm}`;
+  if (dateStr === yesterday) return `אתמול · ${ddmm}`;
+  const dow = new Date(dateStr + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'long' });
+  return `${dow} · ${ddmm}`;
+}

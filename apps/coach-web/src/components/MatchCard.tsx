@@ -35,12 +35,17 @@ export function MatchCard({ match, showDate = false }: { match: MatchSummary; sh
 }
 
 function TeamSide({ team, align, kind }: { team: TeamRef; align: 'start' | 'end'; kind: 'home' | 'away' }) {
-  const flex = align === 'end' ? 'flex-row' : 'flex-row-reverse';
+  // Page is RTL. align="end" = home (outer edge = right). align="start" = away (outer edge = left).
+  // Goal: team logo on the outer edge, team name + home/away indicator hugging the center (next to kickoff time).
+  // In RTL: flex-row reads right-to-left; flex-row-reverse reads left-to-right.
+  const dir = align === 'end' ? 'flex-row' : 'flex-row-reverse';
   return (
-    <div className={`flex items-center gap-2 min-w-0 ${flex}`}>
-      <span className="text-text-primary text-sm font-medium truncate">{team.name}</span>
-      <SideIndicator kind={kind} />
+    <div className={`flex items-center justify-between gap-2 min-w-0 ${dir}`}>
       <img src={teamLogo(team.id)} alt="" loading="lazy" className="w-7 h-7 shrink-0" />
+      <div className={`flex items-center gap-1.5 min-w-0 ${dir}`}>
+        <span className="text-text-primary text-sm font-medium truncate">{team.name}</span>
+        <SideIndicator kind={kind} />
+      </div>
     </div>
   );
 }
@@ -95,4 +100,25 @@ function CenterStatus({ match, kickoff }: { match: MatchSummary; kickoff: string
     );
   }
   return null;
+}
+
+export function MatchCardSkeleton() {
+  return (
+    <div className="w-full bg-bg-card border border-border-subtle rounded-xl flex items-stretch overflow-hidden animate-pulse">
+      <div className="w-1 bg-bg-elevated" />
+      <div className="flex-1 p-3">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="w-7 h-7 rounded-full bg-bg-elevated shrink-0" />
+            <div className="h-3 bg-bg-elevated rounded w-20" />
+          </div>
+          <div className="h-4 w-10 bg-bg-elevated rounded" />
+          <div className="flex items-center justify-between gap-2 flex-row-reverse">
+            <div className="w-7 h-7 rounded-full bg-bg-elevated shrink-0" />
+            <div className="h-3 bg-bg-elevated rounded w-20" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

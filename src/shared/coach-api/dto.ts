@@ -118,3 +118,36 @@ export type MatchDetailResponse = {
   readonly homeLineup?: LineupSide;
   readonly awayLineup?: LineupSide;
 };
+
+export type SquadPlayer = {
+  readonly athleteId: number;
+  readonly name: string;
+  readonly position: string; // GK | DF | MF | FW
+  readonly positionName?: string;
+  readonly age?: number;
+  readonly jerseyNumber?: number;
+  readonly clubId?: number;
+  readonly imageVersion?: number;
+};
+
+export type TeamDetailResponse = {
+  readonly team: TeamRef;
+  readonly country?: string;
+  readonly mainCompetitionId?: number;
+  readonly imageVersion?: number;
+  readonly squad: ReadonlyArray<SquadPlayer>;
+};
+
+export type AthleteDetailResponse = {
+  readonly athleteId: number;
+  readonly name: string;
+  readonly position: string; // GK | DF | MF | FW
+  readonly positionName?: string;
+  readonly age?: number;
+  readonly height?: number;
+  readonly jerseyNumber?: number;
+  readonly nationalityName?: string;
+  readonly clubId?: number;
+  readonly clubName?: string;
+  readonly imageVersion?: number;
+};

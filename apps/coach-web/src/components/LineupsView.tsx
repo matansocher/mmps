@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import type { LineupPlayer, LineupSide, TeamRef } from '../types';
 import { athletePhoto } from '../lib/logos';
 
@@ -42,40 +43,57 @@ export function LineupsView({ home, away }: Props) {
 }
 
 function FormationHeader({ home, away }: Props) {
+  const [, navigate] = useLocation();
   return (
     <div className="grid grid-cols-2 divide-x divide-border-subtle border-b border-border-subtle">
-      <div className="px-3 py-2 text-right">
+      <button onClick={() => navigate(`/team/${home.team.id}`)} className="px-3 py-2 text-right hover:bg-bg-elevated/40 transition-colors">
         <div className="text-text-primary text-sm font-semibold truncate">{home.team.name}</div>
         {home.lineup.formation && <div className="text-text-secondary text-xs">{home.lineup.formation}</div>}
-      </div>
-      <div className="px-3 py-2 text-left">
+      </button>
+      <button onClick={() => navigate(`/team/${away.team.id}`)} className="px-3 py-2 text-left hover:bg-bg-elevated/40 transition-colors">
         <div className="text-text-primary text-sm font-semibold truncate">{away.team.name}</div>
         {away.lineup.formation && <div className="text-text-secondary text-xs">{away.lineup.formation}</div>}
-      </div>
+      </button>
     </div>
   );
 }
 
 function SideList({ players, align }: { players: readonly LineupPlayer[]; align: 'start' | 'end' }) {
+  const [, navigate] = useLocation();
   if (players.length === 0) {
     return <div className="px-3 py-3 text-text-muted text-xs">—</div>;
   }
   return (
     <ul className="divide-y divide-border-subtle">
-      {players.map((p) => (
-        <li key={p.memberId} className={`flex items-center gap-2 px-3 py-2 ${align === 'end' ? '' : 'flex-row-reverse'}`}>
-          {p.athleteId > 0 && (
-            <img src={athletePhoto(p.athleteId)} alt="" loading="lazy" className="w-7 h-7 rounded-full bg-bg-elevated shrink-0" />
-          )}
-          {p.jerseyNumber != null && (
-            <span className="score-font text-text-muted text-xs w-5 text-center shrink-0">{p.jerseyNumber}</span>
-          )}
-          <div className={`flex-1 min-w-0 ${align === 'end' ? 'text-right' : 'text-left'}`}>
-            <div className="text-text-primary text-xs truncate">{p.shortName || p.name}</div>
-            {p.position && <div className="text-text-muted text-[10px] truncate">{p.position}</div>}
-          </div>
-        </li>
-      ))}
+      {players.map((p) => {
+        const clickable = p.athleteId > 0;
+        const content = (
+          <>
+            {p.athleteId > 0 && (
+              <img src={athletePhoto(p.athleteId)} alt="" loading="lazy" className="w-7 h-7 rounded-full bg-bg-elevated shrink-0" />
+            )}
+            {p.jerseyNumber != null && (
+              <span className="score-font text-text-muted text-xs w-5 text-center shrink-0">{p.jerseyNumber}</span>
+            )}
+            <div className={`flex-1 min-w-0 ${align === 'end' ? 'text-right' : 'text-left'}`}>
+              <div className="text-text-primary text-xs truncate">{p.shortName || p.name}</div>
+              {p.position && <div className="text-text-muted text-[10px] truncate">{p.position}</div>}
+            </div>
+          </>
+        );
+        const baseClass = `flex items-center gap-2 px-3 py-2 w-full ${align === 'end' ? '' : 'flex-row-reverse'}`;
+        return (
+          <li key={p.memberId}>
+            {clickable ? (
+              <button onClick={() => navigate(`/athlete/${p.athleteId}`)} className={`${baseClass} hover:bg-bg-elevated/40 transition-colors`}>
+                {content}
+              </button>
+            ) : (
+              <div className={baseClass}>{content}</div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

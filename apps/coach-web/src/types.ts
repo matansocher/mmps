@@ -111,3 +111,36 @@ export type LineupSide = {
   starting: LineupPlayer[];
   bench: LineupPlayer[];
 };
+
+export type SquadPlayer = {
+  athleteId: number;
+  name: string;
+  position: string;
+  positionName?: string;
+  age?: number;
+  jerseyNumber?: number;
+  clubId?: number;
+  imageVersion?: number;
+};
+
+export type TeamDetailResponse = {
+  team: TeamRef;
+  country?: string;
+  mainCompetitionId?: number;
+  imageVersion?: number;
+  squad: SquadPlayer[];
+};
+
+export type AthleteDetailResponse = {
+  athleteId: number;
+  name: string;
+  position: string;
+  positionName?: string;
+  age?: number;
+  height?: number;
+  jerseyNumber?: number;
+  nationalityName?: string;
+  clubId?: number;
+  clubName?: string;
+  imageVersion?: number;
+};

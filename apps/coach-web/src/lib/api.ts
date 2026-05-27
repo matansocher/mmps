@@ -1,5 +1,5 @@
 import { getInitData } from './telegram';
-import type { CompetitionDetailResponse, CompetitionsListResponse, FollowUpdateResponse, MatchDetailResponse, TodayResponse } from '../types';
+import type { AthleteDetailResponse, CompetitionDetailResponse, CompetitionsListResponse, FollowUpdateResponse, MatchDetailResponse, TeamDetailResponse, TodayResponse } from '../types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -21,6 +21,8 @@ export const api = {
   competitions: () => request<CompetitionsListResponse>('/api/coach/competitions'),
   competition: (id: number) => request<CompetitionDetailResponse>(`/api/coach/competitions/${id}`),
   match: (id: number) => request<MatchDetailResponse>(`/api/coach/matches/${id}`),
+  team: (id: number) => request<TeamDetailResponse>(`/api/coach/teams/${id}`),
+  athlete: (id: number) => request<AthleteDetailResponse>(`/api/coach/athletes/${id}`),
   setFollow: (id: number, follow: boolean) =>
     request<FollowUpdateResponse>(`/api/coach/competitions/${id}/follow`, {
       method: 'POST',
