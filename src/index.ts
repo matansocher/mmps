@@ -6,13 +6,12 @@ import { isProd } from '@core/config';
 import { closeMongoConnections, createMongoConnection } from '@core/mongo';
 import { registerSwaggerRoutes } from '@core/openapi';
 import { gracefulShutdown, Logger } from '@core/utils';
-import { stopAllTelegramBots } from '@services/telegram';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
-import { BOT_CONFIG as worldCupConfig, initWorldCup } from '@features/world-cup';
+import { stopAllTelegramBots } from '@services/telegram';
 import { DB_NAME as AUTH_DB_NAME, registerAuthRoutes } from '@shared/auth';
 
 dotenv.config();
@@ -48,7 +47,6 @@ async function main() {
   shouldInitBot(coachConfig) && (await initCoach(app));
   shouldInitBot(woltConfig) && (await initWolt(app));
   shouldInitBot(worldlyConfig) && (await initWorldly(app));
-  shouldInitBot(worldCupConfig) && (await initWorldCup(app));
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
   app.listen(port, () => {
