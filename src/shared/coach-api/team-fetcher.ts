@@ -2,11 +2,13 @@ import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../../services/scores-365/scores-365.config';
-import type { SquadPlayer, TeamDetailResponse } from './dto';
+import type { MatchStatus, SquadPlayer, TeamDetailResponse, TeamRecentMatch } from './dto';
 
 const logger = new Logger('CoachTeamFetcher');
 
 const POSITION_MAP: Record<number, string> = { 1: 'GK', 2: 'DF', 3: 'MF', 4: 'FW' };
+
+const RECENT_MATCH_LIMIT = 5;
 
 type RawCompetitor = {
   id: number;
@@ -14,6 +16,8 @@ type RawCompetitor = {
   symbolicName?: string;
   imageVersion?: number;
   mainCompetitionId?: number;
+  color?: string;
+  awayColor?: string;
   country?: { name?: string };
 };
 
@@ -26,6 +30,23 @@ type RawAthlete = {
   jerseyNum?: number;
   clubId?: number;
   position?: { id: number; name?: string };
+};
+
+type RawGameCompetitor = {
+  id: number;
+  name: string;
+  symbolicName?: string;
+  score?: number;
+};
+
+type RawGame = {
+  id: number;
+  startTime: string;
+  competitionId: number;
+  statusGroup?: number;
+  gameTime?: number;
+  homeCompetitor: RawGameCompetitor;
+  awayCompetitor: RawGameCompetitor;
 };
 
 function baseParams(): Record<string, string> {
@@ -55,12 +76,41 @@ function toSquadPlayer(a: RawAthlete): SquadPlayer {
   };
 }
 
+function gameStatus(g: RawGame): MatchStatus {
+  if (g.statusGroup === 3) return 'live';
+  if (g.statusGroup === 4) return 'finished';
+  return 'scheduled';
+}
+
+function toRecentMatch(g: RawGame, teamId: number): TeamRecentMatch | null {
+  const status = gameStatus(g);
+  if (status !== 'finished') return null;
+  const homeScore = g.homeCompetitor.score ?? -1;
+  const awayScore = g.awayCompetitor.score ?? -1;
+  if (homeScore < 0 || awayScore < 0) return null;
+  const isHome = g.homeCompetitor.id === teamId;
+  const mine = isHome ? homeScore : awayScore;
+  const theirs = isHome ? awayScore : homeScore;
+  const outcome: TeamRecentMatch['outcome'] = mine > theirs ? 'W' : mine === theirs ? 'D' : 'L';
+  return {
+    id: g.id,
+    home: { id: g.homeCompetitor.id, name: g.homeCompetitor.name, symbolicName: g.homeCompetitor.symbolicName },
+    away: { id: g.awayCompetitor.id, name: g.awayCompetitor.name, symbolicName: g.awayCompetitor.symbolicName },
+    status,
+    startTime: g.startTime,
+    score: { home: homeScore, away: awayScore },
+    competitionId: g.competitionId,
+    outcome,
+  };
+}
+
 export async function fetchTeamDetail(teamId: number): Promise<TeamDetailResponse | null> {
   try {
     const params = { ...baseParams(), competitors: String(teamId) };
-    const [compRes, squadRes] = await Promise.all([
+    const [compRes, squadRes, resultsRes] = await Promise.all([
       axios.get(`${SCORES_365_API_URL}/competitors?${new URLSearchParams(params)}`).catch(() => null),
       axios.get(`${SCORES_365_API_URL}/squads/?${new URLSearchParams(params)}`).catch(() => null),
+      axios.get(`${SCORES_365_API_URL}/games/results/?${new URLSearchParams(params)}`).catch(() => null),
     ]);
 
     const competitor: RawCompetitor | undefined = compRes?.data?.competitors?.[0];
@@ -71,6 +121,13 @@ export async function fetchTeamDetail(teamId: number): Promise<TeamDetailRespons
       .filter((a) => (a.position?.id ?? 0) > 0)
       .map(toSquadPlayer);
 
+    const rawGames: RawGame[] = resultsRes?.data?.games ?? [];
+    const recentMatches: TeamRecentMatch[] = rawGames
+      .map((g) => toRecentMatch(g, teamId))
+      .filter((m): m is TeamRecentMatch => m !== null)
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+      .slice(0, RECENT_MATCH_LIMIT);
+
     return {
       team: {
         id: competitor.id,
@@ -80,6 +137,9 @@ export async function fetchTeamDetail(teamId: number): Promise<TeamDetailRespons
       country: competitor.country?.name,
       mainCompetitionId: competitor.mainCompetitionId,
       imageVersion: competitor.imageVersion,
+      color: competitor.color,
+      awayColor: competitor.awayColor,
+      recentMatches,
       squad,
     };
   } catch (err) {

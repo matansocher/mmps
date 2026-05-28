@@ -123,11 +123,18 @@ export type SquadPlayer = {
   imageVersion?: number;
 };
 
+export type TeamRecentMatch = MatchSummary & {
+  outcome: 'W' | 'D' | 'L';
+};
+
 export type TeamDetailResponse = {
   team: TeamRef;
   country?: string;
   mainCompetitionId?: number;
   imageVersion?: number;
+  color?: string;
+  awayColor?: string;
+  recentMatches: TeamRecentMatch[];
   squad: SquadPlayer[];
 };
 

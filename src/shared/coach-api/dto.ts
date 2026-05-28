@@ -130,11 +130,18 @@ export type SquadPlayer = {
   readonly imageVersion?: number;
 };
 
+export type TeamRecentMatch = MatchSummary & {
+  readonly outcome: 'W' | 'D' | 'L';
+};
+
 export type TeamDetailResponse = {
   readonly team: TeamRef;
   readonly country?: string;
   readonly mainCompetitionId?: number;
   readonly imageVersion?: number;
+  readonly color?: string;
+  readonly awayColor?: string;
+  readonly recentMatches: ReadonlyArray<TeamRecentMatch>;
   readonly squad: ReadonlyArray<SquadPlayer>;
 };
 
