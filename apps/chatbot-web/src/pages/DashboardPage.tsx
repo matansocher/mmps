@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DayPicker } from '../components/DayPicker';
 import { EventRow } from '../components/EventRow';
+import { ExpenseRow } from '../components/ExpenseRow';
 import { HeatmapStrip } from '../components/HeatmapStrip';
 import { ReminderRow } from '../components/ReminderRow';
 import { ReminderSheet } from '../components/ReminderSheet';
@@ -10,7 +11,7 @@ import { WeatherCard } from '../components/WeatherCard';
 import { api } from '../lib/api';
 import { dateFromYmd, formatLongDate, todayYmd } from '../lib/date';
 import { haptic } from '../lib/telegram';
-import type { DashboardResponse, ReminderDto } from '../types';
+import type { DashboardResponse, ExpenseTotal, ReminderDto } from '../types';
 
 type ToastState = { readonly message: string; readonly kind: 'success' | 'error' | 'info' } | null;
 
@@ -139,6 +140,17 @@ export function DashboardPage() {
             )}
           </Section>
 
+          <Section
+            title={`Expenses · ${data.expenses.length}`}
+            action={data.expenseTotals.length > 0 ? <ExpenseTotalsBadge totals={data.expenseTotals} /> : null}
+          >
+            {data.expenses.length === 0 ? (
+              <Empty>No expenses for this day</Empty>
+            ) : (
+              data.expenses.map((expense) => <ExpenseRow key={expense.id} expense={expense} />)
+            )}
+          </Section>
+
           <HeatmapStrip days={data.activity.heatmap} />
 
           <button
@@ -200,6 +212,15 @@ function Section({ title, action, children }: { readonly title: string; readonly
 
 function Empty({ children }: { readonly children: React.ReactNode }) {
   return <div className="py-6 text-center text-sm text-text-muted">{children}</div>;
+}
+
+function ExpenseTotalsBadge({ totals }: { readonly totals: ReadonlyArray<ExpenseTotal> }) {
+  const symbol: Record<string, string> = { ILS: '₪', USD: '$', EUR: '€', GBP: '£' };
+  return (
+    <span className="text-xs tabular text-text-secondary">
+      {totals.map((t) => `${symbol[t.currency] || t.currency}${t.total.toFixed(2)}`).join(' · ')}
+    </span>
+  );
 }
 
 function DashboardSkeleton() {

@@ -1,8 +1,11 @@
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { addDays, startOfDay, startOfWeek, subDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
+import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
+import { registry } from '@core/openapi';
 import { Logger } from '@core/utils';
 import { listEvents } from '@services/google-calendar';
 import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-calendar';
@@ -15,24 +18,216 @@ import {
   updateReminderStatus,
 } from '@shared/reminders';
 import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
+import { createManualExpense, getExpensesBetween, SUPPORTED_CURRENCIES, type Expense } from '@shared/expenses';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
+  CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
   EventDto,
   ExerciseLogResponse,
+  ExpenseDto,
+  ExpenseTotal,
   HeatmapDay,
   ReminderDto,
   UpdateReminderBody,
   WeatherSnapshot,
 } from './dto';
 
+extendZodWithOpenApi(z);
+
 const logger = new Logger('ChatbotApiController');
 
 const DEFAULT_WEATHER_LOCATION = 'Tel Aviv';
 const HEATMAP_WEEKS = 13;
+
+// --- Zod schemas for OpenAPI ---
+
+const ExpenseDtoSchema = z.object({
+  id: z.string(),
+  vendor: z.string(),
+  category: z.string(),
+  amount: z.number(),
+  currency: z.string(),
+  type: z.enum(['receipt', 'card_alert', 'bill']),
+  transactionDate: z.string(),
+  notes: z.string().optional(),
+});
+
+const ReminderDtoSchema = z.object({
+  id: z.string(),
+  message: z.string(),
+  dueDate: z.string(),
+  status: z.enum(['pending', 'snoozed', 'completed']),
+  snoozedUntil: z.string().optional(),
+});
+
+const EventDtoSchema = z.object({
+  id: z.string(),
+  summary: z.string(),
+  start: z.string(),
+  end: z.string().optional(),
+  isAllDay: z.boolean(),
+  isBirthday: z.boolean(),
+  location: z.string().optional(),
+});
+
+const HeatmapDaySchema = z.object({
+  date: z.string(),
+  done: z.boolean(),
+  future: z.boolean(),
+});
+
+const WeatherSnapshotSchema = z.object({
+  now: z
+    .object({
+      tempC: z.number(),
+      feelsLike: z.number().optional(),
+      condition: z.string(),
+      conditionCode: z.number().optional(),
+      location: z.string(),
+    })
+    .nullable(),
+  tomorrow: z
+    .object({
+      high: z.number(),
+      low: z.number(),
+      condition: z.string(),
+      conditionCode: z.number().optional(),
+      chanceOfRain: z.number().optional(),
+    })
+    .nullable(),
+});
+
+const DashboardResponseSchema = z.object({
+  date: z.string(),
+  isToday: z.boolean(),
+  weather: WeatherSnapshotSchema.nullable(),
+  birthdays: z.array(EventDtoSchema),
+  events: z.array(EventDtoSchema),
+  reminders: z.array(ReminderDtoSchema),
+  activity: z.object({
+    todayDone: z.boolean(),
+    heatmap: z.array(HeatmapDaySchema),
+  }),
+  expenses: z.array(ExpenseDtoSchema),
+  expenseTotals: z.array(z.object({ currency: z.string(), total: z.number() })),
+});
+
+const CreateReminderBodySchema = z.object({
+  message: z.string(),
+  dueDate: z.string().describe('ISO 8601 date-time'),
+});
+
+const UpdateReminderBodySchema = z.object({
+  message: z.string().optional(),
+  dueDate: z.string().optional(),
+  status: z.enum(['pending', 'completed']).optional(),
+  snoozeMinutes: z.number().optional(),
+});
+
+const CreateManualExpenseBodySchema = z.object({
+  vendor: z.string(),
+  amount: z.number().positive(),
+  currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]).optional(),
+});
+
+const ExerciseLogResponseSchema = z.object({
+  logged: z.boolean(),
+  alreadyDoneToday: z.boolean(),
+});
+
+const ErrorSchema = z.object({ error: z.string() });
+
+// --- OpenAPI route registrations ---
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/dashboard',
+  tags: ['Chatbot'],
+  summary: 'Get dashboard data (weather, events, reminders, activity, expenses)',
+  request: {
+    query: z.object({ date: z.string().optional().describe('YYYY-MM-DD; defaults to today') }),
+  },
+  responses: {
+    200: { description: 'Dashboard payload', content: { 'application/json': { schema: DashboardResponseSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/chatbot/exercise/log',
+  tags: ['Chatbot'],
+  summary: 'Log today\'s exercise (idempotent per day)',
+  responses: {
+    200: { description: 'Logged or already-done', content: { 'application/json': { schema: ExerciseLogResponseSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/chatbot/reminders',
+  tags: ['Chatbot'],
+  summary: 'Create a reminder',
+  request: {
+    body: { content: { 'application/json': { schema: CreateReminderBodySchema } } },
+  },
+  responses: {
+    201: { description: 'Created', content: { 'application/json': { schema: ReminderDtoSchema } } },
+    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/api/chatbot/reminders/{id}',
+  tags: ['Chatbot'],
+  summary: 'Update a reminder (edit, complete, snooze)',
+  request: {
+    params: z.object({ id: z.string() }),
+    body: { content: { 'application/json': { schema: UpdateReminderBodySchema } } },
+  },
+  responses: {
+    200: { description: 'Updated', content: { 'application/json': { schema: ReminderDtoSchema } } },
+    400: { description: 'Invalid id/body', content: { 'application/json': { schema: ErrorSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'delete',
+  path: '/api/chatbot/reminders/{id}',
+  tags: ['Chatbot'],
+  summary: 'Delete a reminder',
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Deleted' },
+    400: { description: 'Invalid id', content: { 'application/json': { schema: ErrorSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/chatbot/expenses',
+  tags: ['Chatbot'],
+  summary: 'Add a manual expense (LLM infers category + type; currency defaults to ILS, transactionDate=now)',
+  request: {
+    body: { content: { 'application/json': { schema: CreateManualExpenseBodySchema } } },
+  },
+  responses: {
+    201: { description: 'Created', content: { 'application/json': { schema: ExpenseDtoSchema } } },
+    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
 
 function dateKey(date: Date): string {
   return formatInTimeZone(date, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
@@ -114,6 +309,25 @@ function parseSelectedDate(raw: unknown): Date {
   return fromZonedTime(`${dateKey(new Date())}T00:00:00`, DEFAULT_TIMEZONE);
 }
 
+function toExpenseDto(e: Expense): ExpenseDto {
+  return {
+    id: e._id!.toString(),
+    vendor: e.vendor,
+    category: e.category,
+    amount: e.amount,
+    currency: e.currency,
+    type: e.type,
+    transactionDate: (e.transactionDate ?? e.emailDate).toISOString(),
+    notes: e.notes,
+  };
+}
+
+function totalsByCurrency(expenses: ReadonlyArray<Expense>): ExpenseTotal[] {
+  const acc = new Map<string, number>();
+  for (const e of expenses) acc.set(e.currency, (acc.get(e.currency) ?? 0) + e.amount);
+  return Array.from(acc.entries()).map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
+}
+
 async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
   try {
     const timeMin = date.toISOString();
@@ -136,11 +350,15 @@ export function registerChatbotApiRoutes(app: Express): void {
       const selectedKey = dateKey(selectedDate);
       const isToday = selectedKey === dateKey(now);
 
-      const [weather, googleEvents, reminders, activity] = await Promise.all([
+      const [weather, googleEvents, reminders, activity, dayExpenses] = await Promise.all([
         isToday ? buildWeatherSnapshot() : Promise.resolve(null),
         fetchEventsForDate(selectedDate),
         getRemindersByUser(chatId, true),
         buildActivitySummary(chatId),
+        getExpensesBetween(selectedDate, addDays(selectedDate, 1)).catch((err) => {
+          logger.warn(`Failed to fetch expenses for ${selectedKey}: ${err}`);
+          return [] as Expense[];
+        }),
       ]);
 
       const eventDtos = googleEvents.map((event, idx) => toEventDto(event, `event-${idx}`));
@@ -157,6 +375,8 @@ export function registerChatbotApiRoutes(app: Express): void {
         events,
         reminders: dayReminders.map(toReminderDto),
         activity,
+        expenses: dayExpenses.map(toExpenseDto),
+        expenseTotals: totalsByCurrency(dayExpenses),
       });
     } catch (err) {
       logger.error(`dashboard failed: ${err}`);
@@ -267,6 +487,29 @@ export function registerChatbotApiRoutes(app: Express): void {
     } catch (err) {
       logger.error(`reminder delete failed: ${err}`);
       res.status(500).json({ error: 'delete_failed' });
+    }
+  });
+
+  app.post('/api/chatbot/expenses', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
+    try {
+      const body = req.body ?? ({} as CreateManualExpenseBody);
+      if (!body.vendor || typeof body.vendor !== 'string') {
+        res.status(400).json({ error: 'vendor_required' });
+        return;
+      }
+      if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
+        res.status(400).json({ error: 'amount_required' });
+        return;
+      }
+      if (body.currency !== undefined && !SUPPORTED_CURRENCIES.includes(body.currency)) {
+        res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
+        return;
+      }
+      const created = await createManualExpense({ vendor: body.vendor, amount: body.amount, currency: body.currency });
+      res.status(201).json(toExpenseDto(created));
+    } catch (err) {
+      logger.error(`expense create failed: ${err}`);
+      res.status(500).json({ error: 'create_failed' });
     }
   });
 
