@@ -42,9 +42,47 @@ export type TableRow = {
   readonly zone: 'champions' | 'europe' | 'relegation' | null;
 };
 
+export type StandingsTable = {
+  readonly groupName?: string;
+  readonly rows: ReadonlyArray<TableRow>;
+};
+
+export type KnockoutParticipant = {
+  readonly id: number;
+  readonly name: string;
+  readonly symbolicName?: string;
+  readonly isQualified?: boolean;
+};
+
+export type KnockoutLeg = {
+  readonly gameId: number;
+  readonly num: number;
+  readonly homeCompetitorId?: number;
+  readonly awayCompetitorId?: number;
+  readonly homeScore?: number;
+  readonly awayScore?: number;
+  readonly statusText?: string;
+  readonly startTime?: string;
+};
+
+export type KnockoutMatchup = {
+  readonly participants: ReadonlyArray<KnockoutParticipant>;
+  readonly score?: ReadonlyArray<number>;
+  readonly legCount: number;
+  readonly gameId?: number;
+  readonly legs: ReadonlyArray<KnockoutLeg>;
+};
+
+export type KnockoutStage = {
+  readonly num: number;
+  readonly name: string;
+  readonly matchups: ReadonlyArray<KnockoutMatchup>;
+};
+
 export type CompetitionDetailResponse = {
   readonly competition: CompetitionRef;
-  readonly table: ReadonlyArray<TableRow>;
+  readonly tables: ReadonlyArray<StandingsTable>;
+  readonly knockoutStages: ReadonlyArray<KnockoutStage>;
   readonly fixtures: ReadonlyArray<MatchSummary>;
 };
 

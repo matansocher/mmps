@@ -4,13 +4,14 @@ import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { notify } from '@services/notifier';
 import type { TelegramBotConfig } from '@services/telegram';
 import { addSubscription, getSubscription, updateSubscription } from '@shared/coach';
-import { getSportsCompetitionMatches, getSportsCompetitionTable, getSportsCompetitions, getSportsMatchesSummary } from '@shared/sports';
+import { getSportsCompetitionMatches, getSportsCompetitions, getSportsMatchesSummary } from '@shared/sports';
 import { coachAuthMiddleware } from './auth.middleware';
 import type { AthleteDetailResponse, CompetitionDetailResponse, CompetitionsListResponse, FollowUpdateBody, FollowUpdateResponse, MatchDetailResponse, MatchSummary, TeamDetailResponse, TodayResponse } from './dto';
 import { fetchAthleteDetail } from './athlete-fetcher';
+import { fetchCompetitionStandingsAndBrackets } from './competition-fetcher';
 import { fetchRichMatch } from './match-fetcher';
 import { fetchTeamDetail } from './team-fetcher';
-import { toCompetitionRef, toMatchSummary, toTableRows } from './transformers';
+import { toCompetitionRef, toMatchSummary } from './transformers';
 
 const logger = new Logger('CoachApiController');
 
@@ -121,7 +122,11 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       res.status(400).json({ error: 'invalid_id' });
       return;
     }
-    const [tableDetails, matchesDetails, competitions] = await Promise.all([getSportsCompetitionTable(id), getSportsCompetitionMatches(id), getSportsCompetitions()]);
+    const [standingsAndBrackets, matchesDetails, competitions] = await Promise.all([
+      fetchCompetitionStandingsAndBrackets(id),
+      getSportsCompetitionMatches(id),
+      getSportsCompetitions(),
+    ]);
     const compMeta = competitions?.find((c) => c.id === id);
     if (!compMeta) {
       res.status(404).json({ error: 'competition_not_found' });
@@ -129,7 +134,8 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
     }
     res.json({
       competition: toCompetitionRef(compMeta),
-      table: tableDetails ? toTableRows(tableDetails.competitionTable) : [],
+      tables: standingsAndBrackets.tables,
+      knockoutStages: standingsAndBrackets.knockoutStages,
       fixtures: matchesDetails ? matchesDetails.matches.map((m) => toMatchSummary(m, id)) : [],
     });
   });
