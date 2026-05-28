@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { createExpense } from '../mongo';
+import { DEFAULT_CURRENCY, type Currency } from '../types';
 import type { CreateExpenseData, Expense, ExpenseCategory, ExpenseType } from '../types';
 
 const logger = new Logger('manual-entry');
@@ -31,13 +32,14 @@ Return ONLY the structured output.`;
 export type ManualExpenseInput = {
   readonly vendor: string;
   readonly amount: number;
+  readonly currency?: Currency;
 };
 
 async function categorize(input: ManualExpenseInput): Promise<z.infer<typeof categorizationSchema>> {
   const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0, apiKey: env.OPENAI_API_KEY }).withStructuredOutput(categorizationSchema, {
     name: 'categorize_expense',
   });
-  const userPrompt = `Vendor: ${input.vendor}\nAmount: ${input.amount} ILS`;
+  const userPrompt = `Vendor: ${input.vendor}\nAmount: ${input.amount} ${input.currency ?? DEFAULT_CURRENCY}`;
   return (await model.invoke([
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: userPrompt },
@@ -65,7 +67,7 @@ export async function createManualExpense(input: ManualExpenseInput): Promise<Ex
     vendor: llm.vendor || input.vendor.trim(),
     category: llm.category,
     amount: Math.round(input.amount * 100) / 100,
-    currency: 'ILS',
+    currency: input.currency ?? DEFAULT_CURRENCY,
     emailDate: now,
     transactionDate: now,
     rawSubject: 'manual entry',

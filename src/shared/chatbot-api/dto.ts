@@ -106,4 +106,5 @@ export type UpdateReminderBody = {
 export type CreateManualExpenseBody = {
   readonly vendor: string;
   readonly amount: number;
+  readonly currency?: 'ILS' | 'USD' | 'EUR' | 'GBP' | 'JPY';
 };

@@ -14,6 +14,10 @@ export type ExpenseCategory =
 
 export type ExpenseType = 'receipt' | 'card_alert' | 'bill';
 
+export const SUPPORTED_CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'JPY'] as const;
+export type Currency = (typeof SUPPORTED_CURRENCIES)[number];
+export const DEFAULT_CURRENCY: Currency = 'ILS';
+
 export type ExpenseItem = {
   readonly name: string;
   readonly qty: number;
