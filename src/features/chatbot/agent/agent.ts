@@ -8,6 +8,7 @@ import {
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
+  expensesTool,
   githubTool,
   gmailTool,
   makavdiaTool,
@@ -318,6 +319,7 @@ export function agent(): AgentDescriptor {
     githubTool,
     contactsTool,
     spotifyTool,
+    expensesTool,
   ];
 
   return {

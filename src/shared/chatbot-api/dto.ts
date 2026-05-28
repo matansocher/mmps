@@ -46,6 +46,34 @@ export type ActivitySummary = {
   readonly heatmap: ReadonlyArray<HeatmapDay>;
 };
 
+export type ExpenseCategoryDto =
+  | 'food'
+  | 'groceries'
+  | 'transport'
+  | 'subscriptions'
+  | 'utilities'
+  | 'shopping'
+  | 'entertainment'
+  | 'health'
+  | 'bills'
+  | 'other';
+
+export type ExpenseDto = {
+  readonly id: string;
+  readonly vendor: string;
+  readonly category: ExpenseCategoryDto;
+  readonly amount: number;
+  readonly currency: string;
+  readonly type: 'receipt' | 'card_alert' | 'bill';
+  readonly transactionDate: string; // ISO
+  readonly notes?: string;
+};
+
+export type ExpenseTotal = {
+  readonly currency: string;
+  readonly total: number;
+};
+
 export type DashboardResponse = {
   readonly date: string; // YYYY-MM-DD, the selected date
   readonly isToday: boolean;
@@ -54,6 +82,8 @@ export type DashboardResponse = {
   readonly events: ReadonlyArray<EventDto>;
   readonly reminders: ReadonlyArray<ReminderDto>;
   readonly activity: ActivitySummary;
+  readonly expenses: ReadonlyArray<ExpenseDto>;
+  readonly expenseTotals: ReadonlyArray<ExpenseTotal>;
 };
 
 export type ExerciseLogResponse = {
@@ -71,4 +101,9 @@ export type UpdateReminderBody = {
   readonly dueDate?: string;
   readonly status?: 'completed' | 'pending';
   readonly snoozeMinutes?: number;
+};
+
+export type CreateManualExpenseBody = {
+  readonly vendor: string;
+  readonly amount: number;
 };

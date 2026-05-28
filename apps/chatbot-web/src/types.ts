@@ -46,6 +46,22 @@ export type ActivitySummary = {
   readonly heatmap: ReadonlyArray<HeatmapDay>;
 };
 
+export type ExpenseDto = {
+  readonly id: string;
+  readonly vendor: string;
+  readonly category: string;
+  readonly amount: number;
+  readonly currency: string;
+  readonly type: 'receipt' | 'card_alert' | 'bill';
+  readonly transactionDate: string;
+  readonly notes?: string;
+};
+
+export type ExpenseTotal = {
+  readonly currency: string;
+  readonly total: number;
+};
+
 export type DashboardResponse = {
   readonly date: string;
   readonly isToday: boolean;
@@ -54,6 +70,8 @@ export type DashboardResponse = {
   readonly events: ReadonlyArray<EventDto>;
   readonly reminders: ReadonlyArray<ReminderDto>;
   readonly activity: ActivitySummary;
+  readonly expenses: ReadonlyArray<ExpenseDto>;
+  readonly expenseTotals: ReadonlyArray<ExpenseTotal>;
 };
 
 export type ExerciseLogResponse = {

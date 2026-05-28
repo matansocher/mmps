@@ -15,14 +15,18 @@ import {
   updateReminderStatus,
 } from '@shared/reminders';
 import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
+import { createManualExpense, getExpensesBetween, type Expense } from '@shared/expenses';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
+  CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
   EventDto,
   ExerciseLogResponse,
+  ExpenseDto,
+  ExpenseTotal,
   HeatmapDay,
   ReminderDto,
   UpdateReminderBody,
@@ -114,6 +118,25 @@ function parseSelectedDate(raw: unknown): Date {
   return fromZonedTime(`${dateKey(new Date())}T00:00:00`, DEFAULT_TIMEZONE);
 }
 
+function toExpenseDto(e: Expense): ExpenseDto {
+  return {
+    id: e._id!.toString(),
+    vendor: e.vendor,
+    category: e.category,
+    amount: e.amount,
+    currency: e.currency,
+    type: e.type,
+    transactionDate: (e.transactionDate ?? e.emailDate).toISOString(),
+    notes: e.notes,
+  };
+}
+
+function totalsByCurrency(expenses: ReadonlyArray<Expense>): ExpenseTotal[] {
+  const acc = new Map<string, number>();
+  for (const e of expenses) acc.set(e.currency, (acc.get(e.currency) ?? 0) + e.amount);
+  return Array.from(acc.entries()).map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
+}
+
 async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
   try {
     const timeMin = date.toISOString();
@@ -136,11 +159,15 @@ export function registerChatbotApiRoutes(app: Express): void {
       const selectedKey = dateKey(selectedDate);
       const isToday = selectedKey === dateKey(now);
 
-      const [weather, googleEvents, reminders, activity] = await Promise.all([
+      const [weather, googleEvents, reminders, activity, dayExpenses] = await Promise.all([
         isToday ? buildWeatherSnapshot() : Promise.resolve(null),
         fetchEventsForDate(selectedDate),
         getRemindersByUser(chatId, true),
         buildActivitySummary(chatId),
+        getExpensesBetween(selectedDate, addDays(selectedDate, 1)).catch((err) => {
+          logger.warn(`Failed to fetch expenses for ${selectedKey}: ${err}`);
+          return [] as Expense[];
+        }),
       ]);
 
       const eventDtos = googleEvents.map((event, idx) => toEventDto(event, `event-${idx}`));
@@ -157,6 +184,8 @@ export function registerChatbotApiRoutes(app: Express): void {
         events,
         reminders: dayReminders.map(toReminderDto),
         activity,
+        expenses: dayExpenses.map(toExpenseDto),
+        expenseTotals: totalsByCurrency(dayExpenses),
       });
     } catch (err) {
       logger.error(`dashboard failed: ${err}`);
@@ -267,6 +296,25 @@ export function registerChatbotApiRoutes(app: Express): void {
     } catch (err) {
       logger.error(`reminder delete failed: ${err}`);
       res.status(500).json({ error: 'delete_failed' });
+    }
+  });
+
+  app.post('/api/chatbot/expenses', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
+    try {
+      const body = req.body ?? ({} as CreateManualExpenseBody);
+      if (!body.vendor || typeof body.vendor !== 'string') {
+        res.status(400).json({ error: 'vendor_required' });
+        return;
+      }
+      if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
+        res.status(400).json({ error: 'amount_required' });
+        return;
+      }
+      const created = await createManualExpense({ vendor: body.vendor, amount: body.amount });
+      res.status(201).json(toExpenseDto(created));
+    } catch (err) {
+      logger.error(`expense create failed: ${err}`);
+      res.status(500).json({ error: 'create_failed' });
     }
   });
 
