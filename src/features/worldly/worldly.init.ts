@@ -7,7 +7,6 @@ import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/worldly';
 import { registerWorldlyApiRoutes } from '@shared/worldly-api';
 import { WorldlyLauncherService } from './launcher.service';
-import { createWorldlyQuizWorker } from './queue';
 import { WorldlyBotSchedulerService } from './worldly-scheduler.service';
 import { BOT_CONFIG } from './worldly.config';
 import { WorldlyController } from './worldly.controller';
@@ -23,11 +22,10 @@ export async function initWorldly(app: Express): Promise<void> {
   const worldlyService = new WorldlyService(bot);
   const launcher = new WorldlyLauncherService(bot);
   const worldlyController = new WorldlyController(worldlyService, bot, launcher);
-  const worldlyScheduler = new WorldlyBotSchedulerService();
+  const worldlyScheduler = new WorldlyBotSchedulerService(worldlyService);
 
   worldlyController.init();
   worldlyScheduler.init();
-  createWorldlyQuizWorker(worldlyService);
 
   registerWorldlyApiRoutes(app, { botConfig: BOT_CONFIG });
 
