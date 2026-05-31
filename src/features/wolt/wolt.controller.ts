@@ -107,7 +107,7 @@ export class WoltController {
       const restaurants = await restaurantsService.getRestaurants();
       let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
-        const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
+        const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, 'לפעמים השרתים של וולט לא מחזירים את כל המסעדות, אבל אני בודק פתרונות אפשריים לזה'].join('\n');
         await ctx.reply(replyText);
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
         return;
