@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
 import { env } from 'node:process';
-import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { verifyChatbotInitData } from './telegram-init-data';
 

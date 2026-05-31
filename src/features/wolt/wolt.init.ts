@@ -5,7 +5,7 @@ import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/wolt';
-import { registerWoltApiRoutes } from '@shared/wolt-api';
+import { registerWoltApiRoutes } from './api';
 import { WoltLauncherService } from './launcher.service';
 import { restaurantsService } from './restaurants.service';
 import { WoltSchedulerService } from './wolt-scheduler.service';

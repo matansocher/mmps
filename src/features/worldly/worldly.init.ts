@@ -5,7 +5,7 @@ import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/worldly';
-import { registerWorldlyApiRoutes } from '@shared/worldly-api';
+import { registerWorldlyApiRoutes } from './api';
 import { WorldlyLauncherService } from './launcher.service';
 import { WorldlyBotSchedulerService } from './worldly-scheduler.service';
 import { BOT_CONFIG } from './worldly.config';
