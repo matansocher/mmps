@@ -3,6 +3,7 @@ import { addDays, startOfDay, startOfWeek, subDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
+import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { registry } from '@core/openapi';
@@ -340,6 +341,42 @@ async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
 }
 
 export function registerChatbotApiRoutes(app: Express): void {
+  app.post('/api/chatbot/expenses', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
+    notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
+    const expectedToken = env.EXPENSES_INGEST_TOKEN;
+    if (!expectedToken) {
+      logger.error('EXPENSES_INGEST_TOKEN not configured');
+      res.status(500).json({ error: 'ingest_not_configured' });
+      return;
+    }
+    const auth = req.header('authorization') ?? '';
+    const provided = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length) : '';
+    if (provided !== expectedToken) {
+      res.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+    try {
+      const body = req.body ?? ({} as CreateManualExpenseBody);
+      if (!body.vendor || typeof body.vendor !== 'string') {
+        res.status(400).json({ error: 'vendor_required' });
+        return;
+      }
+      if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
+        res.status(400).json({ error: 'amount_required' });
+        return;
+      }
+      if (body.currency !== undefined && !SUPPORTED_CURRENCIES.includes(body.currency)) {
+        res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
+        return;
+      }
+      const created = await createManualExpense({ vendor: body.vendor, amount: body.amount, currency: body.currency });
+      res.status(201).json(toExpenseDto(created));
+    } catch (err) {
+      logger.error(`expense create failed: ${err}`);
+      res.status(500).json({ error: 'create_failed' });
+    }
+  });
+
   app.use('/api/chatbot', chatbotAuthMiddleware);
 
   app.get('/api/chatbot/dashboard', async (req: Request, res: Response<DashboardResponse | { error: string }>) => {
@@ -490,29 +527,6 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
-  app.post('/api/chatbot/expenses', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
-    notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
-    try {
-      const body = req.body ?? ({} as CreateManualExpenseBody);
-      if (!body.vendor || typeof body.vendor !== 'string') {
-        res.status(400).json({ error: 'vendor_required' });
-        return;
-      }
-      if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
-        res.status(400).json({ error: 'amount_required' });
-        return;
-      }
-      if (body.currency !== undefined && !SUPPORTED_CURRENCIES.includes(body.currency)) {
-        res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
-        return;
-      }
-      const created = await createManualExpense({ vendor: body.vendor, amount: body.amount, currency: body.currency });
-      res.status(201).json(toExpenseDto(created));
-    } catch (err) {
-      logger.error(`expense create failed: ${err}`);
-      res.status(500).json({ error: 'create_failed' });
-    }
-  });
 
   logger.log('Chatbot API routes registered at /api/chatbot/*');
 }
