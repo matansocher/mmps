@@ -7,10 +7,10 @@ import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { registerChatbotApiRoutes } from '@shared/chatbot-api';
-import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
-import { DB_NAME as EXPENSES_DB_NAME, ensureExpenseIndexes, ensureProcessedEmailIndexes, ensureSenderTemplateIndexes } from '@shared/expenses';
+import { ensureExpenseIndexes, DB_NAME as EXPENSES_DB_NAME } from '@shared/expenses';
+import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
 import { DB_NAME as SELFIE_DB_NAME } from '@shared/selfie';
@@ -43,7 +43,7 @@ export async function initChatbot(app: Express): Promise<void> {
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
-  await Promise.all([ensureExpenseIndexes(), ensureProcessedEmailIndexes(), ensureSenderTemplateIndexes()]);
+  await ensureExpenseIndexes();
 
   const bot = provideTelegramBot(BOT_CONFIG);
 

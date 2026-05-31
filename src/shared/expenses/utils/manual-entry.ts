@@ -68,11 +68,7 @@ export async function createManualExpense(input: ManualExpenseInput): Promise<Ex
     category: llm.category,
     amount: Math.round(input.amount * 100) / 100,
     currency: input.currency ?? DEFAULT_CURRENCY,
-    emailDate: now,
     transactionDate: now,
-    rawSubject: 'manual entry',
-    rawFrom: 'manual',
-    source: 'manual',
   };
 
   const insert = await createExpense(data);
