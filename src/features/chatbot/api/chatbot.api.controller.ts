@@ -21,6 +21,7 @@ import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
 import { createManualExpense, getExpensesBetween, SUPPORTED_CURRENCIES, type Expense } from '@shared/expenses';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import { notify } from '@services/notifier';
+import { BOT_CONFIG } from '../chatbot.config';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
@@ -40,8 +41,6 @@ import type {
 extendZodWithOpenApi(z);
 
 const logger = new Logger('ChatbotApiController');
-
-const NOTIFIER_BOT_CONFIG = { id: 'CHATBOT', name: 'Chatbot 🤖', token: '' };
 
 const DEFAULT_WEATHER_LOCATION = 'Tel Aviv';
 const HEATMAP_WEEKS = 13;
@@ -492,7 +491,7 @@ export function registerChatbotApiRoutes(app: Express): void {
   });
 
   app.post('/api/chatbot/expenses', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
-    notify(NOTIFIER_BOT_CONFIG, { action: 'expense_received', body: req.body });
+    notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
     try {
       const body = req.body ?? ({} as CreateManualExpenseBody);
       if (!body.vendor || typeof body.vendor !== 'string') {
