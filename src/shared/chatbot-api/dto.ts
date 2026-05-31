@@ -66,7 +66,6 @@ export type ExpenseDto = {
   readonly currency: string;
   readonly type: 'receipt' | 'card_alert' | 'bill';
   readonly transactionDate: string; // ISO
-  readonly notes?: string;
 };
 
 export type ExpenseTotal = {

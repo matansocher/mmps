@@ -53,7 +53,6 @@ const ExpenseDtoSchema = z.object({
   currency: z.string(),
   type: z.enum(['receipt', 'card_alert', 'bill']),
   transactionDate: z.string(),
-  notes: z.string().optional(),
 });
 
 const ReminderDtoSchema = z.object({
@@ -317,8 +316,7 @@ function toExpenseDto(e: Expense): ExpenseDto {
     amount: e.amount,
     currency: e.currency,
     type: e.type,
-    transactionDate: (e.transactionDate ?? e.emailDate).toISOString(),
-    notes: e.notes,
+    transactionDate: e.transactionDate.toISOString(),
   };
 }
 

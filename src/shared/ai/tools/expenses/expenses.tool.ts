@@ -11,7 +11,6 @@ import {
   formatPeriodSummary,
   getMonthlyExpenses,
   getWeeklyExpenses,
-  scanRecentExpenses,
   totalsByCategory,
 } from '@shared/expenses';
 import { getExpensesByCategory, getExpensesByVendor, getRecentExpenses, updateUserCategory } from '@shared/expenses/mongo/expenses.repository';
@@ -22,7 +21,7 @@ const CATEGORY_TUPLE = CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCate
 
 const schema = z.object({
   action: z
-    .enum(['today', 'yesterday', 'week', 'month', 'byCategory', 'byVendor', 'recent', 'scanNow', 'analytics', 'vendorTrends', 'setCategory', 'addManual'])
+    .enum(['today', 'yesterday', 'week', 'month', 'byCategory', 'byVendor', 'recent', 'analytics', 'vendorTrends', 'setCategory', 'addManual'])
     .describe('Which expense action to perform'),
   category: z.enum(CATEGORY_TUPLE).optional().describe('Required for byCategory and setCategory'),
   vendor: z.string().optional().describe('Required for byVendor (substring) and addManual (vendor name)'),
@@ -35,8 +34,7 @@ const schema = z.object({
 function renderExpenseRows(expenses: ReadonlyArray<Expense>): string {
   return expenses
     .map((e) => {
-      const d = e.transactionDate || e.emailDate;
-      const iso = d ? d.toISOString().slice(0, 10) : '';
+      const iso = e.transactionDate.toISOString().slice(0, 10);
       const cat = e.userCategory ?? e.category;
       const overridden = e.userCategory ? ' *' : '';
       return `- ${iso} · ${e.vendor} · ${formatAmount(e.amount, e.currency)} · ${cat}${overridden} · id:${e._id?.toString() ?? '?'}`;
@@ -103,15 +101,6 @@ async function runner({ action, category, vendor, amount, expenseId, limit = 20,
         if (expenses.length === 0) return 'No expenses recorded yet.';
         return [`*Recent expenses (${expenses.length})*`, '', renderExpenseRows(expenses)].join('\n');
       }
-      case 'scanNow': {
-        const result = await scanRecentExpenses();
-        const todaySummary = await buildDailySummary();
-        return [
-          `Scan complete: scanned ${result.scanned}, skipped ${result.skipped}, extracted ${result.extracted}, not-expense ${result.notExpense}, errors ${result.errors}.`,
-          '',
-          todaySummary.text,
-        ].join('\n');
-      }
       case 'setCategory': {
         if (!expenseId) return JSON.stringify({ success: false, error: 'expenseId required for setCategory' });
         if (!category) return JSON.stringify({ success: false, error: 'category required for setCategory' });
@@ -135,7 +124,7 @@ async function runner({ action, category, vendor, amount, expenseId, limit = 20,
 
 export const expensesTool = tool(runner, {
   name: 'expenses',
-  description: `Query and manage the user's tracked expenses. Expenses are auto-extracted from Gmail (receipts, credit-card alerts, bills) and may also be entered manually. Stored in MongoDB.
+  description: `Query and manage the user's tracked expenses. Expenses are added manually via API/tool entries and stored in MongoDB.
 
 Actions:
 - today / yesterday: summary for that day (totals, by category, top vendors, transactions)
@@ -146,7 +135,6 @@ Actions:
 - byCategory: Pass category — last 30 days for that category
 - byVendor: Pass vendor (substring) — most recent N transactions
 - recent: Most recent N expenses
-- scanNow: Force a Gmail scan + return today's summary
 - setCategory: Override a single expense's category. Pass expenseId + category. Useful when the user says "the wolt one was actually groceries".
 - addManual: Add a manually entered expense. Pass vendor + amount (positive ILS number). The category and type are inferred automatically.
 
