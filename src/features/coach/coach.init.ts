@@ -5,7 +5,7 @@ import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/coach';
-import { registerCoachApiRoutes } from '@shared/coach-api';
+import { registerCoachApiRoutes } from './api';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';

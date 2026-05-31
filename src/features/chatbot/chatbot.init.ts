@@ -6,7 +6,7 @@ import { Logger } from '@core/utils';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
-import { registerChatbotApiRoutes } from '@shared/chatbot-api';
+import { registerChatbotApiRoutes } from './api';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { ensureExpenseIndexes, DB_NAME as EXPENSES_DB_NAME } from '@shared/expenses';

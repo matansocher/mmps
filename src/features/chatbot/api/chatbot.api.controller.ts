@@ -20,6 +20,8 @@ import {
 import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
 import { createManualExpense, getExpensesBetween, SUPPORTED_CURRENCIES, type Expense } from '@shared/expenses';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
+import { notify } from '@services/notifier';
+import { BOT_CONFIG } from '../chatbot.config';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
@@ -489,6 +491,7 @@ export function registerChatbotApiRoutes(app: Express): void {
   });
 
   app.post('/api/chatbot/expenses', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
+    notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
     try {
       const body = req.body ?? ({} as CreateManualExpenseBody);
       if (!body.vendor || typeof body.vendor !== 'string') {

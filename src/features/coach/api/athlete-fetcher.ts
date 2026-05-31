@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
-import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../../services/scores-365/scores-365.config';
+import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '@services/scores-365';
 import type { AthleteDetailResponse } from './dto';
 
 const logger = new Logger('CoachAthleteFetcher');
