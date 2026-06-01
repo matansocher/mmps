@@ -19,14 +19,13 @@ import {
   updateReminderStatus,
 } from '@shared/reminders';
 import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
-import { createManualExpense, getExpensesBetween, SUPPORTED_CURRENCIES, type Expense } from '@shared/expenses';
+import { createManualExpense, getExpensesBetween, SUPPORTED_CURRENCIES, type Currency, type Expense } from '@shared/expenses';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import { notify } from '@services/notifier';
 import { BOT_CONFIG } from '../chatbot.config';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
-  CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
   EventDto,
@@ -323,6 +322,41 @@ function toExpenseDto(e: Expense): ExpenseDto {
   };
 }
 
+const CURRENCY_SYMBOL_MAP: Record<string, Currency> = { '₪': 'ILS', '$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY' };
+
+function parseExpensePayload(raw: unknown): { vendor: string | null; amount: number | null; currency?: Currency } {
+  const body = (raw ?? {}) as Record<string, unknown>;
+
+  const vendorRaw = body.vendor ?? body.merchant ?? body.name;
+  const vendor = typeof vendorRaw === 'string' && vendorRaw.trim() ? vendorRaw.trim() : null;
+
+  let currency: Currency | undefined;
+  const currencyRaw = body.currency;
+  if (typeof currencyRaw === 'string' && currencyRaw.trim()) {
+    currency = currencyRaw.trim().toUpperCase() as Currency;
+  }
+
+  let amount: number | null = null;
+  const amountRaw = body.amount;
+  if (typeof amountRaw === 'number' && Number.isFinite(amountRaw) && amountRaw > 0) {
+    amount = amountRaw;
+  } else if (typeof amountRaw === 'string') {
+    const trimmed = amountRaw.trim();
+    if (!currency) {
+      for (const [symbol, code] of Object.entries(CURRENCY_SYMBOL_MAP)) {
+        if (trimmed.includes(symbol)) {
+          currency = code;
+          break;
+        }
+      }
+    }
+    const numeric = parseFloat(trimmed.replace(/[^\d.-]/g, ''));
+    if (Number.isFinite(numeric) && numeric > 0) amount = numeric;
+  }
+
+  return { vendor, amount, currency };
+}
+
 function totalsByCurrency(expenses: ReadonlyArray<Expense>): ExpenseTotal[] {
   const acc = new Map<string, number>();
   for (const e of expenses) acc.set(e.currency, (acc.get(e.currency) ?? 0) + e.amount);
@@ -341,7 +375,7 @@ async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
 }
 
 export function registerChatbotApiRoutes(app: Express): void {
-  app.post('/api/chatbot/expenses', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
+  app.post('/api/chatbot/expenses', async (req: Request, res: Response<ExpenseDto | { error: string }>) => {
     notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
     const expectedToken = env.EXPENSES_INGEST_TOKEN;
     if (!expectedToken) {
@@ -356,20 +390,20 @@ export function registerChatbotApiRoutes(app: Express): void {
       return;
     }
     try {
-      const body = req.body ?? ({} as CreateManualExpenseBody);
-      if (!body.vendor || typeof body.vendor !== 'string') {
+      const parsed = parseExpensePayload(req.body);
+      if (!parsed.vendor) {
         res.status(400).json({ error: 'vendor_required' });
         return;
       }
-      if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
+      if (parsed.amount === null) {
         res.status(400).json({ error: 'amount_required' });
         return;
       }
-      if (body.currency !== undefined && !SUPPORTED_CURRENCIES.includes(body.currency)) {
+      if (parsed.currency && !SUPPORTED_CURRENCIES.includes(parsed.currency)) {
         res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
         return;
       }
-      const created = await createManualExpense({ vendor: body.vendor, amount: body.amount, currency: body.currency });
+      const created = await createManualExpense({ vendor: parsed.vendor, amount: parsed.amount, currency: parsed.currency });
       res.status(201).json(toExpenseDto(created));
     } catch (err) {
       logger.error(`expense create failed: ${err}`);
