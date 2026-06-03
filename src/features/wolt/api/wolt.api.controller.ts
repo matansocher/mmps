@@ -108,7 +108,7 @@ export function registerWoltApiRoutes(app: Express, deps: WoltApiDeps): void {
         return;
       }
 
-      await addSubscription(chatId, restaurant, restaurantDetails.photo, restaurantDetails.area);
+      await addSubscription(chatId, restaurant, restaurantDetails.photo);
       notify(botConfig, { action: analyticEventNames.SUBSCRIBE, restaurant, source: 'mini_app' }, userDetails);
       res.json({ status: 'subscribed', restaurant });
     } catch (err) {

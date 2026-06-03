@@ -31,20 +31,6 @@ export class RestaurantsService {
       this.logger.error(`${this.refreshRestaurants.name} - error - ${err}`);
     }
   }
-
-  // Fetches a fresh list for the given areas only. Used by subscription alerting so we don't
-  // re-fetch every city every cycle. Does not touch the cached full search list.
-  async getRestaurantsByAreas(areas: string[]): Promise<WoltRestaurant[]> {
-    if (!areas.length) {
-      return [];
-    }
-    try {
-      return await getRestaurantsList(areas);
-    } catch (err) {
-      this.logger.error(`${this.getRestaurantsByAreas.name} - error - ${err}`);
-      return [];
-    }
-  }
 }
 
 const restaurantsService = new RestaurantsService();
