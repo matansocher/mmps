@@ -11,6 +11,7 @@ export type Reminder = {
   readonly createdAt: Date;
   readonly completedAt?: Date;
   readonly snoozedUntil?: Date;
+  readonly notifiedAt?: Date;
 };
 
 export type CreateReminderData = {
@@ -25,4 +26,5 @@ export type UpdateReminderData = {
   status?: ReminderStatus;
   completedAt?: Date;
   snoozedUntil?: Date;
+  notifiedAt?: Date;
 };

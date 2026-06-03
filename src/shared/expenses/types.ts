@@ -24,7 +24,9 @@ export type Expense = {
   readonly type: ExpenseType;
   readonly vendor: string;
   readonly category: ExpenseCategory;
+  readonly userVendor?: string;
   readonly userCategory?: ExpenseCategory;
+  readonly userType?: ExpenseType;
   readonly amount: number;
   readonly currency: string;
   readonly transactionDate: Date;

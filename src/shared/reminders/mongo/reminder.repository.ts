@@ -23,8 +23,31 @@ export async function getDueReminders(): Promise<Reminder[]> {
   const now = new Date();
 
   return remindersCollection
-    .find({ status: 'pending', dueDate: { $lte: now } })
+    .find({ status: 'pending', dueDate: { $lte: now }, notifiedAt: { $exists: false } })
     .sort({ dueDate: 1 })
+    .toArray();
+}
+
+export async function markReminderNotified(id: string | ObjectId, chatId: number): Promise<boolean> {
+  const remindersCollection = getCollection();
+  const { ObjectId } = await import('mongodb');
+  const result = await remindersCollection.updateOne({ _id: new ObjectId(id), chatId }, { $set: { notifiedAt: new Date() } });
+  return result.modifiedCount > 0;
+}
+
+export async function getPendingRemindersDueOnOrBefore(chatId: number, before: Date): Promise<Reminder[]> {
+  const remindersCollection = getCollection();
+  return remindersCollection
+    .find({ chatId, status: { $in: ['pending', 'snoozed'] }, dueDate: { $lte: before } })
+    .sort({ dueDate: 1 })
+    .toArray();
+}
+
+export async function getRemindersCompletedBetween(chatId: number, from: Date, to: Date): Promise<Reminder[]> {
+  const remindersCollection = getCollection();
+  return remindersCollection
+    .find({ chatId, status: 'completed', completedAt: { $gte: from, $lt: to } })
+    .sort({ completedAt: 1 })
     .toArray();
 }
 

@@ -58,19 +58,59 @@ export type ExpenseCategoryDto =
   | 'bills'
   | 'other';
 
+export type ExpenseTypeDto = 'receipt' | 'card_alert' | 'bill';
+
 export type ExpenseDto = {
   readonly id: string;
   readonly vendor: string;
   readonly category: ExpenseCategoryDto;
   readonly amount: number;
   readonly currency: string;
-  readonly type: 'receipt' | 'card_alert' | 'bill';
+  readonly type: ExpenseTypeDto;
   readonly transactionDate: string; // ISO
+  readonly originalVendor?: string;
+  readonly originalCategory?: ExpenseCategoryDto;
+  readonly originalType?: ExpenseTypeDto;
 };
 
 export type ExpenseTotal = {
   readonly currency: string;
   readonly total: number;
+};
+
+export type ExpenseCategoryBreakdown = {
+  readonly category: ExpenseCategoryDto;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+};
+
+export type ExpenseTypeBreakdown = {
+  readonly type: ExpenseTypeDto;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+};
+
+export type ExpenseDailyPoint = {
+  readonly date: string; // YYYY-MM-DD
+  readonly total: number;
+};
+
+export type ExpensesMonthResponse = {
+  readonly month: string; // YYYY-MM
+  readonly expenses: ReadonlyArray<ExpenseDto>; // ALL expenses of the month, sorted DESC by transactionDate
+  readonly totals: ReadonlyArray<ExpenseTotal>;
+  readonly byCategory: ReadonlyArray<ExpenseCategoryBreakdown>;
+  readonly byType: ReadonlyArray<ExpenseTypeBreakdown>;
+  // Trailing 14 days within the selected month (clamped to today for the current month and to first-of-month at the start)
+  readonly daily: ReadonlyArray<{ readonly currency: string; readonly points: ReadonlyArray<ExpenseDailyPoint> }>;
+};
+
+export type UpdateExpenseBody = {
+  readonly userVendor?: string | null;
+  readonly userCategory?: ExpenseCategoryDto | null;
+  readonly userType?: ExpenseTypeDto | null;
 };
 
 export type DashboardResponse = {

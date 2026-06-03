@@ -68,3 +68,37 @@ export async function updateUserCategory(id: string, userCategory: ExpenseCatego
   await col.updateOne({ _id: new ObjectId(id) }, update);
   return col.findOne({ _id: new ObjectId(id) });
 }
+
+export type UserOverrides = {
+  readonly userVendor?: string | null;
+  readonly userCategory?: ExpenseCategory | null;
+  readonly userType?: import('../types').ExpenseType | null;
+};
+
+export async function updateUserOverrides(id: string, overrides: UserOverrides): Promise<Expense | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const col = getCollection();
+  const set: Record<string, unknown> = {};
+  const unset: Record<string, ''> = {};
+
+  if (overrides.userVendor !== undefined) {
+    if (overrides.userVendor === null || overrides.userVendor === '') unset.userVendor = '';
+    else set.userVendor = overrides.userVendor.trim();
+  }
+  if (overrides.userCategory !== undefined) {
+    if (overrides.userCategory === null) unset.userCategory = '';
+    else set.userCategory = overrides.userCategory;
+  }
+  if (overrides.userType !== undefined) {
+    if (overrides.userType === null) unset.userType = '';
+    else set.userType = overrides.userType;
+  }
+
+  const update: Record<string, unknown> = {};
+  if (Object.keys(set).length > 0) update.$set = set;
+  if (Object.keys(unset).length > 0) update.$unset = unset;
+  if (Object.keys(update).length === 0) return col.findOne({ _id: new ObjectId(id) });
+
+  await col.updateOne({ _id: new ObjectId(id) }, update);
+  return col.findOne({ _id: new ObjectId(id) });
+}

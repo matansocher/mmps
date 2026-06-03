@@ -46,20 +46,76 @@ export type ActivitySummary = {
   readonly heatmap: ReadonlyArray<HeatmapDay>;
 };
 
+export type ExpenseCategory =
+  | 'food'
+  | 'groceries'
+  | 'transport'
+  | 'subscriptions'
+  | 'utilities'
+  | 'shopping'
+  | 'entertainment'
+  | 'health'
+  | 'bills'
+  | 'other';
+
+export type ExpenseType = 'receipt' | 'card_alert' | 'bill';
+
 export type ExpenseDto = {
   readonly id: string;
   readonly vendor: string;
-  readonly category: string;
+  readonly category: ExpenseCategory;
   readonly amount: number;
   readonly currency: string;
-  readonly type: 'receipt' | 'card_alert' | 'bill';
+  readonly type: ExpenseType;
   readonly transactionDate: string;
   readonly notes?: string;
+  readonly originalVendor?: string;
+  readonly originalCategory?: ExpenseCategory;
+  readonly originalType?: ExpenseType;
 };
 
 export type ExpenseTotal = {
   readonly currency: string;
   readonly total: number;
+};
+
+export type ExpenseCategoryBreakdown = {
+  readonly category: ExpenseCategory;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+};
+
+export type ExpenseTypeBreakdown = {
+  readonly type: ExpenseType;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+};
+
+export type ExpenseDailyPoint = {
+  readonly date: string;
+  readonly total: number;
+};
+
+export type ExpenseDailySeries = {
+  readonly currency: string;
+  readonly points: ReadonlyArray<ExpenseDailyPoint>;
+};
+
+export type ExpensesMonthResponse = {
+  readonly month: string; // YYYY-MM
+  readonly expenses: ReadonlyArray<ExpenseDto>;
+  readonly totals: ReadonlyArray<ExpenseTotal>;
+  readonly byCategory: ReadonlyArray<ExpenseCategoryBreakdown>;
+  readonly byType: ReadonlyArray<ExpenseTypeBreakdown>;
+  readonly daily: ReadonlyArray<ExpenseDailySeries>;
+};
+
+export type UpdateExpenseBody = {
+  readonly userVendor?: string | null;
+  readonly userCategory?: ExpenseCategory | null;
+  readonly userType?: ExpenseType | null;
 };
 
 export type DashboardResponse = {
@@ -72,6 +128,10 @@ export type DashboardResponse = {
   readonly activity: ActivitySummary;
   readonly expenses: ReadonlyArray<ExpenseDto>;
   readonly expenseTotals: ReadonlyArray<ExpenseTotal>;
+};
+
+export type ExerciseResponse = {
+  readonly activity: ActivitySummary;
 };
 
 export type ExerciseLogResponse = {

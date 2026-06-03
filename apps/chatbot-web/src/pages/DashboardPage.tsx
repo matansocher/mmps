@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { ConfirmSheet } from '../components/ConfirmSheet';
 import { DayPicker } from '../components/DayPicker';
 import { EventRow } from '../components/EventRow';
-import { ExpenseRow } from '../components/ExpenseRow';
-import { HeatmapStrip } from '../components/HeatmapStrip';
 import { ReminderRow } from '../components/ReminderRow';
 import { ReminderSheet } from '../components/ReminderSheet';
 import { Skeleton } from '../components/Skeleton';
@@ -11,7 +10,7 @@ import { WeatherCard } from '../components/WeatherCard';
 import { api } from '../lib/api';
 import { dateFromYmd, formatLongDate, todayYmd } from '../lib/date';
 import { haptic } from '../lib/telegram';
-import type { DashboardResponse, ExpenseTotal, ReminderDto } from '../types';
+import type { DashboardResponse, EventDto, ReminderDto } from '../types';
 
 type ToastState = { readonly message: string; readonly kind: 'success' | 'error' | 'info' } | null;
 
@@ -22,7 +21,7 @@ export function DashboardPage() {
   const [toast, setToast] = useState<ToastState>(null);
   const [editing, setEditing] = useState<ReminderDto | null>(null);
   const [creating, setCreating] = useState(false);
-  const [logging, setLogging] = useState(false);
+  const [deletingEvent, setDeletingEvent] = useState<EventDto | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -40,46 +39,53 @@ export function DashboardPage() {
     load();
   }, [load]);
 
-  async function handleLog() {
-    if (!data || data.activity.todayDone || !data.isToday) return;
-    try {
-      setLogging(true);
-      const result = await api.logExercise();
-      if (result.logged) {
-        haptic('success');
-        setToast({ message: '🔥 Logged!', kind: 'success' });
-      } else if (result.alreadyDoneToday) {
-        setToast({ message: 'Already logged today', kind: 'info' });
-      }
-      await load();
-    } catch {
-      haptic('error');
-      setToast({ message: 'Failed to log', kind: 'error' });
-    } finally {
-      setLogging(false);
-    }
-  }
-
   async function toggleReminder(reminder: ReminderDto) {
-    if (reminder.status === 'completed') return;
+    const nextStatus: 'completed' | 'pending' = reminder.status === 'completed' ? 'pending' : 'completed';
     try {
-      await api.updateReminder(reminder.id, { status: 'completed' });
-      haptic('success');
+      const updated = await api.updateReminder(reminder.id, { status: nextStatus });
+      haptic(nextStatus === 'completed' ? 'success' : 'select');
       setData((prev) =>
         prev
-          ? {
-              ...prev,
-              reminders: prev.reminders.map((r) => (r.id === reminder.id ? { ...r, status: 'completed' } : r)),
-            }
+          ? { ...prev, reminders: prev.reminders.map((r) => (r.id === reminder.id ? updated : r)) }
           : prev,
       );
     } catch {
-      setToast({ message: 'Failed to complete', kind: 'error' });
+      setToast({ message: nextStatus === 'completed' ? 'Failed to complete' : 'Failed to update', kind: 'error' });
     }
   }
 
+  async function confirmDeleteEvent() {
+    if (!deletingEvent) return;
+    const ev = deletingEvent;
+    setDeletingEvent(null);
+    setData((prev) => (prev ? { ...prev, events: prev.events.filter((e) => e.id !== ev.id) } : prev));
+    try {
+      await api.deleteCalendarEvent(ev.id);
+      haptic('success');
+      setToast({ message: 'Event deleted', kind: 'success' });
+    } catch {
+      haptic('error');
+      setToast({ message: 'Failed to delete', kind: 'error' });
+      await load();
+    }
+  }
+
+  const sortedReminders = data
+    ? [...data.reminders].sort((a, b) => {
+        const aDone = a.status === 'completed' ? 1 : 0;
+        const bDone = b.status === 'completed' ? 1 : 0;
+        if (aDone !== bDone) return aDone - bDone;
+        return a.dueDate.localeCompare(b.dueDate);
+      })
+    : [];
+  const pendingCount = sortedReminders.filter((r) => r.status !== 'completed').length;
+  const overdueCount = sortedReminders.filter((r) => r.status !== 'completed' && r.dueDate.slice(0, 10) < selectedDate).length;
+  const remindersTitle = overdueCount > 0
+    ? `Reminders · ${pendingCount} (${overdueCount} overdue)`
+    : `Reminders · ${pendingCount}`;
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4 pb-24">
+    <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4">
       <header className="flex flex-col gap-3">
         <DayPicker selected={selectedDate} onSelect={setSelectedDate} />
         <div>
@@ -88,7 +94,7 @@ export function DashboardPage() {
         </div>
       </header>
 
-      {loading && !data ? (
+      {loading ? (
         <DashboardSkeleton />
       ) : data ? (
         <>
@@ -109,69 +115,36 @@ export function DashboardPage() {
 
           <Section title={`Events · ${data.events.length}`}>
             {data.events.length === 0 ? (
-              <Empty>Nothing scheduled</Empty>
+              <Empty>Quiet day, no events</Empty>
             ) : (
-              data.events.map((event) => <EventRow key={event.id} event={event} />)
+              data.events.map((event) => (
+                <EventRow key={event.id} event={event} onDelete={setDeletingEvent} />
+              ))
             )}
           </Section>
 
           <Section
-            title={`Reminders · ${data.reminders.length}`}
+            title={remindersTitle}
             action={
-              <button
-                onClick={() => setCreating(true)}
-                className="text-xs text-accent-primary hover:underline"
-              >
+              <button onClick={() => setCreating(true)} className="text-xs text-accent-primary hover:underline">
                 + Add
               </button>
             }
           >
-            {data.reminders.length === 0 ? (
-              <Empty>No reminders for this day</Empty>
+            {sortedReminders.length === 0 ? (
+              <Empty>Nothing on your plate 🎉</Empty>
             ) : (
-              data.reminders.map((reminder) => (
+              sortedReminders.map((reminder) => (
                 <ReminderRow
                   key={reminder.id}
                   reminder={reminder}
+                  selectedDate={selectedDate}
                   onToggleComplete={() => toggleReminder(reminder)}
                   onTap={(r) => setEditing(r)}
                 />
               ))
             )}
           </Section>
-
-          <Section
-            title={`Expenses · ${data.expenses.length}`}
-            action={data.expenseTotals.length > 0 ? <ExpenseTotalsBadge totals={data.expenseTotals} /> : null}
-          >
-            {data.expenses.length === 0 ? (
-              <Empty>No expenses for this day</Empty>
-            ) : (
-              data.expenses.map((expense) => <ExpenseRow key={expense.id} expense={expense} />)
-            )}
-          </Section>
-
-          <HeatmapStrip days={data.activity.heatmap} />
-
-          <button
-            onClick={handleLog}
-            disabled={!data.isToday || data.activity.todayDone || logging}
-            className={`w-full rounded-2xl py-5 text-base font-semibold transition-colors ${
-              data.activity.todayDone
-                ? 'bg-accent-success/15 text-accent-success border border-accent-success/30 cursor-default'
-                : !data.isToday
-                  ? 'bg-bg-elevated text-text-muted border border-border-subtle cursor-not-allowed'
-                  : 'bg-accent-success text-bg-base hover:bg-accent-success/90 active:scale-[0.99]'
-            } ${logging ? 'opacity-70' : ''}`}
-          >
-            {data.activity.todayDone
-              ? '✅ Logged for today'
-              : !data.isToday
-                ? 'Go to today to log a workout'
-                : logging
-                  ? '…'
-                  : '💪 I exercised today'}
-          </button>
         </>
       ) : null}
 
@@ -190,6 +163,17 @@ export function DashboardPage() {
             await load();
           }}
           onError={() => setToast({ message: 'Failed to save', kind: 'error' })}
+        />
+      )}
+
+      {deletingEvent && (
+        <ConfirmSheet
+          title="Delete event?"
+          body={deletingEvent.summary}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={confirmDeleteEvent}
+          onCancel={() => setDeletingEvent(null)}
         />
       )}
 
@@ -214,48 +198,27 @@ function Empty({ children }: { readonly children: React.ReactNode }) {
   return <div className="py-6 text-center text-sm text-text-muted">{children}</div>;
 }
 
-function ExpenseTotalsBadge({ totals }: { readonly totals: ReadonlyArray<ExpenseTotal> }) {
-  const symbol: Record<string, string> = { ILS: '₪', USD: '$', EUR: '€', GBP: '£' };
-  return (
-    <span className="text-xs tabular text-text-secondary">
-      {totals.map((t) => `${symbol[t.currency] || t.currency}${t.total.toFixed(2)}`).join(' · ')}
-    </span>
-  );
-}
-
 function DashboardSkeleton() {
   return (
     <>
-      <WeatherCardSkeleton />
-      <SectionSkeleton rows={3} />
-      <SectionSkeleton rows={2} />
-      <HeatmapSkeleton />
-      <Skeleton className="w-full h-[68px] rounded-2xl" />
-    </>
-  );
-}
-
-function WeatherCardSkeleton() {
-  return (
-    <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Skeleton className="w-10 h-10" rounded="full" />
-          <div className="flex flex-col gap-1.5">
-            <Skeleton className="h-7 w-14" />
-            <Skeleton className="h-3 w-20" />
+      <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10" rounded="full" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-7 w-14" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1.5">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-12" />
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1.5">
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-3 w-12" />
-        </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-3 w-16" />
-      </div>
-    </div>
+      <SectionSkeleton rows={3} />
+      <SectionSkeleton rows={2} />
+    </>
   );
 }
 
@@ -279,20 +242,3 @@ function SectionSkeleton({ rows }: { readonly rows: number }) {
     </section>
   );
 }
-
-function HeatmapSkeleton() {
-  return (
-    <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
-      <div className="flex items-center justify-between mb-3">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-3 w-24" />
-      </div>
-      <div className="grid grid-flow-col grid-rows-7 gap-1" style={{ gridAutoColumns: 'minmax(0, 1fr)' }}>
-        {Array.from({ length: 13 * 7 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-square" rounded="sm" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
