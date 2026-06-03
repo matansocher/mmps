@@ -25,10 +25,7 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
   IDLE: 60 * 15,
 };
 
-// Cache TTL for the full search/mini-app restaurant list. Subscription alerting uses a separate
-// uncached area-scoped fetch, so the search list does not need aggressive freshness. A longer TTL
-// reduces how often we re-fetch all cities and helps stay under Wolt's burst rate limit.
-export const TOO_OLD_LIST_THRESHOLD_MS = 1000 * 60 * 3;
+export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;

@@ -18,37 +18,15 @@ const REQUEST_HEADERS = {
   Referer: 'https://wolt.com/',
 };
 
+const DELAY_BETWEEN_CITY_REQUESTS_MS = 350;
 const MAX_RETRIES_ON_RATE_LIMIT = 3;
 const BASE_BACKOFF_MS = 1000;
-
-// Wolt's consumer-api enforces a burst rate limit (~10 quick requests) per IP and returns 429 when exceeded.
-// Multiple callers (search, mini-app, subscription alerting) can hit it concurrently, so we serialize every
-// Wolt request through a single global queue and keep a minimum spacing between them to avoid bursts.
-const MIN_INTERVAL_BETWEEN_REQUESTS_MS = 1000;
-let requestQueue: Promise<unknown> = Promise.resolve();
-let lastRequestStartedAt = 0;
-
-function throttle<T>(fn: () => Promise<T>): Promise<T> {
-  const result = requestQueue.then(async () => {
-    const waitMs = MIN_INTERVAL_BETWEEN_REQUESTS_MS - (Date.now() - lastRequestStartedAt);
-    if (waitMs > 0) {
-      await sleep(waitMs);
-    }
-    lastRequestStartedAt = Date.now();
-    return fn();
-  });
-  requestQueue = result.then(
-    () => undefined,
-    () => undefined,
-  );
-  return result;
-}
 
 async function getWithRetry<T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> {
   let lastErr: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES_ON_RATE_LIMIT; attempt++) {
     try {
-      const res = await throttle(() => axios.get<T>(url, { ...config, headers: { ...REQUEST_HEADERS, ...config.headers } }));
+      const res = await axios.get<T>(url, { ...config, headers: { ...REQUEST_HEADERS, ...config.headers } });
       return res.data;
     } catch (err) {
       lastErr = err;
@@ -82,6 +60,7 @@ export async function getRestaurantsList(areaSlugs?: string[]): Promise<WoltRest
       } catch (err) {
         logger.error(`${getRestaurantsList.name} - failed to fetch area ${city.areaSlug} - ${err}`);
       }
+      await sleep(DELAY_BETWEEN_CITY_REQUESTS_MS);
     }
 
     return restaurantsWithArea.map((restaurant) => {

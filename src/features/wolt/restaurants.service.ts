@@ -10,7 +10,6 @@ let restaurantsList: RestaurantsList = {
 
 export class RestaurantsService {
   private readonly logger = new Logger(RestaurantsService.name);
-  private refreshInFlight: Promise<void> | null = null;
 
   async getRestaurants(): Promise<WoltRestaurant[]> {
     const { lastUpdated } = restaurantsList;
@@ -22,23 +21,15 @@ export class RestaurantsService {
   }
 
   async refreshRestaurants(): Promise<void> {
-    // Single-flight: concurrent callers share one in-flight refresh instead of each launching a full city burst.
-    if (this.refreshInFlight) {
-      return this.refreshInFlight;
-    }
-    this.refreshInFlight = (async () => {
-      try {
-        const restaurants = await getRestaurantsList();
-        if (restaurants.length) {
-          restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
-        }
-      } catch (err) {
-        this.logger.error(`${this.refreshRestaurants.name} - error - ${err}`);
-      } finally {
-        this.refreshInFlight = null;
+    try {
+      const restaurants = await getRestaurantsList();
+      if (restaurants.length) {
+        restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
+        // this.logger.log(`${this.refreshRestaurants.name} - Restaurants list was refreshed successfully`);
       }
-    })();
-    return this.refreshInFlight;
+    } catch (err) {
+      this.logger.error(`${this.refreshRestaurants.name} - error - ${err}`);
+    }
   }
 
   // Fetches a fresh list for the given areas only. Used by subscription alerting so we don't
