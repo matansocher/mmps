@@ -25,12 +25,14 @@ export async function getSubscription(chatId: number, restaurant: string): Promi
   return subscriptionCollection.findOne(filter);
 }
 
-export async function addSubscription(chatId: number, restaurant: string, restaurantPhoto: string) {
+export async function addSubscription(chatId: number, restaurant: string, restaurantPhoto: string, slug?: string, area?: string) {
   const subscriptionCollection = getCollection();
   const subscription = {
     chatId,
     restaurant,
     restaurantPhoto,
+    ...(slug ? { slug } : {}),
+    ...(area ? { area } : {}),
     isActive: true,
     createdAt: new Date(),
   } as Subscription;

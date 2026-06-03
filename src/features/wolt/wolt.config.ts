@@ -25,13 +25,17 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
   IDLE: 60 * 15,
 };
 
-export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
+// Cache TTL for the full search/mini-app restaurant list. Subscription alerting uses a separate lightweight
+// per-venue endpoint, so the heavy full list does not need aggressive freshness. A longer TTL means we
+// re-fetch all cities far less often, which keeps us under Wolt's per-IP burst rate limit.
+export const TOO_OLD_LIST_THRESHOLD_MS = 1000 * 60 * 3;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;
 
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 export const RESTAURANTS_BASE_URL = 'https://consumer-api.wolt.com/v1/pages/restaurants';
+export const VENUE_DYNAMIC_BASE_URL = 'https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/{slug}/dynamic/';
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 
 // the order of this array is important, this will determine the order of multiple results in restaurants search
