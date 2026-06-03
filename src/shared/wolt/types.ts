@@ -25,6 +25,7 @@ export type Subscription = {
   readonly chatId: number;
   readonly restaurant: string;
   readonly restaurantPhoto: string;
+  readonly area?: string;
   readonly isActive: boolean;
   readonly isSuccess: boolean;
   readonly finishedAt: Date;

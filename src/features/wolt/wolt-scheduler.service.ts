@@ -68,7 +68,7 @@ export class WoltSchedulerService {
 
   async alertSubscriptions(subscriptions: Subscription[]): Promise<void> {
     const restaurantsNames = subscriptions.map((subscription: Subscription) => subscription.restaurant);
-    const restaurants = await restaurantsService.getRestaurants();
+    const restaurants = await this.getRestaurantsForSubscriptions(subscriptions);
     const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
 
     for (const restaurant of onlineRestaurants) {
@@ -77,6 +77,18 @@ export class WoltSchedulerService {
         await this.alertSubscription(restaurant, subscription);
       }
     }
+  }
+
+  // Only fetch the areas that actually have active subscriptions (usually 1-2 cities instead of all of them),
+  // which keeps us well under Wolt's rate limit. Fall back to the full list if any subscription is missing its area
+  // (legacy subscriptions created before the area was stored).
+  private async getRestaurantsForSubscriptions(subscriptions: Subscription[]): Promise<WoltRestaurant[]> {
+    const allHaveArea = subscriptions.every((subscription) => !!subscription.area);
+    if (!allHaveArea) {
+      return restaurantsService.getRestaurants();
+    }
+    const areas = [...new Set(subscriptions.map((subscription) => subscription.area))] as string[];
+    return restaurantsService.getRestaurantsByAreas(areas);
   }
 
   async cleanSubscription(subscription: Subscription): Promise<void> {

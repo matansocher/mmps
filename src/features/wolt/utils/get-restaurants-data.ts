@@ -42,10 +42,13 @@ async function getWithRetry<T = any>(url: string, config: AxiosRequestConfig = {
   throw lastErr;
 }
 
-export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
+// When areaSlugs is provided, only those areas are fetched (used by the subscription alerting flow
+// to avoid hammering Wolt with all-city requests every cycle). Omit it to fetch the full list (search).
+export async function getRestaurantsList(areaSlugs?: string[]): Promise<WoltRestaurant[]> {
   const logger = new Logger(getRestaurantsList.name);
   try {
-    const cities = await getCitiesList();
+    const allCities = await getCitiesList();
+    const cities = areaSlugs?.length ? allCities.filter((city) => areaSlugs.includes(city.areaSlug)) : allCities;
 
     const restaurantsWithArea: any[] = [];
     for (const city of cities) {

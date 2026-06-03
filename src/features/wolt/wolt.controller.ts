@@ -201,7 +201,7 @@ export class WoltController {
     }
 
     const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await addSubscription(chatId, restaurant, restaurantDetails?.photo);
+    await addSubscription(chatId, restaurant, restaurantDetails?.photo, restaurantDetails?.area);
     await ctx.reply(replyText);
     await ctx.react('🤝').catch(() => {});
 
