@@ -5,7 +5,6 @@ import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { buildRestaurantLink } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
@@ -68,35 +67,6 @@ export class WoltSchedulerService {
   }
 
   async alertSubscriptions(subscriptions: Subscription[]): Promise<void> {
-    const subscriptionsWithSlug = subscriptions.filter((subscription) => subscription.slug);
-    const legacySubscriptions = subscriptions.filter((subscription) => !subscription.slug);
-
-    // New subscriptions: check only the specific subscribed venues via the lightweight per-venue endpoint.
-    // Group by slug so multiple users subscribed to the same restaurant share a single status check.
-    const subscriptionsBySlug = new Map<string, Subscription[]>();
-    for (const subscription of subscriptionsWithSlug) {
-      const slug = subscription.slug as string;
-      const group = subscriptionsBySlug.get(slug) ?? [];
-      group.push(subscription);
-      subscriptionsBySlug.set(slug, group);
-    }
-    for (const [slug, group] of subscriptionsBySlug) {
-      const status = await restaurantsService.getVenueStatus(slug);
-      if (!status?.isOnline) {
-        continue;
-      }
-      for (const subscription of group) {
-        await this.alertSubscription(this.toRestaurant(subscription), subscription);
-      }
-    }
-
-    // Legacy subscriptions (created before slug was stored): fall back to matching against the full list.
-    if (legacySubscriptions.length) {
-      await this.alertLegacySubscriptions(legacySubscriptions);
-    }
-  }
-
-  private async alertLegacySubscriptions(subscriptions: Subscription[]): Promise<void> {
     const restaurantsNames = subscriptions.map((subscription: Subscription) => subscription.restaurant);
     const restaurants = await restaurantsService.getRestaurants();
     const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
@@ -107,11 +77,6 @@ export class WoltSchedulerService {
         await this.alertSubscription(restaurant, subscription);
       }
     }
-  }
-
-  private toRestaurant(subscription: Subscription): WoltRestaurant {
-    const link = subscription.area && subscription.slug ? buildRestaurantLink(subscription.area, subscription.slug) : '';
-    return { name: subscription.restaurant, link, photo: subscription.restaurantPhoto } as WoltRestaurant;
   }
 
   async cleanSubscription(subscription: Subscription): Promise<void> {
