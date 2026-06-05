@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react';
 import { formatAmount } from './ExpenseRow';
-import type { ExpenseCategory, ExpenseDto, ExpenseType, UpdateExpenseBody } from '../types';
+import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../lib/categories';
+import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDto, type ExpenseType, type UpdateExpenseBody } from '../types';
 
-const CATEGORIES: ReadonlyArray<{ value: ExpenseCategory; emoji: string; label: string }> = [
-  { value: 'food', emoji: '🍔', label: 'Food' },
-  { value: 'groceries', emoji: '🛒', label: 'Groceries' },
-  { value: 'transport', emoji: '🚗', label: 'Transport' },
-  { value: 'subscriptions', emoji: '📅', label: 'Subs' },
-  { value: 'utilities', emoji: '💡', label: 'Utilities' },
-  { value: 'shopping', emoji: '🛍️', label: 'Shopping' },
-  { value: 'entertainment', emoji: '🎬', label: 'Fun' },
-  { value: 'health', emoji: '💊', label: 'Health' },
-  { value: 'bills', emoji: '🧾', label: 'Bills' },
-  { value: 'other', emoji: '💳', label: 'Other' },
-];
+const CATEGORIES: ReadonlyArray<{ value: ExpenseCategory; emoji: string; label: string }> = EXPENSE_CATEGORIES.map((value) => ({
+  value,
+  emoji: CATEGORY_EMOJI[value],
+  label: CATEGORY_LABELS[value],
+}));
 
 const TYPES: ReadonlyArray<{ value: ExpenseType; label: string }> = [
   { value: 'receipt', label: 'Receipt' },

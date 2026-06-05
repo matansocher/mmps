@@ -5,7 +5,6 @@ import { api } from './lib/api';
 import { todayYmd } from './lib/date';
 import { getWebApp } from './lib/telegram';
 import { DashboardPage } from './pages/DashboardPage';
-import { ExercisePage } from './pages/ExercisePage';
 import { ExpensesPage } from './pages/ExpensesPage';
 
 export function App() {
@@ -41,7 +40,6 @@ export function App() {
         <main className="flex-1">
           <Switch>
             <Route path="/" component={DashboardPage} />
-            <Route path="/exercise" component={ExercisePage} />
             <Route path="/expenses" component={ExpensesPage} />
             <Route>
               <div className="p-6 text-text-secondary">404</div>

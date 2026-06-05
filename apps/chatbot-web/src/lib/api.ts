@@ -1,9 +1,9 @@
 import { getInitData } from './telegram';
 import type {
+  CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
   ExerciseLogResponse,
-  ExerciseResponse,
   ExpenseDto,
   ExpensesMonthResponse,
   ReminderDto,
@@ -27,7 +27,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   dashboard: (date?: string) => request<DashboardResponse>(`/api/chatbot/dashboard${date ? `?date=${encodeURIComponent(date)}` : ''}`),
-  exercise: () => request<ExerciseResponse>('/api/chatbot/exercise'),
   expensesMonth: (month?: string) => request<ExpensesMonthResponse>(`/api/chatbot/expenses${month ? `?month=${encodeURIComponent(month)}` : ''}`),
   logExercise: () => request<ExerciseLogResponse>('/api/chatbot/exercise/log', { method: 'POST' }),
   createReminder: (body: CreateReminderBody) =>
@@ -38,4 +37,6 @@ export const api = {
   deleteCalendarEvent: (id: string) => request<void>(`/api/chatbot/calendar/events/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   updateExpense: (id: string, body: UpdateExpenseBody) =>
     request<ExpenseDto>(`/api/chatbot/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  createManualExpense: (body: CreateManualExpenseBody) =>
+    request<ExpenseDto>('/api/chatbot/expenses/manual', { method: 'POST', body: JSON.stringify(body) }),
 };

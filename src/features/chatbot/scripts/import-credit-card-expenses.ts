@@ -2,65 +2,96 @@
  * Import credit-card transactions from monthly XLSX statements (Hebrew "כאל / Mizrahi" format)
  * into the chatbot expenses collection, skipping any entries that already exist in Mongo.
  *
- * Usage:
- *   npx tsx src/features/chatbot/scripts/import-credit-card-expenses.ts
- *   npx tsx src/features/chatbot/scripts/import-credit-card-expenses.ts --folder expenses-examples
- *   npx tsx src/features/chatbot/scripts/import-credit-card-expenses.ts --file "expenses-examples/some.xlsx"
- *   npx tsx src/features/chatbot/scripts/import-credit-card-expenses.ts --dry-run
+ * Filename convention (REQUIRED): `card-<last4>-<YYYY-MM>.xlsx`
+ *   Examples:
+ *     card-1220-2026-05.xlsx   → Visa ending 1220, statement for May 2026
+ *     card-4477-2026-06.xlsx   → Visa ending 4477, statement for June 2026
+ *   The script parses `<last4>` and `<YYYY-MM>` from the filename and uses them to:
+ *     - Tag every imported row with the source card and statement month (in `messageId`)
+ *     - Pre-filter the Mongo dedup window to that month (faster, safer dedup)
+ *     - Refuse files that don't match the convention (fail fast — explicit > implicit)
  *
- * Dedup rule (per the user's spec): an XLSX row is treated as a duplicate of an existing Mongo
- * expense when the **transaction date** matches (same calendar day, Asia/Jerusalem) AND the
- * **amount** matches (within 0.01) AND the **vendor** matches. Vendor comparison normalizes
- * casing/whitespace and is tolerant of either the original `vendor` or any `userVendor`
- * override the user applied. When multiple existing expenses share the same date+amount the
- * vendor disambiguates which one (if any) is the dup.
+ * Usage:
+ *   1. Adjust the CONFIG block below (folder/file/dryRun) for the run.
+ *   2. npx tsx src/features/chatbot/scripts/import-credit-card-expenses.ts
+ *
+ * Dedup (idempotent — re-running the same file is a no-op):
+ *   1. Every row's `messageId` is deterministic: card+ym+date+currency+amount+vendor. The
+ *      Mongo collection has a unique index on `messageId`, so the second run can't insert
+ *      the same row even if the heuristic below were to miss it.
+ *   2. As a secondary check (catches user-renamed vendors), a row is treated as a duplicate
+ *      when the transaction **date** matches (same calendar day, Asia/Jerusalem) AND the
+ *      **amount** matches (within 0.01) AND the **vendor** matches against either the
+ *      original `vendor` or any `userVendor` override. Vendor comparison normalizes
+ *      casing/whitespace/Hebrew niqqud. Date+amount-only matches are flagged as ambiguous
+ *      and skipped (review manually).
  */
-import { read, utils } from 'xlsx';
 import { config } from 'dotenv';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { basename, isAbsolute, join, resolve } from 'node:path';
-import { argv, cwd, exit } from 'node:process';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
+import { cwd, exit } from 'node:process';
+import { fileURLToPath } from 'node:url';
+import { read, utils } from 'xlsx';
 import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
-import {
-  createExpense,
-  DB_NAME,
-  ensureExpenseIndexes,
-  getExpensesBetween,
-  type CreateExpenseData,
-  type Currency,
-  type Expense,
-  type ExpenseCategory,
-  type ExpenseType,
-} from '@shared/expenses';
+import { createExpense, type CreateExpenseData, type Currency, DB_NAME, ensureExpenseIndexes, type Expense, type ExpenseCategory, type ExpenseType, getExpensesBetween } from '@shared/expenses';
 import { effectiveVendor } from '@shared/expenses';
 
-config({ path: join(cwd(), '.env') });
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const DEFAULT_EXPENSES_DIR = resolve(SCRIPT_DIR, 'expenses');
+// Script lives at src/features/chatbot/scripts — repo root is four levels up.
+const REPO_ROOT = resolve(SCRIPT_DIR, '../../../..');
+
+config({ path: resolve(REPO_ROOT, '.env') });
 
 const logger = new Logger('import-card-xlsx');
 
-// --- Hebrew → category/type heuristics (avoid an LLM round-trip when sector is recognised) ---
+// =============================================================================
+// CONFIG — adjust before running. `file` (when set) takes priority over `folder`.
+// =============================================================================
+const CONFIG = {
+  // Process every `card-<last4>-<YYYY-MM>.xlsx` in this folder. Defaults to the
+  // sibling `expenses/` folder next to this script (paths are resolved against it
+  // first, then against the current working directory).
+  folder: 'expenses' as string,
+  // Set to a single filename to import just that statement (overrides `folder`).
+  // Leave empty to process the whole `folder`.
+  file: '' as string, // e.g. 'card-1220-2026-05.xlsx'
+  // `true` = parse & log only, no Mongo writes. Flip to `false` to actually import.
+  dryRun: false,
+} as const;
+// =============================================================================
 
+// --- Hebrew → category/type heuristics (avoid an LLM round-trip when sector is recognised) ---
+//
+// Sectors below were derived from observed XLSX statements across multiple cards (Mizrahi-1220
+// monthly billed + Discount-7374 immediate-charge). When the bank adds a sector we don't
+// recognise, the row falls through to "other" and the Hebrew text is preserved on the row's
+// `hebrewSector` (unused at write time but useful for triaging unknowns).
 const SECTOR_TO_CATEGORY: Record<string, ExpenseCategory> = {
-  'מסעדות': 'food',
+  מסעדות: 'restaurants',
+  'מזון מהיר': 'fast_food',
   'מזון ומשקאות': 'groceries',
-  'אירועים': 'entertainment',
-  'ביטוח ופיננסים': 'bills',
-  'מלונאות ואירוח': 'entertainment',
-  'מוסדות': 'bills',
-  'תעשיה ומכירות': 'shopping',
+  אנרגיה: 'fuel',
   'רכב ותחבורה': 'transport',
-  'תקשורת ומחשבים': 'utilities',
-  'תיירות': 'entertainment',
+  'ריהוט ובית': 'home',
+  'תעשיה ומכירות': 'shopping',
   'אופנה והלבשה': 'shopping',
+  'רפואה ובריאות': 'health',
   'בריאות ויופי': 'health',
+  'פנאי בילוי': 'entertainment',
   'תרבות ופנאי': 'entertainment',
-  'חינוך': 'other',
+  אירועים: 'events',
+  'מלונאות ואירוח': 'travel',
+  תיירות: 'travel',
+  'תקשורת ומחשבים': 'communications',
+  'ביטוח ופיננסים': 'insurance',
+  מוסדות: 'government',
+  חינוך: 'other',
+  שונות: 'other',
 };
 
-const TYPE_KEYWORDS: ReadonlyArray<{ readonly hebrew: string; readonly type: ExpenseType }> = [
-  { hebrew: 'הוראת קבע', type: 'bill' },
-];
+const TYPE_KEYWORDS: ReadonlyArray<{ readonly hebrew: string; readonly type: ExpenseType }> = [{ hebrew: 'הוראת קבע', type: 'bill' }];
 
 const SECTION_CURRENCY_KEYWORDS: ReadonlyArray<{ readonly match: RegExp; readonly currency: Currency }> = [
   { match: /דולר|\$/, currency: 'USD' },
@@ -68,6 +99,38 @@ const SECTION_CURRENCY_KEYWORDS: ReadonlyArray<{ readonly match: RegExp; readonl
   { match: /פאונד|לירה שטרלינג|£/, currency: 'GBP' },
   { match: /יין יפני|¥/, currency: 'JPY' },
 ];
+
+// --- Filename convention ---
+
+const FILENAME_RE = /^card-(\d{4})-(\d{4})-(0[1-9]|1[0-2])\.xlsx$/i;
+
+type FileMeta = {
+  readonly path: string;
+  readonly fileName: string;
+  readonly cardLast4: string;
+  readonly statementYear: number;
+  readonly statementMonth: number; // 1–12
+  readonly statementYm: string; // YYYY-MM
+};
+
+function parseFileMeta(filePath: string): FileMeta {
+  const fileName = basename(filePath);
+  const m = FILENAME_RE.exec(fileName);
+  if (!m) {
+    throw new Error(`Filename "${fileName}" does not match the required convention card-<last4>-<YYYY-MM>.xlsx (e.g. card-1220-2026-05.xlsx)`);
+  }
+  const [, cardLast4, yearStr, monthStr] = m;
+  const statementYear = Number(yearStr);
+  const statementMonth = Number(monthStr);
+  return {
+    path: filePath,
+    fileName,
+    cardLast4,
+    statementYear,
+    statementMonth,
+    statementYm: `${yearStr}-${monthStr}`,
+  };
+}
 
 // --- XLSX parsing ---
 
@@ -175,15 +238,10 @@ function sameCalendarDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-type DupResult =
-  | { readonly kind: 'unique' }
-  | { readonly kind: 'duplicate'; readonly match: Expense }
-  | { readonly kind: 'ambiguous'; readonly candidates: ReadonlyArray<Expense> };
+type DupResult = { readonly kind: 'unique' } | { readonly kind: 'duplicate'; readonly match: Expense } | { readonly kind: 'ambiguous'; readonly candidates: ReadonlyArray<Expense> };
 
 function findDuplicate(row: ParsedRow, pool: ReadonlyArray<Expense>): DupResult {
-  const sameDateAmount = pool.filter(
-    (e) => e.currency === row.currency && Math.abs(e.amount - row.amount) < 0.01 && sameCalendarDay(e.transactionDate, row.transactionDate),
-  );
+  const sameDateAmount = pool.filter((e) => e.currency === row.currency && Math.abs(e.amount - row.amount) < 0.01 && sameCalendarDay(e.transactionDate, row.transactionDate));
   if (sameDateAmount.length === 0) return { kind: 'unique' };
 
   const vendorMatches = sameDateAmount.filter((e) => isVendorMatch(effectiveVendor(e), row.vendor));
@@ -195,16 +253,16 @@ function findDuplicate(row: ParsedRow, pool: ReadonlyArray<Expense>): DupResult 
 
 // --- Insert ---
 
-function buildMessageId(file: string, row: ParsedRow): string {
+function buildMessageId(meta: FileMeta, row: ParsedRow): string {
   const dateKey = row.transactionDate.toISOString().slice(0, 10);
   const amountKey = Math.round(row.amount * 100);
   const vendorKey = normalizeName(row.vendor).slice(0, 24) || 'unknown';
-  return `card-xlsx:${basename(file)}:${dateKey}:${row.currency}:${amountKey}:${vendorKey}`;
+  return `card-xlsx:${meta.cardLast4}:${meta.statementYm}:${dateKey}:${row.currency}:${amountKey}:${vendorKey}`;
 }
 
-function toCreateData(row: ParsedRow, file: string): CreateExpenseData {
+function toCreateData(row: ParsedRow, meta: FileMeta): CreateExpenseData {
   return {
-    messageId: buildMessageId(file, row),
+    messageId: buildMessageId(meta, row),
     vendor: row.vendor,
     category: row.category,
     type: row.type,
@@ -216,29 +274,20 @@ function toCreateData(row: ParsedRow, file: string): CreateExpenseData {
 
 // --- CLI ---
 
-function parseArgs(): { folder?: string; file?: string; dryRun: boolean } {
-  const args = argv.slice(2);
-  let folder: string | undefined;
-  let file: string | undefined;
-  let dryRun = false;
-  for (let i = 0; i < args.length; i++) {
-    const a = args[i];
-    if (a === '--dry-run') dryRun = true;
-    else if (a === '--folder') folder = args[++i];
-    else if (a === '--file') file = args[++i];
-    else if (a.startsWith('--folder=')) folder = a.slice('--folder='.length);
-    else if (a.startsWith('--file=')) file = a.slice('--file='.length);
-  }
-  return { folder, file, dryRun };
-}
-
 function resolveInputFiles(opts: { folder?: string; file?: string }): string[] {
   if (opts.file) {
-    const p = isAbsolute(opts.file) ? opts.file : resolve(cwd(), opts.file);
-    if (!existsSync(p)) throw new Error(`File not found: ${p}`);
-    return [p];
+    const candidates = [
+      isAbsolute(opts.file) ? opts.file : null,
+      isAbsolute(opts.file) ? null : resolve(DEFAULT_EXPENSES_DIR, opts.file),
+      isAbsolute(opts.file) ? null : resolve(cwd(), opts.file),
+    ].filter((p): p is string => !!p);
+    const found = candidates.find((p) => existsSync(p));
+    if (!found) throw new Error(`File not found: tried ${candidates.join(', ')}`);
+    return [found];
   }
-  const folder = opts.folder ? (isAbsolute(opts.folder) ? opts.folder : resolve(cwd(), opts.folder)) : resolve(cwd(), 'expenses-examples');
+  // Relative `folder` is anchored to the script dir (so the default `'expenses'`
+  // points at the sibling folder regardless of cwd). Absolute paths are honoured as-is.
+  const folder = opts.folder ? (isAbsolute(opts.folder) ? opts.folder : resolve(SCRIPT_DIR, opts.folder)) : DEFAULT_EXPENSES_DIR;
   if (!existsSync(folder) || !statSync(folder).isDirectory()) throw new Error(`Folder not found: ${folder}`);
   return readdirSync(folder)
     .filter((name) => name.toLowerCase().endsWith('.xlsx') && !name.startsWith('~$'))
@@ -247,19 +296,21 @@ function resolveInputFiles(opts: { folder?: string; file?: string }): string[] {
 }
 
 async function main() {
-  const { folder, file, dryRun } = parseArgs();
+  const { folder, file, dryRun } = CONFIG;
   const files = resolveInputFiles({ folder, file });
   logger.log(`Found ${files.length} XLSX file(s) to process${dryRun ? ' (dry run)' : ''}`);
 
-  // Parse first so we know the full date range and only pull existing expenses once.
-  const allRows: { file: string; rows: ParsedRow[] }[] = [];
+  // Parse filename metadata first so we fail fast on naming-convention violations
+  // before we hit the bank/Mongo, then parse contents.
+  const parsedFiles: { meta: FileMeta; rows: ParsedRow[] }[] = [];
   for (const f of files) {
+    const meta = parseFileMeta(f);
     const rows = parseFile(f);
-    allRows.push({ file: f, rows });
-    logger.log(`Parsed ${basename(f)}: ${rows.length} transactions`);
+    parsedFiles.push({ meta, rows });
+    logger.log(`Parsed ${meta.fileName}: card=${meta.cardLast4}, statement=${meta.statementYm}, transactions=${rows.length}`);
   }
 
-  const everyRow = allRows.flatMap((b) => b.rows);
+  const everyRow = parsedFiles.flatMap((b) => b.rows);
   if (everyRow.length === 0) {
     logger.log('No transactions found in any input file.');
     return;
@@ -278,17 +329,26 @@ async function main() {
 
   // Track inserts within this run so a duplicate row inside the same batch doesn't double-insert.
   const liveExisting: Expense[] = [...existing];
+  const existingMessageIds = new Set(liveExisting.map((e) => e.messageId));
 
   let totalInserted = 0;
   let totalSkipped = 0;
   let totalAmbiguous = 0;
   const ambiguousReport: string[] = [];
 
-  for (const { file: f, rows } of allRows) {
+  for (const { meta, rows } of parsedFiles) {
     let inserted = 0;
     let skipped = 0;
     let ambiguous = 0;
     for (const row of rows) {
+      const data = toCreateData(row, meta);
+
+      // Fast path: deterministic messageId already in Mongo (re-run of same file).
+      if (existingMessageIds.has(data.messageId)) {
+        skipped++;
+        continue;
+      }
+
       const dup = findDuplicate(row, liveExisting);
       if (dup.kind === 'duplicate') {
         skipped++;
@@ -297,7 +357,7 @@ async function main() {
       if (dup.kind === 'ambiguous') {
         ambiguous++;
         ambiguousReport.push(
-          `[${basename(f)}:${row.sourceRowIndex}] ${row.transactionDate.toISOString().slice(0, 10)} ${row.amount} ${row.currency} "${row.vendor}" — matches ${dup.candidates.length} existing expense(s): ${dup.candidates
+          `[${meta.fileName}:${row.sourceRowIndex}] ${row.transactionDate.toISOString().slice(0, 10)} ${row.amount} ${row.currency} "${row.vendor}" — matches ${dup.candidates.length} existing expense(s): ${dup.candidates
             .map((c) => `"${effectiveVendor(c)}"(#${c._id?.toString()})`)
             .join(', ')}. Skipping to avoid duplicates; review manually if needed.`,
         );
@@ -305,15 +365,16 @@ async function main() {
         continue;
       }
 
-      const data = toCreateData(row, f);
       if (dryRun) {
-        logger.log(`[would insert] ${data.transactionDate.toISOString().slice(0, 10)} ${data.amount} ${data.currency} "${data.vendor}" (${data.category}/${data.type})`);
+        logger.log(
+          `[would insert] ${data.transactionDate.toISOString().slice(0, 10)} ${data.amount} ${data.currency} "${data.vendor}" (${data.category}/${data.type}) [${meta.cardLast4} ${meta.statementYm}]`,
+        );
       } else {
         try {
           const r = await createExpense(data);
           liveExisting.push({ ...data, _id: r.insertedId, createdAt: new Date() } as Expense);
         } catch (err) {
-          // Most likely a unique-index collision (re-running same file) — count as skip.
+          // Most likely a unique-index collision on messageId (re-running same file) — count as skip.
           const message = err instanceof Error ? err.message : String(err);
           if (message.includes('E11000') || message.toLowerCase().includes('duplicate key')) {
             skipped++;
@@ -322,9 +383,10 @@ async function main() {
           throw err;
         }
       }
+      existingMessageIds.add(data.messageId);
       inserted++;
     }
-    logger.log(`${basename(f)}: inserted=${inserted}, skipped=${skipped}, ambiguous=${ambiguous}`);
+    logger.log(`${meta.fileName}: inserted=${inserted}, skipped=${skipped}, ambiguous=${ambiguous}`);
     totalInserted += inserted;
     totalSkipped += skipped;
     totalAmbiguous += ambiguous;
@@ -343,6 +405,6 @@ async function main() {
 main()
   .then(() => exit(0))
   .catch((err) => {
-    logger.error(`Import failed: ${err instanceof Error ? err.stack ?? err.message : err}`);
+    logger.error(`Import failed: ${err instanceof Error ? (err.stack ?? err.message) : err}`);
     exit(1);
   });

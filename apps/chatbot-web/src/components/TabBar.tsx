@@ -4,7 +4,6 @@ type Tab = { readonly path: string; readonly label: string; readonly icon: strin
 
 const TABS: ReadonlyArray<Tab> = [
   { path: '/', label: 'Dashboard', icon: '🏠' },
-  { path: '/exercise', label: 'Exercise', icon: '💪' },
   { path: '/expenses', label: 'Expenses', icon: '💵' },
 ];
 

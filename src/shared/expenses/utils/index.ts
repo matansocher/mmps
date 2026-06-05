@@ -6,7 +6,6 @@ export {
   buildDailySummary,
   buildYesterdaySummary,
   buildMonthlyAnalyticsSummary,
-  buildWeeklyDigest,
   formatDailySummary,
   formatMonthlyAnalytics,
   formatPeriodSummary,

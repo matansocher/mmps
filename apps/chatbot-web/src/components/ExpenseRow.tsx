@@ -1,17 +1,5 @@
+import { getCategoryEmoji } from '../lib/categories';
 import type { ExpenseDto } from '../types';
-
-const CATEGORY_EMOJI: Record<string, string> = {
-  food: '🍔',
-  groceries: '🛒',
-  transport: '🚗',
-  subscriptions: '📅',
-  utilities: '💡',
-  shopping: '🛍️',
-  entertainment: '🎬',
-  health: '💊',
-  bills: '🧾',
-  other: '💳',
-};
 
 const CURRENCY_SYMBOL: Record<string, string> = {
   ILS: '₪',
@@ -28,16 +16,13 @@ export function formatAmount(amount: number, currency: string): string {
 type Props = {
   readonly expense: ExpenseDto;
   readonly onTap?: (expense: ExpenseDto) => void;
-  readonly showTime?: boolean;
   readonly dayLabel?: string;
 };
 
-export function ExpenseRow({ expense, onTap, showTime, dayLabel }: Props) {
-  const emoji = CATEGORY_EMOJI[expense.category] || '💳';
+export function ExpenseRow({ expense, onTap, dayLabel }: Props) {
+  const emoji = getCategoryEmoji(expense.category);
   const typeTag = expense.type === 'card_alert' ? ' · card' : expense.type === 'bill' ? ' · bill' : '';
   const edited = !!(expense.originalVendor || expense.originalCategory || expense.originalType);
-  const time = showTime ? new Date(expense.transactionDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : null;
-  const timePart = dayLabel && time ? `${dayLabel} ${time}` : dayLabel ? dayLabel : time;
 
   const inner = (
     <div className="flex items-center gap-3 py-2.5 w-full">
@@ -50,7 +35,7 @@ export function ExpenseRow({ expense, onTap, showTime, dayLabel }: Props) {
         <div className="text-xs text-text-muted truncate">
           {expense.category}
           {typeTag}
-          {timePart ? ` · ${timePart}` : ''}
+          {dayLabel ? ` · ${dayLabel}` : ''}
         </div>
       </div>
       <div className="text-sm font-medium tabular text-text-primary shrink-0">{formatAmount(expense.amount, expense.currency)}</div>

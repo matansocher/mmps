@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ConfirmSheet } from '../components/ConfirmSheet';
 import { DayPicker } from '../components/DayPicker';
 import { EventRow } from '../components/EventRow';
+import { ExpenseRow, formatAmount } from '../components/ExpenseRow';
+import { HeatmapStrip } from '../components/HeatmapStrip';
 import { ReminderRow } from '../components/ReminderRow';
 import { ReminderSheet } from '../components/ReminderSheet';
 import { Skeleton } from '../components/Skeleton';
@@ -22,6 +24,7 @@ export function DashboardPage() {
   const [editing, setEditing] = useState<ReminderDto | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingEvent, setDeletingEvent] = useState<EventDto | null>(null);
+  const [logging, setLogging] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -70,6 +73,26 @@ export function DashboardPage() {
     }
   }
 
+  async function handleLog() {
+    if (!data || data.activity.todayDone || !data.isToday) return;
+    try {
+      setLogging(true);
+      const result = await api.logExercise();
+      if (result.logged) {
+        haptic('success');
+        setToast({ message: '🔥 Logged!', kind: 'success' });
+      } else if (result.alreadyDoneToday) {
+        setToast({ message: 'Already logged today', kind: 'info' });
+      }
+      await load();
+    } catch {
+      haptic('error');
+      setToast({ message: 'Failed to log', kind: 'error' });
+    } finally {
+      setLogging(false);
+    }
+  }
+
   const sortedReminders = data
     ? [...data.reminders].sort((a, b) => {
         const aDone = a.status === 'completed' ? 1 : 0;
@@ -83,6 +106,11 @@ export function DashboardPage() {
   const remindersTitle = overdueCount > 0
     ? `Reminders · ${pendingCount} (${overdueCount} overdue)`
     : `Reminders · ${pendingCount}`;
+
+  const expenseTotalsLabel = useMemo(() => {
+    if (!data || data.expenseTotals.length === 0) return null;
+    return data.expenseTotals.map((t) => formatAmount(t.total, t.currency)).join(' · ');
+  }, [data]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4">
@@ -145,6 +173,48 @@ export function DashboardPage() {
               ))
             )}
           </Section>
+
+          <Section
+            title={`Expenses · ${data.expenses.length}`}
+            action={
+              expenseTotalsLabel ? (
+                <span className="normal-case tracking-normal text-text-primary font-medium tabular">
+                  {expenseTotalsLabel}
+                </span>
+              ) : undefined
+            }
+          >
+            {data.expenses.length === 0 ? (
+              <Empty>No spend logged for this day</Empty>
+            ) : (
+              data.expenses.map((expense) => <ExpenseRow key={expense.id} expense={expense} />)
+            )}
+          </Section>
+
+          <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
+            <div className="text-xs uppercase tracking-wide text-text-muted mb-3">Activity · last 90 days</div>
+            <HeatmapStrip days={data.activity.heatmap} />
+          </section>
+
+          <button
+            onClick={handleLog}
+            disabled={!data.isToday || data.activity.todayDone || logging}
+            className={`w-full rounded-2xl py-5 text-base font-semibold transition-colors ${
+              data.activity.todayDone
+                ? 'bg-accent-success/15 text-accent-success border border-accent-success/30 cursor-default'
+                : !data.isToday
+                  ? 'bg-bg-elevated text-text-muted border border-border-subtle cursor-not-allowed'
+                  : 'bg-accent-success text-bg-base hover:bg-accent-success/90 active:scale-[0.99]'
+            } ${logging ? 'opacity-70' : ''}`}
+          >
+            {data.activity.todayDone
+              ? '✅ Logged for today'
+              : !data.isToday
+                ? 'Go to today to log a workout'
+                : logging
+                  ? '…'
+                  : '💪 I exercised today'}
+          </button>
         </>
       ) : null}
 
@@ -218,6 +288,16 @@ function DashboardSkeleton() {
       </div>
       <SectionSkeleton rows={3} />
       <SectionSkeleton rows={2} />
+      <SectionSkeleton rows={3} />
+      <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
+        <Skeleton className="h-3 w-32 mb-3" />
+        <div className="grid grid-flow-col grid-rows-7 gap-1" style={{ gridAutoColumns: 'minmax(0, 1fr)' }}>
+          {Array.from({ length: 13 * 7 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-square" rounded="sm" />
+          ))}
+        </div>
+      </div>
+      <Skeleton className="h-[68px] w-full rounded-2xl" />
     </>
   );
 }
