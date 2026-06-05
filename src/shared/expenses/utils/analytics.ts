@@ -8,6 +8,14 @@ export function effectiveCategory(e: Pick<Expense, 'category' | 'userCategory'>)
   return e.userCategory ?? e.category;
 }
 
+export function effectiveVendor(e: Pick<Expense, 'vendor'> & { readonly userVendor?: string }): string {
+  return e.userVendor ?? e.vendor;
+}
+
+export function effectiveType(e: Pick<Expense, 'type'> & { readonly userType?: Expense['type'] }): Expense['type'] {
+  return e.userType ?? e.type;
+}
+
 export type CurrencyTotal = { readonly currency: string; readonly total: number };
 export type CategoryTotal = { readonly category: ExpenseCategory; readonly currency: string; readonly total: number; readonly count: number };
 export type VendorTotal = { readonly vendor: string; readonly currency: string; readonly total: number; readonly count: number };
@@ -42,12 +50,13 @@ function totalsByCategory(expenses: ReadonlyArray<Expense>, limit?: number): Cat
 function totalsByVendor(expenses: ReadonlyArray<Expense>, limit?: number): VendorTotal[] {
   const map = new Map<string, VendorTotal>();
   for (const e of expenses) {
-    const key = `${e.vendor}|${e.currency}`;
+    const vendor = effectiveVendor(e);
+    const key = `${vendor}|${e.currency}`;
     const existing = map.get(key);
     if (existing) {
       map.set(key, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
     } else {
-      map.set(key, { vendor: e.vendor, currency: e.currency, total: e.amount, count: 1 });
+      map.set(key, { vendor, currency: e.currency, total: e.amount, count: 1 });
     }
   }
   const arr = Array.from(map.values())

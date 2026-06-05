@@ -7,6 +7,7 @@ import {
   buildVendorTrends,
   buildYesterdaySummary,
   createManualExpense,
+  EXPENSE_CATEGORIES,
   formatAmount,
   formatPeriodSummary,
   getMonthlyExpenses,
@@ -16,8 +17,7 @@ import {
 import { getExpensesByCategory, getExpensesByVendor, getRecentExpenses, updateUserCategory } from '@shared/expenses/mongo/expenses.repository';
 import type { Expense, ExpenseCategory } from '@shared/expenses/types';
 
-const CATEGORIES: ReadonlyArray<ExpenseCategory> = ['food', 'groceries', 'transport', 'subscriptions', 'utilities', 'shopping', 'entertainment', 'health', 'bills', 'other'];
-const CATEGORY_TUPLE = CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]];
+const CATEGORY_TUPLE = EXPENSE_CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]];
 
 const schema = z.object({
   action: z

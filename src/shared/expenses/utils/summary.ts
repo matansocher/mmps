@@ -2,7 +2,7 @@ import { endOfDay, format, startOfDay, startOfMonth, startOfWeek, subDays } from
 import { toZonedTime } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import { getExpensesBetween } from '../mongo';
-import type { Expense, ExpenseCategory } from '../types';
+import { CATEGORY_EMOJI, type Expense, type ExpenseCategory } from '../types';
 import { buildMonthlyAnalytics, effectiveCategory, type MonthlyAnalytics } from './analytics';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -10,19 +10,6 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$',
   EUR: '€',
   GBP: '£',
-};
-
-const CATEGORY_EMOJI: Record<ExpenseCategory, string> = {
-  food: '🍔',
-  groceries: '🛒',
-  transport: '🚕',
-  subscriptions: '💳',
-  utilities: '💡',
-  shopping: '🛍️',
-  entertainment: '🎬',
-  health: '💊',
-  bills: '🧾',
-  other: '📦',
 };
 
 function formatAmount(amount: number, currency: string): string {
@@ -166,42 +153,6 @@ export async function buildYesterdaySummary(): Promise<{ text: string; count: nu
 export async function buildMonthlyAnalyticsSummary(date: Date = new Date()): Promise<{ text: string; analytics: MonthlyAnalytics }> {
   const analytics = await buildMonthlyAnalytics(date, { topN: 5 });
   return { text: formatMonthlyAnalytics(analytics), analytics };
-}
-
-export async function buildWeeklyDigest(now: Date = new Date()): Promise<{ text: string; count: number }> {
-  const zoned = toZonedTime(now, DEFAULT_TIMEZONE);
-  const thisWeekStart = startOfWeek(zoned, { weekStartsOn: 0 });
-  const lastWeekStart = subDays(thisWeekStart, 7);
-  const lastWeekEnd = endOfDay(subDays(thisWeekStart, 1));
-  const [lastWeek, weekBefore] = await Promise.all([getExpensesBetween(lastWeekStart, lastWeekEnd), getExpensesBetween(subDays(lastWeekStart, 7), subDays(lastWeekStart, 1))]);
-  if (lastWeek.length === 0) return { text: '', count: 0 };
-
-  const label = `Last week (${format(lastWeekStart, 'd MMM')} – ${format(lastWeekEnd, 'd MMM')})`;
-  const currTotals = totalsByCurrency(lastWeek);
-  const prevTotals = totalsByCurrency(weekBefore);
-  const prevMap = new Map(prevTotals.map((p) => [p.currency, p.total]));
-  const totalLine = currTotals.map((t) => formatAmount(t.total, t.currency)).join(' · ');
-  const vendors = topVendors(lastWeek, 5);
-  const categories = totalsByCategory(lastWeek).slice(0, 5);
-
-  const lines: string[] = [
-    `*${label}*`,
-    `_${lastWeek.length} transactions · ${totalLine}_`,
-    '',
-    '*Week over week*',
-    ...currTotals.map((t) => {
-      const prev = prevMap.get(t.currency) ?? 0;
-      const deltaPct = prev === 0 ? null : Math.round(((t.total - prev) / prev) * 1000) / 10;
-      return `• ${formatMoMLine(t.currency, t.total, prev, deltaPct)}`;
-    }),
-    '',
-    '*Top categories*',
-    ...categories.map((c) => `${CATEGORY_EMOJI[c.category]} ${c.category} — ${formatAmount(c.total, c.currency)}`),
-    '',
-    '*Top vendors*',
-    ...vendors.map((v) => `• ${v.vendor} — ${formatAmount(v.total, v.currency)}`),
-  ];
-  return { text: lines.join('\n'), count: lastWeek.length };
 }
 
 export { totalsByCurrency, totalsByCategory, formatAmount };

@@ -46,20 +46,117 @@ export type ActivitySummary = {
   readonly heatmap: ReadonlyArray<HeatmapDay>;
 };
 
+export const EXPENSE_CATEGORIES = [
+  'restaurants',
+  'fast_food',
+  'groceries',
+  'fuel',
+  'transport',
+  'home',
+  'shopping',
+  'health',
+  'entertainment',
+  'events',
+  'travel',
+  'communications',
+  'insurance',
+  'government',
+  'subscriptions',
+  'utilities',
+  'bills',
+  'other',
+] as const;
+
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+export type ExpenseType = 'receipt' | 'card_alert' | 'bill';
+
 export type ExpenseDto = {
   readonly id: string;
   readonly vendor: string;
-  readonly category: string;
+  readonly category: ExpenseCategory;
   readonly amount: number;
   readonly currency: string;
-  readonly type: 'receipt' | 'card_alert' | 'bill';
+  readonly type: ExpenseType;
   readonly transactionDate: string;
   readonly notes?: string;
+  readonly originalVendor?: string;
+  readonly originalCategory?: ExpenseCategory;
+  readonly originalType?: ExpenseType;
 };
 
 export type ExpenseTotal = {
   readonly currency: string;
   readonly total: number;
+};
+
+export type ExpenseCategoryBreakdown = {
+  readonly category: ExpenseCategory;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+};
+
+export type ExpenseTypeBreakdown = {
+  readonly type: ExpenseType;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+};
+
+export type ExpensePacePrimary = {
+  readonly currency: string;
+  readonly currentTotal: number;
+  readonly projectedTotal: number | null;
+  readonly throughDayOfMonth: number;
+  readonly daysInMonth: number;
+  readonly comparableHistoricToDate: number | null;
+  readonly historicAvgMonthlyTotal: number | null;
+  readonly percentVsHistoric: number | null;
+  readonly baselineMonthCount: number;
+  readonly isCurrentMonth: boolean;
+};
+
+export type ExpenseTrajectoryPoint = {
+  readonly day: number;
+  readonly actual: number | null;
+  readonly expected: number | null;
+};
+
+export type ExpenseCategoryDelta = {
+  readonly category: ExpenseCategory;
+  readonly currency: string;
+  readonly currentTotal: number;
+  readonly currentCount: number;
+  readonly comparableHistoricAvg: number | null;
+  readonly percentVsHistoric: number | null;
+};
+
+export type ExpenseChargeDto = {
+  readonly id: string;
+  readonly vendor: string;
+  readonly amount: number;
+  readonly currency: string;
+  readonly transactionDate: string;
+  readonly category: ExpenseCategory;
+};
+
+export type ExpensesMonthResponse = {
+  readonly month: string; // YYYY-MM
+  readonly expenses: ReadonlyArray<ExpenseDto>;
+  readonly totals: ReadonlyArray<ExpenseTotal>;
+  readonly byCategory: ReadonlyArray<ExpenseCategoryBreakdown>;
+  readonly byType: ReadonlyArray<ExpenseTypeBreakdown>;
+  readonly pace: ExpensePacePrimary;
+  readonly trajectory: ReadonlyArray<ExpenseTrajectoryPoint>;
+  readonly categoryDeltas: ReadonlyArray<ExpenseCategoryDelta>;
+  readonly topCharges: ReadonlyArray<ExpenseChargeDto>;
+};
+
+export type UpdateExpenseBody = {
+  readonly userVendor?: string | null;
+  readonly userCategory?: ExpenseCategory | null;
+  readonly userType?: ExpenseType | null;
 };
 
 export type DashboardResponse = {
@@ -89,4 +186,11 @@ export type UpdateReminderBody = {
   readonly dueDate?: string;
   readonly status?: 'completed' | 'pending';
   readonly snoozeMinutes?: number;
+};
+
+export type CreateManualExpenseBody = {
+  readonly vendor: string;
+  readonly amount: number;
+  readonly currency?: 'ILS' | 'USD' | 'EUR' | 'GBP' | 'JPY';
+  readonly transactionDate?: string;
 };

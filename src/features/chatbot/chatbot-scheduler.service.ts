@@ -4,10 +4,10 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { ChatbotService } from './chatbot.service';
 import {
   birthdayReminder,
+  dailyExpensesLog,
   dailySummary,
   earthquakeMonitor,
   exerciseReminder,
-  expensesSummary,
   footballUpdate,
   makavdiaUpdate,
   polymarketUpdate,
@@ -16,7 +16,6 @@ import {
   sportsCalendar,
   upcomingEventAlert,
   weeklyExerciseSummary,
-  weeklyExpensesDigest,
 } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 
@@ -45,9 +44,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot, this.chatbotService));
 
-    createSchedule(`00 23 * * *`, async () => expensesSummary(this.bot));
-
-    createSchedule(`30 23 * * 6`, async () => weeklyExpensesDigest(this.bot));
+    createSchedule(`00 23 * * *`, async () => dailyExpensesLog(this.bot));
 
     createSchedule(`15 * * * *`, async () => reminderCheck(this.bot));
 

@@ -30,6 +30,7 @@
     "dev:build": "tsc --watch",
     "dev:debug": "tsx watch --inspect src/index.ts",
     "debug": "node --inspect dist/index.js",
+    "seed:expenses": "tsx scripts/seed-mock-data.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
@@ -124,6 +125,7 @@
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "4.1.7"
+    "vitest": "4.1.7",
+    "xlsx": "^0.18.5"
   }
 }

@@ -1,6 +1,6 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import { addDays, startOfDay, startOfWeek, subDays } from 'date-fns';
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { addDays, endOfMonth, startOfDay, startOfWeek, subDays, subMonths } from 'date-fns';
+import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { env } from 'node:process';
@@ -8,32 +8,51 @@ import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { registry } from '@core/openapi';
 import { Logger } from '@core/utils';
-import { listEvents } from '@services/google-calendar';
+import { deleteEvent, listEvents } from '@services/google-calendar';
 import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-calendar';
-import {
-  createReminder,
-  deleteReminder,
-  getReminderById,
-  getRemindersByUser,
-  updateReminder,
-  updateReminderStatus,
-} from '@shared/reminders';
-import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
-import { createManualExpense, getExpensesBetween, SUPPORTED_CURRENCIES, type Currency, type Expense } from '@shared/expenses';
-import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import { notify } from '@services/notifier';
+import { getCurrentWeather, getForecastWeather } from '@services/weather';
+import {
+  createManualExpense,
+  type Currency,
+  DEFAULT_CURRENCY,
+  effectiveCategory,
+  effectiveType,
+  effectiveVendor,
+  type Expense,
+  EXPENSE_CATEGORIES,
+  type ExpenseCategory,
+  type ExpenseType,
+  getExpensesBetween,
+  SUPPORTED_CURRENCIES,
+} from '@shared/expenses';
+import { updateUserOverrides } from '@shared/expenses/mongo/expenses.repository';
+import { createReminder, deleteReminder, getPendingRemindersDueOnOrBefore, getReminderById, getRemindersCompletedBetween, updateReminder, updateReminderStatus } from '@shared/reminders';
+import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
 import { BOT_CONFIG } from '../chatbot.config';
+import { addExpenseToDailyLog } from '../schedulers';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
+  CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
   EventDto,
   ExerciseLogResponse,
+  ExpenseCategoryBreakdown,
+  ExpenseCategoryDelta,
+  ExpenseCategoryDto,
+  ExpenseChargeDto,
   ExpenseDto,
+  ExpensePacePrimary,
+  ExpensesMonthResponse,
   ExpenseTotal,
+  ExpenseTrajectoryPoint,
+  ExpenseTypeBreakdown,
+  ExpenseTypeDto,
   HeatmapDay,
   ReminderDto,
+  UpdateExpenseBody,
   UpdateReminderBody,
   WeatherSnapshot,
 } from './dto';
@@ -44,17 +63,24 @@ const logger = new Logger('ChatbotApiController');
 
 const DEFAULT_WEATHER_LOCATION = 'Tel Aviv';
 const HEATMAP_WEEKS = 13;
+const EXPENSE_TYPES: ReadonlyArray<ExpenseType> = ['receipt', 'card_alert', 'bill'];
 
 // --- Zod schemas for OpenAPI ---
+
+const ExpenseCategoryEnum = z.enum(EXPENSE_CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]]);
+const ExpenseTypeEnum = z.enum(EXPENSE_TYPES as unknown as [ExpenseType, ...ExpenseType[]]);
 
 const ExpenseDtoSchema = z.object({
   id: z.string(),
   vendor: z.string(),
-  category: z.string(),
+  category: ExpenseCategoryEnum,
   amount: z.number(),
   currency: z.string(),
-  type: z.enum(['receipt', 'card_alert', 'bill']),
+  type: ExpenseTypeEnum,
   transactionDate: z.string(),
+  originalVendor: z.string().optional(),
+  originalCategory: ExpenseCategoryEnum.optional(),
+  originalType: ExpenseTypeEnum.optional(),
 });
 
 const ReminderDtoSchema = z.object({
@@ -117,6 +143,55 @@ const DashboardResponseSchema = z.object({
   expenseTotals: z.array(z.object({ currency: z.string(), total: z.number() })),
 });
 
+const ExpensePacePrimarySchema = z.object({
+  currency: z.string(),
+  currentTotal: z.number(),
+  projectedTotal: z.number().nullable(),
+  throughDayOfMonth: z.number(),
+  daysInMonth: z.number(),
+  comparableHistoricToDate: z.number().nullable(),
+  historicAvgMonthlyTotal: z.number().nullable(),
+  percentVsHistoric: z.number().nullable(),
+  baselineMonthCount: z.number(),
+  isCurrentMonth: z.boolean(),
+});
+
+const ExpenseTrajectoryPointSchema = z.object({
+  day: z.number(),
+  actual: z.number().nullable(),
+  expected: z.number().nullable(),
+});
+
+const ExpenseCategoryDeltaSchema = z.object({
+  category: ExpenseCategoryEnum,
+  currency: z.string(),
+  currentTotal: z.number(),
+  currentCount: z.number(),
+  comparableHistoricAvg: z.number().nullable(),
+  percentVsHistoric: z.number().nullable(),
+});
+
+const ExpenseChargeDtoSchema = z.object({
+  id: z.string(),
+  vendor: z.string(),
+  amount: z.number(),
+  currency: z.string(),
+  transactionDate: z.string(),
+  category: ExpenseCategoryEnum,
+});
+
+const ExpensesMonthResponseSchema = z.object({
+  month: z.string(),
+  expenses: z.array(ExpenseDtoSchema),
+  totals: z.array(z.object({ currency: z.string(), total: z.number() })),
+  byCategory: z.array(z.object({ category: ExpenseCategoryEnum, currency: z.string(), total: z.number(), count: z.number() })),
+  byType: z.array(z.object({ type: ExpenseTypeEnum, currency: z.string(), total: z.number(), count: z.number() })),
+  pace: ExpensePacePrimarySchema,
+  trajectory: z.array(ExpenseTrajectoryPointSchema),
+  categoryDeltas: z.array(ExpenseCategoryDeltaSchema),
+  topCharges: z.array(ExpenseChargeDtoSchema),
+});
+
 const CreateReminderBodySchema = z.object({
   message: z.string(),
   dueDate: z.string().describe('ISO 8601 date-time'),
@@ -129,7 +204,15 @@ const UpdateReminderBodySchema = z.object({
   snoozeMinutes: z.number().optional(),
 });
 
-const CreateManualExpenseBodySchema = z.object({
+const UpdateExpenseBodySchema = z.object({
+  userVendor: z.string().nullable().optional(),
+  userCategory: ExpenseCategoryEnum.nullable().optional(),
+  userType: ExpenseTypeEnum.nullable().optional(),
+});
+
+const ExpenseLogAckSchema = z.object({ logged: z.literal(true) });
+
+const LogExpenseBodySchema = z.object({
   vendor: z.string(),
   amount: z.number().positive(),
   currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]).optional(),
@@ -140,6 +223,13 @@ const ExerciseLogResponseSchema = z.object({
   alreadyDoneToday: z.boolean(),
 });
 
+const CreateManualExpenseBodySchema = z.object({
+  vendor: z.string().min(1),
+  amount: z.number().positive(),
+  currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]).optional(),
+  transactionDate: z.string().optional().describe('ISO 8601; defaults to now'),
+});
+
 const ErrorSchema = z.object({ error: z.string() });
 
 // --- OpenAPI route registrations ---
@@ -148,12 +238,22 @@ registry.registerPath({
   method: 'get',
   path: '/api/chatbot/dashboard',
   tags: ['Chatbot'],
-  summary: 'Get dashboard data (weather, events, reminders, activity, expenses)',
-  request: {
-    query: z.object({ date: z.string().optional().describe('YYYY-MM-DD; defaults to today') }),
-  },
+  summary: 'Get dashboard data (weather, events, reminders, exercise activity, expenses summary)',
+  request: { query: z.object({ date: z.string().optional().describe('YYYY-MM-DD; defaults to today') }) },
   responses: {
     200: { description: 'Dashboard payload', content: { 'application/json': { schema: DashboardResponseSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/expenses',
+  tags: ['Chatbot'],
+  summary: 'Get expenses for a month with pace, trajectory, category deltas, and top charges vs trailing-3 baseline',
+  request: { query: z.object({ month: z.string().optional().describe('YYYY-MM; defaults to current month') }) },
+  responses: {
+    200: { description: 'Expenses month payload', content: { 'application/json': { schema: ExpensesMonthResponseSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
   },
 });
@@ -162,7 +262,7 @@ registry.registerPath({
   method: 'post',
   path: '/api/chatbot/exercise/log',
   tags: ['Chatbot'],
-  summary: 'Log today\'s exercise (idempotent per day)',
+  summary: "Log today's exercise (idempotent per day)",
   responses: {
     200: { description: 'Logged or already-done', content: { 'application/json': { schema: ExerciseLogResponseSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
@@ -174,9 +274,7 @@ registry.registerPath({
   path: '/api/chatbot/reminders',
   tags: ['Chatbot'],
   summary: 'Create a reminder',
-  request: {
-    body: { content: { 'application/json': { schema: CreateReminderBodySchema } } },
-  },
+  request: { body: { content: { 'application/json': { schema: CreateReminderBodySchema } } } },
   responses: {
     201: { description: 'Created', content: { 'application/json': { schema: ReminderDtoSchema } } },
     400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
@@ -216,15 +314,58 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: 'delete',
+  path: '/api/chatbot/calendar/events/{id}',
+  tags: ['Chatbot'],
+  summary: 'Delete a Google Calendar event from the primary calendar',
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Deleted' },
+    400: { description: 'Invalid id', content: { 'application/json': { schema: ErrorSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/api/chatbot/expenses/{id}',
+  tags: ['Chatbot'],
+  summary: 'Override the AI-inferred vendor / category / type for an expense (null clears the override)',
+  request: {
+    params: z.object({ id: z.string() }),
+    body: { content: { 'application/json': { schema: UpdateExpenseBodySchema } } },
+  },
+  responses: {
+    200: { description: 'Updated', content: { 'application/json': { schema: ExpenseDtoSchema } } },
+    400: { description: 'Invalid id/body', content: { 'application/json': { schema: ErrorSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
   method: 'post',
   path: '/api/chatbot/expenses',
   tags: ['Chatbot'],
-  summary: 'Add a manual expense (LLM infers category + type; currency defaults to ILS, transactionDate=now)',
-  request: {
-    body: { content: { 'application/json': { schema: CreateManualExpenseBodySchema } } },
-  },
+  summary: 'Log an expense for the daily 23:00 transactions report (in-memory only, not persisted)',
+  request: { body: { content: { 'application/json': { schema: LogExpenseBodySchema } } } },
   responses: {
-    201: { description: 'Created', content: { 'application/json': { schema: ExpenseDtoSchema } } },
+    202: { description: 'Logged for end-of-day report', content: { 'application/json': { schema: ExpenseLogAckSchema } } },
+    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/chatbot/expenses/manual',
+  tags: ['Chatbot'],
+  summary: 'Create a manual expense (persists to mongo; AI-categorized; user can override later via PATCH)',
+  request: { body: { content: { 'application/json': { schema: CreateManualExpenseBodySchema } } } },
+  responses: {
+    201: { description: 'Created expense', content: { 'application/json': { schema: ExpenseDtoSchema } } },
     400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
   },
@@ -253,13 +394,7 @@ function toEventDto(event: GoogleCalendarEvent, fallbackId: string): EventDto {
   };
 }
 
-function toReminderDto(r: {
-  _id: ObjectId;
-  message: string;
-  dueDate: Date;
-  status: 'pending' | 'snoozed' | 'completed';
-  snoozedUntil?: Date;
-}): ReminderDto {
+function toReminderDto(r: { _id: ObjectId; message: string; dueDate: Date; status: 'pending' | 'snoozed' | 'completed'; snoozedUntil?: Date }): ReminderDto {
   return {
     id: r._id.toString(),
     message: r.message,
@@ -272,10 +407,7 @@ function toReminderDto(r: {
 async function buildWeatherSnapshot(): Promise<WeatherSnapshot> {
   try {
     const tomorrowDate = formatInTimeZone(addDays(new Date(), 1), DEFAULT_TIMEZONE, 'yyyy-MM-dd');
-    const [now, tomorrow] = await Promise.all([
-      getCurrentWeather(DEFAULT_WEATHER_LOCATION).catch(() => null),
-      getForecastWeather(DEFAULT_WEATHER_LOCATION, tomorrowDate).catch(() => null),
-    ]);
+    const [now, tomorrow] = await Promise.all([getCurrentWeather(DEFAULT_WEATHER_LOCATION).catch(() => null), getForecastWeather(DEFAULT_WEATHER_LOCATION, tomorrowDate).catch(() => null)]);
 
     return {
       now: now
@@ -311,18 +443,24 @@ function parseSelectedDate(raw: unknown): Date {
 }
 
 function toExpenseDto(e: Expense): ExpenseDto {
+  const vendor = effectiveVendor(e);
+  const category = effectiveCategory(e) as ExpenseCategoryDto;
+  const type = effectiveType(e) as ExpenseTypeDto;
   return {
     id: e._id!.toString(),
-    vendor: e.vendor,
-    category: e.category,
+    vendor,
+    category,
     amount: e.amount,
     currency: e.currency,
-    type: e.type,
+    type,
     transactionDate: e.transactionDate.toISOString(),
+    originalVendor: e.userVendor && e.vendor !== e.userVendor ? e.vendor : undefined,
+    originalCategory: e.userCategory && e.category !== e.userCategory ? (e.category as ExpenseCategoryDto) : undefined,
+    originalType: e.userType && e.type !== e.userType ? (e.type as ExpenseTypeDto) : undefined,
   };
 }
 
-const CURRENCY_SYMBOL_MAP: Record<string, Currency> = { '₪': 'ILS', '$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY' };
+const CURRENCY_SYMBOL_MAP: Record<string, Currency> = { '₪': 'ILS', $: 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY' };
 
 function parseExpensePayload(raw: unknown): { vendor: string | null; amount: number | null; currency?: Currency } {
   const body = (raw ?? {}) as Record<string, unknown>;
@@ -363,6 +501,276 @@ function totalsByCurrency(expenses: ReadonlyArray<Expense>): ExpenseTotal[] {
   return Array.from(acc.entries()).map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
 }
 
+function categoryBreakdown(expenses: ReadonlyArray<Expense>): ExpenseCategoryBreakdown[] {
+  const map = new Map<string, ExpenseCategoryBreakdown>();
+  for (const e of expenses) {
+    const cat = effectiveCategory(e) as ExpenseCategoryDto;
+    const key = `${cat}|${e.currency}`;
+    const existing = map.get(key);
+    if (existing) map.set(key, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
+    else map.set(key, { category: cat, currency: e.currency, total: e.amount, count: 1 });
+  }
+  return Array.from(map.values())
+    .map((c) => ({ ...c, total: Math.round(c.total * 100) / 100 }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function typeBreakdown(expenses: ReadonlyArray<Expense>): ExpenseTypeBreakdown[] {
+  const map = new Map<string, ExpenseTypeBreakdown>();
+  for (const e of expenses) {
+    const t = effectiveType(e) as ExpenseTypeDto;
+    const key = `${t}|${e.currency}`;
+    const existing = map.get(key);
+    if (existing) map.set(key, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
+    else map.set(key, { type: t, currency: e.currency, total: e.amount, count: 1 });
+  }
+  return Array.from(map.values())
+    .map((t) => ({ ...t, total: Math.round(t.total * 100) / 100 }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function parseSelectedMonth(raw: unknown): { ym: string; start: Date; endExclusive: Date } {
+  const todayYm = formatInTimeZone(new Date(), DEFAULT_TIMEZONE, 'yyyy-MM');
+  const ym = typeof raw === 'string' && /^\d{4}-\d{2}$/.test(raw) ? raw : todayYm;
+  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
+  const zoned = toZonedTime(start, DEFAULT_TIMEZONE);
+  const endDay = endOfMonth(zoned);
+  const endExclusive = fromZonedTime(formatInTimeZone(addDays(endDay, 1), DEFAULT_TIMEZONE, "yyyy-MM-dd'T'00:00:00"), DEFAULT_TIMEZONE);
+  return { ym, start, endExclusive };
+}
+
+function getMonthBoundaries(ym: string): { ym: string; start: Date; endExclusive: Date; daysInMonth: number } {
+  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
+  const startZoned = toZonedTime(start, DEFAULT_TIMEZONE);
+  const endDay = endOfMonth(startZoned);
+  const daysInMonth = endDay.getDate();
+  const endExclusive = fromZonedTime(formatInTimeZone(addDays(endDay, 1), DEFAULT_TIMEZONE, "yyyy-MM-dd'T'00:00:00"), DEFAULT_TIMEZONE);
+  return { ym, start, endExclusive, daysInMonth };
+}
+
+function prevYm(ym: string, monthsBack: number): string {
+  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
+  const prev = subMonths(toZonedTime(start, DEFAULT_TIMEZONE), monthsBack);
+  return formatInTimeZone(fromZonedTime(prev, DEFAULT_TIMEZONE), DEFAULT_TIMEZONE, 'yyyy-MM');
+}
+
+function zonedDayOfMonth(d: Date): number {
+  return parseInt(formatInTimeZone(d, DEFAULT_TIMEZONE, 'd'), 10);
+}
+
+function pickPrimaryCurrency(expenses: ReadonlyArray<Expense>): string {
+  if (expenses.length === 0) return DEFAULT_CURRENCY;
+  const totals = new Map<string, number>();
+  for (const e of expenses) totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount);
+  return [...totals.entries()].sort((a, b) => b[1] - a[1])[0][0];
+}
+
+type BaselineMonth = {
+  readonly ym: string;
+  readonly start: Date;
+  readonly endExclusive: Date;
+  readonly daysInMonth: number;
+  readonly expenses: ReadonlyArray<Expense>; // primary-currency only
+};
+
+type Baseline = {
+  readonly monthCount: number;
+  readonly months: ReadonlyArray<BaselineMonth>;
+  readonly avgFullMonthTotal: number; // mean of full-month totals across baseline months
+  readonly avgToDateTotal: number; // mean of (days 1..throughDay) totals across baseline months
+  readonly byCategoryAvg: Map<string, number>; // mean across baseline months (missing = 0)
+  readonly byCategoryMonthsPresent: Map<string, number>;
+  readonly byVendorAvg: Map<string, number>;
+  readonly byVendorMonthsPresent: Map<string, number>;
+  readonly allVendors: Set<string>;
+};
+
+function buildBaseline(allExpenses: ReadonlyArray<Expense>, selectedYm: string, throughDayOfSelected: number, primaryCurrency: string): Baseline {
+  const candidates: BaselineMonth[] = [];
+  for (let i = 1; i <= 3; i++) {
+    const b = getMonthBoundaries(prevYm(selectedYm, i));
+    const monthExp = allExpenses.filter((e) => e.currency === primaryCurrency && e.transactionDate >= b.start && e.transactionDate < b.endExclusive);
+    if (monthExp.length === 0) continue;
+    candidates.push({ ...b, expenses: monthExp });
+  }
+  const months = candidates;
+  const monthCount = months.length;
+
+  if (monthCount === 0) {
+    return {
+      monthCount: 0,
+      months: [],
+      avgFullMonthTotal: 0,
+      avgToDateTotal: 0,
+      byCategoryAvg: new Map(),
+      byCategoryMonthsPresent: new Map(),
+      byVendorAvg: new Map(),
+      byVendorMonthsPresent: new Map(),
+      allVendors: new Set(),
+    };
+  }
+
+  let sumFull = 0;
+  let sumToDate = 0;
+  const byCatTotals = new Map<string, number>();
+  const byCatPresent = new Map<string, number>();
+  const byVenTotals = new Map<string, number>();
+  const byVenPresent = new Map<string, number>();
+  const allVendors = new Set<string>();
+
+  for (const m of months) {
+    const seenCats = new Set<string>();
+    const seenVens = new Set<string>();
+    for (const e of m.expenses) {
+      sumFull += e.amount;
+      const day = zonedDayOfMonth(e.transactionDate);
+      // Cap "to-date" at min(throughDay, daysInMonth-of-this-baseline-month) so a baseline
+      // month shorter than the selected one is still scaled fairly.
+      const compareThrough = Math.min(throughDayOfSelected, m.daysInMonth);
+      if (day <= compareThrough) sumToDate += e.amount;
+      const cat = effectiveCategory(e) as string;
+      const ven = effectiveVendor(e);
+      byCatTotals.set(cat, (byCatTotals.get(cat) ?? 0) + e.amount);
+      byVenTotals.set(ven, (byVenTotals.get(ven) ?? 0) + e.amount);
+      seenCats.add(cat);
+      seenVens.add(ven);
+      allVendors.add(ven);
+    }
+    for (const c of seenCats) byCatPresent.set(c, (byCatPresent.get(c) ?? 0) + 1);
+    for (const v of seenVens) byVenPresent.set(v, (byVenPresent.get(v) ?? 0) + 1);
+  }
+
+  const avgFullMonthTotal = sumFull / monthCount;
+  const avgToDateTotal = sumToDate / monthCount;
+  const byCategoryAvg = new Map<string, number>();
+  for (const [k, v] of byCatTotals) byCategoryAvg.set(k, v / monthCount);
+  const byVendorAvg = new Map<string, number>();
+  for (const [k, v] of byVenTotals) byVendorAvg.set(k, v / monthCount);
+
+  return {
+    monthCount,
+    months,
+    avgFullMonthTotal,
+    avgToDateTotal,
+    byCategoryAvg,
+    byCategoryMonthsPresent: byCatPresent,
+    byVendorAvg,
+    byVendorMonthsPresent: byVenPresent,
+    allVendors,
+  };
+}
+
+function computePace(
+  monthExpensesPrimary: ReadonlyArray<Expense>,
+  baseline: Baseline,
+  primaryCurrency: string,
+  selectedYm: string,
+  daysInSelectedMonth: number,
+  isCurrentMonth: boolean,
+  todayDayOfMonth: number,
+): ExpensePacePrimary {
+  const throughDayOfMonth = isCurrentMonth ? Math.min(todayDayOfMonth, daysInSelectedMonth) : daysInSelectedMonth;
+
+  const currentTotal = monthExpensesPrimary.filter((e) => zonedDayOfMonth(e.transactionDate) <= throughDayOfMonth).reduce((s, e) => s + e.amount, 0);
+
+  const historicAvgMonthlyTotal = baseline.monthCount > 0 ? baseline.avgFullMonthTotal : null;
+  const comparableHistoricToDate = baseline.monthCount > 0 ? baseline.avgToDateTotal : null;
+
+  // Projection only meaningful for current (in-progress) month.
+  let projectedTotal: number | null = null;
+  if (isCurrentMonth && baseline.monthCount > 0) {
+    // projected = currentMTD + avgHistoricTail (avg of (fullMonth - mtdAtSameDay) across baseline)
+    let sumTail = 0;
+    for (const m of baseline.months) {
+      const fullTotal = m.expenses.reduce((s, e) => s + e.amount, 0);
+      const compareThrough = Math.min(throughDayOfMonth, m.daysInMonth);
+      const mtd = m.expenses.filter((e) => zonedDayOfMonth(e.transactionDate) <= compareThrough).reduce((s, e) => s + e.amount, 0);
+      sumTail += fullTotal - mtd;
+    }
+    const avgTail = sumTail / baseline.monthCount;
+    projectedTotal = round2(currentTotal + avgTail);
+  } else if (!isCurrentMonth) {
+    // For past months, "projected" equals the actual final total.
+    projectedTotal = round2(currentTotal);
+  }
+
+  const percentVsHistoric = comparableHistoricToDate !== null && comparableHistoricToDate > 0 ? Math.round(((currentTotal - comparableHistoricToDate) / comparableHistoricToDate) * 100) : null;
+
+  return {
+    currency: primaryCurrency,
+    currentTotal: round2(currentTotal),
+    projectedTotal,
+    throughDayOfMonth,
+    daysInMonth: daysInSelectedMonth,
+    comparableHistoricToDate: comparableHistoricToDate !== null ? round2(comparableHistoricToDate) : null,
+    historicAvgMonthlyTotal: historicAvgMonthlyTotal !== null ? round2(historicAvgMonthlyTotal) : null,
+    percentVsHistoric,
+    baselineMonthCount: baseline.monthCount,
+    isCurrentMonth,
+  };
+}
+
+function buildTrajectory(monthExpensesPrimary: ReadonlyArray<Expense>, baseline: Baseline, daysInSelectedMonth: number, isCurrentMonth: boolean, todayDayOfMonth: number): ExpenseTrajectoryPoint[] {
+  const dailyActual: number[] = new Array(daysInSelectedMonth + 1).fill(0);
+  for (const e of monthExpensesPrimary) {
+    const day = zonedDayOfMonth(e.transactionDate);
+    if (day >= 1 && day <= daysInSelectedMonth) dailyActual[day] += e.amount;
+  }
+  const avgFull = baseline.monthCount > 0 ? baseline.avgFullMonthTotal : null;
+  const points: ExpenseTrajectoryPoint[] = [];
+  let cum = 0;
+  const lastActualDay = isCurrentMonth ? Math.min(todayDayOfMonth, daysInSelectedMonth) : daysInSelectedMonth;
+  for (let d = 1; d <= daysInSelectedMonth; d++) {
+    cum += dailyActual[d];
+    const actual = d <= lastActualDay ? round2(cum) : null;
+    const expected = avgFull !== null ? round2(avgFull * (d / daysInSelectedMonth)) : null;
+    points.push({ day: d, actual, expected });
+  }
+  return points;
+}
+
+function enrichCategoryDeltas(monthExpensesPrimary: ReadonlyArray<Expense>, baseline: Baseline, primaryCurrency: string): ExpenseCategoryDelta[] {
+  const totals = new Map<string, { total: number; count: number }>();
+  for (const e of monthExpensesPrimary) {
+    const cat = effectiveCategory(e) as string;
+    const cur = totals.get(cat) ?? { total: 0, count: 0 };
+    totals.set(cat, { total: cur.total + e.amount, count: cur.count + 1 });
+  }
+  const out: ExpenseCategoryDelta[] = [];
+  for (const [cat, { total, count }] of totals) {
+    const baseAvg = baseline.byCategoryAvg.get(cat) ?? null;
+    const present = baseline.byCategoryMonthsPresent.get(cat) ?? 0;
+    const showDelta = baseline.monthCount >= 2 && present >= 2 && baseAvg !== null && baseAvg > 0;
+    out.push({
+      category: cat as ExpenseCategoryDto,
+      currency: primaryCurrency,
+      currentTotal: round2(total),
+      currentCount: count,
+      comparableHistoricAvg: baseAvg !== null ? round2(baseAvg) : null,
+      percentVsHistoric: showDelta ? Math.round(((total - (baseAvg as number)) / (baseAvg as number)) * 100) : null,
+    });
+  }
+  return out.sort((a, b) => b.currentTotal - a.currentTotal);
+}
+
+function computeTopCharges(monthExpensesPrimary: ReadonlyArray<Expense>, limit: number): ExpenseChargeDto[] {
+  return [...monthExpensesPrimary]
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, limit)
+    .map((e) => ({
+      id: e._id!.toString(),
+      vendor: effectiveVendor(e),
+      amount: round2(e.amount),
+      currency: e.currency,
+      transactionDate: e.transactionDate.toISOString(),
+      category: effectiveCategory(e) as ExpenseCategoryDto,
+    }));
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
   try {
     const timeMin = date.toISOString();
@@ -375,7 +783,7 @@ async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
 }
 
 export function registerChatbotApiRoutes(app: Express): void {
-  app.post('/api/chatbot/expenses', async (req: Request, res: Response<ExpenseDto | { error: string }>) => {
+  app.post('/api/chatbot/expenses', (req: Request, res: Response<{ logged: true } | { error: string }>) => {
     notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
     const expectedToken = env.EXPENSES_INGEST_TOKEN;
     if (!expectedToken) {
@@ -389,26 +797,21 @@ export function registerChatbotApiRoutes(app: Express): void {
       res.status(401).json({ error: 'unauthorized' });
       return;
     }
-    try {
-      const parsed = parseExpensePayload(req.body);
-      if (!parsed.vendor) {
-        res.status(400).json({ error: 'vendor_required' });
-        return;
-      }
-      if (parsed.amount === null) {
-        res.status(400).json({ error: 'amount_required' });
-        return;
-      }
-      if (parsed.currency && !SUPPORTED_CURRENCIES.includes(parsed.currency)) {
-        res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
-        return;
-      }
-      const created = await createManualExpense({ vendor: parsed.vendor, amount: parsed.amount, currency: parsed.currency });
-      res.status(201).json(toExpenseDto(created));
-    } catch (err) {
-      logger.error(`expense create failed: ${err}`);
-      res.status(500).json({ error: 'create_failed' });
+    const parsed = parseExpensePayload(req.body);
+    if (!parsed.vendor) {
+      res.status(400).json({ error: 'vendor_required' });
+      return;
     }
+    if (parsed.amount === null) {
+      res.status(400).json({ error: 'amount_required' });
+      return;
+    }
+    if (parsed.currency && !SUPPORTED_CURRENCIES.includes(parsed.currency)) {
+      res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
+      return;
+    }
+    addExpenseToDailyLog({ vendor: parsed.vendor, amount: parsed.amount, currency: parsed.currency ?? DEFAULT_CURRENCY });
+    res.status(202).json({ logged: true });
   });
 
   app.use('/api/chatbot', chatbotAuthMiddleware);
@@ -420,13 +823,15 @@ export function registerChatbotApiRoutes(app: Express): void {
       const selectedDate = parseSelectedDate(req.query.date);
       const selectedKey = dateKey(selectedDate);
       const isToday = selectedKey === dateKey(now);
+      const selectedDayEnd = addDays(selectedDate, 1);
 
-      const [weather, googleEvents, reminders, activity, dayExpenses] = await Promise.all([
+      const [weather, googleEvents, pendingReminders, completedReminders, activity, dayExpenses] = await Promise.all([
         isToday ? buildWeatherSnapshot() : Promise.resolve(null),
         fetchEventsForDate(selectedDate),
-        getRemindersByUser(chatId, true),
+        getPendingRemindersDueOnOrBefore(chatId, selectedDayEnd),
+        getRemindersCompletedBetween(chatId, selectedDate, selectedDayEnd),
         buildActivitySummary(chatId),
-        getExpensesBetween(selectedDate, addDays(selectedDate, 1)).catch((err) => {
+        getExpensesBetween(selectedDate, selectedDayEnd).catch((err) => {
           logger.warn(`Failed to fetch expenses for ${selectedKey}: ${err}`);
           return [] as Expense[];
         }),
@@ -435,8 +840,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       const eventDtos = googleEvents.map((event, idx) => toEventDto(event, `event-${idx}`));
       const birthdays = eventDtos.filter((e) => e.isBirthday);
       const events = eventDtos.filter((e) => !e.isBirthday);
-
-      const dayReminders = reminders.filter((r) => dateKey(r.dueDate) === selectedKey);
+      const reminders = [...pendingReminders, ...completedReminders];
 
       res.json({
         date: selectedKey,
@@ -444,7 +848,7 @@ export function registerChatbotApiRoutes(app: Express): void {
         weather,
         birthdays,
         events,
-        reminders: dayReminders.map(toReminderDto),
+        reminders: reminders.map(toReminderDto),
         activity,
         expenses: dayExpenses.map(toExpenseDto),
         expenseTotals: totalsByCurrency(dayExpenses),
@@ -452,6 +856,57 @@ export function registerChatbotApiRoutes(app: Express): void {
     } catch (err) {
       logger.error(`dashboard failed: ${err}`);
       res.status(500).json({ error: 'dashboard_failed' });
+    }
+  });
+
+  app.get('/api/chatbot/expenses', async (req: Request, res: Response<ExpensesMonthResponse | { error: string }>) => {
+    try {
+      const { ym, start, endExclusive, daysInMonth } = (() => {
+        const parsed = parseSelectedMonth(req.query.month);
+        return { ...parsed, daysInMonth: getMonthBoundaries(parsed.ym).daysInMonth };
+      })();
+
+      // Fetch a single range covering the selected month + 3 prior baseline months.
+      const baselineStart = getMonthBoundaries(prevYm(ym, 3)).start;
+      const fetchStart = start < baselineStart ? start : baselineStart;
+      const fetchEnd = endExclusive;
+
+      const allExpenses = await getExpensesBetween(fetchStart, fetchEnd);
+      const monthExpenses = allExpenses.filter((e) => e.transactionDate >= start && e.transactionDate < endExclusive);
+      const baselineFetched = allExpenses.filter((e) => e.transactionDate < start);
+
+      const todayYm = formatInTimeZone(new Date(), DEFAULT_TIMEZONE, 'yyyy-MM');
+      const isCurrentMonth = ym === todayYm;
+      const isPastMonth = ym < todayYm;
+      const todayDayOfMonth = zonedDayOfMonth(new Date());
+
+      const primaryCurrency = pickPrimaryCurrency(monthExpenses.length > 0 ? monthExpenses : baselineFetched);
+      const monthExpensesPrimary = monthExpenses.filter((e) => e.currency === primaryCurrency);
+
+      const throughDayForBaseline = isPastMonth ? daysInMonth : Math.min(todayDayOfMonth, daysInMonth);
+      const baseline = buildBaseline(baselineFetched, ym, throughDayForBaseline, primaryCurrency);
+
+      const pace = computePace(monthExpensesPrimary, baseline, primaryCurrency, ym, daysInMonth, isCurrentMonth, todayDayOfMonth);
+      const trajectory = buildTrajectory(monthExpensesPrimary, baseline, daysInMonth, isCurrentMonth, todayDayOfMonth);
+      const categoryDeltas = enrichCategoryDeltas(monthExpensesPrimary, baseline, primaryCurrency);
+      const topCharges = computeTopCharges(monthExpensesPrimary, 5);
+
+      const sorted = [...monthExpenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
+
+      res.json({
+        month: ym,
+        expenses: sorted.map(toExpenseDto),
+        totals: totalsByCurrency(sorted),
+        byCategory: categoryBreakdown(sorted),
+        byType: typeBreakdown(sorted),
+        pace,
+        trajectory,
+        categoryDeltas,
+        topCharges,
+      });
+    } catch (err) {
+      logger.error(`expenses month failed: ${err}`);
+      res.status(500).json({ error: 'expenses_failed' });
     }
   });
 
@@ -561,6 +1016,103 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
+  app.delete('/api/chatbot/calendar/events/:id', async (req: Request<{ id: string }>, res: Response) => {
+    try {
+      const { id } = req.params;
+      if (!id || typeof id !== 'string' || id.length > 1024) {
+        res.status(400).json({ error: 'invalid_id' });
+        return;
+      }
+      try {
+        await deleteEvent(id);
+      } catch (err) {
+        const status = (err as { code?: number; status?: number })?.code ?? (err as { code?: number; status?: number })?.status;
+        if (status === 404 || status === 410) {
+          res.status(404).json({ error: 'not_found' });
+          return;
+        }
+        throw err;
+      }
+      res.status(204).end();
+    } catch (err) {
+      logger.error(`calendar event delete failed: ${err}`);
+      res.status(500).json({ error: 'delete_failed' });
+    }
+  });
+
+  app.patch('/api/chatbot/expenses/:id', async (req: Request<{ id: string }, object, UpdateExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
+    try {
+      const { id } = req.params;
+      if (!ObjectId.isValid(id)) {
+        res.status(400).json({ error: 'invalid_id' });
+        return;
+      }
+      const body = req.body ?? {};
+      if (body.userCategory !== undefined && body.userCategory !== null && !EXPENSE_CATEGORIES.includes(body.userCategory)) {
+        res.status(400).json({ error: 'invalid_category' });
+        return;
+      }
+      if (body.userType !== undefined && body.userType !== null && !EXPENSE_TYPES.includes(body.userType)) {
+        res.status(400).json({ error: 'invalid_type' });
+        return;
+      }
+      if (body.userVendor !== undefined && body.userVendor !== null && typeof body.userVendor !== 'string') {
+        res.status(400).json({ error: 'invalid_vendor' });
+        return;
+      }
+      const updated = await updateUserOverrides(id, {
+        userVendor: body.userVendor === undefined ? undefined : body.userVendor,
+        userCategory: body.userCategory === undefined ? undefined : body.userCategory,
+        userType: body.userType === undefined ? undefined : body.userType,
+      });
+      if (!updated) {
+        res.status(404).json({ error: 'not_found' });
+        return;
+      }
+      res.json(toExpenseDto(updated));
+    } catch (err) {
+      logger.error(`expense update failed: ${err}`);
+      res.status(500).json({ error: 'update_failed' });
+    }
+  });
+
+  app.post('/api/chatbot/expenses/manual', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
+    try {
+      const body = req.body ?? ({} as CreateManualExpenseBody);
+      const vendor = typeof body.vendor === 'string' ? body.vendor.trim() : '';
+      if (!vendor) {
+        res.status(400).json({ error: 'vendor_required' });
+        return;
+      }
+      if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
+        res.status(400).json({ error: 'amount_must_be_positive_number' });
+        return;
+      }
+      if (body.currency && !SUPPORTED_CURRENCIES.includes(body.currency as Currency)) {
+        res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
+        return;
+      }
+      let transactionDate: Date | undefined;
+      if (body.transactionDate) {
+        const d = new Date(body.transactionDate);
+        if (Number.isNaN(d.getTime())) {
+          res.status(400).json({ error: 'invalid_transactionDate' });
+          return;
+        }
+        transactionDate = d;
+      }
+      const created = await createManualExpense({
+        vendor,
+        amount: body.amount,
+        currency: (body.currency as Currency) ?? undefined,
+        transactionDate,
+      });
+      res.status(201).json(toExpenseDto(created));
+    } catch (err) {
+      logger.error(`manual expense create failed: ${err}`);
+      res.status(500).json({ error: 'create_failed' });
+    }
+  });
 
   logger.log('Chatbot API routes registered at /api/chatbot/*');
 }

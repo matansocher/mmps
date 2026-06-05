@@ -5,16 +5,15 @@ import { z } from 'zod';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { createExpense } from '../mongo';
-import { DEFAULT_CURRENCY, type Currency } from '../types';
-import type { CreateExpenseData, Expense, ExpenseCategory, ExpenseType } from '../types';
+import { DEFAULT_CURRENCY, EXPENSE_CATEGORIES, type Currency, type ExpenseCategory } from '../types';
+import type { CreateExpenseData, Expense, ExpenseType } from '../types';
 
 const logger = new Logger('manual-entry');
 
-const CATEGORIES: ReadonlyArray<ExpenseCategory> = ['food', 'groceries', 'transport', 'subscriptions', 'utilities', 'shopping', 'entertainment', 'health', 'bills', 'other'];
 const TYPES: ReadonlyArray<ExpenseType> = ['receipt', 'card_alert', 'bill'];
 
 const categorizationSchema = z.object({
-  category: z.enum(CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]]).describe('The most fitting category for this expense'),
+  category: z.enum(EXPENSE_CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]]).describe('The most fitting category for this expense'),
   type: z
     .enum(TYPES as unknown as [ExpenseType, ...ExpenseType[]])
     .describe(
@@ -24,7 +23,25 @@ const categorizationSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `You normalize a manually entered expense. Given a vendor name and an ILS amount, classify it.
-- Categories: food (restaurants/cafes/delivery), groceries (supermarket), transport (taxi/gas/parking/public transit), subscriptions (Netflix/Spotify/cloud), utilities (electric/water/internet/cellular), shopping (clothes/gadgets/home), entertainment (movies/concerts/games), health (pharmacy/doctor), bills (insurance/tax/rent), other.
+- Categories:
+  • restaurants — sit-down restaurants, cafes, bars, delivery (Wolt, Glovo)
+  • fast_food — quick-service / takeaway food chains
+  • groceries — supermarkets, butchers, produce, beverages, mini-markets
+  • fuel — gas stations
+  • transport — taxis, public transit, parking, tolls, vehicle services
+  • home — furniture, hardware, household goods, pet stores
+  • shopping — clothing, electronics, general retail
+  • health — pharmacies, doctors, clinics, dental
+  • entertainment — movies, gaming, leisure activities
+  • events — ticketed events, nightlife
+  • travel — hotels, accommodation, flights
+  • communications — internet, mobile, cable, computers/phones
+  • insurance — life, health, car, home insurance
+  • government — tolls, taxes, fines, government fees
+  • subscriptions — Netflix, Spotify, cloud services
+  • utilities — electric, water, gas
+  • bills — rent, recurring miscellaneous
+  • other — anything that doesn't fit
 - Types: "receipt" for one-off purchases, "bill" for recurring service charges (utilities, insurance, rent, taxes), "card_alert" only when clearly a card alert.
 - Clean obvious vendor typos when confident; otherwise preserve input casing.
 Return ONLY the structured output.`;
@@ -33,6 +50,7 @@ export type ManualExpenseInput = {
   readonly vendor: string;
   readonly amount: number;
   readonly currency?: Currency;
+  readonly transactionDate?: Date;
 };
 
 async function categorize(input: ManualExpenseInput): Promise<z.infer<typeof categorizationSchema>> {
@@ -68,7 +86,7 @@ export async function createManualExpense(input: ManualExpenseInput): Promise<Ex
     category: llm.category,
     amount: Math.round(input.amount * 100) / 100,
     currency: input.currency ?? DEFAULT_CURRENCY,
-    transactionDate: now,
+    transactionDate: input.transactionDate ?? now,
   };
 
   const insert = await createExpense(data);

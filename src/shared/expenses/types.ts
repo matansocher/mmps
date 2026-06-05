@@ -1,16 +1,69 @@
 import type { ObjectId } from 'mongodb';
 
-export type ExpenseCategory =
-  | 'food'
-  | 'groceries'
-  | 'transport'
-  | 'subscriptions'
-  | 'utilities'
-  | 'shopping'
-  | 'entertainment'
-  | 'health'
-  | 'bills'
-  | 'other';
+export const EXPENSE_CATEGORIES = [
+  'restaurants',
+  'fast_food',
+  'groceries',
+  'fuel',
+  'transport',
+  'home',
+  'shopping',
+  'health',
+  'entertainment',
+  'events',
+  'travel',
+  'communications',
+  'insurance',
+  'government',
+  'subscriptions',
+  'utilities',
+  'bills',
+  'other',
+] as const;
+
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+export const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
+  restaurants: 'Restaurants',
+  fast_food: 'Fast food',
+  groceries: 'Groceries',
+  fuel: 'Fuel',
+  transport: 'Transport',
+  home: 'Home',
+  shopping: 'Shopping',
+  health: 'Health',
+  entertainment: 'Entertainment',
+  events: 'Events',
+  travel: 'Travel',
+  communications: 'Communications',
+  insurance: 'Insurance',
+  government: 'Government',
+  subscriptions: 'Subscriptions',
+  utilities: 'Utilities',
+  bills: 'Bills',
+  other: 'Other',
+};
+
+export const CATEGORY_EMOJI: Record<ExpenseCategory, string> = {
+  restaurants: '🍽️',
+  fast_food: '🍔',
+  groceries: '🛒',
+  fuel: '⛽',
+  transport: '🚗',
+  home: '🛋️',
+  shopping: '🛍️',
+  health: '💊',
+  entertainment: '🎬',
+  events: '🎉',
+  travel: '✈️',
+  communications: '📡',
+  insurance: '🛡️',
+  government: '🏛️',
+  subscriptions: '📅',
+  utilities: '💡',
+  bills: '🧾',
+  other: '💳',
+};
 
 export type ExpenseType = 'receipt' | 'card_alert' | 'bill';
 
@@ -24,7 +77,9 @@ export type Expense = {
   readonly type: ExpenseType;
   readonly vendor: string;
   readonly category: ExpenseCategory;
+  readonly userVendor?: string;
   readonly userCategory?: ExpenseCategory;
+  readonly userType?: ExpenseType;
   readonly amount: number;
   readonly currency: string;
   readonly transactionDate: Date;

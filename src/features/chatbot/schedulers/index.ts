@@ -1,8 +1,8 @@
 export { birthdayReminder } from './birthday-reminder';
+export { dailyExpensesLog, addExpenseToDailyLog } from './daily-expenses-log';
 export { dailySummary } from './daily-summary';
 export { earthquakeMonitor } from './earthquake-monitor';
 export { emailSummary } from './email-summary';
-export { expensesSummary } from './expenses-summary';
 export { exerciseReminder } from './exercise-reminder';
 export { footballPredictions } from './football-predictions';
 export { footballUpdate } from './football-update';
@@ -11,7 +11,6 @@ export { makavdiaUpdate } from './makavdia-update';
 export { reminderCheck } from './reminder-check';
 export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
-export { weeklyExpensesDigest } from './weekly-expenses-digest';
 export { youtubeCheck } from './youtube-check';
 export { polymarketUpdate } from './polymarket-update';
 export { rainRadarAlert } from './rain-radar-alert';
