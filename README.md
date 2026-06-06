@@ -28,7 +28,7 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 | `CHILLI`   | Persona bot — replies as the user's cat in Hebrew                           |
 | `COACH`    | Sports analytics, predictions, schedules. Bundled mini-app (`apps/coach-web`) |
 | `WOLT`     | Wolt restaurant availability watcher + notifications                        |
-| `WORLDLY`  | Geography quiz / education. Mini-app (`apps/worldly-web`)                   |
+| `WORLDLY`  | Geography quiz / education                                                  |
 
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
@@ -57,7 +57,6 @@ npm run docs:dev           # VitePress docs locally
 
 # Mini-app workspaces
 npm run dev:coach-web
-npm run dev:worldly-web
 ```
 
 ### For AI agents (Claude Code, Copilot, Cursor, …)

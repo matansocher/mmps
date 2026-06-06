@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { WorldlyLauncherService } from '@src/features/worldly/launcher.service';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from '@src/features/worldly/worldly.config';
 import { WorldlyController } from '@src/features/worldly/worldly.controller';
 import { buildCallbackQueryUpdate, buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
@@ -49,13 +48,12 @@ describe('WorldlyController E2E', () => {
     vi.clearAllMocks();
     testBot = createTestBot(BOT_CONFIG);
     service = createWorldlyServiceStub();
-    const launcher = new WorldlyLauncherService(testBot.bot);
-    const controller = new WorldlyController(service, testBot.bot, launcher);
+    const controller = new WorldlyController(service, testBot.bot);
     controller.init();
   });
 
   afterEach(() => {
-    delete process.env.WORLDLY_MINI_APP_URL;
+    vi.clearAllMocks();
   });
 
   describe('/start', () => {
@@ -80,25 +78,6 @@ describe('WorldlyController E2E', () => {
 
       expect(mocks.updateSubscription).toHaveBeenCalledWith(expect.any(Number), { isActive: true });
       expect(mocks.addSubscription).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('/app', () => {
-    it('sends the mini-app launcher when the URL is configured', async () => {
-      process.env.WORLDLY_MINI_APP_URL = 'https://worldly.example.com';
-
-      await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/app' }));
-
-      const sent = testBot.transport.callsByMethod('sendMessage');
-      expect(sent).toHaveLength(1);
-      expect(sent[0].payload.reply_markup.inline_keyboard[0][0].web_app.url).toEqual('https://worldly.example.com');
-    });
-
-    it('warns the user when the mini-app URL is missing', async () => {
-      await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/app' }));
-
-      const sent = testBot.transport.callsByMethod('sendMessage');
-      expect(sent[0].payload.text).toContain('עוד לא מוכנה');
     });
   });
 
