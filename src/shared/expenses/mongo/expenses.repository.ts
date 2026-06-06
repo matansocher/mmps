@@ -46,6 +46,71 @@ export async function getExpensesByCategory(category: ExpenseCategory, from: Dat
     .toArray();
 }
 
+export async function getAllExpensesByEffectiveCategory(category: ExpenseCategory): Promise<Expense[]> {
+  const col = getCollection();
+  return col
+    .find({ $or: [{ userCategory: category }, { userCategory: { $exists: false }, category }] })
+    .sort({ transactionDate: -1 })
+    .toArray();
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export async function getAllExpensesByEffectiveVendor(vendorName: string): Promise<Expense[]> {
+  const col = getCollection();
+  const safe = escapeRegex(vendorName.trim());
+  const exact = new RegExp(`^${safe}$`, 'i');
+  return col
+    .find({
+      $or: [
+        { userVendor: exact },
+        { userVendor: { $exists: false }, vendor: exact },
+        { userVendor: null, vendor: exact },
+      ],
+    })
+    .sort({ transactionDate: -1 })
+    .toArray();
+}
+
+export type BulkVendorUpdate = {
+  readonly userVendor?: string | null;
+  readonly userCategory?: ExpenseCategory | null;
+};
+
+export async function bulkUpdateExpensesByEffectiveVendor(vendorName: string, updates: BulkVendorUpdate): Promise<number> {
+  const col = getCollection();
+  const safe = escapeRegex(vendorName.trim());
+  const exact = new RegExp(`^${safe}$`, 'i');
+  const filter = {
+    $or: [
+      { userVendor: exact },
+      { userVendor: { $exists: false }, vendor: exact },
+      { userVendor: null, vendor: exact },
+    ],
+  };
+  const set: Record<string, unknown> = {};
+  const unset: Record<string, ''> = {};
+
+  if (updates.userVendor !== undefined) {
+    if (updates.userVendor === null || updates.userVendor === '') unset.userVendor = '';
+    else set.userVendor = updates.userVendor.trim();
+  }
+  if (updates.userCategory !== undefined) {
+    if (updates.userCategory === null) unset.userCategory = '';
+    else set.userCategory = updates.userCategory;
+  }
+
+  const update: Record<string, unknown> = {};
+  if (Object.keys(set).length > 0) update.$set = set;
+  if (Object.keys(unset).length > 0) update.$unset = unset;
+  if (Object.keys(update).length === 0) return 0;
+
+  const result = await col.updateMany(filter, update);
+  return result.modifiedCount;
+}
+
 export async function getExpensesByVendor(vendor: string, limit = 20): Promise<Expense[]> {
   const col = getCollection();
   return col

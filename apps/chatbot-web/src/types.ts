@@ -193,4 +193,49 @@ export type CreateManualExpenseBody = {
   readonly amount: number;
   readonly currency?: 'ILS' | 'USD' | 'EUR' | 'GBP' | 'JPY';
   readonly transactionDate?: string;
+  readonly category?: ExpenseCategory;
+};
+
+export type ExpenseMonthlyPoint = {
+  readonly month: string;
+  readonly total: number;
+};
+
+export type ExpenseCategoryDetailResponse = {
+  readonly category: ExpenseCategory;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+  readonly avg: number;
+  readonly firstDate: string | null;
+  readonly lastDate: string | null;
+  readonly totals: ReadonlyArray<ExpenseTotal>;
+  readonly monthlyTotals: ReadonlyArray<ExpenseMonthlyPoint>;
+  readonly topVendors: ReadonlyArray<{ readonly vendor: string; readonly total: number; readonly count: number }>;
+  readonly expenses: ReadonlyArray<ExpenseDto>;
+};
+
+export type ExpenseVendorDetailResponse = {
+  readonly vendor: string;
+  readonly currency: string;
+  readonly total: number;
+  readonly count: number;
+  readonly avg: number;
+  readonly firstDate: string | null;
+  readonly lastDate: string | null;
+  readonly totals: ReadonlyArray<ExpenseTotal>;
+  readonly dominantCategory: { readonly category: ExpenseCategory; readonly share: number } | null;
+  readonly monthlyTotals: ReadonlyArray<ExpenseMonthlyPoint>;
+  readonly expenses: ReadonlyArray<ExpenseDto>;
+};
+
+export type BulkUpdateVendorBody = {
+  readonly name: string;
+  readonly userVendor?: string | null;
+  readonly userCategory?: ExpenseCategory | null;
+};
+
+export type BulkUpdateVendorResponse = {
+  readonly modifiedCount: number;
+  readonly vendor: ExpenseVendorDetailResponse;
 };

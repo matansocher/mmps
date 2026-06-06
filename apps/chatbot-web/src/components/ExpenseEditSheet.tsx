@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import { Dropdown, type DropdownOption } from './Dropdown';
 import { formatAmount } from './ExpenseRow';
 import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../lib/categories';
 import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDto, type ExpenseType, type UpdateExpenseBody } from '../types';
 
-const CATEGORIES: ReadonlyArray<{ value: ExpenseCategory; emoji: string; label: string }> = EXPENSE_CATEGORIES.map((value) => ({
+const CATEGORY_OPTIONS: ReadonlyArray<DropdownOption<ExpenseCategory>> = EXPENSE_CATEGORIES.map((value) => ({
   value,
   emoji: CATEGORY_EMOJI[value],
   label: CATEGORY_LABELS[value],
@@ -18,13 +19,15 @@ const TYPES: ReadonlyArray<{ value: ExpenseType; label: string }> = [
 type Props = {
   readonly expense: ExpenseDto;
   readonly onClose: () => void;
-  readonly onSave: (body: UpdateExpenseBody) => Promise<void>;
+  readonly onSave: (body: UpdateExpenseBody, propagateToVendor: boolean) => Promise<void>;
+  readonly onViewVendor?: (vendor: string) => void;
 };
 
-export function ExpenseEditSheet({ expense, onClose, onSave }: Props) {
+export function ExpenseEditSheet({ expense, onClose, onSave, onViewVendor }: Props) {
   const [vendor, setVendor] = useState(expense.vendor);
   const [category, setCategory] = useState<ExpenseCategory>(expense.category);
   const [type, setType] = useState<ExpenseType>(expense.type);
+  const [propagate, setPropagate] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,8 +41,11 @@ export function ExpenseEditSheet({ expense, onClose, onSave }: Props) {
   const originalCategory = expense.originalCategory ?? expense.category;
   const originalType = expense.originalType ?? expense.type;
 
-  const dirty = vendor.trim() !== expense.vendor || category !== expense.category || type !== expense.type;
+  const vendorChanged = vendor.trim() !== expense.vendor;
+  const categoryChanged = category !== expense.category;
+  const dirty = vendorChanged || categoryChanged || type !== expense.type;
   const hasOverrides = !!(expense.originalVendor || expense.originalCategory || expense.originalType);
+  const canPropagate = vendorChanged || categoryChanged;
 
   async function handleSave() {
     if (!dirty) return;
@@ -48,10 +54,10 @@ export function ExpenseEditSheet({ expense, onClose, onSave }: Props) {
     try {
       const body: { userVendor?: string | null; userCategory?: ExpenseCategory | null; userType?: ExpenseType | null } = {};
       const v = vendor.trim();
-      if (v !== expense.vendor) body.userVendor = v === originalVendor ? null : v;
-      if (category !== expense.category) body.userCategory = category === originalCategory ? null : category;
+      if (vendorChanged) body.userVendor = v === originalVendor ? null : v;
+      if (categoryChanged) body.userCategory = category === originalCategory ? null : category;
       if (type !== expense.type) body.userType = type === originalType ? null : type;
-      await onSave(body);
+      await onSave(body, propagate && canPropagate);
     } catch {
       setError('Failed to save. Try again.');
       setSaving(false);
@@ -62,7 +68,7 @@ export function ExpenseEditSheet({ expense, onClose, onSave }: Props) {
     setSaving(true);
     setError(null);
     try {
-      await onSave({ userVendor: null, userCategory: null, userType: null });
+      await onSave({ userVendor: null, userCategory: null, userType: null }, false);
     } catch {
       setError('Failed to reset.');
       setSaving(false);
@@ -89,12 +95,25 @@ export function ExpenseEditSheet({ expense, onClose, onSave }: Props) {
 
           <div>
             <label className="text-xs font-medium text-text-secondary uppercase tracking-wide">Vendor</label>
-            <input
-              value={vendor}
-              onChange={(e) => setVendor(e.target.value)}
-              className="mt-1.5 w-full rounded-xl bg-bg-elevated border border-border-subtle px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent-primary"
-              placeholder="Vendor name"
-            />
+            <div className="mt-1.5 flex gap-2">
+              <input
+                value={vendor}
+                onChange={(e) => setVendor(e.target.value)}
+                className="flex-1 min-w-0 rounded-xl bg-bg-elevated border border-border-subtle px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent-primary"
+                placeholder="Vendor name"
+              />
+              {onViewVendor && (
+                <button
+                  type="button"
+                  onClick={() => onViewVendor(vendor.trim() || expense.vendor)}
+                  aria-label={`View history for ${vendor.trim() || expense.vendor}`}
+                  title="View all expenses from this vendor"
+                  className="shrink-0 w-11 h-11 grid place-items-center rounded-xl bg-bg-elevated border border-border-subtle text-text-secondary hover:text-accent-primary hover:border-accent-primary transition-colors"
+                >
+                  📊
+                </button>
+              )}
+            </div>
             {originalVendor !== vendor.trim() && originalVendor !== expense.vendor && (
               <div className="mt-1 text-xs text-text-muted">AI inferred: "{originalVendor}"</div>
             )}
@@ -102,25 +121,7 @@ export function ExpenseEditSheet({ expense, onClose, onSave }: Props) {
 
           <div>
             <label className="text-xs font-medium text-text-secondary uppercase tracking-wide">Category</label>
-            <div className="mt-1.5 grid grid-cols-3 gap-2">
-              {CATEGORIES.map((c) => {
-                const sel = c.value === category;
-                return (
-                  <button
-                    key={c.value}
-                    onClick={() => setCategory(c.value)}
-                    className={`rounded-xl py-2 px-2 text-xs font-medium flex flex-col items-center gap-0.5 border transition-colors ${
-                      sel
-                        ? 'bg-accent-primary text-bg-base border-accent-primary'
-                        : 'bg-bg-elevated text-text-secondary border-border-subtle hover:border-text-muted'
-                    }`}
-                  >
-                    <span className="text-base leading-none">{c.emoji}</span>
-                    <span>{c.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <Dropdown<ExpenseCategory> value={category} options={CATEGORY_OPTIONS} onChange={setCategory} className="mt-1.5" />
           </div>
 
           <div>
@@ -160,6 +161,20 @@ export function ExpenseEditSheet({ expense, onClose, onSave }: Props) {
                 {expense.notes}
               </div>
             </div>
+          )}
+
+          {canPropagate && (
+            <label className="flex items-start gap-2.5 rounded-xl bg-bg-elevated border border-border-subtle px-3 py-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={propagate}
+                onChange={(e) => setPropagate(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-accent-primary"
+              />
+              <span className="text-xs text-text-secondary leading-snug">
+                Apply {vendorChanged && categoryChanged ? 'name and category' : vendorChanged ? 'new name' : 'category'} to all expenses from "{expense.vendor}"
+              </span>
+            </label>
           )}
 
           {error && <div className="text-xs text-accent-danger">{error}</div>}

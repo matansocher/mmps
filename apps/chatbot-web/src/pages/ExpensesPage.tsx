@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AddExpenseSheet } from '../components/AddExpenseSheet';
+import { CategoryDetailSheet } from '../components/CategoryDetailSheet';
 import { CategoryPieChart } from '../components/CategoryPieChart';
 import { DailyTrajectoryChart } from '../components/DailyTrajectoryChart';
 import { ExpenseEditSheet } from '../components/ExpenseEditSheet';
@@ -7,16 +8,30 @@ import { ExpenseRow, formatAmount } from '../components/ExpenseRow';
 import { MonthPicker } from '../components/MonthPicker';
 import { PaceCard } from '../components/PaceCard';
 import { Skeleton } from '../components/Skeleton';
+import { Tabs } from '../components/Tabs';
 import { Toast } from '../components/Toast';
 import { TopChargesCard } from '../components/TopChargesCard';
+import { VendorDetailSheet } from '../components/VendorDetailSheet';
 import { api } from '../lib/api';
 import { currentYm, dateFromYmd, formatExpenseDayLabel, formatMonthLabel, shiftMonth } from '../lib/date';
 import { haptic } from '../lib/telegram';
-import type { ExpenseDto, ExpensesMonthResponse, UpdateExpenseBody } from '../types';
+import type { ExpenseCategory, ExpenseDto, ExpensesMonthResponse, UpdateExpenseBody } from '../types';
 
 type ToastState = { readonly message: string; readonly kind: 'success' | 'error' | 'info' } | null;
 
+type TabId = 'summary' | 'transactions';
+
+const TABS: ReadonlyArray<{ id: TabId; label: string }> = [
+  { id: 'summary', label: 'Summary' },
+  { id: 'transactions', label: 'Transactions' },
+];
+
 const PAGE_SIZE = 10;
+
+function readTabFromHash(): TabId {
+  const h = window.location.hash.replace('#', '');
+  return h === 'transactions' ? 'transactions' : 'summary';
+}
 
 export function ExpensesPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(currentYm());
@@ -25,9 +40,10 @@ export function ExpensesPage() {
   const [toast, setToast] = useState<ToastState>(null);
   const [editing, setEditing] = useState<ExpenseDto | null>(null);
   const [adding, setAdding] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
-  const touchStartX = useRef<number | null>(null);
+  const [tab, setTab] = useState<TabId>(readTabFromHash);
+  const [categoryDetail, setCategoryDetail] = useState<ExpenseCategory | null>(null);
+  const [vendorDetail, setVendorDetail] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -43,33 +59,39 @@ export function ExpensesPage() {
 
   useEffect(() => {
     load();
-    setCategoryFilter(null);
     setVisibleCount(PAGE_SIZE);
   }, [load]);
 
-  function changeMonth(delta: number) {
-    setSelectedMonth((m) => {
-      const next = shiftMonth(m, delta);
-      if (delta > 0 && next > currentYm()) return m;
-      return next;
-    });
-    haptic('select');
+  useEffect(() => {
+    const onHash = () => setTab(readTabFromHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  function changeTab(next: TabId) {
+    setTab(next);
+    window.history.replaceState(null, '', `#${next}`);
   }
 
-  function onTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0]?.clientX ?? null;
-  }
-  function onTouchEnd(e: React.TouchEvent) {
-    if (touchStartX.current == null) return;
-    const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(dx) < 60) return;
-    changeMonth(dx > 0 ? -1 : 1);
-  }
-
-  async function handleSaveOverride(body: UpdateExpenseBody) {
+  async function handleSaveOverride(body: UpdateExpenseBody, propagateToVendor: boolean) {
     if (!editing) return;
+    const targetVendor = editing.vendor;
     const updated = await api.updateExpense(editing.id, body);
+    if (propagateToVendor && (body.userVendor !== undefined || body.userCategory !== undefined)) {
+      const bulkUpdates: { userVendor?: string; userCategory?: ExpenseCategory } = {};
+      if (body.userVendor !== undefined) bulkUpdates.userVendor = updated.vendor;
+      if (body.userCategory !== undefined) bulkUpdates.userCategory = updated.category;
+      try {
+        await api.bulkUpdateVendor({ name: targetVendor, ...bulkUpdates });
+        await load();
+        setEditing(null);
+        haptic('success');
+        setToast({ message: 'Updated all charges', kind: 'success' });
+        return;
+      } catch {
+        // fall through to single-update toast
+      }
+    }
     setData((prev) =>
       prev ? { ...prev, expenses: prev.expenses.map((e) => (e.id === updated.id ? updated : e)) } : prev,
     );
@@ -79,35 +101,35 @@ export function ExpensesPage() {
   }
 
   const expenses = data?.expenses ?? [];
-  const filtered = useMemo(() => {
-    if (!categoryFilter) return expenses;
-    return expenses.filter((e) => e.category === categoryFilter);
-  }, [expenses, categoryFilter]);
-  const visible = filtered.slice(0, visibleCount);
-  const hasActiveFilter = categoryFilter !== null;
-
-  function clearFilters() {
-    setCategoryFilter(null);
-    setVisibleCount(PAGE_SIZE);
-  }
+  const visible = expenses.slice(0, visibleCount);
 
   function handleChargeTap(chargeId: string) {
     const full = expenses.find((e) => e.id === chargeId);
     if (full) setEditing(full);
   }
 
+  function handleCategoryTap(category: string) {
+    haptic('select');
+    setCategoryDetail(category as ExpenseCategory);
+  }
+
+  function handleViewVendor(vendor: string) {
+    haptic('select');
+    setEditing(null);
+    setVendorDetail(vendor);
+  }
+
   const addDefaultDate = useMemo(() => {
     const today = new Date();
     const todayYm = currentYm();
     if (selectedMonth === todayYm) return today;
-    // Past month: default to last day of that month at noon.
     const next = dateFromYmd(`${shiftMonth(selectedMonth, 1)}-01`);
     next.setDate(next.getDate() - 1);
     return next;
   }, [selectedMonth]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4">
       <header className="flex flex-col gap-3">
         <MonthPicker selected={selectedMonth} onSelect={setSelectedMonth} />
         <div className="flex items-center justify-between gap-3">
@@ -123,63 +145,55 @@ export function ExpensesPage() {
             +
           </button>
         </div>
+        <Tabs tabs={TABS} selected={tab} onSelect={changeTab} />
       </header>
 
       {loading ? (
-        <ExpensesPageSkeleton />
+        tab === 'summary' ? <SummarySkeleton /> : <TransactionsSkeleton />
       ) : data ? (
-        <>
-          <PaceCard pace={data.pace} />
+        tab === 'summary' ? (
+          <>
+            <PaceCard pace={data.pace} />
 
-          {data.trajectory.length > 0 && (
-            <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
-              <DailyTrajectoryChart
-                points={data.trajectory}
-                currency={data.pace.currency}
-                throughDayOfMonth={data.pace.throughDayOfMonth}
-                daysInMonth={data.pace.daysInMonth}
-                isCurrentMonth={data.pace.isCurrentMonth}
-              />
-            </section>
-          )}
+            {data.trajectory.length > 0 && (
+              <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
+                <DailyTrajectoryChart
+                  points={data.trajectory}
+                  currency={data.pace.currency}
+                  throughDayOfMonth={data.pace.throughDayOfMonth}
+                  daysInMonth={data.pace.daysInMonth}
+                  isCurrentMonth={data.pace.isCurrentMonth}
+                />
+              </section>
+            )}
 
-          {data.categoryDeltas.length > 0 && (
-            <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
-              <div className="text-xs uppercase tracking-wide text-text-muted mb-3">By category</div>
-              <CategoryPieChart
-                rows={data.categoryDeltas}
-                currency={data.pace.currency}
-                selected={categoryFilter}
-                onToggle={(c) => {
-                  setCategoryFilter((prev) => (prev === c ? null : c));
-                  setVisibleCount(PAGE_SIZE);
-                }}
-              />
-            </section>
-          )}
+            {data.categoryDeltas.length > 0 && (
+              <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
+                <div className="text-xs uppercase tracking-wide text-text-muted mb-3">By category</div>
+                <CategoryPieChart
+                  rows={data.categoryDeltas}
+                  currency={data.pace.currency}
+                  selected={null}
+                  onToggle={handleCategoryTap}
+                />
+              </section>
+            )}
 
-          {data.topCharges.length > 0 && <TopChargesCard rows={data.topCharges} onTap={handleChargeTap} />}
+            {data.topCharges.length > 0 && <TopChargesCard rows={data.topCharges} onTap={handleChargeTap} />}
 
+            {data.totals.length > 1 && (
+              <div className="text-[11px] text-text-muted text-center">
+                Also this month: {data.totals.filter((t) => t.currency !== data.pace.currency).map((t) => formatAmount(t.total, t.currency)).join(' · ')}
+              </div>
+            )}
+          </>
+        ) : (
           <section className="rounded-2xl bg-bg-card border border-border-subtle overflow-hidden">
-            <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-text-muted">
-              <div className="flex items-center gap-2 min-w-0">
-                <span>Transactions · {filtered.length}</span>
-                {hasActiveFilter && (
-                  <span className="normal-case tracking-normal text-[11px] text-text-secondary truncate">
-                    · {categoryFilter!.replace(/_/g, ' ')}
-                  </span>
-                )}
-              </div>
-              {hasActiveFilter && (
-                <button onClick={clearFilters} className="text-accent-primary normal-case tracking-normal shrink-0">
-                  Clear
-                </button>
-              )}
+            <div className="px-4 py-3 border-b border-border-subtle text-xs uppercase tracking-wide text-text-muted">
+              Transactions · {expenses.length}
             </div>
-            {filtered.length === 0 ? (
-              <div className="py-8 text-center text-sm text-text-muted">
-                {hasActiveFilter ? 'Nothing matches this filter' : 'No spend this month — nice 💪'}
-              </div>
+            {expenses.length === 0 ? (
+              <div className="py-8 text-center text-sm text-text-muted">No spend this month — nice 💪</div>
             ) : (
               <>
                 <div className="px-4 divide-y divide-border-subtle">
@@ -192,27 +206,45 @@ export function ExpensesPage() {
                     />
                   ))}
                 </div>
-                {visibleCount < filtered.length && (
+                {visibleCount < expenses.length && (
                   <button
                     onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
                     className="w-full py-3 text-sm text-accent-primary border-t border-border-subtle hover:bg-bg-elevated transition-colors"
                   >
-                    Show more · {Math.min(PAGE_SIZE, filtered.length - visibleCount)}
+                    Show more · {Math.min(PAGE_SIZE, expenses.length - visibleCount)}
                   </button>
                 )}
               </>
             )}
           </section>
-
-          {data.totals.length > 1 && (
-            <div className="text-[11px] text-text-muted text-center">
-              Also this month: {data.totals.filter((t) => t.currency !== data.pace.currency).map((t) => formatAmount(t.total, t.currency)).join(' · ')}
-            </div>
-          )}
-        </>
+        )
       ) : null}
 
-      {editing && <ExpenseEditSheet expense={editing} onClose={() => setEditing(null)} onSave={handleSaveOverride} />}
+      {editing && (
+        <ExpenseEditSheet
+          expense={editing}
+          onClose={() => setEditing(null)}
+          onSave={handleSaveOverride}
+          onViewVendor={handleViewVendor}
+        />
+      )}
+
+      {categoryDetail && (
+        <CategoryDetailSheet
+          category={categoryDetail}
+          onClose={() => setCategoryDetail(null)}
+          onTapExpense={setEditing}
+          onTapVendor={handleViewVendor}
+        />
+      )}
+
+      {vendorDetail && (
+        <VendorDetailSheet
+          vendor={vendorDetail}
+          onClose={() => setVendorDetail(null)}
+          onTapExpense={setEditing}
+        />
+      )}
 
       {adding && (
         <AddExpenseSheet
@@ -233,10 +265,9 @@ export function ExpensesPage() {
   );
 }
 
-function ExpensesPageSkeleton() {
+function SummarySkeleton() {
   return (
     <>
-      {/* Pace */}
       <div className="rounded-2xl bg-bg-card border border-border-subtle p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <Skeleton className="h-3 w-24" />
@@ -246,7 +277,6 @@ function ExpensesPageSkeleton() {
         <Skeleton className="h-3 w-48" />
         <Skeleton className="h-2 w-full" />
       </div>
-      {/* Trajectory */}
       <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
         <div className="flex items-center justify-between mb-3">
           <Skeleton className="h-3 w-28" />
@@ -254,7 +284,6 @@ function ExpensesPageSkeleton() {
         </div>
         <Skeleton className="h-32 w-full" />
       </div>
-      {/* Category pie */}
       <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
         <Skeleton className="h-3 w-24 mb-3" />
         <div className="flex flex-col items-center gap-3">
@@ -270,7 +299,6 @@ function ExpensesPageSkeleton() {
           </div>
         </div>
       </div>
-      {/* Top charges */}
       <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
         <Skeleton className="h-3 w-24 mb-3" />
         <div className="flex flex-col gap-2">
@@ -286,24 +314,28 @@ function ExpensesPageSkeleton() {
           ))}
         </div>
       </div>
-      {/* Transactions */}
-      <div className="rounded-2xl bg-bg-card border border-border-subtle overflow-hidden">
-        <div className="px-4 py-3 border-b border-border-subtle">
-          <Skeleton className="h-3 w-28" />
-        </div>
-        <div className="px-4 divide-y divide-border-subtle">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 py-2.5">
-              <Skeleton className="h-7 w-7 shrink-0" rounded="full" />
-              <div className="flex-1 flex flex-col gap-1.5">
-                <Skeleton className="h-3.5 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-              <Skeleton className="h-3.5 w-14" />
-            </div>
-          ))}
-        </div>
-      </div>
     </>
+  );
+}
+
+function TransactionsSkeleton() {
+  return (
+    <div className="rounded-2xl bg-bg-card border border-border-subtle overflow-hidden">
+      <div className="px-4 py-3 border-b border-border-subtle">
+        <Skeleton className="h-3 w-28" />
+      </div>
+      <div className="px-4 divide-y divide-border-subtle">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 py-2.5">
+            <Skeleton className="h-7 w-7 shrink-0" rounded="full" />
+            <div className="flex-1 flex flex-col gap-1.5">
+              <Skeleton className="h-3.5 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+            <Skeleton className="h-3.5 w-14" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

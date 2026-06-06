@@ -1,9 +1,26 @@
 import { useEffect, useState } from 'react';
+import { Dropdown, type DropdownOption } from './Dropdown';
 import { api } from '../lib/api';
+import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../lib/categories';
 import { formatDateTimeLocal } from '../lib/date';
-import type { CreateManualExpenseBody, ExpenseDto } from '../types';
+import { EXPENSE_CATEGORIES, type CreateManualExpenseBody, type ExpenseCategory, type ExpenseDto } from '../types';
 
-const CURRENCIES: ReadonlyArray<CreateManualExpenseBody['currency']> = ['ILS', 'USD', 'EUR', 'GBP', 'JPY'];
+type Currency = NonNullable<CreateManualExpenseBody['currency']>;
+
+const CURRENCY_OPTIONS: ReadonlyArray<DropdownOption<Currency>> = [
+  { value: 'ILS', label: 'ILS ₪' },
+  { value: 'USD', label: 'USD $' },
+  { value: 'EUR', label: 'EUR €' },
+  { value: 'GBP', label: 'GBP £' },
+  { value: 'JPY', label: 'JPY ¥' },
+];
+
+type CategoryChoice = ExpenseCategory | 'auto';
+
+const CATEGORY_OPTIONS: ReadonlyArray<DropdownOption<CategoryChoice>> = [
+  { value: 'auto', label: 'Auto (AI)', emoji: '✨' },
+  ...EXPENSE_CATEGORIES.map((c) => ({ value: c as CategoryChoice, label: CATEGORY_LABELS[c], emoji: CATEGORY_EMOJI[c] })),
+];
 
 type Props = {
   readonly defaultDate: Date;
@@ -15,7 +32,8 @@ type Props = {
 export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Props) {
   const [vendor, setVendor] = useState('');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<NonNullable<CreateManualExpenseBody['currency']>>('ILS');
+  const [currency, setCurrency] = useState<Currency>('ILS');
+  const [category, setCategory] = useState<CategoryChoice>('auto');
   const [dateLocal, setDateLocal] = useState(() => {
     const base = new Date(defaultDate);
     base.setHours(12, 0, 0, 0);
@@ -43,6 +61,7 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
         amount: Math.round(parsedAmount * 100) / 100,
         currency,
         transactionDate: new Date(dateLocal).toISOString(),
+        ...(category !== 'auto' ? { category } : {}),
       });
       await onSaved(created);
     } catch {
@@ -56,7 +75,7 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 animate-fade-in" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl bg-bg-card border-t border-border-subtle rounded-t-3xl p-5 flex flex-col gap-4"
+        className="w-full max-w-2xl bg-bg-card border-t border-border-subtle rounded-t-3xl p-5 flex flex-col gap-4 max-h-[92vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">Add expense</h2>
@@ -92,20 +111,15 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
             />
           </label>
 
-          <label className="flex flex-col gap-1 w-28">
+          <div className="flex flex-col gap-1 w-28">
             <span className="text-xs uppercase tracking-wide text-text-muted">Currency</span>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value as NonNullable<CreateManualExpenseBody['currency']>)}
-              className="bg-bg-elevated border border-border-subtle rounded-xl px-3 py-3 text-text-primary focus:outline-none focus:border-accent-primary"
-            >
-              {CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
+            <Dropdown<Currency> value={currency} options={CURRENCY_OPTIONS} onChange={setCurrency} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-xs uppercase tracking-wide text-text-muted">Category</span>
+          <Dropdown<CategoryChoice> value={category} options={CATEGORY_OPTIONS} onChange={setCategory} />
         </div>
 
         <label className="flex flex-col gap-1">
@@ -117,8 +131,6 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
             className="bg-bg-elevated border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent-primary"
           />
         </label>
-
-        <div className="text-[11px] text-text-muted">Category is inferred automatically — you can change it after saving.</div>
 
         <div className="flex items-center gap-2 pt-1">
           <button

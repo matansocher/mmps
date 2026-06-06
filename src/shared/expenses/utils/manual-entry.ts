@@ -51,6 +51,7 @@ export type ManualExpenseInput = {
   readonly amount: number;
   readonly currency?: Currency;
   readonly transactionDate?: Date;
+  readonly category?: ExpenseCategory;
 };
 
 async function categorize(input: ManualExpenseInput): Promise<z.infer<typeof categorizationSchema>> {
@@ -69,11 +70,16 @@ export async function createManualExpense(input: ManualExpenseInput): Promise<Ex
   if (!Number.isFinite(input.amount) || input.amount <= 0) throw new Error('amount must be a positive number');
 
   let llm: z.infer<typeof categorizationSchema>;
-  try {
-    llm = await categorize(input);
-  } catch (err) {
-    logger.warn(`Categorize failed, defaulting to "other"/"receipt": ${err}`);
-    llm = { category: 'other', type: 'receipt', vendor: input.vendor.trim() };
+  if (input.category) {
+    // User picked a category; skip the LLM call.
+    llm = { category: input.category, type: 'receipt', vendor: input.vendor.trim() };
+  } else {
+    try {
+      llm = await categorize(input);
+    } catch (err) {
+      logger.warn(`Categorize failed, defaulting to "other"/"receipt": ${err}`);
+      llm = { category: 'other', type: 'receipt', vendor: input.vendor.trim() };
+    }
   }
 
   const now = new Date();

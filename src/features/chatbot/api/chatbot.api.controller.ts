@@ -13,6 +13,7 @@ import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-cale
 import { notify } from '@services/notifier';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import {
+  bulkUpdateExpensesByEffectiveVendor,
   createManualExpense,
   type Currency,
   DEFAULT_CURRENCY,
@@ -23,6 +24,8 @@ import {
   EXPENSE_CATEGORIES,
   type ExpenseCategory,
   type ExpenseType,
+  getAllExpensesByEffectiveCategory,
+  getAllExpensesByEffectiveVendor,
   getExpensesBetween,
   SUPPORTED_CURRENCIES,
 } from '@shared/expenses';
@@ -34,6 +37,8 @@ import { addExpenseToDailyLog } from '../schedulers';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
+  BulkUpdateVendorBody,
+  BulkUpdateVendorResponse,
   CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
@@ -41,15 +46,18 @@ import type {
   ExerciseLogResponse,
   ExpenseCategoryBreakdown,
   ExpenseCategoryDelta,
+  ExpenseCategoryDetailResponse,
   ExpenseCategoryDto,
   ExpenseChargeDto,
   ExpenseDto,
+  ExpenseMonthlyPoint,
   ExpensePacePrimary,
   ExpensesMonthResponse,
   ExpenseTotal,
   ExpenseTrajectoryPoint,
   ExpenseTypeBreakdown,
   ExpenseTypeDto,
+  ExpenseVendorDetailResponse,
   HeatmapDay,
   ReminderDto,
   UpdateExpenseBody,
@@ -192,6 +200,36 @@ const ExpensesMonthResponseSchema = z.object({
   topCharges: z.array(ExpenseChargeDtoSchema),
 });
 
+const ExpenseMonthlyPointSchema = z.object({ month: z.string(), total: z.number() });
+
+const ExpenseCategoryDetailResponseSchema = z.object({
+  category: ExpenseCategoryEnum,
+  currency: z.string(),
+  total: z.number(),
+  count: z.number(),
+  avg: z.number(),
+  firstDate: z.string().nullable(),
+  lastDate: z.string().nullable(),
+  totals: z.array(z.object({ currency: z.string(), total: z.number() })),
+  monthlyTotals: z.array(ExpenseMonthlyPointSchema),
+  topVendors: z.array(z.object({ vendor: z.string(), total: z.number(), count: z.number() })),
+  expenses: z.array(ExpenseDtoSchema),
+});
+
+const ExpenseVendorDetailResponseSchema = z.object({
+  vendor: z.string(),
+  currency: z.string(),
+  total: z.number(),
+  count: z.number(),
+  avg: z.number(),
+  firstDate: z.string().nullable(),
+  lastDate: z.string().nullable(),
+  totals: z.array(z.object({ currency: z.string(), total: z.number() })),
+  dominantCategory: z.object({ category: ExpenseCategoryEnum, share: z.number() }).nullable(),
+  monthlyTotals: z.array(ExpenseMonthlyPointSchema),
+  expenses: z.array(ExpenseDtoSchema),
+});
+
 const CreateReminderBodySchema = z.object({
   message: z.string(),
   dueDate: z.string().describe('ISO 8601 date-time'),
@@ -208,6 +246,17 @@ const UpdateExpenseBodySchema = z.object({
   userVendor: z.string().nullable().optional(),
   userCategory: ExpenseCategoryEnum.nullable().optional(),
   userType: ExpenseTypeEnum.nullable().optional(),
+});
+
+const BulkUpdateVendorBodySchema = z.object({
+  name: z.string(),
+  userVendor: z.string().nullable().optional(),
+  userCategory: ExpenseCategoryEnum.nullable().optional(),
+});
+
+const BulkUpdateVendorResponseSchema = z.object({
+  modifiedCount: z.number(),
+  vendor: ExpenseVendorDetailResponseSchema,
 });
 
 const ExpenseLogAckSchema = z.object({ logged: z.literal(true) });
@@ -228,6 +277,7 @@ const CreateManualExpenseBodySchema = z.object({
   amount: z.number().positive(),
   currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]).optional(),
   transactionDate: z.string().optional().describe('ISO 8601; defaults to now'),
+  category: ExpenseCategoryEnum.optional().describe('When provided, skips AI categorization'),
 });
 
 const ErrorSchema = z.object({ error: z.string() });
@@ -254,6 +304,48 @@ registry.registerPath({
   request: { query: z.object({ month: z.string().optional().describe('YYYY-MM; defaults to current month') }) },
   responses: {
     200: { description: 'Expenses month payload', content: { 'application/json': { schema: ExpensesMonthResponseSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/expenses/category/{category}',
+  tags: ['Chatbot'],
+  summary: 'Get lifetime expenses for a category, with monthly totals and top vendors',
+  request: { params: z.object({ category: ExpenseCategoryEnum }) },
+  responses: {
+    200: { description: 'Category detail', content: { 'application/json': { schema: ExpenseCategoryDetailResponseSchema } } },
+    400: { description: 'Invalid category', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/expenses/vendor',
+  tags: ['Chatbot'],
+  summary: 'Get lifetime expenses for a vendor (matches effective vendor exactly, case-insensitive)',
+  request: { query: z.object({ name: z.string().describe('Vendor display name (effective vendor)') }) },
+  responses: {
+    200: { description: 'Vendor detail', content: { 'application/json': { schema: ExpenseVendorDetailResponseSchema } } },
+    400: { description: 'Missing vendor name', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'patch',
+  path: '/api/chatbot/expenses/vendor',
+  tags: ['Chatbot'],
+  summary: 'Bulk-update all expenses matching a vendor (name or category)',
+  request: {
+    body: { content: { 'application/json': { schema: BulkUpdateVendorBodySchema } } },
+  },
+  responses: {
+    200: { description: 'Bulk update result + refreshed vendor detail', content: { 'application/json': { schema: BulkUpdateVendorResponseSchema } } },
+    400: { description: 'Validation error', content: { 'application/json': { schema: ErrorSchema } } },
+    404: { description: 'Vendor not found', content: { 'application/json': { schema: ErrorSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
   },
 });
@@ -563,6 +655,97 @@ function pickPrimaryCurrency(expenses: ReadonlyArray<Expense>): string {
   const totals = new Map<string, number>();
   for (const e of expenses) totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount);
   return [...totals.entries()].sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function monthlyTotalsForCurrency(expenses: ReadonlyArray<Expense>, currency: string, months = 12): ExpenseMonthlyPoint[] {
+  const buckets = new Map<string, number>();
+  const now = new Date();
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = formatInTimeZone(d, DEFAULT_TIMEZONE, 'yyyy-MM');
+    buckets.set(ym, 0);
+  }
+  for (const e of expenses) {
+    if (e.currency !== currency) continue;
+    const ym = formatInTimeZone(e.transactionDate, DEFAULT_TIMEZONE, 'yyyy-MM');
+    if (buckets.has(ym)) buckets.set(ym, (buckets.get(ym) ?? 0) + e.amount);
+  }
+  return [...buckets.entries()].map(([month, total]) => ({ month, total: Math.round(total * 100) / 100 }));
+}
+
+function buildCategoryDetail(category: ExpenseCategory, expenses: ReadonlyArray<Expense>): ExpenseCategoryDetailResponse {
+  const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
+  const primaryCurrency = pickPrimaryCurrency(sorted);
+  const primary = sorted.filter((e) => e.currency === primaryCurrency);
+  const total = primary.reduce((s, e) => s + e.amount, 0);
+  const count = primary.length;
+  const avg = count > 0 ? total / count : 0;
+  const firstDate = sorted.length > 0 ? sorted[sorted.length - 1].transactionDate.toISOString() : null;
+  const lastDate = sorted.length > 0 ? sorted[0].transactionDate.toISOString() : null;
+
+  const vendorMap = new Map<string, { vendor: string; total: number; count: number }>();
+  for (const e of primary) {
+    const v = effectiveVendor(e);
+    const existing = vendorMap.get(v);
+    if (existing) vendorMap.set(v, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
+    else vendorMap.set(v, { vendor: v, total: e.amount, count: 1 });
+  }
+  const topVendors = [...vendorMap.values()]
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5)
+    .map((v) => ({ ...v, total: Math.round(v.total * 100) / 100 }));
+
+  return {
+    category: category as ExpenseCategoryDto,
+    currency: primaryCurrency,
+    total: Math.round(total * 100) / 100,
+    count,
+    avg: Math.round(avg * 100) / 100,
+    firstDate,
+    lastDate,
+    totals: totalsByCurrency(sorted),
+    monthlyTotals: monthlyTotalsForCurrency(sorted, primaryCurrency, 12),
+    topVendors,
+    expenses: sorted.map(toExpenseDto),
+  };
+}
+
+function buildVendorDetail(name: string, expenses: ReadonlyArray<Expense>): ExpenseVendorDetailResponse {
+  const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
+  const primaryCurrency = pickPrimaryCurrency(sorted);
+  const primary = sorted.filter((e) => e.currency === primaryCurrency);
+  const total = primary.reduce((s, e) => s + e.amount, 0);
+  const count = primary.length;
+  const avg = count > 0 ? total / count : 0;
+  const firstDate = sorted.length > 0 ? sorted[sorted.length - 1].transactionDate.toISOString() : null;
+  const lastDate = sorted.length > 0 ? sorted[0].transactionDate.toISOString() : null;
+
+  let dominantCategory: ExpenseVendorDetailResponse['dominantCategory'] = null;
+  if (primary.length > 0) {
+    const catMap = new Map<string, number>();
+    for (const e of primary) {
+      const cat = effectiveCategory(e) as string;
+      catMap.set(cat, (catMap.get(cat) ?? 0) + e.amount);
+    }
+    const top = [...catMap.entries()].sort((a, b) => b[1] - a[1])[0];
+    dominantCategory = { category: top[0] as ExpenseCategoryDto, share: total > 0 ? top[1] / total : 0 };
+  }
+
+  const displayVendor = sorted.length > 0 ? effectiveVendor(sorted[0]) : name;
+
+  return {
+    vendor: displayVendor,
+    currency: primaryCurrency,
+    total: Math.round(total * 100) / 100,
+    count,
+    avg: Math.round(avg * 100) / 100,
+    firstDate,
+    lastDate,
+    totals: totalsByCurrency(sorted),
+    dominantCategory,
+    monthlyTotals: monthlyTotalsForCurrency(sorted, primaryCurrency, 12),
+    expenses: sorted.map(toExpenseDto),
+  };
 }
 
 type BaselineMonth = {
@@ -910,6 +1093,76 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
+  app.get('/api/chatbot/expenses/category/:category', async (req: Request, res: Response<ExpenseCategoryDetailResponse | { error: string }>) => {
+    try {
+      const raw = req.params.category;
+      if (!EXPENSE_CATEGORIES.includes(raw as ExpenseCategory)) {
+        res.status(400).json({ error: 'invalid_category' });
+        return;
+      }
+      const category = raw as ExpenseCategory;
+      const expenses = await getAllExpensesByEffectiveCategory(category);
+      res.json(buildCategoryDetail(category, expenses));
+    } catch (err) {
+      logger.error(`expenses category failed: ${err}`);
+      res.status(500).json({ error: 'category_failed' });
+    }
+  });
+
+  app.get('/api/chatbot/expenses/vendor', async (req: Request, res: Response<ExpenseVendorDetailResponse | { error: string }>) => {
+    try {
+      const raw = req.query.name;
+      const name = typeof raw === 'string' ? raw.trim() : '';
+      if (!name) {
+        res.status(400).json({ error: 'missing_name' });
+        return;
+      }
+      const expenses = await getAllExpensesByEffectiveVendor(name);
+      res.json(buildVendorDetail(name, expenses));
+    } catch (err) {
+      logger.error(`expenses vendor failed: ${err}`);
+      res.status(500).json({ error: 'vendor_failed' });
+    }
+  });
+
+  app.patch('/api/chatbot/expenses/vendor', async (req: Request<object, object, BulkUpdateVendorBody>, res: Response<BulkUpdateVendorResponse | { error: string }>) => {
+    try {
+      const body = req.body ?? ({} as BulkUpdateVendorBody);
+      const name = typeof body.name === 'string' ? body.name.trim() : '';
+      if (!name) {
+        res.status(400).json({ error: 'missing_name' });
+        return;
+      }
+      if (body.userVendor !== undefined && body.userVendor !== null && typeof body.userVendor !== 'string') {
+        res.status(400).json({ error: 'invalid_vendor' });
+        return;
+      }
+      if (body.userCategory !== undefined && body.userCategory !== null && !EXPENSE_CATEGORIES.includes(body.userCategory)) {
+        res.status(400).json({ error: 'invalid_category' });
+        return;
+      }
+      if (body.userVendor === undefined && body.userCategory === undefined) {
+        res.status(400).json({ error: 'no_updates' });
+        return;
+      }
+      const modifiedCount = await bulkUpdateExpensesByEffectiveVendor(name, {
+        userVendor: body.userVendor === undefined ? undefined : body.userVendor,
+        userCategory: body.userCategory === undefined ? undefined : body.userCategory,
+      });
+      // After rename, the lookup name changes — use new userVendor (if provided and not null) for the refreshed payload.
+      const refreshedName = typeof body.userVendor === 'string' && body.userVendor.trim() ? body.userVendor.trim() : name;
+      const expenses = await getAllExpensesByEffectiveVendor(refreshedName);
+      if (expenses.length === 0 && modifiedCount === 0) {
+        res.status(404).json({ error: 'vendor_not_found' });
+        return;
+      }
+      res.json({ modifiedCount, vendor: buildVendorDetail(refreshedName, expenses) });
+    } catch (err) {
+      logger.error(`expenses vendor bulk-update failed: ${err}`);
+      res.status(500).json({ error: 'bulk_update_failed' });
+    }
+  });
+
   app.post('/api/chatbot/exercise/log', async (req: Request, res: Response<ExerciseLogResponse | { error: string }>) => {
     try {
       const { chatId } = req.chatbotUser!;
@@ -1092,6 +1345,10 @@ export function registerChatbotApiRoutes(app: Express): void {
         res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
         return;
       }
+      if (body.category !== undefined && !EXPENSE_CATEGORIES.includes(body.category)) {
+        res.status(400).json({ error: 'invalid_category' });
+        return;
+      }
       let transactionDate: Date | undefined;
       if (body.transactionDate) {
         const d = new Date(body.transactionDate);
@@ -1106,6 +1363,7 @@ export function registerChatbotApiRoutes(app: Express): void {
         amount: body.amount,
         currency: (body.currency as Currency) ?? undefined,
         transactionDate,
+        category: body.category,
       });
       res.status(201).json(toExpenseDto(created));
     } catch (err) {

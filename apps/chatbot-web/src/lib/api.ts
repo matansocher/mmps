@@ -1,11 +1,16 @@
 import { getInitData } from './telegram';
 import type {
+  BulkUpdateVendorBody,
+  BulkUpdateVendorResponse,
   CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
   ExerciseLogResponse,
+  ExpenseCategory,
+  ExpenseCategoryDetailResponse,
   ExpenseDto,
   ExpensesMonthResponse,
+  ExpenseVendorDetailResponse,
   ReminderDto,
   UpdateExpenseBody,
   UpdateReminderBody,
@@ -28,6 +33,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   dashboard: (date?: string) => request<DashboardResponse>(`/api/chatbot/dashboard${date ? `?date=${encodeURIComponent(date)}` : ''}`),
   expensesMonth: (month?: string) => request<ExpensesMonthResponse>(`/api/chatbot/expenses${month ? `?month=${encodeURIComponent(month)}` : ''}`),
+  expenseCategory: (category: ExpenseCategory) =>
+    request<ExpenseCategoryDetailResponse>(`/api/chatbot/expenses/category/${encodeURIComponent(category)}`),
+  expenseVendor: (name: string) =>
+    request<ExpenseVendorDetailResponse>(`/api/chatbot/expenses/vendor?name=${encodeURIComponent(name)}`),
+  bulkUpdateVendor: (body: BulkUpdateVendorBody) =>
+    request<BulkUpdateVendorResponse>('/api/chatbot/expenses/vendor', { method: 'PATCH', body: JSON.stringify(body) }),
   logExercise: () => request<ExerciseLogResponse>('/api/chatbot/exercise/log', { method: 'POST' }),
   createReminder: (body: CreateReminderBody) =>
     request<ReminderDto>('/api/chatbot/reminders', { method: 'POST', body: JSON.stringify(body) }),
