@@ -17,11 +17,9 @@
   "scripts": {
     "build": "tsc && tsc-alias --resolve-full-paths && npm run build:web-apps",
     "build:coach-web": "npm run build --workspace=@mmps/coach-web",
-    "build:worldly-web": "npm run build --workspace=@mmps/worldly-web",
     "build:chatbot-web": "npm run build --workspace=@mmps/chatbot-web",
-    "build:web-apps": "npm run build:coach-web && npm run build:worldly-web && npm run build:chatbot-web",
+    "build:web-apps": "npm run build:coach-web && npm run build:chatbot-web",
     "dev:coach-web": "npm run dev --workspace=@mmps/coach-web",
-    "dev:worldly-web": "npm run dev --workspace=@mmps/worldly-web",
     "dev:chatbot-web": "npm run dev --workspace=@mmps/chatbot-web",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
