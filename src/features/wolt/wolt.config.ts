@@ -5,7 +5,6 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Wolt Bot 🍔',
   token: 'WOLT_TELEGRAM_BOT_TOKEN',
   commands: {
-    APP: { command: '/app', description: '📱 פתח אפליקציה 📱' },
     START: { command: '/start', description: 'התחל מהתחלה' },
     LIST: { command: '/list', description: '🩵 רשימת ההתראות הפתוחות 🩵' },
     CONTACT: { command: '/contact', description: '📬 צור קשר 📬' },
