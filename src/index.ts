@@ -45,7 +45,7 @@ async function main() {
   shouldInitBot(chatbotConfig) && (await initChatbot(app));
   shouldInitBot(chilliConfig) && (await initChilli());
   shouldInitBot(coachConfig) && (await initCoach(app));
-  shouldInitBot(woltConfig) && (await initWolt(app));
+  shouldInitBot(woltConfig) && (await initWolt());
   shouldInitBot(worldlyConfig) && (await initWorldly(app));
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);

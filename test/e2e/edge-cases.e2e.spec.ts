@@ -1,6 +1,5 @@
 import { BOT_CONFIG as CHILLI_CONFIG } from '@src/features/chilli/chilli.config';
 import { ChilliController } from '@src/features/chilli/chilli.controller';
-import { WoltLauncherService } from '@src/features/wolt/launcher.service';
 import { BOT_CONFIG as WOLT_CONFIG } from '@src/features/wolt/wolt.config';
 import { WoltController } from '@src/features/wolt/wolt.controller';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -49,7 +48,7 @@ describe('E2E edge cases', () => {
       woltMocks.getActiveSubscriptions.mockRejectedValue(new Error('mongo unreachable'));
 
       const testBot = createTestBot(WOLT_CONFIG);
-      const controller = new WoltController(testBot.bot, new WoltLauncherService(testBot.bot));
+      const controller = new WoltController(testBot.bot);
       controller.init();
 
       // grammY's `bot.catch` runs during polling — for direct `handleUpdate` the rejection still surfaces.

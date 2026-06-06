@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { WoltLauncherService } from '@src/features/wolt/launcher.service';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from '@src/features/wolt/wolt.config';
 import { WoltController } from '@src/features/wolt/wolt.controller';
 import { buildCallbackQueryUpdate, buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
@@ -32,8 +31,7 @@ describe('WoltController E2E', () => {
     resetUpdateBuilderCounters();
     vi.clearAllMocks();
     testBot = createTestBot(BOT_CONFIG);
-    const launcher = new WoltLauncherService(testBot.bot);
-    const controller = new WoltController(testBot.bot, launcher);
+    const controller = new WoltController(testBot.bot);
     controller.init();
   });
 
