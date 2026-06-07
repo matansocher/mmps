@@ -67,6 +67,15 @@ The test: Every changed line should trace directly to the user's request.
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+### 5. Never Commit Unless Asked
+
+**Do not run `git commit` (or `git push`) unless the user explicitly tells you to.**
+
+- Make and stage changes, but leave committing to the user unless they ask.
+- "Fix X", "add Y", "implement Z" means write the code — not commit it.
+- Only commit when the user says so (e.g. "commit this", "commit and push").
+- This also applies to creating tags, amending, or rewriting history.
+
 ---
 
 ## Tech Stack
@@ -803,6 +812,7 @@ Skills live in `.claude/skills/{name}/SKILL.md` and follow the standard Claude C
 - Import from `@services/telegram-grammy` — this path does NOT exist. Use `@services/telegram`.
 - Use `getInlineKeyboardMarkup` — use `buildInlineKeyboard` instead.
 - Forget to update the barrel `index.ts`.
+- Commit or push unless the user explicitly asks you to.
 
 ---
 
