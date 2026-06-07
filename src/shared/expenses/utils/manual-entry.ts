@@ -52,6 +52,7 @@ export type ManualExpenseInput = {
   readonly currency?: Currency;
   readonly transactionDate?: Date;
   readonly category?: ExpenseCategory;
+  readonly card?: string;
 };
 
 async function categorize(input: ManualExpenseInput): Promise<z.infer<typeof categorizationSchema>> {
@@ -93,6 +94,7 @@ export async function createManualExpense(input: ManualExpenseInput): Promise<Ex
     amount: Math.round(input.amount * 100) / 100,
     currency: input.currency ?? DEFAULT_CURRENCY,
     transactionDate: input.transactionDate ?? now,
+    ...(input.card ? { card: input.card } : {}),
   };
 
   const insert = await createExpense(data);

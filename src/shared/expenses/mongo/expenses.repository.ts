@@ -33,6 +33,12 @@ export async function getRecentExpenses(limit = 20): Promise<Expense[]> {
   return col.find({}).sort({ transactionDate: -1 }).limit(limit).toArray();
 }
 
+export async function getDistinctCards(): Promise<string[]> {
+  const col = getCollection();
+  const values = await col.distinct('card', { card: { $exists: true, $ne: null as never } });
+  return (values as unknown[]).filter((v): v is string => typeof v === 'string' && /^\d{4}$/.test(v)).sort();
+}
+
 export async function getExpensesByCategory(category: ExpenseCategory, from: Date, to: Date): Promise<Expense[]> {
   const col = getCollection();
   return col

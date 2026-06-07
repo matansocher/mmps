@@ -26,6 +26,7 @@ import {
   type ExpenseType,
   getAllExpensesByEffectiveCategory,
   getAllExpensesByEffectiveVendor,
+  getDistinctCards,
   getExpensesBetween,
   SUPPORTED_CURRENCIES,
 } from '@shared/expenses';
@@ -39,6 +40,7 @@ import type {
   ActivitySummary,
   BulkUpdateVendorBody,
   BulkUpdateVendorResponse,
+  CardListResponse,
   CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
@@ -86,6 +88,7 @@ const ExpenseDtoSchema = z.object({
   currency: z.string(),
   type: ExpenseTypeEnum,
   transactionDate: z.string(),
+  card: z.string().optional(),
   originalVendor: z.string().optional(),
   originalCategory: ExpenseCategoryEnum.optional(),
   originalType: ExpenseTypeEnum.optional(),
@@ -186,6 +189,7 @@ const ExpenseChargeDtoSchema = z.object({
   currency: z.string(),
   transactionDate: z.string(),
   category: ExpenseCategoryEnum,
+  card: z.string().optional(),
 });
 
 const ExpensesMonthResponseSchema = z.object({
@@ -278,6 +282,11 @@ const CreateManualExpenseBodySchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]).optional(),
   transactionDate: z.string().optional().describe('ISO 8601; defaults to now'),
   category: ExpenseCategoryEnum.optional().describe('When provided, skips AI categorization'),
+  card: z.string().regex(/^\d{4}$/).optional().describe('Last 4 digits of the card'),
+});
+
+const CardListResponseSchema = z.object({
+  cards: z.array(z.string()),
 });
 
 const ErrorSchema = z.object({ error: z.string() });
@@ -463,6 +472,17 @@ registry.registerPath({
   },
 });
 
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/expenses/cards',
+  tags: ['Chatbot'],
+  summary: 'List distinct card last-4 digits seen across all expenses',
+  responses: {
+    200: { description: 'Card list', content: { 'application/json': { schema: CardListResponseSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
 function dateKey(date: Date): string {
   return formatInTimeZone(date, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
 }
@@ -546,6 +566,7 @@ function toExpenseDto(e: Expense): ExpenseDto {
     currency: e.currency,
     type,
     transactionDate: e.transactionDate.toISOString(),
+    ...(e.card ? { card: e.card } : {}),
     originalVendor: e.userVendor && e.vendor !== e.userVendor ? e.vendor : undefined,
     originalCategory: e.userCategory && e.category !== e.userCategory ? (e.category as ExpenseCategoryDto) : undefined,
     originalType: e.userType && e.type !== e.userType ? (e.type as ExpenseTypeDto) : undefined,
@@ -947,6 +968,7 @@ function computeTopCharges(monthExpensesPrimary: ReadonlyArray<Expense>, limit: 
       currency: e.currency,
       transactionDate: e.transactionDate.toISOString(),
       category: effectiveCategory(e) as ExpenseCategoryDto,
+      ...(e.card ? { card: e.card } : {}),
     }));
 }
 
@@ -1349,6 +1371,14 @@ export function registerChatbotApiRoutes(app: Express): void {
         res.status(400).json({ error: 'invalid_category' });
         return;
       }
+      let card: string | undefined;
+      if (body.card !== undefined && body.card !== null && body.card !== '') {
+        if (typeof body.card !== 'string' || !/^\d{4}$/.test(body.card)) {
+          res.status(400).json({ error: 'card_must_be_4_digits' });
+          return;
+        }
+        card = body.card;
+      }
       let transactionDate: Date | undefined;
       if (body.transactionDate) {
         const d = new Date(body.transactionDate);
@@ -1364,11 +1394,22 @@ export function registerChatbotApiRoutes(app: Express): void {
         currency: (body.currency as Currency) ?? undefined,
         transactionDate,
         category: body.category,
+        card,
       });
       res.status(201).json(toExpenseDto(created));
     } catch (err) {
       logger.error(`manual expense create failed: ${err}`);
       res.status(500).json({ error: 'create_failed' });
+    }
+  });
+
+  app.get('/api/chatbot/expenses/cards', async (_req: Request, res: Response<CardListResponse | { error: string }>) => {
+    try {
+      const cards = await getDistinctCards();
+      res.json({ cards });
+    } catch (err) {
+      logger.error(`list cards failed: ${err}`);
+      res.status(500).json({ error: 'list_failed' });
     }
   });
 

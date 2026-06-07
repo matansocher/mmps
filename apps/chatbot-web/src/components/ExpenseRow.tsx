@@ -36,6 +36,7 @@ export function ExpenseRow({ expense, onTap, dayLabel }: Props) {
           {expense.category}
           {typeTag}
           {dayLabel ? ` · ${dayLabel}` : ''}
+          {expense.card ? ` · •••${expense.card}` : ''}
         </div>
       </div>
       <div className="text-sm font-medium tabular text-text-primary shrink-0">{formatAmount(expense.amount, expense.currency)}</div>

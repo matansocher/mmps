@@ -148,9 +148,12 @@ export function ExpenseEditSheet({ expense, onClose, onSave, onViewVendor }: Pro
 
           <div>
             <label className="text-xs font-medium text-text-secondary uppercase tracking-wide">Amount</label>
-            <div className="mt-1.5 rounded-xl bg-bg-elevated border border-border-subtle px-3 py-2.5 text-sm text-text-muted">
-              {formatAmount(expense.amount, expense.currency)}
-              <span className="ml-2 text-xs">— log a correction in chat</span>
+            <div className="mt-1.5 rounded-xl bg-bg-elevated border border-border-subtle px-3 py-2.5 text-sm text-text-muted flex items-center justify-between">
+              <span>
+                {formatAmount(expense.amount, expense.currency)}
+                <span className="ml-2 text-xs">— log a correction in chat</span>
+              </span>
+              {expense.card && <span className="text-xs font-mono text-text-secondary">•••{expense.card}</span>}
             </div>
           </div>
 

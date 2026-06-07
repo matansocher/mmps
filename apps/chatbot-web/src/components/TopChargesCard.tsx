@@ -32,7 +32,10 @@ export function TopChargesCard({ rows, onTap }: Props) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm text-text-primary truncate">{r.vendor}</div>
-              <div className="text-[11px] text-text-muted">{formatExpenseDayLabel(r.transactionDate)}</div>
+              <div className="text-[11px] text-text-muted">
+                {formatExpenseDayLabel(r.transactionDate)}
+                {r.card ? ` · •••${r.card}` : ''}
+              </div>
             </div>
             <div className="text-sm font-semibold tabular text-text-primary shrink-0">
               {formatAmount(r.amount, r.currency)}

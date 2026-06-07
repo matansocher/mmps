@@ -345,6 +345,7 @@ function toCreateData(row: ParsedRow, meta: FileMeta, override: OverrideEntry | 
     type: row.type,
     amount: row.amount,
     currency: row.currency,
+    card: meta.cardLast4,
     transactionDate: row.transactionDate,
   };
   if (!override) return data;

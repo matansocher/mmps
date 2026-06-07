@@ -50,4 +50,5 @@ export const api = {
     request<ExpenseDto>(`/api/chatbot/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   createManualExpense: (body: CreateManualExpenseBody) =>
     request<ExpenseDto>('/api/chatbot/expenses/manual', { method: 'POST', body: JSON.stringify(body) }),
+  listCards: () => request<{ cards: ReadonlyArray<string> }>('/api/chatbot/expenses/cards').then((r) => r.cards),
 };

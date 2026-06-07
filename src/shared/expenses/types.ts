@@ -82,6 +82,7 @@ export type Expense = {
   readonly userType?: ExpenseType;
   readonly amount: number;
   readonly currency: string;
+  readonly card?: string; // last 4 digits of the source card; null for manual/cash entries
   readonly transactionDate: Date;
   readonly createdAt: Date;
 };

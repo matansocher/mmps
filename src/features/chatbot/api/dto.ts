@@ -76,6 +76,7 @@ export type ExpenseDto = {
   readonly currency: string;
   readonly type: ExpenseTypeDto;
   readonly transactionDate: string; // ISO
+  readonly card?: string;
   readonly originalVendor?: string;
   readonly originalCategory?: ExpenseCategoryDto;
   readonly originalType?: ExpenseTypeDto;
@@ -147,6 +148,7 @@ export type ExpenseChargeDto = {
   readonly currency: string;
   readonly transactionDate: string;
   readonly category: ExpenseCategoryDto;
+  readonly card?: string;
 };
 
 export type ExpensesMonthResponse = {
@@ -206,6 +208,11 @@ export type CreateManualExpenseBody = {
   readonly currency?: 'ILS' | 'USD' | 'EUR' | 'GBP' | 'JPY';
   readonly transactionDate?: string; // ISO 8601; defaults to now
   readonly category?: ExpenseCategoryDto;
+  readonly card?: string; // 4-digit last4; optional
+};
+
+export type CardListResponse = {
+  readonly cards: ReadonlyArray<string>;
 };
 
 export type ExpenseMonthlyPoint = {

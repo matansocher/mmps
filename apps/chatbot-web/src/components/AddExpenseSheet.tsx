@@ -34,6 +34,8 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<Currency>('ILS');
   const [category, setCategory] = useState<CategoryChoice>('auto');
+  const [card, setCard] = useState<string>('');
+  const [cards, setCards] = useState<ReadonlyArray<string>>([]);
   const [dateLocal, setDateLocal] = useState(() => {
     const base = new Date(defaultDate);
     base.setHours(12, 0, 0, 0);
@@ -49,6 +51,23 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .listCards()
+      .then((list) => {
+        if (!cancelled) setCards(list);
+      })
+      .catch(() => {
+        if (!cancelled) setCards([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const cardOptions: ReadonlyArray<DropdownOption<string>> = [{ value: '', label: 'No card' }, ...cards.map((c) => ({ value: c, label: `•••${c}` }))];
+
   const parsedAmount = Number(amount);
   const isValid = vendor.trim().length > 0 && Number.isFinite(parsedAmount) && parsedAmount > 0 && Boolean(dateLocal);
 
@@ -62,6 +81,7 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
         currency,
         transactionDate: new Date(dateLocal).toISOString(),
         ...(category !== 'auto' ? { category } : {}),
+        ...(card ? { card } : {}),
       });
       await onSaved(created);
     } catch {
@@ -120,6 +140,11 @@ export function AddExpenseSheet({ defaultDate, onClose, onSaved, onError }: Prop
         <div className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wide text-text-muted">Category</span>
           <Dropdown<CategoryChoice> value={category} options={CATEGORY_OPTIONS} onChange={setCategory} />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-xs uppercase tracking-wide text-text-muted">Card</span>
+          <Dropdown<string> value={card} options={cardOptions} onChange={setCard} />
         </div>
 
         <label className="flex flex-col gap-1">
