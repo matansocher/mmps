@@ -19,11 +19,11 @@ export async function reminderCheck(bot: Bot): Promise<void> {
 
     for (const reminder of dueReminders) {
       try {
-        const message = `🔔 *Reminder*\n\n${reminder.message}\n\n_Due: ${reminder.dueDate.toLocaleString('en-US', {
+        const message = `🔔 *Reminder*\n${reminder.message}\n_Due: ${reminder.dueDate.toLocaleString('en-US', {
           timeZone: DEFAULT_TIMEZONE,
           dateStyle: 'full',
           timeStyle: 'short',
-        })}_\n\n_Tap the mini-app to mark it done._`;
+        })}`;
 
         await bot.api.sendMessage(reminder.chatId, message, { parse_mode: 'Markdown' });
 
