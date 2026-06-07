@@ -21,7 +21,6 @@ type Props = {
 
 export function ExpenseRow({ expense, onTap, dayLabel }: Props) {
   const emoji = getCategoryEmoji(expense.category);
-  const typeTag = expense.type === 'card_alert' ? ' · card' : expense.type === 'bill' ? ' · bill' : '';
   const edited = !!(expense.originalVendor || expense.originalCategory || expense.originalType);
 
   const inner = (
@@ -33,10 +32,8 @@ export function ExpenseRow({ expense, onTap, dayLabel }: Props) {
           {edited && <span className="ml-1 text-[10px] text-text-muted" aria-label="Edited">✎</span>}
         </div>
         <div className="text-xs text-text-muted truncate">
-          {expense.category}
-          {typeTag}
-          {dayLabel ? ` · ${dayLabel}` : ''}
-          {expense.card ? ` · •••${expense.card}` : ''}
+          {dayLabel ?? ''}
+          {expense.card ? `${dayLabel ? ' · ' : ''}•••${expense.card}` : ''}
         </div>
       </div>
       <div className="text-sm font-medium tabular text-text-primary shrink-0">{formatAmount(expense.amount, expense.currency)}</div>
