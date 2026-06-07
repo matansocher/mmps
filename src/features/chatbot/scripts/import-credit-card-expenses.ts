@@ -25,6 +25,13 @@
  *      original `vendor` or any `userVendor` override. Vendor comparison normalizes
  *      casing/whitespace/Hebrew niqqud. Date+amount-only matches are flagged as ambiguous
  *      and skipped (review manually).
+ *
+ * Vendor-override inheritance (keeps the user's manual edits from being silently lost):
+ *   When a row's vendor (after normalization) matches the vendor of any existing expense
+ *   that already carries a `userVendor` and/or `userCategory` override, the new row inherits
+ *   those overrides automatically. The most-recent override wins on collisions, and lookups
+ *   match against both the original `vendor` and any `userVendor` so the bank's raw text
+ *   AND the user's preferred name both find the same overrides.
  */
 import { config } from 'dotenv';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -251,6 +258,76 @@ function findDuplicate(row: ParsedRow, pool: ReadonlyArray<Expense>): DupResult 
   return { kind: 'ambiguous', candidates: sameDateAmount };
 }
 
+// --- User override inheritance ---
+//
+// When the user renames or recategorizes an existing expense (via the mini-app), that override
+// is stored on that single document. Without this map, every future statement reintroduces the
+// original raw vendor text and re-derives the category from the sector — silently undoing the
+// user's correction for all new charges.
+//
+// We index every expense that carries an override by both its raw `vendor` AND its `userVendor`
+// (so future imports match regardless of which name the bank prints), keeping the most-recent
+// override per key. Lookup uses exact normalized match first, then the same ≥3-char substring
+// heuristic used for dedup.
+
+type OverrideEntry = { readonly userVendor?: string; readonly userCategory?: ExpenseCategory; readonly mostRecent: number };
+
+function buildOverrideMap(pool: ReadonlyArray<Expense>): Map<string, OverrideEntry> {
+  const map = new Map<string, OverrideEntry>();
+  for (const e of pool) {
+    if (!e.userVendor && !e.userCategory) continue;
+    const ts = e.transactionDate?.getTime?.() ?? e.createdAt?.getTime?.() ?? 0;
+    const keys = new Set<string>();
+    const raw = normalizeName(e.vendor);
+    if (raw) keys.add(raw);
+    if (e.userVendor) {
+      const renamed = normalizeName(e.userVendor);
+      if (renamed) keys.add(renamed);
+    }
+    for (const k of keys) {
+      const prev = map.get(k);
+      if (!prev || ts > prev.mostRecent) {
+        map.set(k, { userVendor: e.userVendor, userCategory: e.userCategory, mostRecent: ts });
+      }
+    }
+  }
+  return map;
+}
+
+function findOverride(rowVendor: string, map: Map<string, OverrideEntry>): OverrideEntry | null {
+  const n = normalizeName(rowVendor);
+  if (!n) return null;
+  const exact = map.get(n);
+  if (exact) return exact;
+  if (n.length < 3) return null;
+  let best: OverrideEntry | null = null;
+  for (const [key, entry] of map) {
+    if (key.length < 3) continue;
+    if (key.includes(n) || n.includes(key)) {
+      if (!best || entry.mostRecent > best.mostRecent) best = entry;
+    }
+  }
+  return best;
+}
+
+function registerOverride(map: Map<string, OverrideEntry>, expense: Expense): void {
+  if (!expense.userVendor && !expense.userCategory) return;
+  const ts = expense.transactionDate?.getTime?.() ?? expense.createdAt?.getTime?.() ?? 0;
+  const keys = new Set<string>();
+  const raw = normalizeName(expense.vendor);
+  if (raw) keys.add(raw);
+  if (expense.userVendor) {
+    const renamed = normalizeName(expense.userVendor);
+    if (renamed) keys.add(renamed);
+  }
+  for (const k of keys) {
+    const prev = map.get(k);
+    if (!prev || ts > prev.mostRecent) {
+      map.set(k, { userVendor: expense.userVendor, userCategory: expense.userCategory, mostRecent: ts });
+    }
+  }
+}
+
 // --- Insert ---
 
 function buildMessageId(meta: FileMeta, row: ParsedRow): string {
@@ -260,8 +337,8 @@ function buildMessageId(meta: FileMeta, row: ParsedRow): string {
   return `card-xlsx:${meta.cardLast4}:${meta.statementYm}:${dateKey}:${row.currency}:${amountKey}:${vendorKey}`;
 }
 
-function toCreateData(row: ParsedRow, meta: FileMeta): CreateExpenseData {
-  return {
+function toCreateData(row: ParsedRow, meta: FileMeta, override: OverrideEntry | null): CreateExpenseData {
+  const data: CreateExpenseData = {
     messageId: buildMessageId(meta, row),
     vendor: row.vendor,
     category: row.category,
@@ -269,6 +346,12 @@ function toCreateData(row: ParsedRow, meta: FileMeta): CreateExpenseData {
     amount: row.amount,
     currency: row.currency,
     transactionDate: row.transactionDate,
+  };
+  if (!override) return data;
+  return {
+    ...data,
+    ...(override.userVendor ? { userVendor: override.userVendor } : {}),
+    ...(override.userCategory ? { userCategory: override.userCategory } : {}),
   };
 }
 
@@ -330,18 +413,23 @@ async function main() {
   // Track inserts within this run so a duplicate row inside the same batch doesn't double-insert.
   const liveExisting: Expense[] = [...existing];
   const existingMessageIds = new Set(liveExisting.map((e) => e.messageId));
+  const overrideMap = buildOverrideMap(liveExisting);
+  logger.log(`Loaded ${overrideMap.size} vendor override key(s) for inheritance`);
 
   let totalInserted = 0;
   let totalSkipped = 0;
   let totalAmbiguous = 0;
+  let totalInherited = 0;
   const ambiguousReport: string[] = [];
 
   for (const { meta, rows } of parsedFiles) {
     let inserted = 0;
     let skipped = 0;
     let ambiguous = 0;
+    let inherited = 0;
     for (const row of rows) {
-      const data = toCreateData(row, meta);
+      const override = findOverride(row.vendor, overrideMap);
+      const data = toCreateData(row, meta, override);
 
       // Fast path: deterministic messageId already in Mongo (re-run of same file).
       if (existingMessageIds.has(data.messageId)) {
@@ -365,6 +453,13 @@ async function main() {
         continue;
       }
 
+      if (override) {
+        inherited++;
+        logger.log(
+          `[inherit] "${row.vendor}" → userVendor="${override.userVendor ?? '—'}" userCategory="${override.userCategory ?? '—'}"`,
+        );
+      }
+
       if (dryRun) {
         logger.log(
           `[would insert] ${data.transactionDate.toISOString().slice(0, 10)} ${data.amount} ${data.currency} "${data.vendor}" (${data.category}/${data.type}) [${meta.cardLast4} ${meta.statementYm}]`,
@@ -372,7 +467,9 @@ async function main() {
       } else {
         try {
           const r = await createExpense(data);
-          liveExisting.push({ ...data, _id: r.insertedId, createdAt: new Date() } as Expense);
+          const newExpense = { ...data, _id: r.insertedId, createdAt: new Date() } as Expense;
+          liveExisting.push(newExpense);
+          registerOverride(overrideMap, newExpense);
         } catch (err) {
           // Most likely a unique-index collision on messageId (re-running same file) — count as skip.
           const message = err instanceof Error ? err.message : String(err);
@@ -386,14 +483,16 @@ async function main() {
       existingMessageIds.add(data.messageId);
       inserted++;
     }
-    logger.log(`${meta.fileName}: inserted=${inserted}, skipped=${skipped}, ambiguous=${ambiguous}`);
+    logger.log(`${meta.fileName}: inserted=${inserted}, skipped=${skipped}, ambiguous=${ambiguous}, inherited=${inherited}`);
     totalInserted += inserted;
     totalSkipped += skipped;
     totalAmbiguous += ambiguous;
+    totalInherited += inherited;
   }
 
   logger.log(`---`);
   logger.log(`Total inserted: ${totalInserted}`);
+  logger.log(`Total inherited overrides: ${totalInherited}`);
   logger.log(`Total skipped (already in Mongo): ${totalSkipped}`);
   if (totalAmbiguous > 0) {
     logger.warn(`Ambiguous rows (skipped, please review): ${totalAmbiguous}`);
