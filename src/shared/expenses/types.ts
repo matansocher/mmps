@@ -18,6 +18,9 @@ export const EXPENSE_CATEGORIES = [
   'subscriptions',
   'utilities',
   'bills',
+  'transfer',
+  'electronics',
+  'books',
   'other',
 ] as const;
 
@@ -41,6 +44,9 @@ export const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   subscriptions: 'Subscriptions',
   utilities: 'Utilities',
   bills: 'Bills',
+  transfer: 'Transfer',
+  electronics: 'Electronics',
+  books: 'Books',
   other: 'Other',
 };
 
@@ -62,6 +68,9 @@ export const CATEGORY_EMOJI: Record<ExpenseCategory, string> = {
   subscriptions: '📅',
   utilities: '💡',
   bills: '🧾',
+  transfer: '💸',
+  electronics: '💻',
+  books: '📚',
   other: '💳',
 };
 

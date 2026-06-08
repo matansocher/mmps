@@ -1,28 +1,23 @@
 /**
- * Import credit-card transactions from monthly XLSX statements (Hebrew "כאל / Mizrahi" format)
- * into the chatbot expenses collection, skipping any entries that already exist in Mongo.
+ * Import credit-card transactions from monthly XLSX statements into the chatbot
+ * expenses collection, skipping any entries that already exist in Mongo.
  *
- * Filename convention (REQUIRED): `card-<last4>-<YYYY-MM>.xlsx`
- *   Examples:
- *     card-1220-2026-05.xlsx   → Visa ending 1220, statement for May 2026
- *     card-4477-2026-06.xlsx   → Visa ending 4477, statement for June 2026
- *   The script parses `<last4>` and `<YYYY-MM>` from the filename and uses them to:
- *     - Tag every imported row with the source card and statement month (in `messageId`)
- *     - Pre-filter the Mongo dedup window to that month (faster, safer dedup)
- *     - Refuse files that don't match the convention (fail fast — explicit > implicit)
+ * Supported filename conventions (the dispatcher picks the right parser):
+ *   - `card-<last4>-<YYYY>-<MM>.xlsx`  → Discount/Mizrahi (single card, single month)
+ *   - `card-<last4>-<YYYY>.xlsx`       → Isracard/Cal (full year, may mix multiple cards)
  *
  * Usage:
  *   1. Adjust the CONFIG block below (folder/file/dryRun) for the run.
  *   2. npx tsx src/features/chatbot/scripts/import-credit-card-expenses.ts
  *
  * Dedup (idempotent — re-running the same file is a no-op):
- *   1. Every row's `messageId` is deterministic: card+ym+date+currency+amount+vendor. The
- *      Mongo collection has a unique index on `messageId`, so the second run can't insert
- *      the same row even if the heuristic below were to miss it.
- *   2. As a secondary check (catches user-renamed vendors), a row is treated as a duplicate
- *      when the transaction **date** matches (same calendar day, Asia/Jerusalem) AND the
- *      **amount** matches (within 0.01) AND the **vendor** matches against either the
- *      original `vendor` or any `userVendor` override. Vendor comparison normalizes
+ *   1. Every row's `messageId` is deterministic: card+ym+date+currency+amount+vendor.
+ *      The Mongo collection has a unique index on `messageId`, so the second run can't
+ *      insert the same row even if the heuristic below were to miss it.
+ *   2. As a secondary check (catches user-renamed vendors), a row is treated as a
+ *      duplicate when the transaction **date** matches (same calendar day, Asia/Jerusalem)
+ *      AND the **amount** matches (within 0.01) AND the **vendor** matches against either
+ *      the original `vendor` or any `userVendor` override. Vendor comparison normalizes
  *      casing/whitespace/Hebrew niqqud. Date+amount-only matches are flagged as ambiguous
  *      and skipped (review manually).
  *
@@ -34,15 +29,19 @@
  *   AND the user's preferred name both find the same overrides.
  */
 import { config } from 'dotenv';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { cwd, exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { read, utils } from 'xlsx';
 import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
-import { createExpense, type CreateExpenseData, type Currency, DB_NAME, ensureExpenseIndexes, type Expense, type ExpenseCategory, type ExpenseType, getExpensesBetween } from '@shared/expenses';
-import { effectiveVendor } from '@shared/expenses';
+import { createExpense, type CreateExpenseData, DB_NAME, effectiveVendor, ensureExpenseIndexes, type Expense, getAllOverriddenExpenses, getExpensesBetween } from '@shared/expenses';
+import { findDuplicate, normalizeName } from './lib/dedup';
+import { type FileMeta, parseFileMeta } from './lib/filename';
+import { buildOverrideMap, findOverride, type OverrideEntry, registerOverride } from './lib/override-map';
+import { parseDiscountFile } from './parsers/discount';
+import { parseIsracardFile } from './parsers/isracard';
+import type { ParsedRow } from './parsers/types';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_EXPENSES_DIR = resolve(SCRIPT_DIR, 'expenses');
@@ -57,9 +56,9 @@ const logger = new Logger('import-card-xlsx');
 // CONFIG — adjust before running. `file` (when set) takes priority over `folder`.
 // =============================================================================
 const CONFIG = {
-  // Process every `card-<last4>-<YYYY-MM>.xlsx` in this folder. Defaults to the
-  // sibling `expenses/` folder next to this script (paths are resolved against it
-  // first, then against the current working directory).
+  // Process every supported `card-...xlsx` in this folder. Defaults to the sibling
+  // `expenses/` folder next to this script (paths are resolved against it first, then
+  // against the current working directory).
   folder: 'expenses' as string,
   // Set to a single filename to import just that statement (overrides `folder`).
   // Leave empty to process the whole `folder`.
@@ -69,283 +68,35 @@ const CONFIG = {
 } as const;
 // =============================================================================
 
-// --- Hebrew → category/type heuristics (avoid an LLM round-trip when sector is recognised) ---
-//
-// Sectors below were derived from observed XLSX statements across multiple cards (Mizrahi-1220
-// monthly billed + Discount-7374 immediate-charge). When the bank adds a sector we don't
-// recognise, the row falls through to "other" and the Hebrew text is preserved on the row's
-// `hebrewSector` (unused at write time but useful for triaging unknowns).
-const SECTOR_TO_CATEGORY: Record<string, ExpenseCategory> = {
-  מסעדות: 'restaurants',
-  'מזון מהיר': 'fast_food',
-  'מזון ומשקאות': 'groceries',
-  אנרגיה: 'fuel',
-  'רכב ותחבורה': 'transport',
-  'ריהוט ובית': 'home',
-  'תעשיה ומכירות': 'shopping',
-  'אופנה והלבשה': 'shopping',
-  'רפואה ובריאות': 'health',
-  'בריאות ויופי': 'health',
-  'פנאי בילוי': 'entertainment',
-  'תרבות ופנאי': 'entertainment',
-  אירועים: 'events',
-  'מלונאות ואירוח': 'travel',
-  תיירות: 'travel',
-  'תקשורת ומחשבים': 'communications',
-  'ביטוח ופיננסים': 'insurance',
-  מוסדות: 'government',
-  חינוך: 'other',
-  שונות: 'other',
-};
+// --- Dispatcher: route a single file to the right parser ---
 
-const TYPE_KEYWORDS: ReadonlyArray<{ readonly hebrew: string; readonly type: ExpenseType }> = [{ hebrew: 'הוראת קבע', type: 'bill' }];
-
-const SECTION_CURRENCY_KEYWORDS: ReadonlyArray<{ readonly match: RegExp; readonly currency: Currency }> = [
-  { match: /דולר|\$/, currency: 'USD' },
-  { match: /אירו|€/, currency: 'EUR' },
-  { match: /פאונד|לירה שטרלינג|£/, currency: 'GBP' },
-  { match: /יין יפני|¥/, currency: 'JPY' },
-];
-
-// --- Filename convention ---
-
-const FILENAME_RE = /^card-(\d{4})-(\d{4})-(0[1-9]|1[0-2])\.xlsx$/i;
-
-type FileMeta = {
-  readonly path: string;
-  readonly fileName: string;
-  readonly cardLast4: string;
-  readonly statementYear: number;
-  readonly statementMonth: number; // 1–12
-  readonly statementYm: string; // YYYY-MM
-};
-
-function parseFileMeta(filePath: string): FileMeta {
-  const fileName = basename(filePath);
-  const m = FILENAME_RE.exec(fileName);
-  if (!m) {
-    throw new Error(`Filename "${fileName}" does not match the required convention card-<last4>-<YYYY-MM>.xlsx (e.g. card-1220-2026-05.xlsx)`);
-  }
-  const [, cardLast4, yearStr, monthStr] = m;
-  const statementYear = Number(yearStr);
-  const statementMonth = Number(monthStr);
-  return {
-    path: filePath,
-    fileName,
-    cardLast4,
-    statementYear,
-    statementMonth,
-    statementYm: `${yearStr}-${monthStr}`,
-  };
-}
-
-// --- XLSX parsing ---
-
-type ParsedRow = {
-  readonly transactionDate: Date;
-  readonly vendor: string;
-  readonly amount: number;
-  readonly currency: Currency;
-  readonly type: ExpenseType;
-  readonly category: ExpenseCategory;
-  readonly hebrewSector: string;
-  readonly sourceRowIndex: number;
-};
-
-function excelSerialToDate(serial: number): Date {
-  // Excel epoch (1899-12-30) → Unix epoch offset is 25569 days.
-  return new Date(Math.round((serial - 25569) * 86400 * 1000));
-}
-
-function detectSectionCurrency(text: string): Currency | null {
-  for (const { match, currency } of SECTION_CURRENCY_KEYWORDS) {
-    if (match.test(text)) return currency;
-  }
-  return null;
-}
-
-function categorizeFromSector(sector: string): ExpenseCategory {
-  if (sector && SECTOR_TO_CATEGORY[sector]) return SECTOR_TO_CATEGORY[sector];
-  return 'other';
-}
-
-function typeFromHebrewType(hebrewType: string): ExpenseType {
-  for (const { hebrew, type } of TYPE_KEYWORDS) if (hebrewType.includes(hebrew)) return type;
-  // Anything else from a credit-card statement is effectively a card charge.
-  return 'card_alert';
-}
-
-function parseFile(filePath: string): ParsedRow[] {
-  const buf = readFileSync(filePath);
-  const wb = read(buf, { type: 'buffer', cellDates: false });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  // Array of arrays so column letters map directly: row[0]=A, row[1]=B ...
-  const rows = utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: null });
-
-  const parsed: ParsedRow[] = [];
-  let currentCurrency: Currency = 'ILS';
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i] ?? [];
-    const a = row[0];
-    const b = row[1];
-    const c = row[2];
-    const e = row[4];
-    const f = row[5];
-
-    // A single non-empty A cell (typical for section headers/summaries) may indicate a currency switch.
-    if (typeof a === 'string' && a && b == null && c == null) {
-      const detected = detectSectionCurrency(a);
-      if (detected) currentCurrency = detected;
-      continue;
-    }
-
-    // Transaction rows have A=date-serial (number), B=vendor (string), C=amount (number).
-    if (typeof a !== 'number' || typeof b !== 'string' || typeof c !== 'number') continue;
-    if (!b.trim() || !Number.isFinite(c) || c <= 0) continue;
-
-    const hebrewSector = typeof f === 'string' ? f.trim() : '';
-    const hebrewType = typeof e === 'string' ? e.trim() : '';
-
-    parsed.push({
-      transactionDate: excelSerialToDate(a),
-      vendor: b.trim(),
-      amount: Math.round(c * 100) / 100,
-      currency: currentCurrency,
-      type: typeFromHebrewType(hebrewType),
-      category: categorizeFromSector(hebrewSector),
-      hebrewSector,
-      sourceRowIndex: i + 1,
-    });
-  }
-
-  return parsed;
-}
-
-// --- Dedup ---
-
-function normalizeName(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0591-\u05c7]/g, '') // strip Hebrew niqqud
-    .replace(/[^\p{Letter}\p{Number}]+/gu, '');
-}
-
-function isVendorMatch(a: string, b: string): boolean {
-  const na = normalizeName(a);
-  const nb = normalizeName(b);
-  if (!na || !nb) return false;
-  if (na === nb) return true;
-  if (na.length >= 3 && nb.length >= 3 && (na.includes(nb) || nb.includes(na))) return true;
-  return false;
-}
-
-function sameCalendarDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-type DupResult = { readonly kind: 'unique' } | { readonly kind: 'duplicate'; readonly match: Expense } | { readonly kind: 'ambiguous'; readonly candidates: ReadonlyArray<Expense> };
-
-function findDuplicate(row: ParsedRow, pool: ReadonlyArray<Expense>): DupResult {
-  const sameDateAmount = pool.filter((e) => e.currency === row.currency && Math.abs(e.amount - row.amount) < 0.01 && sameCalendarDay(e.transactionDate, row.transactionDate));
-  if (sameDateAmount.length === 0) return { kind: 'unique' };
-
-  const vendorMatches = sameDateAmount.filter((e) => isVendorMatch(effectiveVendor(e), row.vendor));
-  if (vendorMatches.length === 1) return { kind: 'duplicate', match: vendorMatches[0] };
-  if (vendorMatches.length > 1) return { kind: 'ambiguous', candidates: vendorMatches };
-  // Date + amount matched, but vendor didn't — conservatively treat as ambiguous (user may have renamed).
-  return { kind: 'ambiguous', candidates: sameDateAmount };
-}
-
-// --- User override inheritance ---
-//
-// When the user renames or recategorizes an existing expense (via the mini-app), that override
-// is stored on that single document. Without this map, every future statement reintroduces the
-// original raw vendor text and re-derives the category from the sector — silently undoing the
-// user's correction for all new charges.
-//
-// We index every expense that carries an override by both its raw `vendor` AND its `userVendor`
-// (so future imports match regardless of which name the bank prints), keeping the most-recent
-// override per key. Lookup uses exact normalized match first, then the same ≥3-char substring
-// heuristic used for dedup.
-
-type OverrideEntry = { readonly userVendor?: string; readonly userCategory?: ExpenseCategory; readonly mostRecent: number };
-
-function buildOverrideMap(pool: ReadonlyArray<Expense>): Map<string, OverrideEntry> {
-  const map = new Map<string, OverrideEntry>();
-  for (const e of pool) {
-    if (!e.userVendor && !e.userCategory) continue;
-    const ts = e.transactionDate?.getTime?.() ?? e.createdAt?.getTime?.() ?? 0;
-    const keys = new Set<string>();
-    const raw = normalizeName(e.vendor);
-    if (raw) keys.add(raw);
-    if (e.userVendor) {
-      const renamed = normalizeName(e.userVendor);
-      if (renamed) keys.add(renamed);
-    }
-    for (const k of keys) {
-      const prev = map.get(k);
-      if (!prev || ts > prev.mostRecent) {
-        map.set(k, { userVendor: e.userVendor, userCategory: e.userCategory, mostRecent: ts });
-      }
-    }
-  }
-  return map;
-}
-
-function findOverride(rowVendor: string, map: Map<string, OverrideEntry>): OverrideEntry | null {
-  const n = normalizeName(rowVendor);
-  if (!n) return null;
-  const exact = map.get(n);
-  if (exact) return exact;
-  if (n.length < 3) return null;
-  let best: OverrideEntry | null = null;
-  for (const [key, entry] of map) {
-    if (key.length < 3) continue;
-    if (key.includes(n) || n.includes(key)) {
-      if (!best || entry.mostRecent > best.mostRecent) best = entry;
-    }
-  }
-  return best;
-}
-
-function registerOverride(map: Map<string, OverrideEntry>, expense: Expense): void {
-  if (!expense.userVendor && !expense.userCategory) return;
-  const ts = expense.transactionDate?.getTime?.() ?? expense.createdAt?.getTime?.() ?? 0;
-  const keys = new Set<string>();
-  const raw = normalizeName(expense.vendor);
-  if (raw) keys.add(raw);
-  if (expense.userVendor) {
-    const renamed = normalizeName(expense.userVendor);
-    if (renamed) keys.add(renamed);
-  }
-  for (const k of keys) {
-    const prev = map.get(k);
-    if (!prev || ts > prev.mostRecent) {
-      map.set(k, { userVendor: expense.userVendor, userCategory: expense.userCategory, mostRecent: ts });
-    }
+function parseFile(meta: FileMeta): Promise<ParsedRow[]> | ParsedRow[] {
+  switch (meta.kind) {
+    case 'discount':
+      return parseDiscountFile(meta);
+    case 'isracard':
+      return parseIsracardFile(meta);
   }
 }
 
-// --- Insert ---
+// --- Insert helpers ---
 
-function buildMessageId(meta: FileMeta, row: ParsedRow): string {
+function buildMessageId(row: ParsedRow): string {
   const dateKey = row.transactionDate.toISOString().slice(0, 10);
   const amountKey = Math.round(row.amount * 100);
   const vendorKey = normalizeName(row.vendor).slice(0, 24) || 'unknown';
-  return `card-xlsx:${meta.cardLast4}:${meta.statementYm}:${dateKey}:${row.currency}:${amountKey}:${vendorKey}`;
+  return `card-xlsx:${row.cardLast4}:${row.statementYm}:${dateKey}:${row.currency}:${amountKey}:${vendorKey}`;
 }
 
-function toCreateData(row: ParsedRow, meta: FileMeta, override: OverrideEntry | null): CreateExpenseData {
+function toCreateData(row: ParsedRow, override: OverrideEntry | null): CreateExpenseData {
   const data: CreateExpenseData = {
-    messageId: buildMessageId(meta, row),
+    messageId: buildMessageId(row),
     vendor: row.vendor,
     category: row.category,
     type: row.type,
     amount: row.amount,
     currency: row.currency,
-    card: meta.cardLast4,
+    card: row.cardLast4,
     transactionDate: row.transactionDate,
   };
   if (!override) return data;
@@ -388,10 +139,17 @@ async function main() {
   // before we hit the bank/Mongo, then parse contents.
   const parsedFiles: { meta: FileMeta; rows: ParsedRow[] }[] = [];
   for (const f of files) {
-    const meta = parseFileMeta(f);
-    const rows = parseFile(f);
+    let meta: FileMeta;
+    try {
+      meta = parseFileMeta(f);
+    } catch (err) {
+      logger.warn(`Skipping ${f}: ${err instanceof Error ? err.message : err}`);
+      continue;
+    }
+    const rows = await parseFile(meta);
     parsedFiles.push({ meta, rows });
-    logger.log(`Parsed ${meta.fileName}: card=${meta.cardLast4}, statement=${meta.statementYm}, transactions=${rows.length}`);
+    const tag = meta.kind === 'discount' ? `card=${meta.cardLast4}, statement=${meta.statementYm}` : `cards=mixed, year=${meta.statementYear}`;
+    logger.log(`Parsed ${meta.fileName} [${meta.kind}]: ${tag}, transactions=${rows.length}`);
   }
 
   const everyRow = parsedFiles.flatMap((b) => b.rows);
@@ -408,13 +166,20 @@ async function main() {
 
   await createMongoConnection(DB_NAME);
   await ensureExpenseIndexes();
-  const existing = await getExpensesBetween(poolFrom, poolTo);
+  // Two separate loads on purpose:
+  //   1) `existing` is the date-bounded dedup pool — keeps the duplicate-check fast and accurate.
+  //   2) `overridden` is the unbounded set of expenses that carry user overrides — needed so
+  //      a vendor rename made in (say) March still propagates to a June re-import.
+  const [existing, overridden] = await Promise.all([getExpensesBetween(poolFrom, poolTo), getAllOverriddenExpenses()]);
   logger.log(`Loaded ${existing.length} existing Mongo expense(s) in window ${poolFrom.toISOString().slice(0, 10)}..${poolTo.toISOString().slice(0, 10)}`);
+  logger.log(`Loaded ${overridden.length} overridden expense(s) (all time) for vendor-override inheritance`);
 
   // Track inserts within this run so a duplicate row inside the same batch doesn't double-insert.
   const liveExisting: Expense[] = [...existing];
   const existingMessageIds = new Set(liveExisting.map((e) => e.messageId));
-  const overrideMap = buildOverrideMap(liveExisting);
+  // Build override map from the unbounded set so it's not date-windowed. Live inserts
+  // continue to register into the same map below.
+  const overrideMap = buildOverrideMap(overridden);
   logger.log(`Loaded ${overrideMap.size} vendor override key(s) for inheritance`);
 
   let totalInserted = 0;
@@ -430,7 +195,7 @@ async function main() {
     let inherited = 0;
     for (const row of rows) {
       const override = findOverride(row.vendor, overrideMap);
-      const data = toCreateData(row, meta, override);
+      const data = toCreateData(row, override);
 
       // Fast path: deterministic messageId already in Mongo (re-run of same file).
       if (existingMessageIds.has(data.messageId)) {
@@ -456,14 +221,12 @@ async function main() {
 
       if (override) {
         inherited++;
-        logger.log(
-          `[inherit] "${row.vendor}" → userVendor="${override.userVendor ?? '—'}" userCategory="${override.userCategory ?? '—'}"`,
-        );
+        logger.log(`[inherit] "${row.vendor}" → userVendor="${override.userVendor ?? '—'}" userCategory="${override.userCategory ?? '—'}"`);
       }
 
       if (dryRun) {
         logger.log(
-          `[would insert] ${data.transactionDate.toISOString().slice(0, 10)} ${data.amount} ${data.currency} "${data.vendor}" (${data.category}/${data.type}) [${meta.cardLast4} ${meta.statementYm}]`,
+          `[would insert] ${data.transactionDate.toISOString().slice(0, 10)} ${data.amount} ${data.currency} "${data.vendor}" (${data.category}/${data.type}) [${row.cardLast4} ${row.statementYm}]`,
         );
       } else {
         try {

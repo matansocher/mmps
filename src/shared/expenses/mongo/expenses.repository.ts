@@ -33,6 +33,17 @@ export async function getRecentExpenses(limit = 20): Promise<Expense[]> {
   return col.find({}).sort({ transactionDate: -1 }).limit(limit).toArray();
 }
 
+// All expenses that carry any user override — used by the XLSX importer to
+// inherit prior renames/recategorizations even when re-importing date ranges
+// far away from where the original override was made.
+export async function getAllOverriddenExpenses(): Promise<Expense[]> {
+  const col = getCollection();
+  return col
+    .find({ $or: [{ userVendor: { $exists: true, $ne: null as never } }, { userCategory: { $exists: true, $ne: null as never } }] })
+    .sort({ transactionDate: -1 })
+    .toArray();
+}
+
 export async function getDistinctCards(): Promise<string[]> {
   const col = getCollection();
   const values = await col.distinct('card', { card: { $exists: true, $ne: null as never } });

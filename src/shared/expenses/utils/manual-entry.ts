@@ -41,6 +41,9 @@ const SYSTEM_PROMPT = `You normalize a manually entered expense. Given a vendor 
   • subscriptions — Netflix, Spotify, cloud services
   • utilities — electric, water, gas
   • bills — rent, recurring miscellaneous
+  • transfer — money transfers, bank transfers, payments to individuals
+  • electronics — electronics, computers, phones, hardware
+  • books — books, bookstores, printed media
   • other — anything that doesn't fit
 - Types: "receipt" for one-off purchases, "bill" for recurring service charges (utilities, insurance, rent, taxes), "card_alert" only when clearly a card alert.
 - Clean obvious vendor typos when confident; otherwise preserve input casing.
@@ -64,6 +67,22 @@ async function categorize(input: ManualExpenseInput): Promise<z.infer<typeof cat
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: userPrompt },
   ])) as z.infer<typeof categorizationSchema>;
+}
+
+// Reusable categorizer for callers (e.g. the XLSX importer) that need the AI's
+// {category, type} guess for an unknown vendor without inserting anything.
+export async function categorizeVendor(input: {
+  readonly vendor: string;
+  readonly amount: number;
+  readonly currency?: Currency;
+}): Promise<{ readonly category: ExpenseCategory; readonly type: ExpenseType }> {
+  try {
+    const llm = await categorize(input);
+    return { category: llm.category, type: llm.type };
+  } catch (err) {
+    logger.warn(`categorizeVendor failed for "${input.vendor}", defaulting to other/card_alert: ${err}`);
+    return { category: 'other', type: 'card_alert' };
+  }
 }
 
 export async function createManualExpense(input: ManualExpenseInput): Promise<Expense> {
