@@ -76,7 +76,7 @@ export function ExpenseEditSheet({ expense, onClose, onSave, onViewVendor }: Pro
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 animate-fade-in" onClick={onClose} />
       <div className="relative w-full max-w-md bg-bg-card border-t border-border-subtle rounded-t-2xl max-h-[88vh] flex flex-col animate-fade-in">
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border-subtle">

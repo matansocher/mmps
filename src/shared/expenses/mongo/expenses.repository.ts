@@ -33,6 +33,11 @@ export async function getRecentExpenses(limit = 20): Promise<Expense[]> {
   return col.find({}).sort({ transactionDate: -1 }).limit(limit).toArray();
 }
 
+export async function getAllExpenses(): Promise<Expense[]> {
+  const col = getCollection();
+  return col.find({}).sort({ transactionDate: -1 }).toArray();
+}
+
 // All expenses that carry any user override — used by the XLSX importer to
 // inherit prior renames/recategorizations even when re-importing date ranges
 // far away from where the original override was made.

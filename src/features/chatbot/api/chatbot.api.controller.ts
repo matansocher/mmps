@@ -24,6 +24,7 @@ import {
   EXPENSE_CATEGORIES,
   type ExpenseCategory,
   type ExpenseType,
+  getAllExpenses,
   getAllExpensesByEffectiveCategory,
   getAllExpensesByEffectiveVendor,
   getDistinctCards,
@@ -53,10 +54,8 @@ import type {
   ExpenseChargeDto,
   ExpenseDto,
   ExpenseMonthlyPoint,
-  ExpensePacePrimary,
   ExpensesMonthResponse,
   ExpenseTotal,
-  ExpenseTrajectoryPoint,
   ExpenseTypeBreakdown,
   ExpenseTypeDto,
   ExpenseVendorDetailResponse,
@@ -154,25 +153,6 @@ const DashboardResponseSchema = z.object({
   expenseTotals: z.array(z.object({ currency: z.string(), total: z.number() })),
 });
 
-const ExpensePacePrimarySchema = z.object({
-  currency: z.string(),
-  currentTotal: z.number(),
-  projectedTotal: z.number().nullable(),
-  throughDayOfMonth: z.number(),
-  daysInMonth: z.number(),
-  comparableHistoricToDate: z.number().nullable(),
-  historicAvgMonthlyTotal: z.number().nullable(),
-  percentVsHistoric: z.number().nullable(),
-  baselineMonthCount: z.number(),
-  isCurrentMonth: z.boolean(),
-});
-
-const ExpenseTrajectoryPointSchema = z.object({
-  day: z.number(),
-  actual: z.number().nullable(),
-  expected: z.number().nullable(),
-});
-
 const ExpenseCategoryDeltaSchema = z.object({
   category: ExpenseCategoryEnum,
   currency: z.string(),
@@ -194,20 +174,22 @@ const ExpenseChargeDtoSchema = z.object({
 
 const ExpensesMonthResponseSchema = z.object({
   month: z.string(),
+  scope: z.enum(['month', 'all']),
   expenses: z.array(ExpenseDtoSchema),
   totals: z.array(z.object({ currency: z.string(), total: z.number() })),
   byCategory: z.array(z.object({ category: ExpenseCategoryEnum, currency: z.string(), total: z.number(), count: z.number() })),
   byType: z.array(z.object({ type: ExpenseTypeEnum, currency: z.string(), total: z.number(), count: z.number() })),
-  pace: ExpensePacePrimarySchema,
-  trajectory: z.array(ExpenseTrajectoryPointSchema),
   categoryDeltas: z.array(ExpenseCategoryDeltaSchema),
   topCharges: z.array(ExpenseChargeDtoSchema),
+  currency: z.string(),
 });
 
 const ExpenseMonthlyPointSchema = z.object({ month: z.string(), total: z.number() });
 
 const ExpenseCategoryDetailResponseSchema = z.object({
   category: ExpenseCategoryEnum,
+  scope: z.enum(['month', 'all']),
+  month: z.string().nullable(),
   currency: z.string(),
   total: z.number(),
   count: z.number(),
@@ -309,8 +291,8 @@ registry.registerPath({
   method: 'get',
   path: '/api/chatbot/expenses',
   tags: ['Chatbot'],
-  summary: 'Get expenses for a month with pace, trajectory, category deltas, and top charges vs trailing-3 baseline',
-  request: { query: z.object({ month: z.string().optional().describe('YYYY-MM; defaults to current month') }) },
+  summary: 'Get expenses for a month (with category deltas vs prior 3-month baseline) or all time (no baseline)',
+  request: { query: z.object({ month: z.string().optional().describe('YYYY-MM, or "all" for lifetime view; defaults to current month') }) },
   responses: {
     200: { description: 'Expenses month payload', content: { 'application/json': { schema: ExpensesMonthResponseSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
@@ -321,8 +303,11 @@ registry.registerPath({
   method: 'get',
   path: '/api/chatbot/expenses/category/{category}',
   tags: ['Chatbot'],
-  summary: 'Get lifetime expenses for a category, with monthly totals and top vendors',
-  request: { params: z.object({ category: ExpenseCategoryEnum }) },
+  summary: 'Get expenses for a category, optionally scoped to a single month',
+  request: {
+    params: z.object({ category: ExpenseCategoryEnum }),
+    query: z.object({ month: z.string().optional().describe('YYYY-MM to scope to a single month; omit for lifetime') }),
+  },
   responses: {
     200: { description: 'Category detail', content: { 'application/json': { schema: ExpenseCategoryDetailResponseSchema } } },
     400: { description: 'Invalid category', content: { 'application/json': { schema: ErrorSchema } } },
@@ -694,9 +679,14 @@ function monthlyTotalsForCurrency(expenses: ReadonlyArray<Expense>, currency: st
   return [...buckets.entries()].map(([month, total]) => ({ month, total: Math.round(total * 100) / 100 }));
 }
 
-function buildCategoryDetail(category: ExpenseCategory, expenses: ReadonlyArray<Expense>): ExpenseCategoryDetailResponse {
+function buildCategoryDetail(
+  category: ExpenseCategory,
+  expenses: ReadonlyArray<Expense>,
+  scopeMonth: string | null,
+  monthlyContextExpenses?: ReadonlyArray<Expense>,
+): ExpenseCategoryDetailResponse {
   const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-  const primaryCurrency = pickPrimaryCurrency(sorted);
+  const primaryCurrency = pickPrimaryCurrency(sorted.length > 0 ? sorted : monthlyContextExpenses ?? []);
   const primary = sorted.filter((e) => e.currency === primaryCurrency);
   const total = primary.reduce((s, e) => s + e.amount, 0);
   const count = primary.length;
@@ -716,8 +706,13 @@ function buildCategoryDetail(category: ExpenseCategory, expenses: ReadonlyArray<
     .slice(0, 5)
     .map((v) => ({ ...v, total: Math.round(v.total * 100) / 100 }));
 
+  // 12-month bars always show full history for context, even when scoped to a single month.
+  const barsSource = monthlyContextExpenses ?? sorted;
+
   return {
     category: category as ExpenseCategoryDto,
+    scope: scopeMonth ? 'month' : 'all',
+    month: scopeMonth,
     currency: primaryCurrency,
     total: Math.round(total * 100) / 100,
     count,
@@ -725,7 +720,7 @@ function buildCategoryDetail(category: ExpenseCategory, expenses: ReadonlyArray<
     firstDate,
     lastDate,
     totals: totalsByCurrency(sorted),
-    monthlyTotals: monthlyTotalsForCurrency(sorted, primaryCurrency, 12),
+    monthlyTotals: monthlyTotalsForCurrency(barsSource, primaryCurrency, 12),
     topVendors,
     expenses: sorted.map(toExpenseDto),
   };
@@ -864,76 +859,7 @@ function buildBaseline(allExpenses: ReadonlyArray<Expense>, selectedYm: string, 
   };
 }
 
-function computePace(
-  monthExpensesPrimary: ReadonlyArray<Expense>,
-  baseline: Baseline,
-  primaryCurrency: string,
-  selectedYm: string,
-  daysInSelectedMonth: number,
-  isCurrentMonth: boolean,
-  todayDayOfMonth: number,
-): ExpensePacePrimary {
-  const throughDayOfMonth = isCurrentMonth ? Math.min(todayDayOfMonth, daysInSelectedMonth) : daysInSelectedMonth;
-
-  const currentTotal = monthExpensesPrimary.filter((e) => zonedDayOfMonth(e.transactionDate) <= throughDayOfMonth).reduce((s, e) => s + e.amount, 0);
-
-  const historicAvgMonthlyTotal = baseline.monthCount > 0 ? baseline.avgFullMonthTotal : null;
-  const comparableHistoricToDate = baseline.monthCount > 0 ? baseline.avgToDateTotal : null;
-
-  // Projection only meaningful for current (in-progress) month.
-  let projectedTotal: number | null = null;
-  if (isCurrentMonth && baseline.monthCount > 0) {
-    // projected = currentMTD + avgHistoricTail (avg of (fullMonth - mtdAtSameDay) across baseline)
-    let sumTail = 0;
-    for (const m of baseline.months) {
-      const fullTotal = m.expenses.reduce((s, e) => s + e.amount, 0);
-      const compareThrough = Math.min(throughDayOfMonth, m.daysInMonth);
-      const mtd = m.expenses.filter((e) => zonedDayOfMonth(e.transactionDate) <= compareThrough).reduce((s, e) => s + e.amount, 0);
-      sumTail += fullTotal - mtd;
-    }
-    const avgTail = sumTail / baseline.monthCount;
-    projectedTotal = round2(currentTotal + avgTail);
-  } else if (!isCurrentMonth) {
-    // For past months, "projected" equals the actual final total.
-    projectedTotal = round2(currentTotal);
-  }
-
-  const percentVsHistoric = comparableHistoricToDate !== null && comparableHistoricToDate > 0 ? Math.round(((currentTotal - comparableHistoricToDate) / comparableHistoricToDate) * 100) : null;
-
-  return {
-    currency: primaryCurrency,
-    currentTotal: round2(currentTotal),
-    projectedTotal,
-    throughDayOfMonth,
-    daysInMonth: daysInSelectedMonth,
-    comparableHistoricToDate: comparableHistoricToDate !== null ? round2(comparableHistoricToDate) : null,
-    historicAvgMonthlyTotal: historicAvgMonthlyTotal !== null ? round2(historicAvgMonthlyTotal) : null,
-    percentVsHistoric,
-    baselineMonthCount: baseline.monthCount,
-    isCurrentMonth,
-  };
-}
-
-function buildTrajectory(monthExpensesPrimary: ReadonlyArray<Expense>, baseline: Baseline, daysInSelectedMonth: number, isCurrentMonth: boolean, todayDayOfMonth: number): ExpenseTrajectoryPoint[] {
-  const dailyActual: number[] = new Array(daysInSelectedMonth + 1).fill(0);
-  for (const e of monthExpensesPrimary) {
-    const day = zonedDayOfMonth(e.transactionDate);
-    if (day >= 1 && day <= daysInSelectedMonth) dailyActual[day] += e.amount;
-  }
-  const avgFull = baseline.monthCount > 0 ? baseline.avgFullMonthTotal : null;
-  const points: ExpenseTrajectoryPoint[] = [];
-  let cum = 0;
-  const lastActualDay = isCurrentMonth ? Math.min(todayDayOfMonth, daysInSelectedMonth) : daysInSelectedMonth;
-  for (let d = 1; d <= daysInSelectedMonth; d++) {
-    cum += dailyActual[d];
-    const actual = d <= lastActualDay ? round2(cum) : null;
-    const expected = avgFull !== null ? round2(avgFull * (d / daysInSelectedMonth)) : null;
-    points.push({ day: d, actual, expected });
-  }
-  return points;
-}
-
-function enrichCategoryDeltas(monthExpensesPrimary: ReadonlyArray<Expense>, baseline: Baseline, primaryCurrency: string): ExpenseCategoryDelta[] {
+function enrichCategoryDeltas(monthExpensesPrimary: ReadonlyArray<Expense>, baseline: Baseline | null, primaryCurrency: string): ExpenseCategoryDelta[] {
   const totals = new Map<string, { total: number; count: number }>();
   for (const e of monthExpensesPrimary) {
     const cat = effectiveCategory(e) as string;
@@ -942,9 +868,9 @@ function enrichCategoryDeltas(monthExpensesPrimary: ReadonlyArray<Expense>, base
   }
   const out: ExpenseCategoryDelta[] = [];
   for (const [cat, { total, count }] of totals) {
-    const baseAvg = baseline.byCategoryAvg.get(cat) ?? null;
-    const present = baseline.byCategoryMonthsPresent.get(cat) ?? 0;
-    const showDelta = baseline.monthCount >= 2 && present >= 2 && baseAvg !== null && baseAvg > 0;
+    const baseAvg = baseline?.byCategoryAvg.get(cat) ?? null;
+    const present = baseline?.byCategoryMonthsPresent.get(cat) ?? 0;
+    const showDelta = !!baseline && baseline.monthCount >= 2 && present >= 2 && baseAvg !== null && baseAvg > 0;
     out.push({
       category: cat as ExpenseCategoryDto,
       currency: primaryCurrency,
@@ -1066,10 +992,31 @@ export function registerChatbotApiRoutes(app: Express): void {
 
   app.get('/api/chatbot/expenses', async (req: Request, res: Response<ExpensesMonthResponse | { error: string }>) => {
     try {
-      const { ym, start, endExclusive, daysInMonth } = (() => {
-        const parsed = parseSelectedMonth(req.query.month);
-        return { ...parsed, daysInMonth: getMonthBoundaries(parsed.ym).daysInMonth };
-      })();
+      const rawMonth = typeof req.query.month === 'string' ? req.query.month.trim() : '';
+      const isAllTime = rawMonth.toLowerCase() === 'all';
+
+      if (isAllTime) {
+        const allExpensesFull = await getAllExpenses();
+        const primaryCurrency = pickPrimaryCurrency(allExpensesFull);
+        const primary = allExpensesFull.filter((e) => e.currency === primaryCurrency);
+        const sorted = [...allExpensesFull].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
+        const categoryDeltas = enrichCategoryDeltas(primary, null, primaryCurrency);
+        const topCharges = computeTopCharges(primary, 5);
+        res.json({
+          month: 'all',
+          scope: 'all',
+          currency: primaryCurrency,
+          expenses: sorted.map(toExpenseDto),
+          totals: totalsByCurrency(sorted),
+          byCategory: categoryBreakdown(sorted),
+          byType: typeBreakdown(sorted),
+          categoryDeltas,
+          topCharges,
+        });
+        return;
+      }
+
+      const { ym, start, endExclusive } = parseSelectedMonth(req.query.month);
 
       // Fetch a single range covering the selected month + 3 prior baseline months.
       const baselineStart = getMonthBoundaries(prevYm(ym, 3)).start;
@@ -1081,9 +1028,9 @@ export function registerChatbotApiRoutes(app: Express): void {
       const baselineFetched = allExpenses.filter((e) => e.transactionDate < start);
 
       const todayYm = formatInTimeZone(new Date(), DEFAULT_TIMEZONE, 'yyyy-MM');
-      const isCurrentMonth = ym === todayYm;
       const isPastMonth = ym < todayYm;
       const todayDayOfMonth = zonedDayOfMonth(new Date());
+      const { daysInMonth } = getMonthBoundaries(ym);
 
       const primaryCurrency = pickPrimaryCurrency(monthExpenses.length > 0 ? monthExpenses : baselineFetched);
       const monthExpensesPrimary = monthExpenses.filter((e) => e.currency === primaryCurrency);
@@ -1091,8 +1038,6 @@ export function registerChatbotApiRoutes(app: Express): void {
       const throughDayForBaseline = isPastMonth ? daysInMonth : Math.min(todayDayOfMonth, daysInMonth);
       const baseline = buildBaseline(baselineFetched, ym, throughDayForBaseline, primaryCurrency);
 
-      const pace = computePace(monthExpensesPrimary, baseline, primaryCurrency, ym, daysInMonth, isCurrentMonth, todayDayOfMonth);
-      const trajectory = buildTrajectory(monthExpensesPrimary, baseline, daysInMonth, isCurrentMonth, todayDayOfMonth);
       const categoryDeltas = enrichCategoryDeltas(monthExpensesPrimary, baseline, primaryCurrency);
       const topCharges = computeTopCharges(monthExpensesPrimary, 5);
 
@@ -1100,12 +1045,12 @@ export function registerChatbotApiRoutes(app: Express): void {
 
       res.json({
         month: ym,
+        scope: 'month',
+        currency: primaryCurrency,
         expenses: sorted.map(toExpenseDto),
         totals: totalsByCurrency(sorted),
         byCategory: categoryBreakdown(sorted),
         byType: typeBreakdown(sorted),
-        pace,
-        trajectory,
         categoryDeltas,
         topCharges,
       });
@@ -1123,8 +1068,16 @@ export function registerChatbotApiRoutes(app: Express): void {
         return;
       }
       const category = raw as ExpenseCategory;
-      const expenses = await getAllExpensesByEffectiveCategory(category);
-      res.json(buildCategoryDetail(category, expenses));
+      const rawMonth = typeof req.query.month === 'string' ? req.query.month.trim() : '';
+      const scopeMonth = /^\d{4}-\d{2}$/.test(rawMonth) ? rawMonth : null;
+
+      const allCategoryExpenses = await getAllExpensesByEffectiveCategory(category);
+      let scoped: ReadonlyArray<Expense> = allCategoryExpenses;
+      if (scopeMonth) {
+        const { start, endExclusive } = getMonthBoundaries(scopeMonth);
+        scoped = allCategoryExpenses.filter((e) => e.transactionDate >= start && e.transactionDate < endExclusive);
+      }
+      res.json(buildCategoryDetail(category, scoped, scopeMonth, allCategoryExpenses));
     } catch (err) {
       logger.error(`expenses category failed: ${err}`);
       res.status(500).json({ error: 'category_failed' });

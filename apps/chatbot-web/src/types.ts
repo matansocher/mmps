@@ -108,25 +108,6 @@ export type ExpenseTypeBreakdown = {
   readonly count: number;
 };
 
-export type ExpensePacePrimary = {
-  readonly currency: string;
-  readonly currentTotal: number;
-  readonly projectedTotal: number | null;
-  readonly throughDayOfMonth: number;
-  readonly daysInMonth: number;
-  readonly comparableHistoricToDate: number | null;
-  readonly historicAvgMonthlyTotal: number | null;
-  readonly percentVsHistoric: number | null;
-  readonly baselineMonthCount: number;
-  readonly isCurrentMonth: boolean;
-};
-
-export type ExpenseTrajectoryPoint = {
-  readonly day: number;
-  readonly actual: number | null;
-  readonly expected: number | null;
-};
-
 export type ExpenseCategoryDelta = {
   readonly category: ExpenseCategory;
   readonly currency: string;
@@ -147,13 +128,13 @@ export type ExpenseChargeDto = {
 };
 
 export type ExpensesMonthResponse = {
-  readonly month: string; // YYYY-MM
+  readonly month: string; // YYYY-MM or 'all'
+  readonly scope: 'month' | 'all';
+  readonly currency: string;
   readonly expenses: ReadonlyArray<ExpenseDto>;
   readonly totals: ReadonlyArray<ExpenseTotal>;
   readonly byCategory: ReadonlyArray<ExpenseCategoryBreakdown>;
   readonly byType: ReadonlyArray<ExpenseTypeBreakdown>;
-  readonly pace: ExpensePacePrimary;
-  readonly trajectory: ReadonlyArray<ExpenseTrajectoryPoint>;
   readonly categoryDeltas: ReadonlyArray<ExpenseCategoryDelta>;
   readonly topCharges: ReadonlyArray<ExpenseChargeDto>;
 };
@@ -209,6 +190,8 @@ export type ExpenseMonthlyPoint = {
 
 export type ExpenseCategoryDetailResponse = {
   readonly category: ExpenseCategory;
+  readonly scope: 'month' | 'all';
+  readonly month: string | null;
   readonly currency: string;
   readonly total: number;
   readonly count: number;

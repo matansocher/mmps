@@ -2,11 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AddExpenseSheet } from '../components/AddExpenseSheet';
 import { CategoryDetailSheet } from '../components/CategoryDetailSheet';
 import { CategoryPieChart } from '../components/CategoryPieChart';
-import { DailyTrajectoryChart } from '../components/DailyTrajectoryChart';
 import { ExpenseEditSheet } from '../components/ExpenseEditSheet';
 import { ExpenseRow, formatAmount } from '../components/ExpenseRow';
 import { MonthPicker } from '../components/MonthPicker';
-import { PaceCard } from '../components/PaceCard';
 import { Skeleton } from '../components/Skeleton';
 import { Tabs } from '../components/Tabs';
 import { Toast } from '../components/Toast';
@@ -122,11 +120,15 @@ export function ExpensesPage() {
   const addDefaultDate = useMemo(() => {
     const today = new Date();
     const todayYm = currentYm();
-    if (selectedMonth === todayYm) return today;
+    if (selectedMonth === 'all' || selectedMonth === todayYm) return today;
     const next = dateFromYmd(`${shiftMonth(selectedMonth, 1)}-01`);
     next.setDate(next.getDate() - 1);
     return next;
   }, [selectedMonth]);
+
+  const isAllTime = selectedMonth === 'all';
+  const headerTitle = isAllTime ? 'All time' : formatMonthLabel(selectedMonth);
+  const scopeMonthForCategory = isAllTime ? undefined : selectedMonth;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4">
@@ -135,7 +137,7 @@ export function ExpensesPage() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs text-text-muted uppercase tracking-wide">Expenses</div>
-            <h1 className="text-xl font-semibold">{formatMonthLabel(selectedMonth)}</h1>
+            <h1 className="text-xl font-semibold">{headerTitle}</h1>
           </div>
           <button
             onClick={() => setAdding(true)}
@@ -153,28 +155,15 @@ export function ExpensesPage() {
       ) : data ? (
         tab === 'summary' ? (
           <>
-            <PaceCard pace={data.pace} />
-
-            {data.trajectory.length > 0 && (
-              <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
-                <DailyTrajectoryChart
-                  points={data.trajectory}
-                  currency={data.pace.currency}
-                  throughDayOfMonth={data.pace.throughDayOfMonth}
-                  daysInMonth={data.pace.daysInMonth}
-                  isCurrentMonth={data.pace.isCurrentMonth}
-                />
-              </section>
-            )}
-
             {data.categoryDeltas.length > 0 && (
               <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
                 <div className="text-xs uppercase tracking-wide text-text-muted mb-3">By category</div>
                 <CategoryPieChart
                   rows={data.categoryDeltas}
-                  currency={data.pace.currency}
+                  currency={data.currency}
                   selected={null}
                   onToggle={handleCategoryTap}
+                  centerLabelTop={isAllTime ? 'All time' : 'This month'}
                 />
               </section>
             )}
@@ -183,7 +172,8 @@ export function ExpensesPage() {
 
             {data.totals.length > 1 && (
               <div className="text-[11px] text-text-muted text-center">
-                Also this month: {data.totals.filter((t) => t.currency !== data.pace.currency).map((t) => formatAmount(t.total, t.currency)).join(' · ')}
+                {isAllTime ? 'Also tracked: ' : 'Also this month: '}
+                {data.totals.filter((t) => t.currency !== data.currency).map((t) => formatAmount(t.total, t.currency)).join(' · ')}
               </div>
             )}
           </>
@@ -193,7 +183,9 @@ export function ExpensesPage() {
               Transactions · {expenses.length}
             </div>
             {expenses.length === 0 ? (
-              <div className="py-8 text-center text-sm text-text-muted">No spend this month — nice 💪</div>
+              <div className="py-8 text-center text-sm text-text-muted">
+                {isAllTime ? 'No expenses yet' : 'No spend this month — nice 💪'}
+              </div>
             ) : (
               <>
                 <div className="px-4 divide-y divide-border-subtle">
@@ -232,6 +224,7 @@ export function ExpensesPage() {
       {categoryDetail && (
         <CategoryDetailSheet
           category={categoryDetail}
+          month={scopeMonthForCategory}
           onClose={() => setCategoryDetail(null)}
           onTapExpense={setEditing}
           onTapVendor={handleViewVendor}
@@ -268,22 +261,6 @@ export function ExpensesPage() {
 function SummarySkeleton() {
   return (
     <>
-      <div className="rounded-2xl bg-bg-card border border-border-subtle p-5 flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-3 w-24" />
-          <Skeleton className="h-4 w-16" />
-        </div>
-        <Skeleton className="h-9 w-40" />
-        <Skeleton className="h-3 w-48" />
-        <Skeleton className="h-2 w-full" />
-      </div>
-      <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
-        <div className="flex items-center justify-between mb-3">
-          <Skeleton className="h-3 w-28" />
-          <Skeleton className="h-3 w-24" />
-        </div>
-        <Skeleton className="h-32 w-full" />
-      </div>
       <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
         <Skeleton className="h-3 w-24 mb-3" />
         <div className="flex flex-col items-center gap-3">

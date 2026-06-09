@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { currentYm } from '../lib/date';
 
 type Props = {
-  readonly selected: string; // YYYY-MM
-  readonly onSelect: (ym: string) => void;
+  readonly selected: string; // YYYY-MM or 'all'
+  readonly onSelect: (value: string) => void;
   readonly onClose: () => void;
 };
 
@@ -13,7 +13,8 @@ export function MonthPickerSheet({ selected, onSelect, onClose }: Props) {
   const todayYm = currentYm();
   const todayYear = Number(todayYm.slice(0, 4));
   const todayMonth = Number(todayYm.slice(5, 7));
-  const initialYear = Number(selected.slice(0, 4));
+  const isAll = selected === 'all';
+  const initialYear = isAll ? todayYear : Number(selected.slice(0, 4));
   const [year, setYear] = useState<number>(initialYear);
 
   useEffect(() => {
@@ -36,6 +37,24 @@ export function MonthPickerSheet({ selected, onSelect, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl bg-bg-card border-t border-border-subtle rounded-t-3xl p-5 flex flex-col gap-4"
       >
+        <button
+          onClick={() => {
+            onSelect('all');
+            onClose();
+          }}
+          className={`w-full py-3 rounded-xl text-sm font-medium border transition-colors flex items-center justify-center gap-2 ${
+            isAll
+              ? 'bg-accent-primary text-white border-accent-primary'
+              : 'bg-bg-elevated text-text-secondary border-border-subtle hover:text-text-primary'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          All time
+        </button>
+
         <div className="flex items-center justify-between">
           <button
             onClick={() => setYear((y) => y - 1)}

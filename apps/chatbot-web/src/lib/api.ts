@@ -33,8 +33,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   dashboard: (date?: string) => request<DashboardResponse>(`/api/chatbot/dashboard${date ? `?date=${encodeURIComponent(date)}` : ''}`),
   expensesMonth: (month?: string) => request<ExpensesMonthResponse>(`/api/chatbot/expenses${month ? `?month=${encodeURIComponent(month)}` : ''}`),
-  expenseCategory: (category: ExpenseCategory) =>
-    request<ExpenseCategoryDetailResponse>(`/api/chatbot/expenses/category/${encodeURIComponent(category)}`),
+  expenseCategory: (category: ExpenseCategory, month?: string) =>
+    request<ExpenseCategoryDetailResponse>(`/api/chatbot/expenses/category/${encodeURIComponent(category)}${month ? `?month=${encodeURIComponent(month)}` : ''}`),
   expenseVendor: (name: string) =>
     request<ExpenseVendorDetailResponse>(`/api/chatbot/expenses/vendor?name=${encodeURIComponent(name)}`),
   bulkUpdateVendor: (body: BulkUpdateVendorBody) =>

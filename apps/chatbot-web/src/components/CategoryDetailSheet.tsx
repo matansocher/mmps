@@ -4,11 +4,12 @@ import { MonthlyBars } from './MonthlyBars';
 import { Skeleton } from './Skeleton';
 import { api } from '../lib/api';
 import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../lib/categories';
-import { formatExpenseDayLabel } from '../lib/date';
+import { formatExpenseDayLabel, formatMonthLabel } from '../lib/date';
 import type { ExpenseCategory, ExpenseCategoryDetailResponse, ExpenseDto } from '../types';
 
 type Props = {
   readonly category: ExpenseCategory;
+  readonly month?: string; // YYYY-MM — scopes to a single month. Omit for all-time.
   readonly onClose: () => void;
   readonly onTapExpense: (expense: ExpenseDto) => void;
   readonly onTapVendor?: (vendor: string) => void;
@@ -16,15 +17,17 @@ type Props = {
 
 const PAGE_SIZE = 20;
 
-export function CategoryDetailSheet({ category, onClose, onTapExpense, onTapVendor }: Props) {
+export function CategoryDetailSheet({ category, month, onClose, onTapExpense, onTapVendor }: Props) {
   const [data, setData] = useState<ExpenseCategoryDetailResponse | null>(null);
   const [error, setError] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     let cancelled = false;
+    setData(null);
+    setError(false);
     api
-      .expenseCategory(category)
+      .expenseCategory(category, month)
       .then((r) => {
         if (!cancelled) setData(r);
       })
@@ -34,7 +37,7 @@ export function CategoryDetailSheet({ category, onClose, onTapExpense, onTapVend
     return () => {
       cancelled = true;
     };
-  }, [category]);
+  }, [category, month]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -54,7 +57,7 @@ export function CategoryDetailSheet({ category, onClose, onTapExpense, onTapVend
           <h2 className="text-base font-semibold text-text-primary flex items-center gap-2">
             <span className="text-xl">{emoji}</span>
             <span>{label}</span>
-            <span className="text-xs font-normal text-text-muted">· all time</span>
+            <span className="text-xs font-normal text-text-muted">· {month ? formatMonthLabel(month) : 'all time'}</span>
           </h2>
           <button onClick={onClose} aria-label="Close" className="w-8 h-8 grid place-items-center text-text-muted hover:text-text-primary text-lg">
             ✕
