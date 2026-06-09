@@ -46,7 +46,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`00 23 * * *`, async () => dailyExpensesLog(this.bot));
 
-    createSchedule(`15 * * * *`, async () => reminderCheck(this.bot));
+    createSchedule(`*/15 * * * *`, async () => reminderCheck(this.bot));
 
     createSchedule(`*/15 * * * *`, async () => upcomingEventAlert(this.bot));
 
