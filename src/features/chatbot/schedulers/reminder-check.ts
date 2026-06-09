@@ -23,7 +23,7 @@ export async function reminderCheck(bot: Bot): Promise<void> {
           timeZone: DEFAULT_TIMEZONE,
           dateStyle: 'full',
           timeStyle: 'short',
-        })}`;
+        })}_`;
 
         await bot.api.sendMessage(reminder.chatId, message, { parse_mode: 'Markdown' });
 
