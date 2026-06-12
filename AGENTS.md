@@ -8,14 +8,14 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **5 Telegram bots** + an Express HTTP server (Swagger + auth routes). Built around grammY, LangGraph, MongoDB native driver.
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger + auth routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **5 bots:** `chatbot`, `chilli`, `coach`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`.
+- **6 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('chatbot-db')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/coach-web`, `apps/chatbot-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/coach-web`, `apps/chatbot-web`, `apps/expenses-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -119,12 +119,14 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 mmps/
 ├── src/
 │   ├── core/           # Config, mongo, openapi/swagger, services, utils
-│   ├── features/       # The 5 bots (chatbot, chilli, coach, wolt, worldly)
+│   ├── features/       # The 6 bots (chatbot, chilli, coach, expenses, wolt, worldly)
 │   ├── services/       # 30+ external service integrations
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
 │   ├── coach-web/
+│   ├── chatbot-web/
+│   ├── expenses-web/
 │   └── stacker-web/    # Legacy, no active bot
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
@@ -167,27 +169,29 @@ src/services/{name}/
 
 ---
 
-## The 5 Bots
+## The 6 Bots
 
 | ID         | Display Name    | Path                          | Env token                       | Purpose |
 |------------|-----------------|-------------------------------|---------------------------------|---------|
-| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.) |
+| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`   | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`     | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`    | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`      | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
+| `EXPENSES` | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`   | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
 | `WOLT`     | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`       | Watches Wolt restaurants and notifies on availability. |
 | `WORLDLY`  | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`    | Geography quiz/education. |
 
 **Boot logic** (`src/index.ts`):
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
-shouldInitBot(chatbotConfig) && (await initChatbot(app));
-shouldInitBot(chilliConfig)  && (await initChilli());
-shouldInitBot(coachConfig)   && (await initCoach(app));
-shouldInitBot(woltConfig)    && (await initWolt(app));
-shouldInitBot(worldlyConfig) && (await initWorldly(app));
+shouldInitBot(chatbotConfig)  && (await initChatbot(app));
+shouldInitBot(chilliConfig)   && (await initChilli());
+shouldInitBot(coachConfig)    && (await initCoach(app));
+shouldInitBot(expensesConfig) && (await initExpenses(app));
+shouldInitBot(woltConfig)     && (await initWolt(app));
+shouldInitBot(worldlyConfig)  && (await initWorldly(app));
 ```
 
-In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all six run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
 
 ---
 

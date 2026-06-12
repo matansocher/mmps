@@ -29,12 +29,11 @@ export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
     console.error(err.error);
   });
 
-  if (botConfig.commands) {
-    bot.api.setMyCommands(
-      Object.values(botConfig.commands)
-        .filter((command) => !command.hide)
-        .map((command) => ({ ...command, command: command.command.replace('/', '') })),
-    );
+  const commands = Object.values(botConfig.commands || [])
+    .filter((command) => !command.hide)
+    .map((command) => ({ ...command, command: command.command.replace('/', '') }));
+  if (commands?.length) {
+    bot.api.setMyCommands(commands);
   }
 
   botInstances.set(botConfig.id, bot);
