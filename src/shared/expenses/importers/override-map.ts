@@ -2,11 +2,6 @@
 // is stored on that single document. Without this map, every future statement reintroduces the
 // original raw vendor text and re-derives the category from the sector — silently undoing the
 // user's correction for all new charges.
-//
-// We index every expense that carries an override by both its raw `vendor` AND its `userVendor`
-// (so future imports match regardless of which name the bank prints), keeping the most-recent
-// override per key. Lookup uses exact normalized match first, then the same ≥3-char substring
-// heuristic used for dedup.
 
 import type { Expense, ExpenseCategory } from '@shared/expenses';
 import { normalizeName } from './dedup';
