@@ -1,14 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { read, utils } from 'xlsx';
 import { Logger } from '@core/utils';
 import { categorizeVendor, type Currency, type ExpenseCategory, type ExpenseType } from '@shared/expenses';
-import type { IsracardFileMeta } from '../lib/filename';
-import type { ParsedRow } from './types';
+import type { IsracardFileMeta, ParsedRow, ParserInput } from './types';
 
 const logger = new Logger('isracard-parser');
 
-// Authoritative when we can; AI fallback for anything new. These keys come from observed
-// Isracard exports — extend in-place when the bank ships a new sector.
 const SECTOR_TO_CATEGORY_ISRACARD: Record<string, ExpenseCategory> = {
   'מסעדות, קפה וברים': 'restaurants',
   'פנאי, בידור וספורט': 'entertainment',
@@ -30,16 +26,54 @@ const CURRENCY_BY_SYMBOL: Record<string, Currency> = {
 
 const HEADER_MARKER = 'שם בית העסק';
 const STOP_MARKER = 'סך הכל';
-// "חיוב עסקות מיידי" = immediate-charge FX line; "רגילה" = regular ILS row.
-// Neither maps to "bill" / "receipt" semantically — they're all card charges, so route
-// everything to `card_alert` (matches the Discount parser default).
 const DEFAULT_TYPE: ExpenseType = 'card_alert';
+
+// Some Isracard exports embed the year in the title row (e.g. "...לשנת 2026").
+const ISRACARD_YEAR_RE = /(20\d{2})/;
+// Card hint may appear in title (e.g. "...כרטיס המסתיים ב-5713").
+const ISRACARD_CARD_RE = /(\d{4})/;
+
+export function detectIsracardMeta(buffer: Buffer, fileName: string): IsracardFileMeta | null {
+  const wb = read(buffer, { type: 'buffer', cellDates: false });
+  if (wb.SheetNames.length === 0) return null;
+  // Must contain at least one sheet whose first ~50 rows include the Isracard header marker.
+  let found = false;
+  let yearHint: number | null = null;
+  let cardHint: string = '0000';
+  for (const sheetName of wb.SheetNames) {
+    const sheet = wb.Sheets[sheetName];
+    const rows = utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: null });
+    for (let i = 0; i < Math.min(50, rows.length); i++) {
+      const row = rows[i] ?? [];
+      for (const cell of row) {
+        if (typeof cell !== 'string') continue;
+        if (cell.includes(HEADER_MARKER)) found = true;
+        if (yearHint == null) {
+          const m = ISRACARD_YEAR_RE.exec(cell);
+          if (m) yearHint = Number(m[1]);
+        }
+        if (cardHint === '0000') {
+          const m = ISRACARD_CARD_RE.exec(cell);
+          if (m && !ISRACARD_YEAR_RE.test(m[1])) cardHint = m[1];
+        }
+      }
+      if (found && yearHint != null) break;
+    }
+    if (found) break;
+  }
+  if (!found) return null;
+  return {
+    kind: 'isracard',
+    fileName,
+    cardLast4Hint: cardHint,
+    statementYear: yearHint ?? new Date().getFullYear(),
+  };
+}
 
 function parseDdMmYyyy(s: string): Date | null {
   const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(s.trim());
   if (!m) return null;
   const [, dd, mm, yyyy] = m;
-  // Construct in UTC at noon so timezone math (Asia/Jerusalem) doesn't shift the calendar day.
   return new Date(Date.UTC(Number(yyyy), Number(mm) - 1, Number(dd), 12, 0, 0));
 }
 
@@ -49,16 +83,14 @@ function statementYmFromBillingDate(d: Date): string {
   return `${y}-${m}`;
 }
 
-export async function parseIsracardFile(meta: IsracardFileMeta): Promise<ParsedRow[]> {
-  const buf = readFileSync(meta.path);
-  const wb = read(buf, { type: 'buffer', cellDates: false });
+export async function parseIsracardFile(input: ParserInput, meta: IsracardFileMeta): Promise<ParsedRow[]> {
+  const wb = read(input.buffer, { type: 'buffer', cellDates: false });
   const out: ParsedRow[] = [];
 
   for (const sheetName of wb.SheetNames) {
     const sheet = wb.Sheets[sheetName];
     const rows = utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: null });
 
-    // Locate header row (the one containing "שם בית העסק"); data starts after it.
     let headerIdx = -1;
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i] ?? [];
@@ -75,7 +107,6 @@ export async function parseIsracardFile(meta: IsracardFileMeta): Promise<ParsedR
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const row = rows[i] ?? [];
 
-      // Trailer / blank rows mark end of data block.
       const firstCell = row[0];
       if (typeof firstCell === 'string' && firstCell.startsWith(STOP_MARKER)) break;
       if (row.every((c) => c == null || c === '')) continue;
@@ -99,9 +130,6 @@ export async function parseIsracardFile(meta: IsracardFileMeta): Promise<ParsedR
         continue;
       }
 
-      // FX rows: if the original currency isn't ILS, prefer the original amount + currency so
-      // that "20 USD" stays "20 USD" rather than being collapsed to the bank's ILS conversion.
-      // Refunds (negative amounts) are accepted as-is — the analytics layer treats them as offsets.
       let amount: number;
       let currency: Currency;
       const originalCurrency = CURRENCY_BY_SYMBOL[originalCurrencySymbol];
@@ -113,12 +141,6 @@ export async function parseIsracardFile(meta: IsracardFileMeta): Promise<ParsedR
         currency = 'ILS';
       }
       amount = Math.round(amount * 100) / 100;
-
-      if (cardLast4 !== meta.cardLast4Hint) {
-        // Filename hint mismatch — accept row but flag. Multi-card files (e.g. 5713 file
-        // also containing 5216 rows) are legitimate; the row's column-D card wins.
-        logger.log(`${meta.fileName} row ${i + 1}: card mismatch (filename hint=${meta.cardLast4Hint}, row=${cardLast4})`);
-      }
 
       let category: ExpenseCategory;
       if (hebrewSector && SECTOR_TO_CATEGORY_ISRACARD[hebrewSector]) {

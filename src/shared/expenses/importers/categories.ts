@@ -1,9 +1,4 @@
 // Hebrew → category/type heuristics (avoid an LLM round-trip when sector is recognised).
-//
-// `SECTOR_TO_CATEGORY_DISCOUNT` was derived from observed XLSX statements across multiple cards
-// (Mizrahi-1220 monthly billed + Discount-7374 immediate-charge). When the bank adds a sector
-// we don't recognise, the row falls through to "other" and the Hebrew text is preserved on
-// the row's `hebrewSector` (unused at write time but useful for triaging unknowns).
 
 import type { Currency, ExpenseCategory, ExpenseType } from '@shared/expenses';
 
@@ -30,9 +25,7 @@ export const SECTOR_TO_CATEGORY_DISCOUNT: Record<string, ExpenseCategory> = {
   שונות: 'other',
 };
 
-export const TYPE_KEYWORDS: ReadonlyArray<{ readonly hebrew: string; readonly type: ExpenseType }> = [
-  { hebrew: 'הוראת קבע', type: 'bill' },
-];
+export const TYPE_KEYWORDS: ReadonlyArray<{ readonly hebrew: string; readonly type: ExpenseType }> = [{ hebrew: 'הוראת קבע', type: 'bill' }];
 
 export const SECTION_CURRENCY_KEYWORDS: ReadonlyArray<{ readonly match: RegExp; readonly currency: Currency }> = [
   { match: /דולר|\$/, currency: 'USD' },
@@ -48,7 +41,6 @@ export function categorizeFromSectorDiscount(sector: string): ExpenseCategory {
 
 export function typeFromHebrewType(hebrewType: string): ExpenseType {
   for (const { hebrew, type } of TYPE_KEYWORDS) if (hebrewType.includes(hebrew)) return type;
-  // Anything else from a credit-card statement is effectively a card charge.
   return 'card_alert';
 }
 

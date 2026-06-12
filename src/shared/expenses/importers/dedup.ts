@@ -1,5 +1,5 @@
 import { effectiveVendor, type Expense } from '@shared/expenses';
-import type { ParsedRow } from '../parsers/types';
+import type { ParsedRow } from './types';
 
 export function normalizeName(s: string): string {
   return s
@@ -36,6 +36,5 @@ export function findDuplicate(row: ParsedRow, pool: ReadonlyArray<Expense>): Dup
   const vendorMatches = sameDateAmount.filter((e) => isVendorMatch(effectiveVendor(e), row.vendor));
   if (vendorMatches.length === 1) return { kind: 'duplicate', match: vendorMatches[0] };
   if (vendorMatches.length > 1) return { kind: 'ambiguous', candidates: vendorMatches };
-  // Date + amount matched, but vendor didn't — conservatively treat as ambiguous (user may have renamed).
   return { kind: 'ambiguous', candidates: sameDateAmount };
 }

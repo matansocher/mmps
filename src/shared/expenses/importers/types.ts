@@ -9,12 +9,31 @@ export type ParsedRow = {
   readonly category: ExpenseCategory;
   readonly hebrewSector: string;
   readonly sourceRowIndex: number;
-  // Per-row card last4 + statement YM. Both formats supply these so the messageId
-  // builder can stay parser-agnostic. The discount parser fills them from the
-  // file metadata (one card / one month per file). The isracard parser fills them
-  // per-row from column D + the row's billing date.
   readonly cardLast4: string;
   readonly statementYm: string;
+};
+
+export type DiscountFileMeta = {
+  readonly kind: 'discount';
+  readonly fileName: string;
+  readonly cardLast4: string;
+  readonly statementYear: number;
+  readonly statementMonth: number; // 1–12
+  readonly statementYm: string; // YYYY-MM
+};
+
+export type IsracardFileMeta = {
+  readonly kind: 'isracard';
+  readonly fileName: string;
+  readonly cardLast4Hint: string;
+  readonly statementYear: number;
+};
+
+export type FileMeta = DiscountFileMeta | IsracardFileMeta;
+
+export type ParserInput = {
+  readonly fileName: string;
+  readonly buffer: Buffer;
 };
 
 export function excelSerialToDate(serial: number): Date {

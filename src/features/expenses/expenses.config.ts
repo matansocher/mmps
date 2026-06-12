@@ -8,3 +8,6 @@ export const BOT_CONFIG: TelegramBotConfig = {
     START: { command: '/start', description: 'Open expenses app', hide: true },
   },
 };
+
+export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+export const XLSX_EXT_RE = /\.xlsx$/i;
