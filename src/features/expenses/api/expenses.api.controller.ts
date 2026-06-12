@@ -4,6 +4,8 @@ import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
+import { notify } from '@services/notifier';
+import type { UserDetails } from '@services/telegram';
 import {
   bulkUpdateExpensesByEffectiveVendor,
   createManualExpense,
@@ -24,6 +26,7 @@ import {
   SUPPORTED_CURRENCIES,
 } from '@shared/expenses';
 import { updateUserOverrides } from '@shared/expenses/mongo/expenses.repository';
+import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from '../expenses.config';
 import { expensesAuthMiddleware } from './auth.middleware';
 import type {
   BulkUpdateVendorBody,
@@ -374,8 +377,25 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+function toUserDetails(req: Pick<Request, 'expensesUser'>): UserDetails | undefined {
+  const u = req.expensesUser;
+  if (!u) return undefined;
+  return {
+    chatId: u.chatId,
+    telegramUserId: u.telegramUserId,
+    firstName: u.firstName ?? '',
+    lastName: '',
+    username: u.username ?? '',
+  };
+}
+
 export function registerExpensesApiRoutes(app: Express): void {
   app.use('/api/expenses', expensesAuthMiddleware);
+
+  app.post('/api/expenses/session/open', (req: Request, res: Response) => {
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MINI_APP_OPENED }, toUserDetails(req));
+    res.status(204).end();
+  });
 
   app.get('/api/expenses', async (req: Request, res: Response<ExpensesMonthResponse | { error: string }>) => {
     try {
@@ -517,6 +537,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         return;
       }
       res.json({ modifiedCount, vendor: buildVendorDetail(refreshedName, expenses) });
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.API_VENDOR_UPDATE, vendor: name, userVendor: body.userVendor, userCategory: body.userCategory, modifiedCount }, toUserDetails(req));
     } catch (err) {
       logger.error(`expenses vendor bulk-update failed: ${err}`);
       res.status(500).json({ error: 'bulk_update_failed' });
@@ -553,6 +574,11 @@ export function registerExpensesApiRoutes(app: Express): void {
         return;
       }
       res.json(toExpenseDto(updated));
+      notify(
+        BOT_CONFIG,
+        { action: ANALYTIC_EVENT_NAMES.API_EXPENSE_UPDATE, id, fields: Object.keys(body), userVendor: body.userVendor, userCategory: body.userCategory, userType: body.userType },
+        toUserDetails(req),
+      );
     } catch (err) {
       logger.error(`expense update failed: ${err}`);
       res.status(500).json({ error: 'update_failed' });
@@ -605,6 +631,11 @@ export function registerExpensesApiRoutes(app: Express): void {
         card,
       });
       res.status(201).json(toExpenseDto(created));
+      notify(
+        BOT_CONFIG,
+        { action: ANALYTIC_EVENT_NAMES.API_MANUAL_EXPENSE, vendor, amount: body.amount, currency: body.currency ?? DEFAULT_CURRENCY, category: body.category, card },
+        toUserDetails(req),
+      );
     } catch (err) {
       logger.error(`manual expense create failed: ${err}`);
       res.status(500).json({ error: 'create_failed' });

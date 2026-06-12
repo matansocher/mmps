@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Route, Router, Switch } from 'wouter';
+import { api } from './lib/api';
 import { getWebApp } from './lib/telegram';
 import { ExpensesPage } from './pages/ExpensesPage';
 
@@ -10,6 +11,7 @@ export function App() {
       w.ready();
       w.expand();
     }
+    api.notifyMiniAppOpened().catch(() => {});
   }, []);
 
   return (

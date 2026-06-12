@@ -37,4 +37,5 @@ export const api = {
   createManualExpense: (body: CreateManualExpenseBody) =>
     request<ExpenseDto>('/api/expenses/manual', { method: 'POST', body: JSON.stringify(body) }),
   listCards: () => request<{ cards: ReadonlyArray<string> }>('/api/expenses/cards').then((r) => r.cards),
+  notifyMiniAppOpened: () => request<void>('/api/expenses/session/open', { method: 'POST' }),
 };

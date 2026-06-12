@@ -9,6 +9,7 @@ export type ExpensesRequestUser = {
   readonly telegramUserId: number;
   readonly chatId: number;
   readonly username?: string;
+  readonly firstName?: string;
 };
 
 declare module 'express-serve-static-core' {
@@ -55,6 +56,7 @@ export async function expensesAuthMiddleware(req: Request, res: Response, next: 
     telegramUserId: verified.telegramUserId,
     chatId: verified.telegramUserId,
     username: verified.username,
+    firstName: verified.firstName,
   };
   next();
 }
