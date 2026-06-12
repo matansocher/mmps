@@ -1,3 +1,5 @@
+export { applyAllowlist } from './utils/apply-allowlist';
+export type { AllowlistOptions } from './utils/apply-allowlist';
 export { buildInlineKeyboard } from './utils/build-inline-keyboard';
 export { downloadFile } from './utils/download-file';
 export { MessageLoader } from './utils/message-loader';
