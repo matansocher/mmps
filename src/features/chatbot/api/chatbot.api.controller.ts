@@ -14,6 +14,7 @@ import { notify } from '@services/notifier';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import {
   bulkUpdateExpensesByEffectiveVendor,
+  createIngestExpense,
   createManualExpense,
   type Currency,
   DEFAULT_CURRENCY,
@@ -29,13 +30,13 @@ import {
   getAllExpensesByEffectiveVendor,
   getDistinctCards,
   getExpensesBetween,
+  getIngestExpensesBetween,
   SUPPORTED_CURRENCIES,
 } from '@shared/expenses';
 import { updateUserOverrides } from '@shared/expenses/mongo/expenses.repository';
 import { createReminder, deleteReminder, getPendingRemindersDueOnOrBefore, getReminderById, getRemindersCompletedBetween, updateReminder, updateReminderStatus } from '@shared/reminders';
 import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
 import { BOT_CONFIG } from '../chatbot.config';
-import { addExpenseToDailyLog } from '../schedulers';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
@@ -914,7 +915,7 @@ async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
 }
 
 export function registerChatbotApiRoutes(app: Express): void {
-  app.post('/api/chatbot/expenses', (req: Request, res: Response<{ logged: true } | { error: string }>) => {
+  app.post('/api/chatbot/expenses', async (req: Request, res: Response<{ logged: true } | { error: string }>) => {
     notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
     const expectedToken = env.EXPENSES_INGEST_TOKEN;
     if (!expectedToken) {
@@ -941,8 +942,13 @@ export function registerChatbotApiRoutes(app: Express): void {
       res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
       return;
     }
-    addExpenseToDailyLog({ vendor: parsed.vendor, amount: parsed.amount, currency: parsed.currency ?? DEFAULT_CURRENCY });
-    res.status(202).json({ logged: true });
+    try {
+      await createIngestExpense({ vendor: parsed.vendor, amount: parsed.amount, currency: parsed.currency ?? DEFAULT_CURRENCY });
+      res.status(202).json({ logged: true });
+    } catch (err) {
+      logger.error(`Failed to persist ingest expense: ${err}`);
+      res.status(500).json({ error: 'ingest_failed' });
+    }
   });
 
   app.use('/api/chatbot', chatbotAuthMiddleware);
@@ -956,7 +962,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       const isToday = selectedKey === dateKey(now);
       const selectedDayEnd = addDays(selectedDate, 1);
 
-      const [weather, googleEvents, pendingReminders, completedReminders, activity, dayExpenses] = await Promise.all([
+      const [weather, googleEvents, pendingReminders, completedReminders, activity, dayExpenses, ingestExpenses] = await Promise.all([
         isToday ? buildWeatherSnapshot() : Promise.resolve(null),
         fetchEventsForDate(selectedDate),
         getPendingRemindersDueOnOrBefore(chatId, selectedDayEnd),
@@ -966,12 +972,41 @@ export function registerChatbotApiRoutes(app: Express): void {
           logger.warn(`Failed to fetch expenses for ${selectedKey}: ${err}`);
           return [] as Expense[];
         }),
+        getIngestExpensesBetween(selectedDate, selectedDayEnd).catch((err) => {
+          logger.warn(`Failed to fetch ingest expenses for ${selectedKey}: ${err}`);
+          return [];
+        }),
       ]);
 
       const eventDtos = googleEvents.map((event, idx) => toEventDto(event, `event-${idx}`));
       const birthdays = eventDtos.filter((e) => e.isBirthday);
       const events = eventDtos.filter((e) => !e.isBirthday);
       const reminders = [...pendingReminders, ...completedReminders];
+
+      const expenseDtos = dayExpenses.map(toExpenseDto);
+      const expenseTotals = totalsByCurrency(dayExpenses);
+
+      // Surface ingest-logged expenses (POST /api/chatbot/expenses — iPhone shortcut) for the
+      // selected day. These live in a separate collection and are intentionally excluded from the
+      // monthly Expenses page (the xlsx import is authoritative there). The dashboard merges them
+      // so today's card alerts are visible immediately.
+      if (ingestExpenses.length) {
+        const totalsAcc = new Map<string, number>(expenseTotals.map((t) => [t.currency, t.total]));
+        ingestExpenses.forEach((e) => {
+          expenseDtos.push({
+            id: `ingest-${e._id!.toString()}`,
+            vendor: e.vendor,
+            category: 'other',
+            amount: e.amount,
+            currency: e.currency,
+            type: 'card_alert',
+            transactionDate: e.receivedAt.toISOString(),
+          });
+          totalsAcc.set(e.currency, (totalsAcc.get(e.currency) ?? 0) + e.amount);
+        });
+        expenseTotals.length = 0;
+        for (const [currency, total] of totalsAcc) expenseTotals.push({ currency, total: Math.round(total * 100) / 100 });
+      }
 
       res.json({
         date: selectedKey,
@@ -981,8 +1016,8 @@ export function registerChatbotApiRoutes(app: Express): void {
         events,
         reminders: reminders.map(toReminderDto),
         activity,
-        expenses: dayExpenses.map(toExpenseDto),
-        expenseTotals: totalsByCurrency(dayExpenses),
+        expenses: expenseDtos,
+        expenseTotals,
       });
     } catch (err) {
       logger.error(`dashboard failed: ${err}`);

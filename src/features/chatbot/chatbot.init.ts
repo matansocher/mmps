@@ -9,7 +9,7 @@ import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from
 import { registerChatbotApiRoutes } from './api';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
-import { ensureExpenseIndexes, DB_NAME as EXPENSES_DB_NAME } from '@shared/expenses';
+import { ensureExpenseIndexes, ensureIngestExpenseIndexes, DB_NAME as EXPENSES_DB_NAME } from '@shared/expenses';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
@@ -46,6 +46,7 @@ export async function initChatbot(app: Express): Promise<void> {
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
   await ensureExpenseIndexes();
+  await ensureIngestExpenseIndexes();
 
   const bot = provideTelegramBot(BOT_CONFIG);
 
