@@ -11,6 +11,7 @@ import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { ensureExpenseIndexes, DB_NAME as EXPENSES_DB_NAME } from '@shared/expenses';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
+import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
 import { DB_NAME as SELFIE_DB_NAME } from '@shared/selfie';
@@ -39,6 +40,7 @@ export async function initChatbot(app: Express): Promise<void> {
     CALENDAR_EVENTS_DB_NAME,
     SELFIE_DB_NAME,
     FRIENDS_DB_NAME,
+    MEET_FRIENDS_DB_NAME,
     EXPENSES_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);

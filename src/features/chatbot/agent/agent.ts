@@ -14,6 +14,7 @@ import {
   makavdiaTool,
   matchPredictionTool,
   matchSummaryTool,
+  meetupsTool,
   polymarketTool,
   preferencesTool,
   recipesTool,
@@ -318,6 +319,7 @@ export function agent(): AgentDescriptor {
     selfieTool,
     githubTool,
     contactsTool,
+    meetupsTool,
     spotifyTool,
     expensesTool,
   ];
