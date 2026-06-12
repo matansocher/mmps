@@ -9,6 +9,7 @@ import { gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
+import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
@@ -45,6 +46,7 @@ async function main() {
   shouldInitBot(chatbotConfig) && (await initChatbot(app));
   shouldInitBot(chilliConfig) && (await initChilli());
   shouldInitBot(coachConfig) && (await initCoach(app));
+  shouldInitBot(expensesConfig) && (await initExpenses(app));
   shouldInitBot(woltConfig) && (await initWolt());
   shouldInitBot(worldlyConfig) && (await initWorldly(app));
 

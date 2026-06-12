@@ -13,9 +13,7 @@ import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-cale
 import { notify } from '@services/notifier';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
 import {
-  bulkUpdateExpensesByEffectiveVendor,
   createIngestExpense,
-  createManualExpense,
   type Currency,
   DEFAULT_CURRENCY,
   effectiveCategory,
@@ -25,44 +23,26 @@ import {
   EXPENSE_CATEGORIES,
   type ExpenseCategory,
   type ExpenseType,
-  getAllExpenses,
-  getAllExpensesByEffectiveCategory,
-  getAllExpensesByEffectiveVendor,
-  getDistinctCards,
   getExpensesBetween,
   getIngestExpensesBetween,
   SUPPORTED_CURRENCIES,
 } from '@shared/expenses';
-import { updateUserOverrides } from '@shared/expenses/mongo/expenses.repository';
 import { createReminder, deleteReminder, getPendingRemindersDueOnOrBefore, getReminderById, getRemindersCompletedBetween, updateReminder, updateReminderStatus } from '@shared/reminders';
 import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
 import { BOT_CONFIG } from '../chatbot.config';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
-  BulkUpdateVendorBody,
-  BulkUpdateVendorResponse,
-  CardListResponse,
-  CreateManualExpenseBody,
   CreateReminderBody,
   DashboardResponse,
   EventDto,
   ExerciseLogResponse,
-  ExpenseCategoryBreakdown,
-  ExpenseCategoryDelta,
-  ExpenseCategoryDetailResponse,
   ExpenseCategoryDto,
-  ExpenseChargeDto,
   ExpenseDto,
-  ExpenseMonthlyPoint,
-  ExpensesMonthResponse,
   ExpenseTotal,
-  ExpenseTypeBreakdown,
   ExpenseTypeDto,
-  ExpenseVendorDetailResponse,
   HeatmapDay,
   ReminderDto,
-  UpdateExpenseBody,
   UpdateReminderBody,
   WeatherSnapshot,
 } from './dto';
@@ -154,69 +134,6 @@ const DashboardResponseSchema = z.object({
   expenseTotals: z.array(z.object({ currency: z.string(), total: z.number() })),
 });
 
-const ExpenseCategoryDeltaSchema = z.object({
-  category: ExpenseCategoryEnum,
-  currency: z.string(),
-  currentTotal: z.number(),
-  currentCount: z.number(),
-  comparableHistoricAvg: z.number().nullable(),
-  percentVsHistoric: z.number().nullable(),
-});
-
-const ExpenseChargeDtoSchema = z.object({
-  id: z.string(),
-  vendor: z.string(),
-  amount: z.number(),
-  currency: z.string(),
-  transactionDate: z.string(),
-  category: ExpenseCategoryEnum,
-  card: z.string().optional(),
-});
-
-const ExpensesMonthResponseSchema = z.object({
-  month: z.string(),
-  scope: z.enum(['month', 'all']),
-  expenses: z.array(ExpenseDtoSchema),
-  totals: z.array(z.object({ currency: z.string(), total: z.number() })),
-  byCategory: z.array(z.object({ category: ExpenseCategoryEnum, currency: z.string(), total: z.number(), count: z.number() })),
-  byType: z.array(z.object({ type: ExpenseTypeEnum, currency: z.string(), total: z.number(), count: z.number() })),
-  categoryDeltas: z.array(ExpenseCategoryDeltaSchema),
-  topCharges: z.array(ExpenseChargeDtoSchema),
-  currency: z.string(),
-});
-
-const ExpenseMonthlyPointSchema = z.object({ month: z.string(), total: z.number() });
-
-const ExpenseCategoryDetailResponseSchema = z.object({
-  category: ExpenseCategoryEnum,
-  scope: z.enum(['month', 'all']),
-  month: z.string().nullable(),
-  currency: z.string(),
-  total: z.number(),
-  count: z.number(),
-  avg: z.number(),
-  firstDate: z.string().nullable(),
-  lastDate: z.string().nullable(),
-  totals: z.array(z.object({ currency: z.string(), total: z.number() })),
-  monthlyTotals: z.array(ExpenseMonthlyPointSchema),
-  topVendors: z.array(z.object({ vendor: z.string(), total: z.number(), count: z.number() })),
-  expenses: z.array(ExpenseDtoSchema),
-});
-
-const ExpenseVendorDetailResponseSchema = z.object({
-  vendor: z.string(),
-  currency: z.string(),
-  total: z.number(),
-  count: z.number(),
-  avg: z.number(),
-  firstDate: z.string().nullable(),
-  lastDate: z.string().nullable(),
-  totals: z.array(z.object({ currency: z.string(), total: z.number() })),
-  dominantCategory: z.object({ category: ExpenseCategoryEnum, share: z.number() }).nullable(),
-  monthlyTotals: z.array(ExpenseMonthlyPointSchema),
-  expenses: z.array(ExpenseDtoSchema),
-});
-
 const CreateReminderBodySchema = z.object({
   message: z.string(),
   dueDate: z.string().describe('ISO 8601 date-time'),
@@ -227,23 +144,6 @@ const UpdateReminderBodySchema = z.object({
   dueDate: z.string().optional(),
   status: z.enum(['pending', 'completed']).optional(),
   snoozeMinutes: z.number().optional(),
-});
-
-const UpdateExpenseBodySchema = z.object({
-  userVendor: z.string().nullable().optional(),
-  userCategory: ExpenseCategoryEnum.nullable().optional(),
-  userType: ExpenseTypeEnum.nullable().optional(),
-});
-
-const BulkUpdateVendorBodySchema = z.object({
-  name: z.string(),
-  userVendor: z.string().nullable().optional(),
-  userCategory: ExpenseCategoryEnum.nullable().optional(),
-});
-
-const BulkUpdateVendorResponseSchema = z.object({
-  modifiedCount: z.number(),
-  vendor: ExpenseVendorDetailResponseSchema,
 });
 
 const ExpenseLogAckSchema = z.object({ logged: z.literal(true) });
@@ -259,19 +159,6 @@ const ExerciseLogResponseSchema = z.object({
   alreadyDoneToday: z.boolean(),
 });
 
-const CreateManualExpenseBodySchema = z.object({
-  vendor: z.string().min(1),
-  amount: z.number().positive(),
-  currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]).optional(),
-  transactionDate: z.string().optional().describe('ISO 8601; defaults to now'),
-  category: ExpenseCategoryEnum.optional().describe('When provided, skips AI categorization'),
-  card: z.string().regex(/^\d{4}$/).optional().describe('Last 4 digits of the card'),
-});
-
-const CardListResponseSchema = z.object({
-  cards: z.array(z.string()),
-});
-
 const ErrorSchema = z.object({ error: z.string() });
 
 // --- OpenAPI route registrations ---
@@ -284,63 +171,6 @@ registry.registerPath({
   request: { query: z.object({ date: z.string().optional().describe('YYYY-MM-DD; defaults to today') }) },
   responses: {
     200: { description: 'Dashboard payload', content: { 'application/json': { schema: DashboardResponseSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: 'get',
-  path: '/api/chatbot/expenses',
-  tags: ['Chatbot'],
-  summary: 'Get expenses for a month (with category deltas vs prior 3-month baseline) or all time (no baseline)',
-  request: { query: z.object({ month: z.string().optional().describe('YYYY-MM, or "all" for lifetime view; defaults to current month') }) },
-  responses: {
-    200: { description: 'Expenses month payload', content: { 'application/json': { schema: ExpensesMonthResponseSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: 'get',
-  path: '/api/chatbot/expenses/category/{category}',
-  tags: ['Chatbot'],
-  summary: 'Get expenses for a category, optionally scoped to a single month',
-  request: {
-    params: z.object({ category: ExpenseCategoryEnum }),
-    query: z.object({ month: z.string().optional().describe('YYYY-MM to scope to a single month; omit for lifetime') }),
-  },
-  responses: {
-    200: { description: 'Category detail', content: { 'application/json': { schema: ExpenseCategoryDetailResponseSchema } } },
-    400: { description: 'Invalid category', content: { 'application/json': { schema: ErrorSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: 'get',
-  path: '/api/chatbot/expenses/vendor',
-  tags: ['Chatbot'],
-  summary: 'Get lifetime expenses for a vendor (matches effective vendor exactly, case-insensitive)',
-  request: { query: z.object({ name: z.string().describe('Vendor display name (effective vendor)') }) },
-  responses: {
-    200: { description: 'Vendor detail', content: { 'application/json': { schema: ExpenseVendorDetailResponseSchema } } },
-    400: { description: 'Missing vendor name', content: { 'application/json': { schema: ErrorSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: 'patch',
-  path: '/api/chatbot/expenses/vendor',
-  tags: ['Chatbot'],
-  summary: 'Bulk-update all expenses matching a vendor (name or category)',
-  request: {
-    body: { content: { 'application/json': { schema: BulkUpdateVendorBodySchema } } },
-  },
-  responses: {
-    200: { description: 'Bulk update result + refreshed vendor detail', content: { 'application/json': { schema: BulkUpdateVendorResponseSchema } } },
-    400: { description: 'Validation error', content: { 'application/json': { schema: ErrorSchema } } },
-    404: { description: 'Vendor not found', content: { 'application/json': { schema: ErrorSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
   },
 });
@@ -415,23 +245,6 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'patch',
-  path: '/api/chatbot/expenses/{id}',
-  tags: ['Chatbot'],
-  summary: 'Override the AI-inferred vendor / category / type for an expense (null clears the override)',
-  request: {
-    params: z.object({ id: z.string() }),
-    body: { content: { 'application/json': { schema: UpdateExpenseBodySchema } } },
-  },
-  responses: {
-    200: { description: 'Updated', content: { 'application/json': { schema: ExpenseDtoSchema } } },
-    400: { description: 'Invalid id/body', content: { 'application/json': { schema: ErrorSchema } } },
-    404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
   method: 'post',
   path: '/api/chatbot/expenses',
   tags: ['Chatbot'],
@@ -441,30 +254,6 @@ registry.registerPath({
     202: { description: 'Logged for end-of-day report', content: { 'application/json': { schema: ExpenseLogAckSchema } } },
     400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
     401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: 'post',
-  path: '/api/chatbot/expenses/manual',
-  tags: ['Chatbot'],
-  summary: 'Create a manual expense (persists to mongo; AI-categorized; user can override later via PATCH)',
-  request: { body: { content: { 'application/json': { schema: CreateManualExpenseBodySchema } } } },
-  responses: {
-    201: { description: 'Created expense', content: { 'application/json': { schema: ExpenseDtoSchema } } },
-    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: 'get',
-  path: '/api/chatbot/expenses/cards',
-  tags: ['Chatbot'],
-  summary: 'List distinct card last-4 digits seen across all expenses',
-  responses: {
-    200: { description: 'Card list', content: { 'application/json': { schema: CardListResponseSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
   },
 });
@@ -600,308 +389,6 @@ function totalsByCurrency(expenses: ReadonlyArray<Expense>): ExpenseTotal[] {
   return Array.from(acc.entries()).map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
 }
 
-function categoryBreakdown(expenses: ReadonlyArray<Expense>): ExpenseCategoryBreakdown[] {
-  const map = new Map<string, ExpenseCategoryBreakdown>();
-  for (const e of expenses) {
-    const cat = effectiveCategory(e) as ExpenseCategoryDto;
-    const key = `${cat}|${e.currency}`;
-    const existing = map.get(key);
-    if (existing) map.set(key, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
-    else map.set(key, { category: cat, currency: e.currency, total: e.amount, count: 1 });
-  }
-  return Array.from(map.values())
-    .map((c) => ({ ...c, total: Math.round(c.total * 100) / 100 }))
-    .sort((a, b) => b.total - a.total);
-}
-
-function typeBreakdown(expenses: ReadonlyArray<Expense>): ExpenseTypeBreakdown[] {
-  const map = new Map<string, ExpenseTypeBreakdown>();
-  for (const e of expenses) {
-    const t = effectiveType(e) as ExpenseTypeDto;
-    const key = `${t}|${e.currency}`;
-    const existing = map.get(key);
-    if (existing) map.set(key, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
-    else map.set(key, { type: t, currency: e.currency, total: e.amount, count: 1 });
-  }
-  return Array.from(map.values())
-    .map((t) => ({ ...t, total: Math.round(t.total * 100) / 100 }))
-    .sort((a, b) => b.total - a.total);
-}
-
-function parseSelectedMonth(raw: unknown): { ym: string; start: Date; endExclusive: Date } {
-  const todayYm = formatInTimeZone(new Date(), DEFAULT_TIMEZONE, 'yyyy-MM');
-  const ym = typeof raw === 'string' && /^\d{4}-\d{2}$/.test(raw) ? raw : todayYm;
-  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
-  const zoned = toZonedTime(start, DEFAULT_TIMEZONE);
-  const endDay = endOfMonth(zoned);
-  const endExclusive = fromZonedTime(formatInTimeZone(addDays(endDay, 1), DEFAULT_TIMEZONE, "yyyy-MM-dd'T'00:00:00"), DEFAULT_TIMEZONE);
-  return { ym, start, endExclusive };
-}
-
-function getMonthBoundaries(ym: string): { ym: string; start: Date; endExclusive: Date; daysInMonth: number } {
-  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
-  const startZoned = toZonedTime(start, DEFAULT_TIMEZONE);
-  const endDay = endOfMonth(startZoned);
-  const daysInMonth = endDay.getDate();
-  const endExclusive = fromZonedTime(formatInTimeZone(addDays(endDay, 1), DEFAULT_TIMEZONE, "yyyy-MM-dd'T'00:00:00"), DEFAULT_TIMEZONE);
-  return { ym, start, endExclusive, daysInMonth };
-}
-
-function prevYm(ym: string, monthsBack: number): string {
-  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
-  const prev = subMonths(toZonedTime(start, DEFAULT_TIMEZONE), monthsBack);
-  return formatInTimeZone(fromZonedTime(prev, DEFAULT_TIMEZONE), DEFAULT_TIMEZONE, 'yyyy-MM');
-}
-
-function zonedDayOfMonth(d: Date): number {
-  return parseInt(formatInTimeZone(d, DEFAULT_TIMEZONE, 'd'), 10);
-}
-
-function pickPrimaryCurrency(expenses: ReadonlyArray<Expense>): string {
-  if (expenses.length === 0) return DEFAULT_CURRENCY;
-  const totals = new Map<string, number>();
-  for (const e of expenses) totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount);
-  return [...totals.entries()].sort((a, b) => b[1] - a[1])[0][0];
-}
-
-function monthlyTotalsForCurrency(expenses: ReadonlyArray<Expense>, currency: string, months = 12): ExpenseMonthlyPoint[] {
-  const buckets = new Map<string, number>();
-  const now = new Date();
-  for (let i = months - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const ym = formatInTimeZone(d, DEFAULT_TIMEZONE, 'yyyy-MM');
-    buckets.set(ym, 0);
-  }
-  for (const e of expenses) {
-    if (e.currency !== currency) continue;
-    const ym = formatInTimeZone(e.transactionDate, DEFAULT_TIMEZONE, 'yyyy-MM');
-    if (buckets.has(ym)) buckets.set(ym, (buckets.get(ym) ?? 0) + e.amount);
-  }
-  return [...buckets.entries()].map(([month, total]) => ({ month, total: Math.round(total * 100) / 100 }));
-}
-
-function buildCategoryDetail(
-  category: ExpenseCategory,
-  expenses: ReadonlyArray<Expense>,
-  scopeMonth: string | null,
-  monthlyContextExpenses?: ReadonlyArray<Expense>,
-): ExpenseCategoryDetailResponse {
-  const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-  const primaryCurrency = pickPrimaryCurrency(sorted.length > 0 ? sorted : monthlyContextExpenses ?? []);
-  const primary = sorted.filter((e) => e.currency === primaryCurrency);
-  const total = primary.reduce((s, e) => s + e.amount, 0);
-  const count = primary.length;
-  const avg = count > 0 ? total / count : 0;
-  const firstDate = sorted.length > 0 ? sorted[sorted.length - 1].transactionDate.toISOString() : null;
-  const lastDate = sorted.length > 0 ? sorted[0].transactionDate.toISOString() : null;
-
-  const vendorMap = new Map<string, { vendor: string; total: number; count: number }>();
-  for (const e of primary) {
-    const v = effectiveVendor(e);
-    const existing = vendorMap.get(v);
-    if (existing) vendorMap.set(v, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
-    else vendorMap.set(v, { vendor: v, total: e.amount, count: 1 });
-  }
-  const topVendors = [...vendorMap.values()]
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5)
-    .map((v) => ({ ...v, total: Math.round(v.total * 100) / 100 }));
-
-  // 12-month bars always show full history for context, even when scoped to a single month.
-  const barsSource = monthlyContextExpenses ?? sorted;
-
-  return {
-    category: category as ExpenseCategoryDto,
-    scope: scopeMonth ? 'month' : 'all',
-    month: scopeMonth,
-    currency: primaryCurrency,
-    total: Math.round(total * 100) / 100,
-    count,
-    avg: Math.round(avg * 100) / 100,
-    firstDate,
-    lastDate,
-    totals: totalsByCurrency(sorted),
-    monthlyTotals: monthlyTotalsForCurrency(barsSource, primaryCurrency, 12),
-    topVendors,
-    expenses: sorted.map(toExpenseDto),
-  };
-}
-
-function buildVendorDetail(name: string, expenses: ReadonlyArray<Expense>): ExpenseVendorDetailResponse {
-  const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-  const primaryCurrency = pickPrimaryCurrency(sorted);
-  const primary = sorted.filter((e) => e.currency === primaryCurrency);
-  const total = primary.reduce((s, e) => s + e.amount, 0);
-  const count = primary.length;
-  const avg = count > 0 ? total / count : 0;
-  const firstDate = sorted.length > 0 ? sorted[sorted.length - 1].transactionDate.toISOString() : null;
-  const lastDate = sorted.length > 0 ? sorted[0].transactionDate.toISOString() : null;
-
-  let dominantCategory: ExpenseVendorDetailResponse['dominantCategory'] = null;
-  if (primary.length > 0) {
-    const catMap = new Map<string, number>();
-    for (const e of primary) {
-      const cat = effectiveCategory(e) as string;
-      catMap.set(cat, (catMap.get(cat) ?? 0) + e.amount);
-    }
-    const top = [...catMap.entries()].sort((a, b) => b[1] - a[1])[0];
-    dominantCategory = { category: top[0] as ExpenseCategoryDto, share: total > 0 ? top[1] / total : 0 };
-  }
-
-  const displayVendor = sorted.length > 0 ? effectiveVendor(sorted[0]) : name;
-
-  return {
-    vendor: displayVendor,
-    currency: primaryCurrency,
-    total: Math.round(total * 100) / 100,
-    count,
-    avg: Math.round(avg * 100) / 100,
-    firstDate,
-    lastDate,
-    totals: totalsByCurrency(sorted),
-    dominantCategory,
-    monthlyTotals: monthlyTotalsForCurrency(sorted, primaryCurrency, 12),
-    expenses: sorted.map(toExpenseDto),
-  };
-}
-
-type BaselineMonth = {
-  readonly ym: string;
-  readonly start: Date;
-  readonly endExclusive: Date;
-  readonly daysInMonth: number;
-  readonly expenses: ReadonlyArray<Expense>; // primary-currency only
-};
-
-type Baseline = {
-  readonly monthCount: number;
-  readonly months: ReadonlyArray<BaselineMonth>;
-  readonly avgFullMonthTotal: number; // mean of full-month totals across baseline months
-  readonly avgToDateTotal: number; // mean of (days 1..throughDay) totals across baseline months
-  readonly byCategoryAvg: Map<string, number>; // mean across baseline months (missing = 0)
-  readonly byCategoryMonthsPresent: Map<string, number>;
-  readonly byVendorAvg: Map<string, number>;
-  readonly byVendorMonthsPresent: Map<string, number>;
-  readonly allVendors: Set<string>;
-};
-
-function buildBaseline(allExpenses: ReadonlyArray<Expense>, selectedYm: string, throughDayOfSelected: number, primaryCurrency: string): Baseline {
-  const candidates: BaselineMonth[] = [];
-  for (let i = 1; i <= 3; i++) {
-    const b = getMonthBoundaries(prevYm(selectedYm, i));
-    const monthExp = allExpenses.filter((e) => e.currency === primaryCurrency && e.transactionDate >= b.start && e.transactionDate < b.endExclusive);
-    if (monthExp.length === 0) continue;
-    candidates.push({ ...b, expenses: monthExp });
-  }
-  const months = candidates;
-  const monthCount = months.length;
-
-  if (monthCount === 0) {
-    return {
-      monthCount: 0,
-      months: [],
-      avgFullMonthTotal: 0,
-      avgToDateTotal: 0,
-      byCategoryAvg: new Map(),
-      byCategoryMonthsPresent: new Map(),
-      byVendorAvg: new Map(),
-      byVendorMonthsPresent: new Map(),
-      allVendors: new Set(),
-    };
-  }
-
-  let sumFull = 0;
-  let sumToDate = 0;
-  const byCatTotals = new Map<string, number>();
-  const byCatPresent = new Map<string, number>();
-  const byVenTotals = new Map<string, number>();
-  const byVenPresent = new Map<string, number>();
-  const allVendors = new Set<string>();
-
-  for (const m of months) {
-    const seenCats = new Set<string>();
-    const seenVens = new Set<string>();
-    for (const e of m.expenses) {
-      sumFull += e.amount;
-      const day = zonedDayOfMonth(e.transactionDate);
-      // Cap "to-date" at min(throughDay, daysInMonth-of-this-baseline-month) so a baseline
-      // month shorter than the selected one is still scaled fairly.
-      const compareThrough = Math.min(throughDayOfSelected, m.daysInMonth);
-      if (day <= compareThrough) sumToDate += e.amount;
-      const cat = effectiveCategory(e) as string;
-      const ven = effectiveVendor(e);
-      byCatTotals.set(cat, (byCatTotals.get(cat) ?? 0) + e.amount);
-      byVenTotals.set(ven, (byVenTotals.get(ven) ?? 0) + e.amount);
-      seenCats.add(cat);
-      seenVens.add(ven);
-      allVendors.add(ven);
-    }
-    for (const c of seenCats) byCatPresent.set(c, (byCatPresent.get(c) ?? 0) + 1);
-    for (const v of seenVens) byVenPresent.set(v, (byVenPresent.get(v) ?? 0) + 1);
-  }
-
-  const avgFullMonthTotal = sumFull / monthCount;
-  const avgToDateTotal = sumToDate / monthCount;
-  const byCategoryAvg = new Map<string, number>();
-  for (const [k, v] of byCatTotals) byCategoryAvg.set(k, v / monthCount);
-  const byVendorAvg = new Map<string, number>();
-  for (const [k, v] of byVenTotals) byVendorAvg.set(k, v / monthCount);
-
-  return {
-    monthCount,
-    months,
-    avgFullMonthTotal,
-    avgToDateTotal,
-    byCategoryAvg,
-    byCategoryMonthsPresent: byCatPresent,
-    byVendorAvg,
-    byVendorMonthsPresent: byVenPresent,
-    allVendors,
-  };
-}
-
-function enrichCategoryDeltas(monthExpensesPrimary: ReadonlyArray<Expense>, baseline: Baseline | null, primaryCurrency: string): ExpenseCategoryDelta[] {
-  const totals = new Map<string, { total: number; count: number }>();
-  for (const e of monthExpensesPrimary) {
-    const cat = effectiveCategory(e) as string;
-    const cur = totals.get(cat) ?? { total: 0, count: 0 };
-    totals.set(cat, { total: cur.total + e.amount, count: cur.count + 1 });
-  }
-  const out: ExpenseCategoryDelta[] = [];
-  for (const [cat, { total, count }] of totals) {
-    const baseAvg = baseline?.byCategoryAvg.get(cat) ?? null;
-    const present = baseline?.byCategoryMonthsPresent.get(cat) ?? 0;
-    const showDelta = !!baseline && baseline.monthCount >= 2 && present >= 2 && baseAvg !== null && baseAvg > 0;
-    out.push({
-      category: cat as ExpenseCategoryDto,
-      currency: primaryCurrency,
-      currentTotal: round2(total),
-      currentCount: count,
-      comparableHistoricAvg: baseAvg !== null ? round2(baseAvg) : null,
-      percentVsHistoric: showDelta ? Math.round(((total - (baseAvg as number)) / (baseAvg as number)) * 100) : null,
-    });
-  }
-  return out.sort((a, b) => b.currentTotal - a.currentTotal);
-}
-
-function computeTopCharges(monthExpensesPrimary: ReadonlyArray<Expense>, limit: number): ExpenseChargeDto[] {
-  return [...monthExpensesPrimary]
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, limit)
-    .map((e) => ({
-      id: e._id!.toString(),
-      vendor: effectiveVendor(e),
-      amount: round2(e.amount),
-      currency: e.currency,
-      transactionDate: e.transactionDate.toISOString(),
-      category: effectiveCategory(e) as ExpenseCategoryDto,
-      ...(e.card ? { card: e.card } : {}),
-    }));
-}
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
 
 async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
   try {
@@ -1025,153 +512,6 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
-  app.get('/api/chatbot/expenses', async (req: Request, res: Response<ExpensesMonthResponse | { error: string }>) => {
-    try {
-      const rawMonth = typeof req.query.month === 'string' ? req.query.month.trim() : '';
-      const isAllTime = rawMonth.toLowerCase() === 'all';
-
-      if (isAllTime) {
-        const allExpensesFull = await getAllExpenses();
-        const primaryCurrency = pickPrimaryCurrency(allExpensesFull);
-        const primary = allExpensesFull.filter((e) => e.currency === primaryCurrency);
-        const sorted = [...allExpensesFull].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-        const categoryDeltas = enrichCategoryDeltas(primary, null, primaryCurrency);
-        const topCharges = computeTopCharges(primary, 5);
-        res.json({
-          month: 'all',
-          scope: 'all',
-          currency: primaryCurrency,
-          expenses: sorted.map(toExpenseDto),
-          totals: totalsByCurrency(sorted),
-          byCategory: categoryBreakdown(sorted),
-          byType: typeBreakdown(sorted),
-          categoryDeltas,
-          topCharges,
-        });
-        return;
-      }
-
-      const { ym, start, endExclusive } = parseSelectedMonth(req.query.month);
-
-      // Fetch a single range covering the selected month + 3 prior baseline months.
-      const baselineStart = getMonthBoundaries(prevYm(ym, 3)).start;
-      const fetchStart = start < baselineStart ? start : baselineStart;
-      const fetchEnd = endExclusive;
-
-      const allExpenses = await getExpensesBetween(fetchStart, fetchEnd);
-      const monthExpenses = allExpenses.filter((e) => e.transactionDate >= start && e.transactionDate < endExclusive);
-      const baselineFetched = allExpenses.filter((e) => e.transactionDate < start);
-
-      const todayYm = formatInTimeZone(new Date(), DEFAULT_TIMEZONE, 'yyyy-MM');
-      const isPastMonth = ym < todayYm;
-      const todayDayOfMonth = zonedDayOfMonth(new Date());
-      const { daysInMonth } = getMonthBoundaries(ym);
-
-      const primaryCurrency = pickPrimaryCurrency(monthExpenses.length > 0 ? monthExpenses : baselineFetched);
-      const monthExpensesPrimary = monthExpenses.filter((e) => e.currency === primaryCurrency);
-
-      const throughDayForBaseline = isPastMonth ? daysInMonth : Math.min(todayDayOfMonth, daysInMonth);
-      const baseline = buildBaseline(baselineFetched, ym, throughDayForBaseline, primaryCurrency);
-
-      const categoryDeltas = enrichCategoryDeltas(monthExpensesPrimary, baseline, primaryCurrency);
-      const topCharges = computeTopCharges(monthExpensesPrimary, 5);
-
-      const sorted = [...monthExpenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-
-      res.json({
-        month: ym,
-        scope: 'month',
-        currency: primaryCurrency,
-        expenses: sorted.map(toExpenseDto),
-        totals: totalsByCurrency(sorted),
-        byCategory: categoryBreakdown(sorted),
-        byType: typeBreakdown(sorted),
-        categoryDeltas,
-        topCharges,
-      });
-    } catch (err) {
-      logger.error(`expenses month failed: ${err}`);
-      res.status(500).json({ error: 'expenses_failed' });
-    }
-  });
-
-  app.get('/api/chatbot/expenses/category/:category', async (req: Request, res: Response<ExpenseCategoryDetailResponse | { error: string }>) => {
-    try {
-      const raw = req.params.category;
-      if (!EXPENSE_CATEGORIES.includes(raw as ExpenseCategory)) {
-        res.status(400).json({ error: 'invalid_category' });
-        return;
-      }
-      const category = raw as ExpenseCategory;
-      const rawMonth = typeof req.query.month === 'string' ? req.query.month.trim() : '';
-      const scopeMonth = /^\d{4}-\d{2}$/.test(rawMonth) ? rawMonth : null;
-
-      const allCategoryExpenses = await getAllExpensesByEffectiveCategory(category);
-      let scoped: ReadonlyArray<Expense> = allCategoryExpenses;
-      if (scopeMonth) {
-        const { start, endExclusive } = getMonthBoundaries(scopeMonth);
-        scoped = allCategoryExpenses.filter((e) => e.transactionDate >= start && e.transactionDate < endExclusive);
-      }
-      res.json(buildCategoryDetail(category, scoped, scopeMonth, allCategoryExpenses));
-    } catch (err) {
-      logger.error(`expenses category failed: ${err}`);
-      res.status(500).json({ error: 'category_failed' });
-    }
-  });
-
-  app.get('/api/chatbot/expenses/vendor', async (req: Request, res: Response<ExpenseVendorDetailResponse | { error: string }>) => {
-    try {
-      const raw = req.query.name;
-      const name = typeof raw === 'string' ? raw.trim() : '';
-      if (!name) {
-        res.status(400).json({ error: 'missing_name' });
-        return;
-      }
-      const expenses = await getAllExpensesByEffectiveVendor(name);
-      res.json(buildVendorDetail(name, expenses));
-    } catch (err) {
-      logger.error(`expenses vendor failed: ${err}`);
-      res.status(500).json({ error: 'vendor_failed' });
-    }
-  });
-
-  app.patch('/api/chatbot/expenses/vendor', async (req: Request<object, object, BulkUpdateVendorBody>, res: Response<BulkUpdateVendorResponse | { error: string }>) => {
-    try {
-      const body = req.body ?? ({} as BulkUpdateVendorBody);
-      const name = typeof body.name === 'string' ? body.name.trim() : '';
-      if (!name) {
-        res.status(400).json({ error: 'missing_name' });
-        return;
-      }
-      if (body.userVendor !== undefined && body.userVendor !== null && typeof body.userVendor !== 'string') {
-        res.status(400).json({ error: 'invalid_vendor' });
-        return;
-      }
-      if (body.userCategory !== undefined && body.userCategory !== null && !EXPENSE_CATEGORIES.includes(body.userCategory)) {
-        res.status(400).json({ error: 'invalid_category' });
-        return;
-      }
-      if (body.userVendor === undefined && body.userCategory === undefined) {
-        res.status(400).json({ error: 'no_updates' });
-        return;
-      }
-      const modifiedCount = await bulkUpdateExpensesByEffectiveVendor(name, {
-        userVendor: body.userVendor === undefined ? undefined : body.userVendor,
-        userCategory: body.userCategory === undefined ? undefined : body.userCategory,
-      });
-      // After rename, the lookup name changes — use new userVendor (if provided and not null) for the refreshed payload.
-      const refreshedName = typeof body.userVendor === 'string' && body.userVendor.trim() ? body.userVendor.trim() : name;
-      const expenses = await getAllExpensesByEffectiveVendor(refreshedName);
-      if (expenses.length === 0 && modifiedCount === 0) {
-        res.status(404).json({ error: 'vendor_not_found' });
-        return;
-      }
-      res.json({ modifiedCount, vendor: buildVendorDetail(refreshedName, expenses) });
-    } catch (err) {
-      logger.error(`expenses vendor bulk-update failed: ${err}`);
-      res.status(500).json({ error: 'bulk_update_failed' });
-    }
-  });
 
   app.post('/api/chatbot/exercise/log', async (req: Request, res: Response<ExerciseLogResponse | { error: string }>) => {
     try {
@@ -1303,103 +643,6 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
-  app.patch('/api/chatbot/expenses/:id', async (req: Request<{ id: string }, object, UpdateExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
-    try {
-      const { id } = req.params;
-      if (!ObjectId.isValid(id)) {
-        res.status(400).json({ error: 'invalid_id' });
-        return;
-      }
-      const body = req.body ?? {};
-      if (body.userCategory !== undefined && body.userCategory !== null && !EXPENSE_CATEGORIES.includes(body.userCategory)) {
-        res.status(400).json({ error: 'invalid_category' });
-        return;
-      }
-      if (body.userType !== undefined && body.userType !== null && !EXPENSE_TYPES.includes(body.userType)) {
-        res.status(400).json({ error: 'invalid_type' });
-        return;
-      }
-      if (body.userVendor !== undefined && body.userVendor !== null && typeof body.userVendor !== 'string') {
-        res.status(400).json({ error: 'invalid_vendor' });
-        return;
-      }
-      const updated = await updateUserOverrides(id, {
-        userVendor: body.userVendor === undefined ? undefined : body.userVendor,
-        userCategory: body.userCategory === undefined ? undefined : body.userCategory,
-        userType: body.userType === undefined ? undefined : body.userType,
-      });
-      if (!updated) {
-        res.status(404).json({ error: 'not_found' });
-        return;
-      }
-      res.json(toExpenseDto(updated));
-    } catch (err) {
-      logger.error(`expense update failed: ${err}`);
-      res.status(500).json({ error: 'update_failed' });
-    }
-  });
-
-  app.post('/api/chatbot/expenses/manual', async (req: Request<object, object, CreateManualExpenseBody>, res: Response<ExpenseDto | { error: string }>) => {
-    try {
-      const body = req.body ?? ({} as CreateManualExpenseBody);
-      const vendor = typeof body.vendor === 'string' ? body.vendor.trim() : '';
-      if (!vendor) {
-        res.status(400).json({ error: 'vendor_required' });
-        return;
-      }
-      if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
-        res.status(400).json({ error: 'amount_must_be_positive_number' });
-        return;
-      }
-      if (body.currency && !SUPPORTED_CURRENCIES.includes(body.currency as Currency)) {
-        res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
-        return;
-      }
-      if (body.category !== undefined && !EXPENSE_CATEGORIES.includes(body.category)) {
-        res.status(400).json({ error: 'invalid_category' });
-        return;
-      }
-      let card: string | undefined;
-      if (body.card !== undefined && body.card !== null && body.card !== '') {
-        if (typeof body.card !== 'string' || !/^\d{4}$/.test(body.card)) {
-          res.status(400).json({ error: 'card_must_be_4_digits' });
-          return;
-        }
-        card = body.card;
-      }
-      let transactionDate: Date | undefined;
-      if (body.transactionDate) {
-        const d = new Date(body.transactionDate);
-        if (Number.isNaN(d.getTime())) {
-          res.status(400).json({ error: 'invalid_transactionDate' });
-          return;
-        }
-        transactionDate = d;
-      }
-      const created = await createManualExpense({
-        vendor,
-        amount: body.amount,
-        currency: (body.currency as Currency) ?? undefined,
-        transactionDate,
-        category: body.category,
-        card,
-      });
-      res.status(201).json(toExpenseDto(created));
-    } catch (err) {
-      logger.error(`manual expense create failed: ${err}`);
-      res.status(500).json({ error: 'create_failed' });
-    }
-  });
-
-  app.get('/api/chatbot/expenses/cards', async (_req: Request, res: Response<CardListResponse | { error: string }>) => {
-    try {
-      const cards = await getDistinctCards();
-      res.json({ cards });
-    } catch (err) {
-      logger.error(`list cards failed: ${err}`);
-      res.status(500).json({ error: 'list_failed' });
-    }
-  });
 
   logger.log('Chatbot API routes registered at /api/chatbot/*');
 }
