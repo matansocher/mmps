@@ -17,9 +17,10 @@ export type DiscountFileMeta = {
   readonly kind: 'discount';
   readonly fileName: string;
   readonly cardLast4: string;
-  readonly statementYear: number;
-  readonly statementMonth: number; // 1–12
-  readonly statementYm: string; // YYYY-MM
+  // YYYY-MM. Empty when the detector couldn't read it from the header (immediate-debit and
+  // pending-only statements have no scheduled charge date); the parser fills it in from the
+  // mode of transaction months.
+  statementYm: string;
 };
 
 export type IsracardFileMeta = {
