@@ -17,9 +17,10 @@ type Props = {
   readonly expense: ExpenseDto;
   readonly onTap?: (expense: ExpenseDto) => void;
   readonly dayLabel?: string;
+  readonly flagged?: boolean;
 };
 
-export function ExpenseRow({ expense, onTap, dayLabel }: Props) {
+export function ExpenseRow({ expense, onTap, dayLabel, flagged }: Props) {
   const emoji = getCategoryEmoji(expense.category);
   const edited = !!(expense.originalVendor || expense.originalCategory || expense.originalType);
 
@@ -29,6 +30,8 @@ export function ExpenseRow({ expense, onTap, dayLabel }: Props) {
       <div className="flex-1 min-w-0 text-left">
         <div className="text-sm text-text-primary truncate">
           {expense.vendor}
+          {flagged && <span className="ml-1 text-[11px]" aria-label="Unusually high" title="Unusually high for this vendor">⚠️</span>}
+          {expense.notes && <span className="ml-1 text-[10px] text-text-muted" aria-label="Has notes" title={expense.notes}>📝</span>}
           {edited && <span className="ml-1 text-[10px] text-text-muted" aria-label="Edited">✎</span>}
         </div>
         <div className="text-xs text-text-muted truncate">

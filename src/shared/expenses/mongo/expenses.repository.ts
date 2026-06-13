@@ -133,6 +133,19 @@ export async function bulkUpdateExpensesByEffectiveVendor(vendorName: string, up
   return result.modifiedCount;
 }
 
+export async function searchExpenses(query: string, limit = 50): Promise<Expense[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+  const col = getCollection();
+  const safe = escapeRegex(trimmed);
+  const rx = new RegExp(safe, 'i');
+  return col
+    .find({ $or: [{ vendor: rx }, { userVendor: rx }, { notes: rx }] })
+    .sort({ transactionDate: -1 })
+    .limit(limit)
+    .toArray();
+}
+
 export async function getExpensesByVendor(vendor: string, limit = 20): Promise<Expense[]> {
   const col = getCollection();
   return col
@@ -160,6 +173,7 @@ export type UserOverrides = {
   readonly userVendor?: string | null;
   readonly userCategory?: ExpenseCategory | null;
   readonly userType?: import('../types').ExpenseType | null;
+  readonly notes?: string | null;
 };
 
 export async function updateUserOverrides(id: string, overrides: UserOverrides): Promise<Expense | null> {
@@ -179,6 +193,11 @@ export async function updateUserOverrides(id: string, overrides: UserOverrides):
   if (overrides.userType !== undefined) {
     if (overrides.userType === null) unset.userType = '';
     else set.userType = overrides.userType;
+  }
+  if (overrides.notes !== undefined) {
+    const trimmed = typeof overrides.notes === 'string' ? overrides.notes.trim() : '';
+    if (overrides.notes === null || trimmed === '') unset.notes = '';
+    else set.notes = trimmed;
   }
 
   const update: Record<string, unknown> = {};

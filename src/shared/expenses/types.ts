@@ -89,6 +89,7 @@ export type Expense = {
   readonly userVendor?: string;
   readonly userCategory?: ExpenseCategory;
   readonly userType?: ExpenseType;
+  readonly notes?: string;
   readonly amount: number;
   readonly currency: string;
   readonly card?: string; // last 4 digits of the source card; null for manual/cash entries
