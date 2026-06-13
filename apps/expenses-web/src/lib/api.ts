@@ -8,6 +8,7 @@ import type {
   ExpenseDto,
   ExpensesMonthResponse,
   ExpenseVendorDetailResponse,
+  SubscriptionDto,
   UpdateExpenseBody,
 } from '../types';
 
@@ -37,5 +38,8 @@ export const api = {
   createManualExpense: (body: CreateManualExpenseBody) =>
     request<ExpenseDto>('/api/expenses/manual', { method: 'POST', body: JSON.stringify(body) }),
   listCards: () => request<{ cards: ReadonlyArray<string> }>('/api/expenses/cards').then((r) => r.cards),
+  searchExpenses: (q: string) =>
+    request<{ expenses: ReadonlyArray<ExpenseDto> }>(`/api/expenses/search?q=${encodeURIComponent(q)}`).then((r) => r.expenses),
+  subscriptions: () => request<{ subscriptions: ReadonlyArray<SubscriptionDto> }>('/api/expenses/subscriptions').then((r) => r.subscriptions),
   notifyMiniAppOpened: () => request<void>('/api/expenses/session/open', { method: 'POST' }),
 };

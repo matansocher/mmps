@@ -1,2 +1,10 @@
+export { buildWeeklyDigestNumbers, type BuildWeeklyDigestInput, type WeeklyDigestNumbers } from './build-weekly-digest-numbers';
+export { fallbackWeeklyDigest } from './fallback-weekly-digest';
 export { fetchDocumentBuffer } from './fetch-document-buffer';
+export { CURRENCY_SYMBOLS, formatAmount } from './format-amount';
 export { formatFileSummary } from './format-file-summary';
+export { generateWeeklyDigest } from './generate-weekly-digest';
+export { type CategoryTotal, totalsByCategory } from './totals-by-category';
+export { type CurrencyTotal, totalsByCurrency } from './totals-by-currency';
+export { type VendorTotal, totalsByVendor } from './totals-by-vendor';
+export { zonedDayRange } from './zoned-day-range';

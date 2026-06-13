@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AddExpenseSheet } from '../components/AddExpenseSheet';
+import { AnomaliesSheet } from '../components/AnomaliesSheet';
 import { CategoryDetailSheet } from '../components/CategoryDetailSheet';
 import { CategoryPieChart } from '../components/CategoryPieChart';
 import { ExpenseEditSheet } from '../components/ExpenseEditSheet';
 import { ExpenseRow, formatAmount } from '../components/ExpenseRow';
+import { HeatmapSheet } from '../components/HeatmapSheet';
 import { MonthPicker } from '../components/MonthPicker';
+import { SearchSheet } from '../components/SearchSheet';
 import { Skeleton } from '../components/Skeleton';
+import { SubscriptionsSheet, SubscriptionsTile } from '../components/SubscriptionsTile';
 import { Tabs } from '../components/Tabs';
 import { Toast } from '../components/Toast';
 import { TopChargesCard } from '../components/TopChargesCard';
@@ -13,7 +17,7 @@ import { VendorDetailSheet } from '../components/VendorDetailSheet';
 import { api } from '../lib/api';
 import { currentYm, dateFromYmd, formatExpenseDayLabel, formatMonthLabel, shiftMonth } from '../lib/date';
 import { haptic } from '../lib/telegram';
-import type { ExpenseCategory, ExpenseDto, ExpensesMonthResponse, UpdateExpenseBody } from '../types';
+import type { ExpenseCategory, ExpenseDto, ExpensesMonthResponse, SubscriptionDto, UpdateExpenseBody } from '../types';
 
 type ToastState = { readonly message: string; readonly kind: 'success' | 'error' | 'info' } | null;
 
@@ -42,6 +46,10 @@ export function ExpensesPage() {
   const [tab, setTab] = useState<TabId>(readTabFromHash);
   const [categoryDetail, setCategoryDetail] = useState<ExpenseCategory | null>(null);
   const [vendorDetail, setVendorDetail] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [subscriptionsModal, setSubscriptionsModal] = useState<ReadonlyArray<SubscriptionDto> | null>(null);
+  const [anomaliesModal, setAnomaliesModal] = useState(false);
+  const [heatmapOpen, setHeatmapOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -100,6 +108,8 @@ export function ExpensesPage() {
 
   const expenses = data?.expenses ?? [];
   const visible = expenses.slice(0, visibleCount);
+  const anomalyIds = useMemo(() => new Set(data?.anomalyExpenseIds ?? []), [data?.anomalyExpenseIds]);
+  const anomalousExpenses = useMemo(() => expenses.filter((e) => anomalyIds.has(e.id)), [expenses, anomalyIds]);
 
   function handleChargeTap(chargeId: string) {
     const full = expenses.find((e) => e.id === chargeId);
@@ -139,13 +149,22 @@ export function ExpensesPage() {
             <div className="text-xs text-text-muted uppercase tracking-wide">Expenses</div>
             <h1 className="text-xl font-semibold">{headerTitle}</h1>
           </div>
-          <button
-            onClick={() => setAdding(true)}
-            aria-label="Add expense"
-            className="w-10 h-10 grid place-items-center rounded-full bg-accent-primary text-white text-xl leading-none shadow-sm hover:opacity-90 transition-opacity"
-          >
-            +
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSearching(true)}
+              aria-label="Search expenses"
+              className="w-10 h-10 grid place-items-center rounded-full bg-bg-elevated border border-border-subtle text-text-secondary hover:text-accent-primary hover:border-accent-primary transition-colors"
+            >
+              🔍
+            </button>
+            <button
+              onClick={() => setAdding(true)}
+              aria-label="Add expense"
+              className="w-10 h-10 grid place-items-center rounded-full bg-accent-primary text-white text-xl leading-none shadow-sm hover:opacity-90 transition-opacity"
+            >
+              +
+            </button>
+          </div>
         </div>
         <Tabs tabs={TABS} selected={tab} onSelect={changeTab} />
       </header>
@@ -157,7 +176,18 @@ export function ExpensesPage() {
           <>
             {data.categoryDeltas.length > 0 && (
               <section className="rounded-2xl bg-bg-card border border-border-subtle p-4">
-                <div className="text-xs uppercase tracking-wide text-text-muted mb-3">By category</div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-xs uppercase tracking-wide text-text-muted">By category</div>
+                  {!isAllTime && expenses.length > 0 && (
+                    <button
+                      onClick={() => setHeatmapOpen(true)}
+                      className="text-[11px] text-accent-primary hover:underline"
+                      aria-label="Open heatmap"
+                    >
+                      📅 Heatmap
+                    </button>
+                  )}
+                </div>
                 <CategoryPieChart
                   rows={data.categoryDeltas}
                   currency={data.currency}
@@ -169,6 +199,22 @@ export function ExpensesPage() {
             )}
 
             {data.topCharges.length > 0 && <TopChargesCard rows={data.topCharges} onTap={handleChargeTap} />}
+
+            <SubscriptionsTile onOpen={setSubscriptionsModal} />
+
+            {anomalousExpenses.length > 0 && (
+              <button
+                onClick={() => setAnomaliesModal(true)}
+                className="rounded-2xl bg-bg-card border border-border-subtle p-4 text-left active:bg-bg-elevated transition-colors flex items-center gap-3"
+              >
+                <div className="text-2xl shrink-0">⚠️</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-text-primary font-medium">{anomalousExpenses.length} unusual charge{anomalousExpenses.length === 1 ? '' : 's'}</div>
+                  <div className="text-[11px] text-text-muted">Higher than your usual for those vendors — tap to review</div>
+                </div>
+                <div className="text-text-muted">→</div>
+              </button>
+            )}
 
             {data.totals.length > 1 && (
               <div className="text-[11px] text-text-muted text-center">
@@ -195,6 +241,7 @@ export function ExpensesPage() {
                       expense={expense}
                       onTap={setEditing}
                       dayLabel={formatExpenseDayLabel(expense.transactionDate)}
+                      flagged={anomalyIds.has(expense.id)}
                     />
                   ))}
                 </div>
@@ -250,6 +297,51 @@ export function ExpensesPage() {
             await load();
           }}
           onError={() => setToast({ message: 'Failed to add', kind: 'error' })}
+        />
+      )}
+
+      {searching && (
+        <SearchSheet
+          onClose={() => setSearching(false)}
+          onTap={(e) => {
+            setSearching(false);
+            setEditing(e);
+          }}
+        />
+      )}
+
+      {subscriptionsModal && (
+        <SubscriptionsSheet
+          subscriptions={subscriptionsModal}
+          onClose={() => setSubscriptionsModal(null)}
+          onTapVendor={(vendor) => {
+            setSubscriptionsModal(null);
+            handleViewVendor(vendor);
+          }}
+        />
+      )}
+
+      {anomaliesModal && (
+        <AnomaliesSheet
+          expenses={anomalousExpenses}
+          onClose={() => setAnomaliesModal(false)}
+          onTap={(e) => {
+            setAnomaliesModal(false);
+            setEditing(e);
+          }}
+        />
+      )}
+
+      {heatmapOpen && data && (
+        <HeatmapSheet
+          month={selectedMonth}
+          currency={data.currency}
+          expenses={data.expenses}
+          onClose={() => setHeatmapOpen(false)}
+          onTapExpense={(e) => {
+            setHeatmapOpen(false);
+            setEditing(e);
+          }}
         />
       )}
 

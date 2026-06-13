@@ -8,9 +8,11 @@ import { notify } from '@services/notifier';
 import type { UserDetails } from '@services/telegram';
 import {
   bulkUpdateExpensesByEffectiveVendor,
+  computeAnomalies,
   createManualExpense,
   type Currency,
   DEFAULT_CURRENCY,
+  detectSubscriptions,
   effectiveCategory,
   effectiveType,
   effectiveVendor,
@@ -23,11 +25,14 @@ import {
   getAllExpensesByEffectiveVendor,
   getDistinctCards,
   getExpensesBetween,
+  monthlyEquivalent,
+  searchExpenses,
   SUPPORTED_CURRENCIES,
 } from '@shared/expenses';
 import { updateUserOverrides } from '@shared/expenses/mongo/expenses.repository';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from '../expenses.config';
 import { expensesAuthMiddleware } from './auth.middleware';
+import { NOTES_MAX_LENGTH } from './dto';
 import type {
   BulkUpdateVendorBody,
   BulkUpdateVendorResponse,
@@ -45,6 +50,7 @@ import type {
   ExpenseTypeBreakdown,
   ExpenseTypeDto,
   ExpenseVendorDetailResponse,
+  SubscriptionDto,
   UpdateExpenseBody,
 } from './dto';
 
@@ -65,6 +71,7 @@ function toExpenseDto(e: Expense): ExpenseDto {
     type,
     transactionDate: e.transactionDate.toISOString(),
     ...(e.card ? { card: e.card } : {}),
+    ...(e.notes ? { notes: e.notes } : {}),
     originalVendor: e.userVendor && e.vendor !== e.userVendor ? e.vendor : undefined,
     originalCategory: e.userCategory && e.category !== e.userCategory ? (e.category as ExpenseCategoryDto) : undefined,
     originalType: e.userType && e.type !== e.userType ? (e.type as ExpenseTypeDto) : undefined,
@@ -397,6 +404,48 @@ export function registerExpensesApiRoutes(app: Express): void {
     res.status(204).end();
   });
 
+  app.get('/api/expenses/search', async (req: Request, res: Response<{ expenses: ReadonlyArray<ExpenseDto> } | { error: string }>) => {
+    try {
+      const q = typeof req.query.q === 'string' ? req.query.q : '';
+      if (q.trim().length < 2) {
+        res.json({ expenses: [] });
+        return;
+      }
+      const rows = await searchExpenses(q, 50);
+      res.json({ expenses: rows.map(toExpenseDto) });
+    } catch (err) {
+      logger.error(`search failed: ${err}`);
+      res.status(500).json({ error: 'search_failed' });
+    }
+  });
+
+  app.get('/api/expenses/subscriptions', async (_req: Request, res: Response<{ subscriptions: ReadonlyArray<SubscriptionDto> } | { error: string }>) => {
+    try {
+      const to = new Date();
+      const from = subMonths(to, 12);
+      const window = await getExpensesBetween(from, addDays(to, 1));
+      const subs = detectSubscriptions(window);
+      const dto: SubscriptionDto[] = subs.map((s) => ({
+        vendor: s.vendor,
+        category: s.category as ExpenseCategoryDto,
+        currency: s.currency,
+        amount: s.amount,
+        avgAmount: s.avgAmount,
+        cadenceDays: s.cadenceDays,
+        monthlyEquivalent: monthlyEquivalent(s),
+        occurrences: s.occurrences,
+        firstChargedAt: s.firstChargedAt,
+        lastChargedAt: s.lastChargedAt,
+        nextExpectedAt: s.nextExpectedAt,
+      }));
+      res.json({ subscriptions: dto });
+    } catch (err) {
+      logger.error(`subscriptions failed: ${err}`);
+      res.status(500).json({ error: 'subscriptions_failed' });
+    }
+  });
+
+
   app.get('/api/expenses', async (req: Request, res: Response<ExpensesMonthResponse | { error: string }>) => {
     try {
       const rawMonth = typeof req.query.month === 'string' ? req.query.month.trim() : '';
@@ -419,6 +468,7 @@ export function registerExpensesApiRoutes(app: Express): void {
           byType: typeBreakdown(sorted),
           categoryDeltas,
           topCharges,
+          anomalyExpenseIds: [],
         });
         return;
       }
@@ -446,6 +496,7 @@ export function registerExpensesApiRoutes(app: Express): void {
 
       const categoryDeltas = enrichCategoryDeltas(monthExpensesPrimary, baseline, primaryCurrency);
       const topCharges = computeTopCharges(monthExpensesPrimary, 5);
+      const anomalyExpenseIds = computeAnomalies(monthExpenses, baselineFetched).map((e) => e._id!.toString());
 
       const sorted = [...monthExpenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
 
@@ -459,6 +510,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         byType: typeBreakdown(sorted),
         categoryDeltas,
         topCharges,
+        anomalyExpenseIds,
       });
     } catch (err) {
       logger.error(`expenses month failed: ${err}`);
@@ -564,10 +616,21 @@ export function registerExpensesApiRoutes(app: Express): void {
         res.status(400).json({ error: 'invalid_vendor' });
         return;
       }
+      if (body.notes !== undefined && body.notes !== null) {
+        if (typeof body.notes !== 'string') {
+          res.status(400).json({ error: 'invalid_notes' });
+          return;
+        }
+        if (body.notes.length > NOTES_MAX_LENGTH) {
+          res.status(400).json({ error: 'notes_too_long' });
+          return;
+        }
+      }
       const updated = await updateUserOverrides(id, {
         userVendor: body.userVendor === undefined ? undefined : body.userVendor,
         userCategory: body.userCategory === undefined ? undefined : body.userCategory,
         userType: body.userType === undefined ? undefined : body.userType,
+        notes: body.notes === undefined ? undefined : body.notes,
       });
       if (!updated) {
         res.status(404).json({ error: 'not_found' });

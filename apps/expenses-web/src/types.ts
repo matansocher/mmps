@@ -89,13 +89,17 @@ export type ExpensesMonthResponse = {
   readonly byType: ReadonlyArray<ExpenseTypeBreakdown>;
   readonly categoryDeltas: ReadonlyArray<ExpenseCategoryDelta>;
   readonly topCharges: ReadonlyArray<ExpenseChargeDto>;
+  readonly anomalyExpenseIds: ReadonlyArray<string>;
 };
 
 export type UpdateExpenseBody = {
   readonly userVendor?: string | null;
   readonly userCategory?: ExpenseCategory | null;
   readonly userType?: ExpenseType | null;
+  readonly notes?: string | null;
 };
+
+export const NOTES_MAX_LENGTH = 280;
 
 export type CreateManualExpenseBody = {
   readonly vendor: string;
@@ -150,4 +154,18 @@ export type BulkUpdateVendorBody = {
 export type BulkUpdateVendorResponse = {
   readonly modifiedCount: number;
   readonly vendor: ExpenseVendorDetailResponse;
+};
+
+export type SubscriptionDto = {
+  readonly vendor: string;
+  readonly category: ExpenseCategory;
+  readonly currency: string;
+  readonly amount: number;
+  readonly avgAmount: number;
+  readonly cadenceDays: number;
+  readonly monthlyEquivalent: number;
+  readonly occurrences: number;
+  readonly firstChargedAt: string;
+  readonly lastChargedAt: string;
+  readonly nextExpectedAt: string;
 };

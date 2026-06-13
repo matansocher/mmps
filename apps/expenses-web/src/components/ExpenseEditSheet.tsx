@@ -4,6 +4,8 @@ import { formatAmount } from './ExpenseRow';
 import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../lib/categories';
 import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDto, type ExpenseType, type UpdateExpenseBody } from '../types';
 
+const NOTES_MAX_LENGTH = 280;
+
 const CATEGORY_OPTIONS: ReadonlyArray<DropdownOption<ExpenseCategory>> = EXPENSE_CATEGORIES.map((value) => ({
   value,
   emoji: CATEGORY_EMOJI[value],
@@ -27,6 +29,7 @@ export function ExpenseEditSheet({ expense, onClose, onSave, onViewVendor }: Pro
   const [vendor, setVendor] = useState(expense.vendor);
   const [category, setCategory] = useState<ExpenseCategory>(expense.category);
   const [type, setType] = useState<ExpenseType>(expense.type);
+  const [notes, setNotes] = useState<string>(expense.notes ?? '');
   const [propagate, setPropagate] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,8 @@ export function ExpenseEditSheet({ expense, onClose, onSave, onViewVendor }: Pro
 
   const vendorChanged = vendor.trim() !== expense.vendor;
   const categoryChanged = category !== expense.category;
-  const dirty = vendorChanged || categoryChanged || type !== expense.type;
+  const notesChanged = notes.trim() !== (expense.notes ?? '');
+  const dirty = vendorChanged || categoryChanged || type !== expense.type || notesChanged;
   const hasOverrides = !!(expense.originalVendor || expense.originalCategory || expense.originalType);
   const canPropagate = vendorChanged || categoryChanged;
 
@@ -52,11 +56,12 @@ export function ExpenseEditSheet({ expense, onClose, onSave, onViewVendor }: Pro
     setSaving(true);
     setError(null);
     try {
-      const body: { userVendor?: string | null; userCategory?: ExpenseCategory | null; userType?: ExpenseType | null } = {};
+      const body: { userVendor?: string | null; userCategory?: ExpenseCategory | null; userType?: ExpenseType | null; notes?: string | null } = {};
       const v = vendor.trim();
       if (vendorChanged) body.userVendor = v === originalVendor ? null : v;
       if (categoryChanged) body.userCategory = category === originalCategory ? null : category;
       if (type !== expense.type) body.userType = type === originalType ? null : type;
+      if (notesChanged) body.notes = notes.trim() === '' ? null : notes.trim();
       await onSave(body, propagate && canPropagate);
     } catch {
       setError('Failed to save. Try again.');
@@ -157,12 +162,22 @@ export function ExpenseEditSheet({ expense, onClose, onSave, onViewVendor }: Pro
             </div>
           </div>
 
-          {expense.notes && (
+          {(
             <div>
-              <label className="text-xs font-medium text-text-secondary uppercase tracking-wide">Notes</label>
-              <div className="mt-1.5 rounded-xl bg-bg-elevated border border-border-subtle px-3 py-2.5 text-sm text-text-secondary whitespace-pre-wrap">
-                {expense.notes}
-              </div>
+              <label className="text-xs font-medium text-text-secondary uppercase tracking-wide flex items-center justify-between">
+                <span>Notes</span>
+                <span className={`text-[10px] tabular ${notes.length > NOTES_MAX_LENGTH ? 'text-accent-danger' : 'text-text-muted'}`}>
+                  {notes.length}/{NOTES_MAX_LENGTH}
+                </span>
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                maxLength={NOTES_MAX_LENGTH}
+                rows={2}
+                placeholder="Add a note for future you…"
+                className="mt-1.5 w-full rounded-xl bg-bg-elevated border border-border-subtle px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-primary resize-none"
+              />
             </div>
           )}
 
