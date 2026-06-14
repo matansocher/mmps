@@ -1,4 +1,4 @@
-import { getCategoryEmoji } from '../lib/categories';
+import { VendorIcon } from './VendorIcon';
 import type { ExpenseDto } from '../types';
 
 const CURRENCY_SYMBOL: Record<string, string> = {
@@ -21,12 +21,11 @@ type Props = {
 };
 
 export function ExpenseRow({ expense, onTap, dayLabel, flagged }: Props) {
-  const emoji = getCategoryEmoji(expense.category);
   const edited = !!(expense.originalVendor || expense.originalCategory || expense.originalType);
 
   const inner = (
     <div className="flex items-center gap-3 py-2.5 w-full">
-      <div className="text-xl shrink-0 w-7 text-center">{emoji}</div>
+      <VendorIcon vendor={expense.vendor} className="w-7 h-7 rounded-md" textClassName="text-[10px]" />
       <div className="flex-1 min-w-0 text-left">
         <div className="text-sm text-text-primary truncate">
           {expense.vendor}

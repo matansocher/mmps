@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Skeleton } from './Skeleton';
+import { VendorIcon } from './VendorIcon';
 import { formatAmount } from './ExpenseRow';
 import { api } from '../lib/api';
-import { getCategoryEmoji } from '../lib/categories';
 import { formatExpenseDayLabel } from '../lib/date';
 import type { SubscriptionDto } from '../types';
 
@@ -62,7 +62,7 @@ export function SubscriptionsTile({ onOpen }: Props) {
       <div className="flex flex-col gap-1">
         {preview.map((s) => (
           <div key={`${s.vendor}|${s.currency}`} className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="text-sm">{getCategoryEmoji(s.category)}</span>
+            <VendorIcon vendor={s.vendor} className="w-5 h-5 rounded-full" textClassName="text-[8px]" />
             <span className="text-text-primary truncate flex-1 min-w-0">{s.vendor}</span>
             <span className="tabular">{formatAmount(s.avgAmount, s.currency)}</span>
           </div>
@@ -115,9 +115,7 @@ export function SubscriptionsSheet({ subscriptions, onClose, onTapVendor }: Shee
               onClick={() => onTapVendor(s.vendor)}
               className="flex items-center gap-3 py-3 w-full text-left active:bg-bg-elevated rounded-md -mx-1 px-1 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-bg-elevated grid place-items-center text-base shrink-0">
-                {getCategoryEmoji(s.category)}
-              </div>
+              <VendorIcon vendor={s.vendor} className="w-10 h-10 rounded-full" textClassName="text-sm" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-text-primary truncate">{s.vendor}</div>
                 <div className="text-[11px] text-text-muted">

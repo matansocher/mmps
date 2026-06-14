@@ -1,4 +1,4 @@
-import { getCategoryEmoji } from '../lib/categories';
+import { VendorIcon } from './VendorIcon';
 import { formatExpenseDayLabel } from '../lib/date';
 import type { ExpenseChargeDto } from '../types';
 import { formatAmount } from './ExpenseRow';
@@ -27,9 +27,7 @@ export function TopChargesCard({ rows, onTap }: Props) {
             onClick={() => onTap?.(r.id)}
             className="flex items-center gap-3 py-2.5 text-left active:bg-bg-elevated rounded-md px-1 -mx-1 transition-colors"
           >
-            <div className="w-9 h-9 rounded-full bg-bg-elevated grid place-items-center text-base shrink-0">
-              {getCategoryEmoji(r.category)}
-            </div>
+            <VendorIcon vendor={r.vendor} className="w-9 h-9 rounded-full" textClassName="text-xs" />
             <div className="flex-1 min-w-0">
               <div className="text-sm text-text-primary truncate">{r.vendor}</div>
               <div className="text-[11px] text-text-muted">
