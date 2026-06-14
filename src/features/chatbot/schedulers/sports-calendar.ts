@@ -45,21 +45,29 @@ export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): 
 
 2. **My Favorite Teams**: ${favoriteTeams.join(', ')}
 
-3. **Match Selection Rules** - Two categories of matches to add:
+3. **Match Selection Rules** - Four categories of matches to add:
 
    **CATEGORY A - Favorite Team Matches (ALWAYS add, no exceptions):**
    - ⭐ Add ALL matches involving any of my favorite teams: ${favoriteTeams.join(', ')}
    - Include ALL competition types: league matches, cup matches, Champions League (any round), Europa League, etc.
    - Do NOT skip any favorite team match - add every single one within the timeframe
 
-   **CATEGORY B - Other Important Matches (add only if truly exceptional):**
-   - 🏆 **Champions League Knockout**: Round of 16, Quarter-finals, Semi-finals, or Final (NOT group stage)
+   **CATEGORY B - World Cup Matches (ALWAYS add, no exceptions):**
+   - 🌍 Add ALL FIFA World Cup matches, regardless of which teams are playing
+   - Include every stage: group stage, Round of 16, Quarter-finals, Semi-finals, Third-place, and Final
+   - Do NOT skip any World Cup match - add every single one within the timeframe
+
+   **CATEGORY C - Champions League Matches (ALWAYS add, no exceptions):**
+   - 🏆 Add ALL UEFA Champions League matches, regardless of which teams are playing
+   - Include every stage: league phase/group stage, Round of 16, Quarter-finals, Semi-finals, and Final
+   - Do NOT skip any Champions League match - add every single one within the timeframe
+
+   **CATEGORY D - Other Important Matches (add only if truly exceptional):**
    - 🇮🇱 **Israeli Premier League Derby**: True historic derbies (e.g., Tel Aviv derby, Haifa derby)
    - 🥇 **Title Decider**: Top 2 teams, within 3 points, playing each other in the final 5 rounds
    - ⚽ **Israeli Premier League Top Match**: Top 4 teams playing each other
 
-4. **EXPLICIT EXCLUSIONS for Category B only** - Do NOT add:
-   - Champions League group stage matches
+4. **EXPLICIT EXCLUSIONS for Category D only** - Do NOT add:
    - Regular league matches between mid-table teams
    - Matches between teams with >8 points difference
    - Early round cup matches
@@ -73,7 +81,7 @@ export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): 
 
 6. After creating calendar events, send me a summary message in English:
    - If events were created: "✅ Added [X] matches to the calendar:" followed by the list grouped by day with brief explanation why each was added
-   - If no matches found: "No matches coming up for my favorite teams or other important fixtures 🤷‍♂️"`;
+   - If no matches found: "No matches coming up for my favorite teams, the World Cup, or other important fixtures 🤷‍♂️"`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);
 
