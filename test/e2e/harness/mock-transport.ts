@@ -66,6 +66,7 @@ export function createMockTransport(bot: Bot): MockTransport {
 
     switch (method) {
       case 'sendMessage':
+      case 'sendRichMessage':
       case 'sendPhoto':
       case 'sendVoice':
       case 'sendAudio':
