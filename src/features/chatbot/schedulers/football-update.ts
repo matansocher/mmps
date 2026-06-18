@@ -27,7 +27,8 @@ export async function footballUpdate(bot: Bot, chatbotService: ChatbotService): 
     const { response, structured } = await chatbotService.processMessage(prompt, MY_USER_ID, footballUpdateResponseSchema);
 
     if (structured.hasMatches && response?.message) {
-      await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
+      const footer = '\n\n👉 [Coach Bot](https://t.me/mmps_football_coach_bot)';
+      await sendShortenedMessage(bot, MY_USER_ID, `${response.message}${footer}`, { parse_mode: 'Markdown' });
     }
   } catch (err) {
     logger.error(`Failed to send football update: ${err}`);
