@@ -135,6 +135,7 @@ export type LineupPlayer = {
   readonly formationPosition?: string;
   readonly yardLine?: number;
   readonly yardSide?: number;
+  readonly fieldLine?: number;
   readonly ranking?: number;
   readonly isStarting: boolean;
 };

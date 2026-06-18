@@ -191,6 +191,7 @@ function buildLineup(competitor: RawCompetitor, memberIndex: Map<number, RawMemb
       formationPosition: lm.formation?.name,
       yardLine: lm.yardFormation?.line,
       yardSide: lm.yardFormation?.fieldSide,
+      fieldLine: lm.yardFormation?.fieldLine,
       ranking: lm.ranking,
       isStarting: lm.status === 1,
     };

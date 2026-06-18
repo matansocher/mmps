@@ -139,6 +139,7 @@ export type LineupPlayer = {
   formationPosition?: string;
   yardLine?: number;
   yardSide?: number;
+  fieldLine?: number;
   ranking?: number;
   isStarting: boolean;
 };
