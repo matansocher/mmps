@@ -10,6 +10,7 @@ import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
+import { BOT_CONFIG as secretaryConfig, initSecretary } from '@features/secretary';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
@@ -47,6 +48,7 @@ async function main() {
   shouldInitBot(chilliConfig) && (await initChilli());
   shouldInitBot(coachConfig) && (await initCoach(app));
   shouldInitBot(expensesConfig) && (await initExpenses(app));
+  shouldInitBot(secretaryConfig) && (await initSecretary());
   shouldInitBot(woltConfig) && (await initWolt());
   shouldInitBot(worldlyConfig) && (await initWorldly(app));
 
