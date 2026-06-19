@@ -111,29 +111,33 @@ export class SecretaryController {
     const message = ctx.businessMessage;
     if (!message) return;
 
-    const chatId = message.chat.id;
+    // TESTING: just log incoming business messages to verify the connection works.
+    this.logger.log(`business_message | chatId ${message.chat.id} | from ${ctx.from?.id} | isOwner ${ctx.from?.id === MY_USER_ID} | connId ${message.business_connection_id} | text: ${message.text ?? '<non-text>'}`);
 
-    // The account owner replied themselves — record it for context and reset this chat.
-    if (ctx.from?.id === MY_USER_ID) {
-      if (message.text) await this.secretaryService.recordOwnerReply(message.text, chatId);
-      this.resetChat(chatId);
-      return;
-    }
-
-    if (!this.enabled) return;
-
-    const text = message.text;
-    if (!text) return;
-
-    const userDetails: UserDetails = {
-      chatId,
-      telegramUserId: ctx.from?.id ?? null,
-      firstName: ctx.from?.first_name ?? null,
-      lastName: ctx.from?.last_name ?? null,
-      username: ctx.from?.username ?? null,
-    };
-
-    await this.enqueueIncoming(chatId, text, message.business_connection_id, userDetails);
+    // --- processing disabled for testing ---
+    // const chatId = message.chat.id;
+    //
+    // // The account owner replied themselves — record it for context and reset this chat.
+    // if (ctx.from?.id === MY_USER_ID) {
+    //   if (message.text) await this.secretaryService.recordOwnerReply(message.text, chatId);
+    //   this.resetChat(chatId);
+    //   return;
+    // }
+    //
+    // if (!this.enabled) return;
+    //
+    // const text = message.text;
+    // if (!text) return;
+    //
+    // const userDetails: UserDetails = {
+    //   chatId,
+    //   telegramUserId: ctx.from?.id ?? null,
+    //   firstName: ctx.from?.first_name ?? null,
+    //   lastName: ctx.from?.last_name ?? null,
+    //   username: ctx.from?.username ?? null,
+    // };
+    //
+    // await this.enqueueIncoming(chatId, text, message.business_connection_id, userDetails);
   }
 
   private async enqueueIncoming(chatId: number, text: string, businessConnectionId: string | undefined, userDetails: UserDetails): Promise<void> {
