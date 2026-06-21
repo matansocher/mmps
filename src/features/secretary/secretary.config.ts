@@ -13,7 +13,7 @@ export const TRANSCRIPTION_HEADER = 'Message transcription:';
 
 // Check-in feature: ask the owner to approve sending a fixed message to a chat on Mon/Tue/Fri.
 export const OWNER_BUSINESS_CONNECTION_ID = env.OWNER_BUSINESS_CONNECTION_ID;
-export const CHECK_IN_MESSAGE = 'בדיקקה';
+export const CHECK_IN_MESSAGE = 'מה קורה חיים?  איך את??';
 export const CHECK_IN_SEND_CALLBACK = 'check_in:send';
 
 export const SUMMARY_PROMPT = `You are a personal assistant for ${OWNER_NAME}. You are given the full text of a one-day private Telegram conversation between ${OWNER_NAME} ("me"/owner) and another person.
