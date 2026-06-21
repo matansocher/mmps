@@ -72,6 +72,19 @@ Two labels in `.github/workflows/claude.yml` trigger automation:
 - **`review`** on a PR → AI code review.
 - **`implement`** on an issue → AI generates an implementation PR.
 
+### One-off scripts on production (e.g. the Wolt broadcast)
+
+Standalone scripts under `src/**/scripts/` are compiled to `dist/` by the deploy build and can be run on a prod dyno **without the Heroku CLI** via the dashboard: **your app → More ▾ → Run console**.
+
+Run the **compiled** file with plain `node` (not `tsx` — it's a devDependency and is pruned in production):
+
+```bash
+node dist/features/wolt/scripts/broadcast.js            # send to all configured users
+node dist/features/wolt/scripts/broadcast.js <chatId>   # dry run — send only to that chat id
+```
+
+`src/features/wolt/scripts/broadcast.ts` sends a one-off message to a hardcoded `CHAT_IDS` list (edit `CHAT_IDS` / `MESSAGE` and redeploy before running). It uses a bare bot API client (no polling, so it never conflicts with the live bot), throttles sends to stay under Telegram's rate limit, and skips users who blocked the bot. Always dry-run to your own chat id first.
+
 ## Documentation
 
 VitePress site at **<https://matansocher.github.io/mmps/>**:
