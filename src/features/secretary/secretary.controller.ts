@@ -81,7 +81,6 @@ export class SecretaryController {
     const senderName = ctx.from?.first_name ?? undefined;
     const senderUsername = ctx.from?.username ?? undefined;
     const businessConnectionId = message.business_connection_id;
-    this.logger.log(`business_message | chatId=${chatId} | fromOwner=${fromOwner} | OWNER_BUSINESS_CONNECTION_ID=${businessConnectionId}`);
 
     const voiceFileId = message.voice?.file_id ?? message.audio?.file_id;
 
