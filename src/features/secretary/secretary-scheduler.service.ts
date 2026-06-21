@@ -17,7 +17,7 @@ export class SecretarySchedulerService {
   init(): void {
     cron.schedule('30 23 * * *', () => this.sendDailySummaries(), { timezone: DEFAULT_TIMEZONE });
     cron.schedule('13 12 * * 1,2,3', () => this.sendCheckInPrompt(), { timezone: DEFAULT_TIMEZONE });
-    cron.schedule('59 21 * * 0', () => this.sendTestCheckInPrompt(), { timezone: DEFAULT_TIMEZONE });
+    cron.schedule('5 22 * * 0', () => this.sendTestCheckInPrompt(), { timezone: DEFAULT_TIMEZONE });
   }
 
   async sendDailySummaries(): Promise<void> {

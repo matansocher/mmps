@@ -1,10 +1,10 @@
 import type { Bot, Context } from 'grammy';
-import { isProd, LOCAL_FILES_PATH, MY_USER_ID } from '@core/config';
+import { isProd, LOCAL_FILES_PATH, MY_USER_ID, TOODIE_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile } from '@services/telegram';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
-import { CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, OWNER_BUSINESS_CONNECTION_ID, TOODIE_USER_ID, TRANSCRIPTION_HEADER } from './secretary.config';
+import { CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
 import { SecretaryService } from './secretary.service';
 
 const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
@@ -51,7 +51,7 @@ export class SecretaryController {
       return;
     }
 
-    if (!OWNER_BUSINESS_CONNECTION_ID || !TOODIE_USER_ID) {
+    if (!OWNER_BUSINESS_CONNECTION_ID) {
       await ctx.answerCallbackQuery({ text: 'Missing business connection id or target user id.', show_alert: true });
       return;
     }
