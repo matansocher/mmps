@@ -4,7 +4,7 @@ import { Logger } from '@core/utils';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile } from '@services/telegram';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
-import { TRANSCRIPTION_HEADER } from './secretary.config';
+import { CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, OWNER_BUSINESS_CONNECTION_ID, TOODIE_USER_ID, TRANSCRIPTION_HEADER } from './secretary.config';
 import { SecretaryService } from './secretary.service';
 
 const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
@@ -20,14 +20,49 @@ export class SecretaryController {
 
   init(): void {
     this.bot.command('summary', (ctx) => this.summaryHandler(ctx));
+    this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
+    this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
 
     // Local-only: DM the bot directly to fake an incoming business message and test
     // persistence, transcription and the daily summary without a live Business connection.
     if (!isProd) {
+      this.bot.command('ask', (ctx) => this.askHandler(ctx));
       this.bot.on(['message:voice', 'message:audio'], (ctx) => this.simulateAudioHandler(ctx));
       this.bot.on('message:text', (ctx) => this.simulateTextHandler(ctx));
       this.logger.log('Local simulation enabled: DM the bot (text/voice) to simulate incoming messages.');
+    }
+  }
+
+  private async askHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) return;
+    await this.scheduler.sendCheckInPrompt();
+  }
+
+  private businessConnectionHandler(ctx: Context): void {
+    const connection = ctx.businessConnection;
+    if (!connection) return;
+    this.logger.log(`Business connection: id=${connection.id} enabled=${connection.is_enabled} userChatId=${connection.user_chat_id}`);
+  }
+
+  private async checkInSendHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    if (!OWNER_BUSINESS_CONNECTION_ID || !TOODIE_USER_ID) {
+      await ctx.answerCallbackQuery({ text: 'Missing business connection id or target user id.', show_alert: true });
+      return;
+    }
+
+    try {
+      await this.bot.api.sendMessage(TOODIE_USER_ID, CHECK_IN_MESSAGE, { business_connection_id: OWNER_BUSINESS_CONNECTION_ID });
+      await ctx.editMessageText(`Sent ✅\n\n"${CHECK_IN_MESSAGE}"`);
+      await ctx.answerCallbackQuery({ text: 'Sent ✅' });
+    } catch (err) {
+      this.logger.error(`Failed to send check-in message: ${err}`);
+      await ctx.answerCallbackQuery({ text: 'Failed to send.', show_alert: true });
     }
   }
 
@@ -46,6 +81,7 @@ export class SecretaryController {
     const senderName = ctx.from?.first_name ?? undefined;
     const senderUsername = ctx.from?.username ?? undefined;
     const businessConnectionId = message.business_connection_id;
+    this.logger.log(`business_message | chatId=${chatId} | fromOwner=${fromOwner} | OWNER_BUSINESS_CONNECTION_ID=${businessConnectionId}`);
 
     const voiceFileId = message.voice?.file_id ?? message.audio?.file_id;
 
