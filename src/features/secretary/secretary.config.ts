@@ -12,7 +12,6 @@ export const OWNER_NAME = 'Guz | (hebrew: גוז)';
 export const TRANSCRIPTION_HEADER = 'Message transcription:';
 
 // Check-in feature: ask the owner to approve sending a fixed message to a chat on Mon/Tue/Fri.
-export const TOODIE_USER_ID = Number(env.TOODIE_USER_ID);
 export const OWNER_BUSINESS_CONNECTION_ID = env.OWNER_BUSINESS_CONNECTION_ID;
 export const CHECK_IN_MESSAGE = 'מה קורה חיים?  איך את??';
 export const CHECK_IN_SEND_CALLBACK = 'check_in:send';
