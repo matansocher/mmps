@@ -17,6 +17,7 @@ export class SecretarySchedulerService {
   init(): void {
     cron.schedule('30 23 * * *', () => this.sendDailySummaries(), { timezone: DEFAULT_TIMEZONE });
     cron.schedule('13 12 * * 1,2,5', () => this.sendCheckInPrompt(), { timezone: DEFAULT_TIMEZONE });
+    cron.schedule('59 21 * * 1,2,5', () => this.sendTestCheckInPrompt(), { timezone: DEFAULT_TIMEZONE });
   }
 
   async sendDailySummaries(): Promise<void> {
@@ -32,6 +33,15 @@ export class SecretarySchedulerService {
   }
 
   async sendCheckInPrompt(): Promise<void> {
+    try {
+      const keyboard = buildInlineKeyboard([{ text: 'Send ✅', data: CHECK_IN_SEND_CALLBACK, style: 'success' }]);
+      await this.bot.api.sendMessage(MY_USER_ID, `Send this to her?\n\n"${CHECK_IN_MESSAGE}"`, { reply_markup: keyboard });
+    } catch (err) {
+      this.logger.error(`Failed to send check-in prompt: ${err}`);
+    }
+  }
+
+  async sendTestCheckInPrompt(): Promise<void> {
     try {
       const keyboard = buildInlineKeyboard([{ text: 'Send ✅', data: CHECK_IN_SEND_CALLBACK, style: 'success' }]);
       await this.bot.api.sendMessage(MY_USER_ID, `Send this to her?\n\n"${CHECK_IN_MESSAGE}"`, { reply_markup: keyboard });
