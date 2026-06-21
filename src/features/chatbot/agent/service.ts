@@ -109,19 +109,6 @@ export class AiService {
     return this.agent.invoke(createMessage(message, opts), this.createOptions(opts));
   }
 
-  // Append messages to a thread's memory without invoking the model (no reply generated).
-  async appendMessages(messages: BaseMessage[], opts: Partial<InvokeOptions> = {}): Promise<void> {
-    if (!opts.threadId || messages.length === 0) return;
-    await this.agent.updateState({ configurable: { thread_id: opts.threadId } }, { messages });
-  }
-
-  // Generate a reply based on the thread's existing messages, without adding a new input message.
-  async respond(opts: Partial<InvokeOptions> = {}) {
-    await this.truncateThread(opts.threadId);
-
-    return this.agent.invoke({ messages: [] }, this.createOptions(opts));
-  }
-
   stream(message: string, opts: Partial<InvokeOptions> = {}) {
     // truncation is async but we don't await it to avoid blocking the stream
     this.truncateThread(opts.threadId);
