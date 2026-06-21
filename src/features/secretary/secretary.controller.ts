@@ -1,195 +1,104 @@
 import type { Bot, Context } from 'grammy';
-import { isProd, MY_USER_ID } from '@core/config/main.config';
+import { isProd, LOCAL_FILES_PATH, MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
-import { notify } from '@services/notifier';
-import { getMessageData, type UserDetails } from '@services/telegram';
-import { AUTO_REPLY_DELAY_MINUTES, AUTO_REPLY_DELAY_MS, BOT_CONFIG } from './secretary.config';
+import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
+import { downloadFile } from '@services/telegram';
+import { SecretarySchedulerService } from './secretary-scheduler.service';
+import { TRANSCRIPTION_HEADER } from './secretary.config';
 import { SecretaryService } from './secretary.service';
 
-type ChatState = {
-  timer?: ReturnType<typeof setTimeout>;
-  engaged: boolean;
-  businessConnectionId?: string;
-  userDetails?: UserDetails;
-};
+const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
 
 export class SecretaryController {
   private readonly logger = new Logger(SecretaryController.name);
-  private readonly chats = new Map<number, ChatState>();
-  private enabled = true;
 
   constructor(
     private readonly secretaryService: SecretaryService,
+    private readonly scheduler: SecretarySchedulerService,
     private readonly bot: Bot,
   ) {}
 
   init(): void {
-    this.bot.command('start', (ctx) => this.startHandler(ctx));
-    this.bot.command('enable', (ctx) => this.enableHandler(ctx));
-    this.bot.command('disable', (ctx) => this.disableHandler(ctx));
-    this.bot.command('status', (ctx) => this.statusHandler(ctx));
-    this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
+    this.bot.command('summary', (ctx) => this.summaryHandler(ctx));
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
 
-    // Local-only: simulate an incoming "customer" message by DMing the bot directly,
-    // so the full waiting -> auto-reply flow can be tested without a real Business connection.
+    // Local-only: DM the bot directly to fake an incoming business message and test
+    // persistence, transcription and the daily summary without a live Business connection.
     if (!isProd) {
-      this.bot.command('reset', (ctx) => this.resetHandler(ctx));
-      this.bot.on('message:text', (ctx) => this.simulateHandler(ctx));
-      this.logger.log('Local simulation enabled: DM the bot to simulate incoming messages, /reset to clear a conversation.');
+      this.bot.on(['message:voice', 'message:audio'], (ctx) => this.simulateAudioHandler(ctx));
+      this.bot.on('message:text', (ctx) => this.simulateTextHandler(ctx));
+      this.logger.log('Local simulation enabled: DM the bot (text/voice) to simulate incoming messages.');
     }
   }
 
-  private isOwner(ctx: Context): boolean {
-    return ctx.from?.id === MY_USER_ID;
-  }
-
-  private async startHandler(ctx: Context): Promise<void> {
-    if (!this.isOwner(ctx)) return;
-    await ctx.reply(`I auto-reply to your private messages if you don't answer within ${AUTO_REPLY_DELAY_MINUTES} minutes. Use /disable to turn me off, /enable to turn me back on, /status to check.`);
-  }
-
-  private async enableHandler(ctx: Context): Promise<void> {
-    if (!this.isOwner(ctx)) return;
-    this.enabled = true;
-    await ctx.reply('Secretary is ON 🟢');
-  }
-
-  private async disableHandler(ctx: Context): Promise<void> {
-    if (!this.isOwner(ctx)) return;
-    this.enabled = false;
-    this.clearAll();
-    await ctx.reply('Secretary is OFF 🔴');
-  }
-
-  private async statusHandler(ctx: Context): Promise<void> {
-    if (!this.isOwner(ctx)) return;
-    const active = [...this.chats.values()].filter((s) => s.engaged).length;
-    const waiting = [...this.chats.values()].filter((s) => s.timer).length;
-    await ctx.reply(this.enabled ? `Secretary is ON 🟢\nActive conversations: ${active}\nWaiting: ${waiting}` : 'Secretary is OFF 🔴');
-  }
-
-  private async resetHandler(ctx: Context): Promise<void> {
-    if (!this.isOwner(ctx)) return;
-    this.resetChat(ctx.chat?.id ?? 0);
-    await ctx.reply('Conversation reset 🔄 — next message will start a fresh waiting window.');
-  }
-
-  private async simulateHandler(ctx: Context): Promise<void> {
-    const { chatId, text } = getMessageData(ctx);
-    if (!text || text.startsWith('/')) return;
-
-    // Local testing convention: prefix with "me:" to simulate the owner replying themselves.
-    if (text.startsWith('me:')) {
-      const ownerText = text.slice(3).trim();
-      if (ownerText) await this.secretaryService.recordOwnerReply(ownerText, chatId);
-      this.resetChat(chatId);
-      await ctx.reply('📝 recorded as your reply — conversation reset.');
-      return;
-    }
-
-    if (!this.enabled) return;
-
-    const userDetails: UserDetails = {
-      chatId,
-      telegramUserId: ctx.from?.id ?? null,
-      firstName: ctx.from?.first_name ?? 'Test Sender',
-      lastName: ctx.from?.last_name ?? null,
-      username: ctx.from?.username ?? null,
-    };
-
-    await this.enqueueIncoming(chatId, text, undefined, userDetails);
-  }
-
-  private async businessConnectionHandler(ctx: Context): Promise<void> {
-    const connection = ctx.businessConnection;
-    if (!connection) return;
-    this.logger.log(`Business connection update: id ${connection.id}, enabled ${connection.is_enabled}`);
+  private async summaryHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) return;
+    await ctx.reply("Building today's summaries… 🗒️");
+    await this.scheduler.sendDailySummaries();
   }
 
   private async businessMessageHandler(ctx: Context): Promise<void> {
     const message = ctx.businessMessage;
     if (!message) return;
 
-    // TESTING: just log incoming business messages to verify the connection works.
-    this.logger.log(`business_message | chatId ${message.chat.id} | from ${ctx.from?.id} | isOwner ${ctx.from?.id === MY_USER_ID} | connId ${message.business_connection_id} | text: ${message.text ?? '<non-text>'}`);
+    const chatId = message.chat.id;
+    const fromOwner = ctx.from?.id === MY_USER_ID;
+    const senderName = ctx.from?.first_name ?? undefined;
+    const senderUsername = ctx.from?.username ?? undefined;
+    const businessConnectionId = message.business_connection_id;
 
-    // --- processing disabled for testing ---
-    // const chatId = message.chat.id;
-    //
-    // // The account owner replied themselves — record it for context and reset this chat.
-    // if (ctx.from?.id === MY_USER_ID) {
-    //   if (message.text) await this.secretaryService.recordOwnerReply(message.text, chatId);
-    //   this.resetChat(chatId);
-    //   return;
-    // }
-    //
-    // if (!this.enabled) return;
-    //
-    // const text = message.text;
-    // if (!text) return;
-    //
-    // const userDetails: UserDetails = {
-    //   chatId,
-    //   telegramUserId: ctx.from?.id ?? null,
-    //   firstName: ctx.from?.first_name ?? null,
-    //   lastName: ctx.from?.last_name ?? null,
-    //   username: ctx.from?.username ?? null,
-    // };
-    //
-    // await this.enqueueIncoming(chatId, text, message.business_connection_id, userDetails);
-  }
+    const voiceFileId = message.voice?.file_id ?? message.audio?.file_id;
 
-  private async enqueueIncoming(chatId: number, text: string, businessConnectionId: string | undefined, userDetails: UserDetails): Promise<void> {
-    // Always record the incoming message so the agent keeps the full conversation context.
-    await this.secretaryService.recordIncoming(text, chatId);
-
-    const state = this.chats.get(chatId);
-
-    // Already in an active conversation — reply immediately, no waiting.
-    if (state?.engaged) {
-      await this.autoReply(chatId, businessConnectionId, userDetails, true);
+    // Transcribe voice notes the OTHER person sends, echo the transcription into the chat as the owner.
+    if (voiceFileId && !fromOwner) {
+      const transcript = await this.transcribe(voiceFileId);
+      if (transcript) {
+        await this.bot.api.sendMessage(chatId, `${TRANSCRIPTION_HEADER}\n${transcript}`, businessConnectionId ? { business_connection_id: businessConnectionId } : undefined);
+        await this.secretaryService.storeMessage({ chatId, fromOwner: false, text: transcript, transcribed: true, senderName, senderUsername });
+      }
       return;
     }
 
-    // Still waiting — (re)start the debounced timer from the latest message.
-    if (state?.timer) clearTimeout(state.timer);
-    const timer = setTimeout(() => this.fireWaiting(chatId), AUTO_REPLY_DELAY_MS);
-    this.chats.set(chatId, { engaged: false, businessConnectionId, userDetails, timer });
+    const text = message.text ?? message.caption;
+    if (!text) return;
+
+    await this.secretaryService.storeMessage({ chatId, fromOwner, text, senderName, senderUsername });
   }
 
-  private async fireWaiting(chatId: number): Promise<void> {
-    const state = this.chats.get(chatId);
-    if (!state) return;
-    await this.autoReply(chatId, state.businessConnectionId, state.userDetails, false);
-  }
-
-  private async autoReply(chatId: number, businessConnectionId: string | undefined, userDetails: UserDetails | undefined, immediate: boolean): Promise<void> {
-    const state = this.chats.get(chatId);
-    if (state?.timer) clearTimeout(state.timer);
-    this.chats.set(chatId, { engaged: true, businessConnectionId, userDetails });
-
-    if (!immediate) {
-      notify(BOT_CONFIG, { action: 'AUTO_REPLY_TRIGGERED' }, userDetails);
+  private async transcribe(fileId: string): Promise<string> {
+    try {
+      const audioFilePath = await downloadFile(this.bot, fileId, LOCAL_FILES_PATH);
+      return await getTranscriptFromAudio(audioFilePath);
+    } catch (err) {
+      this.logger.error(`Failed to transcribe audio: ${err}`);
+      return '';
     }
-
-    const replyText = await this.secretaryService.generateReply(chatId);
-    if (!replyText) return;
-
-    await this.bot.api.sendMessage(chatId, replyText, businessConnectionId ? { business_connection_id: businessConnectionId } : undefined);
-    notify(BOT_CONFIG, { action: 'AUTO_REPLY_SENT', message: replyText }, userDetails);
   }
 
-  private resetChat(chatId: number): void {
-    const state = this.chats.get(chatId);
-    if (state?.timer) clearTimeout(state.timer);
-    this.chats.delete(chatId);
+  private async simulateAudioHandler(ctx: Context): Promise<void> {
+    const fileId = ctx.message?.voice?.file_id ?? ctx.message?.audio?.file_id;
+    const chatId = ctx.chat?.id ?? 0;
+    const senderName = ctx.from?.first_name ?? undefined;
+    const senderUsername = ctx.from?.username ?? undefined;
+    if (!fileId) return;
+
+    const transcript = await this.transcribe(fileId);
+    if (!transcript) return;
+    await ctx.reply(`${TRANSCRIPTION_HEADER}\n${transcript}`);
+    await this.secretaryService.storeMessage({ chatId, fromOwner: false, text: transcript, transcribed: true, senderName, senderUsername });
   }
 
-  private clearAll(): void {
-    for (const state of this.chats.values()) {
-      if (state.timer) clearTimeout(state.timer);
-    }
-    this.chats.clear();
+  private async simulateTextHandler(ctx: Context): Promise<void> {
+    const text = ctx.message?.text;
+    const chatId = ctx.chat?.id ?? 0;
+    if (!text || text.startsWith('/')) return;
+
+    // Local testing convention: prefix with "me:" to simulate the owner's own message.
+    const fromOwner = text.startsWith('me:');
+    const body = fromOwner ? text.slice(3).trim() : text;
+    if (!body) return;
+
+    await this.secretaryService.storeMessage({ chatId, fromOwner, text: body, senderName: ctx.from?.first_name ?? undefined, senderUsername: ctx.from?.username ?? undefined });
+    await ctx.reply(`📝 stored (${fromOwner ? 'owner' : 'other'}).`);
   }
 }

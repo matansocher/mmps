@@ -1,0 +1,23 @@
+import type { InsertOneResult } from 'mongodb';
+import { getMongoCollection } from '@core/mongo';
+import { DB_NAME, MESSAGES_COLLECTION } from './constants';
+import type { CreateSecretaryMessageData, SecretaryMessage } from './types';
+
+const getCollection = () => getMongoCollection<SecretaryMessage>(DB_NAME, MESSAGES_COLLECTION);
+
+export async function saveMessage(data: CreateSecretaryMessageData): Promise<InsertOneResult<SecretaryMessage>> {
+  const message: Omit<SecretaryMessage, '_id'> = { ...data, createdAt: new Date() };
+  return getCollection().insertOne(message as SecretaryMessage);
+}
+
+export async function getMessagesForChatBetween(chatId: number, from: Date, to: Date): Promise<SecretaryMessage[]> {
+  return getCollection()
+    .find({ chatId, createdAt: { $gte: from, $lt: to } })
+    .sort({ createdAt: 1 })
+    .toArray();
+}
+
+export async function getActiveChatIdsBetween(from: Date, to: Date): Promise<number[]> {
+  const chatIds = await getCollection().distinct('chatId', { createdAt: { $gte: from, $lt: to } });
+  return chatIds as number[];
+}
