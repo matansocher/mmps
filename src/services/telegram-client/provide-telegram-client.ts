@@ -1,7 +1,7 @@
 import { env } from 'node:process';
 import { TelegramClient } from 'telegram';
-import { LogLevel } from 'telegram/extensions/Logger';
-import { StringSession } from 'telegram/sessions';
+import { LogLevel } from 'telegram/extensions/Logger.js';
+import { StringSession } from 'telegram/sessions/index.js';
 import { Logger } from '@core/utils';
 
 const logger = new Logger('TelegramClientProvider');

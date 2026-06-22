@@ -1,6 +1,6 @@
 import { TelegramClient } from 'telegram';
 import type { EntityLike } from 'telegram/define';
-import { NewMessage, type NewMessageEvent } from 'telegram/events';
+import { NewMessage, type NewMessageEvent } from 'telegram/events/index.js';
 import { Logger } from '@core/utils';
 import { EXCLUDED_CHANNELS } from '../constants';
 import { provideTelegramClient } from '../provide-telegram-client';
