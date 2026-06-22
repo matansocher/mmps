@@ -111,13 +111,15 @@ export async function listen({ conversationsIds = [], includeOutgoing = false }:
   telegramClient.addEventHandler(async (event: NewMessageEvent) => {
     try {
       const messageData = extractMessageData(event);
-      if (!messageData?.text && !messageData?.voice) {
+      logger.log(`[monitor] event received: channelId=${messageData?.channelId} userId=${messageData?.userId} isVoice=${messageData?.isVoice} hasText=${!!messageData?.text}`);
+      if (!messageData?.text && !messageData?.isVoice) {
         return;
       }
 
       const channelId = messageData.channelId;
       const userId = messageData.userId;
       if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
+        logger.log(`[monitor] filtered out channelId=${channelId} userId=${userId} (not in conversationsIds)`);
         return;
       }
 
