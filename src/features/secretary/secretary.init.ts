@@ -3,6 +3,7 @@ import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from './mongo';
 import { BOT_CONFIG } from './secretary.config';
 import { SecretaryController } from './secretary.controller';
+import { startGroupMonitor } from './secretary-monitor';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
 import { SecretaryService } from './secretary.service';
 
@@ -17,4 +18,7 @@ export async function initSecretary(): Promise<void> {
 
   secretaryController.init();
   secretaryScheduler.init();
+
+  // Fire-and-forget so a slow/failed telegram client connection never blocks bot startup.
+  void startGroupMonitor();
 }
