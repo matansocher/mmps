@@ -84,12 +84,12 @@ export class SecretaryController {
 
     const voiceFileId = message.voice?.file_id ?? message.audio?.file_id;
 
-    // Transcribe voice notes the OTHER person sends, echo the transcription into the chat as the owner.
-    if (voiceFileId && !fromOwner) {
+    // Transcribe voice notes from either side, echo the transcription into the chat as the owner.
+    if (voiceFileId) {
       const transcript = await this.transcribe(voiceFileId);
       if (transcript) {
         await this.bot.api.sendMessage(chatId, `${TRANSCRIPTION_HEADER}\n${transcript}`, businessConnectionId ? { business_connection_id: businessConnectionId } : undefined);
-        await this.secretaryService.storeMessage({ chatId, fromOwner: false, text: transcript, transcribed: true, senderName, senderUsername });
+        await this.secretaryService.storeMessage({ chatId, fromOwner, text: transcript, transcribed: true, senderName, senderUsername });
       }
       return;
     }
