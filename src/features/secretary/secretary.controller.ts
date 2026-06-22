@@ -69,7 +69,7 @@ export class SecretaryController {
   private async summaryHandler(ctx: Context): Promise<void> {
     if (!isOwner(ctx)) return;
     await ctx.reply("Building today's summaries… 🗒️");
-    await this.scheduler.sendDailySummaries();
+    await this.scheduler.runDailyDigest();
   }
 
   private async businessMessageHandler(ctx: Context): Promise<void> {

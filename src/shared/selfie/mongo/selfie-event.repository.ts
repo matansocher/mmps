@@ -60,3 +60,9 @@ export async function getRecentEvents(limit: number): Promise<SelfieEvent[]> {
   const collection = getCollection();
   return collection.find().sort({ date: -1 }).limit(limit).toArray();
 }
+
+export async function deleteEventsBefore(cutoff: Date): Promise<number> {
+  const collection = getCollection();
+  const result = await collection.deleteMany({ createdAt: { $lt: cutoff } });
+  return result.deletedCount ?? 0;
+}
