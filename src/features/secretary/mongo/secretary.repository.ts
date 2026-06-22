@@ -21,3 +21,8 @@ export async function getActiveChatIdsBetween(from: Date, to: Date): Promise<num
   const chatIds = await getCollection().distinct('chatId', { createdAt: { $gte: from, $lt: to } });
   return chatIds as number[];
 }
+
+export async function deleteMessagesBefore(cutoff: Date): Promise<number> {
+  const result = await getCollection().deleteMany({ createdAt: { $lt: cutoff } });
+  return result.deletedCount ?? 0;
+}

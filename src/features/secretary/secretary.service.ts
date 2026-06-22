@@ -6,7 +6,7 @@ import { env } from 'node:process';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
-import { getActiveChatIdsBetween, getMessagesForChatBetween, saveMessage, type SecretaryMessage } from './mongo';
+import { getActiveChatIdsBetween, getMessagesForChatBetween, deleteMessagesBefore, saveMessage, type SecretaryMessage } from './mongo';
 import { OWNER_NAME, SUMMARY_PROMPT } from './secretary.config';
 
 // Build the day window [00:00, next 00:00) in the project timezone.
@@ -31,9 +31,13 @@ export class SecretaryService {
     await saveMessage({ chatId, fromOwner, text, transcribed, senderName, senderUsername });
   }
 
+  // Delete persisted messages older than the cutoff, after the daily summaries have been sent.
+  async clearMessagesBefore(cutoff: Date): Promise<number> {
+    return deleteMessagesBefore(cutoff);
+  }
+
   // Generate and return one summary per chat that had activity today.
-  async buildDailySummaries(): Promise<{ chatId: number; summary: string }[]> {
-    const { start, end } = todayWindow();
+  async buildDailySummaries(): Promise<{ chatId: number; summary: string }[]> {    const { start, end } = todayWindow();
     const chatIds = await getActiveChatIdsBetween(start, end);
 
     const summaries: { chatId: number; summary: string }[] = [];
