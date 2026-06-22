@@ -17,10 +17,6 @@ export function getMongoCollection<T = any>(dbName: string, collectionName: stri
   return db.collection<T>(collectionName);
 }
 
-export function hasMongoConnection(dbName: string): boolean {
-  return connections.has(dbName);
-}
-
 export async function closeMongoConnections(): Promise<void> {
   await Promise.allSettled(clients.map((client) => client.close()));
   clients.length = 0;

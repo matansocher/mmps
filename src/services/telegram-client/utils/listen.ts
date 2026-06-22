@@ -9,8 +9,6 @@ const logger = new Logger('TelegramClientListener');
 
 type ListenerOptions = {
   readonly conversationsIds?: string[];
-  // By default the listener captures incoming messages from others. Set true to also capture your own.
-  readonly includeOutgoing?: boolean;
 };
 
 export type TelegramMessage = {
@@ -97,16 +95,11 @@ async function getSenderDetails(telegramClient: TelegramClient, userId: string):
 
 type ListenCallback = (message: TelegramMessage, details: ConversationDetails, sender: SenderDetails | null) => void | Promise<void>;
 
-export async function listen({ conversationsIds = [], includeOutgoing = false }: ListenerOptions, callback: ListenCallback) {
-  let telegramClient: TelegramClient;
-  try {
-    telegramClient = await provideTelegramClient();
-    await telegramClient.getDialogs({});
-    logger.log('Loaded dialogs into entity cache');
-  } catch (err) {
-    logger.error(`Failed to start telegram client listener: ${err}`);
-    return;
-  }
+export async function listen({ conversationsIds = [] }: ListenerOptions, callback: ListenCallback) {
+  const telegramClient = await provideTelegramClient();
+
+  await telegramClient.getDialogs({});
+  logger.log('Loaded dialogs into entity cache');
 
   telegramClient.addEventHandler(async (event: NewMessageEvent) => {
     try {
@@ -143,5 +136,5 @@ export async function listen({ conversationsIds = [], includeOutgoing = false }:
     } catch (err) {
       logger.error(`Error handling telegram event: ${err}`);
     }
-  }, new NewMessage(includeOutgoing ? {} : { incoming: true }));
+  }, new NewMessage({ incoming: false }));
 }
