@@ -25,17 +25,3 @@ export type SelfieEvent = {
   readonly sender: SelfieEventSender | null;
   readonly createdAt: Date;
 };
-
-export type CreateSelfieEventData = Omit<SelfieEvent, '_id' | 'createdAt'>;
-
-export type SelfieDailyStat = {
-  readonly _id?: ObjectId;
-  readonly date: string; // Format: "YYYY-MM-DD" (project timezone)
-  readonly conversationId: string;
-  readonly conversationName: string;
-  readonly type: 'channel' | 'chat';
-  readonly count: number;
-  readonly createdAt: Date;
-};
-
-export type CreateSelfieDailyStat = Omit<SelfieDailyStat, '_id' | 'createdAt'>;
