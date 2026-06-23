@@ -59,6 +59,13 @@ export class SecretaryDraftService {
     await this.retirePendingDrafts(chatId);
   }
 
+  // Generate and send a draft suggestion immediately (used by the forgotten-reply nudge's Reply button).
+  async suggestNow(chatId: number, businessConnectionId?: string): Promise<void> {
+    if (businessConnectionId) this.connectionIds.set(chatId, businessConnectionId);
+    this.clearTimer(chatId);
+    await this.suggestDraft(chatId);
+  }
+
   private clearTimer(chatId: number): void {
     const existing = this.timers.get(chatId);
     if (existing) {

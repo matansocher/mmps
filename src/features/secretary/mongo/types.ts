@@ -68,3 +68,26 @@ export type CreateSecretaryDraftData = {
   readonly draftText: string;
   readonly summaryText?: string;
 };
+
+export type SecretaryNudgeStatus = 'pending' | 'replied' | 'snoozed' | 'dismissed' | 'superseded';
+
+// A forgotten-reply nudge: reminds the owner that the other side has been left unanswered.
+export type SecretaryNudge = {
+  readonly _id?: ObjectId;
+  readonly shortId: string; // carried in callback_data
+  readonly chatId: number; // the other person's chat
+  readonly ownerChatId: number; // where the nudge DM is delivered (the owner)
+  readonly businessConnectionId?: string;
+  readonly quote: string; // snippet of her unanswered message(s)
+  readonly status: SecretaryNudgeStatus;
+  readonly messageId?: number; // the nudge message the buttons live on
+  readonly createdAt: Date;
+};
+
+export type CreateSecretaryNudgeData = {
+  readonly shortId: string;
+  readonly chatId: number;
+  readonly ownerChatId: number;
+  readonly businessConnectionId?: string;
+  readonly quote: string;
+};
