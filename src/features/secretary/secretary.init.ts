@@ -1,6 +1,7 @@
 import { createMongoConnection } from '@core/mongo';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from './mongo';
+import { SecretaryActionService } from './secretary-action.service';
 import { BOT_CONFIG } from './secretary.config';
 import { SecretaryController } from './secretary.controller';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
@@ -12,8 +13,9 @@ export async function initSecretary(): Promise<void> {
   const bot = provideTelegramBot(BOT_CONFIG);
 
   const secretaryService = new SecretaryService();
+  const secretaryActionService = new SecretaryActionService();
   const secretaryScheduler = new SecretarySchedulerService(secretaryService, bot);
-  const secretaryController = new SecretaryController(secretaryService, secretaryScheduler, bot);
+  const secretaryController = new SecretaryController(secretaryService, secretaryScheduler, secretaryActionService, bot);
 
   secretaryController.init();
   secretaryScheduler.init();
