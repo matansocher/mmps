@@ -4,6 +4,7 @@ import { DB_NAME } from './mongo';
 import { SecretaryActionService } from './secretary-action.service';
 import { BOT_CONFIG } from './secretary.config';
 import { SecretaryController } from './secretary.controller';
+import { SecretaryDraftService } from './secretary-draft.service';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
 import { SecretaryService } from './secretary.service';
 
@@ -14,8 +15,9 @@ export async function initSecretary(): Promise<void> {
 
   const secretaryService = new SecretaryService();
   const secretaryActionService = new SecretaryActionService();
+  const secretaryDraftService = new SecretaryDraftService(secretaryService, bot);
   const secretaryScheduler = new SecretarySchedulerService(secretaryService, bot);
-  const secretaryController = new SecretaryController(secretaryService, secretaryScheduler, secretaryActionService, bot);
+  const secretaryController = new SecretaryController(secretaryService, secretaryScheduler, secretaryActionService, secretaryDraftService, bot);
 
   secretaryController.init();
   secretaryScheduler.init();

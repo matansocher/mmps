@@ -5,7 +5,8 @@ import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-fr
 import { downloadFile } from '@services/telegram';
 import { getActionByShortId, getActionsByMessageId, updateActionStatus } from './mongo';
 import { buildActionsKeyboard, SecretaryActionService } from './secretary-action.service';
-import { ACTION_CALLBACK_PREFIX, CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
+import { ACTION_CALLBACK_PREFIX, CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, DRAFT_CANCEL_CALLBACK_PREFIX, DRAFT_SEND_CALLBACK_PREFIX, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
+import { SecretaryDraftService } from './secretary-draft.service';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
 import { SecretaryService } from './secretary.service';
 
@@ -18,6 +19,7 @@ export class SecretaryController {
     private readonly secretaryService: SecretaryService,
     private readonly scheduler: SecretarySchedulerService,
     private readonly actionService: SecretaryActionService,
+    private readonly draftService: SecretaryDraftService,
     private readonly bot: Bot,
   ) {}
 
@@ -27,6 +29,8 @@ export class SecretaryController {
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
     this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
     this.bot.callbackQuery(new RegExp(`^${ACTION_CALLBACK_PREFIX}`), (ctx) => this.actionHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${DRAFT_SEND_CALLBACK_PREFIX}`), (ctx) => this.draftSendHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${DRAFT_CANCEL_CALLBACK_PREFIX}`), (ctx) => this.draftCancelHandler(ctx));
 
     // Local-only: DM the bot directly to fake an incoming business message and test
     // persistence, transcription and the daily summary without a live Business connection.
@@ -132,6 +136,7 @@ export class SecretaryController {
       if (transcript) {
         await this.bot.api.sendMessage(chatId, `${TRANSCRIPTION_HEADER}\n${transcript}`, businessConnectionId ? { business_connection_id: businessConnectionId } : undefined);
         await this.secretaryService.storeMessage({ chatId, fromOwner, text: transcript, transcribed: true, senderName, senderUsername });
+        await this.updateDraftFlow(chatId, fromOwner, businessConnectionId);
       }
       return;
     }
@@ -140,6 +145,33 @@ export class SecretaryController {
     if (!text) return;
 
     await this.secretaryService.storeMessage({ chatId, fromOwner, text, senderName, senderUsername });
+    await this.updateDraftFlow(chatId, fromOwner, businessConnectionId);
+  }
+
+  // Drive the smart-reply idle timer for the wife's chat: schedule on her message, cancel on yours.
+  private async updateDraftFlow(chatId: number, fromOwner: boolean, businessConnectionId?: string): Promise<void> {
+    if (isProd && chatId !== TOODIE_USER_ID) return;
+    if (fromOwner) {
+      await this.draftService.onOwnerReply(chatId);
+    } else {
+      this.draftService.scheduleSuggestion(chatId, businessConnectionId);
+    }
+  }
+
+  private async draftSendHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+    await this.draftService.handleSend(ctx);
+  }
+
+  private async draftCancelHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+    await this.draftService.handleCancel(ctx);
   }
 
   private async transcribe(fileId: string): Promise<string> {
@@ -163,6 +195,7 @@ export class SecretaryController {
     if (!transcript) return;
     await ctx.reply(`${TRANSCRIPTION_HEADER}\n${transcript}`);
     await this.secretaryService.storeMessage({ chatId, fromOwner: false, text: transcript, transcribed: true, senderName, senderUsername });
+    await this.updateDraftFlow(chatId, false);
   }
 
   private async simulateTextHandler(ctx: Context): Promise<void> {
@@ -176,6 +209,7 @@ export class SecretaryController {
     if (!body) return;
 
     await this.secretaryService.storeMessage({ chatId, fromOwner, text: body, senderName: ctx.from?.first_name ?? undefined, senderUsername: ctx.from?.username ?? undefined });
+    await this.updateDraftFlow(chatId, fromOwner);
     await ctx.reply(`📝 stored (${fromOwner ? 'owner' : 'other'}).`);
   }
 }
