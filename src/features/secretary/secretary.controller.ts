@@ -3,8 +3,10 @@ import { isProd, LOCAL_FILES_PATH, MY_USER_ID, TOODIE_USER_ID } from '@core/conf
 import { Logger } from '@core/utils';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile } from '@services/telegram';
+import { getActionByShortId, getActionsByMessageId, updateActionStatus } from './mongo';
+import { buildActionsKeyboard, SecretaryActionService } from './secretary-action.service';
+import { ACTION_CALLBACK_PREFIX, CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
-import { CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
 import { SecretaryService } from './secretary.service';
 
 const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
@@ -15,6 +17,7 @@ export class SecretaryController {
   constructor(
     private readonly secretaryService: SecretaryService,
     private readonly scheduler: SecretarySchedulerService,
+    private readonly actionService: SecretaryActionService,
     private readonly bot: Bot,
   ) {}
 
@@ -23,6 +26,7 @@ export class SecretaryController {
     this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
     this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${ACTION_CALLBACK_PREFIX}`), (ctx) => this.actionHandler(ctx));
 
     // Local-only: DM the bot directly to fake an incoming business message and test
     // persistence, transcription and the daily summary without a live Business connection.
@@ -70,6 +74,44 @@ export class SecretaryController {
     if (!isOwner(ctx)) return;
     await ctx.reply("Building today's summaries… 🗒️");
     await this.scheduler.runDailyDigest();
+  }
+
+  // One-tap execution of a suggested calendar/reminder action via the AI agent.
+  private async actionHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    const data = ctx.callbackQuery?.data ?? '';
+    const shortId = data.slice(ACTION_CALLBACK_PREFIX.length);
+    const action = await getActionByShortId(shortId);
+
+    if (!action) {
+      await ctx.answerCallbackQuery({ text: 'Action not found.', show_alert: true });
+      return;
+    }
+    if (action.status === 'done') {
+      await ctx.answerCallbackQuery({ text: 'Already done ✅' });
+      return;
+    }
+
+    // Acknowledge immediately so the button stops spinning while the agent works.
+    await ctx.answerCallbackQuery({ text: 'Working… ⏳' });
+
+    const { ok, text } = await this.actionService.execute(action.instruction);
+    await updateActionStatus(shortId, ok ? 'done' : 'failed', text);
+
+    if (action.messageId) {
+      try {
+        const refreshed = await getActionsByMessageId(action.messageId);
+        await ctx.editMessageReplyMarkup({ reply_markup: buildActionsKeyboard(refreshed) });
+      } catch (err) {
+        this.logger.error(`Failed to refresh action keyboard: ${err}`);
+      }
+    }
+
+    await ctx.reply(`${ok ? '✅' : '❌'} ${text}`);
   }
 
   private async businessMessageHandler(ctx: Context): Promise<void> {
