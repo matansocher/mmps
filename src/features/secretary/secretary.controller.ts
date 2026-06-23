@@ -5,8 +5,9 @@ import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-fr
 import { downloadFile } from '@services/telegram';
 import { getActionByShortId, getActionsByMessageId, updateActionStatus } from './mongo';
 import { buildActionsKeyboard, SecretaryActionService } from './secretary-action.service';
-import { ACTION_CALLBACK_PREFIX, CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, DRAFT_CANCEL_CALLBACK_PREFIX, DRAFT_SEND_CALLBACK_PREFIX, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
+import { ACTION_CALLBACK_PREFIX, CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, DRAFT_CANCEL_CALLBACK_PREFIX, DRAFT_SEND_CALLBACK_PREFIX, NUDGE_DISMISS_CALLBACK_PREFIX, NUDGE_REPLY_CALLBACK_PREFIX, NUDGE_SNOOZE_CALLBACK_PREFIX, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
 import { SecretaryDraftService } from './secretary-draft.service';
+import { SecretaryNudgeService } from './secretary-nudge.service';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
 import { SecretaryService } from './secretary.service';
 
@@ -20,6 +21,7 @@ export class SecretaryController {
     private readonly scheduler: SecretarySchedulerService,
     private readonly actionService: SecretaryActionService,
     private readonly draftService: SecretaryDraftService,
+    private readonly nudgeService: SecretaryNudgeService,
     private readonly bot: Bot,
   ) {}
 
@@ -31,6 +33,9 @@ export class SecretaryController {
     this.bot.callbackQuery(new RegExp(`^${ACTION_CALLBACK_PREFIX}`), (ctx) => this.actionHandler(ctx));
     this.bot.callbackQuery(new RegExp(`^${DRAFT_SEND_CALLBACK_PREFIX}`), (ctx) => this.draftSendHandler(ctx));
     this.bot.callbackQuery(new RegExp(`^${DRAFT_CANCEL_CALLBACK_PREFIX}`), (ctx) => this.draftCancelHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${NUDGE_REPLY_CALLBACK_PREFIX}`), (ctx) => this.nudgeReplyHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${NUDGE_SNOOZE_CALLBACK_PREFIX}`), (ctx) => this.nudgeSnoozeHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${NUDGE_DISMISS_CALLBACK_PREFIX}`), (ctx) => this.nudgeDismissHandler(ctx));
 
     // Local-only: DM the bot directly to fake an incoming business message and test
     // persistence, transcription and the daily summary without a live Business connection.
@@ -149,12 +154,15 @@ export class SecretaryController {
   }
 
   // Drive the smart-reply idle timer for the wife's chat: schedule on her message, cancel on yours.
+  // Drive the smart-reply idle timer and the forgotten-reply nudge for the wife's chat.
   private async updateDraftFlow(chatId: number, fromOwner: boolean, businessConnectionId?: string): Promise<void> {
     if (isProd && chatId !== TOODIE_USER_ID) return;
     if (fromOwner) {
       await this.draftService.onOwnerReply(chatId);
+      await this.nudgeService.onOwnerReply(chatId);
     } else {
       this.draftService.scheduleSuggestion(chatId, businessConnectionId);
+      this.nudgeService.scheduleNudge(chatId, businessConnectionId);
     }
   }
 
@@ -172,6 +180,30 @@ export class SecretaryController {
       return;
     }
     await this.draftService.handleCancel(ctx);
+  }
+
+  private async nudgeReplyHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+    await this.nudgeService.handleReply(ctx);
+  }
+
+  private async nudgeSnoozeHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+    await this.nudgeService.handleSnooze(ctx);
+  }
+
+  private async nudgeDismissHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+    await this.nudgeService.handleDismiss(ctx);
   }
 
   private async transcribe(fileId: string): Promise<string> {

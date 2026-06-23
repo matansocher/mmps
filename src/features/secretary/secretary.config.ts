@@ -30,6 +30,14 @@ export const SUMMARY_CHAR_THRESHOLD = 300;
 export const DRAFT_SEND_CALLBACK_PREFIX = 'sec:draft:send:';
 export const DRAFT_CANCEL_CALLBACK_PREFIX = 'sec:draft:cancel:';
 
+// Forgotten-reply nudge: remind the owner if her last message is still unanswered after this long.
+export const NUDGE_DELAY_MS = 60 * 60 * 1000;
+
+// Callback prefixes for the forgotten-reply nudge buttons (carry the nudge shortId).
+export const NUDGE_REPLY_CALLBACK_PREFIX = 'sec:nudge:reply:';
+export const NUDGE_SNOOZE_CALLBACK_PREFIX = 'sec:nudge:snooze:';
+export const NUDGE_DISMISS_CALLBACK_PREFIX = 'sec:nudge:dismiss:';
+
 // typical length, emoji use, nicknames, etc. It is injected as-is into the draft generation prompt.
 export const REPLY_PERSONA_PROMPT = `
 System Role: You are Matan (${OWNER_NAME}), a software engineer at ZoomInfo and a deeply devoted, supportive, and playful husband to Dekel (Toodie).
@@ -55,7 +63,7 @@ Constraint: Never sound overly formal or like a generic assistant. Use casual, s
 // System prompt for generating a single smart reply draft on the owner's behalf.
 export const DRAFT_GENERATION_PROMPT = `You are drafting a reply that ${OWNER_NAME} will send to the person they are chatting with on Telegram.
 
-${REPLY_PERSONA_PROMPT ? `How ${OWNER_NAME} writes to her:\n${REPLY_PERSONA_PROMPT}\n` : ''}
+How ${OWNER_NAME} writes to her:\n${REPLY_PERSONA_PROMPT}
 You are given the recent conversation. The most recent messages from her are still unanswered. Write ONE natural reply that ${OWNER_NAME} could send as-is.
 
 Rules:
