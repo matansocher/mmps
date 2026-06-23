@@ -42,3 +42,29 @@ export type CreateSecretaryActionData = SecretarySummaryAction & {
   readonly shortId: string;
   readonly ownerChatId: number;
 };
+
+export type SecretaryDraftStatus = 'pending' | 'sent' | 'cancelled' | 'superseded';
+
+// A smart reply draft suggested to the owner after the other side went unanswered for a while.
+export type SecretaryDraft = {
+  readonly _id?: ObjectId;
+  readonly shortId: string; // carried in callback_data
+  readonly chatId: number; // the other person's chat (where the reply would be sent)
+  readonly ownerChatId: number; // where the suggestion DM is delivered (the owner)
+  readonly businessConnectionId?: string; // connection used to send as the owner
+  readonly draftText: string;
+  readonly summaryText?: string;
+  readonly status: SecretaryDraftStatus;
+  readonly messageId?: number; // the suggestion message the buttons live on
+  readonly createdAt: Date;
+  readonly sentAt?: Date;
+};
+
+export type CreateSecretaryDraftData = {
+  readonly shortId: string;
+  readonly chatId: number;
+  readonly ownerChatId: number;
+  readonly businessConnectionId?: string;
+  readonly draftText: string;
+  readonly summaryText?: string;
+};

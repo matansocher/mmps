@@ -17,6 +17,12 @@ export async function getMessagesForChatBetween(chatId: number, from: Date, to: 
     .toArray();
 }
 
+// Most recent messages for a chat (ascending by time), used to build smart-reply context.
+export async function getRecentMessagesForChat(chatId: number, limit: number): Promise<SecretaryMessage[]> {
+  const messages = await getCollection().find({ chatId }).sort({ createdAt: -1 }).limit(limit).toArray();
+  return messages.reverse();
+}
+
 export async function getActiveChatIdsBetween(from: Date, to: Date): Promise<number[]> {
   const chatIds = await getCollection().distinct('chatId', { createdAt: { $gte: from, $lt: to } });
   return chatIds as number[];
