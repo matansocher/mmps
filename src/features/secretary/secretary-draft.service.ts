@@ -1,46 +1,26 @@
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { ChatOpenAI } from '@langchain/openai';
 import type { Bot, Context, InlineKeyboard } from 'grammy';
 import { randomUUID } from 'node:crypto';
-import { env } from 'node:process';
-import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { buildInlineKeyboard } from '@services/telegram';
-import { createDraft, getDraftByShortId, getRecentMessagesForChat, type SecretaryMessage, setDraftMessageId, supersedePendingDraftsForChat, updateDraftStatus } from './mongo';
-import {
-  DRAFT_CANCEL_CALLBACK_PREFIX,
-  DRAFT_GENERATION_PROMPT,
-  DRAFT_SEND_CALLBACK_PREFIX,
-  IDLE_REPLY_DELAY_MS,
-  OWNER_BUSINESS_CONNECTION_ID,
-  OWNER_NAME,
-  SUMMARY_CHAR_THRESHOLD,
-} from './secretary.config';
+import { createDraft, getDraftByShortId, getRecentMessagesForChat, setDraftMessageId, supersedePendingDraftsForChat, updateDraftStatus } from './mongo';
+import { DRAFT_CANCEL_CALLBACK_PREFIX, DRAFT_SEND_CALLBACK_PREFIX, IDLE_REPLY_DELAY_MS, OWNER_BUSINESS_CONNECTION_ID, REPLY_NEEDED_THRESHOLD } from './secretary.config';
+import { generateDraftReply, unansweredTail } from './secretary-draft.utils';
 import { SecretaryService } from './secretary.service';
 
 const CONTEXT_MESSAGE_LIMIT = 20;
-
-const draftSchema = z.object({
-  draft: z.string().describe('The ready-to-send reply text, in her language'),
-  summary: z.string().describe('A one-line summary of what she talked about, or an empty string if her messages were short'),
-});
 
 const newShortId = () => randomUUID().replace(/-/g, '').slice(0, 10);
 
 export class SecretaryDraftService {
   private readonly logger = new Logger(SecretaryDraftService.name);
-  private readonly model: ChatOpenAI;
   private readonly timers = new Map<number, ReturnType<typeof setTimeout>>();
   private readonly connectionIds = new Map<number, string>();
 
   constructor(
     private readonly secretaryService: SecretaryService,
     private readonly bot: Bot,
-  ) {
-    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.5, apiKey: env.OPENAI_API_KEY });
-  }
+  ) {}
 
   // Her new message: (re)start the idle countdown for this chat.
   scheduleSuggestion(chatId: number, businessConnectionId?: string): void {
@@ -63,7 +43,7 @@ export class SecretaryDraftService {
   async suggestNow(chatId: number, businessConnectionId?: string): Promise<void> {
     if (businessConnectionId) this.connectionIds.set(chatId, businessConnectionId);
     this.clearTimer(chatId);
-    await this.suggestDraft(chatId);
+    await this.suggestDraft(chatId, { respectReplyNeeded: false });
   }
 
   private clearTimer(chatId: number): void {
@@ -74,15 +54,27 @@ export class SecretaryDraftService {
     }
   }
 
-  private async suggestDraft(chatId: number): Promise<void> {
+  private async suggestDraft(chatId: number, options: { respectReplyNeeded: boolean } = { respectReplyNeeded: true }): Promise<void> {
     const messages = await getRecentMessagesForChat(chatId, CONTEXT_MESSAGE_LIMIT);
     if (messages.length === 0) return;
 
-    const unanswered = this.unansweredTail(messages);
-    if (unanswered.length === 0) return; // owner already replied since her last message
+    if (unansweredTail(messages).length === 0) return; // owner already replied since her last message
 
-    const generated = await this.generateDraft(messages, unanswered);
+    let generated;
+    try {
+      generated = await generateDraftReply(messages);
+    } catch (err) {
+      this.logger.error(`Failed to generate draft: ${err}`);
+      return;
+    }
     if (!generated) return;
+
+    // On the automatic path, skip silently when the model judges a reply is probably unnecessary
+    // (e.g. she just acknowledged). The nudge's explicit Reply button bypasses this.
+    if (options.respectReplyNeeded && generated.replyNeeded < REPLY_NEEDED_THRESHOLD) {
+      this.logger.log(`Skipping draft for ${chatId}: replyNeeded=${generated.replyNeeded.toFixed(2)} < ${REPLY_NEEDED_THRESHOLD}`);
+      return;
+    }
 
     // Replace any earlier still-pending suggestion for this chat with the fresh one.
     await this.retirePendingDrafts(chatId);
@@ -94,39 +86,6 @@ export class SecretaryDraftService {
     const text = this.formatSuggestion(generated.draft, generated.summary);
     const sent = await this.bot.api.sendMessage(MY_USER_ID, text, { reply_markup: this.buildDraftKeyboard(shortId) });
     await setDraftMessageId(shortId, sent.message_id);
-  }
-
-  // Trailing messages from her since the owner's last reply.
-  private unansweredTail(messages: SecretaryMessage[]): SecretaryMessage[] {
-    const tail: SecretaryMessage[] = [];
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].fromOwner) break;
-      tail.unshift(messages[i]);
-    }
-    return tail;
-  }
-
-  private async generateDraft(context: SecretaryMessage[], unanswered: SecretaryMessage[]): Promise<{ draft: string; summary: string } | null> {
-    try {
-      const other = context.find((m) => !m.fromOwner);
-      const otherName = other?.senderName || other?.senderUsername || 'her';
-      const transcript = context.map((m) => `${m.fromOwner ? OWNER_NAME : otherName}: ${m.text}`).join('\n');
-      const unansweredText = unanswered.map((m) => m.text).join(' ');
-      const wantSummary = unansweredText.length >= SUMMARY_CHAR_THRESHOLD;
-
-      const userPrompt = `Recent conversation (most recent last):\n\n${transcript}\n\nWrite ${OWNER_NAME}'s reply to her latest unanswered messages.${wantSummary ? '' : ' Her messages are short, so leave "summary" empty.'}`;
-
-      const structured = this.model.withStructuredOutput(draftSchema, { name: 'smart_reply_draft' });
-      const result = await structured.invoke([new SystemMessage(DRAFT_GENERATION_PROMPT), new HumanMessage(userPrompt)]);
-
-      const draft = (result.draft ?? '').trim();
-      if (!draft) return null;
-      const summary = wantSummary ? (result.summary ?? '').trim() : '';
-      return { draft, summary };
-    } catch (err) {
-      this.logger.error(`Failed to generate draft: ${err}`);
-      return null;
-    }
   }
 
   private formatSuggestion(draft: string, summary: string): string {
