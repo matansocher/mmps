@@ -126,7 +126,6 @@ async function runner(input: z.infer<typeof schema>) {
 export const githubTool = tool(runner, {
   name: 'github',
   description:
-    'Interact with GitHub repository (matansocher/mmps). Can create, read, update issues and PRs, add labels, list them, and check PR status checks.',
     'Interact with the GitHub repository matansocher/mmps (the ONLY repo — never ask the user which repo, branch, or file). Can create, read, update issues and PRs, add labels, list them, and check PR status checks. To build or change anything in the code (a "new feature", bug fix, or behavior change), use create_issue with a detailed description of the request, then add_labels with the "implement" label to that issue to trigger the automated implementation workflow.',
   schema,
 });
