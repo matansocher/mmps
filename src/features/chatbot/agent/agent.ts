@@ -110,6 +110,8 @@ Available capabilities:
    * To request AI implementation for an issue: add the "implement" label to the issue
    These labels trigger GitHub Actions workflows that use Claude to analyze code and generate implementations.
    Natural language variations: "create an issue about", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation", "check PR status", "are the checks passing", "is CI done", "show PR details", "what files changed in PR", "who reviewed the PR", "is the PR approved"
+   IMPORTANT: The repository is ALWAYS matansocher/mmps — never ask the user which repo, branch, or file. When the user asks to build/add/change/fix anything in the code (a "new feature"), create an issue describing the request and then add the "implement" label to it; the workflow's AI locates the code itself.
+   Natural language variations: "create an issue about", "create a new feature", "comment on issue", "list open issues", "show pull requests", "update the issue status", "add a comment to PR", "request code review", "generate implementation", "check PR status", "are the checks passing", "is CI done", "show PR details", "what files changed in PR", "who reviewed the PR", "is the PR approved"
 - Contacts tool: Suggest 5 random friends to call or reach out to, or add/remove people from the personal friends list.
 - Spotify tool: Search music and manage the user's own Spotify account with these actions:
   * "search_track" - Search for songs by name/artist (returns track IDs and URIs)
@@ -128,12 +130,19 @@ Available capabilities:
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
+- DEFAULT REPOSITORY: The GitHub tool ALWAYS operates on the matansocher/mmps repository. This is the only repo. NEVER ask the user which repository, branch, or which file the feature/code lives in — assume matansocher/mmps every time, even when the user does not mention a repository.
 - The repository has automated GitHub Actions workflows triggered by labels:
   * "review" label - Triggers AI code review on pull requests
   * "implement" label - Triggers AI implementation generation for issues
+- FEATURE / CODE-CHANGE REQUEST FLOW (very important):
+  * When the user asks to create a new feature, add functionality, change behavior, fix a bug, or modify the code in any way (e.g. "I want to create a new feature in github", "update the coach scheduler to run at 13:59 instead of 12:59", "add a command to X", "change Y to Z"), treat this as a request to create an issue and trigger the AI implementation workflow.
+  * Do this WITHOUT asking for the repository, branch, file path, or code location. The "implement" workflow uses an AI agent that locates the relevant code itself, so you do NOT need to know where the code is.
+  * Steps: (1) Use "create_issue" with a clear, descriptive title and a body that fully captures exactly what the user requested (include all specifics like times, names, values). (2) Immediately use "add_labels" to add the "implement" label to the newly created issue (use the issueNumber returned from create_issue).
+  * After both steps, confirm to the user that you created the issue (include its number/link) and triggered the implementation workflow, and that a pull request will follow.
 - When user requests:
   * "review this PR" / "request a code review" / "analyze this pull request" → Use add_labels action to add "review" label to the PR (use prNumber)
   * "implement this issue" / "generate code for this issue" / "solve this issue" → Use add_labels action to add "implement" label to the issue (use issueNumber)
+  * "implement this issue" / "generate code for this issue" / "solve this issue" (referencing an EXISTING issue number) → Use add_labels action to add "implement" label to the issue (use issueNumber)
 - These labels automatically trigger Claude-powered GitHub Actions that will:
   * review: Analyze PR code quality, suggest improvements, check for bugs
   * implement: Generate implementation code and create a pull request from the issue
@@ -331,3 +340,4 @@ export function agent(): AgentDescriptor {
     tools,
   };
 }
+
