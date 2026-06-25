@@ -58,5 +58,11 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /scripts
+/website
 /src/features/expenses/scripts/expenses
 docs/.vitepress/cache/
+
+# Secretary prompt-eval — private real-conversation data (never commit)
+/toodie-conversation.json
+/src/features/secretary/scripts/eval/eval-dataset.json
+/src/features/secretary/scripts/eval/eval-report.json

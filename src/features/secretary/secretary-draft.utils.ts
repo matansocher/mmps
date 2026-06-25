@@ -2,7 +2,7 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { env } from 'node:process';
 import { z } from 'zod';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { GPT_5_MODEL } from '@services/openai/constants';
 import type { SecretaryMessage } from './mongo';
 import { DRAFT_GENERATION_PROMPT, OWNER_NAME, SUMMARY_CHAR_THRESHOLD } from './secretary.config';
 
@@ -39,7 +39,11 @@ export function buildDraftUserPrompt(context: SecretaryMessage[], unanswered: Se
   return { userPrompt, wantSummary };
 }
 
-const buildModel = () => new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.3, apiKey: env.OPENAI_API_KEY });
+const buildModel = () => {
+  const model = env.SECRETARY_DRAFT_MODEL || GPT_5_MODEL;
+  const temperature = model.startsWith('gpt-5') ? 1 : 0.3;
+  return new ChatOpenAI({ model, temperature, apiKey: env.OPENAI_API_KEY });
+};
 
 // Generate a single draft reply for the given recent conversation. Returns null if no draft was produced.
 export async function generateDraftReply(context: SecretaryMessage[]): Promise<DraftReply | null> {

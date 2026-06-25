@@ -4,11 +4,11 @@ import type { InlineKeyboard } from 'grammy';
 import { createAgent } from 'langchain';
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
-import { calendarTool, reminderTool } from '@shared/ai';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { buildInlineKeyboard } from '@services/telegram';
-import { ACTION_AGENT_PROMPT, ACTION_CALLBACK_PREFIX } from './secretary.config';
+import { calendarTool, reminderTool } from '@shared/ai';
 import type { SecretaryAction } from './mongo';
+import { ACTION_AGENT_PROMPT, ACTION_CALLBACK_PREFIX } from './secretary.config';
 
 export type ActionResult = {
   readonly ok: boolean;
