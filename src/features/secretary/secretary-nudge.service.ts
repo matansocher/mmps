@@ -4,8 +4,9 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { buildInlineKeyboard } from '@services/telegram';
 import { createNudge, getNudgeByShortId, getRecentMessagesForChat, setNudgeMessageId, supersedePendingNudgesForChat, updateNudgeStatus, type SecretaryMessage } from './mongo';
-import { NUDGE_DELAY_MS, NUDGE_DISMISS_CALLBACK_PREFIX, NUDGE_REPLY_CALLBACK_PREFIX, NUDGE_SNOOZE_CALLBACK_PREFIX } from './secretary.config';
+import { NUDGE_DELAY_MS, NUDGE_DISMISS_CALLBACK_PREFIX, NUDGE_REPLY_CALLBACK_PREFIX, NUDGE_SNOOZE_CALLBACK_PREFIX, REPLY_NEEDED_THRESHOLD } from './secretary.config';
 import { SecretaryDraftService } from './secretary-draft.service';
+import { generateDraftReply } from './secretary-draft.utils';
 
 const CONTEXT_MESSAGE_LIMIT = 20;
 const QUOTE_MAX_LENGTH = 250;
@@ -53,6 +54,18 @@ export class SecretaryNudgeService {
 
     const unanswered = this.unansweredTail(messages);
     if (unanswered.length === 0) return; // owner already replied since her last message
+
+    // Don't nudge for messages that likely don't need a reply (e.g. she just acknowledged).
+    try {
+      const generated = await generateDraftReply(messages);
+      if (generated && generated.replyNeeded < REPLY_NEEDED_THRESHOLD) {
+        this.logger.log(`Skipping nudge for ${chatId}: replyNeeded=${generated.replyNeeded.toFixed(2)} < ${REPLY_NEEDED_THRESHOLD}`);
+        return;
+      }
+    } catch (err) {
+      this.logger.error(`Failed to evaluate reply-needed for nudge ${chatId}: ${err}`);
+      // Fail open: if we can't judge, still nudge rather than silently drop it.
+    }
 
     await this.retirePendingNudges(chatId);
 
