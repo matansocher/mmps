@@ -16,7 +16,7 @@ export class CoachBotSchedulerService {
 
   init(): void {
     cron.schedule(
-      `59 12,23 * * *`,
+      `59 13,23 * * *`,
       async () => {
         await this.handleIntervalFlow();
       },
