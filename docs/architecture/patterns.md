@@ -294,7 +294,7 @@ export function createChatbotAgent() {
     llmWithTools: model,
     tools,
     systemPrompt: `You are a helpful AI assistant...`,
-    checkpointSaver: new MemorySaver(),
+    checkpointSaver: createChatbotCheckpointer(), // MongoDB-backed, durable across restarts
   });
 
   return agent;
@@ -302,7 +302,8 @@ export function createChatbotAgent() {
 ```
 
 **Benefits**:
-- Memory persistence with MemorySaver
+- Durable memory persistence (MongoDB checkpointer; `MemorySaver` is the in-RAM fallback)
+- Conversation summarization keeps context bounded as threads grow
 - Automatic tool execution
 - Clear state management
 - Easy to test

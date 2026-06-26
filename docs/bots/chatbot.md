@@ -11,7 +11,7 @@ The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropi
 ### Core Features
 - **Conversational AI** - Natural language understanding and generation
 - **Tool Integration** - 20+ tools for extending capabilities
-- **Memory** - Conversation history with LangGraph MemorySaver
+- **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
 - **Error Handling** - Graceful degradation and fallbacks
 
 ### Available Tools
@@ -143,6 +143,21 @@ Tools (weather, reminders, etc.)
 - **Daily Summary** - Generates daily summary at 23:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
 
+### Memory & Context
+
+Conversation memory is two complementary layers:
+
+- **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
+- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~40 messages), the older turns are compressed into a running summary and the most recent (~20) are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**.
+
+Tune via environment variables:
+
+```bash
+# Optional: conversation summarization (defaults in code)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # summarize once a thread passes this many messages
+CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summarizing
+```
+
 ## Database
 
 **Database name**: `chatbot-db`
@@ -201,15 +216,15 @@ If you get rate limit errors:
 ### Memory Issues
 
 If the bot uses too much memory:
-- Limit conversation history with MemorySaver settings
-- Run cleanup job to archive old conversations
+- Lower `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES` so threads are summarized sooner and kept shorter
+- Old conversations expire automatically via the checkpointer's 30-day TTL
 - Monitor with `npm run start:debug`
 
 ## Performance Tips
 
 1. **Use faster models** - Use gpt-4-mini for faster responses
 2. **Cache tool results** - Don't call same tool twice
-3. **Limit history** - Keep only recent 10-20 messages
+3. **Bound context** - Summarization keeps thread size in check; tune the trigger/keep thresholds
 4. **Monitor logs** - Use Google Sheets logging in production
 
 ## Next Steps

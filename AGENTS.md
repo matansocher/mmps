@@ -87,7 +87,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **node-cron** for scheduled tasks
 
 ### Key Dependencies
-- **AI/LLM:** `@anthropic-ai/sdk`, `openai`, `langchain`, `@langchain/langgraph` (with `MemorySaver`), `@langchain/anthropic`, `@langchain/openai`
+- **AI/LLM:** `@anthropic-ai/sdk`, `openai`, `langchain`, `@langchain/langgraph` (with `MemorySaver` as fallback), `@langchain/langgraph-checkpoint-mongodb` (durable chatbot memory), `@langchain/anthropic`, `@langchain/openai`
 - **Database:** `mongodb` (native driver, no ODM)
 - **Bot Platform:** `grammy` (+ `@grammyjs/hydrate`)
 - **Date Handling:** `date-fns`, `date-fns-tz` (default timezone: `Asia/Jerusalem`)
@@ -173,7 +173,7 @@ src/services/{name}/
 
 | ID         | Display Name    | Path                          | Env token                       | Purpose |
 |------------|-----------------|-------------------------------|---------------------------------|---------|
-| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); dashboard mini-app (`apps/chatbot-web`). |
+| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); durable MongoDB-backed memory + conversation summarization; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`   | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`     | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`    | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`      | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
 | `EXPENSES` | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`   | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
@@ -532,12 +532,21 @@ export function agent(): AgentDescriptor {
 
 // factory.ts
 export function createAgentService(descriptor: AgentDescriptor, opts: CreateAgentOptions): AiService {
-  const { model, checkpointer = new MemorySaver(), toolCallbackOptions } = opts;
+  const { model, checkpointer = new MemorySaver(), middleware, toolCallbackOptions } = opts;
   const callbacks = toolCallbackOptions ? [new ToolCallbackHandler(toolCallbackOptions)] : undefined;
-  const reactAgent = createAgent({ model, tools: descriptor.tools, systemPrompt: descriptor.prompt, checkpointer });
+  const reactAgent = createAgent({ model, tools: descriptor.tools, systemPrompt: descriptor.prompt, checkpointer, middleware });
   return new AiService(reactAgent.graph, { name: descriptor.name, callbacks });
 }
 ```
+
+### Memory & context management (chatbot)
+
+The chatbot's conversation memory is two complementary pieces wired up in `features/chatbot`:
+
+- **Persistence (checkpointer).** `agent/checkpointer.ts` provides `createChatbotCheckpointer()`, a Mongo-backed `BaseCheckpointSaver` (via `@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL). It's built in `chatbot.init.ts` and injected into `ChatbotService`, replacing the in-RAM `MemorySaver` so history survives restarts/deploys. State is keyed by `thread_id` (derived from `chatId`).
+- **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). Once a thread passes `CHATBOT_CONFIG.summarization.triggerMessages` (~40), it compresses the oldest turns into a summary and keeps the last `keepMessages` (~20) verbatim. The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped.
+
+There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
 
 ### Tool with Zod
 
