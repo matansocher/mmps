@@ -9,10 +9,11 @@ import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
-import { ToolCallbackOptions } from '@shared/ai';
+import { ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
 import { AiService, createAgentService } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
+import { saveUsageRecord } from './mongo';
 import { ChatbotResponse, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
@@ -57,7 +58,14 @@ export class ChatbotService {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
       const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
-      const result = await this.aiService.invoke(contextualMessage, { threadId });
+
+      const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
+      const startedAt = Date.now();
+      const result = await this.aiService.invoke(contextualMessage, { threadId, callbacks: usageHandler ? [usageHandler] : undefined });
+      if (usageHandler) {
+        this.recordUsage(chatId, usageHandler, Date.now() - startedAt);
+      }
+
       const agentResponse = formatAgentResponse(result);
 
       if (!responseSchema) {
@@ -78,5 +86,23 @@ export class ChatbotService {
         timestamp: new Date().toISOString(),
       };
     }
+  }
+
+  private recordUsage(chatId: number, handler: UsageCallbackHandler, durationMs: number): void {
+    const usage = handler.summary();
+    this.logger.log(
+      `💰 usage chatId=${chatId} model=${usage.model} in=${usage.tokensIn} out=${usage.tokensOut} total=${usage.tokensTotal} cost=$${usage.cost.toFixed(6)} llmCalls=${usage.llmCalls} toolCalls=${usage.toolCalls} duration=${durationMs}ms`,
+    );
+    saveUsageRecord({
+      chatId,
+      model: usage.model,
+      tokensIn: usage.tokensIn,
+      tokensOut: usage.tokensOut,
+      tokensTotal: usage.tokensTotal,
+      cost: usage.cost,
+      durationMs,
+      llmCalls: usage.llmCalls,
+      toolCalls: usage.toolCalls,
+    }).catch((err) => this.logger.error(`Failed to persist usage record for ${chatId}: ${err}`));
   }
 }

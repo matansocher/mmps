@@ -304,6 +304,7 @@ export function createChatbotAgent() {
 **Benefits**:
 - Durable memory persistence (MongoDB checkpointer; `MemorySaver` is the in-RAM fallback)
 - Conversation summarization keeps context bounded as threads grow
+- Per-turn token/cost observability via a runtime usage callback handler
 - Automatic tool execution
 - Clear state management
 - Easy to test

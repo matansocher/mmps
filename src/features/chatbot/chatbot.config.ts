@@ -14,6 +14,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
 };
 
 export const CHATBOT_CONFIG = {
+  // Toggle per-turn token/cost observability. Defaults on; set CHATBOT_USAGE_TRACKING=false to disable.
+  usageTracking: env.CHATBOT_USAGE_TRACKING !== 'false',
   summarization: {
     // Summarize once a thread grows past this many messages.
     triggerMessages: parseInt(env.CHATBOT_SUMMARY_TRIGGER_MESSAGES || '40', 10),

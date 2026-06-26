@@ -33,6 +33,7 @@ WEATHERAPI_KEY=...                 # Weather data
 # Conversation memory tuning (optional; defaults in code)
 CHATBOT_SUMMARY_TRIGGER_MESSAGES=40  # summarize once a thread passes this many messages
 CHATBOT_SUMMARY_KEEP_MESSAGES=20     # recent messages kept verbatim after summarizing
+CHATBOT_USAGE_TRACKING=false         # disable per-turn token/cost metering (default on)
 ```
 
 ### Coach

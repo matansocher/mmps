@@ -173,7 +173,7 @@ src/services/{name}/
 
 | ID         | Display Name    | Path                          | Env token                       | Purpose |
 |------------|-----------------|-------------------------------|---------------------------------|---------|
-| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); durable MongoDB-backed memory + conversation summarization; dashboard mini-app (`apps/chatbot-web`). |
+| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`   | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`     | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`    | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`      | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
 | `EXPENSES` | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`   | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
@@ -547,6 +547,15 @@ The chatbot's conversation memory is two complementary pieces wired up in `featu
 - **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). Once a thread passes `CHATBOT_CONFIG.summarization.triggerMessages` (~40), it compresses the oldest turns into a summary and keeps the last `keepMessages` (~20) verbatim. The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped.
 
 There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
+
+### Token & cost observability (chatbot)
+
+Every user turn is metered. `chatbot.service.ts` attaches a per-turn `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to the agent `invoke` as a runtime callback. It sums `usage_metadata` across the whole ReAct loop (plus any summarization call) and counts LLM/tool calls, then `summary()` rolls up tokens and cost.
+
+- **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens) + `computeModelCost()`. Unknown models → cost `0` + `logger.warn`.
+- **Sink.** After each turn the service logs a `💰 usage` line and fire-and-forget persists a record to db `Chatbot`, collection `usage` (`features/chatbot/mongo/`), 90-day TTL. Fields: `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ chatId?, from?, to? })` groups per user per day (`Asia/Jerusalem`).
+- **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
+- There's no official LangChain package for this — the callback handler is the implementation (no hand-roll reference file).
 
 ### Tool with Zod
 

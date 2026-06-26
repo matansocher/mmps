@@ -25,6 +25,7 @@ import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotLauncherService } from './launcher.service';
+import { ensureUsageIndexes, USAGE_DB_NAME } from './mongo';
 
 const logger = new Logger('initChatbot');
 
@@ -43,11 +44,13 @@ export async function initChatbot(app: Express): Promise<void> {
     FRIENDS_DB_NAME,
     MEET_FRIENDS_DB_NAME,
     EXPENSES_DB_NAME,
+    USAGE_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
   await ensureExpenseIndexes();
   await ensureIngestExpenseIndexes();
+  await ensureUsageIndexes();
 
   const bot = provideTelegramBot(BOT_CONFIG);
 

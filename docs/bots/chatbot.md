@@ -12,6 +12,7 @@ The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropi
 - **Conversational AI** - Natural language understanding and generation
 - **Tool Integration** - 20+ tools for extending capabilities
 - **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
+- **Observability** - Per-turn token usage and cost are metered, logged, and persisted (90-day TTL)
 - **Error Handling** - Graceful degradation and fallbacks
 
 ### Available Tools
@@ -158,6 +159,20 @@ CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # summarize once a thread passes this many
 CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summarizing
 ```
 
+### Token & Cost Observability
+
+Every user turn is metered. A per-turn `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to the agent `invoke` call as a runtime callback. It sums token usage across the whole ReAct loop (and the occasional summarization call) and counts LLM/tool calls, then `chatbot.service.ts` logs a `💰 usage` line and persists an aggregated record.
+
+- **Cost** is computed from a small price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens). Unknown models report cost `0` and log a warning.
+- **Storage** — one record per turn in db `Chatbot`, collection `usage` (`features/chatbot/mongo/`), with a **90-day TTL**. Fields: `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.
+- **Aggregation** — `aggregateUsage({ chatId?, from?, to? })` rolls usage up per user per day (`Asia/Jerusalem`).
+- **Kill-switch** — set `CHATBOT_USAGE_TRACKING=false` to disable entirely.
+
+```bash
+# Optional: per-turn token/cost observability (defaults on)
+CHATBOT_USAGE_TRACKING=false   # disable token/cost metering
+```
+
 ## Database
 
 **Database name**: `chatbot-db`
@@ -166,6 +181,8 @@ Collections:
 - `conversations` - Chat history
 - `reminders` - User reminders
 - `users` - User profiles
+
+The `Chatbot` database additionally holds LangGraph checkpoints (memory) and the `usage` collection (per-turn token/cost records, 90-day TTL).
 
 ## Tool Development
 
