@@ -48,6 +48,9 @@ export class AiService {
     return config;
   }
 
+  // Bounds the context window / cost per turn — independent of where memory is persisted.
+  // NOTE: with the MongoDB checkpointer this now mutates the durable store (old messages
+  // are dropped permanently). Superseded by item #4 (summarize-then-trim).
   private async truncateThread(threadId?: string): Promise<void> {
     if (!threadId) return;
 

@@ -1,4 +1,5 @@
 import { HumanMessage } from '@langchain/core/messages';
+import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
@@ -18,7 +19,7 @@ export class ChatbotService {
   private readonly model: ChatOpenAI;
   private readonly aiService: AiService;
 
-  constructor() {
+  constructor(checkpointer?: BaseCheckpointSaver) {
     this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
 
     const toolCallbackOptions: ToolCallbackOptions = {
@@ -34,7 +35,7 @@ export class ChatbotService {
       },
     };
 
-    this.aiService = createAgentService(agent(), { model: this.model, toolCallbackOptions });
+    this.aiService = createAgentService(agent(), { model: this.model, checkpointer, toolCallbackOptions });
   }
 
   async processMessage(message: string, chatId: number): Promise<ChatbotResponse>;
