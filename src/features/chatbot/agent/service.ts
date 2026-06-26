@@ -1,11 +1,7 @@
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { RunnableConfig } from '@langchain/core/runnables';
 import { CompiledStateGraph } from '@langchain/langgraph';
-import { Logger } from '@core/utils';
-import { CHATBOT_CONFIG } from '../chatbot.config';
 import { AiServiceOptions, InvokeOptions, MessageState } from '../types';
-
-const logger = new Logger('AiService');
 
 function createMessage(message: string, opts: Partial<InvokeOptions> = {}): MessageState {
   const messages: BaseMessage[] = [];
@@ -48,71 +44,13 @@ export class AiService {
     return config;
   }
 
-  private async truncateThread(threadId?: string): Promise<void> {
-    if (!threadId) return;
-
-    try {
-      const state = await this.agent.getState({ configurable: { thread_id: threadId } });
-
-      if (!state?.values?.messages || !Array.isArray(state.values.messages)) {
-        return;
-      }
-
-      const messages = state.values.messages;
-      if (messages.length <= CHATBOT_CONFIG.maxThreadMessages) {
-        return;
-      }
-
-      const systemMessages = messages.filter((msg) => msg._getType() === 'system');
-      const nonSystemMessages = messages.filter((msg) => msg._getType() !== 'system');
-
-      const messagesToKeep = [];
-
-      if (CHATBOT_CONFIG.preserveSystemMessages) {
-        messagesToKeep.push(...systemMessages);
-      }
-
-      const availableSlots = CHATBOT_CONFIG.maxThreadMessages - messagesToKeep.length;
-
-      if (availableSlots > 0) {
-        const recentMessages = nonSystemMessages.slice(-availableSlots);
-
-        if (CHATBOT_CONFIG.preserveFirstMessage && nonSystemMessages.length > 0 && availableSlots > 1) {
-          const firstMessage = nonSystemMessages[0];
-          const recentWithoutFirst = recentMessages.filter((msg) => msg !== firstMessage);
-
-          if (recentWithoutFirst.length < availableSlots - 1) {
-            messagesToKeep.push(firstMessage);
-            messagesToKeep.push(...recentWithoutFirst);
-          } else {
-            messagesToKeep.push(firstMessage);
-            messagesToKeep.push(...recentWithoutFirst.slice(-(availableSlots - 1)));
-          }
-        } else {
-          messagesToKeep.push(...recentMessages);
-        }
-      }
-
-      messagesToKeep.sort((a, b) => messages.indexOf(a) - messages.indexOf(b));
-
-      await this.agent.updateState({ configurable: { thread_id: threadId } }, { messages: messagesToKeep });
-
-      logger.log(`[AiService] Thread ${threadId} truncated from ${messages.length} to ${messagesToKeep.length} messages`);
-    } catch (err) {
-      logger.error(`[AiService] Error truncating thread ${threadId}: ${err}`);
-    }
-  }
-
+  // Context bounding is now handled inside the agent graph by `summarizationMiddleware`
+  // (item #4), which compresses old turns into a summary and persists via the checkpointer.
   async invoke(message: string, opts: Partial<InvokeOptions> = {}) {
-    await this.truncateThread(opts.threadId);
-
     return this.agent.invoke(createMessage(message, opts), this.createOptions(opts));
   }
 
   stream(message: string, opts: Partial<InvokeOptions> = {}) {
-    // truncation is async but we don't await it to avoid blocking the stream
-    this.truncateThread(opts.threadId);
-
     return this.agent.stream(createMessage(message, opts), this.createOptions(opts));
   }
 

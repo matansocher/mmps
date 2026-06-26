@@ -6,8 +6,8 @@ import { AiService } from './service';
 
 export function createAgentService(descriptor: AgentDescriptor | OrchestratorDescriptor, opts: CreateAgentOptions): AiService {
   const { name, tools = [] } = descriptor;
-  const { model, checkpointer = new MemorySaver(), toolCallbackOptions } = opts;
+  const { model, checkpointer = new MemorySaver(), middleware, toolCallbackOptions } = opts;
   const callbacks = toolCallbackOptions ? [new ToolCallbackHandler(toolCallbackOptions)] : undefined;
-  const reactAgent = createAgent({ model, tools, systemPrompt: descriptor.prompt, checkpointer });
+  const reactAgent = createAgent({ model, tools, systemPrompt: descriptor.prompt, checkpointer, middleware });
   return new AiService(reactAgent.graph as any, { name, callbacks });
 }

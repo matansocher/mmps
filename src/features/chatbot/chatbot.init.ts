@@ -6,7 +6,6 @@ import { Logger } from '@core/utils';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
-import { registerChatbotApiRoutes } from './api';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { ensureExpenseIndexes, ensureIngestExpenseIndexes, DB_NAME as EXPENSES_DB_NAME } from '@shared/expenses';
@@ -19,6 +18,8 @@ import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
 import { DB_NAME as FOLLOWER_DB_NAME } from '@shared/youtube-follower';
+import { createChatbotCheckpointer } from './agent';
+import { registerChatbotApiRoutes } from './api';
 import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
@@ -50,7 +51,9 @@ export async function initChatbot(app: Express): Promise<void> {
 
   const bot = provideTelegramBot(BOT_CONFIG);
 
-  const chatbotService = new ChatbotService();
+  const checkpointer = await createChatbotCheckpointer();
+
+  const chatbotService = new ChatbotService(checkpointer);
   const launcher = new ChatbotLauncherService(bot);
   const chatbotController = new ChatbotController(chatbotService, bot, launcher);
   const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot);

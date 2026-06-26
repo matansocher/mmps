@@ -29,6 +29,10 @@ OPENAI_API_KEY=sk-...              # For ChatGPT
 ANTHROPIC_API_KEY=sk-ant-...       # For Claude
 GITHUB_TOKEN=ghp_...               # GitHub integration
 WEATHERAPI_KEY=...                 # Weather data
+
+# Conversation memory tuning (optional; defaults in code)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40  # summarize once a thread passes this many messages
+CHATBOT_SUMMARY_KEEP_MESSAGES=20     # recent messages kept verbatim after summarizing
 ```
 
 ### Coach
