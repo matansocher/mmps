@@ -37,6 +37,7 @@ export type InvokeOptions = {
   system?: string;
   callbacks?: any[];
   recursionLimit?: number;
+  streamMode?: 'values' | 'updates' | 'messages';
 };
 
 export type ChatbotResponse = {

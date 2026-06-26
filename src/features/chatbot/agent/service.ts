@@ -51,7 +51,8 @@ export class AiService {
   }
 
   stream(message: string, opts: Partial<InvokeOptions> = {}) {
-    return this.agent.stream(createMessage(message, opts), this.createOptions(opts));
+    const config = this.createOptions(opts);
+    return this.agent.stream(createMessage(message, opts), { ...config, streamMode: opts.streamMode ?? 'values' });
   }
 
   async getState(opts: Partial<InvokeOptions> = {}) {

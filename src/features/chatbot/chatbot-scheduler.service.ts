@@ -15,6 +15,7 @@ import {
   reminderCheck,
   sportsCalendar,
   upcomingEventAlert,
+  usageSummary,
   weeklyExerciseSummary,
 } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
@@ -43,6 +44,8 @@ export class ChatbotSchedulerService {
     createSchedule(`0 19 * * *`, async () => exerciseReminder(this.bot, this.chatbotService));
 
     createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot, this.chatbotService));
+
+    createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
 
     createSchedule(`00 23 * * *`, async () => dailyExpensesLog(this.bot));
 

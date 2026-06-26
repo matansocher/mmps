@@ -1,4 +1,4 @@
-import { HumanMessage } from '@langchain/core/messages';
+import { BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
@@ -23,7 +23,14 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor(checkpointer?: BaseCheckpointSaver) {
-    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
+    // streamUsage keeps token usage_metadata flowing on the streaming path (item #3) so
+    // streamed turns are still metered by the UsageCallbackHandler.
+    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY, streamUsage: true });
+
+    // Dedicated, non-streaming model for the summarization middleware. disableStreaming makes
+    // it use invoke() internally, so its tokens never appear in streamMode:"messages" output —
+    // otherwise summary tokens would leak into the user's streamed reply (item #6).
+    const summarizationModel = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY, disableStreaming: true });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,
@@ -42,7 +49,7 @@ export class ChatbotService {
     // keeping recent messages verbatim. Replaces the old drop-oldest truncation, and the
     // summarized state is persisted by the checkpointer (item #1) instead of being deleted.
     const summarization = summarizationMiddleware({
-      model: this.model,
+      model: summarizationModel,
       trigger: { messages: CHATBOT_CONFIG.summarization.triggerMessages },
       keep: { messages: CHATBOT_CONFIG.summarization.keepMessages },
       summaryPrompt: CHATBOT_SUMMARY_PROMPT,
@@ -55,9 +62,7 @@ export class ChatbotService {
   async processMessage<T extends z.ZodTypeAny>(message: string, chatId: number, responseSchema: T): Promise<StructuredChatbotResponse<T>>;
   async processMessage<T extends z.ZodTypeAny>(message: string, chatId: number, responseSchema?: T): Promise<ChatbotResponse | StructuredChatbotResponse<T>> {
     try {
-      const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
-      const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
-      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+      const { contextualMessage, threadId } = this.buildContext(message, chatId);
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();
@@ -88,6 +93,46 @@ export class ChatbotService {
     }
   }
 
+  async streamMessage(message: string, chatId: number, onToken: (fullText: string) => void | Promise<void>): Promise<string> {
+    const { contextualMessage, threadId } = this.buildContext(message, chatId);
+
+    const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
+    const startedAt = Date.now();
+    let accumulated = '';
+
+    const stream = await this.aiService.stream(contextualMessage, {
+      threadId,
+      callbacks: usageHandler ? [usageHandler] : undefined,
+      streamMode: 'messages',
+    });
+
+    // In "messages" mode each chunk is a [BaseMessage, metadata] tuple. We surface only the
+    // final answer's tokens: AI-message content chunks. Tool messages and the (empty-content)
+    // tool-call planning chunks are skipped; the summarization model is non-streaming so its
+    // tokens never reach here.
+    for await (const [chunk] of stream as AsyncIterable<[BaseMessage, Record<string, unknown>]>) {
+      const token = extractAiTokenContent(chunk);
+      if (!token) {
+        continue;
+      }
+      accumulated += token;
+      await onToken(accumulated);
+    }
+
+    if (usageHandler) {
+      this.recordUsage(chatId, usageHandler, Date.now() - startedAt);
+    }
+
+    return accumulated;
+  }
+
+  private buildContext(message: string, chatId: number): { contextualMessage: string; threadId: string } {
+    const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
+    const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
+    const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+    return { contextualMessage, threadId };
+  }
+
   private recordUsage(chatId: number, handler: UsageCallbackHandler, durationMs: number): void {
     const usage = handler.summary();
     this.logger.log(
@@ -105,4 +150,18 @@ export class ChatbotService {
       toolCalls: usage.toolCalls,
     }).catch((err) => this.logger.error(`Failed to persist usage record for ${chatId}: ${err}`));
   }
+}
+
+function extractAiTokenContent(chunk: BaseMessage): string {
+  if (typeof chunk?.getType !== 'function' || chunk.getType() !== 'ai') {
+    return '';
+  }
+  const content = chunk.content;
+  if (typeof content === 'string') {
+    return content;
+  }
+  if (Array.isArray(content)) {
+    return content.map((part) => (typeof part === 'string' ? part : typeof (part as { text?: unknown }).text === 'string' ? (part as { text: string }).text : '')).join('');
+  }
+  return '';
 }

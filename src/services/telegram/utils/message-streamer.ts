@@ -68,6 +68,19 @@ export class MessageStreamer {
     return message.message_id;
   }
 
+  // Cancels any pending draft updates WITHOUT sending a final message. Use when the caller
+  // wants to deliver the final reply itself (e.g. via a rich-markdown sender). The draft is
+  // ephemeral and auto-expires on Telegram's side.
+  async stop(): Promise<void> {
+    if (this.flushTimer) {
+      clearTimeout(this.flushTimer);
+      this.flushTimer = undefined;
+    }
+    if (this.flushInFlight) {
+      await this.flushInFlight.catch(() => {});
+    }
+  }
+
   private async flush(): Promise<void> {
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);

@@ -173,7 +173,7 @@ src/services/{name}/
 
 | ID         | Display Name    | Path                          | Env token                       | Purpose |
 |------------|-----------------|-------------------------------|---------------------------------|---------|
-| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
+| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability + token streaming; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`   | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`     | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`    | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`      | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
 | `EXPENSES` | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`   | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
@@ -556,6 +556,17 @@ Every user turn is metered. `chatbot.service.ts` attaches a per-turn `UsageCallb
 - **Sink.** After each turn the service logs a `💰 usage` line and fire-and-forget persists a record to db `Chatbot`, collection `usage` (`features/chatbot/mongo/`), 90-day TTL. Fields: `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ chatId?, from?, to? })` groups per user per day (`Asia/Jerusalem`).
 - **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
 - There's no official LangChain package for this — the callback handler is the implementation (no hand-roll reference file).
+- **Weekly report.** `schedulers/usage-summary.ts` (cron `30 22 * * 6`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs `MY_USER_ID` a deterministic cost/usage breakdown (total cost, turns, tokens, per-day, and per-user if >1).
+
+### Streaming responses (chatbot)
+
+Conversational replies (`text`, `/exercise`, transcribed `audio`) stream token-by-token instead of waiting for the full answer:
+
+- **Path.** `ChatbotController.streamAgentReply` → `ChatbotService.streamMessage(message, chatId, onToken)` → `AiService.stream(..., { streamMode: 'messages' })`. Each chunk is a `[BaseMessage, metadata]` tuple; only **AI-message content tokens** are surfaced (tool messages and empty tool-call-planning chunks are skipped via `extractAiTokenContent`).
+- **Telegram UX.** `MessageStreamer` (`@services/telegram`) pushes debounced plain-text drafts via grammY's `sendMessageDraft` (1500ms default, 429 backoff). On completion the controller calls `streamer.stop()` (no-send) and sends the final answer through `sendRichMessage` so the final message gets markdown. Mid-stream errors keep the partial text plus a ⚠️ note.
+- **Two-model setup.** The main `ChatOpenAI` uses `streamUsage: true` so item #3 metering still works while streaming; the `summarizationMiddleware` gets a **separate** model with `disableStreaming: true` so its summary tokens never leak into the streamed reply.
+- `processMessage` (non-streaming) is still used for `/help`, photo analysis, and the structured-output mini-app path.
+- **Init ordering caveat.** `provideTelegramBot()` calls `bot.start()`, and grammY locks the bot against new listeners once polling begins. In `chatbot.init.ts`, all `await`s (e.g. `createChatbotCheckpointer()`) must run **before** `provideTelegramBot()` so `controller.init()` registers handlers synchronously — otherwise grammY throws "registering more listeners".
 
 ### Tool with Zod
 

@@ -16,3 +16,4 @@ export { polymarketUpdate } from './polymarket-update';
 export { rainRadarAlert } from './rain-radar-alert';
 export { selfieSummary } from './selfie-summary';
 export { upcomingEventAlert } from './upcoming-event-alert';
+export { usageSummary } from './usage-summary';
