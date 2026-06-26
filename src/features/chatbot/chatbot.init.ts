@@ -52,9 +52,13 @@ export async function initChatbot(app: Express): Promise<void> {
   await ensureIngestExpenseIndexes();
   await ensureUsageIndexes();
 
-  const bot = provideTelegramBot(BOT_CONFIG);
-
+  // Build the checkpointer BEFORE provideTelegramBot(), which calls bot.start().
+  // grammY locks the bot against new listeners once polling begins, so any `await`
+  // between starting the bot and registering handlers lets polling win the race and
+  // makes controller.init()'s bot.command/bot.on calls throw. Keep this await above.
   const checkpointer = await createChatbotCheckpointer();
+
+  const bot = provideTelegramBot(BOT_CONFIG);
 
   const chatbotService = new ChatbotService(checkpointer);
   const launcher = new ChatbotLauncherService(bot);
