@@ -132,6 +132,7 @@ async function runner({ action, limit }: z.infer<typeof schema>) {
 
 export const exerciseTool = tool(runner, {
   name: 'exercise_tracker',
-  description: "Manage exercise tracking - log exercises, check today's status, get history, and calculate streaks",
+  description:
+    "Manage exercise tracking - log exercises, check today's status, get history, and calculate streaks. After logging a new exercise, use the exercise analytics tool with action 'check_record' to see if a streak record was broken, and celebrate it if so.",
   schema,
 });
