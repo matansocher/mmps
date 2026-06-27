@@ -305,7 +305,6 @@ export function createChatbotAgent() {
 - Durable memory persistence (MongoDB checkpointer; `MemorySaver` is the in-RAM fallback)
 - Conversation summarization keeps context bounded as threads grow
 - Cross-bot token/cost observability via a shared runtime usage callback handler (`shared/ai/usage/`)
-- Token-by-token response streaming to Telegram (via `streamMode: "messages"`)
 - Automatic tool execution
 - Clear state management
 - Easy to test

@@ -7,7 +7,7 @@ import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { analyzeImage } from '@services/openai/utils/analyze-image';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
-import { downloadFile, getMessageData, MessageLoader, MessageStreamer, sendRichMessage } from '@services/telegram';
+import { downloadFile, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
 import { IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotLauncherService } from './launcher.service';
@@ -65,34 +65,14 @@ export class ChatbotController {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      await this.streamAgentReply(chatId, prompt);
+      const { message: replyText, toolResults } = await this.chatbotService.processMessage(prompt, chatId);
+      await this.handleBotResponse(chatId, replyText, toolResults);
     });
   }
 
-  // Streams the agent's answer as a live Telegram draft (plain text), then sends the final
-  // reply with full markdown via sendRichMessage. On mid-stream failure, the partial text
-  // already shown is preserved and annotated.
-  private async streamAgentReply(chatId: number, prompt: string): Promise<void> {
-    const streamer = new MessageStreamer(this.bot, { chatId });
-    let partialText = '';
-    try {
-      const finalText = await this.chatbotService.streamMessage(prompt, chatId, async (fullText) => {
-        partialText = fullText;
-        await streamer.updateDraft(fullText);
-      });
-      await streamer.stop();
-      const text = finalText || partialText;
-      this.logger.log(`bot response for chatId ${chatId}: ${text}`);
-      await sendRichMessage(this.bot, chatId, text);
-    } catch (err) {
-      this.logger.error(`Error streaming response for chatId ${chatId}: ${err}`);
-      await streamer.stop();
-      const trimmed = partialText.trim();
-      const fallback = trimmed
-        ? `${trimmed}\n\n⚠️ Something went wrong while generating the rest of this reply.`
-        : 'Sorry, I encountered an error processing your request. Please try again.';
-      await sendRichMessage(this.bot, chatId, fallback);
-    }
+  private async handleBotResponse(chatId: number, replyText: string, toolResults: any[]): Promise<void> {
+    this.logger.log(`bot response for chatId ${chatId}: ${replyText}`);
+    await sendRichMessage(this.bot, chatId, replyText);
   }
 
   private async photoHandler(ctx: Context): Promise<void> {
@@ -120,7 +100,9 @@ export class ChatbotController {
       const audioFileLocalPath = await downloadFile(this.bot, audio.file_id, LOCAL_FILES_PATH);
 
       const transcribedText = await getTranscriptFromAudio(audioFileLocalPath);
-      await this.streamAgentReply(chatId, transcribedText);
+      const { message: replyText, toolResults } = await this.chatbotService.processMessage(transcribedText, chatId);
+
+      await this.handleBotResponse(chatId, replyText, toolResults);
 
       deleteFile(audioFileLocalPath);
     });
