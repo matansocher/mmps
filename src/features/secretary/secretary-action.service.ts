@@ -6,7 +6,7 @@ import { env } from 'node:process';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { buildInlineKeyboard } from '@services/telegram';
-import { calendarTool, reminderTool } from '@shared/ai';
+import { calendarTool, recordModelUsage, reminderTool, UsageCallbackHandler } from '@shared/ai';
 import type { SecretaryAction } from './mongo';
 import { ACTION_AGENT_PROMPT, ACTION_CALLBACK_PREFIX } from './secretary.config';
 
@@ -38,7 +38,10 @@ export class SecretaryActionService {
   // Run a single natural-language instruction through the agent and report success + a confirmation line.
   async execute(instruction: string): Promise<ActionResult> {
     try {
-      const result = await this.agent.invoke({ messages: [new HumanMessage(instruction)] }, { recursionLimit: 25 });
+      const usageHandler = new UsageCallbackHandler();
+      const startedAt = Date.now();
+      const result = await this.agent.invoke({ messages: [new HumanMessage(instruction)] }, { recursionLimit: 25, callbacks: [usageHandler] });
+      recordModelUsage({ source: 'secretary', handler: usageHandler, durationMs: Date.now() - startedAt });
       const messages: any[] = result?.messages ?? [];
 
       const toolMessages = messages.filter((m) => m?._getType?.() === 'tool');

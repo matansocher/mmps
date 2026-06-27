@@ -12,7 +12,7 @@ The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropi
 - **Conversational AI** - Natural language understanding and generation
 - **Tool Integration** - 20+ tools for extending capabilities
 - **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
-- **Observability** - Per-turn token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
+- **Observability** - Cross-bot token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
 - **Streaming** - Conversational replies stream token-by-token (live "typing") via Telegram message drafts
 - **Error Handling** - Graceful degradation and fallbacks
 
@@ -144,7 +144,7 @@ Tools (weather, reminders, etc.)
 
 - **Daily Summary** - Generates daily summary at 23:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
-- **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's LLM cost/usage breakdown (from item #3's `aggregateUsage`)
+- **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
 
 ### Memory & Context
 
@@ -163,12 +163,14 @@ CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summ
 
 ### Token & Cost Observability
 
-Every user turn is metered. A per-turn `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to the agent `invoke` call as a runtime callback. It sums token usage across the whole ReAct loop (and the occasional summarization call) and counts LLM/tool calls, then `chatbot.service.ts` logs a `💰 usage` line and persists an aggregated record.
+Token/cost metering is **cross-bot**. The shared module lives in `shared/ai/usage/` and is used by every live AI call site in the repo. A `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to each `invoke` as a runtime callback; it sums token usage across the whole call (ReAct loop, structured output, or summarization) and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` then logs a `💰 usage` line and persists an aggregated record tagged with the originating bot.
 
-- **Cost** is computed from a small price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens). Unknown models report cost `0` and log a warning.
-- **Storage** — one record per turn in db `Chatbot`, collection `usage` (`features/chatbot/mongo/`), with a **90-day TTL**. Fields: `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.
-- **Aggregation** — `aggregateUsage({ chatId?, from?, to? })` rolls usage up per user per day (`Asia/Jerusalem`).
-- **Weekly report** — a scheduler (`schedulers/usage-summary.ts`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs the owner a cost/usage breakdown.
+Instrumented sources: `chatbot`, `chilli`, `secretary` (daily summary, action agent, smart-reply drafts), and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
+
+- **Cost** is computed from a price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens). `resolveModelPrice` does a longest-prefix match so dated snapshots (e.g. `gpt-4.1-mini-2025-04-14`) resolve correctly. Unknown models report cost `0` and log a warning.
+- **Storage** — one record per call in db `Chatbot`, collection `usage` (`shared/ai/usage/`), with a **90-day TTL**. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.
+- **Aggregation** — `aggregateUsage({ source?, chatId?, from?, to? })` rolls usage up per source + user per day (`Asia/Jerusalem`).
+- **Weekly report** — a scheduler (`schedulers/usage-summary.ts`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs the owner a cost/usage breakdown, including a per-bot ("By bot") split.
 - **Kill-switch** — set `CHATBOT_USAGE_TRACKING=false` to disable entirely.
 
 ```bash

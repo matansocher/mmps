@@ -7,7 +7,8 @@ import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
-import { getActiveChatIdsBetween, getMessagesForChatBetween, deleteMessagesBefore, saveMessage, type SecretaryMessage, type SecretarySummaryAction } from './mongo';
+import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
+import { deleteMessagesBefore, getActiveChatIdsBetween, getMessagesForChatBetween, saveMessage, type SecretaryMessage, type SecretarySummaryAction } from './mongo';
 import { OWNER_NAME, SUMMARY_PROMPT } from './secretary.config';
 
 const summarySchema = z.object({
@@ -81,7 +82,10 @@ export class SecretaryService {
       const userPrompt = `Conversation with ${otherName} on ${dateStr} (use this date to resolve relative dates):\n\n${transcript}`;
 
       const structured = this.model.withStructuredOutput(summarySchema, { name: 'daily_summary' });
-      const result = await structured.invoke([new SystemMessage(SUMMARY_PROMPT), new HumanMessage(userPrompt)]);
+      const usageHandler = new UsageCallbackHandler();
+      const startedAt = Date.now();
+      const result = await structured.invoke([new SystemMessage(SUMMARY_PROMPT), new HumanMessage(userPrompt)], { callbacks: [usageHandler] });
+      recordModelUsage({ source: 'secretary', chatId: messages[0]?.chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
 
       const body = result.summary.trim();
       const summary = `🗒️ Daily summary — ${otherName} (${dateStr})\n\n${body}`;

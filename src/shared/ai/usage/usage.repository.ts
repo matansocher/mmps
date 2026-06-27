@@ -9,6 +9,7 @@ const getCollection = (): Collection<UsageRecord> => getMongoCollection<UsageRec
 export async function ensureUsageIndexes(): Promise<void> {
   const collection = getCollection();
   await collection.createIndex({ createdAt: 1 }, { expireAfterSeconds: USAGE_TTL_SECONDS });
+  await collection.createIndex({ source: 1, createdAt: -1 });
   await collection.createIndex({ chatId: 1, createdAt: -1 });
 }
 
@@ -21,6 +22,7 @@ export async function saveUsageRecord(data: SaveUsageData): Promise<InsertOneRes
 export async function aggregateUsage(options: AggregateUsageOptions = {}): Promise<UsageAggregateRow[]> {
   const collection = getCollection();
   const match: Record<string, unknown> = {};
+  if (options.source !== undefined) match.source = options.source;
   if (options.chatId !== undefined) match.chatId = options.chatId;
   if (options.from || options.to) {
     match.createdAt = {
@@ -35,7 +37,8 @@ export async function aggregateUsage(options: AggregateUsageOptions = {}): Promi
       {
         $group: {
           _id: {
-            chatId: '$chatId',
+            source: { $ifNull: ['$source', 'unknown'] },
+            chatId: { $ifNull: ['$chatId', null] },
             day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: DEFAULT_TIMEZONE } },
           },
           turns: { $sum: 1 },
@@ -46,6 +49,7 @@ export async function aggregateUsage(options: AggregateUsageOptions = {}): Promi
       {
         $project: {
           _id: 0,
+          source: '$_id.source',
           chatId: '$_id.chatId',
           day: '$_id.day',
           turns: 1,
@@ -53,7 +57,7 @@ export async function aggregateUsage(options: AggregateUsageOptions = {}): Promi
           cost: 1,
         },
       },
-      { $sort: { day: -1, chatId: 1 } },
+      { $sort: { day: -1, source: 1 } },
     ])
     .toArray();
 }

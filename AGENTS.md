@@ -548,15 +548,16 @@ The chatbot's conversation memory is two complementary pieces wired up in `featu
 
 There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
 
-### Token & cost observability (chatbot)
+### Token & cost observability (cross-bot)
 
-Every user turn is metered. `chatbot.service.ts` attaches a per-turn `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to the agent `invoke` as a runtime callback. It sums `usage_metadata` across the whole ReAct loop (plus any summarization call) and counts LLM/tool calls, then `summary()` rolls up tokens and cost.
+Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.
 
-- **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens) + `computeModelCost()`. Unknown models → cost `0` + `logger.warn`.
-- **Sink.** After each turn the service logs a `💰 usage` line and fire-and-forget persists a record to db `Chatbot`, collection `usage` (`features/chatbot/mongo/`), 90-day TTL. Fields: `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ chatId?, from?, to? })` groups per user per day (`Asia/Jerusalem`).
+- **Instrumented sources.** `chatbot`, `chilli`, `secretary` (`summarizeChat`, action agent, `generateDraftReply`), `expenses` (`manual-entry` categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
+- **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens) + `computeModelCost()`. `resolveModelPrice()` does longest-prefix matching so dated snapshots (`gpt-4.1-mini-2025-04-14`) resolve. Unknown models → cost `0` + `logger.warn`.
+- **Sink.** db `Chatbot`, collection `usage` (`shared/ai/usage/`), 90-day TTL. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ source?, chatId?, from?, to? })` groups per source + user per day (`Asia/Jerusalem`). The `Chatbot` Mongo connection is registered by `chatbot.init`; non-chatbot bots only persist when chatbot is also booted (prod always; locally needs `LOCAL_ACTIVE_BOT_ID=CHATBOT`), otherwise writes fail silently.
 - **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
 - There's no official LangChain package for this — the callback handler is the implementation (no hand-roll reference file).
-- **Weekly report.** `schedulers/usage-summary.ts` (cron `30 22 * * 6`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs `MY_USER_ID` a deterministic cost/usage breakdown (total cost, turns, tokens, per-day, and per-user if >1).
+- **Weekly report.** `schedulers/usage-summary.ts` (cron `30 22 * * 6`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs `MY_USER_ID` a deterministic cost/usage breakdown (total cost, calls, tokens, per-day, per-bot, and per-user if >1).
 
 ### Streaming responses (chatbot)
 

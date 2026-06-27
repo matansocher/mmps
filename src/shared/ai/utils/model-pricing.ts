@@ -27,10 +27,25 @@ export type ModelTokens = {
 // Cost in USD for a single model's token counts. Input tokens are billed at full price
 // (no cache discount) — a small, safe over-estimate. Unknown model → 0 + warn.
 export function computeModelCost(model: string, tokens: ModelTokens): number {
-  const price = MODEL_PRICING[model];
+  const price = resolveModelPrice(model);
   if (!price) {
     logger.warn(`No price configured for model "${model}"; reporting cost 0`);
     return 0;
   }
   return (tokens.inputTokens * price.input + tokens.outputTokens * price.output) / PER_MILLION;
+}
+
+// Matches dated model snapshots (e.g. "gpt-4.1-mini-2025-04-14") to their base price key via
+// longest-prefix match, so providers returning a pinned version still resolve a price.
+function resolveModelPrice(model: string): ModelPrice | undefined {
+  if (MODEL_PRICING[model]) {
+    return MODEL_PRICING[model];
+  }
+  const keys = Object.keys(MODEL_PRICING).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (model.startsWith(`${key}-`)) {
+      return MODEL_PRICING[key];
+    }
+  }
+  return undefined;
 }

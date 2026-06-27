@@ -3,6 +3,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { env } from 'node:process';
 import { z } from 'zod';
 import { GPT_5_MODEL } from '@services/openai/constants';
+import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import type { SecretaryMessage } from './mongo';
 import { DRAFT_GENERATION_PROMPT, OWNER_NAME, SUMMARY_CHAR_THRESHOLD } from './secretary.config';
 
@@ -51,7 +52,10 @@ export async function generateDraftReply(context: SecretaryMessage[]): Promise<D
   const { userPrompt, wantSummary } = buildDraftUserPrompt(context, unanswered);
 
   const structured = buildModel().withStructuredOutput(draftSchema, { name: 'smart_reply_draft' });
-  const result = await structured.invoke([new SystemMessage(DRAFT_GENERATION_PROMPT), new HumanMessage(userPrompt)]);
+  const usageHandler = new UsageCallbackHandler();
+  const startedAt = Date.now();
+  const result = await structured.invoke([new SystemMessage(DRAFT_GENERATION_PROMPT), new HumanMessage(userPrompt)], { callbacks: [usageHandler] });
+  recordModelUsage({ source: 'secretary', chatId: context[0]?.chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
 
   const draft = (result.draft ?? '').trim();
   if (!draft) return null;

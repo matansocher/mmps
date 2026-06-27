@@ -4,8 +4,9 @@ import { env } from 'node:process';
 import { z } from 'zod';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import { createExpense } from '../mongo';
-import { DEFAULT_CURRENCY, EXPENSE_CATEGORIES, type Currency, type ExpenseCategory } from '../types';
+import { type Currency, DEFAULT_CURRENCY, EXPENSE_CATEGORIES, type ExpenseCategory } from '../types';
 import type { CreateExpenseData, Expense, ExpenseType } from '../types';
 
 const logger = new Logger('manual-entry');
@@ -63,10 +64,17 @@ async function categorize(input: ManualExpenseInput): Promise<z.infer<typeof cat
     name: 'categorize_expense',
   });
   const userPrompt = `Vendor: ${input.vendor}\nAmount: ${input.amount} ${input.currency ?? DEFAULT_CURRENCY}`;
-  return (await model.invoke([
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: userPrompt },
-  ])) as z.infer<typeof categorizationSchema>;
+  const usageHandler = new UsageCallbackHandler();
+  const startedAt = Date.now();
+  const result = (await model.invoke(
+    [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: userPrompt },
+    ],
+    { callbacks: [usageHandler] },
+  )) as z.infer<typeof categorizationSchema>;
+  recordModelUsage({ source: 'expenses', handler: usageHandler, durationMs: Date.now() - startedAt });
+  return result;
 }
 
 // Reusable categorizer for callers (e.g. the XLSX importer) that need the AI's

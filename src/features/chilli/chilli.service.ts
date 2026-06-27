@@ -6,6 +6,7 @@ import { DEFAULT_TIMEZONE, isProd, MY_USER_ID } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import { getPrompt } from './mongo';
 
 function buildUserContext(chatId: number): string {
@@ -34,7 +35,10 @@ export class ChilliService {
       const system = `${prompt}\n\n---\n${userContext}\n\nהזמן הנוכחי: ${formattedTime} (${DEFAULT_TIMEZONE})`;
 
       const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
-      const result = await this.aiService.invoke(message, { threadId, system });
+      const usageHandler = new UsageCallbackHandler();
+      const startedAt = Date.now();
+      const result = await this.aiService.invoke(message, { threadId, system, callbacks: [usageHandler] });
+      recordModelUsage({ source: 'chilli', chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
 
       const messages = (result as any).messages;
       const lastMessage = messages[messages.length - 1];

@@ -5,6 +5,7 @@ import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
+import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
@@ -25,7 +26,6 @@ import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotLauncherService } from './launcher.service';
-import { ensureUsageIndexes, USAGE_DB_NAME } from './mongo';
 
 const logger = new Logger('initChatbot');
 
