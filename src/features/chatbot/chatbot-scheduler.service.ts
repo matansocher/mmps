@@ -16,6 +16,7 @@ import {
   sportsCalendar,
   upcomingEventAlert,
   usageSummary,
+  wcTreeUpdate,
   weeklyExerciseSummary,
 } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
@@ -56,6 +57,8 @@ export class ChatbotSchedulerService {
     createSchedule(`*/${LOOKBACK_MINUTES} * * * *`, async () => earthquakeMonitor(this.bot));
 
     createSchedule(`5 16 * * *`, async () => polymarketUpdate(this.bot));
+
+    createSchedule(`00 10 * * *`, async () => wcTreeUpdate(this.bot));
 
     // createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
   }
