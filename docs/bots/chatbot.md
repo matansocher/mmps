@@ -13,7 +13,6 @@ The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropi
 - **Tool Integration** - 20+ tools for extending capabilities
 - **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
 - **Observability** - Cross-bot token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
-- **Streaming** - Conversational replies stream token-by-token (live "typing") via Telegram message drafts
 - **Error Handling** - Graceful degradation and fallbacks
 
 ### Available Tools
@@ -177,14 +176,6 @@ Instrumented sources: `chatbot`, `chilli`, `secretary` (daily summary, action ag
 # Optional: per-turn token/cost observability (defaults on)
 CHATBOT_USAGE_TRACKING=false   # disable token/cost metering
 ```
-
-### Streaming Responses
-
-Conversational replies — plain text messages, `/exercise`, and transcribed voice/audio — stream token-by-token so the Telegram message "types out" instead of appearing all at once. (`/help` and image analysis stay on the non-streaming path.)
-
-- **Flow** — `ChatbotController.streamAgentReply` → `ChatbotService.streamMessage(message, chatId, onToken)` → `AiService.stream(..., { streamMode: 'messages' })`. Only the final answer's AI-content tokens are surfaced; tool messages and tool-call planning chunks are filtered out.
-- **Telegram delivery** — `MessageStreamer` (`@services/telegram`) edits a live draft via grammY's `sendMessageDraft`, debounced (1500ms default) with 429 backoff. When the stream finishes, the final answer is sent through `sendRichMessage` for full markdown; if the stream errors mid-way, the partial text is kept with a ⚠️ note.
-- **Keeps cost metering working** — the main model sets `streamUsage: true` so item #3 still meters streamed turns. The summarization middleware runs on a **separate non-streaming model** (`disableStreaming: true`) so its summary tokens never leak into the reply.
 
 ## Database
 

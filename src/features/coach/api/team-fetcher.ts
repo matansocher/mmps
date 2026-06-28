@@ -104,13 +104,29 @@ function toRecentMatch(g: RawGame, teamId: number): TeamRecentMatch | null {
   };
 }
 
+export async function fetchTeamRecentMatches(teamId: number): Promise<TeamRecentMatch[]> {
+  try {
+    const params = { ...baseParams(), competitors: String(teamId) };
+    const resultsRes = await axios.get(`${SCORES_365_API_URL}/games/results/?${new URLSearchParams(params)}`).catch(() => null);
+    const rawGames: RawGame[] = resultsRes?.data?.games ?? [];
+    return rawGames
+      .map((g) => toRecentMatch(g, teamId))
+      .filter((m): m is TeamRecentMatch => m !== null)
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+      .slice(0, RECENT_MATCH_LIMIT);
+  } catch (err) {
+    logger.error(`fetchTeamRecentMatches failed for ${teamId}: ${err}`);
+    return [];
+  }
+}
+
 export async function fetchTeamDetail(teamId: number): Promise<TeamDetailResponse | null> {
   try {
     const params = { ...baseParams(), competitors: String(teamId) };
-    const [compRes, squadRes, resultsRes] = await Promise.all([
+    const [compRes, squadRes, recentMatches] = await Promise.all([
       axios.get(`${SCORES_365_API_URL}/competitors?${new URLSearchParams(params)}`).catch(() => null),
       axios.get(`${SCORES_365_API_URL}/squads/?${new URLSearchParams(params)}`).catch(() => null),
-      axios.get(`${SCORES_365_API_URL}/games/results/?${new URLSearchParams(params)}`).catch(() => null),
+      fetchTeamRecentMatches(teamId),
     ]);
 
     const competitor: RawCompetitor | undefined = compRes?.data?.competitors?.[0];
@@ -120,13 +136,6 @@ export async function fetchTeamDetail(teamId: number): Promise<TeamDetailRespons
     const squad: SquadPlayer[] = rawSquad
       .filter((a) => (a.position?.id ?? 0) > 0)
       .map(toSquadPlayer);
-
-    const rawGames: RawGame[] = resultsRes?.data?.games ?? [];
-    const recentMatches: TeamRecentMatch[] = rawGames
-      .map((g) => toRecentMatch(g, teamId))
-      .filter((m): m is TeamRecentMatch => m !== null)
-      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-      .slice(0, RECENT_MATCH_LIMIT);
 
     return {
       team: {

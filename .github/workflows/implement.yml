@@ -164,9 +164,9 @@ jobs:
         if: steps.changes.outputs.commits != '0'
         continue-on-error: true
         env:
-          NOTIFIER_TOKEN: ${{ secrets.CHATBOT_TELEGRAM_BOT_TOKEN }}
+          CHATBOT_TOKEN: ${{ secrets.CHATBOT_TELEGRAM_BOT_TOKEN }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${NOTIFIER_TOKEN}/sendMessage" \
+          curl -s -X POST "https://api.telegram.org/bot${CHATBOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=862305226" \
             --data-urlencode "text=🛠️ PR ready for issue #${{ github.event.issue.number }} (${{ github.event.issue.title }})
 

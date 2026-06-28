@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useRoute } from 'wouter';
+import { useLocation, useRoute } from 'wouter';
 import { api } from '../lib/api';
 import type { MatchDetailResponse } from '../types';
 import { MatchScoreboard } from '../components/MatchScoreboard';
 import { MatchInfo } from '../components/MatchInfo';
 import { EventsTimeline } from '../components/EventsTimeline';
+import { RecentFormCard } from '../components/RecentFormCard';
 import { LineupsView } from '../components/LineupsView';
 import { EmptyState } from '../components/EmptyState';
 import { BackHeader } from '../components/BackHeader';
@@ -12,6 +13,7 @@ import { showBackButton } from '../lib/telegram';
 
 export function MatchDetailPage() {
   const [, params] = useRoute('/match/:id');
+  const [, navigate] = useLocation();
   const [data, setData] = useState<MatchDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const id = Number(params?.id);
@@ -44,6 +46,13 @@ export function MatchDetailPage() {
           <MatchScoreboard match={data.match} />
           <MatchInfo match={data.match} venue={data.venue} channel={data.channel} stage={data.stage} />
           <EventsTimeline events={[...data.events]} />
+          {(data.homeRecentMatches?.length || data.awayRecentMatches?.length) && (
+            <RecentFormCard
+              home={{ team: data.match.home, matches: data.homeRecentMatches ?? [] }}
+              away={{ team: data.match.away, matches: data.awayRecentMatches ?? [] }}
+              onSelect={(mid) => navigate(`/match/${mid}`)}
+            />
+          )}
           {data.homeLineup && data.awayLineup && (
             <LineupsView
               home={{ team: data.match.home, lineup: data.homeLineup }}

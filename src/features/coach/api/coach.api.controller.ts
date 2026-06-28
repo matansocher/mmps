@@ -10,7 +10,7 @@ import type { AthleteDetailResponse, CompetitionDetailResponse, CompetitionsList
 import { fetchAthleteDetail } from './athlete-fetcher';
 import { fetchCompetitionStandingsAndBrackets } from './competition-fetcher';
 import { fetchRichMatch } from './match-fetcher';
-import { fetchTeamDetail } from './team-fetcher';
+import { fetchTeamDetail, fetchTeamRecentMatches } from './team-fetcher';
 import { toCompetitionRef, toMatchSummary } from './transformers';
 
 const logger = new Logger('CoachApiController');
@@ -59,8 +59,9 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
     const live: MatchSummary[] = [];
     const groups = filtered.map((group) => {
       const competition = toCompetitionRef(group.competition);
-      const matches = group.matches.map((m) => toMatchSummary(m, group.competition.id));
-      for (const match of matches) if (match.status === 'live') live.push(match);
+      const allMatches = group.matches.map((m) => toMatchSummary(m, group.competition.id));
+      for (const match of allMatches) if (match.status === 'live') live.push(match);
+      const matches = allMatches.filter((match) => match.status !== 'live');
       return { competition, matches };
     });
 
@@ -151,6 +152,10 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       res.status(404).json({ error: 'match_not_found' });
       return;
     }
+    const [homeRecentMatches, awayRecentMatches] = await Promise.all([
+      fetchTeamRecentMatches(rich.summary.home.id),
+      fetchTeamRecentMatches(rich.summary.away.id),
+    ]);
     res.json({
       match: rich.summary,
       ...(rich.venue ? { venue: rich.venue } : {}),
@@ -160,6 +165,8 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       events: rich.events,
       ...(rich.homeLineup ? { homeLineup: rich.homeLineup } : {}),
       ...(rich.awayLineup ? { awayLineup: rich.awayLineup } : {}),
+      ...(homeRecentMatches.length ? { homeRecentMatches } : {}),
+      ...(awayRecentMatches.length ? { awayRecentMatches } : {}),
     });
   });
 

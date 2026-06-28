@@ -105,6 +105,8 @@ export type MatchDetailResponse = {
   events: MatchEvent[];
   homeLineup?: LineupSide;
   awayLineup?: LineupSide;
+  homeRecentMatches?: TeamRecentMatch[];
+  awayRecentMatches?: TeamRecentMatch[];
 };
 
 export type MatchSide = 'home' | 'away';
