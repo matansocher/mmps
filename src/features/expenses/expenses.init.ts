@@ -10,7 +10,6 @@ import { ensureExpenseIndexes, ensureIngestExpenseIndexes, DB_NAME as EXPENSES_D
 import { registerExpensesApiRoutes } from './api';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './expenses.config';
 import { ExpensesController } from './expenses.controller';
-import { ExpensesSchedulerService } from './expenses-scheduler.service';
 import { ExpensesLauncherService } from './launcher.service';
 
 const logger = new Logger('initExpenses');
@@ -31,9 +30,6 @@ export async function initExpenses(app: Express): Promise<void> {
   const launcher = new ExpensesLauncherService(bot);
   const controller = new ExpensesController(bot, launcher);
   controller.init();
-
-  const scheduler = new ExpensesSchedulerService(bot);
-  scheduler.init();
 
   registerExpensesApiRoutes(app);
 
