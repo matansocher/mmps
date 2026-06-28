@@ -34,6 +34,6 @@ export type RawBracket = {
 };
 
 export type WcTreeResult = {
-  readonly path: string;
+  readonly path: string | null;
   readonly placedCount: number;
 };
