@@ -104,6 +104,6 @@ async function runner({ action, query, limit, market, playlistName, playlistDesc
 export const spotifyTool = tool(runner, {
   name: 'spotify',
   description:
-    'Search Spotify (tracks, artists, playlists), get track details and artist top tracks, and manage the user\'s own playlists (create playlist, add tracks to playlist, list user playlists). Requires Spotify API credentials and a user refresh token for playlist write actions.',
+    'Search Spotify (tracks, artists, playlists), get track details and artist top tracks, and manage the user\'s own playlists (create playlist, add tracks to playlist, list user playlists). Requires Spotify API credentials and a user refresh token for playlist write actions. To add/remove a song to/from a named playlist: first use search_track to resolve the song into a track URI, then get_user_playlists to find the playlist ID by name, then add_tracks_to_playlist or remove_tracks_from_playlist. To delete a playlist: get_user_playlists to find its ID, then delete_playlist — always confirm with the user before deleting.',
   schema,
 });

@@ -87,6 +87,6 @@ async function runner({ action, key, value, keyword }: z.infer<typeof preference
 export const preferencesTool = tool(runner, {
   name: 'preferences',
   description:
-    'Manage preferences and personal information. Save things the user wants you to remember, retrieve preferences when relevant to conversations, list all saved preferences, search for specific preferences, or delete outdated ones. Use this to provide personalized responses based on what you know about the user.',
+    'Manage preferences and personal information. Save things the user wants you to remember, retrieve preferences when relevant to conversations, list all saved preferences, search for specific preferences, or delete outdated ones. Use this to provide personalized responses based on what you know about the user. Use descriptive lowercase keys with underscores (e.g. "favorite_color", "dietary_restrictions", "coffee_order"). Preferences are global, not tied to a chat. Proactively search relevant preferences when answering questions they could personalize (food, movies, scheduling, etc.).',
   schema: preferencesSchema,
 });

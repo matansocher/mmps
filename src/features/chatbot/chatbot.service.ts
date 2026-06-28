@@ -10,7 +10,7 @@ import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { ToolCallbackOptions, UsageCallbackHandler, recordModelUsage } from '@shared/ai';
-import { agent } from './agent';
+import { orchestrator } from './agent';
 import { AiService, createAgentService } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, StructuredChatbotResponse } from './types';
@@ -47,7 +47,7 @@ export class ChatbotService {
       summaryPrompt: CHATBOT_SUMMARY_PROMPT,
     });
 
-    this.aiService = createAgentService(agent(), { model: this.model, checkpointer, middleware: [summarization], toolCallbackOptions });
+    this.aiService = createAgentService(orchestrator(), { model: this.model, checkpointer, middleware: [summarization], toolCallbackOptions });
   }
 
   async processMessage(message: string, chatId: number): Promise<ChatbotResponse>;

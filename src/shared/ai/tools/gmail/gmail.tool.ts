@@ -81,6 +81,7 @@ async function runner({ action, query, maxResults, recipient, subject, body, ema
 
 export const gmailTool = tool(runner, {
   name: 'gmail',
-  description: 'List, send, or delete Gmail emails. Supports three actions: "list" to fetch emails with optional search query, "send" to send HTML emails, or "delete" to move emails to trash.',
+  description:
+    'List, send, or delete Gmail emails. Supports three actions: "list" to fetch emails with optional search query (e.g. "is:unread", "from:sender@example.com"), "send" to send HTML emails, or "delete" to move emails to trash by ID. The user\'s own email address is matansocher@gmail.com — when the user says "send to me", "email myself", or "my email", use that address. Always confirm recipient, subject, and body before sending.',
   schema,
 });
