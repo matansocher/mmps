@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      # Stop the build at the `deps` stage. That stage already has all deps
+      # (including devDependencies like tsx) and the OS libs canvas needs,
+      # but does not run `npm run build` — we want sources mounted from the
+      # host and rebuilt on the fly instead.
+      target: deps
+    image: mmps-app:dev
+    container_name: mmps-app-dev
+    environment:
+      NODE_ENV: development
+    # Override the production entrypoint: run the tsx watcher directly.
+    # `tini` is not present in the deps stage, so reset entrypoint too.
+    entrypoint: []
+    command: ["npm", "run", "dev"]
+    volumes:
+      # Bind-mount the entire repo so file edits on the host trigger tsx watch
+      # inside the container.
+      - .:/app
+      # Anonymous volume on /app/node_modules. This is the critical line: it
+      # prevents the host's macOS-built node_modules from shadowing the
+      # container's Linux-built one. Without it, `canvas` and `sharp` crash
+      # on boot inside the container.
+      - /app/node_modules
+      # Same trick for each workspace's node_modules.
+      - /app/apps/chatbot-web/node_modules
+      - /app/apps/coach-web/node_modules
+      - /app/apps/wolt-web/node_modules
+      - /app/apps/world-cup-web/node_modules
+      - /app/apps/worldly-web/node_modules
+    # No healthcheck in dev — tsx watch restarts blow it up, and we don't
+    # need depends_on gating from the app itself.
+    healthcheck:
+      disable: true
