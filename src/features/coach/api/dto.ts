@@ -156,6 +156,8 @@ export type MatchDetailResponse = {
   readonly events: ReadonlyArray<MatchEvent>;
   readonly homeLineup?: LineupSide;
   readonly awayLineup?: LineupSide;
+  readonly homeRecentMatches?: ReadonlyArray<TeamRecentMatch>;
+  readonly awayRecentMatches?: ReadonlyArray<TeamRecentMatch>;
 };
 
 export type SquadPlayer = {
