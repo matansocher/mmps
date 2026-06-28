@@ -32,10 +32,10 @@ describe('ChatbotController E2E', () => {
 
     expect(processMessage).toHaveBeenCalledWith('what is the weather?', expect.any(Number));
 
-    const sent = testBot.transport.callsByMethod('sendMessage');
+    const sent = testBot.transport.callsByMethod('sendRichMessage');
     expect(sent.length).toBeGreaterThanOrEqual(1);
     const reply = sent[sent.length - 1];
-    expect(reply.payload.text).toEqual('stub reply');
+    expect(reply.payload.rich_message.markdown).toEqual('stub reply');
   });
 
   it('runs the exercise prompt through ChatbotService on /exercise', async () => {

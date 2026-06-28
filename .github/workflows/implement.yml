@@ -1,0 +1,175 @@
+---
+name: 🛠️ AI Implement (Aider)
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: |
+      (github.actor == 'matansocher' || contains(github.actor, 'mmps-companion')) &&
+      github.event.label.name == 'implement'
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Get GitHub Token
+        id: get_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CLAUDE_GH_APP_ID }}
+          private-key: ${{ secrets.CLAUDE_GH_APP_PRIVATE_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.get_token.outputs.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Aider
+        run: python -m pip install --upgrade aider-chat
+
+      - name: Configure git
+        run: |
+          git config user.name "Matan Socher"
+          git config user.email "24754543+matansocher@users.noreply.github.com"
+
+      - name: Create working branch
+        id: branch
+        run: |
+          BRANCH="aider/issue-${{ github.event.issue.number }}-${{ github.run_id }}"
+          git checkout -b "$BRANCH"
+          echo "name=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Build task prompt
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          {
+            echo "# Feature request (GitHub issue #$ISSUE_NUMBER)"
+            echo
+            echo "## Title"
+            echo "$ISSUE_TITLE"
+            echo
+            echo "## Description"
+            echo "$ISSUE_BODY"
+            echo
+            echo "## Instructions"
+            echo "- Implement the feature described above for this repository."
+            echo "- Strictly follow the conventions in AGENTS.md: use 'type' (never 'interface'), named exports only (never default), repository FUNCTIONS (not classes) for DB access, async/await (never .then chains), and the path aliases (@core, @features, @services, @shared)."
+            echo "- Keep the change focused and minimal — only what the request needs."
+            echo "- Do NOT modify files under .github/, .env, or anything secret-related."
+            echo "- Do NOT run git commands yourself; only edit source files."
+          } > aider-task.md
+
+      - name: Run Aider
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_KEY }}
+        run: |
+          python -m aider \
+            --model gpt-5 \
+            --yes-always \
+            --no-analytics \
+            --no-check-update \
+            --no-show-model-warnings \
+            --no-attribute-author \
+            --no-attribute-committer \
+            --no-attribute-co-authored-by \
+            --read AGENTS.md \
+            --lint-cmd "npx eslint --fix" \
+            --auto-lint \
+            --message-file aider-task.md
+
+      - name: Clean up task file
+        if: always()
+        run: rm -f aider-task.md
+
+      - name: Check for changes
+        id: changes
+        run: |
+          COMMITS=$(git rev-list --count origin/main..HEAD)
+          echo "commits=$COMMITS" >> "$GITHUB_OUTPUT"
+
+      - name: Build change summary
+        id: summary
+        if: steps.changes.outputs.commits != '0'
+        run: |
+          COMMIT_MESSAGES=$(git log origin/main..HEAD --pretty=format:'- %s')
+          FILE_STAT=$(git diff --stat origin/main..HEAD | tail -n 1 | sed 's/^[[:space:]]*//')
+          CHANGED_FILES=$(git diff --name-only origin/main..HEAD | sed 's/^/- /')
+          {
+            echo "summary<<SUMMARY_EOF"
+            echo "What changed:"
+            echo "$COMMIT_MESSAGES"
+            echo
+            echo "Files (${FILE_STAT}):"
+            echo "$CHANGED_FILES"
+            echo "SUMMARY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment when no changes were produced
+        if: steps.changes.outputs.commits == '0'
+        env:
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" \
+            --body "🤖 Aider ran but produced no code changes for this request. Try rephrasing or adding more detail to the issue, then re-add the \`implement\` label."
+
+      - name: Push branch
+        if: steps.changes.outputs.commits != '0'
+        run: git push -u origin "${{ steps.branch.outputs.name }}"
+
+      - name: Open pull request
+        id: pr
+        if: steps.changes.outputs.commits != '0'
+        env:
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
+        run: |
+          URL=$(gh pr create \
+            --base main \
+            --head "${{ steps.branch.outputs.name }}" \
+            --title "feat: ${{ github.event.issue.title }}" \
+            --body "Implements the request from #${{ github.event.issue.number }}.
+
+          Closes #${{ github.event.issue.number }}
+
+          ## Summary
+          ${{ steps.summary.outputs.summary }}
+
+          ---
+          🤖 Generated by Aider (model: gpt-5). Please review before merging.")
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Notify on Telegram
+        if: steps.changes.outputs.commits != '0'
+        continue-on-error: true
+        env:
+          CHATBOT_TOKEN: ${{ secrets.CHATBOT_TELEGRAM_BOT_TOKEN }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${CHATBOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=862305226" \
+            --data-urlencode "text=🛠️ PR ready for issue #${{ github.event.issue.number }} (${{ github.event.issue.title }})
+
+          ${{ steps.summary.outputs.summary }}
+
+          ${{ steps.pr.outputs.url }}" > /dev/null

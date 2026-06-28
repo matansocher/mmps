@@ -6,7 +6,6 @@ import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
-import { WorldlyLauncherService } from './launcher.service';
 import { generateStatisticsMessage } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
@@ -17,14 +16,12 @@ export class WorldlyController {
   constructor(
     private readonly worldlyService: WorldlyService,
     private readonly bot: Bot,
-    private readonly launcher: WorldlyLauncherService,
   ) {}
 
   init(): void {
-    const { START, APP, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
+    const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
-    this.bot.command(APP.command.replace('/', ''), (ctx) => this.appHandler(ctx));
     this.bot.command(FIRE_MODE.command.replace('/', ''), (ctx) => this.fireModeHandler(ctx));
     this.bot.command(RANDOM.command.replace('/', ''), (ctx) => this.randomHandler(ctx));
     this.bot.command(MAP.command.replace('/', ''), (ctx) => this.mapHandler(ctx));
@@ -42,11 +39,6 @@ export class WorldlyController {
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 
-  async appHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
-    await this.launcher.sendLauncher(chatId);
-  }
-
   private async actionsHandler(ctx: Context): Promise<void> {
     const { chatId } = getMessageData(ctx);
     const subscription = await getSubscription(chatId);
@@ -57,10 +49,6 @@ export class WorldlyController {
         : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
-    const miniAppMarkup = this.launcher.buildKeyboard();
-    if (miniAppMarkup) {
-      keyboard.webApp(miniAppMarkup.inline_keyboard[0][0].text, miniAppMarkup.inline_keyboard[0][0].web_app.url).row();
-    }
     await ctx.reply('איך אני יכול לעזור? 👨‍🏫', { reply_markup: keyboard });
     await ctx.deleteMessage().catch(() => {});
   }

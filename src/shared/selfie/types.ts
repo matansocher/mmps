@@ -25,5 +25,3 @@ export type SelfieEvent = {
   readonly sender: SelfieEventSender | null;
   readonly createdAt: Date;
 };
-
-export type CreateSelfieEventData = Omit<SelfieEvent, '_id' | 'createdAt'>;

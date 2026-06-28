@@ -1,22 +1,12 @@
-import type { InsertOneResult } from 'mongodb';
 import { startOfDay, endOfDay, parseISO } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { getMongoCollection } from '@core/mongo';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import type { CreateSelfieEventData, SelfieEvent } from '../types';
+import type { SelfieEvent } from '../types';
 
 export const DB_NAME = 'Selfie';
 
 const getCollection = () => getMongoCollection<SelfieEvent>(DB_NAME, 'Events');
-
-export async function saveEvent(data: CreateSelfieEventData): Promise<InsertOneResult<SelfieEvent>> {
-  const collection = getCollection();
-  const document: Omit<SelfieEvent, '_id'> = {
-    ...data,
-    createdAt: new Date(),
-  };
-  return collection.insertOne(document as SelfieEvent);
-}
 
 export async function getEventsByConversationId(conversationId: string): Promise<SelfieEvent[]> {
   const collection = getCollection();

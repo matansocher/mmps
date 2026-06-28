@@ -1,4 +1,5 @@
 export { birthdayReminder } from './birthday-reminder';
+export { dailyExpensesLog } from './daily-expenses-log';
 export { dailySummary } from './daily-summary';
 export { earthquakeMonitor } from './earthquake-monitor';
 export { emailSummary } from './email-summary';
@@ -15,3 +16,5 @@ export { polymarketUpdate } from './polymarket-update';
 export { rainRadarAlert } from './rain-radar-alert';
 export { selfieSummary } from './selfie-summary';
 export { upcomingEventAlert } from './upcoming-event-alert';
+export { usageSummary } from './usage-summary';
+export { wcTreeUpdate } from './wc-tree-update';

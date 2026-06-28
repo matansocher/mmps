@@ -5,7 +5,6 @@ export const BOT_CONFIG: TelegramBotConfig = {
   name: 'Wolt Bot 🍔',
   token: 'WOLT_TELEGRAM_BOT_TOKEN',
   commands: {
-    APP: { command: '/app', description: '📱 פתח אפליקציה 📱' },
     START: { command: '/start', description: 'התחל מהתחלה' },
     LIST: { command: '/list', description: '🩵 רשימת ההתראות הפתוחות 🩵' },
     CONTACT: { command: '/contact', description: '📬 צור קשר 📬' },
@@ -31,7 +30,7 @@ export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;
 
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
-export const RESTAURANTS_BASE_URL = 'https://consumer-api.wolt.com/v1/pages/restaurants';
+export const RESTAURANTS_BASE_URL = 'https://restaurant-api.wolt.com/v1/pages/restaurants';
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 
 // the order of this array is important, this will determine the order of multiple results in restaurants search

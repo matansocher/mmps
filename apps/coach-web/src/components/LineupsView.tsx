@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'wouter';
 import type { LineupPlayer, LineupSide, TeamRef } from '../types';
 import { athletePhoto } from '../lib/logos';
+import { FormationPitch } from './FormationPitch';
 
 type Props = {
   home: { team: TeamRef; lineup: LineupSide };
@@ -10,12 +11,21 @@ type Props = {
 
 export function LineupsView({ home, away }: Props) {
   const [expandBench, setExpandBench] = useState(false);
+  const [pitchSide, setPitchSide] = useState<'home' | 'away'>('home');
   const hasBench = home.lineup.bench.length > 0 || away.lineup.bench.length > 0;
+  const active = pitchSide === 'home' ? home : away;
 
   return (
     <section className="space-y-2">
       <h2 className="text-text-secondary text-sm font-semibold px-1">הרכבים</h2>
       <div className="bg-bg-card border border-border-subtle rounded-xl overflow-hidden">
+        <div className="grid grid-cols-2 gap-1 p-1">
+          <SideTab label={home.team.name} active={pitchSide === 'home'} onClick={() => setPitchSide('home')} />
+          <SideTab label={away.team.name} active={pitchSide === 'away'} onClick={() => setPitchSide('away')} />
+        </div>
+        <div className="p-2 pt-0">
+          <FormationPitch players={active.lineup.starting} formation={active.lineup.formation} />
+        </div>
         <FormationHeader home={home} away={away} />
         <div className="grid grid-cols-2 divide-x divide-border-subtle">
           <SideList players={home.lineup.starting} align="end" />
@@ -39,6 +49,19 @@ export function LineupsView({ home, away }: Props) {
         )}
       </div>
     </section>
+  );
+}
+
+function SideTab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-lg py-2 text-sm font-semibold truncate transition-colors ${
+        active ? 'bg-bg-elevated text-text-primary' : 'text-text-secondary hover:text-text-primary'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

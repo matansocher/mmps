@@ -46,12 +46,8 @@ export function HomePage() {
     }
   }, []);
 
-  // Initial Telegram handshake
-  useEffect(() => {
-    window.Telegram?.WebApp?.ready();
-    window.Telegram?.WebApp?.expand();
-    api.open().catch(() => {});
-  }, []);
+  // Initial Telegram handshake + "open app" notification live in App (fire once
+  // per app load). HomePage only handles day loading below.
 
   // Load whenever the selected date changes
   useEffect(() => {

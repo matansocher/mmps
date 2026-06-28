@@ -1,6 +1,6 @@
 import { TelegramClient } from 'telegram';
 import type { EntityLike } from 'telegram/define';
-import { NewMessage, type NewMessageEvent } from 'telegram/events';
+import { NewMessage, type NewMessageEvent } from 'telegram/events/index.js';
 import { Logger } from '@core/utils';
 import { EXCLUDED_CHANNELS } from '../constants';
 import { provideTelegramClient } from '../provide-telegram-client';
@@ -9,6 +9,8 @@ const logger = new Logger('TelegramClientListener');
 
 type ListenerOptions = {
   readonly conversationsIds?: string[];
+  // By default the listener captures incoming messages from others. Set true to also capture your own.
+  readonly includeOutgoing?: boolean;
 };
 
 export type TelegramMessage = {
@@ -95,22 +97,29 @@ async function getSenderDetails(telegramClient: TelegramClient, userId: string):
 
 type ListenCallback = (message: TelegramMessage, details: ConversationDetails, sender: SenderDetails | null) => void | Promise<void>;
 
-export async function listen({ conversationsIds = [] }: ListenerOptions, callback: ListenCallback) {
-  const telegramClient = await provideTelegramClient();
-
-  await telegramClient.getDialogs({});
-  logger.log('Loaded dialogs into entity cache');
+export async function listen({ conversationsIds = [], includeOutgoing = false }: ListenerOptions, callback: ListenCallback) {
+  let telegramClient: TelegramClient;
+  try {
+    telegramClient = await provideTelegramClient();
+    await telegramClient.getDialogs({});
+    logger.log('Loaded dialogs into entity cache');
+  } catch (err) {
+    logger.error(`Failed to start telegram client listener: ${err}`);
+    return;
+  }
 
   telegramClient.addEventHandler(async (event: NewMessageEvent) => {
     try {
       const messageData = extractMessageData(event);
-      if (!messageData?.text && !messageData?.voice) {
+      logger.log(`[monitor] event received: channelId=${messageData?.channelId} userId=${messageData?.userId} isVoice=${messageData?.isVoice} hasText=${!!messageData?.text}`);
+      if (!messageData?.text && !messageData?.isVoice) {
         return;
       }
 
       const channelId = messageData.channelId;
       const userId = messageData.userId;
       if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
+        logger.log(`[monitor] filtered out channelId=${channelId} userId=${userId} (not in conversationsIds)`);
         return;
       }
 
@@ -136,5 +145,5 @@ export async function listen({ conversationsIds = [] }: ListenerOptions, callbac
     } catch (err) {
       logger.error(`Error handling telegram event: ${err}`);
     }
-  }, new NewMessage({ incoming: false }));
+  }, new NewMessage(includeOutgoing ? {} : { incoming: true }));
 }

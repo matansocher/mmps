@@ -14,12 +14,16 @@ export function App() {
 
   return (
     <Router base="/chatbot">
-      <Switch>
-        <Route path="/" component={DashboardPage} />
-        <Route>
-          <div className="p-6 text-text-secondary">404</div>
-        </Route>
-      </Switch>
+      <div className="min-h-screen flex flex-col">
+        <main className="flex-1">
+          <Switch>
+            <Route path="/" component={DashboardPage} />
+            <Route>
+              <div className="p-6 text-text-secondary">404</div>
+            </Route>
+          </Switch>
+        </main>
+      </div>
     </Router>
   );
 }

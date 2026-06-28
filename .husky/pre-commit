@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+# When package.json or package-lock.json is staged, verify they are in sync.
+# Catches the macOS-vs-Linux optionalDependencies drift (npm/cli#4828) BEFORE
+# the change reaches CI on Linux, where `npm ci` would fail with EUSAGE.
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+if echo "$staged" | grep -qE '^(package\.json|package-lock\.json)$'; then
+  echo "📦 package.json or package-lock.json changed — verifying lockfile is in sync..."
+  if ! npm ci --dry-run --include=optional --ignore-scripts > /tmp/npm-ci-dryrun.log 2>&1; then
+    echo ""
+    echo "❌ package-lock.json is out of sync with package.json."
+    echo ""
+    tail -30 /tmp/npm-ci-dryrun.log
+    echo ""
+    echo "💡 Fix: rm -rf node_modules package-lock.json && npm install --include=optional"
+    echo "   Then 'git add package-lock.json' and commit again."
+    exit 1
+  fi
+  echo "✓ lockfile is in sync"
+fi

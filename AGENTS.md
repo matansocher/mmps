@@ -8,14 +8,14 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **5 Telegram bots** + an Express HTTP server (Swagger + auth routes). Built around grammY, LangGraph, MongoDB native driver.
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger + auth routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **5 bots:** `chatbot`, `chilli`, `coach`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`.
+- **6 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('chatbot-db')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/coach-web`, `apps/worldly-web`, `apps/wolt-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/coach-web`, `apps/chatbot-web`, `apps/expenses-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -67,6 +67,15 @@ The test: Every changed line should trace directly to the user's request.
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+### 5. Never Commit Unless Asked
+
+**Do not run `git commit` (or `git push`) unless the user explicitly tells you to.**
+
+- Make and stage changes, but leave committing to the user unless they ask.
+- "Fix X", "add Y", "implement Z" means write the code — not commit it.
+- Only commit when the user says so (e.g. "commit this", "commit and push").
+- This also applies to creating tags, amending, or rewriting history.
+
 ---
 
 ## Tech Stack
@@ -78,7 +87,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **node-cron** for scheduled tasks
 
 ### Key Dependencies
-- **AI/LLM:** `@anthropic-ai/sdk`, `openai`, `langchain`, `@langchain/langgraph` (with `MemorySaver`), `@langchain/anthropic`, `@langchain/openai`
+- **AI/LLM:** `@anthropic-ai/sdk`, `openai`, `langchain`, `@langchain/langgraph` (with `MemorySaver` as fallback), `@langchain/langgraph-checkpoint-mongodb` (durable chatbot memory), `@langchain/anthropic`, `@langchain/openai`
 - **Database:** `mongodb` (native driver, no ODM)
 - **Bot Platform:** `grammy` (+ `@grammyjs/hydrate`)
 - **Date Handling:** `date-fns`, `date-fns-tz` (default timezone: `Asia/Jerusalem`)
@@ -110,14 +119,14 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 mmps/
 ├── src/
 │   ├── core/           # Config, mongo, openapi/swagger, services, utils
-│   ├── features/       # The 5 bots (chatbot, chilli, coach, wolt, worldly)
+│   ├── features/       # The 6 bots (chatbot, chilli, coach, expenses, wolt, worldly)
 │   ├── services/       # 30+ external service integrations
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
 │   ├── coach-web/
-│   ├── worldly-web/
-│   ├── wolt-web/
+│   ├── chatbot-web/
+│   ├── expenses-web/
 │   └── stacker-web/    # Legacy, no active bot
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
@@ -160,27 +169,29 @@ src/services/{name}/
 
 ---
 
-## The 5 Bots
+## The 6 Bots
 
 | ID         | Display Name    | Path                          | Env token                       | Purpose |
 |------------|-----------------|-------------------------------|---------------------------------|---------|
-| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.) |
+| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`   | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`     | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`    | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`      | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
-| `WOLT`     | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`       | Watches Wolt restaurants and notifies on availability. Has mini-app. |
-| `WORLDLY`  | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`    | Geography quiz/education. Has mini-app. |
+| `EXPENSES` | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`   | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
+| `WOLT`     | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`       | Watches Wolt restaurants and notifies on availability. |
+| `WORLDLY`  | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`    | Geography quiz/education. |
 
 **Boot logic** (`src/index.ts`):
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
-shouldInitBot(chatbotConfig) && (await initChatbot(app));
-shouldInitBot(chilliConfig)  && (await initChilli());
-shouldInitBot(coachConfig)   && (await initCoach(app));
-shouldInitBot(woltConfig)    && (await initWolt(app));
-shouldInitBot(worldlyConfig) && (await initWorldly(app));
+shouldInitBot(chatbotConfig)  && (await initChatbot(app));
+shouldInitBot(chilliConfig)   && (await initChilli());
+shouldInitBot(coachConfig)    && (await initCoach(app));
+shouldInitBot(expensesConfig) && (await initExpenses(app));
+shouldInitBot(woltConfig)     && (await initWolt(app));
+shouldInitBot(worldlyConfig)  && (await initWorldly(app));
 ```
 
-In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all six run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
 
 ---
 
@@ -521,12 +532,32 @@ export function agent(): AgentDescriptor {
 
 // factory.ts
 export function createAgentService(descriptor: AgentDescriptor, opts: CreateAgentOptions): AiService {
-  const { model, checkpointer = new MemorySaver(), toolCallbackOptions } = opts;
+  const { model, checkpointer = new MemorySaver(), middleware, toolCallbackOptions } = opts;
   const callbacks = toolCallbackOptions ? [new ToolCallbackHandler(toolCallbackOptions)] : undefined;
-  const reactAgent = createAgent({ model, tools: descriptor.tools, systemPrompt: descriptor.prompt, checkpointer });
+  const reactAgent = createAgent({ model, tools: descriptor.tools, systemPrompt: descriptor.prompt, checkpointer, middleware });
   return new AiService(reactAgent.graph, { name: descriptor.name, callbacks });
 }
 ```
+
+### Memory & context management (chatbot)
+
+The chatbot's conversation memory is two complementary pieces wired up in `features/chatbot`:
+
+- **Persistence (checkpointer).** `agent/checkpointer.ts` provides `createChatbotCheckpointer()`, a Mongo-backed `BaseCheckpointSaver` (via `@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL). It's built in `chatbot.init.ts` and injected into `ChatbotService`, replacing the in-RAM `MemorySaver` so history survives restarts/deploys. State is keyed by `thread_id` (derived from `chatId`).
+- **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). Once a thread passes `CHATBOT_CONFIG.summarization.triggerMessages` (~40), it compresses the oldest turns into a summary and keeps the last `keepMessages` (~20) verbatim. The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped.
+
+There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
+
+### Token & cost observability (cross-bot)
+
+Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.
+
+- **Instrumented sources.** `chatbot`, `chilli`, `secretary` (`summarizeChat`, action agent, `generateDraftReply`), `expenses` (`manual-entry` categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
+- **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens) + `computeModelCost()`. `resolveModelPrice()` does longest-prefix matching so dated snapshots (`gpt-4.1-mini-2025-04-14`) resolve. Unknown models → cost `0` + `logger.warn`.
+- **Sink.** db `Chatbot`, collection `usage` (`shared/ai/usage/`), 90-day TTL. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ source?, chatId?, from?, to? })` groups per source + user per day (`Asia/Jerusalem`). The `Chatbot` Mongo connection is registered by `chatbot.init`; non-chatbot bots only persist when chatbot is also booted (prod always; locally needs `LOCAL_ACTIVE_BOT_ID=CHATBOT`), otherwise writes fail silently.
+- **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
+- There's no official LangChain package for this — the callback handler is the implementation (no hand-roll reference file).
+- **Weekly report.** `schedulers/usage-summary.ts` (cron `30 22 * * 6`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs `MY_USER_ID` a deterministic cost/usage breakdown (total cost, calls, tokens, per-day, per-bot, and per-user if >1).
 
 ### Tool with Zod
 
@@ -733,8 +764,6 @@ npm run docs:build
 
 # Mini-app workspaces
 npm run dev:coach-web
-npm run dev:worldly-web
-npm run dev:wolt-web
 ```
 
 ---
@@ -807,6 +836,7 @@ Skills live in `.claude/skills/{name}/SKILL.md` and follow the standard Claude C
 - Import from `@services/telegram-grammy` — this path does NOT exist. Use `@services/telegram`.
 - Use `getInlineKeyboardMarkup` — use `buildInlineKeyboard` instead.
 - Forget to update the barrel `index.ts`.
+- Commit or push unless the user explicitly asks you to.
 
 ---
 

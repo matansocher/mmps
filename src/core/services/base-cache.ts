@@ -25,4 +25,3 @@ export class BaseCache<T> {
     await redis.set(this.buildKey(key), JSON.stringify(data), 'EX', this.ttlSeconds);
   }
 }
-

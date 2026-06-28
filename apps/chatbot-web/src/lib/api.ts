@@ -1,11 +1,5 @@
 import { getInitData } from './telegram';
-import type {
-  CreateReminderBody,
-  DashboardResponse,
-  ExerciseLogResponse,
-  ReminderDto,
-  UpdateReminderBody,
-} from '../types';
+import type { CreateReminderBody, DashboardResponse, ExerciseLogResponse, ReminderDto, UpdateReminderBody } from '../types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -22,13 +16,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  dashboard: (date?: string) =>
-    request<DashboardResponse>(date ? `/api/chatbot/dashboard?date=${encodeURIComponent(date)}` : '/api/chatbot/dashboard'),
+  dashboard: (date?: string) => request<DashboardResponse>(`/api/chatbot/dashboard${date ? `?date=${encodeURIComponent(date)}` : ''}`),
   logExercise: () => request<ExerciseLogResponse>('/api/chatbot/exercise/log', { method: 'POST' }),
   createReminder: (body: CreateReminderBody) =>
     request<ReminderDto>('/api/chatbot/reminders', { method: 'POST', body: JSON.stringify(body) }),
   updateReminder: (id: string, body: UpdateReminderBody) =>
     request<ReminderDto>(`/api/chatbot/reminders/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-  deleteReminder: (id: string) =>
-    request<void>(`/api/chatbot/reminders/${id}`, { method: 'DELETE' }),
+  deleteReminder: (id: string) => request<void>(`/api/chatbot/reminders/${id}`, { method: 'DELETE' }),
+  deleteCalendarEvent: (id: string) => request<void>(`/api/chatbot/calendar/events/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };

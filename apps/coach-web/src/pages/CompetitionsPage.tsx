@@ -72,27 +72,27 @@ export function CompetitionsPage() {
         ) : data.competitions.length === 0 ? (
           <EmptyState title="אין ליגות" />
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {data.competitions.map((c, i) => (
               <motion.div
                 key={c.id}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.02 }}
-                className="bg-bg-card border border-border-subtle rounded-xl flex items-stretch overflow-hidden hover:bg-bg-elevated transition-colors"
+                className="bg-bg-card border border-border-subtle rounded-lg flex items-stretch overflow-hidden hover:bg-bg-elevated transition-colors"
               >
                 <div style={{ background: leagueColor(c.id) }} className="w-1" />
                 <button
                   onClick={() => navigate(`/league/${c.id}`)}
-                  className="flex-1 p-3 flex items-center gap-3 text-right"
+                  className="flex-1 py-2 px-2.5 flex items-center gap-2.5 text-right"
                 >
-                  <span className="text-2xl shrink-0">{c.icon}</span>
+                  <span className="text-lg shrink-0">{c.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-text-primary font-medium truncate">{c.name}</div>
+                    <div className="text-text-primary font-medium text-sm truncate">{c.name}</div>
                   </div>
-                  <span className="text-text-muted text-lg">‹</span>
+                  <span className="text-text-muted text-base">‹</span>
                 </button>
-                <div className="grid place-items-center pl-2 pr-1">
+                <div className="grid place-items-center pl-1.5 pr-0.5">
                   <FollowStar
                     following={c.following}
                     busy={busyIds.has(c.id)}

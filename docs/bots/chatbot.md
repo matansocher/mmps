@@ -11,7 +11,8 @@ The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropi
 ### Core Features
 - **Conversational AI** - Natural language understanding and generation
 - **Tool Integration** - 20+ tools for extending capabilities
-- **Memory** - Conversation history with LangGraph MemorySaver
+- **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
+- **Observability** - Cross-bot token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
 - **Error Handling** - Graceful degradation and fallbacks
 
 ### Available Tools
@@ -142,6 +143,39 @@ Tools (weather, reminders, etc.)
 
 - **Daily Summary** - Generates daily summary at 23:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
+- **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
+
+### Memory & Context
+
+Conversation memory is two complementary layers:
+
+- **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
+- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~40 messages), the older turns are compressed into a running summary and the most recent (~20) are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**.
+
+Tune via environment variables:
+
+```bash
+# Optional: conversation summarization (defaults in code)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # summarize once a thread passes this many messages
+CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summarizing
+```
+
+### Token & Cost Observability
+
+Token/cost metering is **cross-bot**. The shared module lives in `shared/ai/usage/` and is used by every live AI call site in the repo. A `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to each `invoke` as a runtime callback; it sums token usage across the whole call (ReAct loop, structured output, or summarization) and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` then logs a `💰 usage` line and persists an aggregated record tagged with the originating bot.
+
+Instrumented sources: `chatbot`, `chilli`, `secretary` (daily summary, action agent, smart-reply drafts), and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
+
+- **Cost** is computed from a price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens). `resolveModelPrice` does a longest-prefix match so dated snapshots (e.g. `gpt-4.1-mini-2025-04-14`) resolve correctly. Unknown models report cost `0` and log a warning.
+- **Storage** — one record per call in db `Chatbot`, collection `usage` (`shared/ai/usage/`), with a **90-day TTL**. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.
+- **Aggregation** — `aggregateUsage({ source?, chatId?, from?, to? })` rolls usage up per source + user per day (`Asia/Jerusalem`).
+- **Weekly report** — a scheduler (`schedulers/usage-summary.ts`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs the owner a cost/usage breakdown, including a per-bot ("By bot") split.
+- **Kill-switch** — set `CHATBOT_USAGE_TRACKING=false` to disable entirely.
+
+```bash
+# Optional: per-turn token/cost observability (defaults on)
+CHATBOT_USAGE_TRACKING=false   # disable token/cost metering
+```
 
 ## Database
 
@@ -151,6 +185,8 @@ Collections:
 - `conversations` - Chat history
 - `reminders` - User reminders
 - `users` - User profiles
+
+The `Chatbot` database additionally holds LangGraph checkpoints (memory) and the `usage` collection (per-turn token/cost records, 90-day TTL).
 
 ## Tool Development
 
@@ -201,15 +237,15 @@ If you get rate limit errors:
 ### Memory Issues
 
 If the bot uses too much memory:
-- Limit conversation history with MemorySaver settings
-- Run cleanup job to archive old conversations
+- Lower `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES` so threads are summarized sooner and kept shorter
+- Old conversations expire automatically via the checkpointer's 30-day TTL
 - Monitor with `npm run start:debug`
 
 ## Performance Tips
 
 1. **Use faster models** - Use gpt-4-mini for faster responses
 2. **Cache tool results** - Don't call same tool twice
-3. **Limit history** - Keep only recent 10-20 messages
+3. **Bound context** - Summarization keeps thread size in check; tune the trigger/keep thresholds
 4. **Monitor logs** - Use Google Sheets logging in production
 
 ## Next Steps

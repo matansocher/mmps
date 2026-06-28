@@ -1,4 +1,5 @@
 import { useLocation } from 'wouter';
+import { teamLogo } from '../lib/logos';
 import type { TableRow as Row } from '../types';
 
 function zoneClass(zone: Row['zone']): string {
@@ -26,7 +27,10 @@ export function LeagueTable({ rows }: { rows: Row[] }) {
           className={`w-full grid grid-cols-[2.5rem_1fr_3rem_3rem] items-center px-3 py-2 text-sm text-right hover:bg-bg-elevated/40 transition-colors ${zoneClass(r.zone)}`}
         >
           <span className="text-text-secondary score-font">{r.rank}</span>
-          <span className="text-text-primary truncate text-right">{r.team.name}</span>
+          <span className="flex items-center gap-2 min-w-0 justify-start">
+            <img src={teamLogo(r.team.id, 24)} alt="" className="w-5 h-5 object-contain shrink-0" loading="lazy" />
+            <span className="text-text-primary truncate text-right">{r.team.name}</span>
+          </span>
           <span className="text-left text-text-secondary score-font">{r.played}</span>
           <span className="text-left text-text-primary score-font font-semibold">{r.points}</span>
         </button>

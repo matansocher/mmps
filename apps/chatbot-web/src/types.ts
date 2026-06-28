@@ -46,6 +46,55 @@ export type ActivitySummary = {
   readonly heatmap: ReadonlyArray<HeatmapDay>;
 };
 
+export const EXPENSE_CATEGORIES = [
+  'restaurants',
+  'fast_food',
+  'groceries',
+  'fuel',
+  'transport',
+  'home',
+  'shopping',
+  'health',
+  'entertainment',
+  'events',
+  'travel',
+  'communications',
+  'insurance',
+  'government',
+  'subscriptions',
+  'utilities',
+  'bills',
+  'transfer',
+  'electronics',
+  'books',
+  'other',
+] as const;
+
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+export type ExpenseType = 'receipt' | 'card_alert' | 'bill';
+
+export type ExpenseDto = {
+  readonly id: string;
+  readonly vendor: string;
+  readonly category: ExpenseCategory;
+  readonly amount: number;
+  readonly currency: string;
+  readonly type: ExpenseType;
+  readonly transactionDate: string;
+  readonly notes?: string;
+  readonly card?: string;
+  readonly originalVendor?: string;
+  readonly originalCategory?: ExpenseCategory;
+  readonly originalType?: ExpenseType;
+};
+
+export type ExpenseTotal = {
+  readonly currency: string;
+  readonly total: number;
+};
+
+
 export type DashboardResponse = {
   readonly date: string;
   readonly isToday: boolean;
@@ -54,6 +103,8 @@ export type DashboardResponse = {
   readonly events: ReadonlyArray<EventDto>;
   readonly reminders: ReadonlyArray<ReminderDto>;
   readonly activity: ActivitySummary;
+  readonly expenses: ReadonlyArray<ExpenseDto>;
+  readonly expenseTotals: ReadonlyArray<ExpenseTotal>;
 };
 
 export type ExerciseLogResponse = {
@@ -72,3 +123,4 @@ export type UpdateReminderBody = {
   readonly status?: 'completed' | 'pending';
   readonly snoozeMinutes?: number;
 };
+

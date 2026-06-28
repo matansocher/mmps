@@ -25,8 +25,12 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Validates lockfile
+        run: |
+          npm ci || {
+            echo "::error::npm ci failed — package-lock.json is out of sync with package.json. This usually happens when the lock was regenerated with 'npm install' on macOS, which drops Linux-only optional deps. Fix on a clean checkout: rm -rf node_modules package-lock.json && npm install, then commit package-lock.json."
+            exit 1
+          }
 
       - name: Build
         run: npm run build

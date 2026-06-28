@@ -7,7 +7,7 @@ import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { analyzeImage } from '@services/openai/utils/analyze-image';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
-import { downloadFile, getMessageData, MessageLoader, sendStyledMessage } from '@services/telegram';
+import { downloadFile, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
 import { IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotLauncherService } from './launcher.service';
@@ -42,7 +42,7 @@ export class ChatbotController {
     await messageLoaderService.handleMessageWithLoader(async () => {
       const prompt = `List all your available tools with a short and concise explanation for each. Keep each tool description to 1-2 sentences maximum. Format as a clear, easy-to-scan list.`;
       const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId);
-      await sendStyledMessage(this.bot, chatId, replyText);
+      await sendRichMessage(this.bot, chatId, replyText);
     });
   }
 
@@ -72,7 +72,7 @@ export class ChatbotController {
 
   private async handleBotResponse(chatId: number, replyText: string, toolResults: any[]): Promise<void> {
     this.logger.log(`bot response for chatId ${chatId}: ${replyText}`);
-    await sendStyledMessage(this.bot, chatId, replyText);
+    await sendRichMessage(this.bot, chatId, replyText);
   }
 
   private async photoHandler(ctx: Context): Promise<void> {
@@ -88,7 +88,7 @@ export class ChatbotController {
       const analysis = await analyzeImage(IMAGE_ANALYSIS_PROMPT, imageUrl);
       const { message } = await this.chatbotService.processMessage(`Here is an analysis of an image I sent: ${analysis}\n\nPlease provide a helpful response based on this analysis.`, chatId);
 
-      await sendStyledMessage(this.bot, chatId, message);
+      await sendRichMessage(this.bot, chatId, message);
     });
   }
 

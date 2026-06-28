@@ -1,7 +1,7 @@
 import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
-import { getDueReminders, reactivateSnoozedReminders, updateReminderStatus } from '@shared/reminders';
+import { getDueReminders, markReminderNotified, reactivateSnoozedReminders } from '@shared/reminders';
 
 const logger = new Logger('ReminderCheckScheduler');
 
@@ -19,7 +19,7 @@ export async function reminderCheck(bot: Bot): Promise<void> {
 
     for (const reminder of dueReminders) {
       try {
-        const message = `🔔 *Reminder*\n\n${reminder.message}\n\n_Due: ${reminder.dueDate.toLocaleString('en-US', {
+        const message = `🔔 *Reminder*\n${reminder.message}\n_Due: ${reminder.dueDate.toLocaleString('en-US', {
           timeZone: DEFAULT_TIMEZONE,
           dateStyle: 'full',
           timeStyle: 'short',
@@ -27,7 +27,7 @@ export async function reminderCheck(bot: Bot): Promise<void> {
 
         await bot.api.sendMessage(reminder.chatId, message, { parse_mode: 'Markdown' });
 
-        await updateReminderStatus(reminder._id, reminder.chatId, 'completed');
+        await markReminderNotified(reminder._id, reminder.chatId);
 
         logger.log(`Sent reminder ${reminder._id.toString()} to chat ${reminder.chatId}`);
       } catch (err) {

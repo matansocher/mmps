@@ -39,9 +39,47 @@ export type TableRow = {
   zone: 'champions' | 'europe' | 'relegation' | null;
 };
 
+export type StandingsTable = {
+  groupName?: string;
+  rows: TableRow[];
+};
+
+export type KnockoutParticipant = {
+  id: number;
+  name: string;
+  symbolicName?: string;
+  isQualified?: boolean;
+};
+
+export type KnockoutLeg = {
+  gameId: number;
+  num: number;
+  homeCompetitorId?: number;
+  awayCompetitorId?: number;
+  homeScore?: number;
+  awayScore?: number;
+  statusText?: string;
+  startTime?: string;
+};
+
+export type KnockoutMatchup = {
+  participants: KnockoutParticipant[];
+  score?: number[];
+  legCount: number;
+  gameId?: number;
+  legs: KnockoutLeg[];
+};
+
+export type KnockoutStage = {
+  num: number;
+  name: string;
+  matchups: KnockoutMatchup[];
+};
+
 export type CompetitionDetailResponse = {
   competition: CompetitionRef;
-  table: TableRow[];
+  tables: StandingsTable[];
+  knockoutStages: KnockoutStage[];
   fixtures: MatchSummary[];
 };
 
@@ -67,6 +105,8 @@ export type MatchDetailResponse = {
   events: MatchEvent[];
   homeLineup?: LineupSide;
   awayLineup?: LineupSide;
+  homeRecentMatches?: TeamRecentMatch[];
+  awayRecentMatches?: TeamRecentMatch[];
 };
 
 export type MatchSide = 'home' | 'away';
@@ -101,6 +141,7 @@ export type LineupPlayer = {
   formationPosition?: string;
   yardLine?: number;
   yardSide?: number;
+  fieldLine?: number;
   ranking?: number;
   isStarting: boolean;
 };
@@ -123,11 +164,18 @@ export type SquadPlayer = {
   imageVersion?: number;
 };
 
+export type TeamRecentMatch = MatchSummary & {
+  outcome: 'W' | 'D' | 'L';
+};
+
 export type TeamDetailResponse = {
   team: TeamRef;
   country?: string;
   mainCompetitionId?: number;
   imageVersion?: number;
+  color?: string;
+  awayColor?: string;
+  recentMatches: TeamRecentMatch[];
   squad: SquadPlayer[];
 };
 

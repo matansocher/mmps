@@ -1,3 +1,4 @@
+import { todayYmd } from '../lib/date';
 import type { HeatmapDay } from '../types';
 
 type Props = { readonly days: ReadonlyArray<HeatmapDay> };
@@ -5,6 +6,7 @@ type Props = { readonly days: ReadonlyArray<HeatmapDay> };
 const WEEKDAY_LABELS = ['', 'M', '', 'W', '', 'F', ''];
 
 export function HeatmapStrip({ days }: Props) {
+  const today = todayYmd();
   return (
     <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
       <div className="flex items-center justify-between mb-3">
@@ -28,15 +30,18 @@ export function HeatmapStrip({ days }: Props) {
           className="grid grid-flow-col grid-rows-7 gap-1 flex-1"
           style={{ gridAutoColumns: 'minmax(0, 1fr)' }}
         >
-          {days.map((d) => (
-            <div
-              key={d.date}
-              title={`${d.date}${d.done ? ' — exercised' : ''}`}
-              className={`aspect-square rounded-sm ${
-                d.future ? 'bg-transparent' : d.done ? 'bg-accent-success' : 'bg-bg-elevated'
-              }`}
-            />
-          ))}
+          {days.map((d) => {
+            const isToday = d.date === today;
+            return (
+              <div
+                key={d.date}
+                title={`${d.date}${d.done ? ' — exercised' : ''}${isToday ? ' (today)' : ''}`}
+                className={`aspect-square rounded-sm ${
+                  d.future ? 'bg-transparent' : d.done ? 'bg-accent-success' : 'bg-bg-elevated'
+                } ${isToday ? 'ring-1 ring-inset ring-text-primary' : ''}`}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

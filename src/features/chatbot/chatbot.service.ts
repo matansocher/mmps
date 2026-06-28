@@ -1,15 +1,18 @@
 import { HumanMessage } from '@langchain/core/messages';
+import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import { summarizationMiddleware } from 'langchain';
 import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
-import { ToolCallbackOptions } from '@shared/ai';
+import { ToolCallbackOptions, UsageCallbackHandler, recordModelUsage } from '@shared/ai';
 import { agent } from './agent';
 import { AiService, createAgentService } from './agent';
+import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
@@ -18,7 +21,7 @@ export class ChatbotService {
   private readonly model: ChatOpenAI;
   private readonly aiService: AiService;
 
-  constructor() {
+  constructor(checkpointer?: BaseCheckpointSaver) {
     this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
 
     const toolCallbackOptions: ToolCallbackOptions = {
@@ -34,7 +37,17 @@ export class ChatbotService {
       },
     };
 
-    this.aiService = createAgentService(agent(), { model: this.model, toolCallbackOptions });
+    // Compresses older turns into a running summary once the thread grows past the trigger,
+    // keeping recent messages verbatim. Replaces the old drop-oldest truncation, and the
+    // summarized state is persisted by the checkpointer (item #1) instead of being deleted.
+    const summarization = summarizationMiddleware({
+      model: this.model,
+      trigger: { messages: CHATBOT_CONFIG.summarization.triggerMessages },
+      keep: { messages: CHATBOT_CONFIG.summarization.keepMessages },
+      summaryPrompt: CHATBOT_SUMMARY_PROMPT,
+    });
+
+    this.aiService = createAgentService(agent(), { model: this.model, checkpointer, middleware: [summarization], toolCallbackOptions });
   }
 
   async processMessage(message: string, chatId: number): Promise<ChatbotResponse>;
@@ -44,7 +57,14 @@ export class ChatbotService {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
       const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
-      const result = await this.aiService.invoke(contextualMessage, { threadId });
+
+      const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
+      const startedAt = Date.now();
+      const result = await this.aiService.invoke(contextualMessage, { threadId, callbacks: usageHandler ? [usageHandler] : undefined });
+      if (usageHandler) {
+        recordModelUsage({ source: 'chatbot', chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
+      }
+
       const agentResponse = formatAgentResponse(result);
 
       if (!responseSchema) {

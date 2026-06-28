@@ -27,8 +27,8 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 | `CHATBOT`  | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.) |
 | `CHILLI`   | Persona bot — replies as the user's cat in Hebrew                           |
 | `COACH`    | Sports analytics, predictions, schedules. Bundled mini-app (`apps/coach-web`) |
-| `WOLT`     | Wolt restaurant availability watcher + notifications. Mini-app (`apps/wolt-web`) |
-| `WORLDLY`  | Geography quiz / education. Mini-app (`apps/worldly-web`)                   |
+| `WOLT`     | Wolt restaurant availability watcher + notifications                        |
+| `WORLDLY`  | Geography quiz / education                                                  |
 
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
@@ -57,8 +57,6 @@ npm run docs:dev           # VitePress docs locally
 
 # Mini-app workspaces
 npm run dev:coach-web
-npm run dev:worldly-web
-npm run dev:wolt-web
 ```
 
 ### For AI agents (Claude Code, Copilot, Cursor, …)
@@ -73,6 +71,19 @@ Two labels in `.github/workflows/claude.yml` trigger automation:
 
 - **`review`** on a PR → AI code review.
 - **`implement`** on an issue → AI generates an implementation PR.
+
+### One-off scripts on production (e.g. the Wolt broadcast)
+
+Standalone scripts under `src/**/scripts/` are compiled to `dist/` by the deploy build and can be run on a prod dyno **without the Heroku CLI** via the dashboard: **your app → More ▾ → Run console**.
+
+Run the **compiled** file with plain `node` (not `tsx` — it's a devDependency and is pruned in production):
+
+```bash
+node dist/features/wolt/scripts/broadcast.js            # send to all configured users
+node dist/features/wolt/scripts/broadcast.js <chatId>   # dry run — send only to that chat id
+```
+
+`src/features/wolt/scripts/broadcast.ts` sends a one-off message to a hardcoded `CHAT_IDS` list (edit `CHAT_IDS` / `MESSAGE` and redeploy before running). It uses a bare bot API client (no polling, so it never conflicts with the live bot), throttles sends to stay under Telegram's rate limit, and skips users who blocked the bot. Always dry-run to your own chat id first.
 
 ## Documentation
 

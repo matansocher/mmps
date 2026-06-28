@@ -13,15 +13,19 @@ export const LISTEN_TO_EVENTS = [
   'UpdateDeleteChannelMessages',
 ];
 
-export const CHANNELS = {
-  SHIGURIM: { id: '2374433519', name: `התרעות על שיגורים` },
-  TOODIE: { id: '1332013273', name: `Toodie 🦔` },
-  NEWS_FROM_THE_FIELD: { id: '1406113886', name: `חדשות 100שטח` },
-  ABU_ZALAH: { id: '1425850587', name: `אבו צאלח הדסק הערבי` },
-  INTELLITIMES: { id: '1207026910', name: `INTELLITIMES | إنتل تايمز | אינטלי טיימס` },
-  DANIEL_AMRAM: { id: '1613161072', name: `דניאל עמרם ללא צנזורה` },
-  SHLOMO_WEATHER: { id: '1665567611', name: `שלמה ⛈️ מזג אוויר` },
-  KVUZA: { id: '1727761169', name: `קבוצה` },
+export type ChannelConfig = {
+  readonly id: string;
+  readonly name: string;
+  readonly type: 'channel' | 'chat';
+};
+
+export const CHANNELS: Record<string, ChannelConfig> = {
+  TOODIE: { id: '1332013273', name: `Toodie 🦔`, type: 'chat' },
+  NEWS_FROM_THE_FIELD: { id: '1406113886', name: `חדשות 100שטח`, type: 'channel' },
+  DANIEL_AMRAM: { id: '3648142719', name: `דניאל עמרם ללא צנזורה`, type: 'channel' },
+  SHLOMO_WEATHER: { id: '1665567611', name: `שלמה ⛈️ מזג אוויר`, type: 'channel' },
+  MORAD_STERN: { id: '1083698033', name: `מורד שטרן, הערוץ הטכנולוגי 🇮🇱`, type: 'channel' },
+  GEEKTIME: { id: '1282228958', name: `Geektime`, type: 'channel' },
 };
 
 export const EXCLUDED_CHANNELS = [];

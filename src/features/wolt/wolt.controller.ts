@@ -6,7 +6,6 @@ import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
-import { WoltLauncherService } from './launcher.service';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
@@ -14,15 +13,11 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATO
 export class WoltController {
   private readonly logger = new Logger(WoltController.name);
 
-  constructor(
-    private readonly bot: Bot,
-    private readonly launcher: WoltLauncherService,
-  ) {}
+  constructor(private readonly bot: Bot) {}
 
   init(): void {
-    const { START, APP, LIST, CONTACT } = BOT_CONFIG.commands;
+    const { START, LIST, CONTACT } = BOT_CONFIG.commands;
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
-    this.bot.command(APP.command.replace('/', ''), (ctx) => this.appHandler(ctx));
     this.bot.command(LIST.command.replace('/', ''), (ctx) => this.listHandler(ctx));
     this.bot.command(CONTACT.command.replace('/', ''), (ctx) => this.contactHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
@@ -31,7 +26,7 @@ export class WoltController {
   }
 
   async startHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails } = getMessageData(ctx);
+    const { userDetails } = getMessageData(ctx);
     const userExists = await saveUserDetails(userDetails);
 
     const newUserReplyText = [
@@ -45,16 +40,7 @@ export class WoltController {
     const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
     await ctx.reply(userExists ? existingUserReplyText : newUserReplyText);
 
-    const launcherKeyboard = this.launcher.buildKeyboard();
-    if (launcherKeyboard) {
-      await this.bot.api.sendMessage(chatId, '📱 גם יש לי אפליקציה — לתצוגה ויזואלית:', { reply_markup: launcherKeyboard });
-    }
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: !userExists }, userDetails);
-  }
-
-  async appHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
-    await this.launcher.sendLauncher(chatId);
   }
 
   async contactHandler(ctx: Context): Promise<void> {
@@ -107,7 +93,7 @@ export class WoltController {
       const restaurants = await restaurantsService.getRestaurants();
       let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
       if (!matchedRestaurants.length) {
-        const replyText = ['וואלה חיפשתי ולא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant].join('\n');
+        const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, 'לפעמים השרתים של וולט לא מחזירים את כל המסעדות, אבל אני בודק פתרונות אפשריים לזה'].join('\n');
         await ctx.reply(replyText);
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
         return;
