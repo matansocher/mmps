@@ -14,11 +14,9 @@ import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
-import { DB_NAME as SELFIE_DB_NAME } from '@shared/selfie';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
-import { DB_NAME as FOLLOWER_DB_NAME } from '@shared/youtube-follower';
 import { createChatbotCheckpointer } from './agent';
 import { registerChatbotApiRoutes } from './api';
 import { ChatbotSchedulerService } from './chatbot-scheduler.service';
@@ -37,10 +35,8 @@ export async function initChatbot(app: Express): Promise<void> {
     WOLT_DB_NAME,
     WORLDLY_DB_NAME,
     REMINDERS_DB_NAME,
-    FOLLOWER_DB_NAME,
     POLYMARKET_DB_NAME,
     CALENDAR_EVENTS_DB_NAME,
-    SELFIE_DB_NAME,
     FRIENDS_DB_NAME,
     MEET_FRIENDS_DB_NAME,
     EXPENSES_DB_NAME,

@@ -37,13 +37,7 @@ export { woltTool } from './wolt/wolt.tool';
 
 export { worldlyTool } from './worldly/worldly.tool';
 
-export { preferencesTool } from './preferences';
-
-export { youtubeFollowerTool } from './youtube-follower';
-
 export { polymarketTool } from './polymarket';
-
-export { selfieTool } from './selfie/selfie.tool';
 
 export { githubTool } from './github/github.tool';
 

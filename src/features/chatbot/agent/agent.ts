@@ -16,22 +16,19 @@ import {
   matchSummaryTool,
   meetupsTool,
   polymarketTool,
-  preferencesTool,
   recipesTool,
   reminderTool,
-  selfieTool,
   spotifyTool,
   topMatchesForPredictionTool,
   weatherTool,
   woltTool,
   worldlyTool,
-  youtubeFollowerTool,
 } from '@shared/ai';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, preferences, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Telegram message history, Spotify music search and playlist management, and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -61,7 +58,6 @@ Available capabilities:
   * "send" - Send HTML emails to recipients
   * "delete" - Move emails to trash by ID
 - Smart Reminders tool: Save reminders for specific dates/times and get notified when they're due. Supports creating, listing, editing, completing, deleting, and snoozing reminders.
-- Preferences tool: Save and retrieve personal preferences and information. Remember things the user wants you to know about them (favorite things, dietary restrictions, personal details, etc.) and proactively retrieve relevant preferences during conversations.
 - Football/Sports tools: Get match results, league tables, upcoming fixtures, and competition information.
 - Football Match Prediction tools: Get prediction data for specific matches and identify top matches worth predicting. Use comprehensive data including betting odds, recent form, and statistics to make informed predictions.
 - Makavdia tool: Get the latest 5 games and comprehensive statistics for NBA player Deni Avdija. Returns detailed data including game results, opponent teams, scores, venue information, game times, and player performance stats.
@@ -70,12 +66,6 @@ Available capabilities:
 - Recipes tool: Access your personal cooking recipe collection. List all recipes or get specific recipe details including ingredients, instructions, tags, and links.
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
-- YouTube Channel Follower tool: Subscribe to YouTube channels and receive AI-generated summaries of new videos a few times a day with three actions:
-  * "subscribe" - Subscribe to a YouTube channel using URL, handle (@username), or channel ID. Accepts flexible formats like "https://youtube.com/@Fireship", "@Fireship", or just "Fireship"
-  * "unsubscribe" - Unsubscribe from a channel using the same flexible identifier formats
-  * "list" - Show all active YouTube channel subscriptions
-  Summaries include video title, description, and AI-generated summary of the transcript. Videos without transcripts are automatically skipped. Only one video is sent per check to avoid overwhelming the user.
-  Natural language variations: "subscribe to [channel]", "follow [channel] on YouTube", "unsubscribe from [channel]", "show my YouTube channels", "what channels am I following"
 - Polymarket tool: Subscribe to prediction markets, search for markets, and get daily price updates at 16:00 with five actions:
   * "subscribe" - Subscribe to a Polymarket market using URL or slug. Receive daily updates with current prices and 24h changes.
   * "unsubscribe" - Unsubscribe from a market using URL, slug, or market name
@@ -84,14 +74,6 @@ Available capabilities:
   * "search" - Search for markets by keyword/topic (e.g., "bitcoin", "trump", "fed", "sports", "crypto"). Returns events sorted by 24h volume.
   Accepts flexible formats like full URLs (polymarket.com/event/fed-decision-in-january) or just the slug (fed-decision-in-january).
   Natural language variations: "subscribe to [market]", "track [market] on Polymarket", "unsubscribe from [market]", "show my Polymarket subscriptions", "what's trending on Polymarket", "search for [keyword] markets", "find [topic] predictions"
-- Telegram Selfie tool: Query your personal Telegram message history with five actions:
-  * "recent" - Get the most recent messages across all conversations (default limit: 50)
-  * "by_date" - Get all messages from a specific date (requires date in YYYY-MM-DD format)
-  * "by_conversation" - Get messages from a specific conversation by ID
-  * "by_sender" - Get messages from a specific sender by their user ID
-  * "search" - Search messages by text content (case-insensitive regex match)
-  Each result includes the message text, conversation name, sender name, and their IDs so you can use them for follow-up queries.
-  Natural language variations: "who messaged me today", "what did [person/channel] say", "search my telegram for [keyword]", "show recent messages", "messages from yesterday", "what was said in [group]".
 - GitHub tool: Interact with the matansocher/mmps repository with these actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
    * "get_issue" - Get details of a specific issue by number
@@ -166,26 +148,6 @@ Smart Reminders Guidelines:
 - Format reminder lists clearly with numbering, showing the message and due date for each.
 - Use emojis (🔔, ⏰, ✅, 🗑️, ⏸️) to make reminder interactions more engaging.
 
-Preferences Guidelines:
-- When the user shares personal information they want you to remember, use the preferences tool to save it.
-- Natural language variations to recognize: "remember that I", "save this preference", "I prefer", "my favorite", "I like", "I don't like", "keep in mind that", "note that I", "for future reference".
-- Use descriptive, lowercase keys with underscores (e.g., "favorite_color", "dietary_restrictions", "preferred_language", "coffee_order", "workout_time").
-- PROACTIVE RETRIEVAL: When answering questions where preferences might be relevant, proactively use action "search" or "list" to check if there are saved preferences that could personalize your response.
-- Examples of proactive retrieval:
-  * User asks "What should I eat?" → Search for "food", "diet", "allerg" preferences
-  * User asks "Recommend a movie" → Search for "movie", "genre", "favorite" preferences
-  * User asks about scheduling → Search for "time", "schedule", "availability" preferences
-- Actions available:
-  * "save" - Save or update a preference (requires key and value)
-  * "get" - Retrieve a specific preference by key
-  * "list" - List all saved preferences
-  * "search" - Search preferences by keyword (searches both keys and values)
-  * "delete" - Remove a preference by key
-- After saving a preference, confirm what was saved in a natural way.
-- When user asks "what do you know about me" or "my preferences", use action "list" to show all saved preferences.
-- Format preference lists clearly and naturally, grouping related preferences when possible.
-- IMPORTANT: This is a personal bot - preferences are global and not tied to specific chat IDs.
-
 Exercise Tracking Guidelines:
 - When I mention exercising, working out, or completing fitness activities, use the exercise_tracker tool to log my exercise.
 - Natural language variations to recognize: "I exercised", "just worked out", "finished my training", "completed my workout", "did my exercise", etc.
@@ -227,7 +189,6 @@ Guidelines:
   * When users ask to send emails, confirm the recipient, subject, and body before executing.
   * Use emojis (📧, ✉️, 📨, 🗑️) to make email interactions more engaging.
 - Smart Reminders: When users want to save information for later, set reminders, or be notified about something, use the smart_reminders tool with natural language date parsing in ${DEFAULT_TIMEZONE} timezone. CRITICAL: Always use 18:00 (6 PM) as the default time when no specific time is mentioned. Follow the Smart Reminders Guidelines above for all reminder-related interactions.
-- Preferences: When users share personal information to remember or when answering questions that could benefit from personalization, use the preferences tool. Save preferences with descriptive keys and proactively search for relevant preferences during conversations. Follow the Preferences Guidelines above for all preference-related interactions.
 - Football/Sports: When users ask about football matches, results, league tables, or fixtures, use the appropriate sports tools to provide current information.
 - Football Match Predictions: When users ask to predict match outcomes, first use top_matches_for_prediction to find important upcoming matches, then use match_prediction_data to get comprehensive prediction data. Analyze betting odds (very valuable!), recent form, goals statistics, and other factors. Provide probabilities that sum to 100% and brief, concise reasoning (2-3 sentences max per match).
 - Makavdia Stats: When users ask about Deni Avdija, his NBA stats, recent games, or performance, use the makavdia tool. It returns JSON data with the latest 5 games including scores, opponents, venues, game times, and detailed player statistics. Parse and format the data clearly for the user.
@@ -322,10 +283,7 @@ export function agent(): AgentDescriptor {
     recipesTool,
     woltTool,
     worldlyTool,
-    preferencesTool,
-    youtubeFollowerTool,
     polymarketTool,
-    selfieTool,
     githubTool,
     contactsTool,
     meetupsTool,

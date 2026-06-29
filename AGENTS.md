@@ -173,7 +173,7 @@ src/services/{name}/
 
 | ID         | Display Name    | Path                          | Env token                       | Purpose |
 |------------|-----------------|-------------------------------|---------------------------------|---------|
-| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, youtube-follower, etc.); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
+| `CHATBOT`  | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`    | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, etc.); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`   | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`     | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`    | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`      | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
 | `EXPENSES` | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`   | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
@@ -594,12 +594,12 @@ src/shared/ai/tools/
 └── index.ts          # barrel — every tool re-exported here
 ```
 
-### Available AI Tools (34, registered in `src/features/chatbot/agent/agent.ts`)
+### Available AI Tools (31, registered in `src/features/chatbot/agent/agent.ts`)
 
 Grouped roughly by domain:
 
-- **Personal / productivity:** `calendar`, `gmail`, `reminders`, `preferences`, `contacts`, `recipes`, `exercise`, `exercise-analytics`
-- **Media / lifestyle:** `spotify`, `youtube-follower`, `selfie`, `image` (analyzer + generation), `audio` (transcribe + TTS)
+- **Personal / productivity:** `calendar`, `gmail`, `reminders`, `contacts`, `recipes`, `exercise`, `exercise-analytics`
+- **Media / lifestyle:** `spotify`, `image` (analyzer + generation), `audio` (transcribe + TTS)
 - **Information:** `weather`, `rain-radar`, `earthquake`, `maps` (places + place details), `stocks`, `crypto`, `currency-exchange`, `flights`
 - **Sports / games:** `sports` (competitions list/matches/table, match summary, top matches for prediction, match prediction), `makavdia` (NBA Deni Avdija), `wolt` (delivery stats), `worldly` (geography game stats)
 - **Markets:** `polymarket`
@@ -713,7 +713,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 
 Located in `src/shared/`. Reusable across bots:
 
-`ai/` (agents, tools, utils), `auth/` (Telegram OIDC for companion extension), `calendar-events`, `coach`, `coach-api`, `cooker`, `flights-tracker`, `friends`, `map-service`, `polymarket-follower`, `preferences`, `reminders`, `selfie`, `sports`, `striker`, `trainer`, `wolt`, `wolt-api`, `worldly`, `worldly-api`, `youtube-follower`.
+`ai/` (agents, tools, utils), `auth/` (Telegram OIDC for companion extension), `calendar-events`, `coach`, `coach-api`, `cooker`, `flights-tracker`, `friends`, `map-service`, `polymarket-follower`, `reminders`, `sports`, `striker`, `trainer`, `wolt`, `wolt-api`, `worldly`, `worldly-api`.
 
 ---
 
