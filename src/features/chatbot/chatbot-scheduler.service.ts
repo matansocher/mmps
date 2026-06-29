@@ -60,6 +60,8 @@ export class ChatbotSchedulerService {
 
     createSchedule(`00 10 * * *`, async () => wcTreeUpdate(this.bot));
 
+    createSchedule(`30 14 * * *`, async () => wcTreeUpdate(this.bot));
+
     // createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
   }
 }
