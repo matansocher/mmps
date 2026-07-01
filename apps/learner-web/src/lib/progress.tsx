@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Course } from '../data/courses';
-import { loadReadMap, saveCourse, type ReadMap } from './storage';
+import { fetchCloudMap, mirrorToLocal, readLocalMap, saveCourse, type ReadMap } from './storage';
 
 type ProgressContextValue = {
   readonly loaded: boolean;
@@ -12,15 +12,22 @@ type ProgressContextValue = {
 const ProgressContext = createContext<ProgressContextValue | null>(null);
 
 export function ProgressProvider({ children }: { readonly children: ReactNode }) {
-  const [readMap, setReadMap] = useState<ReadMap>({});
+  // Render instantly from localStorage so the UI is never gated on a slow cloud
+  // round-trip (Telegram Desktop can take several seconds).
+  const [readMap, setReadMap] = useState<ReadMap>(() => readLocalMap());
   const [loaded, setLoaded] = useState(false);
+  // Tracks whether the user changed anything before the cloud response arrived, so
+  // a late cloud load never clobbers a fresh in-session edit.
+  const editedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    loadReadMap().then((map) => {
-      if (cancelled) return;
-      setReadMap(map);
-      setLoaded(true);
+    setLoaded(true);
+    fetchCloudMap().then((cloud) => {
+      if (cancelled || !cloud) return; // null = cloud unavailable/timeout — keep local
+      mirrorToLocal(cloud);
+      if (editedRef.current) return; // user already edited this session — don't overwrite
+      setReadMap(cloud);
     });
     return () => {
       cancelled = true;
@@ -32,6 +39,7 @@ export function ProgressProvider({ children }: { readonly children: ReactNode })
   const readCount = useCallback((courseId: string) => (readMap[courseId] ?? []).length, [readMap]);
 
   const toggle = useCallback((courseId: string, lessonId: string) => {
+    editedRef.current = true;
     setReadMap((prev) => {
       const current = prev[courseId] ?? [];
       const next = current.includes(lessonId) ? current.filter((id) => id !== lessonId) : [...current, lessonId];
