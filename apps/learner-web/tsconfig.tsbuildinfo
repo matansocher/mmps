@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/chaptersheet.tsx","./src/components/quiz.tsx","./src/data/courses.ts","./src/lib/icons.tsx","./src/lib/progress.tsx","./src/lib/storage.ts","./src/lib/telegram.ts","./src/pages/coursepage.tsx","./src/pages/homepage.tsx"],"version":"5.9.3"}

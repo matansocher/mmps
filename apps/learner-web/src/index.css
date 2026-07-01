@@ -1,0 +1,299 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0c11;
+  --panel: #12151d;
+  --panel-2: #191d27;
+  --border: #232935;
+  --text: #c3cad6;
+  --muted: #828d9e;
+  --accent: #7c8cff;
+  --accent-2: #5ee88a;
+  --warn: #f0a545;
+  --danger: #ff7b72;
+  --purple: #b7a6ff;
+  --code-bg: #0c0f16;
+  --radius: 16px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background:
+    radial-gradient(1100px 600px at 50% -10%, rgba(124, 140, 255, 0.08), transparent 60%),
+    var(--bg);
+}
+
+/* Clickable affordance + accessible focus everywhere */
+button,
+a,
+[role='button'] {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Ambient decorative blobs used on the home hero */
+.ambient {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Springy press feedback on tappable cards/buttons */
+.pressable {
+  transition:
+    transform 180ms var(--ease),
+    border-color 180ms var(--ease),
+    box-shadow 180ms var(--ease),
+    background-color 180ms var(--ease);
+}
+.pressable:active {
+  transform: scale(0.98);
+}
+
+/* Top-of-page reading progress bar */
+.read-progress {
+  transition: width 120ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---- Rendered lesson content ---- */
+.course-content {
+  color: var(--text);
+  line-height: 1.65;
+  font-size: 16px;
+}
+.course-content a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.course-content a:hover {
+  text-decoration: underline;
+}
+.course-content .badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: rgba(124, 140, 255, 0.14);
+  color: var(--accent);
+  border: 1px solid rgba(124, 140, 255, 0.22);
+  margin-bottom: 12px;
+}
+.course-content h2.lesson-title {
+  font-size: 28px;
+  margin: 6px 0 8px;
+  color: #fff;
+}
+.course-content .lesson-lede {
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 28px;
+}
+.course-content h3 {
+  color: #fff;
+  margin-top: 34px;
+  font-size: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.course-content h4 {
+  color: var(--purple);
+  margin-top: 24px;
+  font-size: 16px;
+}
+.course-content p {
+  margin: 12px 0;
+}
+.course-content ul,
+.course-content ol {
+  margin: 12px 0;
+  padding-left: 22px;
+}
+.course-content li {
+  margin: 6px 0;
+}
+.course-content strong {
+  color: #fff;
+}
+.course-content code:not(pre code) {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--accent-2);
+  border: 1px solid var(--border);
+}
+.course-content pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.course-content pre code {
+  color: #c9d1d9;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.course-content .callout {
+  border-left: 4px solid var(--accent);
+  background: var(--panel);
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  margin: 20px 0;
+}
+.course-content .callout.warn {
+  border-color: var(--warn);
+}
+.course-content .callout.danger {
+  border-color: var(--danger);
+}
+.course-content .callout.good {
+  border-color: var(--accent-2);
+}
+.course-content .callout .c-title {
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.course-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+}
+.course-content th,
+.course-content td {
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.course-content th {
+  background: var(--panel-2);
+  color: #fff;
+}
+.course-content tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.course-content .diagram {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 22px 0;
+  text-align: center;
+}
+.course-content .diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+.course-content .node-box {
+  fill: var(--panel-2);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.course-content .node-box.worker {
+  stroke: var(--accent-2);
+}
+.course-content .node-box.tool {
+  stroke: var(--warn);
+}
+.course-content .node-text {
+  fill: #fff;
+  font-size: 13px;
+  font-family: inherit;
+}
+.course-content .node-sub {
+  fill: var(--muted);
+  font-size: 10px;
+}
+.course-content .edge {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  fill: none;
+  marker-end: url(#arrow);
+}
+.course-content .edge-label {
+  fill: var(--muted);
+  font-size: 10px;
+}
+.course-content .diagram-caption {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 12px;
+}
+.course-content .pattern-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 18px 0;
+}
+.course-content .pattern-card h4 {
+  margin-top: 0;
+}
+.course-content .tag-row {
+  margin: 10px 0;
+}
+.course-content .tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin: 2px 4px 2px 0;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.course-content .tag.use {
+  color: var(--accent-2);
+  border-color: rgba(126, 231, 135, 0.3);
+}
+.course-content .tag.avoid {
+  color: var(--danger);
+  border-color: rgba(255, 123, 114, 0.3);
+}
+.course-content .kicker {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+.course-content .two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .course-content .two-col {
+    grid-template-columns: 1fr;
+  }
+}
