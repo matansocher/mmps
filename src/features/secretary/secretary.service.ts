@@ -57,6 +57,13 @@ export class SecretaryService {
     return deleteMessagesBefore(cutoff);
   }
 
+  // Whether there was any conversation with the given chat today (project timezone).
+  async hasSpokenWithChatToday(chatId: number): Promise<boolean> {
+    const { start, end } = todayWindow();
+    const messages = await getMessagesForChatBetween(chatId, start, end);
+    return messages.length > 0;
+  }
+
   // Generate and return one summary (with extracted actions) per chat that had activity today.
   async buildDailySummaries(): Promise<DailySummary[]> {
     const { start, end } = todayWindow();

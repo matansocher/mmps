@@ -1,7 +1,7 @@
 import type { Bot } from 'grammy';
 import { randomUUID } from 'node:crypto';
 import cron from 'node-cron';
-import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
+import { DEFAULT_TIMEZONE, MY_USER_ID, TOODIE_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { buildInlineKeyboard, sendShortenedMessage } from '@services/telegram';
 import { createActions, setActionsMessageId, type CreateSecretaryActionData, type SecretarySummaryAction } from './mongo';
@@ -19,7 +19,7 @@ export class SecretarySchedulerService {
 
   init(): void {
     cron.schedule('30 23 * * *', () => this.runDailyDigest(), { timezone: DEFAULT_TIMEZONE });
-    cron.schedule('13 12 * * 1,2,3', () => this.sendCheckInPrompt(), { timezone: DEFAULT_TIMEZONE });
+    cron.schedule('13 11 * * 1,2,3', () => this.sendCheckInPrompt(), { timezone: DEFAULT_TIMEZONE });
   }
 
   async runDailyDigest(): Promise<void> {
@@ -60,6 +60,10 @@ export class SecretarySchedulerService {
 
   async sendCheckInPrompt(): Promise<void> {
     try {
+      if (await this.secretaryService.hasSpokenWithChatToday(TOODIE_USER_ID)) {
+        this.logger.log('Skipping check-in prompt: already spoke today.');
+        return;
+      }
       const keyboard = buildInlineKeyboard([{ text: 'Send ✅', data: CHECK_IN_SEND_CALLBACK, style: 'success' }]);
       await this.bot.api.sendMessage(MY_USER_ID, `Send this to her?\n\n"${CHECK_IN_MESSAGE}"`, { reply_markup: keyboard });
     } catch (err) {
