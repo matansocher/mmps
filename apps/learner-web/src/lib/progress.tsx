@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Course } from '../data/courses';
-import { loadReadMap, saveReadMap, type ReadMap } from './storage';
+import { loadReadMap, saveCourse, type ReadMap } from './storage';
 
 type ProgressContextValue = {
   readonly loaded: boolean;
@@ -35,9 +35,8 @@ export function ProgressProvider({ children }: { readonly children: ReactNode })
     setReadMap((prev) => {
       const current = prev[courseId] ?? [];
       const next = current.includes(lessonId) ? current.filter((id) => id !== lessonId) : [...current, lessonId];
-      const updated = { ...prev, [courseId]: next };
-      saveReadMap(updated);
-      return updated;
+      saveCourse(courseId, next);
+      return { ...prev, [courseId]: next };
     });
   }, []);
 
