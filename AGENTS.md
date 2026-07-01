@@ -134,9 +134,11 @@ mmps/
 ├── .github/
 │   ├── workflows/      # ci.yml, claude.yml (AI review/implement), docs-deploy.yml
 │   └── copilot-instructions.md → ../AGENTS.md   # symlink
+├── .agents/
+│   └── skills/         # MMPS skills (canonical; SKILL.md format)
 ├── .claude/
 │   ├── settings.json
-│   └── skills/         # MMPS-specific Claude Code skills
+│   └── skills → ../.agents/skills               # symlink
 ├── AGENTS.md           # ← you are here (canonical)
 ├── CLAUDE.md → AGENTS.md                          # symlink
 └── .env.example        # All env vars the code references
@@ -791,16 +793,19 @@ Conventions: `*.spec.ts` next to source, `describe()` for grouping, `test.each()
 
 ---
 
-## Project-Local Claude Skills
+## Project-Local Skills
 
-`.claude/skills/` ships skills tailored to MMPS. Triggered via slash command in Claude Code:
+Skills tailored to MMPS live in `.agents/skills/` (the vendor-neutral SKILL.md convention that pairs with `AGENTS.md`) and are shared across agents with **zero duplication**: **GitHub Copilot CLI** discovers `.agents/skills/` natively, and **Claude Code** picks them up through the `.claude/skills → ../.agents/skills` symlink. There is exactly one real copy of each skill. Triggered via slash command (Claude Code) or auto-invoked / `copilot skill list` (Copilot CLI):
 
 - `/review-style` — Check changed files against MMPS conventions (type vs interface, `.then()`, default exports, JSDoc, `readonly`, telegram import path, barrel exports, `bot.api` in controllers).
 - `/planner` — Plan a new feature with the file table + reference patterns.
 - `/update-docs` — Sync VitePress docs in `docs/` with recent code changes.
+- `/scaffold-ai-tool` — Scaffold a new chatbot AI tool (Zod schema + runner, barrel export, `agent.ts` registration, prompt update).
+- `/scaffold-service` — Scaffold a new `src/services/{name}/` integration (`api.ts`/`types.ts`/`index.ts`, env var, barrel).
+- `/integration-research` — Research an external site/API/MCP/host and produce an MMPS-specific feasibility + integration plan.
 - `/playwright`, `/humanizer`, `/fact-checker`, `/prompt-master` — general-purpose, not MMPS-specific.
 
-Skills live in `.claude/skills/{name}/SKILL.md` and follow the standard Claude Code skill frontmatter.
+Skills live in `.agents/skills/{name}/SKILL.md` and follow the standard `SKILL.md` frontmatter (`name`, `description`). Instruction files follow the same single-source rule: `AGENTS.md` is canonical, and `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are symlinks to it.
 
 ---
 
