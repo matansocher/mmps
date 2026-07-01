@@ -80,27 +80,27 @@ function CourseReader({ course, onExit }: { readonly course: Course; readonly on
         <div className="read-progress h-full bg-accent-primary" style={{ width: `${scrollPct}%` }} />
       </div>
 
-      <header className="sticky top-0 z-30 border-b border-border-subtle bg-bg-base/85 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-2xl items-center gap-3 px-3 py-2.5">
-          <button onClick={onExit} aria-label="Back to courses" className="pressable flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-text-secondary hover:bg-bg-elevated">
+      <header className="sticky top-0 z-30 border-b border-border-subtle bg-bg-base/85 backdrop-blur-md" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="mx-auto flex w-full max-w-2xl items-center px-3 py-2.5">
+          <button onClick={onExit} aria-label="Back to courses" className="pressable flex items-center gap-1.5 rounded-xl py-1 pl-1 pr-3 text-sm font-medium text-text-secondary hover:bg-bg-elevated">
             <ArrowLeft />
-          </button>
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg" style={{ backgroundColor: `${course.color}1f` }}>
-              {course.icon}
-            </span>
-            <span className="truncate text-sm font-bold text-text-primary">{course.title}</span>
-          </div>
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="pressable flex shrink-0 items-center gap-1.5 rounded-xl border border-border-subtle px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-border-strong"
-          >
-            <List size={15} /> Chapters
+            Back
           </button>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-6 pt-5">
+        {/* Course header — part of the page content */}
+        <div className="mb-6 flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl" style={{ backgroundColor: `${course.color}1f` }}>
+            {course.icon}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-base font-extrabold text-text-primary">{course.title}</h1>
+            <p className="text-xs font-medium text-text-muted">{isQuizStep ? `Final quiz · ${course.quizzes.length} questions` : `Lesson ${step + 1} of ${course.lessons.length}`}</p>
+          </div>
+        </div>
+
         {isQuizStep ? (
           <QuizSection quizzes={course.quizzes} />
         ) : (
@@ -133,22 +133,30 @@ function CourseReader({ course, onExit }: { readonly course: Course; readonly on
         )}
       </main>
 
-      <footer className="sticky bottom-0 z-30 border-t border-border-subtle bg-bg-base/85 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-4 py-3">
+      <footer className="sticky bottom-0 z-30 border-t border-border-subtle bg-bg-base/85 backdrop-blur-md" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-3 py-2.5">
           <button
             onClick={() => goTo(step - 1)}
             disabled={step === 0}
-            className="pressable flex items-center gap-1 rounded-xl border border-border-subtle px-4 py-2 text-sm font-medium text-text-secondary disabled:opacity-30"
+            aria-label="Previous"
+            className="pressable flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-subtle text-text-secondary disabled:opacity-30"
           >
-            <ChevronLeft size={16} /> Prev
+            <ChevronLeft size={18} />
           </button>
-          <span className="text-xs font-semibold tabular-nums text-text-muted">{isQuizStep ? 'Final Quiz' : `${step + 1} / ${course.lessons.length}`}</span>
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="pressable flex flex-1 items-center justify-center gap-2 rounded-xl border border-border-subtle px-4 py-2.5 text-sm font-semibold text-text-secondary hover:border-border-strong"
+          >
+            <List size={16} />
+            {isQuizStep ? 'Final Quiz' : `Chapter ${step + 1} / ${course.lessons.length}`}
+          </button>
           <button
             onClick={() => goTo(step + 1)}
             disabled={step === lastStep}
-            className="pressable flex items-center gap-1 rounded-xl border border-border-subtle px-4 py-2 text-sm font-medium text-text-secondary disabled:opacity-30"
+            aria-label="Next"
+            className="pressable flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-subtle text-text-secondary disabled:opacity-30"
           >
-            Next <ChevronRight size={16} />
+            <ChevronRight size={18} />
           </button>
         </div>
       </footer>
