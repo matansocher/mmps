@@ -3,19 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0d1117;
-  --panel: #161b22;
-  --panel-2: #1c2330;
-  --border: #2b3441;
-  --text: #d7dee7;
-  --muted: #8b98a9;
-  --accent: #58a6ff;
-  --accent-2: #7ee787;
-  --warn: #f0883e;
+  --bg: #0a0c11;
+  --panel: #12151d;
+  --panel-2: #191d27;
+  --border: #232935;
+  --text: #c3cad6;
+  --muted: #828d9e;
+  --accent: #7c8cff;
+  --accent-2: #5ee88a;
+  --warn: #f0a545;
   --danger: #ff7b72;
-  --purple: #d2a8ff;
-  --code-bg: #0b0f14;
-  --radius: 12px;
+  --purple: #b7a6ff;
+  --code-bg: #0c0f16;
+  --radius: 16px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html,
@@ -25,7 +26,59 @@ body,
 }
 body {
   -webkit-font-smoothing: antialiased;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background:
+    radial-gradient(1100px 600px at 50% -10%, rgba(124, 140, 255, 0.08), transparent 60%),
+    var(--bg);
+}
+
+/* Clickable affordance + accessible focus everywhere */
+button,
+a,
+[role='button'] {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Ambient decorative blobs used on the home hero */
+.ambient {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Springy press feedback on tappable cards/buttons */
+.pressable {
+  transition:
+    transform 180ms var(--ease),
+    border-color 180ms var(--ease),
+    box-shadow 180ms var(--ease),
+    background-color 180ms var(--ease);
+}
+.pressable:active {
+  transform: scale(0.98);
+}
+
+/* Top-of-page reading progress bar */
+.read-progress {
+  transition: width 120ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* ---- Rendered lesson content ---- */
@@ -44,12 +97,14 @@ body {
 .course-content .badge {
   display: inline-block;
   font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 3px 10px;
+  letter-spacing: 0.08em;
+  padding: 4px 11px;
   border-radius: 20px;
-  background: rgba(88, 166, 255, 0.14);
+  background: rgba(124, 140, 255, 0.14);
   color: var(--accent);
+  border: 1px solid rgba(124, 140, 255, 0.22);
   margin-bottom: 12px;
 }
 .course-content h2.lesson-title {
@@ -107,7 +162,7 @@ body {
 }
 .course-content pre code {
   color: #c9d1d9;
-  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 .course-content .callout {
   border-left: 4px solid var(--accent);
