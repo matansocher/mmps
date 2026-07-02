@@ -1,17 +1,14 @@
 import { useEffect } from 'react';
 import { Route, Router, Switch } from 'wouter';
+import { DebugOverlay } from './components/DebugOverlay';
+import { trackEvent } from './lib/api';
 import { ProgressProvider } from './lib/progress';
-import { getWebApp } from './lib/telegram';
 import { CoursePage } from './pages/CoursePage';
 import { HomePage } from './pages/HomePage';
 
 export function App() {
   useEffect(() => {
-    const w = getWebApp();
-    if (w) {
-      w.ready();
-      w.expand();
-    }
+    trackEvent({ type: 'open' });
   }, []);
 
   return (
@@ -27,6 +24,7 @@ export function App() {
           </Switch>
         </div>
       </Router>
+      <DebugOverlay />
     </ProgressProvider>
   );
 }

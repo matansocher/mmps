@@ -3,6 +3,7 @@ import { useLocation, useParams } from 'wouter';
 import { ChapterSheet } from '../components/ChapterSheet';
 import { QuizSection } from '../components/Quiz';
 import { getCourse, type Course } from '../data/courses';
+import { trackEvent } from '../lib/api';
 import { firstUnreadIndex, useProgress } from '../lib/progress';
 import { ArrowLeft, Check, ChevronLeft, ChevronRight, List, Trophy } from '../lib/icons';
 import { haptic, showBackButton } from '../lib/telegram';
@@ -66,10 +67,14 @@ function CourseReader({ course, onExit }: { readonly course: Course; readonly on
     const wasRead = read;
     toggle(course.id, lesson.id);
     haptic(wasRead ? 'select' : 'success');
-    // Celebrate when this marks the final remaining lesson of the course.
-    if (!wasRead && readCount(course.id) + 1 >= course.lessons.length) {
-      setCelebrate(true);
-      setTimeout(() => setCelebrate(false), 2600);
+    if (!wasRead) {
+      trackEvent({ type: 'lesson_complete', courseId: course.id, courseTitle: course.title, lessonId: lesson.id, lessonTitle: lesson.title });
+      // Celebrate + report course completion when this marks the final remaining lesson.
+      if (readCount(course.id) + 1 >= course.lessons.length) {
+        trackEvent({ type: 'course_complete', courseId: course.id, courseTitle: course.title });
+        setCelebrate(true);
+        setTimeout(() => setCelebrate(false), 2600);
+      }
     }
   };
 

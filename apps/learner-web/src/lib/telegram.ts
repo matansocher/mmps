@@ -33,6 +33,10 @@ export function getWebApp(): TgWebApp | null {
   return window.Telegram?.WebApp ?? null;
 }
 
+export function getInitData(): string {
+  return getWebApp()?.initData ?? '';
+}
+
 export function showBackButton(onClick: () => void): () => void {
   const w = getWebApp();
   if (!w) return () => {};

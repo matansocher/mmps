@@ -4,6 +4,29 @@ import { getWebApp } from './telegram';
 // Persisted shape (in memory): { [courseId]: string[] } — read lesson ids per course.
 export type ReadMap = Record<string, string[]>;
 
+// Opt-in diagnostics (append ?debug=1 to the mini-app URL) to inspect CloudStorage
+// behaviour on clients where a devtools console isn't easily accessible.
+export type CloudDiag = {
+  hasWebApp: boolean;
+  hasCloudStorage: boolean;
+  version: string;
+  gatePassed: boolean;
+  usedGetItems: boolean;
+  lastResult: 'idle' | 'ok' | 'empty' | 'error' | 'timeout';
+  lastError: string;
+  courseKeysFound: number;
+};
+export const cloudDiag: CloudDiag = {
+  hasWebApp: false,
+  hasCloudStorage: false,
+  version: '',
+  gatePassed: false,
+  usedGetItems: false,
+  lastResult: 'idle',
+  lastError: '',
+  courseKeysFound: 0,
+};
+
 // One key per course keeps every CloudStorage value tiny (a course's read-list is
 // ~a few hundred chars), well under the 4096-char-per-value limit. A single blob
 // for all courses overflows once most of the ~255 lessons are read.
@@ -19,8 +42,13 @@ const courseKey = (courseId: string) => PREFIX + courseId;
 // but log "not supported" warnings when used, so gate on the version.
 function cloudStorage() {
   const w = getWebApp();
+  cloudDiag.hasWebApp = !!w;
+  cloudDiag.hasCloudStorage = !!w?.CloudStorage;
+  cloudDiag.version = w?.version ?? '';
   if (!w?.CloudStorage) return null;
-  if (!w.isVersionAtLeast?.('6.9')) return null;
+  const gate = !!w.isVersionAtLeast?.('6.9');
+  cloudDiag.gatePassed = gate;
+  if (!gate) return null;
   return w.CloudStorage;
 }
 
@@ -67,10 +95,12 @@ export function mirrorToLocal(map: ReadMap): void {
 function cloudGetAll(cs: NonNullable<ReturnType<typeof cloudStorage>>): Promise<Record<string, string>> {
   const keys = COURSE_IDS.map(courseKey);
   if (typeof cs.getItems === 'function') {
+    cloudDiag.usedGetItems = true;
     return new Promise((resolve, reject) => {
       cs.getItems(keys, (err, values) => (err ? reject(new Error(err)) : resolve(values ?? {})));
     });
   }
+  cloudDiag.usedGetItems = false;
   return Promise.all(
     keys.map(
       (k) =>
@@ -83,22 +113,40 @@ function cloudGetAll(cs: NonNullable<ReturnType<typeof cloudStorage>>): Promise<
 
 // Fetch the cross-device progress from CloudStorage. Resolves to null when cloud
 // is unavailable, errors, or times out — callers must NOT overwrite local state
-// on null (that would wipe good local data with nothing).
+// on null (that would wipe good local data with nothing). Retries once, since the
+// first request on Telegram Desktop right after startup is occasionally dropped.
 export function fetchCloudMap(): Promise<ReadMap | null> {
   const cs = cloudStorage();
   if (!cs) return Promise.resolve(null);
 
-  const load = cloudGetAll(cs).then((values) => {
-    const map: ReadMap = {};
-    for (const id of COURSE_IDS) {
-      const ids = parseIds(values[courseKey(id)]);
-      if (ids) map[id] = ids;
-    }
-    return map;
-  });
+  const attempt = (): Promise<ReadMap | null> => {
+    const load = cloudGetAll(cs).then((values) => {
+      const map: ReadMap = {};
+      for (const id of COURSE_IDS) {
+        const ids = parseIds(values[courseKey(id)]);
+        if (ids) map[id] = ids;
+      }
+      cloudDiag.courseKeysFound = Object.keys(map).length;
+      cloudDiag.lastResult = cloudDiag.courseKeysFound > 0 ? 'ok' : 'empty';
+      return map;
+    });
+    const timeout = new Promise<null>((resolve) =>
+      setTimeout(() => {
+        cloudDiag.lastResult = 'timeout';
+        resolve(null);
+      }, CLOUD_TIMEOUT_MS),
+    );
+    return Promise.race([load, timeout]).catch((e) => {
+      cloudDiag.lastResult = 'error';
+      cloudDiag.lastError = String(e?.message ?? e);
+      return null;
+    });
+  };
 
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), CLOUD_TIMEOUT_MS));
-  return Promise.race([load, timeout]).catch(() => null);
+  return attempt().then((map) => {
+    if (map) return map;
+    return new Promise<ReadMap | null>((resolve) => setTimeout(() => resolve(attempt()), 600));
+  });
 }
 
 // Write-through for a single course: localStorage first (always), CloudStorage
