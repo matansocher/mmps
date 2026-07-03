@@ -112,17 +112,19 @@ export function buildPreviewPrompt(slateLabel: string, dossiers: MatchDossier[])
 
 IMPORTANT — LANGUAGE: The data (team names, venue, and the "trends" text) may be in Hebrew. Translate EVERYTHING into natural English, including all team and player names (e.g. write "Switzerland", "Ivory Coast", not their Hebrew spelling). The final message must contain NO Hebrew characters at all.
 
+IMPORTANT — NEUTRAL VENUE (NO HOME ADVANTAGE): This is the World Cup, so every match is played at a neutral venue and BOTH teams are effectively playing away. The "homeTeam"/"awayTeam" fields are only a fixture-listing order for identification — they do NOT represent a real home/away split. Do NOT give either team a home advantage, and never mention home crowd, home form, or travel/away disadvantage in your analysis or prediction. Weigh both teams purely on their quality and the provided data.
+
 DATA (one object per match):
 ${JSON.stringify(dossiers, null, 2)}
 
 For EACH match, write a rich preview using ONLY the data above:
-1. Header line: "🌍 <Home> vs <Away>" (English names), then a second line with the kickoff time (use the "kickoff" field, which is already Asia/Jerusalem local time), stage/round, and venue (and TV channel if present).
+1. Header line: "🌍 <Team A> vs <Team B>" (English names, using the homeTeam and awayTeam fields as the two competing teams — this order is just the fixture listing, not a home/away advantage), then a second line with the kickoff time (use the "kickoff" field, which is already Asia/Jerusalem local time), stage/round, and venue (and TV channel if present).
 2. Group standings: if standings are provided for the teams, show each team's position, points, and games played, labelled clearly as their place in the World Cup standings table. NEVER call it a "FIFA ranking" and NEVER invent a FIFA/world ranking or any number not in the data. If no standings are provided (e.g. knockout stage), omit this line entirely.
 3. Form & key data: summarize recent form (W/D/L), goals scored/conceded tendencies, notable streaks, and head-to-head history from the provided trends and pre-game statistics. Translate every Hebrew stat into English.
-4. Betting odds: Display an odds line ONLY for outcomes whose numeric 1X2 odds are explicitly present in the pre-game statistics, formatted 🏠 Home | 🤝 Draw | 🚌 Away. NEVER write placeholder text such as "(not provided)", "N/A", or a dash for a missing odd — leave that outcome out. If no numeric odds are present at all, OMIT the odds line completely.
+4. Betting odds: Display an odds line ONLY for outcomes whose numeric 1X2 odds are explicitly present in the pre-game statistics, labelled by team name and formatted "<Team A>: <odd> | 🤝 Draw: <odd> | <Team B>: <odd>". NEVER write placeholder text such as "(not provided)", "N/A", or a dash for a missing odd — leave that outcome out. If no numeric odds are present at all, OMIT the odds line completely.
 5. Analysis: one focused paragraph explaining the matchup and what will likely decide it, grounded in the data.
 6. Prediction:
-   - Win probabilities for the 90-minute result: 🏠 X% | 🤝 Y% | 🚌 Z%. These THREE numbers MUST add up to exactly 100 — verify the arithmetic before writing them.
+   - Win probabilities for the 90-minute result, labelled by team name: "<Team A>: X% | 🤝 Draw: Y% | <Team B>: Z%". These THREE numbers MUST add up to exactly 100 — verify the arithmetic before writing them.
    - Predicted 90-minute scoreline, e.g. "Predicted score: 2-1".
    - Confidence: Low / Medium / High.
    - KNOCKOUT RULE: If the stage is a knockout round (Round of 32, Round of 16, Quarter-final, Semi-final, Final — anything that is not a group stage), the tie MUST produce a winner. If your 90-minute prediction is a draw, add a line "Advances: <Team>" naming who you expect to progress via extra time or penalties. Never leave a knockout tie without a winner.
