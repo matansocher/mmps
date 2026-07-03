@@ -52,14 +52,14 @@ function flagSourceRect(group: number, pos: number): { x: number; y: number; w: 
 //   SF    gnum 1   = left box,       gnum 2   = right box
 //   FINAL gnum 1   = the final (slot 0 left finalist / slot 1 right finalist)
 // ---------------------------------------------------------------------------
-type Slot = { flagCx: number; nameX: number; cy: number; size: number };
+type Slot = { flagCx: number; cy: number; size: number; side: 'L' | 'R' };
 
 function r16Slot(gnum: number, slot: number): Slot {
   const left = gnum <= 4;
   const box = left ? gnum : gnum - 4;
   const vsX = left ? R16.vsX.L : R16.vsX.R;
-  const cy = R16.ys[box - 1] + (slot ? R16.off : -R16.off);
-  return { flagCx: left ? vsX - R16.flagDx : vsX + R16.flagDx, nameX: left ? vsX + R16.nameDx : vsX - R16.nameDx, cy, size: 20 };
+  const cy = R16.ys[box - 1] + (slot ? R16.offBot : -R16.offTop);
+  return { flagCx: left ? vsX - R16.flagDx : vsX + R16.flagDx, cy, size: 20, side: left ? 'L' : 'R' };
 }
 
 function qfSlot(gnum: number, slot: number): Slot {
@@ -67,19 +67,19 @@ function qfSlot(gnum: number, slot: number): Slot {
   const box = left ? gnum : gnum - 2;
   const x = left ? QF.x.L : QF.x.R;
   const cy = QF.boxCy[box - 1] + (slot ? QF.off : -QF.off);
-  return { flagCx: left ? x - QF.flagDx : x + QF.flagDx, nameX: left ? x + QF.nameDx : x - QF.nameDx, cy, size: 16 };
+  return { flagCx: left ? x - QF.flagDx : x + QF.flagDx, cy, size: 16, side: left ? 'L' : 'R' };
 }
 
 function sfSlot(gnum: number, slot: number): Slot {
   const left = gnum <= 1;
   const x = left ? SF.x.L : SF.x.R;
   const cy = SF.boxCy + (slot ? SF.off : -SF.off);
-  return { flagCx: left ? x - SF.flagDx : x + SF.flagDx, nameX: left ? x + SF.nameDx : x - SF.nameDx, cy, size: 15 };
+  return { flagCx: left ? x - SF.flagDx : x + SF.flagDx, cy, size: 15, side: left ? 'L' : 'R' };
 }
 
 function finalSlot(_gnum: number, slot: number): Slot {
   const cy = FINAL.ys[slot]; // slot 0 = top box (left finalist), 1 = bottom box (right finalist)
-  return { flagCx: FINAL.x - FINAL.flagDx, nameX: FINAL.x + FINAL.nameDx, cy, size: 18 };
+  return { flagCx: FINAL.x - FINAL.flagDx, cy, size: 18, side: 'L' };
 }
 
 const ROUND_SLOT: Record<WcRound, (gnum: number, slot: number) => Slot> = { R16: r16Slot, QF: qfSlot, SF: sfSlot, FINAL: finalSlot };
@@ -103,10 +103,10 @@ function drawFlag(ctx: ReturnType<ReturnType<typeof createCanvas>['getContext']>
   ctx.stroke();
 }
 
-function drawName(ctx: ReturnType<ReturnType<typeof createCanvas>['getContext']>, text: string, x: number, y: number, size: number): void {
+function drawName(ctx: ReturnType<ReturnType<typeof createCanvas>['getContext']>, text: string, x: number, y: number, size: number, align: 'left' | 'right'): void {
   ctx.font = `bold ${size}px ${FONT_FAMILY}`;
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'right';
+  ctx.textAlign = align;
   ctx.direction = 'rtl';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(text, x, y);
@@ -127,8 +127,13 @@ export async function renderWcTree(placements: WcPlacement[]): Promise<string> {
     }
     const slot = slotFn(p.gnum, p.slot);
     const src = flagSourceRect(p.group, p.pos);
-    drawFlag(ctx, base, src, slot.flagCx, slot.cy, slot.size + 20);
-    drawName(ctx, p.name, slot.nameX, slot.cy, slot.size);
+    const diameter = slot.size + 20;
+    drawFlag(ctx, base, src, slot.flagCx, slot.cy, diameter);
+    // Anchor the name to the inner edge of the (correctly placed) flag so it always
+    // sits next to the flag inside the box, mirrored on the right side of the bracket.
+    const gap = diameter / 2 + 9;
+    const nameX = slot.side === 'L' ? slot.flagCx + gap : slot.flagCx - gap;
+    drawName(ctx, p.name, nameX, slot.cy, slot.size, slot.side === 'L' ? 'left' : 'right');
   }
 
   await mkdir(OUTPUT_DIR, { recursive: true });

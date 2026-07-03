@@ -23,10 +23,12 @@ export const FLAG_SRC_SIZE = 45;
 // ---------------------------------------------------------------------------
 // Target slot geometry per round (measured from the base art).
 // ---------------------------------------------------------------------------
-export const R16 = { vsX: { L: 281, R: 991 }, ys: [278, 451, 604, 772], off: 41, flagDx: 43, nameDx: 55 };
+// The VS circle sits slightly above the true midpoint of each pairing, so the two
+// stacked slots are asymmetric about `ys`: the top team needs a smaller offset.
+export const R16 = { vsX: { L: 281, R: 991 }, ys: [278, 451, 604, 772], offTop: 30, offBot: 41, flagDx: 43 };
 // QF: two tall boxes per side (cy centers); each holds two stacked slots (cy +/- off).
-export const QF = { x: { L: 440, R: 829 }, boxCy: [342, 711], off: 31, flagDx: 30, nameDx: 38 };
+export const QF = { x: { L: 440, R: 829 }, boxCy: [342, 711], off: 31, flagDx: 30 };
 // SF: one tall box per side; two stacked slots (cy +/- off).
-export const SF = { x: { L: 488, R: 781 }, boxCy: 538, off: 33, flagDx: 28, nameDx: 38 };
+export const SF = { x: { L: 488, R: 781 }, boxCy: 538, off: 33, flagDx: 28 };
 // Final: top finalist box (left side) and bottom finalist box (right side).
-export const FINAL = { x: 636, ys: [380, 577], flagDx: 36, nameDx: 50 };
+export const FINAL = { x: 636, ys: [380, 577], flagDx: 36 };

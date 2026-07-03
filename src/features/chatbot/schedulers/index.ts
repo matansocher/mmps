@@ -16,3 +16,4 @@ export { rainRadarAlert } from './rain-radar-alert';
 export { upcomingEventAlert } from './upcoming-event-alert';
 export { usageSummary } from './usage-summary';
 export { wcTreeUpdate } from './wc-tree-update';
+export { worldCupPreview } from './world-cup-preview';
