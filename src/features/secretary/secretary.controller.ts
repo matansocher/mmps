@@ -5,10 +5,21 @@ import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-fr
 import { downloadFile } from '@services/telegram';
 import { getActionByShortId, getActionsByMessageId, updateActionStatus } from './mongo';
 import { buildActionsKeyboard, SecretaryActionService } from './secretary-action.service';
-import { ACTION_CALLBACK_PREFIX, CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, DRAFT_CANCEL_CALLBACK_PREFIX, DRAFT_SEND_CALLBACK_PREFIX, NUDGE_DISMISS_CALLBACK_PREFIX, NUDGE_REPLY_CALLBACK_PREFIX, NUDGE_SNOOZE_CALLBACK_PREFIX, OWNER_BUSINESS_CONNECTION_ID, TRANSCRIPTION_HEADER } from './secretary.config';
 import { SecretaryDraftService } from './secretary-draft.service';
 import { SecretaryNudgeService } from './secretary-nudge.service';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
+import {
+  ACTION_CALLBACK_PREFIX,
+  CHECK_IN_MESSAGE,
+  CHECK_IN_SEND_CALLBACK,
+  DRAFT_CANCEL_CALLBACK_PREFIX,
+  DRAFT_SEND_CALLBACK_PREFIX,
+  NUDGE_DISMISS_CALLBACK_PREFIX,
+  NUDGE_REPLY_CALLBACK_PREFIX,
+  NUDGE_SNOOZE_CALLBACK_PREFIX,
+  OWNER_BUSINESS_CONNECTION_ID,
+  TRANSCRIPTION_HEADER,
+} from './secretary.config';
 import { SecretaryService } from './secretary.service';
 
 const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
@@ -36,20 +47,7 @@ export class SecretaryController {
     this.bot.callbackQuery(new RegExp(`^${NUDGE_REPLY_CALLBACK_PREFIX}`), (ctx) => this.nudgeReplyHandler(ctx));
     this.bot.callbackQuery(new RegExp(`^${NUDGE_SNOOZE_CALLBACK_PREFIX}`), (ctx) => this.nudgeSnoozeHandler(ctx));
     this.bot.callbackQuery(new RegExp(`^${NUDGE_DISMISS_CALLBACK_PREFIX}`), (ctx) => this.nudgeDismissHandler(ctx));
-
-    // Local-only: DM the bot directly to fake an incoming business message and test
-    // persistence, transcription and the daily summary without a live Business connection.
-    if (!isProd) {
-      this.bot.command('ask', (ctx) => this.askHandler(ctx));
-      this.bot.on(['message:voice', 'message:audio'], (ctx) => this.simulateAudioHandler(ctx));
-      this.bot.on('message:text', (ctx) => this.simulateTextHandler(ctx));
-      this.logger.log('Local simulation enabled: DM the bot (text/voice) to simulate incoming messages.');
-    }
-  }
-
-  private async askHandler(ctx: Context): Promise<void> {
-    if (!isOwner(ctx)) return;
-    await this.scheduler.sendCheckInPrompt();
+    this.bot.on(['message:voice', 'message:audio'], (ctx) => this.transcribeDmHandler(ctx));
   }
 
   private businessConnectionHandler(ctx: Context): void {
@@ -216,32 +214,16 @@ export class SecretaryController {
     }
   }
 
-  private async simulateAudioHandler(ctx: Context): Promise<void> {
+  private async transcribeDmHandler(ctx: Context): Promise<void> {
     const fileId = ctx.message?.voice?.file_id ?? ctx.message?.audio?.file_id;
-    const chatId = ctx.chat?.id ?? 0;
-    const senderName = ctx.from?.first_name ?? undefined;
-    const senderUsername = ctx.from?.username ?? undefined;
     if (!fileId) return;
 
     const transcript = await this.transcribe(fileId);
-    if (!transcript) return;
+    if (!transcript) {
+      await ctx.reply('Could not transcribe the audio.');
+      return;
+    }
+
     await ctx.reply(`${TRANSCRIPTION_HEADER}\n${transcript}`);
-    await this.secretaryService.storeMessage({ chatId, fromOwner: false, text: transcript, transcribed: true, senderName, senderUsername });
-    await this.updateDraftFlow(chatId, false);
-  }
-
-  private async simulateTextHandler(ctx: Context): Promise<void> {
-    const text = ctx.message?.text;
-    const chatId = ctx.chat?.id ?? 0;
-    if (!text || text.startsWith('/')) return;
-
-    // Local testing convention: prefix with "me:" to simulate the owner's own message.
-    const fromOwner = text.startsWith('me:');
-    const body = fromOwner ? text.slice(3).trim() : text;
-    if (!body) return;
-
-    await this.secretaryService.storeMessage({ chatId, fromOwner, text: body, senderName: ctx.from?.first_name ?? undefined, senderUsername: ctx.from?.username ?? undefined });
-    await this.updateDraftFlow(chatId, fromOwner);
-    await ctx.reply(`📝 stored (${fromOwner ? 'owner' : 'other'}).`);
   }
 }
