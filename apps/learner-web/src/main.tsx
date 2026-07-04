@@ -4,10 +4,7 @@ import { App } from './App';
 import { getWebApp } from './lib/telegram';
 import './index.css';
 
-// Signal readiness BEFORE React mounts. Telegram Web/Desktop only service the
-// CloudStorage bridge after ready(), and child effects (ProgressProvider's cloud
-// fetch) run before parent effects — so calling ready() here guarantees it
-// happens before any CloudStorage access.
+// Signal readiness and expand the mini-app to full height before React mounts.
 const wa = getWebApp();
 if (wa) {
   wa.ready();

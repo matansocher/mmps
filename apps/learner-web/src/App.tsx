@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Route, Router, Switch } from 'wouter';
-import { DebugOverlay } from './components/DebugOverlay';
 import { trackEvent } from './lib/api';
 import { ProgressProvider } from './lib/progress';
 import { CoursePage } from './pages/CoursePage';
@@ -24,7 +23,6 @@ export function App() {
           </Switch>
         </div>
       </Router>
-      <DebugOverlay />
     </ProgressProvider>
   );
 }

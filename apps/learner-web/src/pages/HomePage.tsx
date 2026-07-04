@@ -31,7 +31,7 @@ function ProgressRing({ pct, size = 60 }: { readonly pct: number; readonly size?
 
 export function HomePage() {
   const [, navigate] = useLocation();
-  const { readCount } = useProgress();
+  const { readCount, loaded } = useProgress();
 
   useEffect(() => {
     hideBackButton();
@@ -68,6 +68,14 @@ export function HomePage() {
   };
 
   const greeting = stats.learnedLessons === 0 ? 'Start your journey' : overallPct === 100 ? 'You finished everything' : 'Welcome back';
+
+  if (!loaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-border-subtle border-t-accent-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full pb-16">
