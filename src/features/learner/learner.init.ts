@@ -1,15 +1,19 @@
 import type { Express } from 'express';
 import express from 'express';
 import path from 'node:path';
+import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { registerLearnerApiRoutes } from './api';
 import { BOT_CONFIG } from './learner.config';
 import { LearnerController } from './learner.controller';
+import { DB_NAME } from './mongo';
 
 const logger = new Logger('initLearner');
 
 export async function initLearner(app: Express): Promise<void> {
+  await createMongoConnection(DB_NAME);
+
   const bot = provideTelegramBot(BOT_CONFIG);
 
   const learnerController = new LearnerController(bot);

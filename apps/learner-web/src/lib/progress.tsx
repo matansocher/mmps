@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Course } from '../data/courses';
-import { fetchCloudMap, mirrorToLocal, readLocalMap, saveCourse, type ReadMap } from './storage';
+import { fetchProgress, saveCourseProgress, type ReadMap } from './api';
 
 type ProgressContextValue = {
   readonly loaded: boolean;
@@ -12,41 +12,47 @@ type ProgressContextValue = {
 const ProgressContext = createContext<ProgressContextValue | null>(null);
 
 export function ProgressProvider({ children }: { readonly children: ReactNode }) {
-  // Render instantly from localStorage so the UI is never gated on a slow cloud
-  // round-trip (Telegram Desktop can take several seconds).
-  const [readMap, setReadMap] = useState<ReadMap>(() => readLocalMap());
+  const [readMap, setReadMap] = useState<ReadMap>({});
   const [loaded, setLoaded] = useState(false);
-  // Tracks whether the user changed anything before the cloud response arrived, so
-  // a late cloud load never clobbers a fresh in-session edit.
+  // Mirror of readMap for reads inside event handlers, so toggle can compute the
+  // next state (and persist it) without putting a side effect in the state updater
+  // (which React StrictMode invokes twice — that would double-save).
+  const mapRef = useRef<ReadMap>(readMap);
+  // Tracks whether the user changed anything before the initial load resolved, so
+  // a late server response never clobbers a fresh in-session edit.
   const editedRef = useRef(false);
+
+  const commit = useCallback((next: ReadMap) => {
+    mapRef.current = next;
+    setReadMap(next);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    setLoaded(true);
-    fetchCloudMap().then((cloud) => {
-      if (cancelled || !cloud) return; // null = cloud unavailable/timeout — keep local
-      mirrorToLocal(cloud);
-      if (editedRef.current) return; // user already edited this session — don't overwrite
-      setReadMap(cloud);
+    fetchProgress().then((progress) => {
+      if (cancelled) return;
+      if (progress && !editedRef.current) commit(progress);
+      setLoaded(true);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [commit]);
 
   const isRead = useCallback((courseId: string, lessonId: string) => (readMap[courseId] ?? []).includes(lessonId), [readMap]);
 
   const readCount = useCallback((courseId: string) => (readMap[courseId] ?? []).length, [readMap]);
 
-  const toggle = useCallback((courseId: string, lessonId: string) => {
-    editedRef.current = true;
-    setReadMap((prev) => {
-      const current = prev[courseId] ?? [];
+  const toggle = useCallback(
+    (courseId: string, lessonId: string) => {
+      editedRef.current = true;
+      const current = mapRef.current[courseId] ?? [];
       const next = current.includes(lessonId) ? current.filter((id) => id !== lessonId) : [...current, lessonId];
-      saveCourse(courseId, next);
-      return { ...prev, [courseId]: next };
-    });
-  }, []);
+      commit({ ...mapRef.current, [courseId]: next });
+      void saveCourseProgress(courseId, next);
+    },
+    [commit],
+  );
 
   const value = useMemo(() => ({ loaded, isRead, toggle, readCount }), [loaded, isRead, toggle, readCount]);
 

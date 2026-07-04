@@ -2,6 +2,7 @@ import type { Express, Request, Response } from 'express';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import type { TelegramBotConfig } from '@services/telegram';
+import { getProgress, saveCourseProgress, type ReadMap } from '../mongo';
 import { learnerAuthMiddleware } from './auth.middleware';
 
 const logger = new Logger('LearnerApiController');
@@ -49,6 +50,32 @@ export function registerLearnerApiRoutes(app: Express, deps: LearnerApiDeps): vo
 
     notify(botConfig, { action, ...data }, userDetailsFromReq(req));
     res.status(204).end();
+  });
+
+  app.get('/api/learner/progress', async (req: Request, res: Response<{ courses: ReadMap } | { error: string }>) => {
+    try {
+      const courses = await getProgress(req.learnerUser!.chatId);
+      res.json({ courses });
+    } catch (err) {
+      logger.error(`Failed to load progress: ${err}`);
+      res.status(500).json({ error: 'load_failed' });
+    }
+  });
+
+  app.put('/api/learner/progress/:courseId', async (req: Request, res: Response) => {
+    const courseId = req.params.courseId;
+    const { lessonIds } = (req.body ?? {}) as { lessonIds?: unknown };
+    if (typeof courseId !== 'string' || !courseId || !Array.isArray(lessonIds) || !lessonIds.every((id) => typeof id === 'string')) {
+      res.status(400).json({ error: 'invalid_body' });
+      return;
+    }
+    try {
+      await saveCourseProgress(req.learnerUser!.chatId, courseId, lessonIds as string[]);
+      res.status(204).end();
+    } catch (err) {
+      logger.error(`Failed to save progress: ${err}`);
+      res.status(500).json({ error: 'save_failed' });
+    }
   });
 
   logger.log('Learner API routes registered at /api/learner/*');

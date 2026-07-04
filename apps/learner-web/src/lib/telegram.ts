@@ -2,8 +2,6 @@ type TgWebApp = {
   ready(): void;
   expand(): void;
   initData: string;
-  version: string;
-  isVersionAtLeast(v: string): boolean;
   BackButton: {
     show(): void;
     hide(): void;
@@ -14,12 +12,6 @@ type TgWebApp = {
     impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
     notificationOccurred(type: 'error' | 'success' | 'warning'): void;
     selectionChanged(): void;
-  };
-  CloudStorage?: {
-    getItem(key: string, cb: (err: string | null, value?: string) => void): void;
-    setItem(key: string, value: string, cb?: (err: string | null, stored?: boolean) => void): void;
-    getItems(keys: string[], cb: (err: string | null, values?: Record<string, string>) => void): void;
-    removeItem(key: string, cb?: (err: string | null, removed?: boolean) => void): void;
   };
 };
 
