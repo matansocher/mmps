@@ -9,7 +9,6 @@ import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
-import { ensureExpenseIndexes, ensureIngestExpenseIndexes, DB_NAME as EXPENSES_DB_NAME } from '@shared/expenses';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
@@ -23,7 +22,6 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
-import { ChatbotLauncherService } from './launcher.service';
 
 const logger = new Logger('initChatbot');
 
@@ -39,13 +37,10 @@ export async function initChatbot(app: Express): Promise<void> {
     CALENDAR_EVENTS_DB_NAME,
     FRIENDS_DB_NAME,
     MEET_FRIENDS_DB_NAME,
-    EXPENSES_DB_NAME,
     USAGE_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
-  await ensureExpenseIndexes();
-  await ensureIngestExpenseIndexes();
   await ensureUsageIndexes();
 
   // Build the checkpointer BEFORE provideTelegramBot(), which calls bot.start().
@@ -57,8 +52,7 @@ export async function initChatbot(app: Express): Promise<void> {
   const bot = provideTelegramBot(BOT_CONFIG);
 
   const chatbotService = new ChatbotService(checkpointer);
-  const launcher = new ChatbotLauncherService(bot);
-  const chatbotController = new ChatbotController(chatbotService, bot, launcher);
+  const chatbotController = new ChatbotController(chatbotService, bot);
   const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot);
 
   chatbotController.init();

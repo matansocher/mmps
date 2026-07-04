@@ -10,7 +10,6 @@ import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-fr
 import { downloadFile, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
 import { IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { ChatbotLauncherService } from './launcher.service';
 
 export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
@@ -18,7 +17,6 @@ export class ChatbotController {
   constructor(
     private readonly chatbotService: ChatbotService,
     private readonly bot: Bot,
-    private readonly launcher: ChatbotLauncherService,
   ) {}
 
   init(): void {
@@ -46,9 +44,27 @@ export class ChatbotController {
     });
   }
 
+  buildKeyboard(): { inline_keyboard: { text: string; web_app: { url: string } }[][] } | null {
+    const url = env.CHATBOT_MINI_APP_URL;
+    if (!url) {
+      this.logger.warn('CHATBOT_MINI_APP_URL not configured');
+      return null;
+    }
+    return { inline_keyboard: [[{ text: '📱 Open app', web_app: { url } }]] };
+  }
+
+  async sendLauncher(chatId: number, intro = '🤖 Here is the app:'): Promise<void> {
+    const reply_markup = this.buildKeyboard();
+    if (!reply_markup) {
+      await this.bot.api.sendMessage(chatId, 'The app is not configured yet. Try again later.');
+      return;
+    }
+    await this.bot.api.sendMessage(chatId, intro, { reply_markup });
+  }
+
   private async appHandler(ctx: Context): Promise<void> {
     const { chatId } = getMessageData(ctx);
-    await this.launcher.sendLauncher(chatId);
+    await this.sendLauncher(chatId);
   }
 
   private async exerciseHandler(ctx: Context): Promise<void> {

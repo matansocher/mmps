@@ -44,5 +44,3 @@ export { githubTool } from './github/github.tool';
 export { contactsTool } from './contacts/contacts.tool';
 
 export { meetupsTool } from './meetups/meetups.tool';
-
-export { expensesTool } from './expenses/expenses.tool';

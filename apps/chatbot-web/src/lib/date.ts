@@ -79,15 +79,3 @@ export function shiftMonth(ym: string, delta: number): string {
 export function formatMonthLabel(ym: string): string {
   return format(parseISO(`${ym}-01T00:00:00`), 'MMM yyyy');
 }
-
-export function formatExpenseDayLabel(iso: string): string {
-  try {
-    const d = parseISO(iso);
-    const dayYmd = format(d, 'yyyy-MM-dd');
-    if (isToday(dayYmd)) return 'Today';
-    if (isYesterday(dayYmd)) return 'Yesterday';
-    return format(d, 'MMM d');
-  } catch {
-    return '';
-  }
-}

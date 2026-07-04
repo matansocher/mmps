@@ -1,5 +1,4 @@
 export { birthdayReminder } from './birthday-reminder';
-export { dailyExpensesLog } from './daily-expenses-log';
 export { dailySummary } from './daily-summary';
 export { earthquakeMonitor } from './earthquake-monitor';
 export { emailSummary } from './email-summary';

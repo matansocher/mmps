@@ -4,7 +4,6 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { ChatbotService } from './chatbot.service';
 import {
   birthdayReminder,
-  dailyExpensesLog,
   dailySummary,
   earthquakeMonitor,
   exerciseReminder,
@@ -48,8 +47,6 @@ export class ChatbotSchedulerService {
     createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot, this.chatbotService));
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
-
-    createSchedule(`00 23 * * *`, async () => dailyExpensesLog(this.bot));
 
     createSchedule(`*/15 * * * *`, async () => reminderCheck(this.bot));
 

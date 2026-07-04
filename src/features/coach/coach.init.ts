@@ -10,7 +10,6 @@ import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';
 import { CoachService } from './coach.service';
-import { CoachLauncherService } from './launcher.service';
 
 const logger = new Logger('initCoach');
 
@@ -19,8 +18,7 @@ export async function initCoach(app: Express): Promise<void> {
 
   const bot = provideTelegramBot(BOT_CONFIG);
   const coachService = new CoachService();
-  const launcher = new CoachLauncherService(bot);
-  const coachController = new CoachController(coachService, bot, launcher);
+  const coachController = new CoachController(coachService, bot);
   const coachScheduler = new CoachBotSchedulerService(coachService, bot);
 
   coachController.init();

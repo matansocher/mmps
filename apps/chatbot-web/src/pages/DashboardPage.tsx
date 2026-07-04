@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ConfirmSheet } from '../components/ConfirmSheet';
 import { DayPicker } from '../components/DayPicker';
 import { EventRow } from '../components/EventRow';
-import { ExpenseRow, formatAmount } from '../components/ExpenseRow';
 import { HeatmapStrip } from '../components/HeatmapStrip';
 import { ReminderRow } from '../components/ReminderRow';
 import { ReminderSheet } from '../components/ReminderSheet';
@@ -107,11 +106,6 @@ export function DashboardPage() {
     ? `Reminders · ${pendingCount} (${overdueCount} overdue)`
     : `Reminders · ${pendingCount}`;
 
-  const expenseTotalsLabel = useMemo(() => {
-    if (!data || data.expenseTotals.length === 0) return null;
-    return data.expenseTotals.map((t) => formatAmount(t.total, t.currency)).join(' · ');
-  }, [data]);
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4">
       <header className="flex flex-col gap-3">
@@ -171,23 +165,6 @@ export function DashboardPage() {
                   onTap={(r) => setEditing(r)}
                 />
               ))
-            )}
-          </Section>
-
-          <Section
-            title={`Expenses · ${data.expenses.length}`}
-            action={
-              expenseTotalsLabel ? (
-                <span className="normal-case tracking-normal text-text-primary font-medium tabular">
-                  {expenseTotalsLabel}
-                </span>
-              ) : undefined
-            }
-          >
-            {data.expenses.length === 0 ? (
-              <Empty>No spend logged for this day</Empty>
-            ) : (
-              data.expenses.map((expense) => <ExpenseRow key={expense.id} expense={expense} />)
             )}
           </Section>
 
@@ -288,7 +265,6 @@ function DashboardSkeleton() {
       </div>
       <SectionSkeleton rows={3} />
       <SectionSkeleton rows={2} />
-      <SectionSkeleton rows={3} />
       <div className="rounded-2xl bg-bg-card border border-border-subtle p-4">
         <Skeleton className="h-3 w-32 mb-3" />
         <div className="grid grid-flow-col grid-rows-7 gap-1" style={{ gridAutoColumns: 'minmax(0, 1fr)' }}>
