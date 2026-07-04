@@ -3,33 +3,15 @@ import { addDays, endOfMonth, startOfDay, startOfWeek, subDays, subMonths } from
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
-import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { registry } from '@core/openapi';
 import { Logger } from '@core/utils';
 import { deleteEvent, listEvents } from '@services/google-calendar';
 import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-calendar';
-import { notify } from '@services/notifier';
 import { getCurrentWeather, getForecastWeather } from '@services/weather';
-import {
-  createIngestExpense,
-  type Currency,
-  DEFAULT_CURRENCY,
-  effectiveCategory,
-  effectiveType,
-  effectiveVendor,
-  type Expense,
-  EXPENSE_CATEGORIES,
-  type ExpenseCategory,
-  type ExpenseType,
-  getExpensesBetween,
-  getIngestExpensesBetween,
-  SUPPORTED_CURRENCIES,
-} from '@shared/expenses';
 import { createReminder, deleteReminder, getPendingRemindersDueOnOrBefore, getReminderById, getRemindersCompletedBetween, updateReminder, updateReminderStatus } from '@shared/reminders';
 import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
-import { BOT_CONFIG } from '../chatbot.config';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
   ActivitySummary,
@@ -37,10 +19,6 @@ import type {
   DashboardResponse,
   EventDto,
   ExerciseLogResponse,
-  ExpenseCategoryDto,
-  ExpenseDto,
-  ExpenseTotal,
-  ExpenseTypeDto,
   HeatmapDay,
   ReminderDto,
   UpdateReminderBody,
@@ -53,26 +31,8 @@ const logger = new Logger('ChatbotApiController');
 
 const DEFAULT_WEATHER_LOCATION = 'Tel Aviv';
 const HEATMAP_WEEKS = 13;
-const EXPENSE_TYPES: ReadonlyArray<ExpenseType> = ['receipt', 'card_alert', 'bill'];
 
 // --- Zod schemas for OpenAPI ---
-
-const ExpenseCategoryEnum = z.enum(EXPENSE_CATEGORIES as unknown as [ExpenseCategory, ...ExpenseCategory[]]);
-const ExpenseTypeEnum = z.enum(EXPENSE_TYPES as unknown as [ExpenseType, ...ExpenseType[]]);
-
-const ExpenseDtoSchema = z.object({
-  id: z.string(),
-  vendor: z.string(),
-  category: ExpenseCategoryEnum,
-  amount: z.number(),
-  currency: z.string(),
-  type: ExpenseTypeEnum,
-  transactionDate: z.string(),
-  card: z.string().optional(),
-  originalVendor: z.string().optional(),
-  originalCategory: ExpenseCategoryEnum.optional(),
-  originalType: ExpenseTypeEnum.optional(),
-});
 
 const ReminderDtoSchema = z.object({
   id: z.string(),
@@ -130,8 +90,6 @@ const DashboardResponseSchema = z.object({
     todayDone: z.boolean(),
     heatmap: z.array(HeatmapDaySchema),
   }),
-  expenses: z.array(ExpenseDtoSchema),
-  expenseTotals: z.array(z.object({ currency: z.string(), total: z.number() })),
 });
 
 const CreateReminderBodySchema = z.object({
@@ -144,14 +102,6 @@ const UpdateReminderBodySchema = z.object({
   dueDate: z.string().optional(),
   status: z.enum(['pending', 'completed']).optional(),
   snoozeMinutes: z.number().optional(),
-});
-
-const ExpenseLogAckSchema = z.object({ logged: z.literal(true) });
-
-const LogExpenseBodySchema = z.object({
-  vendor: z.string(),
-  amount: z.number().positive(),
-  currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]).optional(),
 });
 
 const ExerciseLogResponseSchema = z.object({
@@ -167,7 +117,7 @@ registry.registerPath({
   method: 'get',
   path: '/api/chatbot/dashboard',
   tags: ['Chatbot'],
-  summary: 'Get dashboard data (weather, events, reminders, exercise activity, expenses summary)',
+  summary: 'Get dashboard data (weather, events, reminders, exercise activity)',
   request: { query: z.object({ date: z.string().optional().describe('YYYY-MM-DD; defaults to today') }) },
   responses: {
     200: { description: 'Dashboard payload', content: { 'application/json': { schema: DashboardResponseSchema } } },
@@ -244,20 +194,6 @@ registry.registerPath({
   },
 });
 
-registry.registerPath({
-  method: 'post',
-  path: '/api/chatbot/expenses',
-  tags: ['Chatbot'],
-  summary: 'Log an expense for the daily 23:00 transactions report (in-memory only, not persisted)',
-  request: { body: { content: { 'application/json': { schema: LogExpenseBodySchema } } } },
-  responses: {
-    202: { description: 'Logged for end-of-day report', content: { 'application/json': { schema: ExpenseLogAckSchema } } },
-    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
 function dateKey(date: Date): string {
   return formatInTimeZone(date, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
 }
@@ -329,67 +265,6 @@ function parseSelectedDate(raw: unknown): Date {
   return fromZonedTime(`${dateKey(new Date())}T00:00:00`, DEFAULT_TIMEZONE);
 }
 
-function toExpenseDto(e: Expense): ExpenseDto {
-  const vendor = effectiveVendor(e);
-  const category = effectiveCategory(e) as ExpenseCategoryDto;
-  const type = effectiveType(e) as ExpenseTypeDto;
-  return {
-    id: e._id!.toString(),
-    vendor,
-    category,
-    amount: e.amount,
-    currency: e.currency,
-    type,
-    transactionDate: e.transactionDate.toISOString(),
-    ...(e.card ? { card: e.card } : {}),
-    originalVendor: e.userVendor && e.vendor !== e.userVendor ? e.vendor : undefined,
-    originalCategory: e.userCategory && e.category !== e.userCategory ? (e.category as ExpenseCategoryDto) : undefined,
-    originalType: e.userType && e.type !== e.userType ? (e.type as ExpenseTypeDto) : undefined,
-  };
-}
-
-const CURRENCY_SYMBOL_MAP: Record<string, Currency> = { '₪': 'ILS', $: 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY' };
-
-function parseExpensePayload(raw: unknown): { vendor: string | null; amount: number | null; currency?: Currency } {
-  const body = (raw ?? {}) as Record<string, unknown>;
-
-  const vendorRaw = body.vendor ?? body.merchant ?? body.name;
-  const vendor = typeof vendorRaw === 'string' && vendorRaw.trim() ? vendorRaw.trim() : null;
-
-  let currency: Currency | undefined;
-  const currencyRaw = body.currency;
-  if (typeof currencyRaw === 'string' && currencyRaw.trim()) {
-    currency = currencyRaw.trim().toUpperCase() as Currency;
-  }
-
-  let amount: number | null = null;
-  const amountRaw = body.amount;
-  if (typeof amountRaw === 'number' && Number.isFinite(amountRaw) && amountRaw > 0) {
-    amount = amountRaw;
-  } else if (typeof amountRaw === 'string') {
-    const trimmed = amountRaw.trim();
-    if (!currency) {
-      for (const [symbol, code] of Object.entries(CURRENCY_SYMBOL_MAP)) {
-        if (trimmed.includes(symbol)) {
-          currency = code;
-          break;
-        }
-      }
-    }
-    const numeric = parseFloat(trimmed.replace(/[^\d.-]/g, ''));
-    if (Number.isFinite(numeric) && numeric > 0) amount = numeric;
-  }
-
-  return { vendor, amount, currency };
-}
-
-function totalsByCurrency(expenses: ReadonlyArray<Expense>): ExpenseTotal[] {
-  const acc = new Map<string, number>();
-  for (const e of expenses) acc.set(e.currency, (acc.get(e.currency) ?? 0) + e.amount);
-  return Array.from(acc.entries()).map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
-}
-
-
 async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
   try {
     const timeMin = date.toISOString();
@@ -402,42 +277,6 @@ async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
 }
 
 export function registerChatbotApiRoutes(app: Express): void {
-  app.post('/api/chatbot/expenses', async (req: Request, res: Response<{ logged: true } | { error: string }>) => {
-    notify(BOT_CONFIG, { action: 'expense_received', body: req.body });
-    const expectedToken = env.EXPENSES_INGEST_TOKEN;
-    if (!expectedToken) {
-      logger.error('EXPENSES_INGEST_TOKEN not configured');
-      res.status(500).json({ error: 'ingest_not_configured' });
-      return;
-    }
-    const auth = req.header('authorization') ?? '';
-    const provided = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length) : '';
-    if (provided !== expectedToken) {
-      res.status(401).json({ error: 'unauthorized' });
-      return;
-    }
-    const parsed = parseExpensePayload(req.body);
-    if (!parsed.vendor) {
-      res.status(400).json({ error: 'vendor_required' });
-      return;
-    }
-    if (parsed.amount === null) {
-      res.status(400).json({ error: 'amount_required' });
-      return;
-    }
-    if (parsed.currency && !SUPPORTED_CURRENCIES.includes(parsed.currency)) {
-      res.status(400).json({ error: `currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}` });
-      return;
-    }
-    try {
-      await createIngestExpense({ vendor: parsed.vendor, amount: parsed.amount, currency: parsed.currency ?? DEFAULT_CURRENCY });
-      res.status(202).json({ logged: true });
-    } catch (err) {
-      logger.error(`Failed to persist ingest expense: ${err}`);
-      res.status(500).json({ error: 'ingest_failed' });
-    }
-  });
-
   app.use('/api/chatbot', chatbotAuthMiddleware);
 
   app.get('/api/chatbot/dashboard', async (req: Request, res: Response<DashboardResponse | { error: string }>) => {
@@ -449,51 +288,18 @@ export function registerChatbotApiRoutes(app: Express): void {
       const isToday = selectedKey === dateKey(now);
       const selectedDayEnd = addDays(selectedDate, 1);
 
-      const [weather, googleEvents, pendingReminders, completedReminders, activity, dayExpenses, ingestExpenses] = await Promise.all([
+      const [weather, googleEvents, pendingReminders, completedReminders, activity] = await Promise.all([
         isToday ? buildWeatherSnapshot() : Promise.resolve(null),
         fetchEventsForDate(selectedDate),
         getPendingRemindersDueOnOrBefore(chatId, selectedDayEnd),
         getRemindersCompletedBetween(chatId, selectedDate, selectedDayEnd),
         buildActivitySummary(chatId),
-        getExpensesBetween(selectedDate, selectedDayEnd).catch((err) => {
-          logger.warn(`Failed to fetch expenses for ${selectedKey}: ${err}`);
-          return [] as Expense[];
-        }),
-        getIngestExpensesBetween(selectedDate, selectedDayEnd).catch((err) => {
-          logger.warn(`Failed to fetch ingest expenses for ${selectedKey}: ${err}`);
-          return [];
-        }),
       ]);
 
       const eventDtos = googleEvents.map((event, idx) => toEventDto(event, `event-${idx}`));
       const birthdays = eventDtos.filter((e) => e.isBirthday);
       const events = eventDtos.filter((e) => !e.isBirthday);
       const reminders = [...pendingReminders, ...completedReminders];
-
-      const expenseDtos = dayExpenses.map(toExpenseDto);
-      const expenseTotals = totalsByCurrency(dayExpenses);
-
-      // Surface ingest-logged expenses (POST /api/chatbot/expenses — iPhone shortcut) for the
-      // selected day. These live in a separate collection and are intentionally excluded from the
-      // monthly Expenses page (the xlsx import is authoritative there). The dashboard merges them
-      // so today's card alerts are visible immediately.
-      if (ingestExpenses.length) {
-        const totalsAcc = new Map<string, number>(expenseTotals.map((t) => [t.currency, t.total]));
-        ingestExpenses.forEach((e) => {
-          expenseDtos.push({
-            id: `ingest-${e._id!.toString()}`,
-            vendor: e.vendor,
-            category: 'other',
-            amount: e.amount,
-            currency: e.currency,
-            type: 'card_alert',
-            transactionDate: e.receivedAt.toISOString(),
-          });
-          totalsAcc.set(e.currency, (totalsAcc.get(e.currency) ?? 0) + e.amount);
-        });
-        expenseTotals.length = 0;
-        for (const [currency, total] of totalsAcc) expenseTotals.push({ currency, total: Math.round(total * 100) / 100 });
-      }
 
       res.json({
         date: selectedKey,
@@ -503,8 +309,6 @@ export function registerChatbotApiRoutes(app: Express): void {
         events,
         reminders: reminders.map(toReminderDto),
         activity,
-        expenses: expenseDtos,
-        expenseTotals,
       });
     } catch (err) {
       logger.error(`dashboard failed: ${err}`);
