@@ -14,9 +14,10 @@ export async function handleListSubscriptions(chatId: number): Promise<string> {
       return JSON.stringify({ success: true, message, subscriptions: [], expiredSubscriptions });
     }
 
-    const subscriptionsList = subscriptions.map(({ marketQuestion, marketSlug, createdAt }) => ({
+    const subscriptionsList = subscriptions.map(({ marketQuestion, marketSlug, type, createdAt }) => ({
       question: marketQuestion,
       slug: marketSlug,
+      type: type ?? 'binary',
       url: buildPolymarketUrl(marketSlug),
       subscribedSince: createdAt.toISOString(),
     }));

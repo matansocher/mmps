@@ -58,7 +58,6 @@ export class ChatbotSchedulerService {
     createSchedule(`5 16 * * *`, async () => polymarketUpdate(this.bot));
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
-    spotifyPodcastUpdate(this.bot);
 
     createSchedule(`00 10 * * *`, async () => wcTreeUpdate(this.bot));
 

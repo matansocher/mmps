@@ -1,7 +1,7 @@
-import type { MarketSummary } from '@services/polymarket';
-import type { Subscription } from '@shared/polymarket-follower';
-import { formatDailyUpdateMessage, formatPriceChange } from './format-polymarket-update';
-import type { MarketUpdate } from './format-polymarket-update';
+import type { EventOutcome, MarketSummary, MultiOutcomeEventSummary } from '@services/polymarket';
+import type { OutcomeSnapshot, Subscription } from '@shared/polymarket-follower';
+import { formatDailyUpdateMessage, formatMultiOutcomeUpdateMessage, formatOutcomeChange, formatPriceChange, toOutcomeSnapshots } from './format-polymarket-update';
+import type { MarketUpdate, MultiOutcomeUpdate } from './format-polymarket-update';
 
 const createMockMarket = (overrides: Partial<MarketSummary> = {}): MarketSummary => ({
   id: 'market-123',
@@ -221,5 +221,119 @@ describe('formatDailyUpdateMessage', () => {
     const result = formatDailyUpdateMessage(updates);
 
     expect(result).toContain('Yes: 1.0%');
+  });
+});
+
+const createMockOutcome = (overrides: Partial<EventOutcome> = {}): EventOutcome => ({
+  outcome: 'France',
+  probability: 0.356,
+  oneDayPriceChange: 0.02,
+  marketSlug: 'will-france-win-the-2026-fifa-world-cup',
+  ...overrides,
+});
+
+const createMockEvent = (overrides: Partial<MultiOutcomeEventSummary> = {}): MultiOutcomeEventSummary => ({
+  id: 'event-1',
+  title: 'World Cup Winner',
+  slug: 'world-cup-winner',
+  volume24hr: 1000000,
+  active: true,
+  closed: false,
+  negRisk: true,
+  outcomes: [createMockOutcome()],
+  polymarketUrl: 'https://polymarket.com/event/world-cup-winner',
+  ...overrides,
+});
+
+const createMockMultiSubscription = (overrides: Partial<Subscription> = {}): Subscription =>
+  ({
+    marketId: 'event-1',
+    marketSlug: 'world-cup-winner',
+    marketQuestion: 'World Cup Winner',
+    chatId: 12345,
+    type: 'multi',
+    lastNotifiedPrice: null,
+    lastNotifiedOutcomes: null,
+    ...overrides,
+  }) as Subscription;
+
+describe('formatOutcomeChange', () => {
+  it('should prefer API 24h change when available', () => {
+    expect(formatOutcomeChange(createMockOutcome({ oneDayPriceChange: 0.02 }), null)).toBe('📈 (+2.0%)');
+  });
+
+  it('should render negative API change', () => {
+    expect(formatOutcomeChange(createMockOutcome({ oneDayPriceChange: -0.04 }), null)).toBe('📉 (-4.0%)');
+  });
+
+  it('should fall back to matching snapshot when API change is null', () => {
+    const snapshots: OutcomeSnapshot[] = [{ outcome: 'France', probability: 0.3 }];
+    // 0.356 - 0.30 = 0.056 => +5.6%
+    expect(formatOutcomeChange(createMockOutcome({ oneDayPriceChange: null }), snapshots)).toBe('📈 (+5.6%)');
+  });
+
+  it('should return empty string when no change data is available', () => {
+    expect(formatOutcomeChange(createMockOutcome({ oneDayPriceChange: null }), null)).toBe('');
+  });
+
+  it('should return empty string when snapshot has no matching outcome', () => {
+    const snapshots: OutcomeSnapshot[] = [{ outcome: 'Spain', probability: 0.12 }];
+    expect(formatOutcomeChange(createMockOutcome({ oneDayPriceChange: null }), snapshots)).toBe('');
+  });
+});
+
+describe('toOutcomeSnapshots', () => {
+  it('should map outcomes to name/probability snapshots', () => {
+    const event = createMockEvent({
+      outcomes: [createMockOutcome({ outcome: 'France', probability: 0.35 }), createMockOutcome({ outcome: 'Spain', probability: 0.12 })],
+    });
+
+    expect(toOutcomeSnapshots(event)).toEqual([
+      { outcome: 'France', probability: 0.35 },
+      { outcome: 'Spain', probability: 0.12 },
+    ]);
+  });
+
+  it('should cap snapshots at the top 8 outcomes', () => {
+    const outcomes = Array.from({ length: 12 }, (_, index) => createMockOutcome({ outcome: `Team ${index}`, probability: (12 - index) / 100 }));
+    expect(toOutcomeSnapshots(createMockEvent({ outcomes }))).toHaveLength(8);
+  });
+});
+
+describe('formatMultiOutcomeUpdateMessage', () => {
+  it('should format a multi-outcome event with ranked outcomes', () => {
+    const updates: MultiOutcomeUpdate[] = [
+      {
+        subscription: createMockMultiSubscription(),
+        event: createMockEvent({
+          outcomes: [createMockOutcome({ outcome: 'France', probability: 0.356, oneDayPriceChange: 0.02 }), createMockOutcome({ outcome: 'Argentina', probability: 0.168, oneDayPriceChange: -0.01 })],
+        }),
+      },
+    ];
+
+    const result = formatMultiOutcomeUpdateMessage(updates);
+
+    expect(result).toContain('*Polymarket Events Update*');
+    expect(result).toContain('🟢');
+    expect(result).toContain('*World Cup Winner*');
+    expect(result).toContain('1. France: 35.6% 📈 (+2.0%)');
+    expect(result).toContain('2. Argentina: 16.8% 📉 (-1.0%)');
+    expect(result).toContain('[View event](https://polymarket.com/event/world-cup-winner)');
+  });
+
+  it('should show only the top 8 outcomes', () => {
+    const outcomes = Array.from({ length: 14 }, (_, index) => createMockOutcome({ outcome: `Team ${index}`, probability: (14 - index) / 100 }));
+    const updates: MultiOutcomeUpdate[] = [{ subscription: createMockMultiSubscription(), event: createMockEvent({ outcomes }) }];
+
+    const result = formatMultiOutcomeUpdateMessage(updates);
+
+    expect(result).toContain('8. Team 7');
+    expect(result).not.toContain('9. Team 8');
+  });
+
+  it('should show closed emoji for closed events', () => {
+    const updates: MultiOutcomeUpdate[] = [{ subscription: createMockMultiSubscription(), event: createMockEvent({ closed: true, active: false }) }];
+
+    expect(formatMultiOutcomeUpdateMessage(updates)).toContain('🔒');
   });
 });

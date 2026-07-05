@@ -1,5 +1,6 @@
-import { getMarketBySlug } from '@services/polymarket';
+import { getEventOutcomes, getMarketBySlug } from '@services/polymarket';
 import { getActiveSubscriptionsByChatId, removeSubscription } from '@shared/polymarket-follower';
+import type { Subscription } from '@shared/polymarket-follower';
 
 export type ExpiredSubscription = {
   readonly question: string;
@@ -22,27 +23,9 @@ export async function checkAndCleanExpiredSubscriptions(chatId: number): Promise
   const expiredSubscriptions: ExpiredSubscription[] = [];
 
   for (const subscription of subscriptions) {
-    try {
-      const market = await getMarketBySlug(subscription.marketSlug);
-
-      if (market.closed) {
-        await removeSubscription(subscription.marketId, chatId);
-
-        const yesPct = (market.yesPrice * 100).toFixed(1);
-        expiredSubscriptions.push({
-          question: subscription.marketQuestion,
-          slug: subscription.marketSlug,
-          finalPrice: `${yesPct}% Yes`,
-        });
-      }
-    } catch {
-      // If we can't fetch the market, it might have been removed - clean it up
-      await removeSubscription(subscription.marketId, chatId);
-      expiredSubscriptions.push({
-        question: subscription.marketQuestion,
-        slug: subscription.marketSlug,
-        finalPrice: 'Market unavailable',
-      });
+    const expired = subscription.type === 'multi' ? await checkExpiredMultiOutcome(chatId, subscription) : await checkExpiredBinary(chatId, subscription);
+    if (expired) {
+      expiredSubscriptions.push(expired);
     }
   }
 
@@ -56,4 +39,40 @@ export async function checkAndCleanExpiredSubscriptions(chatId: number): Promise
       : `${expiredSubscriptions.length} markets have ended and were removed from your subscriptions:\n${expiredSubscriptions.map((s) => `- "${s.question}" (Final: ${s.finalPrice})`).join('\n')}`;
 
   return { expiredSubscriptions, message };
+}
+
+async function checkExpiredBinary(chatId: number, subscription: Subscription): Promise<ExpiredSubscription | null> {
+  try {
+    const market = await getMarketBySlug(subscription.marketSlug);
+
+    if (market.closed) {
+      await removeSubscription(subscription.marketId, chatId);
+      const yesPct = (market.yesPrice * 100).toFixed(1);
+      return { question: subscription.marketQuestion, slug: subscription.marketSlug, finalPrice: `${yesPct}% Yes` };
+    }
+
+    return null;
+  } catch {
+    // If we can't fetch the market, it might have been removed - clean it up
+    await removeSubscription(subscription.marketId, chatId);
+    return { question: subscription.marketQuestion, slug: subscription.marketSlug, finalPrice: 'Market unavailable' };
+  }
+}
+
+async function checkExpiredMultiOutcome(chatId: number, subscription: Subscription): Promise<ExpiredSubscription | null> {
+  try {
+    const event = await getEventOutcomes(subscription.marketSlug);
+
+    if (event.closed || event.outcomes.length === 0) {
+      await removeSubscription(subscription.marketId, chatId);
+      const leader = event.outcomes[0];
+      const finalPrice = leader ? `${leader.outcome} ${(leader.probability * 100).toFixed(1)}%` : 'Event ended';
+      return { question: subscription.marketQuestion, slug: subscription.marketSlug, finalPrice };
+    }
+
+    return null;
+  } catch {
+    await removeSubscription(subscription.marketId, chatId);
+    return { question: subscription.marketQuestion, slug: subscription.marketSlug, finalPrice: 'Event unavailable' };
+  }
 }
