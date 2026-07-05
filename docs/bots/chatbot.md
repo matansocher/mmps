@@ -6,6 +6,10 @@
 
 The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropic's Claude. It provides intelligent conversation with access to external tools like weather, reminders, calendar integration, GitHub, and more.
 
+::: tip Deep dive
+For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoDB checkpointer, summarization, and token/cost observability — see the [Chatbot Deep Dive](/bots/chatbot-deep-dive).
+:::
+
 ## Features
 
 ### Core Features

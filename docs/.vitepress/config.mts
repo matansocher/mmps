@@ -68,6 +68,7 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/bots/overview' },
             { text: 'Chatbot', link: '/bots/chatbot' },
+            { text: 'Chatbot — Deep Dive', link: '/bots/chatbot-deep-dive' },
             { text: 'Coach', link: '/bots/coach' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },
