@@ -18,6 +18,7 @@ import {
   recipesTool,
   reminderTool,
   spotifyTool,
+  spotifyPodcastTool,
   topMatchesForPredictionTool,
   weatherTool,
   woltTool,
@@ -108,6 +109,12 @@ Available capabilities:
   Natural language: "create a playlist called X", "add [song] to my [playlist] playlist", "remove [song] from my [playlist] playlist", "delete my [playlist] playlist", "what playlists do I have", "search Spotify for [song/artist]".
   For "add/remove [song] to/from [playlist]" flows: first use search_track to resolve song names into track URIs, then use get_user_playlists to find the target playlist's ID by name, then call add_tracks_to_playlist or remove_tracks_from_playlist.
   For "delete [playlist]": use get_user_playlists to find the ID by name, then delete_playlist. Always confirm with the user before deleting a playlist.
+- Spotify podcast tool (spotify_podcast): Manage podcast subscriptions and get hourly (daytime) alerts when a subscribed podcast publishes a new episode.
+  * "search" - Search Spotify podcasts by name (returns showId)
+  * "subscribe" - Subscribe to a podcast by showId
+  * "unsubscribe" - Unsubscribe by showId or podcast name
+  * "list" - List active podcast subscriptions
+  Natural language: "notify me when [podcast] posts a new episode", "follow the [podcast] podcast", "stop following [podcast]", "which podcasts am I following". For subscribe flows: first use search to resolve the podcast name into a showId, then subscribe with that showId.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -287,6 +294,7 @@ export function agent(): AgentDescriptor {
     contactsTool,
     meetupsTool,
     spotifyTool,
+    spotifyPodcastTool,
   ];
 
   return {
