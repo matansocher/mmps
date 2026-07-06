@@ -10,6 +10,8 @@ import { SecretaryService } from './secretary.service';
 
 const CONTEXT_MESSAGE_LIMIT = 20;
 
+const OPTION_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣'];
+
 const newShortId = () => randomUUID().replace(/-/g, '').slice(0, 10);
 
 export class SecretaryDraftService {
@@ -81,25 +83,26 @@ export class SecretaryDraftService {
 
     const shortId = newShortId();
     const businessConnectionId = this.connectionIds.get(chatId);
-    await createDraft({ shortId, chatId, ownerChatId: MY_USER_ID, businessConnectionId, draftText: generated.draft, summaryText: generated.summary });
+    await createDraft({ shortId, chatId, ownerChatId: MY_USER_ID, businessConnectionId, draftTexts: generated.drafts, summaryText: generated.summary });
 
-    const text = this.formatSuggestion(generated.draft, generated.summary);
-    const sent = await this.bot.api.sendMessage(MY_USER_ID, text, { reply_markup: this.buildDraftKeyboard(shortId) });
+    const text = this.formatSuggestion(generated.drafts, generated.summary);
+    const sent = await this.bot.api.sendMessage(MY_USER_ID, text, { reply_markup: this.buildDraftKeyboard(shortId, generated.drafts.length) });
     await setDraftMessageId(shortId, sent.message_id);
   }
 
-  private formatSuggestion(draft: string, summary: string): string {
-    return summary ? `📋 She talked about: ${summary}\n\n💬 Suggested reply:\n${draft}` : `💬 Suggested reply:\n${draft}`;
+  private formatSuggestion(drafts: string[], summary: string): string {
+    const options = drafts.map((draft, i) => `${OPTION_EMOJIS[i] ?? `${i + 1}.`} ${draft}`).join('\n');
+    const header = summary ? `📋 She talked about: ${summary}\n\n` : '';
+    return `${header}💬 Choose a reply:\n${options}`;
   }
 
-  private buildDraftKeyboard(shortId: string): InlineKeyboard {
-    return buildInlineKeyboard(
-      [
-        { text: 'Send ✅', data: `${DRAFT_SEND_CALLBACK_PREFIX}${shortId}`, style: 'success' },
-        { text: 'Cancel ✖️', data: `${DRAFT_CANCEL_CALLBACK_PREFIX}${shortId}`, style: 'danger' },
-      ],
-      2,
-    );
+  private buildDraftKeyboard(shortId: string, count: number): InlineKeyboard {
+    const optionButtons = Array.from({ length: count }, (_, i) => ({
+      text: OPTION_EMOJIS[i] ?? `${i + 1}`,
+      data: `${DRAFT_SEND_CALLBACK_PREFIX}${shortId}:${i}`,
+      style: 'success' as const,
+    }));
+    return buildInlineKeyboard([...optionButtons, { text: 'Cancel ✖️', data: `${DRAFT_CANCEL_CALLBACK_PREFIX}${shortId}`, style: 'danger' }], count);
   }
 
   // Mark pending drafts for a chat as superseded and strip their buttons.
@@ -116,10 +119,18 @@ export class SecretaryDraftService {
   }
 
   async handleSend(ctx: Context): Promise<void> {
-    const shortId = (ctx.callbackQuery?.data ?? '').slice(DRAFT_SEND_CALLBACK_PREFIX.length);
+    const payload = (ctx.callbackQuery?.data ?? '').slice(DRAFT_SEND_CALLBACK_PREFIX.length);
+    const [shortId, indexStr] = payload.split(':');
     const draft = await getDraftByShortId(shortId);
     if (!draft || draft.status !== 'pending') {
       await ctx.answerCallbackQuery({ text: 'This draft is no longer available.' });
+      return;
+    }
+
+    const index = Number(indexStr);
+    const chosen = draft.draftTexts[index];
+    if (!chosen) {
+      await ctx.answerCallbackQuery({ text: 'That option is no longer available.', show_alert: true });
       return;
     }
 
@@ -130,11 +141,11 @@ export class SecretaryDraftService {
     }
 
     try {
-      await this.bot.api.sendMessage(draft.chatId, draft.draftText, { business_connection_id: businessConnectionId });
-      await this.secretaryService.storeMessage({ chatId: draft.chatId, fromOwner: true, text: draft.draftText });
+      await this.bot.api.sendMessage(draft.chatId, chosen, { business_connection_id: businessConnectionId });
+      await this.secretaryService.storeMessage({ chatId: draft.chatId, fromOwner: true, text: chosen });
       await updateDraftStatus(shortId, 'sent');
       this.clearTimer(draft.chatId);
-      await ctx.editMessageText(`Sent ✅\n\n${draft.draftText}`);
+      await ctx.editMessageText(`Sent ✅\n\n${chosen}`);
       await ctx.answerCallbackQuery({ text: 'Sent ✅' });
     } catch (err) {
       this.logger.error(`Failed to send draft ${shortId}: ${err}`);

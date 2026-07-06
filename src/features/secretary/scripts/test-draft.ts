@@ -25,9 +25,6 @@ const SAMPLE = `
 // Name used for her side in the transcript (label only).
 const HER_NAME = 'her';
 
-// How many drafts to generate per run (temperature 0.5 → output varies).
-const SAMPLE_COUNT = 3;
-
 function parseSample(raw: string): SecretaryMessage[] {
   const base = Date.now();
   return raw
@@ -66,22 +63,20 @@ async function main(): Promise<void> {
   logger.log('────────────── PROMPT SENT TO MODEL ──────────────');
   logger.log(`\n${userPrompt}\n`);
   logger.log(`Unanswered messages: ${unanswered.length} | Summary threshold reached: ${wantSummary ? 'YES (summary requested)' : 'no (summary suppressed)'}`);
-  logger.log(`──────────── GENERATING ${SAMPLE_COUNT} DRAFT(S) ────────────`);
+  logger.log(`──────────── GENERATING DRAFT OPTIONS ────────────`);
 
-  for (let i = 1; i <= SAMPLE_COUNT; i++) {
-    try {
-      const result = await generateDraftReply(messages);
-      if (!result) {
-        logger.warn(`Draft #${i}: (empty — model returned no draft)`);
-        continue;
-      }
-      const wouldSend = result.replyNeeded >= REPLY_NEEDED_THRESHOLD;
-      logger.log(`\n#${i} 🎯 replyNeeded: ${result.replyNeeded.toFixed(2)} (threshold ${REPLY_NEEDED_THRESHOLD}) → ${wouldSend ? 'WOULD SEND ✅' : 'WOULD STAY SILENT 🤫'}`);
-      logger.log(`#${i} 💬 DRAFT:\n${result.draft}`);
-      if (result.summary) logger.log(`#${i} 📋 SUMMARY: ${result.summary}`);
-    } catch (err) {
-      logger.error(`Draft #${i} failed: ${err}`);
+  try {
+    const result = await generateDraftReply(messages);
+    if (!result) {
+      logger.warn('(empty — model returned no drafts)');
+      return;
     }
+    const wouldSend = result.replyNeeded >= REPLY_NEEDED_THRESHOLD;
+    logger.log(`\n🎯 replyNeeded: ${result.replyNeeded.toFixed(2)} (threshold ${REPLY_NEEDED_THRESHOLD}) → ${wouldSend ? 'WOULD SEND ✅' : 'WOULD STAY SILENT 🤫'}`);
+    result.drafts.forEach((draft, i) => logger.log(`#${i + 1} 💬 ${draft}`));
+    if (result.summary) logger.log(`📋 SUMMARY: ${result.summary}`);
+  } catch (err) {
+    logger.error(`Draft generation failed: ${err}`);
   }
 }
 

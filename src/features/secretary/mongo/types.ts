@@ -52,7 +52,7 @@ export type SecretaryDraft = {
   readonly chatId: number; // the other person's chat (where the reply would be sent)
   readonly ownerChatId: number; // where the suggestion DM is delivered (the owner)
   readonly businessConnectionId?: string; // connection used to send as the owner
-  readonly draftText: string;
+  readonly draftTexts: string[]; // distinct reply options the owner can choose from
   readonly summaryText?: string;
   readonly status: SecretaryDraftStatus;
   readonly messageId?: number; // the suggestion message the buttons live on
@@ -65,7 +65,7 @@ export type CreateSecretaryDraftData = {
   readonly chatId: number;
   readonly ownerChatId: number;
   readonly businessConnectionId?: string;
-  readonly draftText: string;
+  readonly draftTexts: string[];
   readonly summaryText?: string;
 };
 
