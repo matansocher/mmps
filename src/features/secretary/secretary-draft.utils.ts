@@ -5,16 +5,20 @@ import { z } from 'zod';
 import { GPT_5_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import type { SecretaryMessage } from './mongo';
-import { DRAFT_GENERATION_PROMPT, OWNER_NAME, SUMMARY_CHAR_THRESHOLD } from './secretary.config';
+import { DRAFT_GENERATION_PROMPT, DRAFT_OPTIONS_COUNT, OWNER_NAME, SUMMARY_CHAR_THRESHOLD } from './secretary.config';
 
 export type DraftReply = {
-  readonly draft: string;
+  readonly drafts: string[]; // distinct ready-to-send reply options, best-guess first
   readonly summary: string;
   readonly replyNeeded: number; // 0–1 probability that the owner actually needs to reply
 };
 
 const draftSchema = z.object({
-  draft: z.string().describe('The ready-to-send reply text, in her language'),
+  drafts: z
+    .array(z.string().describe('A ready-to-send reply option, in her language'))
+    .min(1)
+    .max(6)
+    .describe(`Exactly ${DRAFT_OPTIONS_COUNT} DISTINCT reply options for the owner to choose from, best-guess first. Each option must be meaningfully different in angle/tone, not a reworded duplicate.`),
   summary: z.string().describe('A one-line summary of what she talked about, or an empty string if her messages were short'),
   replyNeeded: z.number().min(0).max(1).describe('Probability (0 to 1) that the owner actually needs to reply: low for acknowledgements/closings, high for questions/requests/plans'),
 });
@@ -36,7 +40,7 @@ export function buildDraftUserPrompt(context: SecretaryMessage[], unanswered: Se
   const transcript = context.map((m) => `${m.fromOwner ? OWNER_NAME : otherName}: ${m.text}`).join('\n');
   const unansweredText = unanswered.map((m) => m.text).join(' ');
   const wantSummary = unansweredText.length >= SUMMARY_CHAR_THRESHOLD;
-  const userPrompt = `Recent conversation (most recent last):\n\n${transcript}\n\nWrite ${OWNER_NAME}'s reply to her latest unanswered messages.${wantSummary ? '' : ' Her messages are short, so leave "summary" empty.'}`;
+  const userPrompt = `Recent conversation (most recent last):\n\n${transcript}\n\nWrite ${DRAFT_OPTIONS_COUNT} distinct reply options ${OWNER_NAME} could send to her latest unanswered messages.${wantSummary ? '' : ' Her messages are short, so leave "summary" empty.'}`;
   return { userPrompt, wantSummary };
 }
 
@@ -46,7 +50,7 @@ const buildModel = () => {
   return new ChatOpenAI({ model, temperature, apiKey: env.OPENAI_API_KEY });
 };
 
-// Generate a single draft reply for the given recent conversation. Returns null if no draft was produced.
+// Generate distinct reply options for the given recent conversation in a single call. Returns null if none produced.
 export async function generateDraftReply(context: SecretaryMessage[]): Promise<DraftReply | null> {
   const unanswered = unansweredTail(context);
   const { userPrompt, wantSummary } = buildDraftUserPrompt(context, unanswered);
@@ -57,9 +61,9 @@ export async function generateDraftReply(context: SecretaryMessage[]): Promise<D
   const result = await structured.invoke([new SystemMessage(DRAFT_GENERATION_PROMPT), new HumanMessage(userPrompt)], { callbacks: [usageHandler] });
   recordModelUsage({ source: 'secretary', chatId: context[0]?.chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
 
-  const draft = (result.draft ?? '').trim();
-  if (!draft) return null;
+  const drafts = [...new Set((result.drafts ?? []).map((d) => (d ?? '').trim()).filter(Boolean))].slice(0, DRAFT_OPTIONS_COUNT);
+  if (drafts.length === 0) return null;
   const summary = wantSummary ? (result.summary ?? '').trim() : '';
   const replyNeeded = typeof result.replyNeeded === 'number' ? result.replyNeeded : 1;
-  return { draft, summary, replyNeeded };
+  return { drafts, summary, replyNeeded };
 }

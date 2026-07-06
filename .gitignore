@@ -66,3 +66,4 @@ docs/.vitepress/cache/
 /toodie-conversation.json
 /src/features/secretary/scripts/eval/eval-dataset.json
 /src/features/secretary/scripts/eval/eval-report.json
+/test/eval/results
