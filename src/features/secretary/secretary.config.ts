@@ -26,9 +26,6 @@ export const IDLE_REPLY_DELAY_MS = 5 * 60 * 1000;
 // Smart reply drafts: how many distinct options to offer per suggestion (all produced in a single LLM call).
 export const DRAFT_OPTIONS_COUNT = Math.min(4, Math.max(2, Number(env.SECRETARY_DRAFT_OPTIONS ?? 4)));
 
-// Only include a "what she talked about" summary when her unanswered text is at least this long.
-export const SUMMARY_CHAR_THRESHOLD = 300;
-
 // Smart reply drafts: skip sending a draft if the model's reply-needed probability is below this.
 export const REPLY_NEEDED_THRESHOLD = 0.6;
 
