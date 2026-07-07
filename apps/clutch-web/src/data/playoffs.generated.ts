@@ -23470,6 +23470,76 @@ export const LEAGUES: { readonly nba: readonly Playoffs[]; readonly ucl: readonl
     ]
   },
   {
+    "season": 1950,
+    "league": "WC",
+    "format": "13 teams; group stage then a final round-robin pool of four (Uruguay, Brazil, Sweden, Spain) with no knockout final — the deciding match was Uruguay 2–1 Brazil. Modeled here as semi-finals (top two vs bottom two of the final pool) feeding that decider.",
+    "champion": "Uruguay",
+    "runnerUp": "Brazil",
+    "source": "https://en.wikipedia.org/wiki/1950_FIFA_World_Cup",
+    "rounds": [
+      {
+        "round": "Semi-finals",
+        "conference": null,
+        "series": [
+          {
+            "higherSeed": {
+              "seed": "",
+              "seedNumber": 0,
+              "team": "Uruguay",
+              "wins": 0
+            },
+            "lowerSeed": {
+              "seed": "",
+              "seedNumber": 0,
+              "team": "Sweden",
+              "wins": 0
+            },
+            "result": "3–2",
+            "winner": "Uruguay"
+          },
+          {
+            "higherSeed": {
+              "seed": "",
+              "seedNumber": 0,
+              "team": "Brazil",
+              "wins": 0
+            },
+            "lowerSeed": {
+              "seed": "",
+              "seedNumber": 0,
+              "team": "Spain",
+              "wins": 0
+            },
+            "result": "6–1",
+            "winner": "Brazil"
+          }
+        ]
+      },
+      {
+        "round": "Final",
+        "conference": null,
+        "series": [
+          {
+            "higherSeed": {
+              "seed": "",
+              "seedNumber": 0,
+              "team": "Uruguay",
+              "wins": 0
+            },
+            "lowerSeed": {
+              "seed": "",
+              "seedNumber": 0,
+              "team": "Brazil",
+              "wins": 0
+            },
+            "result": "2–1",
+            "winner": "Uruguay"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "season": 1954,
     "league": "WC",
     "format": "16 teams, group stage then quarter-finals onward",
