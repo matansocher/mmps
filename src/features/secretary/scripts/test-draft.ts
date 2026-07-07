@@ -58,7 +58,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const { userPrompt, wantSummary } = buildDraftUserPrompt(messages, unanswered);
+  const { userPrompt, wantSummary } = buildDraftUserPrompt(messages);
 
   logger.log('────────────── PROMPT SENT TO MODEL ──────────────');
   logger.log(`\n${userPrompt}\n`);

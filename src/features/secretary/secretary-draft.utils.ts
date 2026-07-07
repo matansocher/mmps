@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { GPT_5_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import type { SecretaryMessage } from './mongo';
-import { DRAFT_GENERATION_PROMPT, DRAFT_OPTIONS_COUNT, OWNER_NAME, SUMMARY_CHAR_THRESHOLD } from './secretary.config';
+import { DRAFT_GENERATION_PROMPT, DRAFT_OPTIONS_COUNT, OWNER_NAME } from './secretary.config';
 
 export type DraftReply = {
   readonly drafts: string[]; // distinct ready-to-send reply options, best-guess first
@@ -19,7 +19,7 @@ const draftSchema = z.object({
     .min(1)
     .max(6)
     .describe(`Exactly ${DRAFT_OPTIONS_COUNT} DISTINCT reply options for the owner to choose from, best-guess first. Each option must be meaningfully different in angle/tone, not a reworded duplicate.`),
-  summary: z.string().describe('A one-line summary of what she talked about, or an empty string if her messages were short'),
+  summary: z.string().describe('A one-line summary of what she talked about'),
   replyNeeded: z.number().min(0).max(1).describe('Probability (0 to 1) that the owner actually needs to reply: low for acknowledgements/closings, high for questions/requests/plans'),
 });
 
@@ -34,14 +34,12 @@ export function unansweredTail(messages: SecretaryMessage[]): SecretaryMessage[]
 }
 
 // Assemble the user prompt fed to the draft model from the recent conversation.
-export function buildDraftUserPrompt(context: SecretaryMessage[], unanswered: SecretaryMessage[]): { userPrompt: string; wantSummary: boolean } {
+export function buildDraftUserPrompt(context: SecretaryMessage[]): { userPrompt: string; wantSummary: boolean } {
   const other = context.find((m) => !m.fromOwner);
   const otherName = other?.senderName || other?.senderUsername || 'her';
   const transcript = context.map((m) => `${m.fromOwner ? OWNER_NAME : otherName}: ${m.text}`).join('\n');
-  const unansweredText = unanswered.map((m) => m.text).join(' ');
-  const wantSummary = unansweredText.length >= SUMMARY_CHAR_THRESHOLD;
-  const userPrompt = `Recent conversation (most recent last):\n\n${transcript}\n\nWrite ${DRAFT_OPTIONS_COUNT} distinct reply options ${OWNER_NAME} could send to her latest unanswered messages.${wantSummary ? '' : ' Her messages are short, so leave "summary" empty.'}`;
-  return { userPrompt, wantSummary };
+  const userPrompt = `Recent conversation (most recent last):\n\n${transcript}\n\nWrite ${DRAFT_OPTIONS_COUNT} distinct reply options ${OWNER_NAME} could send to her latest unanswered messages. Always include a one-line "summary" of what she talked about.`;
+  return { userPrompt, wantSummary: true };
 }
 
 const buildModel = () => {
@@ -52,8 +50,7 @@ const buildModel = () => {
 
 // Generate distinct reply options for the given recent conversation in a single call. Returns null if none produced.
 export async function generateDraftReply(context: SecretaryMessage[]): Promise<DraftReply | null> {
-  const unanswered = unansweredTail(context);
-  const { userPrompt, wantSummary } = buildDraftUserPrompt(context, unanswered);
+  const { userPrompt, wantSummary } = buildDraftUserPrompt(context);
 
   const structured = buildModel().withStructuredOutput(draftSchema, { name: 'smart_reply_draft' });
   const usageHandler = new UsageCallbackHandler();
