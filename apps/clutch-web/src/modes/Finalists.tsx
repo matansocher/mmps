@@ -4,6 +4,7 @@ import type { League } from '../types';
 import { seasonsForSelection, leagueOf } from '../lib/playoffs';
 import { loadProfile, recordFinalists, statsFor } from '../lib/storage';
 import { selectionMeta, type LeagueSelection } from '../lib/leagues';
+import { trackGameStart, trackGameEnd } from '../lib/analytics';
 import { haptic } from '../lib/haptics';
 import { shortName } from '../lib/teams';
 import { useCountUp } from '../lib/useCountUp';
@@ -108,6 +109,7 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
       if (!recorded.current) {
         recorded.current = true;
         recordFinalists(sel, total);
+        trackGameEnd('finalists', sel, { score: total, rounds: rounds.length, isRecord: total > initialBest && total > 0 });
       }
       setPhase('over');
       return;
@@ -144,7 +146,7 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
   }
 
   if (phase === 'intro') {
-    return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); trackGameStart('finalists', sel); setPhase('play'); }} />;
   }
   if (phase === 'over') {
     return <GameOver score={score} best={Math.max(initialBest, score)} results={results} isRecord={score > initialBest && score > 0} onPlayAgain={onPlayAgain} />;

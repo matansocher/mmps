@@ -4,6 +4,7 @@ import type { League, Playoffs } from '../types';
 import { seasonsFor, seasonsForSelection, leagueOf } from '../lib/playoffs';
 import { recordDecade, loadProfile, statsFor } from '../lib/storage';
 import { selectionMeta, type LeagueSelection } from '../lib/leagues';
+import { trackGameStart, trackGameEnd } from '../lib/analytics';
 import { haptic } from '../lib/haptics';
 import { teamStyle, shortName } from '../lib/teams';
 import { useCountUp } from '../lib/useCountUp';
@@ -86,7 +87,9 @@ function Round({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => 
     const s = order.reduce((n, c, i) => n + (c.team === answer[i] ? 1 : 0), 0);
     setFinalScore(s);
     setTimedOut(byTimeout);
+    const prevBest = statsFor(loadProfile(), sel).bestDecadeScore;
     recordDecade(sel, s);
+    trackGameEnd('decades', sel, { score: s, total: order.length, isRecord: s > prevBest && s > 0 });
     haptic(byTimeout ? 'error' : 'heavy');
     setPhase('result');
   }
@@ -105,7 +108,7 @@ function Round({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => 
   }, [phase, secondsLeft]);
 
   if (phase === 'intro') {
-    return <Intro sel={sel} startYear={startYear} endYear={endYear} best={statsFor(loadProfile(), sel).bestDecadeScore} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro sel={sel} startYear={startYear} endYear={endYear} best={statsFor(loadProfile(), sel).bestDecadeScore} onStart={() => { haptic('light'); trackGameStart('decades', sel); setPhase('play'); }} />;
   }
   if (phase === 'result') {
     return <Result answerLeagues={answerLeagues} startYear={startYear} endYear={endYear} years={years} answer={answer} order={order} score={finalScore} timedOut={timedOut} onPlayAgain={onPlayAgain} />;

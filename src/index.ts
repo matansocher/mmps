@@ -1,7 +1,6 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
-import path from 'node:path';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
 import { closeMongoConnections, createMongoConnection } from '@core/mongo';
@@ -9,6 +8,7 @@ import { registerSwaggerRoutes } from '@core/openapi';
 import { gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
+import { initClutch } from '@features/clutch';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
 import { BOT_CONFIG as learnerConfig, initLearner } from '@features/learner';
@@ -38,12 +38,7 @@ async function main() {
     res.json({ success: true });
   });
 
-  const clutchDist = path.resolve('apps/clutch-web/dist');
-  app.use('/clutch', express.static(clutchDist));
-  app.get('/clutch/*splat', (_req: Request, res: Response) => {
-    res.sendFile(path.join(clutchDist, 'index.html'));
-  });
-  logger.log(`Clutch SPA served from ${clutchDist} at /clutch/*`);
+  initClutch(app);
 
   registerSwaggerRoutes(app);
 

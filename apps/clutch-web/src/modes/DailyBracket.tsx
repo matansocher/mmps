@@ -10,6 +10,7 @@ import { recordDaily, todaysRecord, loadProfile } from '../lib/storage';
 import { buildShareText, shareOrCopy } from '../lib/share';
 import { ratingOf } from '../lib/facts';
 import { haptic } from '../lib/haptics';
+import { trackGameStart, trackGameEnd, trackShare } from '../lib/analytics';
 import { teamStyle, shortName } from '../lib/teams';
 import { useCountUp } from '../lib/useCountUp';
 import { TeamCard } from '../components/TeamCard';
@@ -109,12 +110,13 @@ export function DailyBracket({ league: selection }: { league: LeagueSelection })
     const flags = scored.results.map((r) => r.correct);
     const p = recordDaily(selection, { year, score: scored.score, maxScore: scored.maxScore, correctCount: scored.correctCount, total: flat.length, flags });
     setStreak(p.leagues[selection].dailyStreak);
+    trackGameEnd('daily', selection, { score: scored.score, maxScore: scored.maxScore, correct: scored.correctCount, total: flat.length, streak: p.leagues[selection].dailyStreak });
     haptic('heavy');
     setPhase('result');
   }
 
   if (phase === 'intro') {
-    return <Intro league={league} year={year} champion={season.champion} format={season.format} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro league={league} year={year} champion={season.champion} format={season.format} onStart={() => { haptic('light'); trackGameStart('daily', selection); setPhase('play'); }} />;
   }
   if (phase === 'result') {
     return <Result league={league} year={year} champion={season.champion} flat={flat} groups={groups} picks={picks} streak={streak} storedFlags={existing?.flags} />;
@@ -429,6 +431,7 @@ function Result({
 
   async function onShare() {
     haptic('light');
+    trackShare('daily');
     const results = flat.map((s, i) => ({ series: s, pickedTeam: picks[i] ?? '', correct: flagFor(i), points: 0 }));
     const text = buildShareText(league, year, results, score, maxScore, streak);
     const res = await shareOrCopy(text);

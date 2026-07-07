@@ -4,6 +4,7 @@ import type { League } from '../types';
 import { seasonsForSelection, flattenSeason, leagueOf } from '../lib/playoffs';
 import { loadProfile, recordChump, statsFor } from '../lib/storage';
 import { selectionMeta, type LeagueSelection } from '../lib/leagues';
+import { trackGameStart, trackGameEnd } from '../lib/analytics';
 import { haptic } from '../lib/haptics';
 import { teamStyle, shortName } from '../lib/teams';
 import { useCountUp } from '../lib/useCountUp';
@@ -110,6 +111,7 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
     if (!recorded.current) {
       recorded.current = true;
       recordChump(sel, finalLongest);
+      trackGameEnd('chump', sel, { streak: finalLongest, isRecord: finalLongest > initialBest && finalLongest > 0 });
     }
     setPhase('over');
   }
@@ -176,7 +178,7 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
   );
 
   if (phase === 'intro') {
-    return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); trackGameStart('chump', sel); setPhase('play'); }} />;
   }
   if (phase === 'over') {
     return <GameOver longest={longest} best={best} isRecord={longest > initialBest && longest > 0} onPlayAgain={onPlayAgain} />;

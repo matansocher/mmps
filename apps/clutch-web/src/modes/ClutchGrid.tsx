@@ -5,6 +5,7 @@ import { dayNumber, msUntilNextDay } from '../lib/daily';
 import { dailyGrid, cellAt, matchCell, allTeams, leagueForTeam, type Grid, type Axis } from '../lib/grid';
 import { loadProfile, gridToday, liveGridStreak, recordGrid, type GridResult } from '../lib/storage';
 import { buildGridShareText, shareOrCopy } from '../lib/share';
+import { trackGameStart, track, trackShare } from '../lib/analytics';
 import { haptic } from '../lib/haptics';
 import { TeamLogo } from '../components/TeamLogo';
 import { TopBar } from '../components/TopBar';
@@ -28,6 +29,11 @@ export function ClutchGrid() {
     existing ? { result: existing, streak: liveGridStreak(loadProfile(), today), isRecord: false } : null,
   );
 
+  useEffect(() => {
+    if (!existing) trackGameStart('clutch-grid');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function finish(cells: CellState[]) {
     const flags = cells.map((c) => c.status === 'correct');
     const filled = flags.filter(Boolean).length;
@@ -35,6 +41,7 @@ export function ClutchGrid() {
     const bestBefore = loadProfile().grid.bestStreak;
     const result: GridResult = { dateKey: keyOf(today), dayNumber: dayNum, filled, score, cells: flags };
     const p = recordGrid(result, today);
+    track('grid_completed', { filled, score, streak: p.grid.currentStreak, isRecord: p.grid.currentStreak > bestBefore && p.grid.currentStreak > 0 });
     setOutcome({ result, streak: p.grid.currentStreak, isRecord: p.grid.currentStreak > bestBefore && p.grid.currentStreak > 0 });
     setPhase('done');
   }
@@ -273,6 +280,7 @@ function Result({ grid, dayNum, outcome }: { grid: Grid; dayNum: number; outcome
   }, []);
 
   async function onShare() {
+    trackShare('clutch-grid');
     const text = buildGridShareText(dayNum, result.filled, result.score, result.cells, streak);
     const res = await shareOrCopy(text);
     setShareMsg(res === 'copied' ? 'Copied to clipboard!' : res === 'shared' ? 'Shared!' : 'Could not share');
