@@ -21,8 +21,6 @@ export class ChatbotController {
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));
-    this.bot.command('help', (ctx) => this.helpHandler(ctx));
-    this.bot.command('app', (ctx) => this.appHandler(ctx));
     this.bot.command('exercise', (ctx) => this.exerciseHandler(ctx));
     this.bot.on('message:text', (ctx) => this.messageHandler(ctx));
     this.bot.on('message:photo', (ctx) => this.photoHandler(ctx));
@@ -33,39 +31,9 @@ export class ChatbotController {
     await ctx.reply('Hi, I am your chatbot! How can I assist you today?');
   }
 
-  private async helpHandler(ctx: Context): Promise<void> {
-    const { chatId, messageId } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      const prompt = `List all your available tools with a short and concise explanation for each. Keep each tool description to 1-2 sentences maximum. Format as a clear, easy-to-scan list.`;
-      const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId);
-      await sendRichMessage(this.bot, chatId, replyText);
-    });
-  }
 
-  buildKeyboard(): { inline_keyboard: { text: string; web_app: { url: string } }[][] } | null {
-    const url = env.CHATBOT_MINI_APP_URL;
-    if (!url) {
-      this.logger.warn('CHATBOT_MINI_APP_URL not configured');
-      return null;
-    }
-    return { inline_keyboard: [[{ text: '📱 Open app', web_app: { url } }]] };
-  }
 
-  async sendLauncher(chatId: number, intro = '🤖 Here is the app:'): Promise<void> {
-    const reply_markup = this.buildKeyboard();
-    if (!reply_markup) {
-      await this.bot.api.sendMessage(chatId, 'The app is not configured yet. Try again later.');
-      return;
-    }
-    await this.bot.api.sendMessage(chatId, intro, { reply_markup });
-  }
-
-  private async appHandler(ctx: Context): Promise<void> {
-    const { chatId } = getMessageData(ctx);
-    await this.sendLauncher(chatId);
-  }
 
   private async exerciseHandler(ctx: Context): Promise<void> {
     await this.runAgentReply(ctx, 'I exercised', '🔥');
