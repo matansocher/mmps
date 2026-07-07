@@ -1,0 +1,274 @@
+{
+  "season": 1994,
+  "league": "WC",
+  "format": "32 teams, Round of 16 onward",
+  "champion": "Brazil",
+  "runnerUp": "Italy",
+  "source": "https://en.wikipedia.org/wiki/1994_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Belgium",
+            "wins": 0
+          },
+          "result": "3–2",
+          "winner": "Germany"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Switzerland",
+            "wins": 0
+          },
+          "result": "3–0",
+          "winner": "Spain"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Saudi Arabia",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sweden",
+            "wins": 0
+          },
+          "result": "1–3",
+          "winner": "Sweden"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Romania",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Argentina",
+            "wins": 0
+          },
+          "result": "3–2",
+          "winner": "Romania"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Republic of Ireland",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Netherlands"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "United States",
+            "wins": 0
+          },
+          "result": "1–0",
+          "winner": "Brazil"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Nigeria",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "result": "1–2 (a.e.t.)",
+          "winner": "Italy"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Mexico",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bulgaria",
+            "wins": 0
+          },
+          "result": "1–1 (1–3 p)",
+          "winner": "Bulgaria"
+        }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Romania",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sweden",
+            "wins": 0
+          },
+          "result": "2–2 (4–5 p)",
+          "winner": "Sweden"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "result": "2–3",
+          "winner": "Brazil"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bulgaria",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Bulgaria"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Italy"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sweden",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "result": "0–1",
+          "winner": "Brazil"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bulgaria",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "result": "1–2",
+          "winner": "Italy"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "result": "0–0 (3–2 p)",
+          "winner": "Brazil"
+        }
+      ]
+    }
+  ]
+}

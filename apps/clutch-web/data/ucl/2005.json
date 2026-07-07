@@ -1,0 +1,274 @@
+{
+  "season": 2005,
+  "league": "UCL",
+  "format": "16-team",
+  "champion": "Liverpool",
+  "runnerUp": "AC Milan",
+  "source": "https://en.wikipedia.org/wiki/2004-05_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Juventus"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayer Leverkusen",
+            "wins": 0
+          },
+          "result": "6–2",
+          "winner": "Liverpool"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "PSV Eindhoven",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Monaco",
+            "wins": 0
+          },
+          "result": "3–0",
+          "winner": "PSV Eindhoven"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Arsenal",
+            "wins": 0
+          },
+          "result": "3–2",
+          "winner": "Bayern Munich"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Barcelona",
+            "wins": 0
+          },
+          "result": "5–4",
+          "winner": "Chelsea"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "AC Milan",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester United",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "AC Milan"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Lyon",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Werder Bremen",
+            "wins": 0
+          },
+          "result": "10–2",
+          "winner": "Lyon"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Inter Milan",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Porto",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Inter Milan"
+        }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Liverpool"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "PSV Eindhoven",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Lyon",
+            "wins": 0
+          },
+          "result": "2–2 (4–2 pen.)",
+          "winner": "PSV Eindhoven"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "result": "6–5",
+          "winner": "Chelsea"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "AC Milan",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Inter Milan",
+            "wins": 0
+          },
+          "result": "5–0",
+          "winner": "AC Milan"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "result": "1–0",
+          "winner": "Liverpool"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "AC Milan",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "PSV Eindhoven",
+            "wins": 0
+          },
+          "result": "3–3 (a.g.)",
+          "winner": "AC Milan"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "AC Milan",
+            "wins": 0
+          },
+          "result": "3–3 (3–2 pen.)",
+          "winner": "Liverpool"
+        }
+      ]
+    }
+  ]
+}

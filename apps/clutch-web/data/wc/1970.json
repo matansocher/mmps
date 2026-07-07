@@ -1,0 +1,140 @@
+{
+  "season": 1970,
+  "league": "WC",
+  "format": "16 teams, group stage then quarter-finals onward",
+  "champion": "Brazil",
+  "runnerUp": "Italy",
+  "source": "https://en.wikipedia.org/wiki/1970_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Soviet Union",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Uruguay",
+            "wins": 0
+          },
+          "result": "0–1 (a.e.t.)",
+          "winner": "Uruguay"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Mexico",
+            "wins": 0
+          },
+          "result": "4–1",
+          "winner": "Italy"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Peru",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Brazil"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "result": "3–2 (a.e.t.)",
+          "winner": "West Germany"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Uruguay",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "result": "1–3",
+          "winner": "Brazil"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "result": "4–3 (a.e.t.)",
+          "winner": "Italy"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "result": "4–1",
+          "winner": "Brazil"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "season": 1997,
+  "league": "UCL",
+  "format": "8-team",
+  "champion": "Borussia Dortmund",
+  "runnerUp": "Juventus",
+  "source": "https://en.wikipedia.org/wiki/1996%E2%80%9397_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Auxerre",
+            "wins": 0
+          },
+          "result": "4–1",
+          "winner": "Borussia Dortmund"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester United",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Porto",
+            "wins": 0
+          },
+          "result": "4–0",
+          "winner": "Manchester United"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Ajax",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Atlético Madrid",
+            "wins": 0
+          },
+          "result": "4–3",
+          "winner": "Ajax"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Rosenborg",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "1–3",
+          "winner": "Juventus"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester United",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Borussia Dortmund"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Ajax",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "2–6",
+          "winner": "Juventus"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "Borussia Dortmund"
+        }
+      ]
+    }
+  ]
+}

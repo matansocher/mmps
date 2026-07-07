@@ -1,0 +1,140 @@
+{
+  "season": 2000,
+  "league": "EURO",
+  "format": "16 teams, quarter-finals onward",
+  "champion": "France",
+  "runnerUp": "Italy",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_2000",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Portugal",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Turkey",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Portugal"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Romania",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Italy"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "FR Yugoslavia",
+            "wins": 0
+          },
+          "result": "6–1",
+          "winner": "Netherlands"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "result": "1–2",
+          "winner": "France"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Portugal",
+            "wins": 0
+          },
+          "result": "2–1 (a.e.t.)",
+          "winner": "France"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "result": "0–0 (3–1 p)",
+          "winner": "Italy"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "result": "2–1 (a.e.t.)",
+          "winner": "France"
+        }
+      ]
+    }
+  ]
+}

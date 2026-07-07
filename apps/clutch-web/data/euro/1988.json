@@ -1,0 +1,70 @@
+{
+  "season": 1988,
+  "league": "EURO",
+  "format": "8 teams, two groups of 4; top two per group to semi-finals; no third-place match",
+  "champion": "Netherlands",
+  "runnerUp": "Soviet Union",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1988",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "result": "1–2",
+          "winner": "Netherlands"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Soviet Union",
+            "wins": 0
+          },
+          "result": "0–2",
+          "winner": "Soviet Union"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Soviet Union",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "result": "0–2",
+          "winner": "Netherlands"
+        }
+      ]
+    }
+  ]
+}

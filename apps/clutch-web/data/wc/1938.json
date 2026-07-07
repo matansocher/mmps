@@ -1,0 +1,274 @@
+{
+  "season": 1938,
+  "league": "WC",
+  "format": "15 teams (Austria withdrew post-draw; Sweden advanced by walkover), straight knockout from round of 16",
+  "champion": "Italy",
+  "runnerUp": "Hungary",
+  "source": "https://en.wikipedia.org/wiki/1938_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Switzerland",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "result": "4–2 (replay)",
+          "winner": "Switzerland"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Dutch East Indies",
+            "wins": 0
+          },
+          "result": "6–0",
+          "winner": "Hungary"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sweden",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Austria",
+            "wins": 0
+          },
+          "result": "w/o",
+          "winner": "Sweden"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Cuba",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Romania",
+            "wins": 0
+          },
+          "result": "2–1 (replay)",
+          "winner": "Cuba"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Belgium",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "France"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Norway",
+            "wins": 0
+          },
+          "result": "2–1 (a.e.t.)",
+          "winner": "Italy"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Czechoslovakia",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "result": "3–0 (a.e.t.)",
+          "winner": "Czechoslovakia"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Poland",
+            "wins": 0
+          },
+          "result": "6–5 (a.e.t.)",
+          "winner": "Brazil"
+        }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sweden",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Cuba",
+            "wins": 0
+          },
+          "result": "8–0",
+          "winner": "Sweden"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Switzerland",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Hungary"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "Italy"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Czechoslovakia",
+            "wins": 0
+          },
+          "result": "2–1 (replay)",
+          "winner": "Brazil"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Italy"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sweden",
+            "wins": 0
+          },
+          "result": "5–1",
+          "winner": "Hungary"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Italy"
+        }
+      ]
+    }
+  ]
+}

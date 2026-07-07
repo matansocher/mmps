@@ -1,0 +1,70 @@
+{
+  "season": 1964,
+  "league": "EURO",
+  "format": "4-team final tournament (host: Spain); semi-finals, third place, final",
+  "champion": "Spain",
+  "runnerUp": "Soviet Union",
+  "source": "https://en.wikipedia.org/wiki/1964_European_Nations%27_Cup",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Soviet Union",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Denmark",
+            "wins": 0
+          },
+          "result": "3–0",
+          "winner": "Soviet Union"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "result": "2–1 (a.e.t.)",
+          "winner": "Spain"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Soviet Union",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Spain"
+        }
+      ]
+    }
+  ]
+}

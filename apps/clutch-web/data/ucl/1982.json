@@ -1,0 +1,140 @@
+{
+  "season": 1982,
+  "league": "UCL",
+  "format": "8-team",
+  "champion": "Aston Villa",
+  "runnerUp": "Bayern Munich",
+  "source": "https://en.wikipedia.org/wiki/1981%E2%80%9382_European_Cup",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Dynamo Kyiv",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Aston Villa",
+            "wins": 0
+          },
+          "result": "0-2",
+          "winner": "Aston Villa"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Anderlecht",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Red Star Belgrade",
+            "wins": 0
+          },
+          "result": "4-2",
+          "winner": "Anderlecht"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "CSKA Sofia",
+            "wins": 0
+          },
+          "result": "1-2",
+          "winner": "CSKA Sofia"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Universitatea Craiova",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "result": "1-3",
+          "winner": "Bayern Munich"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Aston Villa",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Anderlecht",
+            "wins": 0
+          },
+          "result": "1-0",
+          "winner": "Aston Villa"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "CSKA Sofia",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "result": "4-7",
+          "winner": "Bayern Munich"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Aston Villa",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "result": "1-0",
+          "winner": "Aston Villa"
+        }
+      ]
+    }
+  ]
+}
