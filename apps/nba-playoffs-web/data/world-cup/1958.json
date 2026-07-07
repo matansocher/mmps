@@ -1,0 +1,38 @@
+{
+  "season": 1958,
+  "tournament": "World Cup",
+  "format": "16 teams, group stage then quarter-finals onward",
+  "champion": "Brazil",
+  "runnerUp": "Sweden",
+  "source": "https://en.wikipedia.org/wiki/1958_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "West Germany", "teamB": "Yugoslavia", "score": "1-0", "winner": "West Germany" },
+        { "teamA": "France", "teamB": "Northern Ireland", "score": "4-0", "winner": "France" },
+        { "teamA": "Sweden", "teamB": "Soviet Union", "score": "2-0", "winner": "Sweden" },
+        { "teamA": "Brazil", "teamB": "Wales", "score": "1-0", "winner": "Brazil" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Sweden", "teamB": "West Germany", "score": "3-1", "winner": "Sweden" },
+        { "teamA": "Brazil", "teamB": "France", "score": "5-2", "winner": "Brazil" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "France", "teamB": "West Germany", "score": "6-3", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Brazil", "teamB": "Sweden", "score": "5-2", "winner": "Brazil" }
+      ]
+    }
+  ]
+}

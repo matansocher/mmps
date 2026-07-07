@@ -1,0 +1,22 @@
+{
+  "season": 1980,
+  "tournament": "Euro",
+  "format": "8 teams, two groups of 4; group winners to final, runners-up to third-place play-off",
+  "champion": "West Germany",
+  "runnerUp": "Belgium",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1980",
+  "rounds": [
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Czechoslovakia", "teamB": "Italy", "score": "1-1 (9-8 p)", "winner": "Czechoslovakia" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "West Germany", "teamB": "Belgium", "score": "2-1", "winner": "West Germany" }
+      ]
+    }
+  ]
+}

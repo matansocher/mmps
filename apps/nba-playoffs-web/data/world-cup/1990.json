@@ -1,0 +1,51 @@
+{
+  "season": 1990,
+  "tournament": "World Cup",
+  "format": "32 teams, Round of 16 onward",
+  "champion": "West Germany",
+  "runnerUp": "Argentina",
+  "source": "https://en.wikipedia.org/wiki/1990_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Brazil", "teamB": "Argentina", "score": "0-1", "winner": "Argentina" },
+        { "teamA": "Spain", "teamB": "Yugoslavia", "score": "1-2 (a.e.t.)", "winner": "Yugoslavia" },
+        { "teamA": "Republic of Ireland", "teamB": "Romania", "score": "0-0 (5-4 p)", "winner": "Republic of Ireland" },
+        { "teamA": "Italy", "teamB": "Uruguay", "score": "2-0", "winner": "Italy" },
+        { "teamA": "Czechoslovakia", "teamB": "Costa Rica", "score": "4-1", "winner": "Czechoslovakia" },
+        { "teamA": "West Germany", "teamB": "Netherlands", "score": "2-1", "winner": "West Germany" },
+        { "teamA": "Cameroon", "teamB": "Colombia", "score": "2-1 (a.e.t.)", "winner": "Cameroon" },
+        { "teamA": "England", "teamB": "Belgium", "score": "1-0 (a.e.t.)", "winner": "England" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "Yugoslavia", "score": "0-0 (3-2 p)", "winner": "Argentina" },
+        { "teamA": "Republic of Ireland", "teamB": "Italy", "score": "0-1", "winner": "Italy" },
+        { "teamA": "Czechoslovakia", "teamB": "West Germany", "score": "0-1", "winner": "West Germany" },
+        { "teamA": "Cameroon", "teamB": "England", "score": "2-3 (a.e.t.)", "winner": "England" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "Italy", "score": "1-1 (4-3 p)", "winner": "Argentina" },
+        { "teamA": "West Germany", "teamB": "England", "score": "1-1 (4-3 p)", "winner": "West Germany" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Italy", "teamB": "England", "score": "2-1", "winner": "Italy" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "West Germany", "score": "0-1", "winner": "West Germany" }
+      ]
+    }
+  ]
+}

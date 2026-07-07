@@ -1,0 +1,51 @@
+{
+  "season": 2010,
+  "tournament": "World Cup",
+  "format": "32 teams, Round of 16 onward",
+  "champion": "Spain",
+  "runnerUp": "Netherlands",
+  "source": "https://en.wikipedia.org/wiki/2010_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Uruguay", "teamB": "South Korea", "score": "2-1", "winner": "Uruguay" },
+        { "teamA": "United States", "teamB": "Ghana", "score": "1-2 (a.e.t.)", "winner": "Ghana" },
+        { "teamA": "Netherlands", "teamB": "Slovakia", "score": "2-1", "winner": "Netherlands" },
+        { "teamA": "Brazil", "teamB": "Chile", "score": "3-0", "winner": "Brazil" },
+        { "teamA": "Argentina", "teamB": "Mexico", "score": "3-1", "winner": "Argentina" },
+        { "teamA": "Germany", "teamB": "England", "score": "4-1", "winner": "Germany" },
+        { "teamA": "Paraguay", "teamB": "Japan", "score": "0-0 (5-3 p)", "winner": "Paraguay" },
+        { "teamA": "Spain", "teamB": "Portugal", "score": "1-0", "winner": "Spain" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Uruguay", "teamB": "Ghana", "score": "1-1 (4-2 p)", "winner": "Uruguay" },
+        { "teamA": "Netherlands", "teamB": "Brazil", "score": "2-1", "winner": "Netherlands" },
+        { "teamA": "Argentina", "teamB": "Germany", "score": "0-4", "winner": "Germany" },
+        { "teamA": "Paraguay", "teamB": "Spain", "score": "0-1", "winner": "Spain" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Uruguay", "teamB": "Netherlands", "score": "2-3", "winner": "Netherlands" },
+        { "teamA": "Germany", "teamB": "Spain", "score": "0-1", "winner": "Spain" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Uruguay", "teamB": "Germany", "score": "2-3", "winner": "Germany" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Netherlands", "teamB": "Spain", "score": "0-1 (a.e.t.)", "winner": "Spain" }
+      ]
+    }
+  ]
+}

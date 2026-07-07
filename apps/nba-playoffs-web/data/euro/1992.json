@@ -1,0 +1,23 @@
+{
+  "season": 1992,
+  "tournament": "Euro",
+  "format": "8 teams, two groups, semi-finals onward",
+  "champion": "Denmark",
+  "runnerUp": "Germany",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1992",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Sweden", "teamB": "Germany", "score": "2-3", "winner": "Germany" },
+        { "teamA": "Netherlands", "teamB": "Denmark", "score": "2-2 (4-5 p)", "winner": "Denmark" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Denmark", "teamB": "Germany", "score": "2-0", "winner": "Denmark" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "season": 2000,
+  "tournament": "Euro",
+  "format": "16 teams, quarter-finals onward",
+  "champion": "France",
+  "runnerUp": "Italy",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_2000",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Portugal", "teamB": "Turkey", "score": "2-0", "winner": "Portugal" },
+        { "teamA": "Italy", "teamB": "Romania", "score": "2-0", "winner": "Italy" },
+        { "teamA": "Netherlands", "teamB": "FR Yugoslavia", "score": "6-1", "winner": "Netherlands" },
+        { "teamA": "Spain", "teamB": "France", "score": "1-2", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "France", "teamB": "Portugal", "score": "2-1 (a.e.t.)", "winner": "France" },
+        { "teamA": "Italy", "teamB": "Netherlands", "score": "0-0 (3-1 p)", "winner": "Italy" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "France", "teamB": "Italy", "score": "2-1 (a.e.t.)", "winner": "France" }
+      ]
+    }
+  ]
+}

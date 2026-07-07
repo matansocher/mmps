@@ -1,0 +1,51 @@
+{
+  "season": 1938,
+  "tournament": "World Cup",
+  "format": "15 teams (Austria withdrew post-draw; Sweden advanced by walkover), straight knockout from round of 16",
+  "champion": "Italy",
+  "runnerUp": "Hungary",
+  "source": "https://en.wikipedia.org/wiki/1938_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Switzerland", "teamB": "Germany", "score": "4-2 (replay)", "winner": "Switzerland" },
+        { "teamA": "Hungary", "teamB": "Dutch East Indies", "score": "6-0", "winner": "Hungary" },
+        { "teamA": "Sweden", "teamB": "Austria", "score": "w/o", "winner": "Sweden" },
+        { "teamA": "Cuba", "teamB": "Romania", "score": "2-1 (replay)", "winner": "Cuba" },
+        { "teamA": "France", "teamB": "Belgium", "score": "3-1", "winner": "France" },
+        { "teamA": "Italy", "teamB": "Norway", "score": "2-1 (a.e.t.)", "winner": "Italy" },
+        { "teamA": "Czechoslovakia", "teamB": "Netherlands", "score": "3-0 (a.e.t.)", "winner": "Czechoslovakia" },
+        { "teamA": "Brazil", "teamB": "Poland", "score": "6-5 (a.e.t.)", "winner": "Brazil" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Sweden", "teamB": "Cuba", "score": "8-0", "winner": "Sweden" },
+        { "teamA": "Hungary", "teamB": "Switzerland", "score": "2-0", "winner": "Hungary" },
+        { "teamA": "Italy", "teamB": "France", "score": "3-1", "winner": "Italy" },
+        { "teamA": "Brazil", "teamB": "Czechoslovakia", "score": "2-1 (replay)", "winner": "Brazil" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Italy", "teamB": "Brazil", "score": "2-1", "winner": "Italy" },
+        { "teamA": "Hungary", "teamB": "Sweden", "score": "5-1", "winner": "Hungary" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Brazil", "teamB": "Sweden", "score": "4-2", "winner": "Brazil" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Italy", "teamB": "Hungary", "score": "4-2", "winner": "Italy" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "season": 1978,
+  "tournament": "World Cup",
+  "format": "second group stage, then final & third place",
+  "champion": "Argentina",
+  "runnerUp": "Netherlands",
+  "source": "https://en.wikipedia.org/wiki/1978_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Brazil", "teamB": "Italy", "score": "2-1", "winner": "Brazil" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "Netherlands", "score": "3-1 (a.e.t.)", "winner": "Argentina" }
+      ]
+    }
+  ]
+}

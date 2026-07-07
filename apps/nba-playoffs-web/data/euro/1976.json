@@ -1,0 +1,29 @@
+{
+  "season": 1976,
+  "tournament": "Euro",
+  "format": "4-team final tournament (host: Yugoslavia); semi-finals, third place, final",
+  "champion": "Czechoslovakia",
+  "runnerUp": "West Germany",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1976",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Czechoslovakia", "teamB": "Netherlands", "score": "3-1 (a.e.t.)", "winner": "Czechoslovakia" },
+        { "teamA": "Yugoslavia", "teamB": "West Germany", "score": "2-4 (a.e.t.)", "winner": "West Germany" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Netherlands", "teamB": "Yugoslavia", "score": "3-2 (a.e.t.)", "winner": "Netherlands" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Czechoslovakia", "teamB": "West Germany", "score": "2-2 (5-3 p)", "winner": "Czechoslovakia" }
+      ]
+    }
+  ]
+}

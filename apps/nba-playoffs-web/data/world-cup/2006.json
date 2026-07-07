@@ -1,0 +1,51 @@
+{
+  "season": 2006,
+  "tournament": "World Cup",
+  "format": "32 teams, Round of 16 onward",
+  "champion": "Italy",
+  "runnerUp": "France",
+  "source": "https://en.wikipedia.org/wiki/2006_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Sweden", "score": "2-0", "winner": "Germany" },
+        { "teamA": "Argentina", "teamB": "Mexico", "score": "2-1 (a.e.t.)", "winner": "Argentina" },
+        { "teamA": "Italy", "teamB": "Australia", "score": "1-0", "winner": "Italy" },
+        { "teamA": "Switzerland", "teamB": "Ukraine", "score": "0-0 (0-3 p)", "winner": "Ukraine" },
+        { "teamA": "England", "teamB": "Ecuador", "score": "1-0", "winner": "England" },
+        { "teamA": "Portugal", "teamB": "Netherlands", "score": "1-0", "winner": "Portugal" },
+        { "teamA": "Brazil", "teamB": "Ghana", "score": "3-0", "winner": "Brazil" },
+        { "teamA": "Spain", "teamB": "France", "score": "1-3", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Argentina", "score": "1-1 (4-2 p)", "winner": "Germany" },
+        { "teamA": "Italy", "teamB": "Ukraine", "score": "3-0", "winner": "Italy" },
+        { "teamA": "England", "teamB": "Portugal", "score": "0-0 (1-3 p)", "winner": "Portugal" },
+        { "teamA": "Brazil", "teamB": "France", "score": "0-1", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Italy", "score": "0-2 (a.e.t.)", "winner": "Italy" },
+        { "teamA": "Portugal", "teamB": "France", "score": "0-1", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Portugal", "score": "3-1", "winner": "Germany" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Italy", "teamB": "France", "score": "1-1 (5-3 p)", "winner": "Italy" }
+      ]
+    }
+  ]
+}

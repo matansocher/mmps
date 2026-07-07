@@ -1,0 +1,29 @@
+{
+  "season": 1972,
+  "tournament": "Euro",
+  "format": "4-team final tournament (host: Belgium); semi-finals, third place, final",
+  "champion": "West Germany",
+  "runnerUp": "Soviet Union",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1972",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Belgium", "teamB": "West Germany", "score": "1-2", "winner": "West Germany" },
+        { "teamA": "Soviet Union", "teamB": "Hungary", "score": "1-0", "winner": "Soviet Union" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Belgium", "teamB": "Hungary", "score": "2-1", "winner": "Belgium" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "West Germany", "teamB": "Soviet Union", "score": "3-0", "winner": "West Germany" }
+      ]
+    }
+  ]
+}

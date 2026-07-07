@@ -1,0 +1,51 @@
+{
+  "season": 2002,
+  "tournament": "World Cup",
+  "format": "32 teams, Round of 16 onward",
+  "champion": "Brazil",
+  "runnerUp": "Germany",
+  "source": "https://en.wikipedia.org/wiki/2002_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Paraguay", "score": "1-0", "winner": "Germany" },
+        { "teamA": "Mexico", "teamB": "United States", "score": "0-2", "winner": "United States" },
+        { "teamA": "Spain", "teamB": "Republic of Ireland", "score": "1-1 (3-2 p)", "winner": "Spain" },
+        { "teamA": "South Korea", "teamB": "Italy", "score": "2-1 (a.e.t.)", "winner": "South Korea" },
+        { "teamA": "Denmark", "teamB": "England", "score": "0-3", "winner": "England" },
+        { "teamA": "Brazil", "teamB": "Belgium", "score": "2-0", "winner": "Brazil" },
+        { "teamA": "Sweden", "teamB": "Senegal", "score": "1-2 (a.e.t.)", "winner": "Senegal" },
+        { "teamA": "Japan", "teamB": "Turkey", "score": "0-1", "winner": "Turkey" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Germany", "teamB": "United States", "score": "1-0", "winner": "Germany" },
+        { "teamA": "Spain", "teamB": "South Korea", "score": "0-0 (3-5 p)", "winner": "South Korea" },
+        { "teamA": "England", "teamB": "Brazil", "score": "1-2", "winner": "Brazil" },
+        { "teamA": "Senegal", "teamB": "Turkey", "score": "0-1 (a.e.t.)", "winner": "Turkey" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Germany", "teamB": "South Korea", "score": "1-0", "winner": "Germany" },
+        { "teamA": "Brazil", "teamB": "Turkey", "score": "1-0", "winner": "Brazil" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "South Korea", "teamB": "Turkey", "score": "2-3", "winner": "Turkey" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Brazil", "score": "0-2", "winner": "Brazil" }
+      ]
+    }
+  ]
+}

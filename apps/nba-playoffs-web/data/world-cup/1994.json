@@ -1,0 +1,51 @@
+{
+  "season": 1994,
+  "tournament": "World Cup",
+  "format": "32 teams, Round of 16 onward",
+  "champion": "Brazil",
+  "runnerUp": "Italy",
+  "source": "https://en.wikipedia.org/wiki/1994_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Belgium", "score": "3-2", "winner": "Germany" },
+        { "teamA": "Spain", "teamB": "Switzerland", "score": "3-0", "winner": "Spain" },
+        { "teamA": "Saudi Arabia", "teamB": "Sweden", "score": "1-3", "winner": "Sweden" },
+        { "teamA": "Romania", "teamB": "Argentina", "score": "3-2", "winner": "Romania" },
+        { "teamA": "Netherlands", "teamB": "Republic of Ireland", "score": "2-0", "winner": "Netherlands" },
+        { "teamA": "Brazil", "teamB": "United States", "score": "1-0", "winner": "Brazil" },
+        { "teamA": "Nigeria", "teamB": "Italy", "score": "1-2 (a.e.t.)", "winner": "Italy" },
+        { "teamA": "Mexico", "teamB": "Bulgaria", "score": "1-1 (1-3 p)", "winner": "Bulgaria" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Romania", "teamB": "Sweden", "score": "2-2 (4-5 p)", "winner": "Sweden" },
+        { "teamA": "Netherlands", "teamB": "Brazil", "score": "2-3", "winner": "Brazil" },
+        { "teamA": "Bulgaria", "teamB": "Germany", "score": "2-1", "winner": "Bulgaria" },
+        { "teamA": "Italy", "teamB": "Spain", "score": "2-1", "winner": "Italy" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Sweden", "teamB": "Brazil", "score": "0-1", "winner": "Brazil" },
+        { "teamA": "Bulgaria", "teamB": "Italy", "score": "1-2", "winner": "Italy" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Sweden", "teamB": "Bulgaria", "score": "4-0", "winner": "Sweden" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Brazil", "teamB": "Italy", "score": "0-0 (3-2 p)", "winner": "Brazil" }
+      ]
+    }
+  ]
+}

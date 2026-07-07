@@ -1,0 +1,45 @@
+{
+  "season": 2016,
+  "tournament": "Euro",
+  "format": "24 teams, Round of 16 onward",
+  "champion": "Portugal",
+  "runnerUp": "France",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_2016_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Switzerland", "teamB": "Poland", "score": "1-1 (4-5 p)", "winner": "Poland" },
+        { "teamA": "Wales", "teamB": "Northern Ireland", "score": "1-0", "winner": "Wales" },
+        { "teamA": "Croatia", "teamB": "Portugal", "score": "0-1 (a.e.t.)", "winner": "Portugal" },
+        { "teamA": "France", "teamB": "Republic of Ireland", "score": "2-1", "winner": "France" },
+        { "teamA": "Germany", "teamB": "Slovakia", "score": "3-0", "winner": "Germany" },
+        { "teamA": "Hungary", "teamB": "Belgium", "score": "0-4", "winner": "Belgium" },
+        { "teamA": "Italy", "teamB": "Spain", "score": "2-0", "winner": "Italy" },
+        { "teamA": "England", "teamB": "Iceland", "score": "1-2", "winner": "Iceland" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Poland", "teamB": "Portugal", "score": "1-1 (3-5 p)", "winner": "Portugal" },
+        { "teamA": "Wales", "teamB": "Belgium", "score": "3-1", "winner": "Wales" },
+        { "teamA": "Germany", "teamB": "Italy", "score": "1-1 (6-5 p)", "winner": "Germany" },
+        { "teamA": "France", "teamB": "Iceland", "score": "5-2", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Portugal", "teamB": "Wales", "score": "2-0", "winner": "Portugal" },
+        { "teamA": "Germany", "teamB": "France", "score": "0-2", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Portugal", "teamB": "France", "score": "1-0 (a.e.t.)", "winner": "Portugal" }
+      ]
+    }
+  ]
+}

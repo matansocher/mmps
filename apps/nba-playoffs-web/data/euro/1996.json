@@ -1,0 +1,32 @@
+{
+  "season": 1996,
+  "tournament": "Euro",
+  "format": "16 teams, quarter-finals onward",
+  "champion": "Germany",
+  "runnerUp": "Czech Republic",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1996",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "England", "teamB": "Spain", "score": "0-0 (4-2 p)", "winner": "England" },
+        { "teamA": "France", "teamB": "Netherlands", "score": "0-0 (5-4 p)", "winner": "France" },
+        { "teamA": "Germany", "teamB": "Croatia", "score": "2-1", "winner": "Germany" },
+        { "teamA": "Portugal", "teamB": "Czech Republic", "score": "0-1", "winner": "Czech Republic" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Germany", "teamB": "England", "score": "1-1 (6-5 p)", "winner": "Germany" },
+        { "teamA": "Czech Republic", "teamB": "France", "score": "0-0 (6-5 p)", "winner": "Czech Republic" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Czech Republic", "teamB": "Germany", "score": "1-2 (a.e.t.)", "winner": "Germany" }
+      ]
+    }
+  ]
+}

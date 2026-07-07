@@ -1,0 +1,23 @@
+{
+  "season": 1984,
+  "tournament": "Euro",
+  "format": "8 teams, two groups of 4; top two per group to semi-finals; no third-place match",
+  "champion": "France",
+  "runnerUp": "Spain",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1984",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "France", "teamB": "Portugal", "score": "3-2 (a.e.t.)", "winner": "France" },
+        { "teamA": "Spain", "teamB": "Denmark", "score": "1-1 (5-4 p)", "winner": "Spain" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "France", "teamB": "Spain", "score": "2-0", "winner": "France" }
+      ]
+    }
+  ]
+}

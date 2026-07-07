@@ -1,0 +1,51 @@
+{
+  "season": 1934,
+  "tournament": "World Cup",
+  "format": "16 teams, straight knockout from round of 16",
+  "champion": "Italy",
+  "runnerUp": "Czechoslovakia",
+  "source": "https://en.wikipedia.org/wiki/1934_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Italy", "teamB": "United States", "score": "7-1", "winner": "Italy" },
+        { "teamA": "Spain", "teamB": "Brazil", "score": "3-1", "winner": "Spain" },
+        { "teamA": "Austria", "teamB": "France", "score": "3-2 (a.e.t.)", "winner": "Austria" },
+        { "teamA": "Hungary", "teamB": "Egypt", "score": "4-2", "winner": "Hungary" },
+        { "teamA": "Switzerland", "teamB": "Netherlands", "score": "3-2", "winner": "Switzerland" },
+        { "teamA": "Czechoslovakia", "teamB": "Romania", "score": "2-1", "winner": "Czechoslovakia" },
+        { "teamA": "Sweden", "teamB": "Argentina", "score": "3-2", "winner": "Sweden" },
+        { "teamA": "Germany", "teamB": "Belgium", "score": "5-2", "winner": "Germany" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Sweden", "score": "2-1", "winner": "Germany" },
+        { "teamA": "Austria", "teamB": "Hungary", "score": "2-1", "winner": "Austria" },
+        { "teamA": "Italy", "teamB": "Spain", "score": "1-0 (replay)", "winner": "Italy" },
+        { "teamA": "Czechoslovakia", "teamB": "Switzerland", "score": "3-2", "winner": "Czechoslovakia" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Italy", "teamB": "Austria", "score": "1-0", "winner": "Italy" },
+        { "teamA": "Czechoslovakia", "teamB": "Germany", "score": "3-1", "winner": "Czechoslovakia" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Germany", "teamB": "Austria", "score": "3-2", "winner": "Germany" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Italy", "teamB": "Czechoslovakia", "score": "2-1 (a.e.t.)", "winner": "Italy" }
+      ]
+    }
+  ]
+}

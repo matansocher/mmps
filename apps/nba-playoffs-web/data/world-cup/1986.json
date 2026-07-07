@@ -1,0 +1,51 @@
+{
+  "season": 1986,
+  "tournament": "World Cup",
+  "format": "32 teams, Round of 16 onward",
+  "champion": "Argentina",
+  "runnerUp": "West Germany",
+  "source": "https://en.wikipedia.org/wiki/1986_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "Uruguay", "score": "1-0", "winner": "Argentina" },
+        { "teamA": "England", "teamB": "Paraguay", "score": "3-0", "winner": "England" },
+        { "teamA": "Denmark", "teamB": "Spain", "score": "1-5", "winner": "Spain" },
+        { "teamA": "Soviet Union", "teamB": "Belgium", "score": "3-4 (a.e.t.)", "winner": "Belgium" },
+        { "teamA": "Brazil", "teamB": "Poland", "score": "4-0", "winner": "Brazil" },
+        { "teamA": "Italy", "teamB": "France", "score": "0-2", "winner": "France" },
+        { "teamA": "Morocco", "teamB": "West Germany", "score": "0-1", "winner": "West Germany" },
+        { "teamA": "Mexico", "teamB": "Bulgaria", "score": "2-0", "winner": "Mexico" }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "England", "score": "2-1", "winner": "Argentina" },
+        { "teamA": "Spain", "teamB": "Belgium", "score": "1-1 (4-5 p)", "winner": "Belgium" },
+        { "teamA": "Brazil", "teamB": "France", "score": "1-1 (3-4 p)", "winner": "France" },
+        { "teamA": "West Germany", "teamB": "Mexico", "score": "0-0 (4-1 p)", "winner": "West Germany" }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "Belgium", "score": "2-0", "winner": "Argentina" },
+        { "teamA": "France", "teamB": "West Germany", "score": "0-2", "winner": "West Germany" }
+      ]
+    },
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Belgium", "teamB": "France", "score": "2-4 (a.e.t.)", "winner": "France" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "Argentina", "teamB": "West Germany", "score": "3-2", "winner": "Argentina" }
+      ]
+    }
+  ]
+}

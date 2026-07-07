@@ -1,0 +1,22 @@
+{
+  "season": 1974,
+  "tournament": "World Cup",
+  "format": "second group stage, then final & third place",
+  "champion": "West Germany",
+  "runnerUp": "Netherlands",
+  "source": "https://en.wikipedia.org/wiki/1974_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Third place",
+      "matches": [
+        { "teamA": "Poland", "teamB": "Brazil", "score": "1-0", "winner": "Poland" }
+      ]
+    },
+    {
+      "round": "Final",
+      "matches": [
+        { "teamA": "West Germany", "teamB": "Netherlands", "score": "2-1", "winner": "West Germany" }
+      ]
+    }
+  ]
+}
