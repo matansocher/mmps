@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏀 NBA Playoffs Game — Implementation Plan</title>
+<style>
+  :root{
+    --bg:#0d1117;--card:#161b22;--card2:#1c2330;--border:#30363d;
+    --text:#e6edf3;--muted:#8b949e;--accent:#f97316;--accent2:#3b82f6;
+    --green:#3fb950;--red:#f85149;--yellow:#d29922;--purple:#a371f7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;padding:40px 20px}
+  .wrap{max-width:900px;margin:0 auto}
+  header{text-align:center;padding:40px 24px;background:linear-gradient(135deg,#1d2430,#161b22);border:1px solid var(--border);border-radius:16px;margin-bottom:28px}
+  header h1{font-size:2rem;margin-bottom:10px}
+  header p{color:var(--muted);font-size:1.05rem}
+  .stats{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:22px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 18px;min-width:96px}
+  .stat .num{font-size:1.4rem;font-weight:700;color:var(--accent)}
+  .stat .lbl{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:22px}
+  section h2{font-size:1.35rem;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+  h3{font-size:1.08rem;margin:18px 0 8px;color:var(--accent2)}
+  ul,ol{padding-left:22px;margin:8px 0}
+  li{margin-bottom:8px}
+  strong{color:#fff}
+  code{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:.88em;color:#e6edf3}
+  .badge{display:inline-block;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;vertical-align:middle;margin-left:8px;letter-spacing:.3px}
+  .b-done{background:var(--green);color:#04260f}
+  .b-build{background:var(--accent);color:#3d1c02}
+  .b-plan{background:var(--accent2);color:#08203f}
+  .b-later{background:#3a4150;color:var(--muted)}
+  .b-scope{background:var(--purple);color:#1e0f3d}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .decision{border-left:3px solid var(--green);background:rgba(63,185,80,.07);padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:12px}
+  .decision .q{color:var(--muted);font-size:.9rem}
+  .decision .a{font-weight:600;margin-top:2px}
+  .flow{counter-reset:step;list-style:none;padding-left:0}
+  .flow li{position:relative;padding-left:44px;margin-bottom:14px}
+  .flow li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--accent2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+  .phase{border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:var(--card2)}
+  .phase .h{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:1.05rem}
+  .phase ul{margin-top:8px}
+  .tree{background:#0d1117;border:1px solid var(--border);border-radius:10px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem;color:var(--muted);white-space:pre;overflow-x:auto}
+  .emoji{font-size:1.25rem;letter-spacing:3px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .card-mini{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px}
+  footer{text-align:center;color:var(--muted);font-size:.9rem;margin-top:28px}
+  .pill{display:inline-block;background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.85rem;margin:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>🏀 NBA Playoffs Game — Implementation Plan</h1>
+    <p>Current scope: <strong>Daily Challenge</strong> · <strong>Bracket Builder</strong> <span style="opacity:.6">(Who Advanced? was built then removed)</span></p>
+    <div class="stats">
+      <div class="stat"><div class="num">47</div><div class="lbl">Seasons</div></div>
+      <div class="stat"><div class="num">1980–2026</div><div class="lbl">Range</div></div>
+      <div class="stat"><div class="num">674</div><div class="lbl">Series</div></div>
+      <div class="stat"><div class="num">3</div><div class="lbl">MVP Modes</div></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>Status Legend</h2>
+    <div class="legend">
+      <span class="badge b-done">DONE</span>
+      <span class="badge b-build">BUILDING NEXT</span>
+      <span class="badge b-plan">PLANNED (MVP)</span>
+      <span class="badge b-later">LATER</span>
+      <span class="badge b-scope">IN SCOPE</span>
+    </div>
+    <p style="margin-top:12px;color:var(--muted)">This document is the single source of truth for what we're building and where we are. Updated as milestones land.</p>
+  </section>
+
+  <section>
+    <h2>✅ Locked Decisions <span class="badge b-done">DONE</span></h2>
+    <p style="color:var(--muted);margin-bottom:14px">Agreed during brainstorm — these shape the whole build.</p>
+
+    <div class="decision">
+      <div class="q">Where does it live?</div>
+      <div class="a">New Vite + React mini-app → <code>apps/nba-playoffs-web</code> (matches coach-web / chatbot-web / expenses-web conventions).</div>
+    </div>
+    <div class="decision">
+      <div class="q">Backend?</div>
+      <div class="a">Client-only. Deterministic daily seed from the date; scores &amp; streaks in <code>localStorage</code>. No server, no auth for MVP.</div>
+    </div>
+    <div class="decision">
+      <div class="q">How do the modes relate?</div>
+      <div class="a">The <strong>Daily Challenge = that day's Bracket Builder</strong> (one shareable score everyone compares). <strong>Who Advanced?</strong> is a separate endless quick-play practice mode.</div>
+    </div>
+    <div class="decision">
+      <div class="q">How does bracket picking work?</div>
+      <div class="a"><strong>Truth-fill:</strong> every one of the 15 series always shows the real teams that actually met; you pick each winner independently. Fair, no dead bracket, all series count.</div>
+    </div>
+    <div class="decision">
+      <div class="q">Is the year shown?</div>
+      <div class="a">Yes — it's a history/recall game. Seeing "2016 Playoffs" lets fans recall what happened. (Mystery Mode = a later toggle.)</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🎮 MVP Modes</h2>
+
+    <h3>1 · Daily Challenge — Bracket Builder <span class="badge b-scope">IN SCOPE</span></h3>
+    <p>One year per day, identical for everyone worldwide (date-seeded). Fill the whole bracket, submit once, get a shareable score. The viral core.</p>
+    <ol class="flow">
+      <li><strong>Intro card:</strong> "2016 NBA Playoffs" + a Start button. Shows your streak 🔥 and whether you've played today.</li>
+      <li><strong>Play (round-by-round stepper):</strong> First Round (8 series) → Conf Semifinals (4) → Conf Finals (2) → Finals (1). Each series is a card showing both real seeded teams; tap the winner. Progress bar on top. One-thumb, fast — no cramped bracket on mobile.</li>
+      <li><strong>Submit → animated reveal:</strong> each pick flips green (right) / red (wrong), round by round, with fun facts on big upsets.</li>
+      <li><strong>Score &amp; share:</strong> round-weighted score /27, streak update, and a spoiler-free emoji share card.</li>
+    </ol>
+    <div class="card-mini" style="margin-top:10px">
+      <div style="color:var(--muted);font-size:.85rem;margin-bottom:6px">Share card mockup (no spoilers):</div>
+      <div>🏀 NBA Bracket — 2016 · <strong>21/27</strong> · 🔥7</div>
+      <div class="emoji">🟩🟩🟥🟩🟩🟥🟩🟩</div>
+      <div class="emoji">🟩🟥🟩🟩</div>
+      <div class="emoji">🟩🟩 · 🟩</div>
+    </div>
+
+    <h3>2 · Who Advanced? — Endless Quick Play <span class="badge b-later">REMOVED</span></h3>
+    <p><em>This mode was built (with 0–4 exact-score guessing) but later removed at the user's request. The game now ships with the Daily Challenge / Bracket Builder only. Kept here for history.</em></p>
+    <ul>
+      <li>Card showed two seeded teams + the year (e.g. "1999 · ⑧ Knicks vs ① Heat — who advanced?").</li>
+      <li>Tap or swipe the winner → instant green/red + a one-line fact.</li>
+      <li>Chased a <strong>best streak</strong> (hi-score loop). A miss broke the streak but you kept going.</li>
+      <li>Weighted toward juicy upsets (189 in the data) to keep it surprising.</li>
+    </ul>
+
+    <h3>Later modes (not in MVP) <span class="badge b-later">LATER</span></h3>
+    <div>
+      <span class="pill">Guess the Champion</span>
+      <span class="pill">Guess the Runner-Up</span>
+      <span class="pill">Series Score margin</span>
+      <span class="pill">Marathon (all 47 years)</span>
+      <span class="pill">Mystery-Year hard mode</span>
+      <span class="pill">Global leaderboards</span>
+      <span class="pill">Friend duels</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>🏆 Scoring &amp; Retention</h2>
+    <div class="grid2">
+      <div class="card-mini">
+        <h3 style="margin-top:0">Bracket (Daily)</h3>
+        <ul>
+          <li>First Round pick = <strong>1</strong> pt</li>
+          <li>Conf Semifinal = <strong>2</strong> pts</li>
+          <li>Conf Final = <strong>3</strong> pts</li>
+          <li>Finals = <strong>5</strong> pts</li>
+          <li>Perfect bracket = bonus 🎯</li>
+          <li>Max = <strong>27</strong> pts</li>
+        </ul>
+      </div>
+      <div class="card-mini">
+        <h3 style="margin-top:0">Streaks &amp; loops</h3>
+        <ul>
+          <li>Daily streak 🔥 (miss a day = reset)</li>
+          <li>Who Advanced? best-streak hi-score</li>
+          <li>localStorage profile: history, bests, played-today</li>
+          <li>Badges (later): Bracket Master, Upset Oracle</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>📱 UX Principles</h2>
+    <ul>
+      <li><strong>One-thumb, fast:</strong> tap/swipe only, no typing. Round-by-round card stepper beats a tiny bracket on phones.</li>
+      <li><strong>Instant, satisfying feedback:</strong> animated green/red reveal + fun facts turn every answer into a micro-lesson.</li>
+      <li><strong>Sub-3-minute daily:</strong> respect time, maximize "just one more."</li>
+      <li><strong>Iconic reveal:</strong> after submit, show the filled bracket visual — screenshot-worthy and shareable.</li>
+      <li><strong>No dead ends:</strong> wrong pick → learn something → keep flowing.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🧱 Architecture <span class="badge b-plan">PLANNED (MVP)</span></h2>
+    <div class="tree">apps/nba-playoffs-web/
+├── package.json            (npm workspace)
+├── vite.config.ts
+├── index.html
+└── src/
+    ├── main.tsx / App.tsx
+    ├── data/
+    │   ├── playoffs.ts      generated bundle of 47 years
+    │   └── series-index.ts  flat 674-series list (Who Advanced?)
+    ├── lib/
+    │   ├── daily.ts         date → deterministic year (same for all)
+    │   ├── scoring.ts       round weights, totals
+    │   ├── storage.ts       localStorage profile/streaks
+    │   └── share.ts         emoji share-card builder
+    ├── modes/
+    │   ├── Home/            hero + streak + entry tiles
+    │   ├── DailyBracket/    stepper, reveal, results
+    │   └── WhoAdvanced/     endless swipe
+    └── components/
+        ├── SeriesCard  BracketView  ResultReveal
+        └── ShareCard   StreakBadge</div>
+    <p style="margin-top:10px;color:var(--muted)">Data pipeline: a small build step bundles the 47 JSON files into typed TS and derives the flat series index — no runtime fetching, instant load.</p>
+  </section>
+
+  <section>
+    <h2>🛠 Build Roadmap</h2>
+
+    <div class="phase">
+      <div class="h"><span>Phase 0 · Design decisions</span><span class="badge b-done">DONE</span></div>
+      <ul><li>Platform, client-only, mode relationships, truth-fill, year-shown — all locked above.</li></ul>
+    </div>
+
+    <div class="phase">
+      <div class="h"><span>Phase 1 · Scaffold app + data pipeline</span><span class="badge b-done">DONE</span></div>
+      <ul>
+        <li>✓ Created <code>apps/nba-playoffs-web</code> Vite + React + Tailwind workspace.</li>
+        <li>✓ <code>gen-data.mjs</code> bundles the 47 JSON files into typed data + a flat 689-series index.</li>
+        <li>✓ Home screen (daily hero, quick-play tile, stats strip) + wouter routing.</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="h"><span>Phase 2 · Who Advanced? (quick win)</span><span class="badge b-done">DONE</span></div>
+      <ul><li>✓ Endless series cards (upset-weighted), tap winner, instant feedback + fun fact, current/best streak in localStorage.</li></ul>
+    </div>
+
+    <div class="phase">
+      <div class="h"><span>Phase 3 · Daily Bracket Builder</span><span class="badge b-done">DONE</span></div>
+      <ul><li>✓ Date-seeded year (shuffled 47-year cycle), round-by-round truth-fill stepper, submit-then-reveal with per-series ✓/✗ and "you picked" annotation.</li></ul>
+    </div>
+
+    <div class="phase">
+      <div class="h"><span>Phase 4 · Scoring, streaks, share cards</span><span class="badge b-done">DONE</span></div>
+      <ul><li>✓ Round-weighted scoring (max 27), daily streak, Wordle-style emoji share via Web Share / clipboard.</li></ul>
+    </div>
+
+    <div class="phase">
+      <div class="h"><span>Phase 5 · Polish</span><span class="badge b-done">DONE</span></div>
+      <ul>
+        <li>✓ Motion pass: framer-motion round transitions, spring intro/result heroes, staggered per-series reveal, animated count-up score.</li>
+        <li>✓ Haptics (navigator.vibrate) on picks, submit, correct/wrong; dependency-free canvas confetti on high scores &amp; streak milestones.</li>
+        <li>✓ Performance tier badges (Benchwarmer → PERFECT), champion trophy callout in team colors, richer auto-generated fun facts.</li>
+        <li>✓ All 47 season JSON files moved into the app as bundled assets (<code>data/seasons/</code>).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="phase">
+      <div class="h"><span>Round 2 · Playability upgrades</span><span class="badge b-done">DONE</span></div>
+      <ul>
+        <li>✓ <strong>Team logos:</strong> real logos next to every team, resolved at runtime from a public CDN with an automatic colored-crest fallback for the franchises it doesn't carry (Bobcats, KC Kings, NO Hornets, Sonics, Bullets). No trademarked files bundled in the repo.</li>
+        <li>✓ <strong>Who Advanced? — exact-score guessing</strong> <em>(later removed at the user's request; see the mode section above)</em>: a 0–4 selector per team; the higher number is your winner. Wrong winner = miss (streak resets); right winner, wrong score = <em>good</em> (+1); exact series score = <em>great</em> (+3).</li>
+        <li>✓ <strong>Today's Bracket — real connected bracket:</strong> conference tabs [East · West · 🏆 Finals], vertical layout where first-round winners visibly "↓ advance to" the semifinals, then conference finals, then the Finals. Fills like an actual bracket instead of isolated questions. Per-series scoring unchanged.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="phase">
+      <div class="h"><span>Round 3 · Real bracket tree + instant feedback</span><span class="badge b-done">DONE</span></div>
+      <ul>
+        <li>✓ <strong>Tournament-tree layout:</strong> replaced the conference tabs with a single horizontally-scrollable bracket — East grows left→right, West mirrors right→left, and the Finals sits dead center. Compact cards fit all 8 teams per side so it reads like a real printed bracket.</li>
+        <li>✓ <strong>Tap-to-advance with instant feedback:</strong> pick a winner and get an immediate ✓ "Nailed it" (green) or ✗ "Wrong" (red) flash. The real winner always advances and slides into the next round's slot, which unlocks (and glows) once both feeders are decided.</li>
+        <li>✓ <strong>Micro-animations:</strong> pulsing glow on the active pickable series, slide-in when a team advances, a scale pop + floating verdict badge on each answer, and a live "✓ correct / picked" counter in the top bar.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>❓ Open Questions for Next Rounds</h2>
+    <ul>
+      <li><strong>Who Advanced? session shape:</strong> <span style="color:var(--green)">✓ Endless points + streak</span> — exact-score guessing adds depth; a wrong winner breaks the streak.</li>
+      <li><strong>Team branding:</strong> <span style="color:var(--green)">✓ Real logos (CDN) + colored crest fallback</span> for every franchise incl. defunct/relocated teams.</li>
+      <li><strong>Fun facts:</strong> auto-generate from data (seeds, sweeps, upsets), or hand-write a curated set for marquee series?</li>
+      <li><strong>Visual identity:</strong> generic dark/orange (current), or lean into a specific retro-NBA / broadcast look?</li>
+      <li><strong>Daily repeat policy:</strong> cycle all 47 years before repeating, or allow re-play of past days?</li>
+    </ul>
+  </section>
+
+  <footer>
+    Scope: Daily Challenge · Bracket Builder — client-only Vite + React mini-app · Data: 47 seasons (1980–2026)
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,292 @@
+{
+  "season": 2021,
+  "league": "NBA",
+  "format": "16-team",
+  "champion": "Milwaukee Bucks",
+  "runnerUp": "Phoenix Suns",
+  "source": "https://en.wikipedia.org/wiki/2021_NBA_playoffs",
+  "rounds": [
+    {
+      "round": "First Round",
+      "conference": "Eastern",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "E1",
+            "seedNumber": 1,
+            "team": "Philadelphia 76ers",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E8",
+            "seedNumber": 8,
+            "team": "Washington Wizards",
+            "wins": 1
+          },
+          "result": "4-1",
+          "winner": "Philadelphia 76ers"
+        },
+        {
+          "higherSeed": {
+            "seed": "E4",
+            "seedNumber": 4,
+            "team": "New York Knicks",
+            "wins": 1
+          },
+          "lowerSeed": {
+            "seed": "E5",
+            "seedNumber": 5,
+            "team": "Atlanta Hawks",
+            "wins": 4
+          },
+          "result": "4-1",
+          "winner": "Atlanta Hawks"
+        },
+        {
+          "higherSeed": {
+            "seed": "E3",
+            "seedNumber": 3,
+            "team": "Milwaukee Bucks",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E6",
+            "seedNumber": 6,
+            "team": "Miami Heat",
+            "wins": 0
+          },
+          "result": "4-0",
+          "winner": "Milwaukee Bucks"
+        },
+        {
+          "higherSeed": {
+            "seed": "E2",
+            "seedNumber": 2,
+            "team": "Brooklyn Nets",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E7",
+            "seedNumber": 7,
+            "team": "Boston Celtics",
+            "wins": 1
+          },
+          "result": "4-1",
+          "winner": "Brooklyn Nets"
+        }
+      ]
+    },
+    {
+      "round": "First Round",
+      "conference": "Western",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W1",
+            "seedNumber": 1,
+            "team": "Utah Jazz",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W8",
+            "seedNumber": 8,
+            "team": "Memphis Grizzlies",
+            "wins": 1
+          },
+          "result": "4-1",
+          "winner": "Utah Jazz"
+        },
+        {
+          "higherSeed": {
+            "seed": "W4",
+            "seedNumber": 4,
+            "team": "Los Angeles Clippers",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W5",
+            "seedNumber": 5,
+            "team": "Dallas Mavericks",
+            "wins": 3
+          },
+          "result": "4-3",
+          "winner": "Los Angeles Clippers"
+        },
+        {
+          "higherSeed": {
+            "seed": "W3",
+            "seedNumber": 3,
+            "team": "Denver Nuggets",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W6",
+            "seedNumber": 6,
+            "team": "Portland Trail Blazers",
+            "wins": 2
+          },
+          "result": "4-2",
+          "winner": "Denver Nuggets"
+        },
+        {
+          "higherSeed": {
+            "seed": "W2",
+            "seedNumber": 2,
+            "team": "Phoenix Suns",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W7",
+            "seedNumber": 7,
+            "team": "Los Angeles Lakers",
+            "wins": 2
+          },
+          "result": "4-2",
+          "winner": "Phoenix Suns"
+        }
+      ]
+    },
+    {
+      "round": "Conference Semifinals",
+      "conference": "Eastern",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "E1",
+            "seedNumber": 1,
+            "team": "Philadelphia 76ers",
+            "wins": 3
+          },
+          "lowerSeed": {
+            "seed": "E5",
+            "seedNumber": 5,
+            "team": "Atlanta Hawks",
+            "wins": 4
+          },
+          "result": "4-3",
+          "winner": "Atlanta Hawks"
+        },
+        {
+          "higherSeed": {
+            "seed": "E2",
+            "seedNumber": 2,
+            "team": "Brooklyn Nets",
+            "wins": 3
+          },
+          "lowerSeed": {
+            "seed": "E3",
+            "seedNumber": 3,
+            "team": "Milwaukee Bucks",
+            "wins": 4
+          },
+          "result": "4-3",
+          "winner": "Milwaukee Bucks"
+        }
+      ]
+    },
+    {
+      "round": "Conference Semifinals",
+      "conference": "Western",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W1",
+            "seedNumber": 1,
+            "team": "Utah Jazz",
+            "wins": 2
+          },
+          "lowerSeed": {
+            "seed": "W4",
+            "seedNumber": 4,
+            "team": "Los Angeles Clippers",
+            "wins": 4
+          },
+          "result": "4-2",
+          "winner": "Los Angeles Clippers"
+        },
+        {
+          "higherSeed": {
+            "seed": "W2",
+            "seedNumber": 2,
+            "team": "Phoenix Suns",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W3",
+            "seedNumber": 3,
+            "team": "Denver Nuggets",
+            "wins": 0
+          },
+          "result": "4-0",
+          "winner": "Phoenix Suns"
+        }
+      ]
+    },
+    {
+      "round": "Conference Finals",
+      "conference": "Eastern",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "E3",
+            "seedNumber": 3,
+            "team": "Milwaukee Bucks",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E5",
+            "seedNumber": 5,
+            "team": "Atlanta Hawks",
+            "wins": 2
+          },
+          "result": "4-2",
+          "winner": "Milwaukee Bucks"
+        }
+      ]
+    },
+    {
+      "round": "Conference Finals",
+      "conference": "Western",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W2",
+            "seedNumber": 2,
+            "team": "Phoenix Suns",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W4",
+            "seedNumber": 4,
+            "team": "Los Angeles Clippers",
+            "wins": 2
+          },
+          "result": "4-2",
+          "winner": "Phoenix Suns"
+        }
+      ]
+    },
+    {
+      "round": "NBA Finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W2",
+            "seedNumber": 2,
+            "team": "Phoenix Suns",
+            "wins": 2
+          },
+          "lowerSeed": {
+            "seed": "E3",
+            "seedNumber": 3,
+            "team": "Milwaukee Bucks",
+            "wins": 4
+          },
+          "result": "4-2",
+          "winner": "Milwaukee Bucks"
+        }
+      ]
+    }
+  ]
+}

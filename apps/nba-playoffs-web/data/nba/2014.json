@@ -1,0 +1,292 @@
+{
+  "season": 2014,
+  "league": "NBA",
+  "format": "16-team",
+  "champion": "San Antonio Spurs",
+  "runnerUp": "Miami Heat",
+  "source": "https://en.wikipedia.org/wiki/2014_NBA_playoffs",
+  "rounds": [
+    {
+      "round": "First Round",
+      "conference": "Eastern",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "E1",
+            "seedNumber": 1,
+            "team": "Indiana Pacers",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E8",
+            "seedNumber": 8,
+            "team": "Atlanta Hawks",
+            "wins": 3
+          },
+          "result": "4-3",
+          "winner": "Indiana Pacers"
+        },
+        {
+          "higherSeed": {
+            "seed": "E4",
+            "seedNumber": 4,
+            "team": "Chicago Bulls",
+            "wins": 1
+          },
+          "lowerSeed": {
+            "seed": "E5",
+            "seedNumber": 5,
+            "team": "Washington Wizards",
+            "wins": 4
+          },
+          "result": "4-1",
+          "winner": "Washington Wizards"
+        },
+        {
+          "higherSeed": {
+            "seed": "E3",
+            "seedNumber": 3,
+            "team": "Toronto Raptors",
+            "wins": 3
+          },
+          "lowerSeed": {
+            "seed": "E6",
+            "seedNumber": 6,
+            "team": "Brooklyn Nets",
+            "wins": 4
+          },
+          "result": "4-3",
+          "winner": "Brooklyn Nets"
+        },
+        {
+          "higherSeed": {
+            "seed": "E2",
+            "seedNumber": 2,
+            "team": "Miami Heat",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E7",
+            "seedNumber": 7,
+            "team": "Charlotte Bobcats",
+            "wins": 0
+          },
+          "result": "4-0",
+          "winner": "Miami Heat"
+        }
+      ]
+    },
+    {
+      "round": "First Round",
+      "conference": "Western",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W1",
+            "seedNumber": 1,
+            "team": "San Antonio Spurs",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W8",
+            "seedNumber": 8,
+            "team": "Dallas Mavericks",
+            "wins": 3
+          },
+          "result": "4-3",
+          "winner": "San Antonio Spurs"
+        },
+        {
+          "higherSeed": {
+            "seed": "W4",
+            "seedNumber": 4,
+            "team": "Houston Rockets",
+            "wins": 2
+          },
+          "lowerSeed": {
+            "seed": "W5",
+            "seedNumber": 5,
+            "team": "Portland Trail Blazers",
+            "wins": 4
+          },
+          "result": "4-2",
+          "winner": "Portland Trail Blazers"
+        },
+        {
+          "higherSeed": {
+            "seed": "W3",
+            "seedNumber": 3,
+            "team": "Los Angeles Clippers",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W6",
+            "seedNumber": 6,
+            "team": "Golden State Warriors",
+            "wins": 3
+          },
+          "result": "4-3",
+          "winner": "Los Angeles Clippers"
+        },
+        {
+          "higherSeed": {
+            "seed": "W2",
+            "seedNumber": 2,
+            "team": "Oklahoma City Thunder",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W7",
+            "seedNumber": 7,
+            "team": "Memphis Grizzlies",
+            "wins": 3
+          },
+          "result": "4-3",
+          "winner": "Oklahoma City Thunder"
+        }
+      ]
+    },
+    {
+      "round": "Conference Semifinals",
+      "conference": "Eastern",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "E1",
+            "seedNumber": 1,
+            "team": "Indiana Pacers",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E5",
+            "seedNumber": 5,
+            "team": "Washington Wizards",
+            "wins": 2
+          },
+          "result": "4-2",
+          "winner": "Indiana Pacers"
+        },
+        {
+          "higherSeed": {
+            "seed": "E2",
+            "seedNumber": 2,
+            "team": "Miami Heat",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E6",
+            "seedNumber": 6,
+            "team": "Brooklyn Nets",
+            "wins": 1
+          },
+          "result": "4-1",
+          "winner": "Miami Heat"
+        }
+      ]
+    },
+    {
+      "round": "Conference Semifinals",
+      "conference": "Western",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W1",
+            "seedNumber": 1,
+            "team": "San Antonio Spurs",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W5",
+            "seedNumber": 5,
+            "team": "Portland Trail Blazers",
+            "wins": 1
+          },
+          "result": "4-1",
+          "winner": "San Antonio Spurs"
+        },
+        {
+          "higherSeed": {
+            "seed": "W2",
+            "seedNumber": 2,
+            "team": "Oklahoma City Thunder",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W3",
+            "seedNumber": 3,
+            "team": "Los Angeles Clippers",
+            "wins": 2
+          },
+          "result": "4-2",
+          "winner": "Oklahoma City Thunder"
+        }
+      ]
+    },
+    {
+      "round": "Conference Finals",
+      "conference": "Eastern",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "E1",
+            "seedNumber": 1,
+            "team": "Indiana Pacers",
+            "wins": 2
+          },
+          "lowerSeed": {
+            "seed": "E2",
+            "seedNumber": 2,
+            "team": "Miami Heat",
+            "wins": 4
+          },
+          "result": "4-2",
+          "winner": "Miami Heat"
+        }
+      ]
+    },
+    {
+      "round": "Conference Finals",
+      "conference": "Western",
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W1",
+            "seedNumber": 1,
+            "team": "San Antonio Spurs",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "W2",
+            "seedNumber": 2,
+            "team": "Oklahoma City Thunder",
+            "wins": 2
+          },
+          "result": "4-2",
+          "winner": "San Antonio Spurs"
+        }
+      ]
+    },
+    {
+      "round": "NBA Finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "W1",
+            "seedNumber": 1,
+            "team": "San Antonio Spurs",
+            "wins": 4
+          },
+          "lowerSeed": {
+            "seed": "E2",
+            "seedNumber": 2,
+            "team": "Miami Heat",
+            "wins": 1
+          },
+          "result": "4-1",
+          "winner": "San Antonio Spurs"
+        }
+      ]
+    }
+  ]
+}
