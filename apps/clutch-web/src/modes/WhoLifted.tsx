@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { League } from '../types';
 import { seasonsForSelection, leagueOf } from '../lib/playoffs';
@@ -13,6 +13,7 @@ import { Confetti } from '../components/Confetti';
 
 const CORRECT_DELAY = 520;
 const REVEAL_DELAY = 1250;
+const QUESTION_MS = 5000;
 
 type Question = {
   readonly id: string;
@@ -22,7 +23,7 @@ type Question = {
   readonly options: readonly string[];
 };
 
-type Answered = { readonly pick: string; readonly correct: boolean };
+type Answered = { readonly pick: string | null; readonly correct: boolean };
 type Phase = 'intro' | 'play' | 'over';
 
 function shuffle<T>(arr: readonly T[]): T[] {
@@ -75,10 +76,16 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
   const [answered, setAnswered] = useState<Answered | null>(null);
 
   const flowRef = useRef<number | null>(null);
+  const clockRef = useRef<number[]>([]);
   const recorded = useRef(false);
 
   const q = deck[qIndex % deck.length];
   const best = Math.max(initialBest, streak);
+
+  function clearClock() {
+    clockRef.current.forEach((t) => window.clearTimeout(t));
+    clockRef.current = [];
+  }
 
   function endRun(finalStreak: number) {
     if (!recorded.current) {
@@ -95,6 +102,7 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
 
   function pick(team: string) {
     if (answered) return;
+    clearClock();
     const correct = team === q.champion;
     setAnswered({ pick: team, correct });
     if (correct) {
@@ -106,6 +114,32 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
       flowRef.current = window.setTimeout(() => endRun(streak), REVEAL_DELAY);
     }
   }
+
+  function timeout() {
+    if (answered) return;
+    clearClock();
+    haptic('error');
+    setAnswered({ pick: null, correct: false });
+    flowRef.current = window.setTimeout(() => endRun(streak), REVEAL_DELAY);
+  }
+
+  // Per-question 5s clock (only while awaiting an answer).
+  useEffect(() => {
+    if (phase !== 'play' || answered) return;
+    const warn = window.setTimeout(() => haptic('light'), QUESTION_MS - 1600);
+    const expire = window.setTimeout(timeout, QUESTION_MS);
+    clockRef.current.push(warn, expire);
+    return clearClock;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, qIndex, answered]);
+
+  useEffect(
+    () => () => {
+      clearClock();
+      if (flowRef.current) window.clearTimeout(flowRef.current);
+    },
+    [],
+  );
 
   if (phase === 'intro') {
     return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); setPhase('play'); }} />;
@@ -122,6 +156,19 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
         title="Who Lifted It?"
         right={<span className="rounded-lg bg-court-card px-2 py-1 text-xs font-bold text-ink-secondary">BEST {best}</span>}
       />
+
+      {/* 5-second timer bar */}
+      <div className="h-1.5 w-full bg-court-card">
+        {!answered && (
+          <motion.div
+            key={qIndex}
+            className="h-full bg-hoop"
+            initial={{ width: '100%' }}
+            animate={{ width: '0%' }}
+            transition={{ duration: QUESTION_MS / 1000, ease: 'linear' }}
+          />
+        )}
+      </div>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 safe-b">
         {/* Streak */}
@@ -228,7 +275,7 @@ function Intro({ sel, best, onStart }: { sel: LeagueSelection; best: number; onS
           <div className="mt-4 font-display text-6xl leading-none tracking-wide text-hoop">WHO LIFTED IT?</div>
         </motion.div>
         <p className="mt-4 max-w-xs text-ink-secondary">
-          A year appears. Tap the team that lifted the trophy that season. One wrong pick ends the run — how many champions can you name in a row?
+          A year appears. Tap the team that lifted the trophy that season — you've got <strong className="text-ink-primary">5 seconds</strong> a pick. One wrong or too-slow answer ends the run. How many can you name in a row?
         </p>
         {best > 0 && <p className="mt-3 text-xs text-ink-muted">Best streak: {best}</p>}
         <button type="button" onClick={onStart} className="no-select mt-8 w-full max-w-xs rounded-2xl bg-hoop py-4 font-display text-2xl tracking-wide text-white active:scale-[0.98]">

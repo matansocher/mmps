@@ -377,15 +377,15 @@
 
     <div class="idea" style="border-color:#3fb950">
       <div class="top"><div class="name"><span class="em">📅</span>Clutch Daily <span class="badge b-hard">FLAGSHIP</span></div></div>
-      <div class="hook">"Clutch Daily #412 — 4/5 🔥  🏀🟩 ⚽🟩 🌍🟥 🏀🟩 ⚽🟩  Streak: 34"</div>
-      <p>One shared puzzle per day, <strong>the same 5 questions for everyone on Earth</strong> (deterministic from the date — we already date-seed picks). Mixed across all four tournaments. <strong>One attempt, no retries</strong> — scarcity is the engine, so the score means something and tomorrow always matters. Build a <strong>streak that hurts to lose</strong>, watch a midnight countdown, then flex a spoiler-free share card.</p>
+      <div class="hook">"Today's 5 questions — the same for everyone. How many did you get?"</div>
+      <p>Think <strong>Wordle, but for sports trophies</strong>. Every day there are <strong>5 questions, and everyone in the world gets the exact same ones</strong>. You get <strong>one try</strong>. Answer them, keep your daily streak alive, and share how you did. New questions drop every day — so there's always a reason to come back tomorrow.</p>
       <div class="meta">
-        <div class="k">Why it hooks</div><div>Scarcity (one try) + loss-aversion (streak) + a fixed daily appointment (midnight reset) — the three strongest retention forces in mobile, stacked.</div>
-        <div class="k">Share loop</div><div>Wordle-style emoji grid is <strong>spoiler-safe</strong>, so friends must click the deep-link to play — growth is baked into the flex.</div>
-        <div class="k">Data used</div><div class="chips"><span class="pill data">mixed, date-seeded</span><span class="pill data">any existing mode</span></div>
-        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"34-day streak"</span><span class="pill viral">"beat 88% of fans today"</span><span class="pill viral">spoiler-free share card</span></div>
+        <div class="k">Why it hooks</div><div>You can only play once a day, so skipping a day feels like missing out. The growing streak number ("Day 34 🔥") is what pulls people back every single morning.</div>
+        <div class="k">Sharing</div><div>Your result shows as colored squares (✅ / ❌) <strong>without giving the answers away</strong> — so friends have to tap the link and play it themselves to see how they'd do.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">a daily mix from all 4 tournaments</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"34-day streak"</span><span class="pill viral">"I beat 88% of fans today"</span><span class="pill viral">share card with no spoilers</span></div>
       </div>
-      <p class="note" style="margin-top:10px">Reuses <code>daily.ts</code> seeding + per-league stats. Minimal new data — highest ROI in the whole doc.</p>
+      <p class="note" style="margin-top:10px">Reuses the daily-question code we already have. Very little new data needed — the biggest payoff in the whole doc.</p>
     </div>
 
     <h3 style="margin-top:18px">🕹️ Three new viral formats</h3>
@@ -404,25 +404,25 @@
 
     <div class="idea">
       <div class="top"><div class="name"><span class="em">🎯</span>Guess in 6 <span style="font-weight:400;color:var(--muted)">(Champion Wordle)</span></div><span class="badge b-med">MEDIUM</span></div>
-      <div class="hook">"One hidden champion. Six guesses. Tiles narrow it down."</div>
-      <p>One mystery champion team is hidden. Each guess of another champion reveals hint tiles: 🟩 same tournament, 🟨 same decade, ⬆️/⬇️ year direction, 🔤 first letter. A deductive six-try puzzle that produces a <strong>Wordle-identical shareable grid</strong> — instant familiarity with the meme format the whole world already knows.</p>
+      <div class="hook">"Guess the secret champion team in 6 tries."</div>
+      <p>The game picks <strong>one secret trophy-winning team</strong>. You guess team names, and after each guess it tells you <strong>how close you are</strong> — is it the same sport? The same decade? Is the real answer from an <strong>earlier or later</strong> year? Use those clues to zero in and crack it within 6 guesses. It's Wordle, but the hidden answer is a champion.</p>
       <div class="meta">
-        <div class="k">How to play</div><div>Type/pick a champion → color tiles reveal proximity → deduce the answer within 6.</div>
-        <div class="k">Scoring</div><div>Fewer guesses = better; daily seed + endless practice mode.</div>
+        <div class="k">How to play</div><div>Type a team → clues light up (same sport? same decade? earlier/later year?) → use them to guess again → solve within 6.</div>
+        <div class="k">Scoring</div><div>The fewer guesses, the better. A fresh secret team each day, plus a practice mode to play as much as you like.</div>
         <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season</span><span class="pill data">tournament</span></div>
-        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"got it in 3 🟩🟩🟩"</span><span class="pill viral">Wordle-native share grid</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"got it in 3!"</span><span class="pill viral">familiar Wordle-style share grid</span></div>
       </div>
     </div>
 
     <div class="idea">
       <div class="top"><div class="name"><span class="em">🪜</span>Survivor Bracket</div><span class="badge b-hard">AMBITIOUS</span></div>
-      <div class="hook">"Answer to survive. One global bracket. Last fan standing."</div>
-      <p>A weekly elimination event: keep answering to survive each round; miss and you're out. One shared bracket, thousands of players, whittled down to a last-fan-standing finale. Creates a <strong>scheduled communal event</strong> (appointment viewing) with a natural leaderboard climax that begs to be screenshotted.</p>
+      <div class="hook">"Keep answering right to stay in. Last fans standing win the week."</div>
+      <p>A contest <strong>everyone plays together each week</strong>. You keep answering questions round after round — but get <strong>one wrong and you're out</strong>. The goal is simple: survive as long as you can. Because everyone's playing the same event at the same time, it becomes something people show up for — and the players who last the longest top the board.</p>
       <div class="meta">
-        <div class="k">How to play</div><div>Join the weekly bracket → survive escalating rounds of mixed questions → survivors advance, top fans win the week.</div>
-        <div class="k">Scoring</div><div>Rounds survived + finishing place; weekly reset for a fresh shot.</div>
-        <div class="k">Data used</div><div class="chips"><span class="pill data">any mode, seeded</span><span class="pill data">mixed pool</span></div>
-        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"survived to Round 9"</span><span class="pill viral">live communal event</span></div>
+        <div class="k">How to play</div><div>Join the weekly game → answer each round → one wrong answer ends your run → see how far you got compared to everyone else.</div>
+        <div class="k">Scoring</div><div>How many rounds you survived, plus your final rank. Resets every week for a fresh shot.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">questions from any mode</span><span class="pill data">mixed pool</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"survived to Round 9"</span><span class="pill viral">a live event everyone joins at once</span></div>
       </div>
     </div>
 

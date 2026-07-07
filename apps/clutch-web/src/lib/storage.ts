@@ -26,6 +26,43 @@ export type LeagueStats = {
 
 export type Profile = {
   leagues: Record<LeagueSelection, LeagueStats>;
+  daily: DailyClutchState;
+  grid: GridState;
+};
+
+// ── Clutch Daily ──────────────────────────────────────────────────────────
+export type DailyClutchResult = {
+  readonly dateKey: string;
+  readonly dayNumber: number;
+  readonly correct: number;
+  readonly total: number;
+  readonly flags: readonly boolean[]; // per-question correctness, in play order
+  readonly leagues: readonly League[]; // tournament of each question, in play order
+};
+
+export type DailyClutchState = {
+  currentStreak: number;
+  bestStreak: number;
+  lastCompletedKey: string | null;
+  results: Record<string, DailyClutchResult>;
+};
+
+// ── Clutch Grid ───────────────────────────────────────────────────────────
+export type GridResult = {
+  readonly dateKey: string;
+  readonly dayNumber: number;
+  readonly filled: number; // correct cells (0..9)
+  readonly score: number; // filled base + rarity
+  readonly cells: readonly boolean[]; // per-cell correctness, row-major (9)
+};
+
+export type GridState = {
+  currentStreak: number;
+  bestStreak: number;
+  bestScore: number;
+  bestFilled: number;
+  lastCompletedKey: string | null;
+  results: Record<string, GridResult>;
 };
 
 const KEY = 'playoffiq.profile.v2';
@@ -47,8 +84,20 @@ function emptyStats(): LeagueStats {
 
 const LEAGUE_IDS = [...(Object.keys(LEAGUES) as League[]), 'all'] as LeagueSelection[];
 
+function emptyDaily(): DailyClutchState {
+  return { currentStreak: 0, bestStreak: 0, lastCompletedKey: null, results: {} };
+}
+
+function emptyGrid(): GridState {
+  return { currentStreak: 0, bestStreak: 0, bestScore: 0, bestFilled: 0, lastCompletedKey: null, results: {} };
+}
+
 function emptyProfile(): Profile {
-  return { leagues: Object.fromEntries(LEAGUE_IDS.map((id) => [id, emptyStats()])) as Record<LeagueSelection, LeagueStats> };
+  return {
+    leagues: Object.fromEntries(LEAGUE_IDS.map((id) => [id, emptyStats()])) as Record<LeagueSelection, LeagueStats>,
+    daily: emptyDaily(),
+    grid: emptyGrid(),
+  };
 }
 
 export function loadProfile(): Profile {
@@ -59,6 +108,8 @@ export function loadProfile(): Profile {
     const base = emptyProfile();
     return {
       leagues: Object.fromEntries(LEAGUE_IDS.map((id) => [id, { ...base.leagues[id], ...(parsed.leagues?.[id] ?? {}) }])) as Record<LeagueSelection, LeagueStats>,
+      daily: { ...base.daily, ...(parsed.daily ?? {}) },
+      grid: { ...base.grid, ...(parsed.grid ?? {}) },
     };
   } catch {
     return emptyProfile();
@@ -156,6 +207,77 @@ export function recordChump(league: LeagueSelection, streak: number): Profile {
   const p = loadProfile();
   const stats = p.leagues[league];
   stats.bestChumpStreak = Math.max(stats.bestChumpStreak, streak);
+  save(p);
+  return p;
+}
+
+// ── Clutch Daily ──────────────────────────────────────────────────────────
+
+// Today's Clutch Daily result, if the player has already taken it.
+export function dailyClutchToday(p: Profile, date = new Date()): DailyClutchResult | undefined {
+  return p.daily.results[dateKey(date)];
+}
+
+// The streak that's still "alive" today — i.e. the run continues if the last
+// completed day was today or yesterday, otherwise it has lapsed to 0.
+export function liveDailyStreak(p: Profile, date = new Date()): number {
+  const last = p.daily.lastCompletedKey;
+  if (!last) return 0;
+  const gap = daysBetween(last, dateKey(date));
+  return gap === 0 || gap === 1 ? p.daily.currentStreak : 0;
+}
+
+// Records today's Clutch Daily. One attempt per day — subsequent calls are ignored.
+export function recordDailyClutch(result: DailyClutchResult, date = new Date()): Profile {
+  const p = loadProfile();
+  const d = p.daily;
+  const key = dateKey(date);
+  if (d.results[key]) return p;
+
+  d.results[key] = result;
+  if (d.lastCompletedKey && daysBetween(d.lastCompletedKey, key) === 1) {
+    d.currentStreak += 1;
+  } else {
+    d.currentStreak = 1;
+  }
+  d.lastCompletedKey = key;
+  d.bestStreak = Math.max(d.bestStreak, d.currentStreak);
+
+  save(p);
+  return p;
+}
+
+// ── Clutch Grid records ────────────────────────────────────────────────────
+
+export function gridToday(p: Profile, date = new Date()): GridResult | undefined {
+  return p.grid.results[dateKey(date)];
+}
+
+export function liveGridStreak(p: Profile, date = new Date()): number {
+  const last = p.grid.lastCompletedKey;
+  if (!last) return 0;
+  const gap = daysBetween(last, dateKey(date));
+  return gap === 0 || gap === 1 ? p.grid.currentStreak : 0;
+}
+
+// Records today's Clutch Grid. One attempt per day — subsequent calls are ignored.
+export function recordGrid(result: GridResult, date = new Date()): Profile {
+  const p = loadProfile();
+  const g = p.grid;
+  const key = dateKey(date);
+  if (g.results[key]) return p;
+
+  g.results[key] = result;
+  if (g.lastCompletedKey && daysBetween(g.lastCompletedKey, key) === 1) {
+    g.currentStreak += 1;
+  } else {
+    g.currentStreak = 1;
+  }
+  g.lastCompletedKey = key;
+  g.bestStreak = Math.max(g.bestStreak, g.currentStreak);
+  g.bestScore = Math.max(g.bestScore, result.score);
+  g.bestFilled = Math.max(g.bestFilled, result.filled);
+
   save(p);
   return p;
 }

@@ -10,6 +10,9 @@ import { RapidFire } from './modes/RapidFire';
 import { WhoLifted } from './modes/WhoLifted';
 import { Finalists } from './modes/Finalists';
 import { ChampionOrChump } from './modes/ChampionOrChump';
+import { ClutchDaily } from './modes/ClutchDaily';
+import { Records } from './modes/Records';
+import { ClutchGrid } from './modes/ClutchGrid';
 
 const GAMES: readonly GameId[] = ['daily', 'decades', 'rapid', 'lifted', 'finalists', 'chump'];
 
@@ -38,6 +41,9 @@ export function App() {
       <div className="min-h-full">
         <Switch>
           <Route path="/" component={Home} />
+          <Route path="/today" component={ClutchDaily} />
+          <Route path="/records" component={Records} />
+          <Route path="/grid" component={ClutchGrid} />
           <Route path="/:game/:league">
             {            (p) => (isGame(p.game) && isSelection(p.league) ? <Play game={p.game} league={p.league} /> : <Redirect to="/" />)}
           </Route>
