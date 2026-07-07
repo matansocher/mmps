@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, Reorder, useDragControls } from 'framer-motion';
-import type { League } from '../types';
-import { seasonsFor } from '../lib/playoffs';
+import type { League, Playoffs } from '../types';
+import { seasonsFor, seasonsForSelection, leagueOf } from '../lib/playoffs';
 import { recordDecade, loadProfile, statsFor } from '../lib/storage';
-import { leagueConfig } from '../lib/leagues';
+import { selectionMeta, type LeagueSelection } from '../lib/leagues';
 import { haptic } from '../lib/haptics';
 import { teamStyle, shortName } from '../lib/teams';
 import { useCountUp } from '../lib/useCountUp';
@@ -14,7 +14,8 @@ import { Confetti } from '../components/Confetti';
 const WINDOW = 10;
 const ROUND_SECONDS = 30;
 
-type Chip = { readonly id: string; readonly team: string };
+type WindowItem = { readonly year: number; readonly champion: string; readonly league: League };
+type Chip = { readonly id: string; readonly team: string; readonly league: League };
 type Phase = 'intro' | 'play' | 'result';
 
 function shuffle<T>(arr: readonly T[]): T[] {
@@ -26,31 +27,50 @@ function shuffle<T>(arr: readonly T[]): T[] {
   return a;
 }
 
-export function DecadeChampions({ league }: { league: League }) {
-  const [seed, setSeed] = useState(0);
-  return <Round key={seed} league={league} onPlayAgain={() => setSeed((s) => s + 1)} />;
+// A window of WINDOW champions to order by year. For a single league it's a run of
+// consecutive tournaments; for "all" it's WINDOW consecutive distinct years drawn from
+// every tournament combined (so an era mixes sports, one champion per year).
+function buildWindow(sel: LeagueSelection): WindowItem[] {
+  if (sel !== 'all') {
+    const all = seasonsFor(sel);
+    const start = Math.floor(Math.random() * (all.length - WINDOW + 1));
+    return all.slice(start, start + WINDOW).map((s) => ({ year: s.season, champion: s.champion, league: sel }));
+  }
+  const byYear = new Map<number, Playoffs[]>();
+  for (const s of seasonsForSelection('all')) {
+    const arr = byYear.get(s.season) ?? [];
+    arr.push(s);
+    byYear.set(s.season, arr);
+  }
+  const years = [...byYear.keys()].sort((a, b) => a - b);
+  const startIdx = Math.floor(Math.random() * (years.length - WINDOW + 1));
+  return years.slice(startIdx, startIdx + WINDOW).map((y) => {
+    const arr = byYear.get(y)!;
+    const s = arr[Math.floor(Math.random() * arr.length)];
+    return { year: y, champion: s.champion, league: leagueOf(s) };
+  });
 }
 
-function Round({ league, onPlayAgain }: { league: League; onPlayAgain: () => void }) {
-  // A window of WINDOW consecutive tournaments (by index, not calendar year) so leagues
-  // played every few years (World Cup / Euros) work the same as yearly ones (NBA / UCL).
-  const windowSeasons = useMemo(() => {
-    const all = seasonsFor(league);
-    const start = Math.floor(Math.random() * (all.length - WINDOW + 1));
-    return all.slice(start, start + WINDOW);
-  }, [league]);
-  const years = useMemo(() => windowSeasons.map((s) => s.season), [windowSeasons]);
-  const answer = useMemo(() => windowSeasons.map((s) => s.champion), [windowSeasons]);
+export function DecadeChampions({ league }: { league: LeagueSelection }) {
+  const [seed, setSeed] = useState(0);
+  return <Round key={seed} sel={league} onPlayAgain={() => setSeed((s) => s + 1)} />;
+}
+
+function Round({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => void }) {
+  const items = useMemo(() => buildWindow(sel), [sel]);
+  const years = useMemo(() => items.map((i) => i.year), [items]);
+  const answer = useMemo(() => items.map((i) => i.champion), [items]);
+  const answerLeagues = useMemo(() => items.map((i) => i.league), [items]);
   const startYear = years[0];
   const endYear = years[years.length - 1];
 
   const initial = useMemo<Chip[]>(() => {
-    const base: Chip[] = answer.map((team, i) => ({ id: `c${i}`, team }));
+    const base: Chip[] = items.map((it, i) => ({ id: `c${i}`, team: it.champion, league: it.league }));
     let s = shuffle(base);
     // Avoid gifting a fully-correct board on the very first shuffle.
     if (s.every((c, i) => c.team === answer[i])) s = shuffle(base);
     return s;
-  }, [answer]);
+  }, [items, answer]);
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [order, setOrder] = useState<Chip[]>(initial);
@@ -66,7 +86,7 @@ function Round({ league, onPlayAgain }: { league: League; onPlayAgain: () => voi
     const s = order.reduce((n, c, i) => n + (c.team === answer[i] ? 1 : 0), 0);
     setFinalScore(s);
     setTimedOut(byTimeout);
-    recordDecade(league, s);
+    recordDecade(sel, s);
     haptic(byTimeout ? 'error' : 'heavy');
     setPhase('result');
   }
@@ -85,10 +105,10 @@ function Round({ league, onPlayAgain }: { league: League; onPlayAgain: () => voi
   }, [phase, secondsLeft]);
 
   if (phase === 'intro') {
-    return <Intro league={league} startYear={startYear} endYear={endYear} best={statsFor(loadProfile(), league).bestDecadeScore} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro sel={sel} startYear={startYear} endYear={endYear} best={statsFor(loadProfile(), sel).bestDecadeScore} onStart={() => { haptic('light'); setPhase('play'); }} />;
   }
   if (phase === 'result') {
-    return <Result league={league} startYear={startYear} endYear={endYear} years={years} answer={answer} order={order} score={finalScore} timedOut={timedOut} onPlayAgain={onPlayAgain} />;
+    return <Result answerLeagues={answerLeagues} startYear={startYear} endYear={endYear} years={years} answer={answer} order={order} score={finalScore} timedOut={timedOut} onPlayAgain={onPlayAgain} />;
   }
 
   const danger = secondsLeft <= 6;
@@ -135,7 +155,7 @@ function Round({ league, onPlayAgain }: { league: League; onPlayAgain: () => voi
           {/* Draggable champions */}
           <Reorder.Group axis="y" values={order} onReorder={setOrder} className="flex flex-1 flex-col gap-2">
             {order.map((chip) => (
-              <ChampRow key={chip.id} league={league} chip={chip} />
+              <ChampRow key={chip.id} chip={chip} />
             ))}
           </Reorder.Group>
         </div>
@@ -150,9 +170,9 @@ function Round({ league, onPlayAgain }: { league: League; onPlayAgain: () => voi
   );
 }
 
-function ChampRow({ league, chip }: { league: League; chip: Chip }) {
+function ChampRow({ chip }: { chip: Chip }) {
   const controls = useDragControls();
-  const style = teamStyle(league, chip.team);
+  const style = teamStyle(chip.league, chip.team);
   return (
     <Reorder.Item
       value={chip}
@@ -174,20 +194,20 @@ function ChampRow({ league, chip }: { league: League; chip: Chip }) {
           <circle cx="4" cy="13" r="1.4" /><circle cx="10" cy="13" r="1.4" />
         </svg>
       </button>
-      <TeamLogo league={league} team={chip.team} size={28} />
-      <span className="flex-1 truncate text-sm font-semibold">{shortName(league, chip.team)}</span>
+      <TeamLogo league={chip.league} team={chip.team} size={28} />
+      <span className="flex-1 truncate text-sm font-semibold">{shortName(chip.league, chip.team)}</span>
     </Reorder.Item>
   );
 }
 
-function Intro({ league, startYear, endYear, best, onStart }: { league: League; startYear: number; endYear: number; best: number; onStart: () => void }) {
-  const cfg = leagueConfig(league);
+function Intro({ sel, startYear, endYear, best, onStart }: { sel: LeagueSelection; startYear: number; endYear: number; best: number; onStart: () => void }) {
+  const meta = selectionMeta(sel);
   return (
     <div className="flex min-h-full flex-col">
       <TopBar title="Decade Champions" />
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 text-center safe-b">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}>
-          <div className="rounded-full bg-flame/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-flame">{cfg.emoji} {cfg.short} · Title Ladder</div>
+          <div className="rounded-full bg-flame/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-flame">{meta.emoji} {meta.short} · Title Ladder</div>
           <div className="mt-4 font-display text-7xl leading-none tracking-wide text-flame">{startYear}–{endYear}</div>
           <div className="mt-2 font-display text-3xl tracking-wide">Order the champions</div>
         </motion.div>
@@ -207,7 +227,7 @@ function Intro({ league, startYear, endYear, best, onStart }: { league: League; 
 }
 
 function Result({
-  league,
+  answerLeagues,
   startYear,
   endYear,
   years,
@@ -217,7 +237,7 @@ function Result({
   timedOut,
   onPlayAgain,
 }: {
-  league: League;
+  answerLeagues: League[];
   startYear: number;
   endYear: number;
   years: number[];
@@ -261,6 +281,7 @@ function Result({
           {years.map((y, i) => {
             const picked = order[i]?.team;
             const correct = picked === answer[i];
+            const rowLeague = answerLeagues[i];
             return (
               <motion.div
                 key={y}
@@ -270,10 +291,10 @@ function Result({
                 className={`flex items-center gap-3 rounded-2xl bg-court-card p-2.5 ring-1 ${correct ? 'ring-win/40' : 'ring-miss/40'}`}
               >
                 <span className="w-12 shrink-0 text-center font-display text-2xl tracking-wide text-ink-secondary">{`'${String(y).slice(2)}`}</span>
-                <TeamLogo league={league} team={answer[i]} size={30} />
+                <TeamLogo league={rowLeague} team={answer[i]} size={30} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold">{shortName(league, answer[i])}</div>
-                  {!correct && <div className="truncate text-[11px] text-miss">you placed {picked ? shortName(league, picked) : '—'}</div>}
+                  <div className="truncate text-sm font-semibold">{shortName(rowLeague, answer[i])}</div>
+                  {!correct && <div className="truncate text-[11px] text-miss">you placed {picked ? shortName(order[i].league, picked) : '—'}</div>}
                 </div>
                 <span className={`text-lg ${correct ? 'text-win' : 'text-miss'}`}>{correct ? '✓' : '✗'}</span>
               </motion.div>

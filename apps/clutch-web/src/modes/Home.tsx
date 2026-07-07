@@ -1,20 +1,23 @@
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import type { League } from '../types';
+import type { LeagueSelection } from '../lib/leagues';
 import { LEAGUES } from '../lib/leagues';
 import { loadProfile, statsFor, type LeagueStats } from '../lib/storage';
 import { haptic } from '../lib/haptics';
 
-const LEAGUE_IDS = Object.keys(LEAGUES) as League[];
+const SEL_IDS = [...(Object.keys(LEAGUES) as LeagueSelection[]), 'all'] as LeagueSelection[];
 
 export function Home() {
   const [, navigate] = useLocation();
   const profile = loadProfile();
 
-  const best = (pick: (s: LeagueStats) => number) => Math.max(...LEAGUE_IDS.map((l) => pick(statsFor(profile, l))));
+  const best = (pick: (s: LeagueStats) => number) => Math.max(...SEL_IDS.map((l) => pick(statsFor(profile, l))));
   const bestBracket = best((s) => s.bestBracketScore);
   const bestDecade = best((s) => s.bestDecadeScore);
   const bestRapid = best((s) => s.bestRapidStreak);
+  const bestLifted = best((s) => s.bestLiftedStreak);
+  const bestFinalists = best((s) => s.bestFinalistsScore);
+  const bestChump = best((s) => s.bestChumpStreak);
 
   const go = (path: string) => {
     haptic('light');
@@ -76,7 +79,7 @@ export function Home() {
         variants={item}
         type="button"
         onClick={() => go('/rapid')}
-        className="no-select mb-6 w-full overflow-hidden rounded-3xl bg-gradient-to-br from-win/25 to-court-card p-5 text-left ring-1 ring-line-strong transition active:scale-[0.99]"
+        className="no-select mb-4 w-full overflow-hidden rounded-3xl bg-gradient-to-br from-win/25 to-court-card p-5 text-left ring-1 ring-line-strong transition active:scale-[0.99]"
       >
         <div className="flex items-center justify-between">
           <span className="rounded-full bg-win/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-win">Survival</span>
@@ -84,6 +87,51 @@ export function Home() {
         </div>
         <div className="mt-4 font-display text-4xl tracking-wide">Rapid Fire</div>
         <p className="mt-1 text-sm text-ink-secondary">Who advanced? Pick fast — 5 seconds a shot, endless streak.</p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-flame px-4 py-2 text-sm font-bold text-court-base">Play now →</div>
+      </motion.button>
+
+      <motion.button
+        variants={item}
+        type="button"
+        onClick={() => go('/lifted')}
+        className="no-select mb-4 w-full overflow-hidden rounded-3xl bg-gradient-to-br from-hoop/25 to-court-card p-5 text-left ring-1 ring-line-strong transition active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between">
+          <span className="rounded-full bg-hoop/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-hoop">Trivia</span>
+          {bestLifted > 0 && <span className="text-sm font-bold text-hoop">🔥 {bestLifted}</span>}
+        </div>
+        <div className="mt-4 font-display text-4xl tracking-wide">Who Lifted It?</div>
+        <p className="mt-1 text-sm text-ink-secondary">A year appears — tap the champion. One miss ends the streak.</p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-flame px-4 py-2 text-sm font-bold text-court-base">Play now →</div>
+      </motion.button>
+
+      <motion.button
+        variants={item}
+        type="button"
+        onClick={() => go('/finalists')}
+        className="no-select mb-4 w-full overflow-hidden rounded-3xl bg-gradient-to-br from-flame/25 to-court-card p-5 text-left ring-1 ring-line-strong transition active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between">
+          <span className="rounded-full bg-flame/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-flame">Two Picks</span>
+          {bestFinalists > 0 && <span className="text-sm font-bold text-flame">{bestFinalists}/20</span>}
+        </div>
+        <div className="mt-4 font-display text-4xl tracking-wide">Both Finalists</div>
+        <p className="mt-1 text-sm text-ink-secondary">Pick both teams that reached the final, then the winner. 10 rounds.</p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-flame px-4 py-2 text-sm font-bold text-court-base">Play now →</div>
+      </motion.button>
+
+      <motion.button
+        variants={item}
+        type="button"
+        onClick={() => go('/chump')}
+        className="no-select mb-6 w-full overflow-hidden rounded-3xl bg-gradient-to-br from-win/25 to-court-card p-5 text-left ring-1 ring-line-strong transition active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between">
+          <span className="rounded-full bg-win/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-win">Quick Win</span>
+          {bestChump > 0 && <span className="text-sm font-bold text-win">🔥 {bestChump}</span>}
+        </div>
+        <div className="mt-4 font-display text-4xl tracking-wide">Champion or Chump?</div>
+        <p className="mt-1 text-sm text-ink-secondary">A team + year flash up. Champions — yes or no? Swipe fast, 3 lives.</p>
         <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-flame px-4 py-2 text-sm font-bold text-court-base">Play now →</div>
       </motion.button>
     </motion.div>

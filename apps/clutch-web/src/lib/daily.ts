@@ -1,5 +1,6 @@
-import type { League } from '../types';
-import { seasonsFor } from './playoffs';
+import type { League, Playoffs } from '../types';
+import { seasonsFor, seasonsForSelection } from './playoffs';
+import type { LeagueSelection } from './leagues';
 
 // Deterministic PRNG (mulberry32) so a given seed always yields the same sequence.
 export function mulberry32(seed: number): () => number {
@@ -60,4 +61,29 @@ export function dailySeasonYear(league: League, date = new Date()): number {
   const n = dayNumber(date);
   const idx = ((n % cycle.length) + cycle.length) % cycle.length;
   return cycle[idx];
+}
+
+// A shuffled cycle of the selection's seasons, so every season is exhausted before repeats.
+function shuffledSeasonPool(sel: LeagueSelection): Playoffs[] {
+  const pool = [...seasonsForSelection(sel)];
+  const rng = mulberry32(hashString(`playoff-daily-pool-v1-${sel}`));
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+}
+
+const POOL_CYCLES: Partial<Record<LeagueSelection, Playoffs[]>> = {};
+
+function poolFor(sel: LeagueSelection): Playoffs[] {
+  return (POOL_CYCLES[sel] ??= shuffledSeasonPool(sel));
+}
+
+// The full season for a given day — works for a single league or the "all" mix.
+export function dailySeason(sel: LeagueSelection, date = new Date()): Playoffs {
+  const pool = poolFor(sel);
+  const n = dayNumber(date);
+  const idx = ((n % pool.length) + pool.length) % pool.length;
+  return pool[idx];
 }

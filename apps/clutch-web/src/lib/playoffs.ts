@@ -1,9 +1,16 @@
 import { LEAGUES as DATA } from '../data/playoffs.generated';
 import type { FlatSeries, League, Playoffs, Round } from '../types';
-import { leagueConfig } from './leagues';
+import { leagueConfig, type LeagueSelection } from './leagues';
+
+export const ALL_LEAGUES: readonly League[] = ['nba', 'ucl', 'wc', 'euro'];
 
 export function seasonsFor(league: League): readonly Playoffs[] {
   return DATA[league];
+}
+
+// Seasons for a selection — a single league, or every tournament combined ("all").
+export function seasonsForSelection(sel: LeagueSelection): readonly Playoffs[] {
+  return sel === 'all' ? ALL_LEAGUES.flatMap((l) => DATA[l]) : DATA[sel];
 }
 
 export function seasonByYear(league: League, year: number): Playoffs | undefined {

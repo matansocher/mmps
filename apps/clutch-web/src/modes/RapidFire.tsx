@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { League } from '../types';
-import { seasonsFor, flattenSeason } from '../lib/playoffs';
+import { seasonsForSelection, flattenSeason } from '../lib/playoffs';
 import { loadProfile, recordRapid, statsFor } from '../lib/storage';
-import { leagueConfig } from '../lib/leagues';
+import { selectionMeta, type LeagueSelection } from '../lib/leagues';
 import { haptic } from '../lib/haptics';
 import { teamStyle, shortName } from '../lib/teams';
 import { useCountUp } from '../lib/useCountUp';
@@ -17,6 +17,7 @@ const REVEAL_DELAY = 1200;
 
 type Question = {
   readonly id: string;
+  readonly league: League;
   readonly season: number;
   readonly round: string;
   readonly left: string;
@@ -37,14 +38,15 @@ function shuffle<T>(arr: readonly T[]): T[] {
   return a;
 }
 
-// Every real playoff series across all seasons becomes a question.
-function buildDeck(league: League): Question[] {
+// Every real playoff series across the selected seasons becomes a question.
+function buildDeck(sel: LeagueSelection): Question[] {
   const out: Question[] = [];
-  for (const season of seasonsFor(league)) {
+  for (const season of seasonsForSelection(sel)) {
     for (const s of flattenSeason(season)) {
       const flip = Math.random() < 0.5;
       out.push({
-        id: `${season.season}-${s.round}-${s.higherSeed.team}-${s.lowerSeed.team}`,
+        id: `${s.league}-${season.season}-${s.round}-${s.higherSeed.team}-${s.lowerSeed.team}`,
+        league: s.league,
         season: season.season,
         round: s.round,
         left: flip ? s.lowerSeed.team : s.higherSeed.team,
@@ -57,14 +59,14 @@ function buildDeck(league: League): Question[] {
   return out;
 }
 
-export function RapidFire({ league }: { league: League }) {
+export function RapidFire({ league }: { league: LeagueSelection }) {
   const [seed, setSeed] = useState(0);
-  return <Run key={seed} league={league} onPlayAgain={() => setSeed((s) => s + 1)} />;
+  return <Run key={seed} sel={league} onPlayAgain={() => setSeed((s) => s + 1)} />;
 }
 
-function Run({ league, onPlayAgain }: { league: League; onPlayAgain: () => void }) {
-  const deck = useMemo(() => shuffle(buildDeck(league)), [league]);
-  const initialBest = useMemo(() => statsFor(loadProfile(), league).bestRapidStreak, [league]);
+function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => void }) {
+  const deck = useMemo(() => shuffle(buildDeck(sel)), [sel]);
+  const initialBest = useMemo(() => statsFor(loadProfile(), sel).bestRapidStreak, [sel]);
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [qIndex, setQIndex] = useState(0);
@@ -86,7 +88,7 @@ function Run({ league, onPlayAgain }: { league: League; onPlayAgain: () => void 
   function endRun(finalStreak: number) {
     if (!recorded.current) {
       recorded.current = true;
-      recordRapid(league, finalStreak);
+      recordRapid(sel, finalStreak);
     }
     setPhase('over');
   }
@@ -138,7 +140,7 @@ function Run({ league, onPlayAgain }: { league: League; onPlayAgain: () => void 
   );
 
   if (phase === 'intro') {
-    return <Intro league={league} best={initialBest} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); setPhase('play'); }} />;
   }
   if (phase === 'over') {
     return <GameOver streak={streak} best={best} isRecord={streak > initialBest && streak > 0} onPlayAgain={onPlayAgain} />;
@@ -192,9 +194,9 @@ function Run({ league, onPlayAgain }: { league: League; onPlayAgain: () => void 
 
         {/* Team choices */}
         <div className="mt-5 flex flex-1 flex-col justify-center gap-3 pb-6">
-          <TeamChoice league={league} team={q.left} answered={answered} winner={q.winner} onPick={pick} />
+          <TeamChoice league={q.league} team={q.left} answered={answered} winner={q.winner} onPick={pick} />
           <div className="text-center font-display text-xl tracking-widest text-ink-muted">VS</div>
-          <TeamChoice league={league} team={q.right} answered={answered} winner={q.winner} onPick={pick} />
+          <TeamChoice league={q.league} team={q.right} answered={answered} winner={q.winner} onPick={pick} />
 
           <div className="h-6 text-center">
             <AnimatePresence>
@@ -205,7 +207,7 @@ function Run({ league, onPlayAgain }: { league: League; onPlayAgain: () => void 
                   exit={{ opacity: 0 }}
                   className={`text-sm font-bold ${answered!.correct ? 'text-win' : 'text-miss'}`}
                 >
-                  {answered!.correct ? '+1' : `${shortName(league, q.winner)} won ${q.result}`}
+                  {answered!.correct ? '+1' : `${shortName(q.league, q.winner)} won ${q.result}`}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -277,14 +279,14 @@ function TeamChoice({
   );
 }
 
-function Intro({ league, best, onStart }: { league: League; best: number; onStart: () => void }) {
-  const cfg = leagueConfig(league);
+function Intro({ sel, best, onStart }: { sel: LeagueSelection; best: number; onStart: () => void }) {
+  const meta = selectionMeta(sel);
   return (
     <div className="flex min-h-full flex-col">
       <TopBar title="Rapid Fire" />
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 text-center safe-b">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}>
-          <div className="rounded-full bg-flame/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-flame">{cfg.emoji} {cfg.short} · Survival</div>
+          <div className="rounded-full bg-flame/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-flame">{meta.emoji} {meta.short} · Survival</div>
           <div className="mt-4 font-display text-7xl leading-none tracking-wide text-flame">RAPID FIRE</div>
         </motion.div>
         <p className="mt-4 max-w-xs text-ink-secondary">

@@ -1,22 +1,28 @@
 import { Route, Router, Switch, useLocation } from 'wouter';
 import { useEffect } from 'react';
-import type { League } from './types';
-import { isLeague } from './lib/leagues';
+import type { LeagueSelection } from './lib/leagues';
+import { isSelection } from './lib/leagues';
 import { Home } from './modes/Home';
 import { LeagueSelect, type GameId } from './modes/LeagueSelect';
 import { DailyBracket } from './modes/DailyBracket';
 import { DecadeChampions } from './modes/DecadeChampions';
 import { RapidFire } from './modes/RapidFire';
+import { WhoLifted } from './modes/WhoLifted';
+import { Finalists } from './modes/Finalists';
+import { ChampionOrChump } from './modes/ChampionOrChump';
 
-const GAMES: readonly GameId[] = ['daily', 'decades', 'rapid'];
+const GAMES: readonly GameId[] = ['daily', 'decades', 'rapid', 'lifted', 'finalists', 'chump'];
 
 function isGame(value: string): value is GameId {
   return (GAMES as readonly string[]).includes(value);
 }
 
-function Play({ game, league }: { game: GameId; league: League }) {
+function Play({ game, league }: { game: GameId; league: LeagueSelection }) {
   if (game === 'daily') return <DailyBracket league={league} />;
   if (game === 'decades') return <DecadeChampions league={league} />;
+  if (game === 'lifted') return <WhoLifted league={league} />;
+  if (game === 'finalists') return <Finalists league={league} />;
+  if (game === 'chump') return <ChampionOrChump league={league} />;
   return <RapidFire league={league} />;
 }
 
@@ -33,7 +39,7 @@ export function App() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/:game/:league">
-            {(p) => (isGame(p.game) && isLeague(p.league) ? <Play game={p.game} league={p.league} /> : <Redirect to="/" />)}
+            {            (p) => (isGame(p.game) && isSelection(p.league) ? <Play game={p.game} league={p.league} /> : <Redirect to="/" />)}
           </Route>
           <Route path="/:game">{(p) => (isGame(p.game) ? <LeagueSelect game={p.game} /> : <Redirect to="/" />)}</Route>
           <Route>
