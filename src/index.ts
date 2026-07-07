@@ -1,6 +1,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
+import path from 'node:path';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
 import { closeMongoConnections, createMongoConnection } from '@core/mongo';
@@ -36,6 +37,13 @@ async function main() {
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
   });
+
+  const clutchDist = path.resolve('apps/clutch-web/dist');
+  app.use('/clutch', express.static(clutchDist));
+  app.get('/clutch/*splat', (_req: Request, res: Response) => {
+    res.sendFile(path.join(clutchDist, 'index.html'));
+  });
+  logger.log(`Clutch SPA served from ${clutchDist} at /clutch/*`);
 
   registerSwaggerRoutes(app);
 
