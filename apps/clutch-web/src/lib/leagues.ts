@@ -86,3 +86,20 @@ export function leagueConfig(league: League): LeagueConfig {
 export function isLeague(value: string | undefined): value is League {
   return value === 'nba' || value === 'ucl' || value === 'wc' || value === 'euro';
 }
+
+// A game can be played on a single league, or on "all" — a mix across every tournament.
+export type LeagueSelection = League | 'all';
+
+export type SelectionMeta = { readonly emoji: string; readonly short: string; readonly name: string; readonly playName: string };
+
+const ALL_META: SelectionMeta = { emoji: '🌐', short: 'ALL', name: 'All Sports', playName: 'All Sports' };
+
+export function selectionMeta(sel: LeagueSelection): SelectionMeta {
+  if (sel === 'all') return ALL_META;
+  const c = LEAGUES[sel];
+  return { emoji: c.emoji, short: c.short, name: c.name, playName: c.playName };
+}
+
+export function isSelection(value: string | undefined): value is LeagueSelection {
+  return value === 'all' || isLeague(value);
+}

@@ -1,5 +1,6 @@
-import type { League } from '../types';
-import { seasonsFor } from './playoffs';
+import type { League, Playoffs } from '../types';
+import { seasonsFor, seasonsForSelection, leagueOf } from './playoffs';
+import type { LeagueSelection } from './leagues';
 
 // Deterministic PRNG (mulberry32) so a given seed always yields the same sequence.
 export function mulberry32(seed: number): () => number {
@@ -60,4 +61,78 @@ export function dailySeasonYear(league: League, date = new Date()): number {
   const n = dayNumber(date);
   const idx = ((n % cycle.length) + cycle.length) % cycle.length;
   return cycle[idx];
+}
+
+// A shuffled cycle of the selection's seasons, so every season is exhausted before repeats.
+function shuffledSeasonPool(sel: LeagueSelection): Playoffs[] {
+  const pool = [...seasonsForSelection(sel)];
+  const rng = mulberry32(hashString(`playoff-daily-pool-v1-${sel}`));
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+}
+
+const POOL_CYCLES: Partial<Record<LeagueSelection, Playoffs[]>> = {};
+
+function poolFor(sel: LeagueSelection): Playoffs[] {
+  return (POOL_CYCLES[sel] ??= shuffledSeasonPool(sel));
+}
+
+// The full season for a given day — works for a single league or the "all" mix.
+export function dailySeason(sel: LeagueSelection, date = new Date()): Playoffs {
+  const pool = poolFor(sel);
+  const n = dayNumber(date);
+  const idx = ((n % pool.length) + pool.length) % pool.length;
+  return pool[idx];
+}
+
+// ── Clutch Daily ────────────────────────────────────────────────────────────
+// One shared 5-question quiz per calendar day, identical for everyone. Each
+// question shows a year + tournament and asks which team lifted the trophy.
+
+export type DailyQuestion = {
+  readonly league: League;
+  readonly season: number;
+  readonly champion: string;
+  readonly options: readonly string[]; // 4 choices incl. the champion, deterministically ordered
+};
+
+export const DAILY_QUESTION_COUNT = 5;
+
+function seededShuffle<T>(arr: T[], rng: () => number): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// The day's five questions — mixed across all four tournaments, same for the whole world.
+export function dailyClutchQuestions(date = new Date()): DailyQuestion[] {
+  const rng = mulberry32(hashString(`clutch-daily-v1-${dateKey(date)}`));
+  const all = seasonsForSelection('all');
+
+  const championsByLeague = new Map<League, string[]>();
+  for (const s of all) {
+    const lg = leagueOf(s);
+    const list = championsByLeague.get(lg) ?? [];
+    if (!list.includes(s.champion)) list.push(s.champion);
+    championsByLeague.set(lg, list);
+  }
+
+  const picks = seededShuffle([...all], rng).slice(0, DAILY_QUESTION_COUNT);
+  return picks.map((s) => {
+    const lg = leagueOf(s);
+    const decoys = seededShuffle((championsByLeague.get(lg) ?? []).filter((c) => c !== s.champion), rng).slice(0, 3);
+    const options = seededShuffle([s.champion, ...decoys], rng);
+    return { league: lg, season: s.season, champion: s.champion, options };
+  });
+}
+
+// Milliseconds until local midnight — powers the "next Clutch" countdown.
+export function msUntilNextDay(date = new Date()): number {
+  const next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+  return next.getTime() - date.getTime();
 }

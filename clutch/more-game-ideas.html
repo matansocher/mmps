@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏆 Clutch — More Game Ideas (All 4 Tournaments)</title>
+<style>
+  :root{
+    --bg:#0d1117;--card:#161b22;--card2:#1c2330;--border:#30363d;
+    --text:#e6edf3;--muted:#8b949e;--accent:#f97316;--accent2:#3b82f6;
+    --green:#3fb950;--red:#f85149;--yellow:#d29922;--purple:#a371f7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;padding:40px 20px}
+  .wrap{max-width:960px;margin:0 auto}
+  header{text-align:center;padding:40px 24px;background:linear-gradient(135deg,#1d2430,#161b22);border:1px solid var(--border);border-radius:16px;margin-bottom:28px}
+  header h1{font-size:2rem;margin-bottom:10px}
+  header p{color:var(--muted);font-size:1.05rem}
+  .stats{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:22px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 18px;min-width:96px}
+  .stat .num{font-size:1.4rem;font-weight:700;color:var(--accent)}
+  .stat .lbl{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:22px}
+  section h2{font-size:1.35rem;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+  h3{font-size:1.08rem;margin:18px 0 8px;color:var(--accent2)}
+  p{margin-bottom:10px}
+  ul,ol{padding-left:22px;margin:8px 0}
+  li{margin-bottom:6px}
+  strong{color:#fff}
+  code{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:.88em;color:#e6edf3}
+  .badge{display:inline-block;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;vertical-align:middle;margin-left:8px;letter-spacing:.3px}
+  .b-easy{background:var(--green);color:#04260f}
+  .b-med{background:var(--accent);color:#3d1c02}
+  .b-hard{background:var(--purple);color:#1e0f3d}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .idea{border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:18px;background:var(--card2)}
+  .idea .top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .idea .top .name{font-size:1.15rem;font-weight:700}
+  .idea .top .name .em{font-size:1.25rem;margin-right:8px}
+  .idea .hook{color:var(--yellow);font-style:italic;margin-bottom:12px}
+  .meta{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:.92rem;margin-top:10px}
+  .meta .k{color:var(--muted);text-transform:uppercase;font-size:.72rem;letter-spacing:.5px;padding-top:2px}
+  .chips{margin-top:2px}
+  .pill{display:inline-block;background:#0d1117;border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:.8rem;margin:2px 4px 2px 0}
+  .pill.data{border-color:#284b8a;color:#79b8ff}
+  .pill.viral{border-color:#6b3fa0;color:#c9a3ff}
+  .decision{border-left:3px solid var(--green);background:rgba(63,185,80,.07);padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}.meta{grid-template-columns:1fr}}
+  .card-mini{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .card-mini h4{color:var(--accent);font-size:.98rem;margin-bottom:6px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.9rem}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left}
+  th{background:#0d1117;color:var(--muted);text-transform:uppercase;font-size:.72rem;letter-spacing:.5px}
+  .ok{color:var(--green);font-weight:700}
+  .no{color:var(--red);font-weight:700}
+  footer{text-align:center;color:var(--muted);font-size:.9rem;margin-top:28px}
+  .note{color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>🏆 Clutch — More Game Ideas</h1>
+    <p>Fresh modes to build next — every one playable across <strong>all four tournaments</strong></p>
+    <div class="stats">
+      <div class="stat"><div class="num">4</div><div class="lbl">Tournaments</div></div>
+      <div class="stat"><div class="num">133</div><div class="lbl">Seasons</div></div>
+      <div class="stat"><div class="num">1,517</div><div class="lbl">Matches</div></div>
+      <div class="stat"><div class="num">23</div><div class="lbl">New Ideas</div></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>The Rule of This Doc</h2>
+    <p>We now have <strong>NBA</strong> 🏀, <strong>Champions League</strong> ⚽, <strong>World Cup</strong> 🌍 and <strong>Euros</strong> 🇪🇺. Every idea below relies <em>only</em> on data points that <strong>all four tournaments share</strong>, so a single build ships to every league at once — the user just picks a league (or an "All Sports" mix).</p>
+    <div class="grid2">
+      <div class="card-mini">
+        <h4>✅ Safe shared data (use freely)</h4>
+        <ul style="margin-bottom:0">
+          <li>Year / season</li>
+          <li>Champion &amp; Runner-up</li>
+          <li>Every matchup: two teams + winner</li>
+          <li>The scoreline / series result string</li>
+          <li>The round each matchup belongs to</li>
+          <li>Team logos (real crests/flags)</li>
+        </ul>
+      </div>
+      <div class="card-mini">
+        <h4>⛔ NBA-only (avoid for cross-tournament)</h4>
+        <ul style="margin-bottom:0">
+          <li>Seed numbers (1–8)</li>
+          <li>Conference (East / West)</li>
+        </ul>
+        <p class="note" style="margin-top:8px">These don't exist for the football tournaments, so no cross-tournament mode should depend on them.</p>
+      </div>
+    </div>
+    <div class="legend" style="margin-top:16px">
+      <span class="badge b-easy">QUICK WIN</span>
+      <span class="badge b-med">MEDIUM</span>
+      <span class="badge b-hard">AMBITIOUS</span>
+    </div>
+  </section>
+
+  <!-- ============ TIER 1: QUICK WINS ============ -->
+  <section>
+    <h2>⚡ Tier 1 — Quick Wins</h2>
+    <p class="note">Small builds that reuse the Rapid-Fire loop / card UI. High replay value, low effort.</p>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🏆</span>Who Lifted It?</div><span class="badge b-easy">QUICK WIN</span></div>
+      <div class="hook">"It's 1994. Who was crowned?"</div>
+      <p>Show a <strong>year + league crest</strong>, then 4 team logos. Tap the champion. Instant right/wrong flash, streak counter, endless. The purest trivia hook — a 3-second dopamine loop.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Year appears → pick the champion from 4 logos → next. Speed bonus for fast taps.</div>
+        <div class="k">Scoring</div><div>+1 per correct, streak multiplier, one wrong ends the run (or 3 lives).</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season</span><span class="pill data">other champions as decoys</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"I named 18 champions in a row"</span><span class="pill viral">shareable streak card</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🥈</span>Both Finalists</div><span class="badge b-easy">QUICK WIN</span></div>
+      <div class="hook">"Name BOTH teams that reached the 2008 final."</div>
+      <p>Harder than champion-only. Show the year; the user must pick <strong>both</strong> the winner and the runner-up (from a grid of logos), then optionally mark <em>which</em> one won for a bonus. Rewards deep knowledge.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Select 2 of 6 logos → confirm → optional "who won?" tap for bonus points.</div>
+        <div class="k">Scoring</div><div>Good = both finalists right. Great = also picked the winner correctly.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">runnerUp</span><span class="pill data">season</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">daily "final of the day"</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ TIER 2: MEDIUM ============ -->
+  <section>
+    <h2>🎯 Tier 2 — Medium</h2>
+    <p class="note">New interaction patterns, still a single reusable screen per mode.</p>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🧭</span>Path to Glory</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"Retrace the champion's run — every team they beat, in order."</div>
+      <p>Pick a year's champion. We reveal their <strong>knockout path round-by-round</strong> with the opponent hidden. The user guesses (or drag-orders) each team the champion defeated on the way to the title. A story-driven mode that makes each run feel legendary.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Round 1 → "who did they beat?" pick from options → advance up the rounds to the final.</div>
+        <div class="k">Scoring</div><div>+1 per correct opponent; perfect-path bonus; optional "no hints" multiplier.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">rounds</span><span class="pill data">matchups</span><span class="pill data">winner</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"traced the whole run blind"</span></div>
+      </div>
+      <p class="note">Depth varies by tournament (some football editions are Final-only) — the mode just uses however many rounds a season has, so it self-scales.</p>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🎲</span>Odd One Out</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"Three of these teams won a title in the 2010s. One never did. Spot the fake."</div>
+      <p>Show 4 team logos under a prompt (e.g. "champions of this era"). Three genuinely won a title in the chosen window; one is a plausible impostor. Fast, punchy, endlessly generatable from the champion list.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Tap the team that does NOT belong → reveal → next.</div>
+        <div class="k">Scoring</div><div>Streak-based, speed bonus, 3 lives.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion set</span><span class="pill data">season window</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"got fooled by the decoy"</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">⚖️</span>Higher or Lower</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"Who has MORE titles in our data — Real Madrid or AC Milan?"</div>
+      <p>The viral classic. Two teams (or two years) face off; the user picks which has <strong>more championships</strong> (or which final happened <em>earlier</em>). Correct answer stays on screen and the next challenger slides in — endless chain. Trivially derived by counting champions per team.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Left team stays, guess if the right team has higher/lower title count → chain forever.</div>
+        <div class="k">Scoring</div><div>Endless streak; personal best; league or All-Sports pool.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion (counted per team)</span><span class="pill data">season</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">proven addictive format</span><span class="pill viral">"beat my streak"</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🔢</span>Call the Scoreline</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"The 1970 final: Brazil vs Italy. What was the score?"</div>
+      <p>Reuses the bracket's <strong>good / great</strong> scoring philosophy as a standalone rapid mode. Show any final (or big matchup); the user dials in the exact result. Right winner = good; exact scoreline = great. Pure skill expression.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>See the matchup → set each team's score → submit. Works for NBA series results and football scorelines alike.</div>
+        <div class="k">Scoring</div><div>Good = correct winner. Great = exact result string match.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">matchup</span><span class="pill data">result</span><span class="pill data">winner</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"called the exact score"</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TIER 3: AMBITIOUS ============ -->
+  <section>
+    <h2>🚀 Tier 3 — Ambitious</h2>
+    <p class="note">Bigger builds with the most virality upside.</p>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🗓️</span>Daily Five</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"5 questions. Same for everyone, everywhere, today only."</div>
+      <p>The <strong>Wordle engine</strong> for Clutch. Every day a fixed, seeded set of 5 mixed questions (a "Who Lifted It", a "Guess the Year", a scoreline, etc.) — <em>identical for all players</em>. One attempt. Emoji-grid result to share (🟩🟩🟨⬛🟩). This is the single biggest lever for daily-return + organic sharing.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Open app → today's 5 → one shot each → shareable score card + global leaderboard.</div>
+        <div class="k">Scoring</div><div>Out of 5 (or points); streak of consecutive days played; percentile vs everyone.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">everything, seeded by date</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">Wordle-style emoji share</span><span class="pill viral">daily streak</span><span class="pill viral">friend leaderboards</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🤝</span>Head-to-Head Duel</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"Same 7 questions. You vs a friend. Fastest correct wins."</div>
+      <p>Asynchronous 1v1: challenge a friend via link; both get the <strong>same seeded question set</strong> from any mode; compare score + time. Turns single-player trivia into social competition — the strongest driver of re-shares and invites.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Pick a mode + league → generate challenge link → friend plays same set → winner banner.</div>
+        <div class="k">Scoring</div><div>Score first, tie-break on total time.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">any mode, seeded</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">1v1 invites</span><span class="pill viral">rivalry / rematch loop</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🌐</span>All-Sports Mixer</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"NBA, UCL, World Cup, Euros — all in one gauntlet."</div>
+      <p>Not a new mode but a <strong>meta-layer</strong>: any existing mode can pull from all four tournaments at once. A survival gauntlet where questions jump between sports separates the casual fan from the true polymath — and showcases the breadth of our data.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Toggle "All Sports" on any mode → questions randomly drawn across leagues → endless survival.</div>
+        <div class="k">Scoring</div><div>Global leaderboard; per-sport accuracy breakdown at the end.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">all leagues combined</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"true sports genius" badge</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROUND 2: ALL-NEW IDEAS ============ -->
+  <section>
+    <h2>🆕 Round 2 — Ten More (all-new)</h2>
+    <p class="note">A fresh batch, <strong>distinct from everything above</strong>. No overlap with Who Lifted It?, Both Finalists, Path to Glory, Odd One Out, Higher or Lower, Call the Scoreline, Daily Five, Head-to-Head Duel or the All-Sports Mixer. Same rule applies: each one is playable on NBA, Champions League, World Cup <em>and</em> Euros.</p>
+
+    <h3 style="margin-top:18px">⚡ Quick Wins</h3>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🃏</span>Champion or Chump?</div><span class="badge b-easy">QUICK WIN</span></div>
+      <div class="hook">"1998 · Chicago Bulls — champions, yes or no?"</div>
+      <p>A single team + a single year flashes up. <strong>Swipe right for champion, left for chump.</strong> A pure binary reflex loop — even faster than Who Lifted It? because there are no options to scan. Half the prompts are true champions, half are plausible near-misses (runners-up, or that team in a year they didn't win).</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Team + year → swipe/tap YES or NO → instant flash → next. Endless, speed bonus.</div>
+        <div class="k">Scoring</div><div>Streak-based, 3 lives, faster taps = more points.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season</span><span class="pill data">runnerUp as decoys</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"swiped 40 in a row"</span><span class="pill viral">TikTok-style swipe loop</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🔍</span>Crest Zoom</div><span class="badge b-easy">QUICK WIN</span></div>
+      <div class="hook">"Name the club from a 200% zoom of its crest."</div>
+      <p>We already ship real logos for every team — so blur, crop or extreme-zoom one and ask the user to identify it from 4 options. As the timer ticks, the logo slowly un-zooms (earlier guess = more points). A gorgeous, purely visual mode that shows off the logo library.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Zoomed crest → pick from 4 team logos/names → reveal → next. Zoom eases out over ~4s.</div>
+        <div class="k">Scoring</div><div>Points scale with how zoomed-in it still was when you guessed.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">team logos</span><span class="pill data">champion/finalist pool for decoys</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"guessed it at 300% zoom"</span><span class="pill viral">screenshot the mystery crest</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🥇</span>Winner or Runner-Up?</div><span class="badge b-easy">QUICK WIN</span></div>
+      <div class="hook">"France reached the 2006 final. Did they lift it — or lose it?"</div>
+      <p>Show a team that genuinely <strong>reached a final</strong> that year, then ask the binary: did they win or come second? Every prompt is a real finalist, so it rewards knowing the <em>outcome</em>, not just the participants. A natural companion to Both Finalists that flips the question.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Team + year (a real finalist) → tap 🏆 Won or 🥈 Lost → next.</div>
+        <div class="k">Scoring</div><div>Endless streak; one miss ends it (or 3 lives).</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">runnerUp</span><span class="pill data">season</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"heartbreak or glory" framing</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:18px">🎯 Medium</h3>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🗄️</span>Trophy Cabinet</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"Tap every year Real Madrid were crowned."</div>
+      <p>Pick a team, then a grid of years appears. The user selects <strong>all</strong> the seasons that team won the title — no more, no less. A memory/completionist mode that turns dynasties into a satisfying multi-select puzzle. Trivially generated by filtering champions per team.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Team shown → tap all winning years in a grid → submit → reveal misses & extras.</div>
+        <div class="k">Scoring</div><div>+1 per correct year, −1 per false pick; perfect-cabinet bonus.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"nailed the full dynasty"</span></div>
+      </div>
+      <p class="note">Self-scales to sparse tournaments — a team with one title just has one correct year to find.</p>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">⏳</span>Older or Newer</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"Which title came FIRST — this one or that one?"</div>
+      <p>Two championship cards (team + trophy) sit side by side; the user picks which happened <strong>earlier in history</strong>. The correct card locks in and a new challenger slides up — an endless chronology chain. Different axis from Higher or Lower (that's title <em>counts</em>; this is <em>time</em>), and it forces a mental timeline across sports.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Anchor card stays, guess if the challenger is older/newer → chain forever.</div>
+        <div class="k">Scoring</div><div>Endless streak; personal best; league or All-Sports pool.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">proven chain format</span><span class="pill viral">"beat my streak"</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🏜️</span>Title Drought</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"Who's waited LONGER since their last trophy?"</div>
+      <p>Two teams face off; the user picks which has the <strong>longer drought</strong> — the bigger gap since their most recent title in our data. A poignant twist that surfaces fallen giants and long-suffering fanbases. Computed from each team's latest champion year vs. the newest season available.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Two crests → tap the one with the longer title drought → reveal both gaps → chain.</div>
+        <div class="k">Scoring</div><div>Endless streak; league or All-Sports pool.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season (latest title year)</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"my club's drought is longer 😭"</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🔁</span>Repeat or One-Off?</div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"They won it. Did they go back-to-back?"</div>
+      <p>Show a champion + year and ask whether that team <strong>successfully defended</strong> the title at the very next edition. Sharpens knowledge of dynasties vs. flashes in the pan. Derived by checking if the same team is champion of the next season in the list.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Champion + year → tap "Repeated" or "One-off" → reveal the next edition's winner → next.</div>
+        <div class="k">Scoring</div><div>Streak-based, 3 lives, speed bonus.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">consecutive seasons</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"knew the back-to-backs"</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:18px">🚀 Ambitious</h3>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🪜</span>Last Team Standing</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"One of these five won in 1985. Eliminate the four that didn't."</div>
+      <p>An elimination-survival twist on trivia. A year is set and a pool of candidate teams appears; each turn you <strong>knock out one team you think did NOT win</strong>. Survive by never eliminating the real champion — the pool shrinks until only the winner remains. Tension builds every tap.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Year + N candidates → eliminate a non-champion each round → clear the board without hitting the real winner.</div>
+        <div class="k">Scoring</div><div>Points per safe elimination; full clear = big bonus; touching the champion ends the round.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">finalist/champion pool for decoys</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"cleared it down to the last team"</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🎱</span>Champion Bingo</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"Fill your card as history's champions get called."</div>
+      <p>Each player gets a <strong>5×5 card of teams</strong>. A daily/seeded sequence "draws" champions from across history; you dab any team on your card that gets called. First line / full house wins. A social, communal daily ritual that's endlessly shareable and works beautifully with the All-Sports pool.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Get a random team card → champions are called one by one → dab matches → race to a line / blackout.</div>
+        <div class="k">Scoring</div><div>Speed to first line; blackout bonus; daily seeded card shared by all.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season (as the draw order)</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">shared daily card</span><span class="pill viral">"BINGO in 9 calls"</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">📈</span>Fan Level — Career Mode</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"From Casual to Clutch Legend — one meta-progression across every mode."</div>
+      <p>Not a mode but a <strong>retention spine</strong> that wraps all of them. Every game earns XP toward a <em>Fan Level</em>; leveling up unlocks new eras (the '80s, the '00s), new leagues, cosmetic card themes, and badges ("Named 50 champions", "Polymath: correct in all 4 sports"). Gives casual players a long-term reason to keep opening the app.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Play any mode → earn XP + badges → level up → unlock eras, leagues & themes.</div>
+        <div class="k">Scoring</div><div>Persistent XP, levels, badge collection, per-sport mastery meters.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">outcomes from every mode</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"Clutch Legend Lv.30"</span><span class="pill viral">badge flexes</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROUND 3: THE ADDICTION ENGINE ============ -->
+  <section>
+    <h2>🧲 Round 3 — The Addiction Engine</h2>
+    <p class="note">This round is different. Instead of more minigames, it's the <strong>meta-layer that makes the whole app a daily habit</strong> — the streak + scarcity + social loop that turns "fun once" into "opens every morning" — plus three fresh formats proven to go viral in sports. Everything still works across NBA, Champions League, World Cup <em>and</em> Euros.</p>
+
+    <div class="decision">
+      <strong>💡 The core insight:</strong> Every mode we have is <em>replayable</em>, which is fun — but replayable isn't addictive. Addiction comes from <strong>scarcity + streaks + a shared scoreboard</strong> (the Wordle / Immaculate Grid formula). The single highest-leverage thing to build next isn't another game — it's the daily ritual below.
+    </div>
+
+    <h3 style="margin-top:18px">🏆 The Flagship</h3>
+
+    <div class="idea" style="border-color:#3fb950">
+      <div class="top"><div class="name"><span class="em">📅</span>Clutch Daily <span class="badge b-hard">FLAGSHIP</span></div></div>
+      <div class="hook">"Today's 5 questions — the same for everyone. How many did you get?"</div>
+      <p>Think <strong>Wordle, but for sports trophies</strong>. Every day there are <strong>5 questions, and everyone in the world gets the exact same ones</strong>. You get <strong>one try</strong>. Answer them, keep your daily streak alive, and share how you did. New questions drop every day — so there's always a reason to come back tomorrow.</p>
+      <div class="meta">
+        <div class="k">Why it hooks</div><div>You can only play once a day, so skipping a day feels like missing out. The growing streak number ("Day 34 🔥") is what pulls people back every single morning.</div>
+        <div class="k">Sharing</div><div>Your result shows as colored squares (✅ / ❌) <strong>without giving the answers away</strong> — so friends have to tap the link and play it themselves to see how they'd do.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">a daily mix from all 4 tournaments</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"34-day streak"</span><span class="pill viral">"I beat 88% of fans today"</span><span class="pill viral">share card with no spoilers</span></div>
+      </div>
+      <p class="note" style="margin-top:10px">Reuses the daily-question code we already have. Very little new data needed — the biggest payoff in the whole doc.</p>
+    </div>
+
+    <h3 style="margin-top:18px">🕹️ Three new viral formats</h3>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🔲</span>Clutch Grid</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"Immaculate Grid for trophies — fill all 9 cells."</div>
+      <p>A 3×3 grid of intersecting constraints — rows like <em>Won it all</em> / <em>Lost the final</em> / <em>1990s</em>, columns like <em>NBA</em> / <em>Champions League</em> / <em>Reached the final twice+</em>. Fill each cell with a valid team + year. <strong>The single most viral format in sports right now</strong> (Immaculate Grid pulls millions of daily plays), and our normalized champion/runner-up data across four tournaments is exactly its shape.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Tap a cell → search a team+year that satisfies both constraints → 9 guesses, rarity score for uncommon answers.</div>
+        <div class="k">Scoring</div><div>Fill count + rarity (uniqueness of your picks vs other players); one grid per day.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">runnerUp</span><span class="pill data">season</span><span class="pill data">tournament</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"9/9, rarity 140"</span><span class="pill viral">shareable grid image</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🎯</span>Guess in 6 <span style="font-weight:400;color:var(--muted)">(Champion Wordle)</span></div><span class="badge b-med">MEDIUM</span></div>
+      <div class="hook">"Guess the secret champion team in 6 tries."</div>
+      <p>The game picks <strong>one secret trophy-winning team</strong>. You guess team names, and after each guess it tells you <strong>how close you are</strong> — is it the same sport? The same decade? Is the real answer from an <strong>earlier or later</strong> year? Use those clues to zero in and crack it within 6 guesses. It's Wordle, but the hidden answer is a champion.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Type a team → clues light up (same sport? same decade? earlier/later year?) → use them to guess again → solve within 6.</div>
+        <div class="k">Scoring</div><div>The fewer guesses, the better. A fresh secret team each day, plus a practice mode to play as much as you like.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">champion</span><span class="pill data">season</span><span class="pill data">tournament</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"got it in 3!"</span><span class="pill viral">familiar Wordle-style share grid</span></div>
+      </div>
+    </div>
+
+    <div class="idea">
+      <div class="top"><div class="name"><span class="em">🪜</span>Survivor Bracket</div><span class="badge b-hard">AMBITIOUS</span></div>
+      <div class="hook">"Keep answering right to stay in. Last fans standing win the week."</div>
+      <p>A contest <strong>everyone plays together each week</strong>. You keep answering questions round after round — but get <strong>one wrong and you're out</strong>. The goal is simple: survive as long as you can. Because everyone's playing the same event at the same time, it becomes something people show up for — and the players who last the longest top the board.</p>
+      <div class="meta">
+        <div class="k">How to play</div><div>Join the weekly game → answer each round → one wrong answer ends your run → see how far you got compared to everyone else.</div>
+        <div class="k">Scoring</div><div>How many rounds you survived, plus your final rank. Resets every week for a fresh shot.</div>
+        <div class="k">Data used</div><div class="chips"><span class="pill data">questions from any mode</span><span class="pill data">mixed pool</span></div>
+        <div class="k">Viral hook</div><div class="chips"><span class="pill viral">"survived to Round 9"</span><span class="pill viral">a live event everyone joins at once</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:18px">🔒 Retention scaffolding (wrap it around everything)</h3>
+    <div class="grid2">
+      <div class="card-mini">
+        <h4>🧊 Streak Freeze</h4>
+        <p class="note" style="margin-bottom:0">Earn a freeze per perfect week; it auto-saves a missed day. Duolingo's masterstroke — protecting the investment <em>increases</em> play instead of ragequitting.</p>
+      </div>
+      <div class="card-mini">
+        <h4>🏆 Weekly Leagues</h4>
+        <p class="note" style="margin-bottom:0">Sun–Sun buckets of ~30 players; top 5 promote, bottom 5 relegate. Pure framing over existing scores — no new content, huge DAU lift.</p>
+      </div>
+      <div class="card-mini">
+        <h4>🔔 Comeback nudges</h4>
+        <p class="note" style="margin-bottom:0">"Your 34-day streak ends in 2h 🔥" / "Today's Daily is spicy — 3 tournaments in 5 Qs." Re-engagement is where retention is won.</p>
+      </div>
+      <div class="card-mini">
+        <h4>🎖️ Badge cabinet</h4>
+        <p class="note" style="margin-bottom:0">Unlockables — <em>Decade Master</em>, <em>Globe Trotter</em> (all 4 tournaments in a day), <em>Ice Cold</em> (perfect Daily). Collection completion is its own loop.</p>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:14px"><strong>Build order:</strong> ship <strong>Clutch Daily + streak + share card</strong> first (the addiction engine), then <strong>Clutch Grid</strong> (proven sports-viral), then <strong>Weekly Leagues + Streak Freeze</strong> as a retention multiplier over what already exists.</p>
+  </section>
+
+  <section>
+    <h2>✅ Cross-Tournament Compatibility Check</h2>
+    <p class="note">Every idea confirmed against what each tournament actually stores.</p>
+    <table>
+      <thead>
+        <tr><th>Idea</th><th>NBA</th><th>UCL</th><th>World Cup</th><th>Euros</th><th>Key data</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Who Lifted It?</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion</td></tr>
+        <tr><td>Both Finalists</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + runnerUp</td></tr>
+        <tr><td>Guess the Year</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>final + season</td></tr>
+        <tr><td>Path to Glory</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓*</td><td class="ok">✓*</td><td>rounds + winner</td></tr>
+        <tr><td>Odd One Out</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion set</td></tr>
+        <tr><td>Higher or Lower</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion counts</td></tr>
+        <tr><td>Call the Scoreline</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>result string</td></tr>
+        <tr><td>Daily Five</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>mixed, seeded</td></tr>
+        <tr><td>Head-to-Head Duel</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>any mode, seeded</td></tr>
+        <tr><td>All-Sports Mixer</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>all combined</td></tr>
+        <tr><td colspan="6" style="background:#0d1117;color:var(--accent2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:.72rem">Round 2 — all-new</td></tr>
+        <tr><td>Champion or Chump?</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + season</td></tr>
+        <tr><td>Crest Zoom</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>team logos</td></tr>
+        <tr><td>Winner or Runner-Up?</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + runnerUp</td></tr>
+        <tr><td>Trophy Cabinet</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + season</td></tr>
+        <tr><td>Older or Newer</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>season</td></tr>
+        <tr><td>Title Drought</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + latest season</td></tr>
+        <tr><td>Repeat or One-Off?</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>consecutive champions</td></tr>
+        <tr><td>Last Team Standing</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + decoys</td></tr>
+        <tr><td>Champion Bingo</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion set</td></tr>
+        <tr><td>Fan Level — Career Mode</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>outcomes from all modes</td></tr>
+        <tr><td colspan="6" style="background:#0d1117;color:var(--accent2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:.72rem">Round 3 — the addiction engine</td></tr>
+        <tr><td>Clutch Daily</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>mixed, date-seeded</td></tr>
+        <tr><td>Clutch Grid</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + runnerUp + season</td></tr>
+        <tr><td>Guess in 6</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>champion + season + tournament</td></tr>
+        <tr><td>Survivor Bracket</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td>any mode, seeded</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:10px">* Football editions with only a Final (e.g. some World Cup / Euro years) simply present a shorter path — the mode self-scales to the number of rounds a season has.</p>
+  </section>
+
+  <!-- ============ VIRALITY LAYER ============ -->
+  <section>
+    <h2>📈 The Virality Layer (shared by all modes)</h2>
+    <div class="grid2">
+      <div class="card-mini">
+        <h4>🟩 Shareable result cards</h4>
+        <p class="note" style="margin-bottom:0">Wordle-style emoji grids + a clean image card ("Clutch · Who Lifted It · 18 streak"). One-tap share to socials/WhatsApp.</p>
+      </div>
+      <div class="card-mini">
+        <h4>🔥 Daily streaks</h4>
+        <p class="note" style="margin-bottom:0">"Day 12 in a row." Loss aversion brings players back every single day.</p>
+      </div>
+      <div class="card-mini">
+        <h4>🏅 Leaderboards</h4>
+        <p class="note" style="margin-bottom:0">Global + friends. Per-league and All-Sports boards so everyone can top something.</p>
+      </div>
+      <div class="card-mini">
+        <h4>⚔️ Challenge a friend</h4>
+        <p class="note" style="margin-bottom:0">Same seed via link → rivalry + rematch loop = built-in invitations.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RECOMMENDATION ============ -->
+  <section>
+    <h2>🧭 My Recommended Order</h2>
+    <ol>
+      <li><strong>Who Lifted It?</strong> — fastest to ship, immediately fun, validates the endless-card loop reused everywhere else.</li>
+      <li><strong>Higher or Lower</strong> — proven-addictive format, tiny data footprint.</li>
+      <li><strong>Daily Five</strong> — the retention + sharing engine; this is what makes Clutch spread.</li>
+      <li>Then layer in <strong>Path to Glory</strong>, <strong>Guess the Year</strong>, and the <strong>Head-to-Head Duel</strong>.</li>
+    </ol>
+    <p class="note">Want me to spin any of these into a full implementation plan (screens, scoring, files) like we did for the first three games? Say the word and I'll pick it up.</p>
+  </section>
+
+  <footer>
+    Clutch · More Game Ideas · Generated 2026-07-07 · 23 ideas across three rounds, all verified playable across NBA, Champions League, World Cup &amp; Euros.
+  </footer>
+
+</div>
+</body>
+</html>

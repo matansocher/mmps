@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { FlatSeries, League } from '../types';
-import { dailySeasonYear } from '../lib/daily';
-import { seasonByYear, flattenSeason, roundOrderFor, roundWeightFor } from '../lib/playoffs';
+import { dailySeason } from '../lib/daily';
+import { flattenSeason, roundOrderFor, roundWeightFor, leagueOf } from '../lib/playoffs';
 import { leagueConfig } from '../lib/leagues';
+import type { LeagueSelection } from '../lib/leagues';
 import { scorePicks } from '../lib/scoring';
 import { recordDaily, todaysRecord, loadProfile } from '../lib/storage';
 import { buildShareText, shareOrCopy } from '../lib/share';
@@ -49,12 +50,15 @@ function buildTree(root: Item, byIdx: Map<number, Item>, feeders: Record<number,
   return { item: root, children: (feeders[root.index] ?? []).map((i) => buildTree(byIdx.get(i)!, byIdx, feeders)) };
 }
 
-export function DailyBracket({ league }: { league: League }) {
+export function DailyBracket({ league: selection }: { league: LeagueSelection }) {
+  // Resolve today's season from the selection (single league or the All-Sports mix), then
+  // render everything with that season's real league so logos/config/scoring stay correct.
+  const season = useMemo(() => dailySeason(selection), [selection]);
+  const league = leagueOf(season);
   const cfg = leagueConfig(league);
   const roundOrder = useMemo(() => roundOrderFor(league), [league]);
   const sideRootRound = roundOrder[roundOrder.length - 2];
-  const year = dailySeasonYear(league);
-  const season = seasonByYear(league, year)!;
+  const year = season.season;
   const flat = useMemo(() => flattenSeason(season), [season]);
 
   const withIdx = useMemo<Item[]>(() => flat.map((series, index) => ({ series, index })), [flat]);
@@ -75,11 +79,11 @@ export function DailyBracket({ league }: { league: League }) {
     };
   }, [withIdx, feeders, cfg.finalRound]);
 
-  const existing = todaysRecord(loadProfile(), league);
+  const existing = todaysRecord(loadProfile(), selection);
   const [phase, setPhase] = useState<Phase>(existing ? 'result' : 'intro');
   const [picks, setPicks] = useState<Record<number, string>>({});
   const [flash, setFlash] = useState<Flash>(null);
-  const [streak, setStreak] = useState(() => loadProfile().leagues[league]?.dailyStreak ?? 0);
+  const [streak, setStreak] = useState(() => loadProfile().leagues[selection]?.dailyStreak ?? 0);
 
   const scored = useMemo(() => scorePicks(league, flat, picks), [league, flat, picks]);
   const total = flat.length;
@@ -103,8 +107,8 @@ export function DailyBracket({ league }: { league: League }) {
 
   function submit() {
     const flags = scored.results.map((r) => r.correct);
-    const p = recordDaily(league, { year, score: scored.score, maxScore: scored.maxScore, correctCount: scored.correctCount, total: flat.length, flags });
-    setStreak(p.leagues[league].dailyStreak);
+    const p = recordDaily(selection, { year, score: scored.score, maxScore: scored.maxScore, correctCount: scored.correctCount, total: flat.length, flags });
+    setStreak(p.leagues[selection].dailyStreak);
     haptic('heavy');
     setPhase('result');
   }
