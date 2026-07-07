@@ -4,6 +4,7 @@ import type { League } from '../types';
 import { dailyClutchQuestions, dayNumber, msUntilNextDay, DAILY_QUESTION_COUNT, type DailyQuestion } from '../lib/daily';
 import { loadProfile, dailyClutchToday, liveDailyStreak, recordDailyClutch, type DailyClutchResult } from '../lib/storage';
 import { buildDailyClutchShareText, shareOrCopy } from '../lib/share';
+import { trackGameStart, track, trackShare } from '../lib/analytics';
 import { leagueConfig } from '../lib/leagues';
 import { shortName } from '../lib/teams';
 import { haptic } from '../lib/haptics';
@@ -43,12 +44,13 @@ export function ClutchDaily() {
     const result: DailyClutchResult = { dateKey: '', dayNumber: dayNum, correct, total: questions.length, flags, leagues };
     const bestBefore = loadProfile().daily.bestStreak;
     const p = recordDailyClutch({ ...result, dateKey: keyOf(today) }, today);
+    track('daily_completed', { correct, total: questions.length, streak: p.daily.currentStreak, isRecord: p.daily.currentStreak > bestBefore && p.daily.currentStreak > 0 });
     setOutcome({ result, streak: p.daily.currentStreak, isRecord: p.daily.currentStreak > bestBefore && p.daily.currentStreak > 0 });
     setPhase('done');
   }
 
   if (phase === 'intro') {
-    return <Intro dayNum={dayNum} streak={initialStreak} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro dayNum={dayNum} streak={initialStreak} onStart={() => { haptic('light'); trackGameStart('clutch-daily'); setPhase('play'); }} />;
   }
   if (phase === 'done' && outcome) {
     return <Result dayNum={dayNum} outcome={outcome} />;
@@ -223,6 +225,7 @@ function Result({ dayNum, outcome }: { dayNum: number; outcome: Outcome }) {
   }, []);
 
   async function onShare() {
+    trackShare('clutch-daily');
     const text = buildDailyClutchShareText(dayNum, result.correct, result.total, result.flags, result.leagues, streak);
     const res = await shareOrCopy(text);
     setShareMsg(res === 'copied' ? 'Copied to clipboard!' : res === 'shared' ? 'Shared!' : 'Could not share');

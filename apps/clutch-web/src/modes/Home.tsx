@@ -6,6 +6,7 @@ import { LEAGUES } from '../lib/leagues';
 import { loadProfile, statsFor, liveDailyStreak, dailyClutchToday, gridToday, liveGridStreak, type LeagueStats } from '../lib/storage';
 import { msUntilNextDay } from '../lib/daily';
 import { GAMES, ACCENT, type GameDef } from '../lib/games';
+import { trackAppOpen } from '../lib/analytics';
 import { haptic } from '../lib/haptics';
 
 const SEL_IDS = [...(Object.keys(LEAGUES) as LeagueSelection[]), 'all'] as LeagueSelection[];
@@ -31,6 +32,11 @@ export function Home() {
 
   const gridStreak = liveGridStreak(profile);
   const gridDone = gridToday(profile);
+
+  useEffect(() => {
+    trackAppOpen({ dailyStreak, gridStreak, returning: dailyStreak > 0 || gridStreak > 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [remaining, setRemaining] = useState(msUntilNextDay());
   useEffect(() => {

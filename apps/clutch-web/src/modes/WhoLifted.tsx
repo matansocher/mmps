@@ -4,6 +4,7 @@ import type { League } from '../types';
 import { seasonsForSelection, leagueOf } from '../lib/playoffs';
 import { loadProfile, recordLifted, statsFor } from '../lib/storage';
 import { selectionMeta, type LeagueSelection } from '../lib/leagues';
+import { trackGameStart, trackGameEnd } from '../lib/analytics';
 import { haptic } from '../lib/haptics';
 import { shortName } from '../lib/teams';
 import { useCountUp } from '../lib/useCountUp';
@@ -91,6 +92,7 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
     if (!recorded.current) {
       recorded.current = true;
       recordLifted(sel, finalStreak);
+      trackGameEnd('lifted', sel, { streak: finalStreak, isRecord: finalStreak > initialBest && finalStreak > 0 });
     }
     setPhase('over');
   }
@@ -142,7 +144,7 @@ function Run({ sel, onPlayAgain }: { sel: LeagueSelection; onPlayAgain: () => vo
   );
 
   if (phase === 'intro') {
-    return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); setPhase('play'); }} />;
+    return <Intro sel={sel} best={initialBest} onStart={() => { haptic('light'); trackGameStart('lifted', sel); setPhase('play'); }} />;
   }
   if (phase === 'over') {
     return <GameOver streak={streak} best={best} isRecord={streak > initialBest && streak > 0} onPlayAgain={onPlayAgain} />;
