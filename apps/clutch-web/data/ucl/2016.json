@@ -1,0 +1,274 @@
+{
+  "season": 2016,
+  "league": "UCL",
+  "format": "16-team",
+  "champion": "Real Madrid",
+  "runnerUp": "Atlético Madrid",
+  "source": "https://en.wikipedia.org/wiki/2015-16_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Paris Saint-Germain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Paris Saint-Germain"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Dynamo Kyiv",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester City",
+            "wins": 0
+          },
+          "result": "1–3",
+          "winner": "Manchester City"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Gent",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Wolfsburg",
+            "wins": 0
+          },
+          "result": "2–4",
+          "winner": "Wolfsburg"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Roma",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "result": "0–4",
+          "winner": "Real Madrid"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Arsenal",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Barcelona",
+            "wins": 0
+          },
+          "result": "1–5",
+          "winner": "Barcelona"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "PSV Eindhoven",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Atlético Madrid",
+            "wins": 0
+          },
+          "result": "0–0 (7–8 pen.)",
+          "winner": "Atlético Madrid"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "result": "4–6 (a.e.t.)",
+          "winner": "Bayern Munich"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Benfica",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Zenit Saint Petersburg",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "Benfica"
+        }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Paris Saint-Germain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester City",
+            "wins": 0
+          },
+          "result": "2–3",
+          "winner": "Manchester City"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Wolfsburg",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "result": "2–3",
+          "winner": "Real Madrid"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Barcelona",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Atlético Madrid",
+            "wins": 0
+          },
+          "result": "2–3",
+          "winner": "Atlético Madrid"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Benfica",
+            "wins": 0
+          },
+          "result": "3–2",
+          "winner": "Bayern Munich"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester City",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "result": "0–1",
+          "winner": "Real Madrid"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Atlético Madrid",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "result": "2–2 (a.g.)",
+          "winner": "Atlético Madrid"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Atlético Madrid",
+            "wins": 0
+          },
+          "result": "1–1 (5–3 pen.)",
+          "winner": "Real Madrid"
+        }
+      ]
+    }
+  ]
+}

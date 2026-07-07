@@ -1,0 +1,140 @@
+{
+  "season": 1996,
+  "league": "UCL",
+  "format": "8-team",
+  "champion": "Juventus",
+  "runnerUp": "Ajax",
+  "source": "https://en.wikipedia.org/wiki/1995%E2%80%9396_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Ajax",
+            "wins": 0
+          },
+          "result": "0–3",
+          "winner": "Ajax"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Legia Warsaw",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Panathinaikos",
+            "wins": 0
+          },
+          "result": "0–3",
+          "winner": "Panathinaikos"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "1–2",
+          "winner": "Juventus"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Nantes",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spartak Moscow",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Nantes"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Ajax",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Panathinaikos",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "Ajax"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Nantes",
+            "wins": 0
+          },
+          "result": "4–3",
+          "winner": "Juventus"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Ajax",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "1–1 (pens)",
+          "winner": "Juventus"
+        }
+      ]
+    }
+  ]
+}

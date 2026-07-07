@@ -1,0 +1,274 @@
+{
+  "season": 2021,
+  "league": "UCL",
+  "format": "16-team",
+  "champion": "Chelsea",
+  "runnerUp": "Manchester City",
+  "source": "https://en.wikipedia.org/wiki/2020-21_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester City",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Mönchengladbach",
+            "wins": 0
+          },
+          "result": "4–0",
+          "winner": "Manchester City"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Lazio",
+            "wins": 0
+          },
+          "result": "6–2",
+          "winner": "Bayern Munich"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Atlético Madrid",
+            "wins": 0
+          },
+          "result": "3–0",
+          "winner": "Chelsea"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "RB Leipzig",
+            "wins": 0
+          },
+          "result": "4–0",
+          "winner": "Liverpool"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Porto",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "4–4 (a.g.)",
+          "winner": "Porto"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Paris Saint-Germain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Barcelona",
+            "wins": 0
+          },
+          "result": "5–2",
+          "winner": "Paris Saint-Germain"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sevilla",
+            "wins": 0
+          },
+          "result": "5–4",
+          "winner": "Borussia Dortmund"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Atalanta",
+            "wins": 0
+          },
+          "result": "4–1",
+          "winner": "Real Madrid"
+        }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester City",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Manchester City"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Porto",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Chelsea"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Paris Saint-Germain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "result": "3–3 (a.g.)",
+          "winner": "Paris Saint-Germain"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "Real Madrid"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester City",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Paris Saint-Germain",
+            "wins": 0
+          },
+          "result": "4–1",
+          "winner": "Manchester City"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "Chelsea"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester City",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Chelsea",
+            "wins": 0
+          },
+          "result": "0–1",
+          "winner": "Chelsea"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,274 @@
+{
+  "season": 2024,
+  "league": "EURO",
+  "format": "24 teams, Round of 16 onward",
+  "champion": "Spain",
+  "runnerUp": "England",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_2024_knockout_stage",
+  "rounds": [
+    {
+      "round": "Round of 16",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Switzerland",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Switzerland"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Denmark",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Germany"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Slovakia",
+            "wins": 0
+          },
+          "result": "2–1 (a.e.t.)",
+          "winner": "England"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Georgia",
+            "wins": 0
+          },
+          "result": "4–1",
+          "winner": "Spain"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Portugal",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Slovenia",
+            "wins": 0
+          },
+          "result": "0–0 (3–0 p)",
+          "winner": "Portugal"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Belgium",
+            "wins": 0
+          },
+          "result": "1–0",
+          "winner": "France"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Romania",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "result": "0–3",
+          "winner": "Netherlands"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Austria",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Turkey",
+            "wins": 0
+          },
+          "result": "1–2",
+          "winner": "Turkey"
+        }
+      ]
+    },
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "result": "2–1 (a.e.t.)",
+          "winner": "Spain"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Portugal",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "result": "0–0 (3–5 p)",
+          "winner": "France"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Turkey",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Netherlands"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Switzerland",
+            "wins": 0
+          },
+          "result": "1–1 (5–3 p)",
+          "winner": "England"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Spain"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "result": "1–2",
+          "winner": "England"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Spain"
+        }
+      ]
+    }
+  ]
+}

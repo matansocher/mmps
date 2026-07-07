@@ -1,0 +1,140 @@
+{
+  "season": 1996,
+  "league": "EURO",
+  "format": "16 teams, quarter-finals onward",
+  "champion": "Germany",
+  "runnerUp": "Czech Republic",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1996",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Spain",
+            "wins": 0
+          },
+          "result": "0–0 (4–2 p)",
+          "winner": "England"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "result": "0–0 (5–4 p)",
+          "winner": "France"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Croatia",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Germany"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Portugal",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Czech Republic",
+            "wins": 0
+          },
+          "result": "0–1",
+          "winner": "Czech Republic"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "result": "1–1 (6–5 p)",
+          "winner": "Germany"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Czech Republic",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "result": "0–0 (6–5 p)",
+          "winner": "Czech Republic"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Czech Republic",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Germany",
+            "wins": 0
+          },
+          "result": "1–2 (a.e.t.)",
+          "winner": "Germany"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "season": 1982,
+  "league": "WC",
+  "format": "second group stage, then semi-finals, third place, final",
+  "champion": "Italy",
+  "runnerUp": "West Germany",
+  "source": "https://en.wikipedia.org/wiki/1982_FIFA_World_Cup_knockout_stage",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Poland",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "result": "0–2",
+          "winner": "Italy"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "France",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "result": "3–3 (4–5 p)",
+          "winner": "West Germany"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Italy",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "result": "3–1",
+          "winner": "Italy"
+        }
+      ]
+    }
+  ]
+}

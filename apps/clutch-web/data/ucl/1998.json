@@ -1,0 +1,140 @@
+{
+  "season": 1998,
+  "league": "UCL",
+  "format": "8-team",
+  "champion": "Real Madrid",
+  "runnerUp": "Juventus",
+  "source": "https://en.wikipedia.org/wiki/1997%E2%80%9398_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayer Leverkusen",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "result": "1–4",
+          "winner": "Real Madrid"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Bayern Munich",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "result": "0–1",
+          "winner": "Borussia Dortmund"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Dynamo Kyiv",
+            "wins": 0
+          },
+          "result": "5–2",
+          "winner": "Juventus"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Monaco",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Manchester United",
+            "wins": 0
+          },
+          "result": "1–1 (a)",
+          "winner": "Monaco"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Borussia Dortmund",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "Real Madrid"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Monaco",
+            "wins": 0
+          },
+          "result": "6–4",
+          "winner": "Juventus"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Madrid",
+            "wins": 0
+          },
+          "result": "0–1",
+          "winner": "Real Madrid"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "season": 1954,
+  "league": "WC",
+  "format": "16 teams, group stage then quarter-finals onward",
+  "champion": "West Germany",
+  "runnerUp": "Hungary",
+  "source": "https://en.wikipedia.org/wiki/1954_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Austria",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Switzerland",
+            "wins": 0
+          },
+          "result": "7–5",
+          "winner": "Austria"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Uruguay",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Uruguay"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Yugoslavia",
+            "wins": 0
+          },
+          "result": "2–0",
+          "winner": "West Germany"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Brazil",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Hungary"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Austria",
+            "wins": 0
+          },
+          "result": "6–1",
+          "winner": "West Germany"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Uruguay",
+            "wins": 0
+          },
+          "result": "4–2 (a.e.t.)",
+          "winner": "Hungary"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "result": "3–2",
+          "winner": "West Germany"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "season": 1930,
+  "league": "WC",
+  "format": "13 teams, 4 groups, top team from each group advances; semi-finals and final only",
+  "champion": "Uruguay",
+  "runnerUp": "Argentina",
+  "source": "https://en.wikipedia.org/wiki/1930_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "United States",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Argentina",
+            "wins": 0
+          },
+          "result": "1–6",
+          "winner": "Argentina"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Yugoslavia",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Uruguay",
+            "wins": 0
+          },
+          "result": "1–6",
+          "winner": "Uruguay"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Uruguay",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Argentina",
+            "wins": 0
+          },
+          "result": "4–2",
+          "winner": "Uruguay"
+        }
+      ]
+    }
+  ]
+}

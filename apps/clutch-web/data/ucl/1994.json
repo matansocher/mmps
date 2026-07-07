@@ -1,0 +1,70 @@
+{
+  "season": 1994,
+  "league": "UCL",
+  "format": "4-team",
+  "champion": "AC Milan",
+  "runnerUp": "Barcelona",
+  "source": "https://en.wikipedia.org/wiki/1993-94_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "AC Milan",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Monaco",
+            "wins": 0
+          },
+          "result": "3–0",
+          "winner": "AC Milan"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Barcelona",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Porto",
+            "wins": 0
+          },
+          "result": "3–0",
+          "winner": "Barcelona"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "AC Milan",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Barcelona",
+            "wins": 0
+          },
+          "result": "4–0",
+          "winner": "AC Milan"
+        }
+      ]
+    }
+  ]
+}

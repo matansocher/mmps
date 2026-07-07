@@ -1,0 +1,70 @@
+{
+  "season": 1976,
+  "league": "EURO",
+  "format": "4-team final tournament (host: Yugoslavia); semi-finals, third place, final",
+  "champion": "Czechoslovakia",
+  "runnerUp": "West Germany",
+  "source": "https://en.wikipedia.org/wiki/UEFA_Euro_1976",
+  "rounds": [
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Czechoslovakia",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Netherlands",
+            "wins": 0
+          },
+          "result": "3–1 (a.e.t.)",
+          "winner": "Czechoslovakia"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Yugoslavia",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "result": "2–4 (a.e.t.)",
+          "winner": "West Germany"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Czechoslovakia",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "result": "2–2 (5–3 p)",
+          "winner": "Czechoslovakia"
+        }
+      ]
+    }
+  ]
+}
