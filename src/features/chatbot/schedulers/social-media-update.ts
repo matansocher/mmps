@@ -5,7 +5,7 @@ import { getUserVideos } from '@services/tiktok';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
 import { getVideosFromRSS } from '@services/youtube';
 import { getSubscriptionsGroupedByChatId, updateLastSeen } from '@shared/social-follower';
-import type { SocialSubscription } from '@shared/social-follower';
+import type { SocialPlatform, SocialSubscription } from '@shared/social-follower';
 
 const logger = new Logger('SocialMediaUpdateScheduler');
 
@@ -18,7 +18,7 @@ type NewPost = {
   readonly createdAt: Date;
 };
 
-export async function socialMediaUpdate(bot: Bot): Promise<void> {
+export async function socialMediaUpdate(bot: Bot, platforms: SocialPlatform[]): Promise<void> {
   const subscriptionsByChatId = await getSubscriptionsGroupedByChatId();
 
   if (subscriptionsByChatId.size === 0) {
@@ -26,7 +26,10 @@ export async function socialMediaUpdate(bot: Bot): Promise<void> {
   }
 
   for (const [chatId, subscriptions] of subscriptionsByChatId) {
-    await processSubscriptionsForChat(bot, chatId, subscriptions);
+    const relevantSubscriptions = subscriptions.filter((subscription) => platforms.includes(subscription.platform));
+    if (relevantSubscriptions.length > 0) {
+      await processSubscriptionsForChat(bot, chatId, relevantSubscriptions);
+    }
   }
 }
 

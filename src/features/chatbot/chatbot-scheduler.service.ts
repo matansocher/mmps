@@ -60,7 +60,9 @@ export class ChatbotSchedulerService {
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
 
-    createSchedule(`30 11-23 * * *`, async () => socialMediaUpdate(this.bot));
+    createSchedule(`30 11,15,19,23 * * *`, async () => socialMediaUpdate(this.bot, ['twitter', 'youtube']));
+
+    createSchedule(`30 18 * * *`, async () => socialMediaUpdate(this.bot, ['tiktok']));
 
     createSchedule(`00 10 * * *`, async () => wcTreeUpdate(this.bot));
 

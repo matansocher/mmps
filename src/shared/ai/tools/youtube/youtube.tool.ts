@@ -11,7 +11,7 @@ const schema = z.object({
   action: z
     .enum(['latest_videos', 'channel_info', 'video_transcript', 'subscribe', 'unsubscribe', 'list'])
     .describe(
-      'Action to perform: "latest_videos" fetches the latest videos of a channel, "channel_info" fetches channel details, "video_transcript" fetches the transcript of a specific video (for summarizing or answering questions about its content), "subscribe" adds hourly new-video notifications for a channel, "unsubscribe" removes them, "list" shows current subscriptions',
+      'Action to perform: "latest_videos" fetches the latest videos of a channel, "channel_info" fetches channel details, "video_transcript" fetches the transcript of a specific video (for summarizing or answering questions about its content), "subscribe" adds new-video notifications for a channel (checked every 4 hours), "unsubscribe" removes them, "list" shows current subscriptions',
     ),
   channel: z.string().optional().describe('YouTube channel identifier - handle (@Fireship), channel URL, or channel ID (UC...). Required for all actions except "list" and "video_transcript"'),
   video: z.string().optional().describe('YouTube video URL or video ID (e.g., "https://www.youtube.com/watch?v=dQw4w9WgXcQ" or "dQw4w9WgXcQ"). Required for "video_transcript"'),
@@ -39,7 +39,7 @@ async function handleSubscribe(channel: string): Promise<string> {
   const publishDates = rssVideos.map((video) => new Date(video.publishedAt));
   const newestAt = publishDates.length ? new Date(Math.max(...publishDates.map((date) => date.getTime()))) : null;
   await createSubscription({ platform: 'youtube', username: info.id, displayName: info.name, chatId, lastSeenAt: newestAt });
-  return `Subscribed to ${info.name} on YouTube - you will get a notification when they upload a new video (checked hourly between 11:00-23:00)`;
+  return `Subscribed to ${info.name} on YouTube - you will get a notification when they upload a new video (checked every 4 hours between 11:00-23:00)`;
 }
 
 async function handleUnsubscribe(channel: string): Promise<string> {
@@ -90,6 +90,6 @@ async function runner({ action, channel, video, count }: z.infer<typeof schema>)
 export const youtubeTool = tool(runner, {
   name: 'youtube',
   description:
-    'Get the latest YouTube videos of a channel (with title, stats, and duration), channel info, the transcript of a specific video (for summarizing or answering questions about its content), or manage hourly new-video notifications: subscribe/unsubscribe to a channel, or list current subscriptions. Accepts handles (@Fireship), channel URLs, or channel IDs.',
+    'Get the latest YouTube videos of a channel (with title, stats, and duration), channel info, the transcript of a specific video (for summarizing or answering questions about its content), or manage new-video notifications (checked every 4 hours): subscribe/unsubscribe to a channel, or list current subscriptions. Accepts handles (@Fireship), channel URLs, or channel IDs.',
   schema,
 });
