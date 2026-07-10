@@ -2,6 +2,7 @@ import type { Bot } from 'grammy';
 import { Logger, sleep } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getUserVideos } from '@services/tiktok';
+import { fetchChannelPosts as fetchTelegramChannelPosts } from '@services/telegram-scraper';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
 import { getVideosFromRSS } from '@services/youtube';
 import { getSubscriptionsGroupedByChatId, updateLastSeen } from '@shared/social-follower';
@@ -9,7 +10,7 @@ import type { SocialPlatform, SocialSubscription } from '@shared/social-follower
 
 const logger = new Logger('SocialMediaUpdateScheduler');
 
-const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦', youtube: 'YouTube 📺' } as const;
+const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦', youtube: 'YouTube 📺', telegram: 'Telegram 📣' } as const;
 const SLEEP_BETWEEN_USERS_MS = 5000; // be gentle with anonymous scraping endpoints
 
 type NewPost = {
@@ -66,6 +67,8 @@ async function getNewPosts(subscription: SocialSubscription): Promise<NewPost[]>
       return getNewTikTokPosts(subscription);
     case 'youtube':
       return getNewYouTubeVideos(subscription);
+    case 'telegram':
+      return getNewTelegramPosts(subscription);
   }
 }
 
@@ -104,8 +107,20 @@ async function getNewYouTubeVideos({ username: channelId, chatId, lastSeenAt }: 
   return newVideos.map((video) => ({ text: video.title, url: video.url, createdAt: video.publishedDate }));
 }
 
+async function getNewTelegramPosts({ username, chatId, lastSeenId }: SocialSubscription): Promise<NewPost[]> {
+  const { posts } = await fetchTelegramChannelPosts(username, 20); // free t.me web preview (~20 posts per page), no auth
+  if (!posts.length) {
+    return [];
+  }
+  // Telegram post ids are sequential per channel
+  const newPosts = lastSeenId ? posts.filter((post) => post.id > Number(lastSeenId)) : [];
+  const newestId = posts.reduce((max, post) => (post.id > max ? post.id : max), posts[0].id);
+  await updateLastSeen('telegram', username, chatId, { lastSeenId: String(newestId) });
+  return newPosts.map((post) => ({ text: post.text, url: post.url, createdAt: post.publishedAt ? new Date(post.publishedAt) : new Date() }));
+}
+
 function formatSubscriptionSection(subscription: SocialSubscription, newPosts: NewPost[]): string {
-  const name = subscription.platform === 'youtube' ? (subscription.displayName ?? subscription.username) : `@${subscription.username}`;
+  const name = subscription.platform === 'youtube' || subscription.platform === 'telegram' ? (subscription.displayName ?? subscription.username) : `@${subscription.username}`;
   const header = `*${PLATFORM_LABELS[subscription.platform]} - ${name}* (${newPosts.length} new)`;
   const lines = newPosts.map((post) => {
     const text = post.text ? (post.text.length > 200 ? `${post.text.slice(0, 200)}...` : post.text) : '(no caption)';

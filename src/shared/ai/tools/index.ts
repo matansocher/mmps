@@ -51,3 +51,5 @@ export { twitterTool } from './twitter/twitter.tool';
 export { tiktokTool } from './tiktok/tiktok.tool';
 
 export { youtubeTool } from './youtube/youtube.tool';
+
+export { telegramChannelsTool } from './telegram-channels/telegram-channels.tool';

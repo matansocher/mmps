@@ -19,6 +19,7 @@ import {
   reminderTool,
   spotifyTool,
   spotifyPodcastTool,
+  telegramChannelsTool,
   tiktokTool,
   topMatchesForPredictionTool,
   twitterTool,
@@ -31,7 +32,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, automatic notifications for followed TikTok/Twitter/YouTube accounts (Twitter/YouTube every 4 hours, TikTok daily), and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, automatic notifications for followed TikTok/Twitter/YouTube/Telegram accounts (Twitter/YouTube every 4 hours, TikTok daily, Telegram hourly), and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -140,6 +141,13 @@ Available capabilities:
   * "list" - Show all active YouTube subscriptions
   Accepts handles (@Fireship), channel URLs, or channel IDs.
   Natural language variations: "what did [channel] upload", "latest videos of [channel]", "show me [channel]'s new videos", "youtube channel info of [channel]", "summarize [video/link]", "what is this video about", "what does [channel] say in their latest video" (use latest_videos to find the video, then video_transcript to get its content), "notify me when [channel] uploads", "follow [channel] on YouTube", "stop following [channel] on YouTube", "which YouTube channels am I following"
+- Telegram Channels tool (telegram_channels): Fetch the latest posts of any public Telegram channel (via the t.me web preview — public channels only) with these actions:
+  * "latest_posts" - Get the latest posts of a channel (default 5, max 20). Each post includes text, date, link, and view count.
+  * "subscribe" - Follow a channel for new-post notifications (checked hourly between 11:30-23:30)
+  * "unsubscribe" - Stop following a channel
+  * "list" - Show all active Telegram channel subscriptions
+  Accepts handles (@durov, geektimecoil) or t.me links (https://t.me/durov).
+  Natural language variations: "what did [channel] post on Telegram", "latest posts of the [channel] telegram channel", "notify me when [channel] posts on Telegram", "follow the [channel] telegram channel", "stop following [channel] on Telegram", "which Telegram channels am I following"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -322,6 +330,7 @@ export function agent(): AgentDescriptor {
     tiktokTool,
     twitterTool,
     youtubeTool,
+    telegramChannelsTool,
   ];
 
   return {
