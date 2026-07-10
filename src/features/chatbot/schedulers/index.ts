@@ -11,6 +11,7 @@ export { reminderCheck } from './reminder-check';
 export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
 export { polymarketUpdate } from './polymarket-update';
+export { socialMediaUpdate } from './social-media-update';
 export { spotifyPodcastUpdate } from './spotify-podcast-update';
 export { rainRadarAlert } from './rain-radar-alert';
 export { upcomingEventAlert } from './upcoming-event-alert';

@@ -12,6 +12,7 @@ import {
   polymarketUpdate,
   // rainRadarAlert,
   reminderCheck,
+  socialMediaUpdate,
   sportsCalendar,
   spotifyPodcastUpdate,
   upcomingEventAlert,
@@ -58,6 +59,10 @@ export class ChatbotSchedulerService {
     createSchedule(`5 16 * * *`, async () => polymarketUpdate(this.bot));
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
+
+    createSchedule(`30 11,15,19,23 * * *`, async () => socialMediaUpdate(this.bot, ['twitter', 'youtube']));
+
+    createSchedule(`30 18 * * *`, async () => socialMediaUpdate(this.bot, ['tiktok']));
 
     createSchedule(`00 10 * * *`, async () => wcTreeUpdate(this.bot));
 
