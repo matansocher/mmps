@@ -3,12 +3,13 @@ import { Logger, sleep } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getUserVideos } from '@services/tiktok';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
+import { getVideosFromRSS } from '@services/youtube';
 import { getSubscriptionsGroupedByChatId, updateLastSeen } from '@shared/social-follower';
 import type { SocialSubscription } from '@shared/social-follower';
 
 const logger = new Logger('SocialMediaUpdateScheduler');
 
-const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦' } as const;
+const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦', youtube: 'YouTube 📺' } as const;
 const SLEEP_BETWEEN_USERS_MS = 5000; // be gentle with anonymous scraping endpoints
 
 type NewPost = {
@@ -60,6 +61,8 @@ async function getNewPosts(subscription: SocialSubscription): Promise<NewPost[]>
       return getNewTwitterPosts(subscription);
     case 'tiktok':
       return getNewTikTokPosts(subscription);
+    case 'youtube':
+      return getNewYouTubeVideos(subscription);
   }
 }
 
@@ -86,8 +89,21 @@ async function getNewTikTokPosts({ username, chatId, lastSeenId }: SocialSubscri
   return newVideos.map((video) => ({ text: video.description, url: video.url, createdAt: new Date(video.createdAt) }));
 }
 
+async function getNewYouTubeVideos({ username: channelId, chatId, lastSeenAt }: SocialSubscription): Promise<NewPost[]> {
+  const videos = await getVideosFromRSS(channelId); // free official RSS feed, no API quota
+  if (!videos.length) {
+    return [];
+  }
+  const withDates = videos.map((video) => ({ ...video, publishedDate: new Date(video.publishedAt) }));
+  const newVideos = lastSeenAt ? withDates.filter((video) => video.publishedDate > lastSeenAt) : [];
+  const newestAt = withDates.reduce((max, video) => (video.publishedDate > max ? video.publishedDate : max), withDates[0].publishedDate);
+  await updateLastSeen('youtube', channelId, chatId, { lastSeenAt: newestAt });
+  return newVideos.map((video) => ({ text: video.title, url: video.url, createdAt: video.publishedDate }));
+}
+
 function formatSubscriptionSection(subscription: SocialSubscription, newPosts: NewPost[]): string {
-  const header = `*${PLATFORM_LABELS[subscription.platform]} - @${subscription.username}* (${newPosts.length} new)`;
+  const name = subscription.platform === 'youtube' ? (subscription.displayName ?? subscription.username) : `@${subscription.username}`;
+  const header = `*${PLATFORM_LABELS[subscription.platform]} - ${name}* (${newPosts.length} new)`;
   const lines = newPosts.map((post) => {
     const text = post.text ? (post.text.length > 200 ? `${post.text.slice(0, 200)}...` : post.text) : '(no caption)';
     return post.url ? `- ${text}\n  ${post.url}` : `- ${text}`;

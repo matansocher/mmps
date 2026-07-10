@@ -25,12 +25,13 @@ import {
   weatherTool,
   woltTool,
   worldlyTool,
+  youtubeTool,
 } from '@shared/ai';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, hourly notifications for followed TikTok/Twitter accounts, and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, hourly notifications for followed TikTok/Twitter/YouTube accounts, and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -130,6 +131,14 @@ Available capabilities:
   * "unsubscribe" - Stop following a user
   * "list" - Show all active TikTok subscriptions
   Natural language variations: "what did [user] post on TikTok", "latest TikToks of [user]", "show me [user]'s new posts", "what is [user] saying in their latest video", "tiktok profile of [user]", "notify me when [user] posts on TikTok", "follow [user] on TikTok", "stop following [user] on TikTok", "which TikTok users am I following". Use the transcript to answer questions about a video's content.
+- YouTube tool: Fetch a YouTube channel's latest videos or channel info with these actions:
+  * "latest_videos" - Get the latest videos of a channel (default 5, max 10). Each video includes title, URL, stats (views, likes), duration, and publish date.
+  * "channel_info" - Get channel details (subscribers, video count, description)
+  * "subscribe" - Follow a channel for new-video notifications (checked hourly at :30 between 11:00-23:00)
+  * "unsubscribe" - Stop following a channel
+  * "list" - Show all active YouTube subscriptions
+  Accepts handles (@Fireship), channel URLs, or channel IDs.
+  Natural language variations: "what did [channel] upload", "latest videos of [channel]", "show me [channel]'s new videos", "youtube channel info of [channel]", "notify me when [channel] uploads", "follow [channel] on YouTube", "stop following [channel] on YouTube", "which YouTube channels am I following"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -248,18 +257,16 @@ Guidelines:
   * Include USGS links for users to get more details.
   * For queries like "any big earthquakes today", use action "magnitude" with appropriate threshold (e.g., 5.5+) and hoursBack (e.g., 24).
   * Examples: "Show me recent earthquakes", "Any earthquakes above magnitude 6?", "Earthquake activity today"
-- YouTube Channel Follower Guidelines:
-  * When users want to follow, subscribe to, or get updates from YouTube channels, use the youtube_follower tool.
-  * Natural language variations to recognize: "subscribe to", "follow [channel]", "get updates from", "unsubscribe from", "stop following", "show my channels", "list my subscriptions", "what channels am I following".
+- YouTube Channel Guidelines:
+  * When users ask about a YouTube channel's videos, or want to follow/unfollow channels for new-video notifications, use the youtube tool.
+  * Natural language variations to recognize: "what did [channel] upload", "latest videos of [channel]", "subscribe to [channel]", "follow [channel] on YouTube", "unsubscribe from", "stop following", "which YouTube channels am I following".
   * Flexible identifier formats: Accept YouTube URLs (https://youtube.com/@Fireship), handles (@Fireship), channel IDs (UCsBjURrPoezykLs9EqgamOA), or plain names (Fireship).
   * Actions available:
-    - "subscribe": Subscribe to a YouTube channel (requires channelIdentifier)
-    - "unsubscribe": Unsubscribe from a channel (requires channelIdentifier)
-    - "list": List all active subscriptions (no parameters needed)
-  * After subscribing, confirm the channel name and explain that they'll receive AI summaries of new videos a few times daily, one video at a time.
-  * Summaries are sent automatically and include AI-generated summaries from video transcripts.
-  * Videos without transcripts are automatically skipped.
-  * Format subscription lists clearly with channel names, handles, and subscription dates.
+    - "latest_videos": Get the latest videos of a channel (title, stats, duration, link)
+    - "channel_info": Get channel details (subscribers, video count, description)
+    - "subscribe": Follow a channel for new-video notifications (checked hourly at :30 between 11:00-23:00)
+    - "unsubscribe": Unfollow a channel
+    - "list": List all active YouTube subscriptions (no parameters needed)
   * Use emojis (📺, ▶️, 🔔, ✅) to make interactions engaging.
 - Polymarket Guidelines:
   * When users want to follow prediction markets, track betting odds, search for markets, or get market updates, use the polymarket tool.
@@ -312,6 +319,7 @@ export function agent(): AgentDescriptor {
     spotifyPodcastTool,
     tiktokTool,
     twitterTool,
+    youtubeTool,
   ];
 
   return {

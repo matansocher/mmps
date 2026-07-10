@@ -27,8 +27,10 @@ export async function createSubscription(data: CreateSocialSubscriptionData): Pr
   const subscription: Omit<SocialSubscription, '_id'> = {
     platform: data.platform,
     username: data.username,
+    displayName: data.displayName ?? null,
     chatId: data.chatId,
     lastSeenId: data.lastSeenId ?? null,
+    lastSeenAt: data.lastSeenAt ?? null,
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
