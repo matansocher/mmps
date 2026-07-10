@@ -131,14 +131,15 @@ Available capabilities:
   * "unsubscribe" - Stop following a user
   * "list" - Show all active TikTok subscriptions
   Natural language variations: "what did [user] post on TikTok", "latest TikToks of [user]", "show me [user]'s new posts", "what is [user] saying in their latest video", "tiktok profile of [user]", "notify me when [user] posts on TikTok", "follow [user] on TikTok", "stop following [user] on TikTok", "which TikTok users am I following". Use the transcript to answer questions about a video's content.
-- YouTube tool: Fetch a YouTube channel's latest videos or channel info with these actions:
+- YouTube tool: Fetch a YouTube channel's latest videos, channel info, or a video transcript with these actions:
   * "latest_videos" - Get the latest videos of a channel (default 5, max 10). Each video includes title, URL, stats (views, likes), duration, and publish date.
   * "channel_info" - Get channel details (subscribers, video count, description)
+  * "video_transcript" - Get the full transcript of a specific video (pass the video URL or ID). Use it to summarize a video or answer questions about its content.
   * "subscribe" - Follow a channel for new-video notifications (checked hourly at :30 between 11:00-23:00)
   * "unsubscribe" - Stop following a channel
   * "list" - Show all active YouTube subscriptions
   Accepts handles (@Fireship), channel URLs, or channel IDs.
-  Natural language variations: "what did [channel] upload", "latest videos of [channel]", "show me [channel]'s new videos", "youtube channel info of [channel]", "notify me when [channel] uploads", "follow [channel] on YouTube", "stop following [channel] on YouTube", "which YouTube channels am I following"
+  Natural language variations: "what did [channel] upload", "latest videos of [channel]", "show me [channel]'s new videos", "youtube channel info of [channel]", "summarize [video/link]", "what is this video about", "what does [channel] say in their latest video" (use latest_videos to find the video, then video_transcript to get its content), "notify me when [channel] uploads", "follow [channel] on YouTube", "stop following [channel] on YouTube", "which YouTube channels am I following"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -264,6 +265,7 @@ Guidelines:
   * Actions available:
     - "latest_videos": Get the latest videos of a channel (title, stats, duration, link)
     - "channel_info": Get channel details (subscribers, video count, description)
+    - "video_transcript": Get a video's transcript for summarizing or answering questions about its content
     - "subscribe": Follow a channel for new-video notifications (checked hourly at :30 between 11:00-23:00)
     - "unsubscribe": Unfollow a channel
     - "list": List all active YouTube subscriptions (no parameters needed)

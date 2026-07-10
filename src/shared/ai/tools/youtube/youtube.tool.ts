@@ -2,18 +2,19 @@ import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { sleep } from '@core/utils';
-import { getChannelInfo, getChannelVideoIds, getVideoMetadata, getVideosFromRSS } from '@services/youtube';
+import { getChannelInfo, getChannelVideoIds, getTranscriptText, getVideoMetadata, getVideosFromRSS } from '@services/youtube';
 import { createSubscription, getActiveSubscriptionsByChatId, getSubscription, removeSubscription } from '@shared/social-follower';
 
 const chatId = MY_USER_ID;
 
 const schema = z.object({
   action: z
-    .enum(['latest_videos', 'channel_info', 'subscribe', 'unsubscribe', 'list'])
+    .enum(['latest_videos', 'channel_info', 'video_transcript', 'subscribe', 'unsubscribe', 'list'])
     .describe(
-      'Action to perform: "latest_videos" fetches the latest videos of a channel, "channel_info" fetches channel details, "subscribe" adds hourly new-video notifications for a channel, "unsubscribe" removes them, "list" shows current subscriptions',
+      'Action to perform: "latest_videos" fetches the latest videos of a channel, "channel_info" fetches channel details, "video_transcript" fetches the transcript of a specific video (for summarizing or answering questions about its content), "subscribe" adds hourly new-video notifications for a channel, "unsubscribe" removes them, "list" shows current subscriptions',
     ),
-  channel: z.string().optional().describe('YouTube channel identifier - handle (@Fireship), channel URL, or channel ID (UC...). Required for all actions except "list"'),
+  channel: z.string().optional().describe('YouTube channel identifier - handle (@Fireship), channel URL, or channel ID (UC...). Required for all actions except "list" and "video_transcript"'),
+  video: z.string().optional().describe('YouTube video URL or video ID (e.g., "https://www.youtube.com/watch?v=dQw4w9WgXcQ" or "dQw4w9WgXcQ"). Required for "video_transcript"'),
   count: z.number().min(1).max(10).optional().describe('Number of latest videos to fetch (default: 5, max: 10). Only used with "latest_videos"'),
 });
 
@@ -59,7 +60,16 @@ async function handleList(): Promise<string> {
   return `YouTube subscriptions:\n${subscriptions.map((s) => `- ${s.displayName ?? s.username}`).join('\n')}`;
 }
 
-async function runner({ action, channel, count }: z.infer<typeof schema>) {
+async function handleVideoTranscript(video: string): Promise<string> {
+  const videoUrl = video.startsWith('http') ? video : `https://www.youtube.com/watch?v=${video}`;
+  const transcript = await getTranscriptText(videoUrl);
+  return transcript || 'No transcript available for this video';
+}
+
+async function runner({ action, channel, video, count }: z.infer<typeof schema>) {
+  if (action === 'video_transcript') {
+    return video ? handleVideoTranscript(video) : 'video is required for the "video_transcript" action';
+  }
   if (action !== 'list' && !channel) {
     return `channel is required for the "${action}" action`;
   }
@@ -80,6 +90,6 @@ async function runner({ action, channel, count }: z.infer<typeof schema>) {
 export const youtubeTool = tool(runner, {
   name: 'youtube',
   description:
-    'Get the latest YouTube videos of a channel (with title, stats, and duration), channel info, or manage hourly new-video notifications: subscribe/unsubscribe to a channel, or list current subscriptions. Accepts handles (@Fireship), channel URLs, or channel IDs.',
+    'Get the latest YouTube videos of a channel (with title, stats, and duration), channel info, the transcript of a specific video (for summarizing or answering questions about its content), or manage hourly new-video notifications: subscribe/unsubscribe to a channel, or list current subscriptions. Accepts handles (@Fireship), channel URLs, or channel IDs.',
   schema,
 });
