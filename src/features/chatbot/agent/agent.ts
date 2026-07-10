@@ -19,7 +19,9 @@ import {
   reminderTool,
   spotifyTool,
   spotifyPodcastTool,
+  tiktokTool,
   topMatchesForPredictionTool,
+  twitterTool,
   weatherTool,
   woltTool,
   worldlyTool,
@@ -28,7 +30,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, hourly notifications for followed TikTok/Twitter accounts, and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -66,6 +68,12 @@ Available capabilities:
 - Recipes tool: Access your personal cooking recipe collection. List all recipes or get specific recipe details including ingredients, instructions, tags, and links.
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
+- Twitter tool: Interact with X (Twitter) users with these actions:
+  * "latest_posts" - Fetch the latest posts (tweets) of any public user (default 5, max 20). Returns post text, date, link, and engagement metrics (likes, retweets, replies, views) when available. Supports filtering out retweets and replies.
+  * "subscribe" - Follow a user for new-post notifications (checked hourly at :30 between 11:00-23:00)
+  * "unsubscribe" - Stop following a user
+  * "list" - Show all active Twitter subscriptions
+  Natural language variations: "what did [user] post lately", "latest tweets of [user]", "show me [user]'s recent posts", "what's [user] saying on X/Twitter", "notify me when [user] tweets", "follow [user] on Twitter", "stop following [user] on Twitter", "which Twitter users am I following"
 - Polymarket tool: Subscribe to prediction markets, search for markets, and get daily price updates at 16:00 with five actions:
   * "subscribe" - Subscribe to a Polymarket market using URL or slug. Receive daily updates with current prices and 24h changes.
   * "unsubscribe" - Unsubscribe from a market using URL, slug, or market name
@@ -115,6 +123,13 @@ Available capabilities:
   * "unsubscribe" - Unsubscribe by showId or podcast name
   * "list" - List active podcast subscriptions
   Natural language: "notify me when [podcast] posts a new episode", "follow the [podcast] podcast", "stop following [podcast]", "which podcasts am I following". For subscribe flows: first use search to resolve the podcast name into a showId, then subscribe with that showId.
+- TikTok tool: Fetch a TikTok user's latest posts or profile info with these actions:
+  * "latest_posts" - Get the latest posts of a user (default 5, max 10). Each post includes description, TikTok URL, stats, a direct video download link, and a transcript of what is said in the video (when available).
+  * "user_info" - Get a user's profile details (followers, bio, video count, etc.)
+  * "subscribe" - Follow a user for new-post notifications (checked hourly at :30 between 11:00-23:00)
+  * "unsubscribe" - Stop following a user
+  * "list" - Show all active TikTok subscriptions
+  Natural language variations: "what did [user] post on TikTok", "latest TikToks of [user]", "show me [user]'s new posts", "what is [user] saying in their latest video", "tiktok profile of [user]", "notify me when [user] posts on TikTok", "follow [user] on TikTok", "stop following [user] on TikTok", "which TikTok users am I following". Use the transcript to answer questions about a video's content.
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -295,6 +310,8 @@ export function agent(): AgentDescriptor {
     meetupsTool,
     spotifyTool,
     spotifyPodcastTool,
+    tiktokTool,
+    twitterTool,
   ];
 
   return {
