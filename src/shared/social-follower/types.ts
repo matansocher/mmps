@@ -1,12 +1,12 @@
 import type { ObjectId } from 'mongodb';
 
-export type SocialPlatform = 'tiktok' | 'twitter' | 'youtube';
+export type SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram';
 
 export type SocialSubscription = {
   readonly _id?: ObjectId;
   readonly platform: SocialPlatform;
-  readonly username: string; // twitter/tiktok handle, or youtube channel id (UC...)
-  readonly displayName?: string | null; // pretty name for notifications (youtube channel title)
+  readonly username: string; // twitter/tiktok/telegram handle, or youtube channel id (UC...)
+  readonly displayName?: string | null; // pretty name for notifications (youtube/telegram channel title)
   readonly chatId: number;
   readonly lastSeenId: string | null; // newest post id seen (twitter/tiktok ids are chronological)
   readonly lastSeenAt: Date | null; // newest post timestamp seen (youtube - video ids are not chronological)

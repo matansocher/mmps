@@ -64,6 +64,8 @@ export class ChatbotSchedulerService {
 
     createSchedule(`30 18 * * *`, async () => socialMediaUpdate(this.bot, ['tiktok']));
 
+    createSchedule(`30 11-23 * * *`, async () => socialMediaUpdate(this.bot, ['telegram']));
+
     createSchedule(`00 10 * * *`, async () => wcTreeUpdate(this.bot));
 
     createSchedule(`00 16 * * *`, async () => worldCupPreview(this.bot, this.chatbotService));
