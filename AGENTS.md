@@ -8,7 +8,7 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **8 Telegram bots** + an Express HTTP server (Swagger + auth routes). Built around grammY, LangGraph, MongoDB native driver.
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **8 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
 - **8 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. A ninth feature, `clutch`, is a bot-less static SPA (always initialized).
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
@@ -83,7 +83,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ### Core
 - **Plain TypeScript** — no framework, direct Node.js 24.x application
 - **TypeScript 5.9** with ES2022 target, **non-strict** mode
-- **Express 5** (HTTP server for Swagger UI, auth, webhooks)
+- **Express 5** (HTTP server for Swagger UI, mini-app routes, webhooks)
 - **node-cron** for scheduled tasks
 
 ### Key Dependencies
@@ -96,7 +96,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **Code Quality:** ESLint 9 (flat config), Prettier 3
 - **Vector DB:** `@pinecone-database/pinecone`
 - **Telegram MTProto:** `telegram` (for client-mode features, separate from bot)
-- **Other notable:** `canvas`, `sharp`, `cheerio`, `youtube-transcript-plus`, `googleapis`, `twilio`, `yahoo-finance2`, `octokit`, `jose` (JWT for auth), `vitepress` (docs)
+- **Other notable:** `canvas`, `sharp`, `cheerio`, `youtube-transcript-plus`, `googleapis`, `twilio`, `yahoo-finance2`, `octokit`, `vitepress` (docs)
 
 ### Code Formatting
 - **Prettier:** 200 char line width, single quotes, trailing commas, **semicolons required**
@@ -392,7 +392,7 @@ export async function initChatbot(app: Express): Promise<void> {
 }
 ```
 
-Init functions accept the Express `app` only if they register HTTP routes (auth, swagger, mini-app endpoints). `initChilli()` takes no args.
+Init functions accept the Express `app` only if they register HTTP routes (swagger, mini-app endpoints). `initChilli()` takes no args.
 
 ### Layered: Controller → Service → Repository
 
@@ -663,7 +663,7 @@ export async function createReminder(data: CreateReminderData): Promise<InsertOn
 }
 ```
 
-Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `Reminders`, etc. — see each module's `mongo/constants.ts`). The auth subsystem under `@shared/auth` has its own `DB_NAME`.
+Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `Reminders`, etc. — see each module's `mongo/constants.ts`).
 
 ---
 
@@ -673,7 +673,6 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 
 - `GET /` — health (`{ success: true }`)
 - `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
-- `/api/auth/*` — Telegram-login OIDC for the companion browser extension. CORS enabled when `COMPANION_ORIGIN` is set.
 - Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
 
 ---
@@ -725,7 +724,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 
 Located in `src/shared/`. Reusable across bots:
 
-`ai/` (agents, tools, usage, utils), `auth/` (Telegram OIDC for companion extension), `calendar-events`, `coach`, `cooker`, `expenses`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
+`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `expenses`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
 
 ---
 

@@ -1,6 +1,6 @@
 # MMPS — Multi-Purpose Telegram Bots
 
-A TypeScript Node.js 24 app hosting **8 AI-powered Telegram bots** plus an Express HTTP server (Swagger, auth for the companion browser extension, mini-app endpoints). No framework — plain TS with manual DI.
+A TypeScript Node.js 24 app hosting **8 AI-powered Telegram bots** plus an Express HTTP server (Swagger, mini-app endpoints). No framework — plain TS with manual DI.
 
 **📚 [Full Documentation](https://matansocher.github.io/mmps/)** &nbsp;·&nbsp; **🤖 [AGENTS.md](./AGENTS.md)** (canonical onboarding for AI agents and humans) &nbsp;·&nbsp; **⚡ [Quick Start](#quick-start)**
 
@@ -43,7 +43,7 @@ Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 - **grammY** for Telegram. All bot code uses `@services/telegram`.
 - **LangChain / LangGraph** for agent + tool orchestration; the chatbot persists conversation memory in a Mongo-backed checkpointer.
 - **MongoDB** native driver (no ODM). Each bot has its own database (`Chatbot`, `Coach`, `Wolt`, …).
-- **Express 5** runs alongside the bots — Swagger UI, auth endpoints, optional mini-app data routes per bot.
+- **Express 5** runs alongside the bots — Swagger UI, optional mini-app data routes per bot.
 - **Manual DI** via per-feature `init*` functions in `src/index.ts`.
 
 Full architecture overview: <https://matansocher.github.io/mmps/architecture/overview>.

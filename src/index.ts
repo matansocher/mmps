@@ -1,10 +1,9 @@
 import axios from 'axios';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
-import { closeMongoConnections, createMongoConnection } from '@core/mongo';
+import { closeMongoConnections } from '@core/mongo';
 import { registerSwaggerRoutes } from '@core/openapi';
 import { closeRedisConnection } from '@core/services';
 import { gracefulShutdown, Logger } from '@core/utils';
@@ -18,7 +17,6 @@ import { BOT_CONFIG as secretaryConfig, initSecretary } from '@features/secretar
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
-import { DB_NAME as AUTH_DB_NAME, registerAuthRoutes } from '@shared/auth';
 
 dotenv.config();
 
@@ -32,12 +30,6 @@ async function main() {
 
   app.use(express.json());
 
-  // CORS for auth endpoints (companion extension)
-  const companionOrigin = env.COMPANION_ORIGIN;
-  if (companionOrigin) {
-    app.use('/api/auth', cors({ origin: companionOrigin, credentials: true }));
-  }
-
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
   });
@@ -45,10 +37,6 @@ async function main() {
   initClutch(app);
 
   registerSwaggerRoutes(app);
-
-  // Auth routes — always active, not gated by bot init
-  await createMongoConnection(AUTH_DB_NAME);
-  registerAuthRoutes(app);
 
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
   const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {

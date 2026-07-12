@@ -76,7 +76,6 @@ src/
 │   │       ├── weather/
 │   │       ├── reminders/
 │   │       └── ...
-│   ├── auth/              # Telegram OIDC auth
 │   ├── sports/            # Sports utilities
 │   └── ...                # reminders, friends, expenses, etc.
 │
