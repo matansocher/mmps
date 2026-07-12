@@ -37,7 +37,7 @@ export function ReminderRow({ reminder, selectedDate, onToggleComplete, onTap }:
           {reminder.message}
         </div>
         <div className={`text-xs tabular ${showOverdue ? 'text-accent-danger' : 'text-text-muted'}`}>
-          {snoozed ? `⏸️ snoozed · ${label.replace(/^[🔔⏰]\s*/, '')}` : label}
+          {snoozed ? `⏸️ snoozed · ${label.replace(/^[🔔⏰]\s*/u, '')}` : label}
         </div>
       </button>
     </div>
