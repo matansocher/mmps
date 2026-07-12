@@ -22,7 +22,7 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor(checkpointer?: BaseCheckpointSaver) {
-    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
+    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,

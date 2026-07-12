@@ -1,3 +1,4 @@
+import axios from 'axios';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
@@ -20,6 +21,8 @@ import { stopAllTelegramBots } from '@services/telegram';
 import { DB_NAME as AUTH_DB_NAME, registerAuthRoutes } from '@shared/auth';
 
 dotenv.config();
+
+axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
 
 async function main() {
   // await initConsoleOverride();

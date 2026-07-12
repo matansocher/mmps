@@ -45,7 +45,7 @@ export function buildDraftUserPrompt(context: SecretaryMessage[]): { userPrompt:
 const buildModel = () => {
   const model = env.SECRETARY_DRAFT_MODEL || GPT_5_MODEL;
   const temperature = model.startsWith('gpt-5') ? 1 : 0.3;
-  return new ChatOpenAI({ model, temperature, apiKey: env.OPENAI_API_KEY });
+  return new ChatOpenAI({ model, temperature, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 };
 
 // Generate distinct reply options for the given recent conversation in a single call. Returns null if none produced.
