@@ -6,7 +6,7 @@ This page goes deeper than the [Chatbot overview](/bots/chatbot) — it explains
 
 ## 1. What it is (30-second version)
 
-The **chatbot** is one of six Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **31 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
+The **chatbot** is one of eight Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
 
 Key engineering properties:
 
@@ -46,7 +46,7 @@ The feature lives in `src/features/chatbot/` and follows the repo's **Controller
 | `chatbot.init.ts` | Manual DI wiring. Opens Mongo connections, builds the checkpointer, creates service/controller/scheduler, registers routes + SPA, boots the bot. |
 | `chatbot.controller.ts` | grammY handlers: `/start /help /app /exercise`, text, photo, audio. Wraps calls in `MessageLoader` (reaction + typing + loader). |
 | `chatbot.service.ts` | The brain. Builds the model, summarization middleware, and agent service; `processMessage()` is the single entry point. |
-| `agent/agent.ts` | The **AgentDescriptor**: name, giant system prompt, and the array of 31 tools. |
+| `agent/agent.ts` | The **AgentDescriptor**: name, giant system prompt, and the array of 27 tools. |
 | `agent/factory.ts` | `createAgentService()` — calls LangChain `createAgent()` and wraps the compiled graph. |
 | `agent/service.ts` | `AiService` — thin wrapper over the compiled graph: `invoke`/`stream`/`getState`, builds `RunnableConfig` (thread_id, callbacks, recursion limit). |
 | `agent/checkpointer.ts` | `createChatbotCheckpointer()` — Mongo-backed persistence, db `Chatbot`, 30-day TTL. |
@@ -144,7 +144,7 @@ Conventions worth calling out:
 - **Return strings (usually JSON strings)** — tools return serialized results; errors are caught and returned as `{ success:false, error }` so a failing tool degrades gracefully instead of throwing.
 - **Zod = validation + schema** — the same schema both validates args and is converted to the JSON schema sent to the model for function calling.
 
-Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 31 tools group into: personal/productivity (calendar, gmail, reminders, contacts, recipes, exercise), media (spotify, image, audio), information (weather, earthquake, maps, stocks, crypto, flights), sports/games (sports, makavdia, wolt, worldly), markets (polymarket), dev (github).
+Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 27 registered tools group into: personal/productivity (calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics), media/social (spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels), information (weather, earthquake), sports/games (competitions, match summary/prediction, makavdia, wolt, worldly), markets (polymarket), dev (github).
 
 ## 8. Memory — the MongoDB checkpointer
 
@@ -295,7 +295,7 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 
 | Decision | Why / tradeoff |
 |----------|----------------|
-| Single agent, 31 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by very explicit prompt guidance. |
+| Single agent, 27 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by very explicit prompt guidance. |
 | Summarize vs. truncate | Summarizing preserves long-term facts at the cost of an extra LLM call. Chosen because it's a *personal* assistant where remembering user facts matters. |
 | Mongo checkpointer + 30-day TTL | Durable across deploys; TTL bounds storage & respects privacy. Tradeoff: memory of very old conversations is intentionally lost. |
 | Fire-and-forget usage writes | Observability must never slow or break a user reply; accept rare lost records. |

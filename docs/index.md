@@ -12,11 +12,11 @@ hero:
 features:
   - icon: 🤖
     title: AI-Powered Bots
-    details: 6 specialized Telegram bots powered by OpenAI, Anthropic, and LangChain
+    details: 8 specialized Telegram bots powered by OpenAI, Anthropic, and LangChain
   
   - icon: 📚
     title: Chatbot Assistant
-    details: Advanced conversational AI with 20+ tools including weather, reminders, and GitHub integration
+    details: Advanced conversational AI with 27 tools including weather, reminders, and GitHub integration
   
   - icon: ⚽
     title: Sports Analytics
@@ -40,7 +40,7 @@ features:
 
 - **[Getting Started](/guide/getting-started)** - Set up MMPS in 5 minutes
 - **[Architecture](/architecture/overview)** - Understand the system design
-- **[Available Bots](/bots/overview)** - Explore all 4 bots and their features
+- **[Available Bots](/bots/overview)** - Explore all 8 bots and their features
 - **[Contributing](/development/contributing)** - Help improve MMPS
 - **[Deployment](/deployment/production)** - Deploy to production
 
@@ -57,12 +57,18 @@ features:
 
 MMPS is a multi-purpose Telegram bot platform built with plain TypeScript and Node.js. Each bot operates independently with its own database, services, and scheduled tasks. The application uses manual dependency injection for simplicity and control, with no external frameworks overhead.
 
-### The 4 Bots
+### The Bots
 
 1. **Chatbot** - AI-powered conversational assistant with advanced features
-2. **Coach** - Sports predictions and analytics with real-time data
-3. **Wolt** - Restaurant availability notifications
-4. **Worldly** - Geography education and trivia challenges
+2. **Chilli** - Cat persona bot replying in Hebrew
+3. **Coach** - Sports predictions and analytics with real-time data
+4. **Expenses** - Expense tracker with a Telegram mini-app
+5. **Learner** - Courses mini-app
+6. **Secretary** - Personal secretary over a Telegram business connection
+7. **Wolt** - Restaurant availability notifications
+8. **Worldly** - Geography education and trivia challenges
+
+Plus **Clutch** — a bot-less static SPA served by the Express server.
 
 ## Get Started
 
@@ -79,10 +85,10 @@ cp .env.example .env
 # Edit .env with your credentials
 
 # Run in development
-npm run start:dev
+npm run dev
 
 # Or run a specific bot
-LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
+LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 For detailed setup instructions, see the [Getting Started Guide](/guide/getting-started).
@@ -91,7 +97,7 @@ For detailed setup instructions, see the [Getting Started Guide](/guide/getting-
 
 - **Guide** - Installation, configuration, and getting started
 - **Architecture** - System design, patterns, and code guidelines
-- **Bots** - Detailed documentation for each of the 4 bots
+- **Bots** - Detailed documentation for each bot
 - **Development** - Contributing guidelines, testing, and extending the platform
 - **Deployment** - Production deployment and monitoring
 

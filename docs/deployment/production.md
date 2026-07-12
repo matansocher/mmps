@@ -33,7 +33,7 @@ Set all required variables in production:
 IS_PROD=true
 
 # MongoDB
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/
+MONGO_DB_URL=mongodb+srv://user:pass@cluster.mongodb.net/
 
 # AI APIs
 OPENAI_API_KEY=sk-...
@@ -81,7 +81,7 @@ pm2 logs mmps
 docker build -t mmps .
 
 # Run container
-docker run -e MONGO_URI=... -e OPENAI_API_KEY=... mmps
+docker run -e MONGO_DB_URL=... -e OPENAI_API_KEY=... mmps
 ```
 
 ## Monitoring & Logging

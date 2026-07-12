@@ -14,7 +14,7 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
-- **DB:** MongoDB. Connections are managed by name (`createMongoConnection('chatbot-db')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
+- **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
 - **Apps workspace:** `apps/chatbot-web`, `apps/clutch-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web` are Vite mini-apps (npm workspaces).
 
 ---
@@ -328,8 +328,8 @@ function getUser(username: string) {
 ### Parallel Operations
 ```typescript
 await Promise.all([
-  createMongoConnection('chatbot-db'),
-  createMongoConnection('coach-db'),
+  createMongoConnection('Chatbot'),
+  createMongoConnection('Coach'),
 ]);
 ```
 
@@ -379,7 +379,7 @@ logger.debug('trace');  // debug
 // features/chatbot/chatbot.init.ts
 export async function initChatbot(app: Express): Promise<void> {
   await Promise.all([
-    createMongoConnection('chatbot-db'),
+    createMongoConnection('Chatbot'),
     connectGithubMcp().catch((err) => console.error(err)),
   ]);
 
@@ -655,7 +655,7 @@ The connection string env var is **`MONGO_DB_URL`** (used by `src/core/mongo/mon
 
 ```typescript
 function getCollection(): Collection<Reminder> {
-  return getMongoCollection<Reminder>('chatbot-db', 'reminders');
+  return getMongoCollection<Reminder>('Reminders', 'reminders');
 }
 
 export async function createReminder(data: CreateReminderData): Promise<InsertOneResult<Reminder>> {
@@ -663,7 +663,7 @@ export async function createReminder(data: CreateReminderData): Promise<InsertOn
 }
 ```
 
-Each bot uses its own database (`chatbot-db`, `coach-db`, etc.). The auth subsystem under `@shared/auth` has its own `DB_NAME`.
+Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `Reminders`, etc. — see each module's `mongo/constants.ts`). The auth subsystem under `@shared/auth` has its own `DB_NAME`.
 
 ---
 

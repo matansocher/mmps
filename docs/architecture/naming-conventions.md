@@ -31,7 +31,7 @@ features/
   └── my_bot/         # ❌ WRONG - use my-bot
 
 services/
-  ├── telegram-grammy/    # ✅ CORRECT
+  ├── telegram/           # ✅ CORRECT
   ├── openai/             # ✅ CORRECT
   └── googleServices/     # ❌ WRONG - use google-services
 ```
@@ -217,7 +217,7 @@ export * from './chatbot.service';  // Too broad
 ```bash
 # ✅ CORRECT
 OPENAI_API_KEY=sk-...
-MONGO_URI=mongodb://...
+MONGO_DB_URL=mongodb://...
 CHATBOT_TELEGRAM_BOT_TOKEN=...
 GOOGLE_SHEETS_SPREADSHEET_ID=...
 IS_PROD=true
@@ -262,7 +262,7 @@ git commit -m "CHANGE WEATHER API"        # All caps
 | Type | Convention | Example |
 |------|-----------|---------|
 | Files | kebab-case with suffix | `chatbot.service.ts` |
-| Directories | kebab-case | `telegram-grammy/` |
+| Directories | kebab-case | `telegram-client/` |
 | Variables | camelCase | `botToken` |
 | Functions | camelCase, verb prefix | `getUserByUsername()` |
 | Constants | SCREAMING_SNAKE_CASE | `DEFAULT_TIMEZONE` |

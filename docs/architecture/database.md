@@ -11,11 +11,11 @@ MongoDB database patterns and best practices in MMPS.
 const connections: Map<string, Db> = new Map();
 
 export async function createMongoConnection(dbName: string): Promise<void> {
-  if (!env.MONGO_URI) {
-    throw new Error('MONGO_URI environment variable not configured');
+  if (!env.MONGO_DB_URL) {
+    throw new Error('MONGO_DB_URL environment variable not configured');
   }
 
-  const client = new MongoClient(env.MONGO_URI);
+  const client = new MongoClient(env.MONGO_DB_URL);
   await client.connect();
   
   const db = client.db(dbName);
@@ -42,16 +42,21 @@ export function getMongoCollection<T>(dbName: string, collectionName: string): C
 ```typescript
 // features/chatbot/chatbot.init.ts
 export async function initChatbot(): Promise<void> {
-  await createMongoConnection('chatbot-db');
+  await createMongoConnection('Chatbot');
   // ... rest of initialization
 }
 ```
 
-Each bot gets its own database:
-- `chatbot-db`
-- `coach-db`
-- `wolt-db`
-- `worldly-db`
+Each bot/domain gets its own PascalCase database (defined in each module's `mongo/constants.ts`):
+- `Chatbot`
+- `Chilli`
+- `Coach`
+- `Expenses`
+- `Learner`
+- `Secretary`
+- `Wolt`
+- `Worldly`
+- Plus shared domains: `Reminders`, `Friends`, `Trainer`, `Auth`, and more
 
 ## Type-Safe Collections
 
@@ -79,7 +84,7 @@ export type CreateReminderData = Omit<Reminder, '_id' | 'createdAt' | 'sentAt'>;
 
 ```typescript
 function getCollection(): Collection<Reminder> {
-  return getMongoCollection<Reminder>('chatbot-db', 'reminders');
+  return getMongoCollection<Reminder>('Reminders', 'reminders');
 }
 
 // Use throughout the repository
@@ -313,12 +318,12 @@ export async function bulkUpdateReminders(updates: Array<{
 ```typescript
 // ✅ CORRECT
 function getCollection(): Collection<Reminder> {
-  return getMongoCollection<Reminder>('chatbot-db', 'reminders');
+  return getMongoCollection<Reminder>('Reminders', 'reminders');
 }
 
 // ❌ WRONG
 function getCollection() {
-  return getMongoCollection('chatbot-db', 'reminders');
+  return getMongoCollection('Reminders', 'reminders');
 }
 ```
 

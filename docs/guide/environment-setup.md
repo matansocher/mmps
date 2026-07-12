@@ -17,7 +17,7 @@ These variables must be set for the application to run:
 
 ```bash
 # MongoDB Connection
-MONGO_URI=mongodb://localhost:27017
+MONGO_DB_URL=mongodb://localhost:27017
 
 # Application Mode
 IS_PROD=false
@@ -52,7 +52,7 @@ SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
 
 ```bash
 # Run a specific bot in development
-LOCAL_ACTIVE_BOT_ID=chatbot
+LOCAL_ACTIVE_BOT_ID=CHATBOT
 
 # Bot tokens for other bots
 COACH_TELEGRAM_BOT_TOKEN=...
@@ -110,7 +110,7 @@ brew install mongodb-community
 brew services start mongodb-community
 
 # Connection string
-MONGO_URI=mongodb://localhost:27017
+MONGO_DB_URL=mongodb://localhost:27017
 ```
 
 ### MongoDB Atlas (Cloud)
@@ -121,7 +121,7 @@ MONGO_URI=mongodb://localhost:27017
 4. Add it to `.env`
 
 ```bash
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/
+MONGO_DB_URL=mongodb+srv://username:password@cluster.mongodb.net/
 ```
 
 ## API Keys Setup
@@ -155,7 +155,7 @@ npm test         # Tests should pass
 Then start the application:
 
 ```bash
-npm run start:dev
+npm run dev
 ```
 
 Check the console logs to ensure the bot(s) started successfully.

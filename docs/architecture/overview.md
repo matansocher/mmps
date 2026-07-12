@@ -46,10 +46,10 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 ```
 src/
 ├── core/           # Core utilities, config, MongoDB setup
-├── features/       # Bot implementations (6 independent bots)
+├── features/       # Bot implementations (8 independent bots + clutch SPA)
 ├── services/       # External service integrations (30+ services)
 ├── shared/         # Shared utilities and AI tools
-└── main.ts         # Entry point with conditional bot loading
+└── index.ts        # Entry point with conditional bot loading
 ```
 
 ### Feature Structure
@@ -70,17 +70,23 @@ features/{bot-name}/
 
 ### Available Bots
 
-1. **Chatbot** - AI assistant with 20+ tools
-2. **Coach** - Sports analytics and predictions
-3. **Wolt** - Restaurant notifications
-4. **Worldly** - Geography education
+1. **Chatbot** - AI assistant with 27 tools
+2. **Chilli** - Cat persona bot (Hebrew)
+3. **Coach** - Sports analytics and predictions
+4. **Expenses** - Expense tracker mini-app
+5. **Learner** - Courses mini-app
+6. **Secretary** - Personal secretary over a Telegram business connection
+7. **Wolt** - Restaurant notifications
+8. **Worldly** - Geography education
+
+Plus **Clutch** — a bot-less static SPA served by the Express server.
 
 ## Conditional Bot Loading
 
 In development, run one bot at a time:
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
+LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 In production, all bots run:
@@ -89,7 +95,7 @@ In production, all bots run:
 IS_PROD=true npm start
 ```
 
-Logic in `main.ts`:
+Logic in `src/index.ts`:
 
 ```typescript
 const shouldInitBot = (config) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
@@ -105,7 +111,7 @@ Initialization functions set up services and controllers:
 // features/chatbot/chatbot.init.ts
 export async function initChatbot(): Promise<void> {
   await Promise.all([
-    createMongoConnection('chatbot-db'),
+    createMongoConnection('Chatbot'),
     connectGithubMcp().catch(console.error),
   ]);
 
@@ -208,7 +214,7 @@ Response back to user
 
 ## Environment Configuration
 
-- **Development**: `IS_PROD=false`, `LOCAL_ACTIVE_BOT_ID=chatbot`
+- **Development**: `IS_PROD=false`, `LOCAL_ACTIVE_BOT_ID=CHATBOT`
 - **Production**: `IS_PROD=true` (all bots run)
 - **Google Sheets Logging**: Service account credentials for production logging
 
