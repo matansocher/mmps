@@ -12,7 +12,7 @@ import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
-import { DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
+import { DB_NAME as REMINDERS_DB_NAME, ensureReminderIndexes } from '@shared/reminders';
 import { DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
 import { DB_NAME as SPOTIFY_FOLLOWER_DB_NAME } from '@shared/spotify-follower';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
@@ -46,6 +46,7 @@ export async function initChatbot(app: Express): Promise<void> {
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
   await ensureUsageIndexes();
+  await ensureReminderIndexes();
 
   // Build the checkpointer BEFORE provideTelegramBot(), which calls bot.start().
   // grammY locks the bot against new listeners once polling begins, so any `await`

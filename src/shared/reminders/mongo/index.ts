@@ -2,6 +2,7 @@ export { DB_NAME } from './constants';
 
 export {
   createReminder,
+  ensureReminderIndexes,
   getDueReminders,
   markReminderNotified,
   getPendingRemindersDueOnOrBefore,

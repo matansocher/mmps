@@ -5,6 +5,12 @@ import type { CreateSecretaryMessageData, SecretaryMessage } from './types';
 
 const getCollection = () => getMongoCollection<SecretaryMessage>(DB_NAME, MESSAGES_COLLECTION);
 
+export async function ensureSecretaryMessageIndexes(): Promise<void> {
+  const collection = getCollection();
+  await collection.createIndex({ chatId: 1, createdAt: -1 });
+  await collection.createIndex({ createdAt: 1 });
+}
+
 export async function saveMessage(data: CreateSecretaryMessageData): Promise<InsertOneResult<SecretaryMessage>> {
   const message: Omit<SecretaryMessage, '_id'> = { ...data, createdAt: new Date() };
   return getCollection().insertOne(message as SecretaryMessage);

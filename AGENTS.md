@@ -649,7 +649,7 @@ export function getMongoCollection<T>(dbName: string, collectionName: string): C
 }
 ```
 
-The connection string env var is **`MONGO_DB_URL`** (used by `src/core/mongo/mongo-connection.ts`). A handful of standalone migration scripts under `src/**/scripts/` use the legacy `MONGO_URI` — both should typically point at the same cluster.
+The connection string env var is **`MONGO_DB_URL`** — used by `src/core/mongo/mongo-connection.ts` and by the standalone migration scripts under `src/**/scripts/`.
 
 ### Repository Functions
 
