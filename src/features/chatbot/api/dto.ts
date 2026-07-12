@@ -18,47 +18,12 @@ export type ReminderDto = {
   readonly snoozedUntil?: string;
 };
 
-export type WeatherSnapshot = {
-  readonly now: {
-    readonly tempC: number;
-    readonly feelsLike: number;
-    readonly condition: string;
-    readonly conditionCode: number;
-    readonly location: string;
-  } | null;
-  readonly tomorrow: {
-    readonly high: number;
-    readonly low: number;
-    readonly condition: string;
-    readonly conditionCode: number;
-    readonly chanceOfRain: number;
-  } | null;
-};
-
-export type HeatmapDay = {
-  readonly date: string; // YYYY-MM-DD
-  readonly done: boolean;
-  readonly future: boolean;
-};
-
-export type ActivitySummary = {
-  readonly todayDone: boolean;
-  readonly heatmap: ReadonlyArray<HeatmapDay>;
-};
-
 export type DashboardResponse = {
   readonly date: string; // YYYY-MM-DD, the selected date
   readonly isToday: boolean;
-  readonly weather: WeatherSnapshot | null; // null when selected date is not today
   readonly birthdays: ReadonlyArray<EventDto>;
   readonly events: ReadonlyArray<EventDto>;
   readonly reminders: ReadonlyArray<ReminderDto>;
-  readonly activity: ActivitySummary;
-};
-
-export type ExerciseLogResponse = {
-  readonly logged: boolean;
-  readonly alreadyDoneToday: boolean;
 };
 
 export type CreateReminderBody = {
@@ -71,4 +36,48 @@ export type UpdateReminderBody = {
   readonly dueDate?: string;
   readonly status?: 'completed' | 'pending';
   readonly snoozeMinutes?: number;
+};
+
+export type CreateEventBody = {
+  readonly summary: string;
+  readonly start: string; // ISO 8601 date-time
+  readonly end: string; // ISO 8601 date-time
+  readonly location?: string;
+};
+
+export type UsageResponse = {
+  readonly days: number;
+  readonly totals: { readonly cost: number; readonly turns: number; readonly tokensTotal: number };
+  readonly perDay: ReadonlyArray<{ readonly day: string; readonly cost: number; readonly turns: number; readonly tokensTotal: number }>;
+  readonly perSource: ReadonlyArray<{ readonly source: string; readonly cost: number; readonly turns: number; readonly tokensTotal: number }>;
+};
+
+export type EmailDto = {
+  readonly id: string;
+  readonly from: string;
+  readonly subject: string;
+  readonly snippet: string;
+};
+
+export type UnreadEmailsResponse = {
+  readonly emails: ReadonlyArray<EmailDto>;
+};
+
+export type FullEmailDto = {
+  readonly id: string;
+  readonly from: string;
+  readonly subject: string;
+  readonly date: string;
+  readonly bodyText: string;
+};
+
+export type UpcomingBirthdayDto = {
+  readonly id: string;
+  readonly summary: string;
+  readonly date: string; // YYYY-MM-DD
+  readonly inDays: number;
+};
+
+export type UpcomingBirthdaysResponse = {
+  readonly birthdays: ReadonlyArray<UpcomingBirthdayDto>;
 };

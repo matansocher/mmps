@@ -1,36 +1,36 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import { addDays, endOfMonth, startOfDay, startOfWeek, subDays, subMonths } from 'date-fns';
-import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { addDays, differenceInCalendarDays, subDays } from 'date-fns';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { registry } from '@core/openapi';
 import { Logger } from '@core/utils';
-import { deleteEvent, listEvents } from '@services/google-calendar';
+import { createEvent, deleteEvent, listEvents } from '@services/google-calendar';
 import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-calendar';
-import { getCurrentWeather, getForecastWeather } from '@services/weather';
+import { fetchEmailFull, fetchUserEmails, markEmailAsRead, trashEmail } from '@services/gmail';
+import { aggregateUsage } from '@shared/ai';
 import { createReminder, deleteReminder, getPendingRemindersDueOnOrBefore, getReminderById, getRemindersCompletedBetween, updateReminder, updateReminderStatus } from '@shared/reminders';
-import { addExercise, getExercises, getTodayExercise } from '@shared/trainer';
 import { chatbotAuthMiddleware } from './auth.middleware';
 import type {
-  ActivitySummary,
+  CreateEventBody,
   CreateReminderBody,
   DashboardResponse,
   EventDto,
-  ExerciseLogResponse,
-  HeatmapDay,
+  FullEmailDto,
   ReminderDto,
+  UnreadEmailsResponse,
+  UpcomingBirthdayDto,
+  UpcomingBirthdaysResponse,
   UpdateReminderBody,
-  WeatherSnapshot,
+  UsageResponse,
 } from './dto';
 
 extendZodWithOpenApi(z);
 
 const logger = new Logger('ChatbotApiController');
 
-const DEFAULT_WEATHER_LOCATION = 'Tel Aviv';
-const HEATMAP_WEEKS = 13;
 
 // --- Zod schemas for OpenAPI ---
 
@@ -52,44 +52,12 @@ const EventDtoSchema = z.object({
   location: z.string().optional(),
 });
 
-const HeatmapDaySchema = z.object({
-  date: z.string(),
-  done: z.boolean(),
-  future: z.boolean(),
-});
-
-const WeatherSnapshotSchema = z.object({
-  now: z
-    .object({
-      tempC: z.number(),
-      feelsLike: z.number().optional(),
-      condition: z.string(),
-      conditionCode: z.number().optional(),
-      location: z.string(),
-    })
-    .nullable(),
-  tomorrow: z
-    .object({
-      high: z.number(),
-      low: z.number(),
-      condition: z.string(),
-      conditionCode: z.number().optional(),
-      chanceOfRain: z.number().optional(),
-    })
-    .nullable(),
-});
-
 const DashboardResponseSchema = z.object({
   date: z.string(),
   isToday: z.boolean(),
-  weather: WeatherSnapshotSchema.nullable(),
   birthdays: z.array(EventDtoSchema),
   events: z.array(EventDtoSchema),
   reminders: z.array(ReminderDtoSchema),
-  activity: z.object({
-    todayDone: z.boolean(),
-    heatmap: z.array(HeatmapDaySchema),
-  }),
 });
 
 const CreateReminderBodySchema = z.object({
@@ -104,12 +72,47 @@ const UpdateReminderBodySchema = z.object({
   snoozeMinutes: z.number().optional(),
 });
 
-const ExerciseLogResponseSchema = z.object({
-  logged: z.boolean(),
-  alreadyDoneToday: z.boolean(),
+const CreateEventBodySchema = z.object({
+  summary: z.string(),
+  start: z.string().describe('ISO 8601 date-time'),
+  end: z.string().describe('ISO 8601 date-time'),
+  location: z.string().optional(),
 });
 
 const ErrorSchema = z.object({ error: z.string() });
+
+const UsageResponseSchema = z.object({
+  days: z.number(),
+  totals: z.object({ cost: z.number(), turns: z.number(), tokensTotal: z.number() }),
+  perDay: z.array(z.object({ day: z.string(), cost: z.number(), turns: z.number(), tokensTotal: z.number() })),
+  perSource: z.array(z.object({ source: z.string(), cost: z.number(), turns: z.number(), tokensTotal: z.number() })),
+});
+
+const EmailDtoSchema = z.object({
+  id: z.string(),
+  from: z.string(),
+  subject: z.string(),
+  snippet: z.string(),
+});
+
+const UnreadEmailsResponseSchema = z.object({ emails: z.array(EmailDtoSchema) });
+
+const FullEmailDtoSchema = z.object({
+  id: z.string(),
+  from: z.string(),
+  subject: z.string(),
+  date: z.string(),
+  bodyText: z.string(),
+});
+
+const UpcomingBirthdayDtoSchema = z.object({
+  id: z.string(),
+  summary: z.string(),
+  date: z.string(),
+  inDays: z.number(),
+});
+
+const UpcomingBirthdaysResponseSchema = z.object({ birthdays: z.array(UpcomingBirthdayDtoSchema) });
 
 // --- OpenAPI route registrations ---
 
@@ -117,21 +120,10 @@ registry.registerPath({
   method: 'get',
   path: '/api/chatbot/dashboard',
   tags: ['Chatbot'],
-  summary: 'Get dashboard data (weather, events, reminders, exercise activity)',
+  summary: 'Get dashboard data (events, reminders)',
   request: { query: z.object({ date: z.string().optional().describe('YYYY-MM-DD; defaults to today') }) },
   responses: {
     200: { description: 'Dashboard payload', content: { 'application/json': { schema: DashboardResponseSchema } } },
-    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: 'post',
-  path: '/api/chatbot/exercise/log',
-  tags: ['Chatbot'],
-  summary: "Log today's exercise (idempotent per day)",
-  responses: {
-    200: { description: 'Logged or already-done', content: { 'application/json': { schema: ExerciseLogResponseSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
   },
 });
@@ -181,6 +173,19 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: 'post',
+  path: '/api/chatbot/calendar/events',
+  tags: ['Chatbot'],
+  summary: 'Create a Google Calendar event in the primary calendar',
+  request: { body: { content: { 'application/json': { schema: CreateEventBodySchema } } } },
+  responses: {
+    201: { description: 'Created', content: { 'application/json': { schema: EventDtoSchema } } },
+    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
   method: 'delete',
   path: '/api/chatbot/calendar/events/{id}',
   tags: ['Chatbot'],
@@ -190,6 +195,80 @@ registry.registerPath({
     204: { description: 'Deleted' },
     400: { description: 'Invalid id', content: { 'application/json': { schema: ErrorSchema } } },
     404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/usage',
+  tags: ['Chatbot'],
+  summary: 'Get aggregated AI usage stats',
+  request: { query: z.object({ days: z.enum(['7', '30']).optional().describe("'7' or '30'; defaults to 7") }) },
+  responses: {
+    200: { description: 'Usage data', content: { 'application/json': { schema: UsageResponseSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/emails/unread',
+  tags: ['Chatbot'],
+  summary: 'List unread inbox emails',
+  responses: {
+    200: { description: 'Emails', content: { 'application/json': { schema: UnreadEmailsResponseSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/emails/{id}',
+  tags: ['Chatbot'],
+  summary: 'Get a single email by id',
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Email', content: { 'application/json': { schema: FullEmailDtoSchema } } },
+    400: { description: 'Invalid id', content: { 'application/json': { schema: ErrorSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/chatbot/emails/{id}/read',
+  tags: ['Chatbot'],
+  summary: 'Mark an email as read',
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Marked as read' },
+    400: { description: 'Invalid id', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'delete',
+  path: '/api/chatbot/emails/{id}',
+  tags: ['Chatbot'],
+  summary: 'Trash an email',
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Trashed' },
+    400: { description: 'Invalid id', content: { 'application/json': { schema: ErrorSchema } } },
+    500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/chatbot/birthdays/upcoming',
+  tags: ['Chatbot'],
+  summary: 'Get upcoming birthdays in the next 7 days',
+  responses: {
+    200: { description: 'Birthdays', content: { 'application/json': { schema: UpcomingBirthdaysResponseSchema } } },
     500: { description: 'Server error', content: { 'application/json': { schema: ErrorSchema } } },
   },
 });
@@ -227,37 +306,6 @@ function toReminderDto(r: { _id: ObjectId; message: string; dueDate: Date; statu
   };
 }
 
-async function buildWeatherSnapshot(): Promise<WeatherSnapshot> {
-  try {
-    const tomorrowDate = formatInTimeZone(addDays(new Date(), 1), DEFAULT_TIMEZONE, 'yyyy-MM-dd');
-    const [now, tomorrow] = await Promise.all([getCurrentWeather(DEFAULT_WEATHER_LOCATION).catch(() => null), getForecastWeather(DEFAULT_WEATHER_LOCATION, tomorrowDate).catch(() => null)]);
-
-    return {
-      now: now
-        ? {
-            tempC: now.temperature,
-            feelsLike: now.feelsLike,
-            condition: now.condition,
-            conditionCode: now.conditionCode,
-            location: now.location,
-          }
-        : null,
-      tomorrow: tomorrow
-        ? {
-            high: tomorrow.temperatureMax,
-            low: tomorrow.temperatureMin,
-            condition: tomorrow.condition,
-            conditionCode: tomorrow.conditionCode,
-            chanceOfRain: tomorrow.chanceOfRain,
-          }
-        : null,
-    };
-  } catch (err) {
-    logger.warn(`Weather snapshot failed: ${err}`);
-    return { now: null, tomorrow: null };
-  }
-}
-
 function parseSelectedDate(raw: unknown): Date {
   if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
     return fromZonedTime(`${raw}T00:00:00`, DEFAULT_TIMEZONE);
@@ -288,12 +336,10 @@ export function registerChatbotApiRoutes(app: Express): void {
       const isToday = selectedKey === dateKey(now);
       const selectedDayEnd = addDays(selectedDate, 1);
 
-      const [weather, googleEvents, pendingReminders, completedReminders, activity] = await Promise.all([
-        isToday ? buildWeatherSnapshot() : Promise.resolve(null),
+      const [googleEvents, pendingReminders, completedReminders] = await Promise.all([
         fetchEventsForDate(selectedDate),
         getPendingRemindersDueOnOrBefore(chatId, selectedDayEnd),
         getRemindersCompletedBetween(chatId, selectedDate, selectedDayEnd),
-        buildActivitySummary(chatId),
       ]);
 
       const eventDtos = googleEvents.map((event, idx) => toEventDto(event, `event-${idx}`));
@@ -304,32 +350,13 @@ export function registerChatbotApiRoutes(app: Express): void {
       res.json({
         date: selectedKey,
         isToday,
-        weather,
         birthdays,
         events,
         reminders: reminders.map(toReminderDto),
-        activity,
       });
     } catch (err) {
       logger.error(`dashboard failed: ${err}`);
       res.status(500).json({ error: 'dashboard_failed' });
-    }
-  });
-
-
-  app.post('/api/chatbot/exercise/log', async (req: Request, res: Response<ExerciseLogResponse | { error: string }>) => {
-    try {
-      const { chatId } = req.chatbotUser!;
-      const existing = await getTodayExercise(chatId);
-      if (existing) {
-        res.json({ logged: false, alreadyDoneToday: true });
-        return;
-      }
-      await addExercise(chatId);
-      res.json({ logged: true, alreadyDoneToday: false });
-    } catch (err) {
-      logger.error(`exercise log failed: ${err}`);
-      res.status(500).json({ error: 'exercise_log_failed' });
     }
   });
 
@@ -423,6 +450,32 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
+  app.post('/api/chatbot/calendar/events', async (req: Request<object, object, CreateEventBody>, res: Response<EventDto | { error: string }>) => {
+    try {
+      const { summary, start, end, location } = req.body ?? {};
+      if (!summary || !start || !end) {
+        res.status(400).json({ error: 'invalid_body' });
+        return;
+      }
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || endDate <= startDate) {
+        res.status(400).json({ error: 'invalid_date' });
+        return;
+      }
+      const created = await createEvent({
+        summary,
+        location,
+        start: { dateTime: startDate.toISOString(), timeZone: DEFAULT_TIMEZONE },
+        end: { dateTime: endDate.toISOString(), timeZone: DEFAULT_TIMEZONE },
+      });
+      res.status(201).json(toEventDto(created, 'event-created'));
+    } catch (err) {
+      logger.error(`calendar event create failed: ${err}`);
+      res.status(500).json({ error: 'create_failed' });
+    }
+  });
+
   app.delete('/api/chatbot/calendar/events/:id', async (req: Request<{ id: string }>, res: Response) => {
     try {
       const { id } = req.params;
@@ -447,27 +500,132 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
+  app.get('/api/chatbot/usage', async (req: Request, res: Response<UsageResponse | { error: string }>) => {
+    try {
+      const rawDays = req.query.days;
+      const days = rawDays === '30' ? 30 : 7;
+      const from = subDays(new Date(), days);
+      const rows = await aggregateUsage({ from });
+
+      const totalCost = rows.reduce((s, r) => s + r.cost, 0);
+      const totalTurns = rows.reduce((s, r) => s + r.turns, 0);
+      const totalTokens = rows.reduce((s, r) => s + r.tokensTotal, 0);
+
+      const dayMap = new Map<string, { cost: number; turns: number; tokensTotal: number }>();
+      for (let i = 0; i < days; i++) {
+        const key = dateKey(addDays(from, i + 1));
+        dayMap.set(key, { cost: 0, turns: 0, tokensTotal: 0 });
+      }
+      for (const r of rows) {
+        const entry = dayMap.get(r.day) ?? { cost: 0, turns: 0, tokensTotal: 0 };
+        entry.cost += r.cost;
+        entry.turns += r.turns;
+        entry.tokensTotal += r.tokensTotal;
+        dayMap.set(r.day, entry);
+      }
+      const perDay = [...dayMap.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([day, v]) => ({ day, ...v }));
+
+      const sourceMap = new Map<string, { cost: number; turns: number; tokensTotal: number }>();
+      for (const r of rows) {
+        const entry = sourceMap.get(r.source) ?? { cost: 0, turns: 0, tokensTotal: 0 };
+        entry.cost += r.cost;
+        entry.turns += r.turns;
+        entry.tokensTotal += r.tokensTotal;
+        sourceMap.set(r.source, entry);
+      }
+      const perSource = [...sourceMap.entries()]
+        .sort((a, b) => b[1].cost - a[1].cost)
+        .map(([source, v]) => ({ source, ...v }));
+
+      res.json({ days, totals: { cost: totalCost, turns: totalTurns, tokensTotal: totalTokens }, perDay, perSource });
+    } catch (err) {
+      logger.error(`usage failed: ${err}`);
+      res.status(500).json({ error: 'usage_failed' });
+    }
+  });
+
+  app.get('/api/chatbot/emails/unread', async (req: Request, res: Response<UnreadEmailsResponse | { error: string }>) => {
+    try {
+      const emails = (await fetchUserEmails('is:unread in:inbox', 10)) ?? [];
+      res.json({ emails });
+    } catch (err) {
+      logger.error(`emails failed: ${err}`);
+      res.status(500).json({ error: 'emails_failed' });
+    }
+  });
+
+  app.get('/api/chatbot/emails/:id', async (req: Request<{ id: string }>, res: Response<FullEmailDto | { error: string }>) => {
+    try {
+      const { id } = req.params;
+      if (!id || typeof id !== 'string' || id.length > 256) {
+        res.status(400).json({ error: 'invalid_id' });
+        return;
+      }
+      const email = await fetchEmailFull(id);
+      if (!email) {
+        res.status(404).json({ error: 'not_found' });
+        return;
+      }
+      res.json({ id: email.id, from: email.from, subject: email.subject, date: email.date, bodyText: email.bodyText });
+    } catch (err) {
+      logger.error(`email fetch failed: ${err}`);
+      res.status(500).json({ error: 'emails_failed' });
+    }
+  });
+
+  app.post('/api/chatbot/emails/:id/read', async (req: Request<{ id: string }>, res: Response) => {
+    try {
+      const { id } = req.params;
+      if (!id || typeof id !== 'string' || id.length > 256) {
+        res.status(400).json({ error: 'invalid_id' });
+        return;
+      }
+      await markEmailAsRead(id);
+      res.status(204).end();
+    } catch (err) {
+      logger.error(`mark read failed: ${err}`);
+      res.status(500).json({ error: 'mark_read_failed' });
+    }
+  });
+
+  app.delete('/api/chatbot/emails/:id', async (req: Request<{ id: string }>, res: Response) => {
+    try {
+      const { id } = req.params;
+      if (!id || typeof id !== 'string' || id.length > 256) {
+        res.status(400).json({ error: 'invalid_id' });
+        return;
+      }
+      await trashEmail(id);
+      res.status(204).end();
+    } catch (err) {
+      logger.error(`email delete failed: ${err}`);
+      res.status(500).json({ error: 'delete_failed' });
+    }
+  });
+
+  app.get('/api/chatbot/birthdays/upcoming', async (req: Request, res: Response<UpcomingBirthdaysResponse | { error: string }>) => {
+    try {
+      const now = new Date();
+      const events = await listEvents({ timeMin: now.toISOString(), timeMax: addDays(now, 7).toISOString(), singleEvents: true, orderBy: 'startTime', maxResults: 250 });
+      const todayKey = dateKey(now);
+      const birthdays: UpcomingBirthdayDto[] = events
+        .filter((e) => e.start && isBirthdayEvent(e.summary ?? ''))
+        .map((e): UpcomingBirthdayDto => {
+          const dateStr = (e.start!.date ?? dateKey(new Date(e.start!.dateTime!))) as string;
+          const inDays = differenceInCalendarDays(new Date(dateStr), new Date(todayKey));
+          return { id: e.id ?? '', summary: e.summary ?? '(no title)', date: dateStr, inDays };
+        })
+        .sort((a, b) => a.date.localeCompare(b.date));
+      res.json({ birthdays });
+    } catch (err) {
+      logger.error(`birthdays failed: ${err}`);
+      res.status(500).json({ error: 'birthdays_failed' });
+    }
+  });
+
 
   logger.log('Chatbot API routes registered at /api/chatbot/*');
 }
 
-async function buildActivitySummary(chatId: number): Promise<ActivitySummary> {
-  const exercises = await getExercises(chatId, 1000);
-  const today = startOfDay(new Date());
-  const todayKey = dateKey(today);
-
-  const doneDays = new Set<string>();
-  for (const ex of exercises) doneDays.add(dateKey(ex.createdAt));
-
-  const thisWeekSunday = startOfWeek(today, { weekStartsOn: 0 });
-  const heatmapStart = subDays(thisWeekSunday, (HEATMAP_WEEKS - 1) * 7);
-  const heatmap: HeatmapDay[] = [];
-  for (let i = 0; i < HEATMAP_WEEKS * 7; i++) {
-    const day = addDays(heatmapStart, i);
-    const key = dateKey(day);
-    const future = key > todayKey;
-    heatmap.push({ date: key, done: !future && doneDays.has(key), future });
-  }
-
-  return { todayDone: doneDays.has(todayKey), heatmap };
-}
