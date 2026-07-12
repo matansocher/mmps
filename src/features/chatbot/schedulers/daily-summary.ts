@@ -36,7 +36,7 @@ Please format the response nicely with emojis and make it feel like a friendly g
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.');
+    await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
     logger.error(`Failed to generate/send daily summary: ${err}`);
   }
 }
