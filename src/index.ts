@@ -5,6 +5,7 @@ import { env } from 'node:process';
 import { isProd } from '@core/config';
 import { closeMongoConnections, createMongoConnection } from '@core/mongo';
 import { registerSwaggerRoutes } from '@core/openapi';
+import { closeRedisConnection } from '@core/services';
 import { gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
@@ -47,22 +48,34 @@ async function main() {
   registerAuthRoutes(app);
 
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
+  const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {
+    if (!shouldInitBot(config)) return;
+    try {
+      await init();
+    } catch (err) {
+      logger.error(`Failed to init bot '${config.id}': ${err}`);
+    }
+  };
 
-  shouldInitBot(chatbotConfig) && (await initChatbot(app));
-  shouldInitBot(chilliConfig) && (await initChilli());
-  shouldInitBot(coachConfig) && (await initCoach(app));
-  shouldInitBot(expensesConfig) && (await initExpenses(app));
-  shouldInitBot(learnerConfig) && (await initLearner(app));
-  shouldInitBot(secretaryConfig) && (await initSecretary());
-  shouldInitBot(woltConfig) && (await initWolt());
-  shouldInitBot(worldlyConfig) && (await initWorldly(app));
+  await initBot(chatbotConfig, () => initChatbot(app));
+  await initBot(chilliConfig, () => initChilli());
+  await initBot(coachConfig, () => initCoach(app));
+  await initBot(expensesConfig, () => initExpenses(app));
+  await initBot(learnerConfig, () => initLearner(app));
+  await initBot(secretaryConfig, () => initSecretary());
+  await initBot(woltConfig, () => initWolt());
+  await initBot(worldlyConfig, () => initWorldly(app));
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     logger.log(`Server is running on http://localhost:${port}/`);
   });
 
-  gracefulShutdown(stopAllTelegramBots, closeMongoConnections);
+  const closeHttpServer = () => new Promise<void>((resolve) => server.close(() => resolve()));
+  gracefulShutdown(closeHttpServer, stopAllTelegramBots, closeMongoConnections, closeRedisConnection);
 }
 
-main();
+main().catch((err) => {
+  new Logger('main.ts').error(`Fatal error during startup: ${err}`);
+  process.exit(1);
+});

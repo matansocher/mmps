@@ -7,7 +7,7 @@ export async function listEvents(options?: CalendarListOptions, calendarId = DEF
   const calendar = provideCalendar();
   const params: any = { calendarId, singleEvents: options?.singleEvents !== false, orderBy: options?.orderBy || 'startTime' };
 
-  params.timeMin = options.timeMin ?? startOfDay(new Date()).toISOString();
+  params.timeMin = options?.timeMin ?? startOfDay(new Date()).toISOString();
 
   if (options?.timeMax) {
     params.timeMax = options.timeMax;
