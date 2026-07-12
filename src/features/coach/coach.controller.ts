@@ -125,6 +125,13 @@ export class CoachController {
     const { chatId, userDetails, data: response } = getCallbackQueryData(ctx);
 
     const [action, resource, subAction] = response.split(' - ');
+    const parseIdOrThrow = (value: string): number => {
+      const id = Number(value);
+      if (!Number.isInteger(id)) {
+        throw new Error(`Invalid callback id: ${value}`);
+      }
+      return id;
+    };
     try {
       switch (action) {
         case BOT_ACTIONS.START:
@@ -143,15 +150,16 @@ export class CoachController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.TABLE:
-          await this.tableHandler(ctx, Number(resource));
+          await this.tableHandler(ctx, parseIdOrThrow(resource));
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
           break;
         case BOT_ACTIONS.MATCH: {
-          await this.competitionMatchesHandler(ctx, Number(resource));
+          const competitionId = parseIdOrThrow(resource);
+          await this.competitionMatchesHandler(ctx, competitionId);
           await ctx.deleteMessage().catch(() => {});
           const leagueName = Object.entries(COMPETITION_IDS_MAP)
-            .filter(([, value]) => value === Number(resource))
+            .filter(([, value]) => value === competitionId)
             .map(([key]) => key)[0];
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
           break;
@@ -162,7 +170,7 @@ export class CoachController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES }, userDetails);
           break;
         case BOT_ACTIONS.CUSTOM_LEAGUES_SELECT:
-          await this.customLeaguesSelectHandler(ctx, chatId, Number(resource), Number(subAction));
+          await this.customLeaguesSelectHandler(ctx, chatId, parseIdOrThrow(resource), parseIdOrThrow(subAction));
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES_SELECT }, userDetails);
           break;

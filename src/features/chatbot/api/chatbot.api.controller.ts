@@ -1,5 +1,5 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import { addDays, differenceInCalendarDays, subDays } from 'date-fns';
+import { addDays, differenceInCalendarDays, parseISO, subDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
@@ -398,7 +398,11 @@ export function registerChatbotApiRoutes(app: Express): void {
 
       if (body.status === 'completed') {
         await updateReminderStatus(id, chatId, 'completed');
-      } else if (body.snoozeMinutes && body.snoozeMinutes > 0) {
+      } else if (body.snoozeMinutes !== undefined) {
+        if (!Number.isInteger(body.snoozeMinutes) || body.snoozeMinutes <= 0) {
+          res.status(400).json({ error: 'invalid_snooze' });
+          return;
+        }
         const until = new Date(Date.now() + body.snoozeMinutes * 60 * 1000);
         await updateReminderStatus(id, chatId, 'snoozed', until);
       } else {
@@ -614,7 +618,7 @@ export function registerChatbotApiRoutes(app: Express): void {
         .filter((e) => e.start && isBirthdayEvent(e.summary ?? ''))
         .map((e): UpcomingBirthdayDto => {
           const dateStr = (e.start!.date ?? dateKey(new Date(e.start!.dateTime!))) as string;
-          const inDays = differenceInCalendarDays(new Date(dateStr), new Date(todayKey));
+          const inDays = differenceInCalendarDays(parseISO(dateStr), parseISO(todayKey));
           return { id: e.id ?? '', summary: e.summary ?? '(no title)', date: dateStr, inDays };
         })
         .sort((a, b) => a.date.localeCompare(b.date));
