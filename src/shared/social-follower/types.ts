@@ -28,3 +28,18 @@ export type UpdateLastSeenData = {
   readonly lastSeenId?: string;
   readonly lastSeenAt?: Date;
 };
+
+export type PendingPost = {
+  readonly _id?: ObjectId;
+  readonly platform: SocialPlatform;
+  readonly username: string;
+  readonly displayName?: string | null;
+  readonly chatId: number;
+  readonly postId: string | null; // platform post id, used for dedupe on collector retries
+  readonly text: string | null;
+  readonly url: string | null;
+  readonly postedAt: Date;
+  readonly collectedAt: Date;
+};
+
+export type CreatePendingPostData = Omit<PendingPost, '_id' | 'collectedAt'>;
