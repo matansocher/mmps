@@ -12,6 +12,7 @@ import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { initClutch } from '@features/clutch';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
+import { initGroundZero } from '@features/ground-zero';
 import { BOT_CONFIG as learnerConfig, initLearner } from '@features/learner';
 import { BOT_CONFIG as secretaryConfig, initSecretary } from '@features/secretary';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
@@ -35,6 +36,7 @@ async function main() {
   });
 
   initClutch(app);
+  initGroundZero(app);
 
   registerSwaggerRoutes(app);
 

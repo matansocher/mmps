@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ground Zero — Expansion Roadmap</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        background: #070b12;
+        color: #f8fafc;
+        --background: #070b12;
+        --surface: rgba(15, 23, 36, 0.9);
+        --surface-raised: rgba(22, 33, 50, 0.94);
+        --border: rgba(148, 163, 184, 0.2);
+        --text-muted: #9fb0c5;
+        --blue: #38bdf8;
+        --green: #4ade80;
+        --amber: #fbbf24;
+        --red: #fb7185;
+        --violet: #a78bfa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        padding: 40px 20px 72px;
+        background: radial-gradient(circle at 50% -10%, rgba(56, 189, 248, 0.16), transparent 36rem), linear-gradient(180deg, #070b12 0%, #090f19 100%);
+      }
+
+      main {
+        width: min(1120px, 100%);
+        margin: auto;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 10ch;
+        margin-bottom: 12px;
+        font-family: system-ui, sans-serif;
+        font-size: clamp(42px, 9vw, 86px);
+        line-height: 0.9;
+        letter-spacing: -0.06em;
+      }
+
+      h2 {
+        margin-bottom: 18px;
+        font-family: system-ui, sans-serif;
+        font-size: clamp(24px, 4vw, 38px);
+        letter-spacing: -0.03em;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-family: system-ui, sans-serif;
+        font-size: 17px;
+      }
+
+      p,
+      li {
+        color: var(--text-muted);
+        line-height: 1.65;
+      }
+
+      a {
+        color: var(--blue);
+      }
+
+      code {
+        padding: 2px 6px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #0a111d;
+        color: #dbeafe;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.3fr 0.7fr;
+        gap: 48px;
+        align-items: end;
+        margin-bottom: 56px;
+      }
+
+      .eyebrow,
+      .section-label {
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+      }
+
+      .hero-copy {
+        max-width: 68ch;
+        margin-bottom: 0;
+        font-size: 16px;
+      }
+
+      .status-panel,
+      .card,
+      .phase,
+      .asset-card,
+      .decision {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--surface);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+      }
+
+      .status-panel {
+        padding: 22px;
+      }
+
+      .status-row,
+      .summary {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .status-row + .status-row {
+        margin-top: 20px;
+      }
+
+      .status-row strong {
+        color: #fff;
+        font-size: 13px;
+      }
+
+      .status-row span {
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .meter {
+        height: 8px;
+        overflow: hidden;
+        margin-top: 9px;
+        border-radius: 999px;
+        background: #172235;
+      }
+
+      .meter span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+      }
+
+      .mvp-meter span {
+        width: 100%;
+        background: linear-gradient(90deg, var(--blue), var(--green));
+      }
+
+      .expansion-meter span {
+        width: 81%;
+        background: linear-gradient(90deg, var(--violet), var(--blue));
+      }
+
+      section {
+        margin-top: 64px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .grid-three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card,
+      .decision,
+      .asset-card {
+        padding: 22px;
+      }
+
+      .card strong,
+      .decision strong,
+      .asset-card strong {
+        color: #fff;
+      }
+
+      .card p,
+      .decision p,
+      .asset-card p {
+        margin-bottom: 0;
+        font-size: 14px;
+      }
+
+      .badge {
+        display: inline-flex;
+        min-height: 26px;
+        align-items: center;
+        margin-bottom: 14px;
+        padding: 4px 9px;
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .confirmed {
+        color: var(--green);
+      }
+
+      .recommended {
+        color: var(--blue);
+      }
+
+      .future {
+        color: var(--violet);
+      }
+
+      .needed {
+        color: var(--amber);
+      }
+
+      .phases {
+        display: grid;
+        gap: 14px;
+      }
+
+      .phase {
+        display: grid;
+        grid-template-columns: 72px 1fr auto;
+        gap: 20px;
+        align-items: start;
+        padding: 22px;
+      }
+
+      .phase-number {
+        color: var(--blue);
+        font-family: system-ui, sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+      }
+
+      .phase p {
+        margin-bottom: 0;
+        font-size: 14px;
+      }
+
+      .phase ul {
+        margin: 12px 0 0;
+        padding-left: 20px;
+      }
+
+      .phase-status {
+        min-width: 92px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: #172235;
+        color: var(--text-muted);
+        font-size: 10px;
+        text-align: center;
+        letter-spacing: 0.08em;
+      }
+
+      .priority-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .priority-list li {
+        padding: 12px 14px;
+        border-left: 3px solid var(--border);
+        background: rgba(7, 11, 18, 0.45);
+        font-size: 13px;
+      }
+
+      .priority-now li {
+        border-color: var(--blue);
+      }
+
+      .priority-next li {
+        border-color: var(--amber);
+      }
+
+      .priority-later li {
+        border-color: var(--violet);
+      }
+
+      .asset-card ul,
+      .decision ul {
+        margin-bottom: 0;
+        padding-left: 20px;
+      }
+
+      .asset-spec {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 10px;
+        background: #09111d;
+        color: #cbd5e1;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .prompt {
+        margin-top: 14px;
+        padding: 14px;
+        border: 1px dashed rgba(56, 189, 248, 0.4);
+        border-radius: 10px;
+        background: rgba(56, 189, 248, 0.05);
+        color: #dbeafe;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .asset-intro {
+        max-width: 760px;
+        margin-bottom: 22px;
+        color: var(--text-muted);
+        line-height: 1.7;
+      }
+
+      .workflow {
+        display: grid;
+        gap: 10px;
+        margin: 16px 0 0;
+        padding: 0;
+        counter-reset: asset-step;
+        list-style: none;
+      }
+
+      .workflow li {
+        display: grid;
+        grid-template-columns: 30px 1fr;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .workflow li::before {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        border-radius: 50%;
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 800;
+        content: counter(asset-step);
+        counter-increment: asset-step;
+      }
+
+      .prompt-title {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--blue);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+      }
+
+      .deliverable-list {
+        display: grid;
+        gap: 8px;
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .deliverable-list li {
+        padding: 9px 11px;
+        border-left: 2px solid var(--green);
+        background: rgba(52, 211, 153, 0.05);
+        color: #d1fae5;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .note {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-left: 3px solid var(--amber);
+        background: rgba(251, 191, 36, 0.07);
+        color: #fde68a;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .checklist {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .checklist li {
+        display: grid;
+        grid-template-columns: 26px 1fr;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .checklist li::before {
+        content: '';
+        width: 18px;
+        height: 18px;
+        margin-top: 4px;
+        border: 1px solid #53657d;
+        border-radius: 5px;
+        background: #0b1421;
+      }
+
+      footer {
+        margin-top: 64px;
+        padding-top: 22px;
+        border-top: 1px solid var(--border);
+        color: #718197;
+        font-size: 12px;
+      }
+
+      @media (max-width: 800px) {
+        body {
+          padding: 28px 16px 56px;
+        }
+
+        .hero,
+        .grid,
+        .grid-three {
+          grid-template-columns: 1fr;
+        }
+
+        .phase {
+          grid-template-columns: 52px 1fr;
+        }
+
+        .phase-status {
+          grid-column: 2;
+          width: fit-content;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div>
+          <p class="eyebrow">EXPANSION ROADMAP · LIVING DOCUMENT</p>
+          <h1>GROUND ZERO</h1>
+          <p class="hero-copy">
+            The core expansion is implemented: guards now use realistic cone vision, sentries rotate in place, all five facilities are substantially larger, and a player-following camera keeps the
+            action readable. Suspicion, movement noise, investigation, searching, and return-to-post behavior now create a deeper stealth loop. Directional characters and mission objects are rendered
+            with scalable procedural SVG/CSS art, so the remaining roadmap can focus on interactive environments and long-term progression.
+          </p>
+        </div>
+        <aside class="status-panel">
+          <div class="status-row">
+            <div>
+              <strong>Playable MVP</strong>
+              <div class="meter mvp-meter" aria-label="MVP 100 percent complete"><span></span></div>
+            </div>
+            <span>100%</span>
+          </div>
+          <div class="status-row">
+            <div>
+              <strong>Expansion roadmap</strong>
+              <div class="meter expansion-meter" aria-label="Expansion 81 percent complete"><span></span></div>
+            </div>
+            <span>81%</span>
+          </div>
+        </aside>
+      </header>
+
+      <section>
+        <p class="section-label">COMPLETED EXPANSION</p>
+        <h2>What changed</h2>
+        <div class="grid">
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>90-degree guard vision</h3>
+            <p>Guards see forward plus the 45-degree space on both sides. Walls and solid props block individual lines of sight, creating a believable cone rather than three simple rays.</p>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Standing sentries</h3>
+            <p>Some guards stay in place and rotate through configured directions, pausing to scan left, center, and right. Their timing becomes part of the puzzle.</p>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Larger, denser floors</h3>
+            <p>All five missions are now handcrafted 25×17 facilities with denser walls, rooms, corridors, hiding locations, alternate routes, and path validation.</p>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Procedural SVG/CSS art</h3>
+            <p>Directional operatives and guards, objective case, locked and open extraction doors, and hiding lockers are generated as scalable SVG/CSS sprites with no external image dependency.</p>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Suspicion and noise</h3>
+            <p>Detection now raises a readable awareness meter instead of causing an immediate distant alarm. Movement creates short-lived noise pulses that attract guards within a floor-specific radius.</p>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Investigation and search AI</h3>
+            <p>Guards pathfind to sound or last-seen positions, search the area, then return to their patrol route or sentry post. Their color communicates routine, investigation, search, and return states.</p>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Smooth interpolated movement</h3>
+            <p>Player, guard, and camera positions now animate between deterministic grid ticks. Quick taps are buffered, key releases stop immediately, and board taps no longer snap the camera.</p>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Interactive Lobby routes</h3>
+            <p>The first mission now introduces a collectible access card, a sealed door that opens after authorization, and paired vents that instantly create alternate infiltration routes.</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">IMPLEMENTED ARCHITECTURE</p>
+        <h2>How the expansion works</h2>
+        <div class="grid">
+          <article class="decision">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Use angular field-of-view with occlusion</h3>
+            <p>
+              Candidate tiles are included when their angle is within 45 degrees of the guard's facing direction. Each candidate then receives a grid line-of-sight check, such as Bresenham traversal,
+              so walls can block one side of the cone without blocking the other.
+            </p>
+          </article>
+          <article class="decision">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Add guard behavior types</h3>
+            <p>
+              Guards use explicit <code>patrol</code> and <code>sentry</code> routines plus shared <code>investigate</code>, <code>search</code>, and <code>return</code> modes. Breadth-first pathfinding
+              routes alerted guards around walls without changing the deterministic grid simulation.
+            </p>
+          </article>
+          <article class="decision">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Render a viewport, not the whole map</h3>
+            <p>
+              The current renderer fits the entire floor onto the Canvas. Larger floors would make every tile tiny. A camera should follow the player while rendering a fixed-size viewport, with a
+              minimap or room map for orientation.
+            </p>
+          </article>
+          <article class="decision">
+            <span class="badge confirmed">IMPLEMENTED</span>
+            <h3>Keep simulation and presentation separate</h3>
+            <p>
+              Game rules remain grid-based and deterministic. Sprites, lighting, animation, camera movement, and particles only visualize that state, preserving reliable collision and detection tests.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">IMPLEMENTATION PHASES</p>
+        <h2>Expansion sequence</h2>
+        <div class="phases">
+          <article class="phase">
+            <div class="phase-number">01</div>
+            <div>
+              <h3>Guard awareness overhaul</h3>
+              <p>Build the foundation for every future stealth mechanic.</p>
+              <ul>
+                <li>90-degree field-of-view with per-tile wall occlusion</li>
+                <li>Patrol and stationary sentry behaviors</li>
+                <li>Configurable facing sequence and pause duration</li>
+                <li>Vision-cone tests for corners, doors, and diagonal walls</li>
+              </ul>
+            </div>
+            <span class="phase-status">DONE</span>
+          </article>
+
+          <article class="phase">
+            <div class="phase-number">02</div>
+            <div>
+              <h3>Large-world camera and level format</h3>
+              <p>Allow complex floors without reducing readability or touch precision.</p>
+              <ul>
+                <li>Player-following camera with smooth, interruptible movement</li>
+                <li>Fixed tile size and responsive viewport dimensions</li>
+                <li>20–30 tile floor templates with rooms and alternate paths</li>
+                <li>Minimap, discovered-room map, or off-screen objective indicator</li>
+              </ul>
+            </div>
+            <span class="phase-status">DONE</span>
+          </article>
+
+          <article class="phase">
+            <div class="phase-number">03</div>
+            <div>
+              <h3>Visual identity and sprite pipeline</h3>
+              <p>Replace abstract shapes while keeping gameplay information instantly readable.</p>
+              <ul>
+                <li>Procedural SVG sprite factory and image cache are implemented</li>
+                <li>Four directional player and guard designs are implemented</li>
+                <li>Objective, hiding, locked-exit, and open-exit designs are implemented</li>
+                <li>Guard modes and hidden-player states retain separate visual feedback</li>
+              </ul>
+            </div>
+            <span class="phase-status">DONE</span>
+          </article>
+
+          <article class="phase">
+            <div class="phase-number">04</div>
+            <div>
+              <h3>Deeper stealth simulation</h3>
+              <p>Move beyond instant binary detection while preserving fast restarts.</p>
+              <ul>
+                <li>Suspicion meter and per-floor gain/decay tuning are implemented</li>
+                <li>Movement noise radius and Canvas pulse feedback are implemented</li>
+                <li>Guard investigate, search, and return-to-post states are implemented</li>
+                <li>Darkness, lit areas, crouching, and cover strength</li>
+              </ul>
+            </div>
+            <span class="phase-status">IN PROGRESS</span>
+          </article>
+
+          <article class="phase">
+            <div class="phase-number">05</div>
+            <div>
+              <h3>Interactive levels and tools</h3>
+              <p>Create multiple solutions instead of one correct route.</p>
+              <ul>
+                <li>Access cards, sealed doors, and paired vents are implemented in the Lobby</li>
+                <li>Switches, cameras, and laser grids remain</li>
+                <li>Smoke bombs, noise makers, EMP charges, and disguises</li>
+                <li>Optional valuables and secondary objectives</li>
+                <li>Non-lethal guard distractions and temporary takedowns</li>
+              </ul>
+            </div>
+            <span class="phase-status">IN PROGRESS</span>
+          </article>
+
+          <article class="phase">
+            <div class="phase-number">06</div>
+            <div>
+              <h3>Campaign and replayability</h3>
+              <p>Turn individual floors into a game players want to master.</p>
+              <ul>
+                <li>Mission chapters with escalating mechanics and visual themes</li>
+                <li>Ratings for time, detections, valuables, and optional objectives</li>
+                <li>Unlockable gadgets and selectable loadouts</li>
+                <li>Daily challenge, seeded maps, achievements, and leaderboards</li>
+              </ul>
+            </div>
+            <span class="phase-status">LONG TERM</span>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">REMAINING GAMEPLAY</p>
+        <h2>What is left</h2>
+        <div class="grid grid-three">
+          <article class="card">
+            <span class="badge recommended">BUILD NEXT</span>
+            <ul class="priority-list priority-now">
+              <li>Hands-on level balancing and guard timing playtests</li>
+              <li>Security cameras, switches, and laser grids</li>
+              <li>Light and darkness zones with crouching</li>
+              <li>Optional valuables and mission ratings</li>
+            </ul>
+          </article>
+          <article class="card">
+            <span class="badge needed">NEXT LAYER</span>
+            <ul class="priority-list priority-next">
+              <li>Security cameras and laser grids</li>
+              <li>Smoke bombs, noise makers, and EMP tools</li>
+              <li>Multiple objective and extraction types</li>
+              <li>Non-lethal distractions and temporary takedowns</li>
+              <li>Mission chapters and progression</li>
+            </ul>
+          </article>
+          <article class="card">
+            <span class="badge future">LONG TERM</span>
+            <ul class="priority-list priority-later">
+              <li>Gadget loadouts and upgrades</li>
+              <li>Multiple objective types</li>
+              <li>Procedural mission variants</li>
+              <li>Daily challenges and leaderboards</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">OPTIONAL FUTURE REFERENCE</p>
+        <h2>Archived image-generation brief</h2>
+        <p class="asset-intro">
+          No generated images are required for the current game. The production build now uses procedural SVG/CSS sprites that remain sharp at every tile size. The prompts below are preserved only as
+          an optional reference if the game eventually receives a fully illustrated art pass.
+        </p>
+        <div class="grid">
+          <article class="asset-card full-width">
+            <span class="badge recommended">START HERE</span>
+            <h3>Your exact workflow</h3>
+            <ol class="workflow">
+              <li><span>Choose tactical realism or cyberpunk neon. Tactical realism is recommended because the current UI and vector fallback already use that language.</span></li>
+              <li><span>Generate one style-reference image with the master prompt below. Pick your favorite result and use it as the style/image reference for every later generation.</span></li>
+              <li><span>Generate the player reference, then its four directional images. Reuse the same reference image, seed, model, aspect ratio, and style strength.</span></li>
+              <li><span>Repeat the same process for the guard, then generate the objective, exit, and hiding object.</span></li>
+              <li><span>Remove backgrounds if your generator cannot make true transparency. Keep the subject centered with empty padding around it.</span></li>
+              <li><span>Export the 11 files as transparent PNG or lossless WebP, name them exactly as listed below, and send them together in one ZIP.</span></li>
+            </ol>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">DECISION NEEDED</span>
+            <h3>Choose one visual direction</h3>
+            <ul>
+              <li><strong>Recommended:</strong> top-down orthographic, stylized tactical realism</li>
+              <li>Alternative: clean cyberpunk neon with stronger color and glow</li>
+              <li>Avoid isometric perspective initially; it complicates grid alignment and touch targeting</li>
+            </ul>
+            <div class="prompt">
+              <span class="prompt-title">MASTER STYLE-REFERENCE PROMPT</span>
+              Top-down orthographic concept sheet for a premium tactical stealth game called Ground Zero, stylized tactical realism, covert operative, security guard, secure data case, industrial
+              facility props, dark navy and charcoal palette, restrained cyan interaction accents, restrained red security accents, crisp readable silhouettes, subtle material detail, consistent
+              overhead lighting, polished video-game production art, no perspective tilt, no isometric view, no text, no logos, square composition.
+            </div>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">GENERATOR SETTINGS</span>
+            <h3>Keep these settings locked</h3>
+            <div class="asset-spec">
+              <span>Aspect ratio: 1:1 square</span>
+              <span>Source size: 1024×1024 preferred; 512×512 minimum</span>
+              <span>Top-down orthographic camera</span>
+              <span>Use one model version, seed, and style reference for the entire set</span>
+              <span>Reference/style strength: medium; enough for consistency without copying the layout</span>
+              <span>Background: transparent, or flat chroma green if transparency is unsupported</span>
+              <span>Centered subject occupying roughly 65–75% of the canvas</span>
+              <span>No text, frame, scene, floor, weapon effects, or baked directional shadow</span>
+              <span>Final export: transparent lossless WebP or PNG</span>
+            </div>
+            <div class="prompt">
+              <span class="prompt-title">NEGATIVE PROMPT — APPEND WHEN SUPPORTED</span>
+              isometric, side view, front camera, perspective camera, cinematic scene, environment, floor, background, drop shadow, cast shadow, glow around silhouette, text, letters, labels, watermark,
+              logo, border, UI, multiple characters, cropped body, duplicate limbs, extra arms, extra legs, distorted anatomy, blurry edges, low contrast silhouette
+            </div>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">STEP 1 · PLAYER REFERENCE</span>
+            <h3>Create the operative once</h3>
+            <ul>
+              <li>First generate a neutral reference image and approve the clothing, colors, body proportions, and silhouette.</li>
+              <li>The cyan-blue accent must be visible when the image is reduced to about 48 pixels.</li>
+              <li>Do not generate walk animation yet; the first delivery only needs idle directions.</li>
+            </ul>
+            <div class="prompt">
+              <span class="prompt-title">PLAYER REFERENCE PROMPT</span>
+              Single covert infiltration operative for a top-down stealth game, stylized tactical realism, slim athletic build, dark charcoal fitted tactical clothing, compact equipment harness, soft
+              black boots and gloves, one clear cyan-blue shoulder and chest accent, unmasked head with simple readable shape, practical near-future design, full body centered, strict top-down
+              orthographic camera, isolated on transparent background, no weapon, no shadow, no text, one character only, square composition.
+            </div>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">STEP 2 · PLAYER DIRECTIONS</span>
+            <h3>Generate four matching player images</h3>
+            <ul>
+              <li>Attach the approved player reference to every generation.</li>
+              <li>Replace <code>[DIRECTION]</code> with north/up, east/right, south/down, and west/left.</li>
+              <li>Keep body size and center point identical; only the facing direction should change.</li>
+            </ul>
+            <div class="prompt">
+              <span class="prompt-title">PLAYER DIRECTION PROMPT — RUN FOUR TIMES</span>
+              Use the attached operative as the exact character and outfit reference. Single top-down orthographic stealth operative game sprite facing [DIRECTION], same charcoal clothing, same
+              cyan-blue shoulder and chest accent, same body proportions and equipment, neutral idle stance, head and torso clearly oriented toward [DIRECTION], full body centered at identical scale,
+              compact readable silhouette, transparent background, no floor, no shadow, no text, one character only, square composition.
+            </div>
+            <ul class="deliverable-list">
+              <li>player-up.png</li>
+              <li>player-right.png</li>
+              <li>player-down.png</li>
+              <li>player-left.png</li>
+            </ul>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">STEP 3 · GUARD REFERENCE</span>
+            <h3>Create the security guard once</h3>
+            <ul>
+              <li>Match the player's camera angle and approximate body scale.</li>
+              <li>Use a red accent and asymmetrical helmet/shoulder detail so facing direction is obvious.</li>
+              <li>Do not include a flashlight beam; vision remains a separate game-rendered cone.</li>
+            </ul>
+            <div class="prompt">
+              <span class="prompt-title">GUARD REFERENCE PROMPT</span>
+              Single corporate security guard for a top-down tactical stealth game, stylized tactical realism, sturdy build, dark navy armored uniform, compact utility belt, matte helmet, clear red
+              shoulder stripe and red chest badge, asymmetrical radio on one shoulder to make facing readable, practical near-future design, full body centered, strict top-down orthographic camera,
+              isolated on transparent background, no flashlight beam, no weapon effect, no shadow, no text, one character only, square composition.
+            </div>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">STEP 4 · GUARD DIRECTIONS</span>
+            <h3>Generate four matching guard images</h3>
+            <ul>
+              <li>Attach the approved guard reference and reuse its seed/settings.</li>
+              <li>Replace <code>[DIRECTION]</code> with north/up, east/right, south/down, and west/left.</li>
+              <li>Keep the red accents visible but do not add a red glow around the body.</li>
+            </ul>
+            <div class="prompt">
+              <span class="prompt-title">GUARD DIRECTION PROMPT — RUN FOUR TIMES</span>
+              Use the attached guard as the exact character and uniform reference. Single top-down orthographic security guard game sprite facing [DIRECTION], same dark navy armor, same helmet, same
+              red shoulder stripe and chest badge, same radio and equipment, neutral alert stance, head and torso clearly oriented toward [DIRECTION], full body centered at identical scale, transparent
+              background, no floor, no flashlight beam, no vision cone, no shadow, no text, one character only, square composition.
+            </div>
+            <ul class="deliverable-list">
+              <li>guard-up.png</li>
+              <li>guard-right.png</li>
+              <li>guard-down.png</li>
+              <li>guard-left.png</li>
+            </ul>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">STEP 5 · OBJECTIVE</span>
+            <h3>Secure data case</h3>
+            <p>The objective should look valuable and interactive without producing so much glow that it obscures the tile.</p>
+            <div class="prompt">
+              <span class="prompt-title">OBJECTIVE PROMPT</span>
+              Single secure data case game prop viewed from a strict top-down orthographic camera, premium stylized tactical realism, compact matte-black reinforced hard case, subtle cyan status strip
+              and one small illuminated lock, strong readable rectangular silhouette, centered, isolated on transparent background, no floor, no hands, no text, no logo, no cast shadow, square
+              composition, readable at 48 pixels.
+            </div>
+            <ul class="deliverable-list"><li>objective.png</li></ul>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">STEP 6 · EXIT</span>
+            <h3>Extraction elevator</h3>
+            <p>Generate the doorway as a top-down floor object rather than a front-facing wall illustration. It must remain readable from the game's overhead camera.</p>
+            <div class="prompt">
+              <span class="prompt-title">EXIT PROMPT</span>
+              Single secured extraction elevator threshold for a top-down tactical stealth game, strict orthographic overhead view, dark brushed-metal double door and compact surrounding frame,
+              restrained green-cyan access light, clear open-path silhouette indicating extraction, stylized tactical realism, centered, isolated on transparent background, no wall scene, no corridor,
+              no characters, no text, no exit sign, no cast shadow, square composition.
+            </div>
+            <ul class="deliverable-list"><li>exit.png</li></ul>
+          </article>
+          <article class="asset-card">
+            <span class="badge needed">STEP 7 · HIDING</span>
+            <h3>Industrial locker</h3>
+            <p>The first hiding sprite should be a locker because it works across all five facilities. Plants and alcoves can become later variants.</p>
+            <div class="prompt">
+              <span class="prompt-title">HIDING OBJECT PROMPT</span>
+              Single wide industrial security locker used as a hiding place in a top-down stealth game, strict orthographic overhead view, dark steel double-door cabinet, slightly worn edges, subtle
+              recessed handles, enough depth to conceal one operative, low-contrast charcoal palette with a tiny cyan interaction marker, stylized tactical realism, centered, isolated on transparent
+              background, no open doors, no person, no floor, no text, no cast shadow, square composition, readable at 48 pixels.
+            </div>
+            <ul class="deliverable-list"><li>hiding.png</li></ul>
+          </article>
+          <article class="asset-card full-width">
+            <span class="badge future">OPTIONAL · LATER ART PASS</span>
+            <h3>Environment pack after the first 11 sprites</h3>
+            <p>These are useful later but are not wired into the current sprite manifest yet. Generate them only after the required set looks consistent in the game.</p>
+            <div class="grid">
+              <div>
+                <strong>Props</strong>
+                <ul>
+                  <li>Desk, crate, server rack, couch, cabinet, divider</li>
+                  <li>Security camera, keypad, alarm panel, laser emitter</li>
+                </ul>
+                <div class="prompt">
+                  <span class="prompt-title">REUSABLE PROP PROMPT</span>
+                  Single [OBJECT] environment prop for a top-down tactical stealth game, strict orthographic overhead view, stylized tactical realism, dark navy and charcoal facility palette, subtle
+                  material detail, clear silhouette, centered, isolated on transparent background, no floor, no characters, no text, no cast shadow, square composition, readable at 48 pixels.
+                </div>
+              </div>
+              <div>
+                <strong>Tile surfaces</strong>
+                <ul>
+                  <li>Dark concrete, office tile, server floor, industrial metal</li>
+                  <li>Wall straight, inner corner, outer corner, and doorway pieces</li>
+                </ul>
+                <div class="prompt">
+                  <span class="prompt-title">REUSABLE TILE PROMPT</span>
+                  Seamless [SURFACE] floor texture for a top-down tactical stealth game, exact orthographic overhead view, dark low-contrast material, fine realistic surface detail, subtle even wear,
+                  uniform lighting, no objects, no seams, no border, no directional shadow, no lighting hotspot, perfectly tileable on all four edges, square composition, visually quiet behind gameplay.
+                </div>
+              </div>
+            </div>
+          </article>
+          <article class="asset-card full-width">
+            <span class="badge confirmed">DELIVERY CHECKLIST</span>
+            <h3>What to check before sending the ZIP</h3>
+            <ul>
+              <li>Exactly one subject appears in every file, fully visible and centered.</li>
+              <li>All eight character images have the same scale, camera angle, proportions, clothing, and colors.</li>
+              <li>Up, right, down, and left are genuinely different directions; do not rotate one image mechanically because body details and lighting would rotate incorrectly.</li>
+              <li>The background is truly transparent, not white, gray, checkerboard, or a fake transparency pattern.</li>
+              <li>Each asset remains recognizable when previewed at 48×48 pixels.</li>
+              <li>No asset contains words, symbols pretending to be words, logos, watermarks, frames, or baked shadows.</li>
+              <li>Keep the original 1024×1024 or 512×512 files. I will resize, optimize, place, and connect them to the game.</li>
+            </ul>
+            <ul class="deliverable-list">
+              <li>player-up.png · player-right.png · player-down.png · player-left.png</li>
+              <li>guard-up.png · guard-right.png · guard-down.png · guard-left.png</li>
+              <li>objective.png · exit.png · hiding.png</li>
+            </ul>
+          </article>
+        </div>
+        <p class="note">
+          If your generator cannot preserve a character across four directions, stop after creating the reference image and send it first. It is better to refine one consistent character before
+          producing eight mismatched sprites. For generators without transparency support, use a perfectly flat bright green background and do not add shadows; the background can then be removed cleanly.
+        </p>
+      </section>
+
+      <section>
+        <p class="section-label">WHAT I NEED FROM YOU</p>
+        <h2>Decisions and deliverables</h2>
+        <div class="grid">
+          <article class="card">
+            <span class="badge needed">YOUR DECISIONS</span>
+            <ul class="checklist">
+              <li>Choose tactical realism or cyberpunk neon as the permanent art direction.</li>
+              <li>Confirm top-down orthographic perspective.</li>
+              <li>Choose the setting for the first large mission: office tower, research lab, museum, warehouse, or secure data center.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <span class="badge confirmed">NO ASSETS REQUIRED</span>
+            <ul class="checklist">
+              <li>The player and guard direction sets are generated in code.</li>
+              <li>The objective, exit states, and hiding locker are generated in code.</li>
+              <li>Future props and surfaces can follow the same procedural SVG approach.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">REMAINING ENGINEERING</p>
+        <h2>Work that can continue without external artwork</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Mechanics</h3>
+            <p>
+              Suspicion, movement noise, investigation, searching, return behavior, and an initial per-floor difficulty curve are complete. Doors, cameras, lasers, gadgets, darkness, mission scoring,
+              and hands-on level balancing can continue using the upgraded vector renderer.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Content pipeline</h3>
+            <p>
+              The large-level schema, route validation, camera, minimap, sprite loader, procedural SVG factory, and Canvas renderer are complete. The visual system can expand in code without waiting
+              for generated files.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <footer>Last updated: 13 July 2026 — smooth interpolated movement plus the first interactive level slice with access cards, sealed doors, and paired vents implemented.</footer>
+    </main>
+  </body>
+</html>
