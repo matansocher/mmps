@@ -10,7 +10,7 @@ const schema = z.object({
   action: z
     .enum(['latest_posts', 'user_info', 'subscribe', 'unsubscribe', 'list'])
     .describe(
-      'Action to perform: "latest_posts" fetches the latest posts of a user, "user_info" fetches the user profile details, "subscribe" adds daily new-post notifications for a user, "unsubscribe" removes them, "list" shows current subscriptions',
+      'Action to perform: "latest_posts" fetches the latest posts of a user, "user_info" fetches the user profile details, "subscribe" adds a user to the daily 22:45 social media digest, "unsubscribe" removes them, "list" shows current subscriptions',
     ),
   username: z.string().optional().describe('TikTok username without the @ prefix (e.g., "khaby.lame"). Required for all actions except "list"'),
   count: z.number().min(1).max(10).optional().describe('Number of latest posts to fetch (default: 5, max: 10). Only used with "latest_posts"'),
@@ -23,7 +23,7 @@ async function handleSubscribe(username: string): Promise<string> {
   }
   const { videos } = await getUserVideos(username, 1);
   await createSubscription({ platform: 'tiktok', username, chatId, lastSeenId: videos[0]?.id ?? null });
-  return `Subscribed to @${username} on TikTok - you will get a notification when they post something new (checked daily at 18:00)`;
+  return `Subscribed to @${username} on TikTok - their new posts will be included in the daily digest at 22:45`;
 }
 
 async function handleUnsubscribe(username: string): Promise<string> {
@@ -65,6 +65,6 @@ async function runner({ action, username, count }: z.infer<typeof schema>) {
 export const tiktokTool = tool(runner, {
   name: 'tiktok',
   description:
-    'Get the latest TikTok posts of a user (with video download link and transcript when available), a TikTok user profile info, or manage daily new-post notifications: subscribe/unsubscribe to a user, or list current subscriptions',
+    'Get the latest TikTok posts of a user (with video download link and transcript when available), a TikTok user profile info, or manage subscriptions for the daily 22:45 social media digest: subscribe/unsubscribe to a user, or list current subscriptions',
   schema,
 });

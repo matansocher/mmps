@@ -13,7 +13,8 @@ import {
   polymarketUpdate,
   // rainRadarAlert,
   reminderCheck,
-  socialMediaUpdate,
+  socialMediaCollect,
+  socialMediaDigest,
   sportsCalendar,
   spotifyPodcastUpdate,
   upcomingEventAlert,
@@ -61,11 +62,13 @@ export class ChatbotSchedulerService {
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
 
-    createSchedule(`30 11,15,19,23 * * *`, async () => socialMediaUpdate(this.bot, ['twitter', 'youtube']));
+    createSchedule(`30 11,15,19,23 * * *`, async () => socialMediaCollect(['twitter', 'youtube']));
 
-    createSchedule(`30 18 * * *`, async () => socialMediaUpdate(this.bot, ['tiktok']));
+    createSchedule(`30 18 * * *`, async () => socialMediaCollect(['tiktok']));
 
-    createSchedule(`30 11-23 * * *`, async () => socialMediaUpdate(this.bot, ['telegram']));
+    createSchedule(`30 11-23 * * *`, async () => socialMediaCollect(['telegram']));
+
+    createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
 
     // createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
   }

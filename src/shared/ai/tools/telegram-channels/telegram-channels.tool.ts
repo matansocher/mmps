@@ -9,7 +9,7 @@ const chatId = MY_USER_ID;
 const schema = z.object({
   action: z
     .enum(['latest_posts', 'subscribe', 'unsubscribe', 'list'])
-    .describe('Action to perform: "latest_posts" fetches recent posts of a public channel, "subscribe" adds new-post notifications for a channel (checked hourly between 11:30-23:30), "unsubscribe" removes them, "list" shows current subscriptions'),
+    .describe('Action to perform: "latest_posts" fetches recent posts of a public channel, "subscribe" adds a channel to the daily 22:45 social media digest (its new posts are summarized into key points), "unsubscribe" removes them, "list" shows current subscriptions'),
   channel: z.string().optional().describe('The public Telegram channel handle, without the @ prefix (e.g., "durov", "geektimecoil"). Also accepts t.me links. Required for all actions except "list"'),
   count: z.number().min(1).max(20).optional().describe('Number of latest posts to fetch (default: 5, max: 20). Only used with "latest_posts"'),
 });
@@ -43,7 +43,7 @@ async function handleSubscribe(handle: string): Promise<string> {
   }
   const { channel, posts } = await fetchChannelPosts(handle, 1);
   await createSubscription({ platform: 'telegram', username: handle, displayName: channel.title, chatId, lastSeenId: posts[0] ? String(posts[0].id) : null });
-  return `Subscribed to ${channel.title ?? `@${handle}`} on Telegram - you will get a notification when they post something new (checked hourly between 11:30-23:30)`;
+  return `Subscribed to ${channel.title ?? `@${handle}`} on Telegram - a summary of their new posts will be included in the daily digest at 22:45`;
 }
 
 async function handleUnsubscribe(handle: string): Promise<string> {
@@ -83,6 +83,6 @@ async function runner({ action, channel, count }: z.infer<typeof schema>) {
 export const telegramChannelsTool = tool(runner, {
   name: 'telegram_channels',
   description:
-    'Fetch the latest posts of any public Telegram channel by handle (via the t.me web preview, public channels only), or manage new-post notifications (checked hourly between 11:30-23:30): subscribe/unsubscribe to a channel, or list current subscriptions. Returns post text, date, link, and view count.',
+    'Fetch the latest posts of any public Telegram channel by handle (via the t.me web preview, public channels only), or manage subscriptions for the daily 22:45 social media digest (new posts are summarized into key points per channel): subscribe/unsubscribe to a channel, or list current subscriptions. Returns post text, date, link, and view count.',
   schema,
 });

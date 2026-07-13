@@ -9,7 +9,7 @@ const chatId = MY_USER_ID;
 const schema = z.object({
   action: z
     .enum(['latest_posts', 'subscribe', 'unsubscribe', 'list'])
-    .describe('Action to perform: "latest_posts" fetches recent tweets, "subscribe" adds new-post notifications for a user (checked every 4 hours), "unsubscribe" removes them, "list" shows current subscriptions'),
+    .describe('Action to perform: "latest_posts" fetches recent tweets, "subscribe" adds a user to the daily 22:45 social media digest, "unsubscribe" removes them, "list" shows current subscriptions'),
   username: z.string().optional().describe('The X (Twitter) username/handle, without the @ prefix (e.g., "elonmusk", "nasa"). Required for all actions except "list"'),
   count: z.number().min(1).max(20).optional().describe('Number of latest posts to fetch (default: 5, max: 20). Only used with "latest_posts"'),
   includeRetweets: z.boolean().optional().describe('Whether to include retweets (default: true). Only used with "latest_posts"'),
@@ -38,7 +38,7 @@ async function handleSubscribe(username: string): Promise<string> {
   }
   const { tweets } = await fetchLatestPosts(username, { count: 1 });
   await createSubscription({ platform: 'twitter', username, chatId, lastSeenId: tweets[0]?.id ?? null });
-  return `Subscribed to @${username} on Twitter - you will get a notification when they post something new (checked every 4 hours between 11:00-23:00)`;
+  return `Subscribed to @${username} on Twitter - a summary of their new posts will be included in the daily digest at 22:45`;
 }
 
 async function handleUnsubscribe(username: string): Promise<string> {
@@ -78,6 +78,6 @@ async function runner({ action, username, count, includeRetweets, includeReplies
 export const twitterTool = tool(runner, {
   name: 'twitter',
   description:
-    'Fetch the latest posts (tweets) of any public X (Twitter) user by username, or manage new-post notifications (checked every 4 hours): subscribe/unsubscribe to a user, or list current subscriptions. Returns post text, date, link, and engagement metrics when available.',
+    'Fetch the latest posts (tweets) of any public X (Twitter) user by username, or manage subscriptions for the daily 22:45 social media digest (new posts are summarized per user): subscribe/unsubscribe to a user, or list current subscriptions. Returns post text, date, link, and engagement metrics when available.',
   schema,
 });

@@ -32,7 +32,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, automatic notifications for followed TikTok/Twitter/YouTube/Telegram accounts (Twitter/YouTube every 4 hours, TikTok daily, Telegram hourly), and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points), and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -72,7 +72,7 @@ Available capabilities:
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
 - Twitter tool: Interact with X (Twitter) users with these actions:
   * "latest_posts" - Fetch the latest posts (tweets) of any public user (default 5, max 20). Returns post text, date, link, and engagement metrics (likes, retweets, replies, views) when available. Supports filtering out retweets and replies.
-  * "subscribe" - Follow a user for new-post notifications (checked every 4 hours at 11:30, 15:30, 19:30, 23:30)
+  * "subscribe" - Follow a user: a summary of their new posts is included in the daily social media digest (sent at 22:45)
   * "unsubscribe" - Stop following a user
   * "list" - Show all active Twitter subscriptions
   Natural language variations: "what did [user] post lately", "latest tweets of [user]", "show me [user]'s recent posts", "what's [user] saying on X/Twitter", "notify me when [user] tweets", "follow [user] on Twitter", "stop following [user] on Twitter", "which Twitter users am I following"
@@ -128,7 +128,7 @@ Available capabilities:
 - TikTok tool: Fetch a TikTok user's latest posts or profile info with these actions:
   * "latest_posts" - Get the latest posts of a user (default 5, max 10). Each post includes description, TikTok URL, stats, a direct video download link, and a transcript of what is said in the video (when available).
   * "user_info" - Get a user's profile details (followers, bio, video count, etc.)
-  * "subscribe" - Follow a user for new-post notifications (checked daily at 18:00)
+  * "subscribe" - Follow a user: their new posts are included in the daily social media digest (sent at 22:45)
   * "unsubscribe" - Stop following a user
   * "list" - Show all active TikTok subscriptions
   Natural language variations: "what did [user] post on TikTok", "latest TikToks of [user]", "show me [user]'s new posts", "what is [user] saying in their latest video", "tiktok profile of [user]", "notify me when [user] posts on TikTok", "follow [user] on TikTok", "stop following [user] on TikTok", "which TikTok users am I following". Use the transcript to answer questions about a video's content.
@@ -136,14 +136,14 @@ Available capabilities:
   * "latest_videos" - Get the latest videos of a channel (default 5, max 10). Each video includes title, URL, stats (views, likes), duration, and publish date.
   * "channel_info" - Get channel details (subscribers, video count, description)
   * "video_transcript" - Get the full transcript of a specific video (pass the video URL or ID). Use it to summarize a video or answer questions about its content.
-  * "subscribe" - Follow a channel for new-video notifications (checked every 4 hours at 11:30, 15:30, 19:30, 23:30)
+  * "subscribe" - Follow a channel: their new videos are included in the daily social media digest (sent at 22:45)
   * "unsubscribe" - Stop following a channel
   * "list" - Show all active YouTube subscriptions
   Accepts handles (@Fireship), channel URLs, or channel IDs.
   Natural language variations: "what did [channel] upload", "latest videos of [channel]", "show me [channel]'s new videos", "youtube channel info of [channel]", "summarize [video/link]", "what is this video about", "what does [channel] say in their latest video" (use latest_videos to find the video, then video_transcript to get its content), "notify me when [channel] uploads", "follow [channel] on YouTube", "stop following [channel] on YouTube", "which YouTube channels am I following"
 - Telegram Channels tool (telegram_channels): Fetch the latest posts of any public Telegram channel (via the t.me web preview — public channels only) with these actions:
   * "latest_posts" - Get the latest posts of a channel (default 5, max 20). Each post includes text, date, link, and view count.
-  * "subscribe" - Follow a channel for new-post notifications (checked hourly between 11:30-23:30)
+  * "subscribe" - Follow a channel: a key-points summary of its new posts is included in the daily social media digest (sent at 22:45)
   * "unsubscribe" - Stop following a channel
   * "list" - Show all active Telegram channel subscriptions
   Accepts handles (@durov, geektimecoil) or t.me links (https://t.me/durov).
