@@ -176,7 +176,7 @@ src/services/{name}/
 
 | ID          | Display Name    | Path                          | Env token                        | Purpose |
 |-------------|-----------------|-------------------------------|----------------------------------|---------|
-| `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
+| `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
 | `EXPENSES`  | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`    | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
@@ -190,14 +190,23 @@ src/services/{name}/
 **Boot logic** (`src/index.ts`):
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
-shouldInitBot(chatbotConfig)   && (await initChatbot(app));
-shouldInitBot(chilliConfig)    && (await initChilli());
-shouldInitBot(coachConfig)     && (await initCoach(app));
-shouldInitBot(expensesConfig)  && (await initExpenses(app));
-shouldInitBot(learnerConfig)   && (await initLearner(app));
-shouldInitBot(secretaryConfig) && (await initSecretary());
-shouldInitBot(woltConfig)      && (await initWolt());
-shouldInitBot(worldlyConfig)   && (await initWorldly(app));
+const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {
+  if (!shouldInitBot(config)) return;
+  try {
+    await init();
+  } catch (err) {
+    logger.error(`Failed to init bot '${config.id}': ${err}`); // one bot failing doesn't kill the rest
+  }
+};
+
+await initBot(chatbotConfig, () => initChatbot(app));
+await initBot(chilliConfig, () => initChilli());
+await initBot(coachConfig, () => initCoach(app));
+await initBot(expensesConfig, () => initExpenses(app));
+await initBot(learnerConfig, () => initLearner(app));
+await initBot(secretaryConfig, () => initSecretary());
+await initBot(woltConfig, () => initWolt());
+await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
 In production all eight run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
@@ -567,6 +576,17 @@ Token/cost metering is shared across the repo. The module lives in `shared/ai/us
 - **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
 - There's no official LangChain package for this — the callback handler is the implementation (no hand-roll reference file).
 - **Weekly report.** `schedulers/usage-summary.ts` (cron `30 22 * * 6`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs `MY_USER_ID` a deterministic cost/usage breakdown (total cost, calls, tokens, per-day, per-bot, and per-user if >1).
+
+### Social media follower (collect → digest)
+
+Follows accounts on 4 platforms and DMs a single daily digest instead of real-time notifications. Two phases, both chatbot schedulers:
+
+- **Collect (silent).** `features/chatbot/schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter+youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`), diffs new posts against the subscription's `lastSeenId`/`lastSeenAt`, and stores them in Mongo (db `SocialFollower`, collection `PendingPost`) — nothing is sent. Pending rows are inserted **before** `lastSeen` advances; `createPendingPosts` dedupes by `platform+username+chatId+postId`, so a crash re-collects rather than loses posts.
+- **Digest.** `features/chatbot/schedulers/social-media-digest.ts` — cron `45 22 * * *`. Groups all pending posts per chat and per followed account: **telegram/twitter** get an AI key-points summary (`getResponse` with `GPT_SMALL_MODEL`, bullet count scales with volume via `targetKeyPointsCount` — ~1 per 10 posts, min 2, max 10 — written in the posts' own language, falls back to a raw listing on AI failure); **youtube/tiktok** are listed one line per post with link. Sends one combined Markdown message, then deletes exactly the rows it sent — posts collected after 22:45 roll into the next day's digest; empty day → no message; send failure keeps everything for retry tomorrow.
+- **Diffing rules.** Twitter/TikTok ids are chronological snowflakes → `BigInt(id) > BigInt(lastSeenId)` (neutralizes pinned posts). Telegram post ids are sequential per channel → numeric compare. YouTube video ids are *not* chronological → timestamp diff via `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
+- **Subscriptions.** `shared/social-follower/` — `Subscription` + `PendingPost` collections, repository functions, `SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`. Managed through the chatbot tools (`tiktok`, `twitter`, `youtube`, `telegram_channels`), each with subscribe/unsubscribe/list actions keyed to `MY_USER_ID`.
+- **Data sources.** telegram → `@services/telegram-scraper` (t.me/s web preview, no auth); twitter → `@services/twitter-scraper` (anonymous GraphQL + Nitter fallback, no key); youtube → RSS (collect) + Supadata-backed `@services/youtube` (tool actions); tiktok → RapidAPI `@services/tiktok` (metered free tier — mind the quota).
+- Digest summarization goes through the raw `@services/openai` helper, so it is **not** usage-metered (consistent with the other raw helpers).
 
 ### Tool with Zod
 
