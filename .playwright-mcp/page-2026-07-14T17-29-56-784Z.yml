@@ -1,0 +1,210 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - paragraph [ref=e4]: Product plan · Updated 2026-07-14
+    - heading "Israel Geo" [level=1] [ref=e5]
+    - paragraph [ref=e6]: A five-round Street View game for Israel. Players inspect a fixed panorama, draw a confidence circle, and balance precision against risk for up to 25,000 points.
+  - generic [ref=e7]:
+    - heading "Current state" [level=2] [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - paragraph [ref=e11]: Game
+        - heading "Complete game loop" [level=3] [ref=e12]
+        - paragraph [ref=e13]: Five rounds, fixed panoramas, confidence-circle scoring, hit/miss results, MongoDB records, and progressive location loading.
+      - generic [ref=e14]:
+        - paragraph [ref=e15]: Location engine
+        - heading "Working" [level=3] [ref=e16]
+        - paragraph [ref=e17]: Generates one inhabited location immediately and preloads the next round while the player explores.
+      - generic [ref=e18]:
+        - paragraph [ref=e19]: Engagement
+        - heading "Personal progression suite" [level=3] [ref=e20]
+        - paragraph [ref=e21]: Passport, rewards, Daily Route, City Crowns, Navigator XP, monthly Light Up progress, profiles, and private sharing are implemented.
+  - generic [ref=e22]:
+    - heading "Current engagement release" [level=2] [ref=e23]
+    - generic [ref=e24]:
+      - paragraph [ref=e25]: Implemented
+      - heading "Israel Passport + Confidence Circles + Share Card" [level=3] [ref=e26]
+      - paragraph [ref=e27]: Every guess now includes a 1-150 km confidence radius. Small successful circles earn the highest score; misses take an immediate penalty and then decay based on distance beyond the edge. Passport stamps persist in MongoDB, and the final result can be shared as a spoiler-free image.
+    - list [ref=e28]:
+      - listitem [ref=e29]:
+        - strong [ref=e30]: "Done - Israel Passport:"
+        - text: first successful hit in each locality unlocks a stamp; later tighter hits improve its best-radius record.
+      - listitem [ref=e31]:
+        - strong [ref=e32]: "Done - Confidence Circle:"
+        - text: tap a center, adjust a large radius slider, preview the maximum score, then lock the circle.
+      - listitem [ref=e33]:
+        - strong [ref=e34]: "Done - Share Card:"
+        - text: generate a PNG with total score, five hit/miss results, radii, points, and new-stamp count without revealing locations.
+      - listitem [ref=e35]:
+        - strong [ref=e36]: "Done - Rewards Economy:"
+        - text: earn Compass Coins, buy and equip twelve cosmetics, preview a weekly feature, and unlock Passport-exclusive items.
+      - listitem [ref=e37]:
+        - strong [ref=e38]: "Done - Server authority:"
+        - text: Telegram-authenticated MongoDB profiles now own rewards, Passport stamps, records, cosmetics, XP, Crowns, streaks, and monthly progress.
+  - generic [ref=e39]:
+    - paragraph [ref=e40]: Implemented progression release
+    - heading "Telegram-authenticated personal progression" [level=2] [ref=e41]
+    - paragraph [ref=e42]: Israel Geo is now a dedicated Telegram Mini App. Every player progresses independently, with no leaderboards, divisions, public search, duels, or player-comparison screens.
+    - generic [ref=e43]:
+      - article [ref=e44]:
+        - generic [ref=e45]: 01 · AUTH
+        - heading "Dedicated Telegram bot" [level=3] [ref=e46]
+        - paragraph [ref=e47]:
+          - text: A new Israel Geo bot launches the Mini App. The server validates Telegram init data, uses
+          - code [ref=e48]: MY_USER_ID
+          - text: during local development, and stores the player by Telegram user ID.
+        - generic [ref=e49]: Required foundation
+        - generic [ref=e50]: MongoDB
+      - article [ref=e51]:
+        - generic [ref=e52]: 02 · RETURN
+        - heading "The Daily Route" [level=3] [ref=e53]
+        - paragraph [ref=e54]: The same five locations are available to every player from midnight Israel time. Each player gets one rewarded attempt, then unlimited reward-free practice replays. Track current and best personal streaks.
+        - generic [ref=e55]: No rankings
+        - generic [ref=e56]: Daily return
+      - article [ref=e57]:
+        - generic [ref=e58]: 03 · MASTERY
+        - heading "City Crowns" [level=3] [ref=e59]
+        - paragraph [ref=e60]: Each of the 18 localities has permanent mastery. A successful circle earns 10 mastery plus 5/10/15 for radii within 30/15/5 km. Tiers unlock at Bronze 30, Silver 100, Gold 250, and Crown 500.
+        - generic [ref=e61]: Personal mastery
+        - generic [ref=e62]: Permanent
+      - article [ref=e63]:
+        - generic [ref=e64]: 04 · MONTHLY
+        - heading "Light Up Israel" [level=3] [ref=e65]
+        - paragraph [ref=e66]: A personal monthly map tracks the 18 Passport localities. One successful scored Daily Route circle lights that locality. Lighting all 18 before month-end unlocks the month’s exclusive cosmetic.
+        - generic [ref=e67]: Personal goal
+        - generic [ref=e68]: Monthly cosmetic
+      - article [ref=e69]:
+        - generic [ref=e70]: 05 · IDENTITY
+        - heading "Navigator Identity" [level=3] [ref=e71]
+        - paragraph [ref=e72]: A player can edit their display name, select a built-in illustrated avatar, earn increasingly expensive XP levels, unlock a title every five levels, equip cosmetics, and display badges, Passport stamps, Crowns, and monthly maps.
+        - generic [ref=e73]: Editable profile
+        - generic [ref=e74]: Personal XP
+      - article [ref=e75]:
+        - generic [ref=e76]: 06 · SHARING
+        - heading "Private shareable profile" [level=3] [ref=e77]
+        - paragraph [ref=e78]: Profiles are private by default. Players explicitly create a public link containing progress but no Telegram identity. Regenerating the token invalidates the previous link.
+        - generic [ref=e79]: Privacy first
+        - generic [ref=e80]: Revocable link
+    - paragraph [ref=e81]:
+      - strong [ref=e82]: "Removed from scope:"
+      - text: Weekly Divisions and Five Lives Expedition. There will be no leaderboards or player-versus-player progression.
+  - generic [ref=e83]:
+    - heading "Persistence and authority" [level=2] [ref=e84]
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - paragraph [ref=e87]: Identity
+        - heading "Telegram user ID" [level=3] [ref=e88]
+        - paragraph [ref=e89]:
+          - text: The server validates signed Mini App init data against the dedicated bot token. Local development authenticates as
+          - code [ref=e90]: MY_USER_ID
+          - text: .
+      - generic [ref=e91]:
+        - paragraph [ref=e92]: MongoDB
+        - heading "One durable player profile" [level=3] [ref=e93]
+        - paragraph [ref=e94]: Passport, coins, inventory, equipment, XP, titles, Crowns, streaks, Daily Route attempts, monthly maps, records, display name, and avatar are persisted server-side.
+      - generic [ref=e95]:
+        - paragraph [ref=e96]: Server authority
+        - heading "No client-awarded progression" [level=3] [ref=e97]
+        - paragraph [ref=e98]: Scores, rewards, XP, Crown mastery, Daily completion, and Light Up progress are calculated atomically with the submitted guess. The browser only renders returned results.
+  - generic [ref=e99]:
+    - heading "Rewards economy" [level=2] [ref=e100]
+    - generic [ref=e101]:
+      - generic [ref=e102]:
+        - paragraph [ref=e103]: Earn
+        - heading "Compass Coins" [level=3] [ref=e104]
+        - paragraph [ref=e105]: "Implemented values: 25 per completed game, 5 per successful circle, 5/10/15 for hits with 30/15/5 km circles, and 10 per new Passport stamp."
+      - generic [ref=e106]:
+        - paragraph [ref=e107]: Spend
+        - heading "Cosmetics only" [level=3] [ref=e108]
+        - paragraph [ref=e109]: Twelve shop items cover Passport designs, map themes, guess pins, and share-card frames. Prices are 100, 180, or 300 coins.
+      - generic [ref=e110]:
+        - paragraph [ref=e111]: Return loop
+        - heading "Weekly feature" [level=3] [ref=e112]
+        - paragraph [ref=e113]: The permanent catalog keeps every item available. One game-visible cosmetic is 20% off each week and can be previewed for one game.
+      - generic [ref=e114]:
+        - paragraph [ref=e115]: Mastery
+        - heading "Passport exclusives" [level=3] [ref=e116]
+        - paragraph [ref=e117]: Unique cosmetics unlock at 3, 6, 12, and 18 stamps. These rewards cannot be purchased with coins.
+      - generic [ref=e118]:
+        - paragraph [ref=e119]: Fairness
+        - heading "No gameplay advantages" [level=3] [ref=e120]
+        - paragraph [ref=e121]: Coins cannot buy points, easier circles, hints, leaderboard position, or additional attempts. Progress remains skill-based.
+  - generic [ref=e122]:
+    - heading "Implementation rollout" [level=2] [ref=e123]
+    - generic [ref=e124]:
+      - generic [ref=e125]:
+        - paragraph [ref=e126]: Done · Phase 1
+        - heading "Telegram and MongoDB foundation" [level=3] [ref=e127]
+        - paragraph [ref=e128]: Create the dedicated bot, validate Mini App authentication, add the player profile repository, and move Passport, rewards, records, and equipment from local storage to server authority.
+      - generic [ref=e129]:
+        - paragraph [ref=e130]: Done · Phase 2
+        - heading "Personal mastery" [level=3] [ref=e131]
+        - paragraph [ref=e132]: Add Navigator XP and titles, editable name/avatar, City Crown mastery, badges, and the private profile screen.
+      - generic [ref=e133]:
+        - paragraph [ref=e134]: Done · Phase 3
+        - heading "Daily and monthly return loops" [level=3] [ref=e135]
+        - paragraph [ref=e136]: Add the shared Daily Route with one rewarded attempt, personal streaks, reward-free practice, and the personal monthly Light Up Israel map with an exclusive completion cosmetic.
+      - generic [ref=e137]:
+        - paragraph [ref=e138]: Done · Phase 4
+        - heading "Private sharing" [level=3] [ref=e139]
+        - paragraph [ref=e140]: Generate revocable public profile tokens and a read-only progress page that excludes Telegram IDs and private account data.
+  - generic [ref=e141]:
+    - paragraph [ref=e142]: Ideas backlog · Not implemented
+    - heading "Future engagement ideas" [level=2] [ref=e143]
+    - paragraph [ref=e144]: These ideas preserve the personal, skill-based direction. They do not introduce leaderboards, pay-to-win advantages, or player-versus-player pressure.
+    - generic [ref=e145]:
+      - article [ref=e146]:
+        - paragraph [ref=e147]: Learning loop
+        - heading "Memory Lane" [level=3] [ref=e148]
+        - paragraph [ref=e149]: Build a private review route from locations the player missed badly. Revisit them days later and show improvement in circle size and distance.
+        - generic [ref=e150]: High learning value
+        - generic [ref=e151]: Medium effort
+      - article [ref=e152]:
+        - paragraph [ref=e153]: Discovery
+        - heading "Local Story Cards" [level=3] [ref=e154]
+        - paragraph [ref=e155]: After a reveal, show one concise fact about the locality, its landscape, architecture, food, or history. Completed cards form a personal discovery album.
+        - generic [ref=e156]: Educational
+        - generic [ref=e157]: Content needed
+      - article [ref=e158]:
+        - paragraph [ref=e159]: Weekly goals
+        - heading "Navigator Contracts" [level=3] [ref=e160]
+        - paragraph [ref=e161]: Offer three personal objectives each week, such as landing two circles under 15 km or discovering three northern localities. Completion grants coins or cosmetic fragments.
+        - generic [ref=e162]: No competition
+        - generic [ref=e163]: High retention
+      - article [ref=e164]:
+        - paragraph [ref=e165]: Collection
+        - heading "Regional Albums" [level=3] [ref=e166]
+        - paragraph [ref=e167]: Group Passport locations into Coast, Center, North, Jerusalem, and South albums. Completing an album unlocks a themed profile background and route summary card.
+        - generic [ref=e168]: Uses existing progress
+        - generic [ref=e169]: Cosmetic reward
+      - article [ref=e170]:
+        - paragraph [ref=e171]: Game variety
+        - heading "Route Modifiers" [level=3] [ref=e172]
+        - paragraph [ref=e173]: Optional personal challenges such as “10 km maximum circle,” “city streets only,” or “no map zoom.” Modifiers increase XP but never affect standard records.
+        - generic [ref=e174]: Opt-in difficulty
+        - generic [ref=e175]: Skill expression
+      - article [ref=e176]:
+        - paragraph [ref=e177]: Exploration history
+        - heading "Journey Timeline" [level=3] [ref=e178]
+        - paragraph [ref=e179]: A chronological map of completed routes, best discoveries, Crown promotions, monthly completions, and unusually accurate guesses.
+        - generic [ref=e180]: Personal memories
+        - generic [ref=e181]: Shareable moments
+      - article [ref=e182]:
+        - paragraph [ref=e183]: Daily resilience
+        - heading "Earned Streak Compass" [level=3] [ref=e184]
+        - paragraph [ref=e185]: Completing a full monthly map earns one non-purchasable compass that protects a future missed Daily Route day. It cannot be bought or stacked excessively.
+        - generic [ref=e186]: Ethical streak protection
+        - generic [ref=e187]: Monthly reward
+      - article [ref=e188]:
+        - paragraph [ref=e189]: Personalization
+        - heading "Navigator Headquarters" [level=3] [ref=e190]
+        - paragraph [ref=e191]: A small customizable room or dashboard where earned Passport covers, pins, Crown trophies, postcards, and monthly frames appear together.
+        - generic [ref=e192]: Long-term identity
+        - generic [ref=e193]: High effort
+  - generic [ref=e194]:
+    - heading "Rules for healthy engagement" [level=2] [ref=e195]
+    - list [ref=e196]:
+      - listitem [ref=e197]: Do not sell score advantages, easier circles, or extra rewarded Daily Route attempts.
+      - listitem [ref=e198]: Do not use paid loot boxes or chance-based cash rewards.
+      - listitem [ref=e199]: Missing a day resets the current streak but never removes earned rewards or mastery.
+      - listitem [ref=e200]: Reward skill, discovery, and consistency—not excessive session length.
+      - listitem [ref=e201]: Keep profiles private by default and allow players to invalidate old share links.

@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Israel Geo - Product Plan</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --background: #07111f;
+        --surface: #0f1b2d;
+        --surface-strong: #17253a;
+        --foreground: #f8fafc;
+        --muted: #a7b4c7;
+        --primary: #fb923c;
+        --accent: #60a5fa;
+        --success: #4ade80;
+        --border: rgb(148 163 184 / 22%);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at 85% 5%, rgb(37 99 235 / 14%), transparent 28rem), radial-gradient(circle at 5% 35%, rgb(234 88 12 / 11%), transparent 30rem), var(--background);
+        color: var(--foreground);
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(1040px, calc(100% - 28px));
+        margin: 0 auto;
+        padding: 48px 0 80px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin-top: 0;
+        line-height: 1.12;
+      }
+
+      h1 {
+        margin-bottom: 16px;
+        font-size: clamp(3rem, 9vw, 6rem);
+        letter-spacing: -0.06em;
+      }
+
+      h2 {
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 1.15rem;
+      }
+
+      p {
+        margin-top: 0;
+      }
+
+      code {
+        padding: 2px 6px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #091525;
+        color: #fdba74;
+      }
+
+      section {
+        margin-top: 24px;
+        padding: clamp(20px, 4vw, 34px);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--surface);
+        box-shadow: 0 18px 45px rgb(0 0 0 / 24%);
+      }
+
+      .eyebrow,
+      .label {
+        color: var(--primary);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .lead {
+        max-width: 720px;
+        color: #cbd5e1;
+        font-size: 1.12rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #111e30;
+      }
+
+      .card p:last-child,
+      .card ul:last-child {
+        margin-bottom: 0;
+      }
+
+      .status {
+        color: var(--success);
+        font-weight: 800;
+      }
+
+      .idea {
+        position: relative;
+        padding-top: 48px;
+      }
+
+      .number {
+        position: absolute;
+        top: 14px;
+        left: 18px;
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .pill {
+        display: inline-block;
+        margin: 4px 4px 0 0;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: var(--surface-strong);
+        color: #fed7aa;
+        font-size: 0.75rem;
+        font-weight: 800;
+      }
+
+      .recommended {
+        border-color: rgb(96 165 250 / 55%);
+        background: rgb(30 64 175 / 14%);
+      }
+
+      .recommended .label {
+        color: var(--accent);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+
+      th,
+      td {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      ol,
+      ul {
+        padding-left: 1.2rem;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      .note {
+        margin: 18px 0 0;
+        padding: 15px 17px;
+        border-left: 4px solid var(--accent);
+        border-radius: 8px;
+        background: rgb(37 99 235 / 13%);
+        color: #bfdbfe;
+      }
+
+      .backlog {
+        border-style: dashed;
+      }
+
+      .backlog .label {
+        color: #c4b5fd;
+      }
+
+      @media (max-width: 600px) {
+        main {
+          width: min(100% - 18px, 1040px);
+          padding-top: 28px;
+        }
+
+        section {
+          border-radius: 15px;
+        }
+
+        th,
+        td {
+          min-width: 135px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Product plan · Updated 2026-07-14</p>
+        <h1>Israel Geo</h1>
+        <p class="lead">A five-round Street View game for Israel. Players inspect a fixed panorama, draw a confidence circle, and balance precision against risk for up to 25,000 points.</p>
+      </header>
+
+      <section>
+        <h2>Current state</h2>
+        <div class="grid">
+          <div class="card">
+            <p class="label">Game</p>
+            <h3 class="status">Complete game loop</h3>
+            <p>Five rounds, fixed panoramas, confidence-circle scoring, hit/miss results, MongoDB records, and progressive location loading.</p>
+          </div>
+          <div class="card">
+            <p class="label">Location engine</p>
+            <h3 class="status">Working</h3>
+            <p>Generates one inhabited location immediately and preloads the next round while the player explores.</p>
+          </div>
+          <div class="card">
+            <p class="label">Engagement</p>
+            <h3 class="status">Personal progression suite</h3>
+            <p>Passport, rewards, Daily Route, City Crowns, Navigator XP, monthly Light Up progress, profiles, and private sharing are implemented.</p>
+          </div>
+          <div class="card">
+            <p class="label">Platform</p>
+            <h3 class="status">Telegram + MongoDB</h3>
+            <p>Production uses signed Telegram Mini App identity. Local development uses a fallback navigator and can run without configuring or starting the Telegram bot.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Current engagement release</h2>
+        <div class="card recommended">
+          <p class="label">Implemented</p>
+          <h3>Israel Passport + Confidence Circles + Share Card</h3>
+          <p>
+            Every guess now includes a 1-150 km confidence radius. Small successful circles earn the highest score; misses take an immediate penalty and then decay based on distance beyond the edge.
+            Passport stamps persist in MongoDB, and the final result can be shared as a spoiler-free image.
+          </p>
+        </div>
+        <ol>
+          <li><strong>Done - Israel Passport:</strong> first successful hit in each locality unlocks a stamp; later tighter hits improve its best-radius record.</li>
+          <li><strong>Done - Confidence Circle:</strong> tap a center, adjust a large radius slider, preview the maximum score, then lock the circle.</li>
+          <li><strong>Done - Share Card:</strong> generate a PNG with total score, five hit/miss results, radii, points, and new-stamp count without revealing locations.</li>
+          <li><strong>Done - Rewards Economy:</strong> earn Compass Coins, buy and equip twelve cosmetics, preview a weekly feature, and unlock Passport-exclusive items.</li>
+          <li><strong>Done - Server authority:</strong> Telegram-authenticated MongoDB profiles now own rewards, Passport stamps, records, cosmetics, XP, Crowns, streaks, and monthly progress.</li>
+        </ol>
+      </section>
+
+      <section>
+        <p class="eyebrow">Implemented progression release</p>
+        <h2>Telegram-authenticated personal progression</h2>
+        <p>Israel Geo is now a dedicated Telegram Mini App. Every player progresses independently, with no leaderboards, divisions, public search, duels, or player-comparison screens.</p>
+
+        <div class="grid">
+          <article class="card idea">
+            <span class="number">01 · AUTH</span>
+            <h3>Dedicated Telegram bot</h3>
+            <p>
+              A new Israel Geo bot launches the Mini App. The server validates Telegram init data, uses <code>MY_USER_ID</code> during local development, and stores the player by Telegram user ID.
+            </p>
+            <span class="pill">Required foundation</span><span class="pill">MongoDB</span>
+          </article>
+
+          <article class="card idea">
+            <span class="number">02 · RETURN</span>
+            <h3>The Daily Route</h3>
+            <p>
+              The same five locations are available to every player from midnight Israel time. Each player gets one rewarded attempt, then unlimited reward-free practice replays. Track current and
+              best personal streaks.
+            </p>
+            <span class="pill">No rankings</span><span class="pill">Daily return</span>
+          </article>
+
+          <article class="card idea">
+            <span class="number">03 · MASTERY</span>
+            <h3>City Crowns</h3>
+            <p>
+              Each of the 18 localities has permanent mastery. A successful circle earns 10 mastery plus 5/10/15 for radii within 30/15/5 km. Tiers unlock at Bronze 30, Silver 100, Gold 250, and Crown
+              500.
+            </p>
+            <span class="pill">Personal mastery</span><span class="pill">Permanent</span>
+          </article>
+
+          <article class="card idea">
+            <span class="number">04 · MONTHLY</span>
+            <h3>Light Up Israel</h3>
+            <p>
+              A personal monthly map tracks the 18 Passport localities. One successful scored Daily Route circle lights that locality. Lighting all 18 before month-end unlocks the month’s exclusive
+              cosmetic.
+            </p>
+            <span class="pill">Personal goal</span><span class="pill">Monthly cosmetic</span>
+          </article>
+
+          <article class="card idea">
+            <span class="number">05 · IDENTITY</span>
+            <h3>Navigator Identity</h3>
+            <p>
+              A player can edit their display name, select a built-in illustrated avatar, earn increasingly expensive XP levels, unlock a title every five levels, equip cosmetics, and display badges,
+              Passport stamps, Crowns, and monthly maps.
+            </p>
+            <span class="pill">Editable profile</span><span class="pill">Personal XP</span>
+          </article>
+
+          <article class="card idea">
+            <span class="number">06 · SHARING</span>
+            <h3>Private shareable profile</h3>
+            <p>Profiles are private by default. Players explicitly create a public link containing progress but no Telegram identity. Regenerating the token invalidates the previous link.</p>
+            <span class="pill">Privacy first</span><span class="pill">Revocable link</span>
+          </article>
+        </div>
+        <p class="note"><strong>Removed from scope:</strong> Weekly Divisions and Five Lives Expedition. There will be no leaderboards or player-versus-player progression.</p>
+      </section>
+
+      <section>
+        <h2>Persistence and authority</h2>
+        <div class="grid">
+          <div class="card">
+            <p class="label">Identity</p>
+            <h3>Telegram user ID</h3>
+            <p>The server validates signed Mini App init data against the dedicated bot token. Local development authenticates as <code>MY_USER_ID</code>.</p>
+          </div>
+          <div class="card">
+            <p class="label">MongoDB</p>
+            <h3>One durable player profile</h3>
+            <p>Passport, coins, inventory, equipment, XP, titles, Crowns, streaks, Daily Route attempts, monthly maps, records, display name, and avatar are persisted server-side.</p>
+          </div>
+          <div class="card">
+            <p class="label">Server authority</p>
+            <h3>No client-awarded progression</h3>
+            <p>Scores, rewards, XP, Crown mastery, Daily completion, and Light Up progress are calculated atomically with the submitted guess. The browser only renders returned results.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Rewards economy</h2>
+        <div class="grid">
+          <div class="card">
+            <p class="label">Earn</p>
+            <h3>Compass Coins</h3>
+            <p>Implemented values: 25 per completed game, 5 per successful circle, 5/10/15 for hits with 30/15/5 km circles, and 10 per new Passport stamp.</p>
+          </div>
+          <div class="card">
+            <p class="label">Spend</p>
+            <h3>Cosmetics only</h3>
+            <p>Twelve shop items cover Passport designs, map themes, guess pins, and share-card frames. Prices are 100, 180, or 300 coins.</p>
+          </div>
+          <div class="card">
+            <p class="label">Return loop</p>
+            <h3>Weekly feature</h3>
+            <p>The permanent catalog keeps every item available. One game-visible cosmetic is 20% off each week and can be previewed for one game.</p>
+          </div>
+          <div class="card">
+            <p class="label">Mastery</p>
+            <h3>Passport exclusives</h3>
+            <p>Unique cosmetics unlock at 3, 6, 12, and 18 stamps. These rewards cannot be purchased with coins.</p>
+          </div>
+          <div class="card">
+            <p class="label">Fairness</p>
+            <h3>No gameplay advantages</h3>
+            <p>Coins cannot buy points, easier circles, hints, leaderboard position, or additional attempts. Progress remains skill-based.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Completed rollout</h2>
+        <div class="grid">
+          <div class="card">
+            <p class="label">Done · Phase 1</p>
+            <h3>Telegram and MongoDB foundation</h3>
+            <p>Added the dedicated bot, Mini App authentication, player profile repository, and server-authoritative Passport, rewards, records, and equipment.</p>
+          </div>
+          <div class="card">
+            <p class="label">Done · Phase 2</p>
+            <h3>Personal mastery</h3>
+            <p>Added Navigator XP and titles, editable name/avatar, City Crown mastery, badges, and the private profile screen.</p>
+          </div>
+          <div class="card">
+            <p class="label">Done · Phase 3</p>
+            <h3>Daily and monthly return loops</h3>
+            <p>Added the shared Daily Route with one rewarded attempt, personal streaks, reward-free practice, and the personal monthly Light Up Israel map with an exclusive completion cosmetic.</p>
+          </div>
+          <div class="card">
+            <p class="label">Done · Phase 4</p>
+            <h3>Private sharing</h3>
+            <p>Added revocable public profile tokens and a read-only progress page that excludes Telegram IDs and private account data.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <p class="eyebrow">Ideas backlog · Not implemented</p>
+        <h2>Future engagement ideas</h2>
+        <p>These ideas preserve the personal, skill-based direction. They do not introduce leaderboards, pay-to-win advantages, or player-versus-player pressure.</p>
+        <div class="grid">
+          <article class="card backlog">
+            <p class="label">Learning loop</p>
+            <h3>Memory Lane</h3>
+            <p>Build a private review route from locations the player missed badly. Revisit them days later and show improvement in circle size and distance.</p>
+            <span class="pill">High learning value</span><span class="pill">Medium effort</span>
+          </article>
+          <article class="card backlog">
+            <p class="label">Discovery</p>
+            <h3>Local Story Cards</h3>
+            <p>After a reveal, show one concise fact about the locality, its landscape, architecture, food, or history. Completed cards form a personal discovery album.</p>
+            <span class="pill">Educational</span><span class="pill">Content needed</span>
+          </article>
+          <article class="card backlog">
+            <p class="label">Weekly goals</p>
+            <h3>Navigator Contracts</h3>
+            <p>Offer three personal objectives each week, such as landing two circles under 15 km or discovering three northern localities. Completion grants coins or cosmetic fragments.</p>
+            <span class="pill">No competition</span><span class="pill">High retention</span>
+          </article>
+          <article class="card backlog">
+            <p class="label">Collection</p>
+            <h3>Regional Albums</h3>
+            <p>Group Passport locations into Coast, Center, North, Jerusalem, and South albums. Completing an album unlocks a themed profile background and route summary card.</p>
+            <span class="pill">Uses existing progress</span><span class="pill">Cosmetic reward</span>
+          </article>
+          <article class="card backlog">
+            <p class="label">Game variety</p>
+            <h3>Route Modifiers</h3>
+            <p>Optional personal challenges such as “10 km maximum circle,” “city streets only,” or “no map zoom.” Modifiers increase XP but never affect standard records.</p>
+            <span class="pill">Opt-in difficulty</span><span class="pill">Skill expression</span>
+          </article>
+          <article class="card backlog">
+            <p class="label">Exploration history</p>
+            <h3>Journey Timeline</h3>
+            <p>A chronological map of completed routes, best discoveries, Crown promotions, monthly completions, and unusually accurate guesses.</p>
+            <span class="pill">Personal memories</span><span class="pill">Shareable moments</span>
+          </article>
+          <article class="card backlog">
+            <p class="label">Daily resilience</p>
+            <h3>Earned Streak Compass</h3>
+            <p>Completing a full monthly map earns one non-purchasable compass that protects a future missed Daily Route day. It cannot be bought or stacked excessively.</p>
+            <span class="pill">Ethical streak protection</span><span class="pill">Monthly reward</span>
+          </article>
+          <article class="card backlog">
+            <p class="label">Personalization</p>
+            <h3>Navigator Headquarters</h3>
+            <p>A small customizable room or dashboard where earned Passport covers, pins, Crown trophies, postcards, and monthly frames appear together.</p>
+            <span class="pill">Long-term identity</span><span class="pill">High effort</span>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Rules for healthy engagement</h2>
+        <ul>
+          <li>Do not sell score advantages, easier circles, or extra rewarded Daily Route attempts.</li>
+          <li>Do not use paid loot boxes or chance-based cash rewards.</li>
+          <li>Missing a day resets the current streak but never removes earned rewards or mastery.</li>
+          <li>Reward skill, discovery, and consistency—not excessive session length.</li>
+          <li>Keep profiles private by default and allow players to invalidate old share links.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
