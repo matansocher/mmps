@@ -7,7 +7,7 @@ Detailed breakdown of the MMPS directory structure.
 ```
 mmps/
 ├── src/                    # Source code
-├── apps/                   # npm workspaces — Vite mini-apps (chatbot-web, clutch-web, coach-web, expenses-web, learner-web)
+├── apps/                   # npm workspaces — Vite mini-apps (chatbot-web, clutch-web, coach-web, expenses-web, israel-geo-web, learner-web)
 ├── docs/                   # VitePress documentation
 ├── dist/                   # Compiled JavaScript (generated)
 ├── coverage/               # Test coverage reports (generated)
@@ -40,7 +40,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (8 bots + clutch SPA)
+├── features/              # Bot implementations (9 bots + bot-less web features)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── schedulers/    # Scheduler implementations
@@ -56,6 +56,7 @@ src/
 │   ├── clutch/            # Static SPA (no bot)
 │   ├── coach/             # Sports bot
 │   ├── expenses/          # Expense tracker mini-app bot
+│   ├── israel-geo/        # Street View geography game (no bot)
 │   ├── learner/           # Courses mini-app bot
 │   ├── secretary/         # Personal secretary (business connection)
 │   ├── wolt/              # Restaurant bot
@@ -137,6 +138,7 @@ services/github/
 ```
 
 **Benefits of utils breakdown**:
+
 - Single responsibility per file
 - Easy to test individual functions
 - Clear separation of concerns
@@ -167,16 +169,19 @@ shared/ai/
 ## Configuration Files
 
 ### TypeScript
+
 - **tsconfig.json** - Main TypeScript config
 - **tsconfig.build.json** - Build-specific config
 - **Path aliases**: `@src/*`, `@core/*`, `@features/*`, `@services/*`, `@shared/*`, `@config/*`
 
 ### Code Quality
+
 - **eslint.config.mjs** - ESLint rules (flat config)
 - **.prettierrc.json** - Prettier formatting (200 char width, single quotes, semicolons)
 - **.prettierignore** - Files to skip formatting
 
 ### Testing
+
 - **vitest.config.ts** - Vitest unit-test configuration (`src/**/*.spec.ts`)
 - **vitest.integration.config.ts** - Vitest integration suite (`test/integration/**/*.spec.ts`)
 - **vitest.e2e.config.ts** - Vitest bot E2E suite (`test/e2e/**/*.spec.ts`)
@@ -184,6 +189,7 @@ shared/ai/
 - **coverage/** - Generated test coverage reports
 
 ### Git & CI/CD
+
 - **.github/workflows/ci.yml** - GitHub Actions for testing and linting
 - **.husky/** - Git hooks
 - **commitlint.config.cjs** - Commit message validation
@@ -193,10 +199,15 @@ shared/ai/
 Use path aliases in imports:
 
 ```typescript
-import { Logger } from '@core/utils';           // core utilities
-import { initChatbot } from '@features/chatbot'; // features
-import { openaiAPI } from '@services/openai';    // services
-import { weatherTool } from '@shared/ai/tools';  // shared utilities
+import { Logger } from '@core/utils';
+// core utilities
+import { initChatbot } from '@features/chatbot';
+// features
+import { openaiAPI } from '@services/openai';
+// services
+import { weatherTool } from '@shared/ai/tools';
+
+// shared utilities
 ```
 
 ## Module Exports

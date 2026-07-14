@@ -66,6 +66,7 @@ export default defineConfig({
                         { text: 'Clutch', link: '/bots/clutch' },
                         { text: 'Coach', link: '/bots/coach' },
                         { text: 'Expenses', link: '/bots/expenses' },
+                        { text: 'Israel Geo', link: '/bots/israel-geo' },
                         { text: 'Learner', link: '/bots/learner' },
                         { text: 'Secretary', link: '/bots/secretary' },
                         { text: 'Wolt', link: '/bots/wolt' },

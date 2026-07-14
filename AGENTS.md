@@ -8,14 +8,14 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **8 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **9 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **8 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. A ninth feature, `clutch`, is a bot-less static SPA (always initialized).
+- **9 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `israel-geo`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `clutch` is a bot-less web feature.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/chatbot-web`, `apps/clutch-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/chatbot-web`, `apps/clutch-web`, `apps/coach-web`, `apps/expenses-web`, `apps/israel-geo-web`, `apps/learner-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -81,12 +81,14 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ## Tech Stack
 
 ### Core
+
 - **Plain TypeScript** — no framework, direct Node.js 24.x application
 - **TypeScript 5.9** with ES2022 target, **non-strict** mode
 - **Express 5** (HTTP server for Swagger UI, mini-app routes, webhooks)
 - **node-cron** for scheduled tasks
 
 ### Key Dependencies
+
 - **AI/LLM:** `@anthropic-ai/sdk`, `openai`, `langchain`, `@langchain/langgraph` (with `MemorySaver` as fallback), `@langchain/langgraph-checkpoint-mongodb` (durable chatbot memory), `@langchain/anthropic`, `@langchain/openai`
 - **Database:** `mongodb` (native driver, no ODM)
 - **Bot Platform:** `grammy` (+ `@grammyjs/hydrate`)
@@ -99,6 +101,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **Other notable:** `canvas`, `sharp`, `cheerio`, `youtube-transcript-plus`, `googleapis`, `twilio`, `yahoo-finance2`, `octokit`, `vitepress` (docs)
 
 ### Code Formatting
+
 - **Prettier:** 200 char line width, single quotes, trailing commas, **semicolons required**
 - **Path Aliases (`tsconfig.json`):**
   - `@src/*` → `src/*`
@@ -128,6 +131,7 @@ mmps/
 │   ├── clutch-web/
 │   ├── coach-web/
 │   ├── expenses-web/
+│   ├── israel-geo-web/
 │   └── learner-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
@@ -146,6 +150,7 @@ mmps/
 ```
 
 ### Feature Structure (per bot)
+
 ```
 src/features/{name}/
 ├── {name}.init.ts                # initX(app) — wires DI, registers routes/bot
@@ -162,6 +167,7 @@ src/features/{name}/
 ```
 
 ### Service Structure
+
 ```
 src/services/{name}/
 ├── api.ts or {name}.service.ts   # Main implementation
@@ -175,19 +181,21 @@ src/services/{name}/
 ## The Bots
 
 | ID          | Display Name    | Path                          | Env token                        | Purpose |
-|-------------|-----------------|-------------------------------|----------------------------------|---------|
+| ------------ | -------------- | -------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
 | `EXPENSES`  | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`    | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
+| `ISRAEL_GEO` | Israel Geo 🧭  | `src/features/israel-geo/` | `ISRAEL_GEO_TELEGRAM_BOT_TOKEN` | Street View confidence-circle game with a Telegram Mini App, Mongo-backed progression, Daily Route, Passport, City Crowns, and personal monthly exploration.                                                                                                                                                                                                                                        |
 | `LEARNER`   | Learner 🎓      | `src/features/learner/`       | `LEARNER_TELEGRAM_BOT_TOKEN`     | Courses mini-app (`apps/learner-web`) served at `/learner/`. |
 | `SECRETARY` | Secretary 🤝    | `src/features/secretary/`     | `SECRETARY_TELEGRAM_BOT_TOKEN`   | Personal secretary over a Telegram business connection — voice transcription, AI draft replies, daily chat summaries with one-tap actions, check-in nudges. Has eval scripts (`npm run eval:draft`). |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
 | `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education. |
 
-**Not a bot:** `CLUTCH` (`src/features/clutch/`) is a static SPA (`apps/clutch-web`) served at `/clutch/*` with an analytics endpoint that forwards events to the notifier. It is always initialized (`initClutch(app)`), regardless of `LOCAL_ACTIVE_BOT_ID`.
+**Not a bot:** `CLUTCH` (`src/features/clutch/`) is a static SPA (`apps/clutch-web`) served at `/clutch/*` and is always initialized regardless of `LOCAL_ACTIVE_BOT_ID`.
 
 **Boot logic** (`src/index.ts`):
+
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
 const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {
@@ -203,13 +211,14 @@ await initBot(chatbotConfig, () => initChatbot(app));
 await initBot(chilliConfig, () => initChilli());
 await initBot(coachConfig, () => initCoach(app));
 await initBot(expensesConfig, () => initExpenses(app));
+await initBot(israelGeoConfig, () => initIsraelGeo(app));
 await initBot(learnerConfig, () => initLearner(app));
 await initBot(secretaryConfig, () => initSecretary());
 await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all eight run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all nine run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `ISRAEL_GEO`) to run only that one.
 
 ---
 
@@ -229,10 +238,13 @@ export type User = {
 };
 
 // ❌ WRONG
-interface User { /* ... */ }
+interface User {
+  /* ... */
+}
 ```
 
 Rules:
+
 - Use `type` for all type definitions.
 - Mark properties `readonly` for immutability.
 - Prefer utility types: `Omit<T, K>`, `Pick<T, K>`, `Partial<T>`.
@@ -258,18 +270,23 @@ export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
   private readonly aiService: AiService;
 
-  async processMessage(message: string, chatId: number): Promise<ChatbotResponse> { /* ... */ }
+  async processMessage(message: string, chatId: number): Promise<ChatbotResponse> {
+    /* ... */
+  }
 }
 
 export class ChatbotController {
   constructor(private readonly chatbotService: ChatbotService) {}
-  init(): void { /* register grammY handlers */ }
+  init(): void {
+    /* register grammY handlers */
+  }
 }
 ```
 
 ### Documentation Style
 
 **No JSDoc.** Code should be self-documenting. Use inline `//` comments only for:
+
 - Format specifications: `readonly time: string; // Format: "YYYY-MM-DD HH:MM"`
 - Non-obvious logic
 - Important configuration notes
@@ -277,7 +294,7 @@ export class ChatbotController {
 ### Naming Conventions
 
 | Type                | Convention            | Example                                    |
-|---------------------|-----------------------|--------------------------------------------|
+| ------------------- | ------------------- | ------------------------------------------ |
 | Files               | kebab-case + suffix   | `chatbot-scheduler.service.ts`, `types.ts` |
 | Variables/Functions | camelCase             | `weatherData`, `getUserByUsername()`       |
 | Constants           | SCREAMING_SNAKE       | `DEFAULT_TIMEZONE`, `BOT_CONFIG`           |
@@ -291,6 +308,7 @@ export class ChatbotController {
 ## Imports & Exports
 
 ### Import Order (auto-sorted by Prettier)
+
 1. Third-party modules
 2. `@core/*` → `@decorators/*` → `@features/*` → `@mocks/*` → `@services/*` → `@shared/*` → `@test/*`
 3. Relative imports (`./`, `../`)
@@ -307,12 +325,12 @@ import { BOT_CONFIG } from './chatbot.config';
 **Named exports only. NEVER use default exports.**
 
 ```typescript
+// ✅ Type imports
+import type { ObjectId } from 'mongodb';
+
 // ✅ Barrel exports (index.ts)
 export * from './types';
 export { ChatbotService } from './chatbot.service';
-
-// ✅ Type imports
-import type { ObjectId } from 'mongodb';
 ```
 
 ---
@@ -335,22 +353,22 @@ function getUser(username: string) {
 ```
 
 ### Parallel Operations
+
 ```typescript
-await Promise.all([
-  createMongoConnection('Chatbot'),
-  createMongoConnection('Coach'),
-]);
+await Promise.all([createMongoConnection('Chatbot'), createMongoConnection('Coach')]);
 ```
 
 ### Error Handling Patterns
 
 **1. Validation — throw early:**
+
 ```typescript
 if (!apiKey) throw new Error('API key not configured');
 if (diffDays > 14) throw new Error('Forecast only available up to 14 days');
 ```
 
 **2. Services — try/catch with Logger:**
+
 ```typescript
 async processMessage(message: string): Promise<ChatbotResponse> {
   try {
@@ -363,6 +381,7 @@ async processMessage(message: string): Promise<ChatbotResponse> {
 ```
 
 **3. Non-critical — inline `.catch()`:**
+
 ```typescript
 await connectGithubMcp().catch((err) => console.error(err));
 ```
@@ -371,6 +390,7 @@ await connectGithubMcp().catch((err) => console.error(err));
 
 ```typescript
 import { Logger } from '@core/utils';
+
 const logger = new Logger('MyClass');
 logger.log('info');     // general
 logger.error('boom');   // errors
@@ -387,10 +407,7 @@ logger.debug('trace');  // debug
 ```typescript
 // features/chatbot/chatbot.init.ts
 export async function initChatbot(app: Express): Promise<void> {
-  await Promise.all([
-    createMongoConnection('Chatbot'),
-    connectGithubMcp().catch((err) => console.error(err)),
-  ]);
+  await Promise.all([createMongoConnection('Chatbot'), connectGithubMcp().catch((err) => console.error(err))]);
 
   const chatbotService = new ChatbotService();
   const chatbotController = new ChatbotController(chatbotService);
@@ -457,6 +474,7 @@ export class ChatbotSchedulerService {
 All Telegram code goes through `@services/telegram`. There is **no `@services/telegram-grammy`** — that path was used during migration and no longer exists. Any reference to it is stale and should be replaced with `@services/telegram`.
 
 Public exports (from `src/services/telegram/index.ts`):
+
 - `provideTelegramBot(config)` — memoized `Bot` instance per bot ID.
 - `buildInlineKeyboard([{ text, data }])` — each button on its own row; `data` → `callback_data`.
 - `getMessageData(ctx)`, `getCallbackQueryData(ctx)` — extract `{ chatId, userDetails, text, ... }`.
@@ -500,6 +518,7 @@ Shows reaction emoji immediately, "typing…" action, loader message after 3s, a
 ### GitHub Automation
 
 Two GitHub labels trigger workflows in `.github/workflows/claude.yml`:
+
 - **`review`** on a PR → AI code review
 - **`implement`** on an issue → AI creates an implementation PR
 
@@ -511,13 +530,17 @@ The chatbot agent has a `githubTool` that can add these labels through natural l
 export class BaseCache<T> {
   private cache: Record<string, { value: T; timestamp: number }> = {};
   private readonly validForMs: number;
-  constructor(validForMinutes: number) { this.validForMs = validForMinutes * 60 * 1000; }
+  constructor(validForMinutes: number) {
+    this.validForMs = validForMinutes * 60 * 1000;
+  }
   get(key: string): T | null {
     const entry = this.cache[key];
     if (!entry || Date.now() - entry.timestamp > this.validForMs) return null;
     return entry.value;
   }
-  set(key: string, value: T): void { this.cache[key] = { value, timestamp: Date.now() }; }
+  set(key: string, value: T): void {
+    this.cache[key] = { value, timestamp: Date.now() };
+  }
 }
 ```
 
@@ -583,7 +606,7 @@ Follows accounts on 4 platforms and DMs a single daily digest instead of real-ti
 
 - **Collect (silent).** `features/chatbot/schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter+youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`), diffs new posts against the subscription's `lastSeenId`/`lastSeenAt`, and stores them in Mongo (db `SocialFollower`, collection `PendingPost`) — nothing is sent. Pending rows are inserted **before** `lastSeen` advances; `createPendingPosts` dedupes by `platform+username+chatId+postId`, so a crash re-collects rather than loses posts.
 - **Digest.** `features/chatbot/schedulers/social-media-digest.ts` — cron `45 22 * * *`. Groups all pending posts per chat and per followed account: **telegram/twitter** get an AI key-points summary (`getResponse` with `GPT_SMALL_MODEL`, bullet count scales with volume via `targetKeyPointsCount` — ~1 per 10 posts, min 2, max 10 — written in the posts' own language, falls back to a raw listing on AI failure); **youtube/tiktok** are listed one line per post with link. Sends one combined Markdown message, then deletes exactly the rows it sent — posts collected after 22:45 roll into the next day's digest; empty day → no message; send failure keeps everything for retry tomorrow.
-- **Diffing rules.** Twitter/TikTok ids are chronological snowflakes → `BigInt(id) > BigInt(lastSeenId)` (neutralizes pinned posts). Telegram post ids are sequential per channel → numeric compare. YouTube video ids are *not* chronological → timestamp diff via `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
+- **Diffing rules.** Twitter/TikTok ids are chronological snowflakes → `BigInt(id) > BigInt(lastSeenId)` (neutralizes pinned posts). Telegram post ids are sequential per channel → numeric compare. YouTube video ids are _not_ chronological → timestamp diff via `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
 - **Subscriptions.** `shared/social-follower/` — `Subscription` + `PendingPost` collections, repository functions, `SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`. Managed through the chatbot tools (`tiktok`, `twitter`, `youtube`, `telegram_channels`), each with subscribe/unsubscribe/list actions keyed to `MY_USER_ID`.
 - **Data sources.** telegram → `@services/telegram-scraper` (t.me/s web preview, no auth); twitter → `@services/twitter-scraper` (anonymous GraphQL + Nitter fallback, no key); youtube → RSS (collect) + Supadata-backed `@services/youtube` (tool actions); tiktok → RapidAPI `@services/tiktok` (metered free tier — mind the quota).
 - Digest summarization goes through the raw `@services/openai` helper, so it is **not** usage-metered (consistent with the other raw helpers).
@@ -602,8 +625,10 @@ const schema = z.object({
 
 async function runner({ action, location, date }: z.infer<typeof schema>) {
   switch (action) {
-    case 'current':  return getCurrentWeather(location);
-    case 'forecast': return getForecastWeather(location, date!);
+    case 'current':
+      return getCurrentWeather(location);
+    case 'forecast':
+      return getForecastWeather(location, date!);
   }
 }
 
@@ -702,7 +727,7 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 Located in `src/services/`. Each has its own README-via-code structure (`api.ts` / `*.service.ts` + `types.ts` + `constants.ts` + `index.ts`):
 
 | Service                | Purpose                                    |
-|------------------------|--------------------------------------------|
+| ------------------ | ---------------------------------------------------------------- |
 | `alpha-vantage`        | Stock fundamentals & quotes                |
 | `anthropic`            | Claude API helpers                         |
 | `earthquake-api`       | USGS quake feed                            |
@@ -753,12 +778,14 @@ Located in `src/shared/`. Reusable across bots:
 The full list is in `.env.example`. Everything that the code references via `env.X` is documented there. Highlights:
 
 **Required for any local dev:**
+
 - `MONGO_DB_URL` — Mongo connection string (the main code path uses this).
-- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | EXPENSES | LEARNER | SECRETARY | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
+- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | EXPENSES | ISRAEL_GEO | LEARNER | SECRETARY | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
 - One of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (depending on which agents you exercise).
 - The `*_TELEGRAM_BOT_TOKEN` for whichever bot you set as `LOCAL_ACTIVE_BOT_ID`.
 
 **Convenience flags:**
+
 - `IS_PROD=true` runs all bots regardless of `LOCAL_ACTIVE_BOT_ID`.
 - `PORT` — Express port (default 3000).
 
@@ -769,6 +796,7 @@ Everything else is feature-specific (Spotify, GitHub App, Google services, Twili
 ```typescript
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+
 const zonedDate = toZonedTime(new Date(), 'Asia/Jerusalem');
 ```
 
@@ -793,7 +821,7 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, clutch-web)
+# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, clutch-web, israel-geo-web)
 npm run dev:coach-web
 
 # Secretary prompt evals
@@ -845,6 +873,7 @@ Skills live in `.agents/skills/{name}/SKILL.md` and follow the standard `SKILL.m
 ## Quick Reference
 
 ### DO
+
 - Use `type` (NEVER `interface`).
 - Mark types as `readonly`.
 - Use `async/await` (NEVER `.then()` chains).
@@ -863,6 +892,7 @@ Skills live in `.agents/skills/{name}/SKILL.md` and follow the standard `SKILL.m
 - Use semicolons (Prettier enforced).
 
 ### DON'T
+
 - Use `interface`.
 - Use JSDoc comments.
 - Chain promises with `.then()`.

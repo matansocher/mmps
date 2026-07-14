@@ -74,10 +74,11 @@ features/{bot-name}/
 2. **Chilli** - Cat persona bot (Hebrew)
 3. **Coach** - Sports analytics and predictions
 4. **Expenses** - Expense tracker mini-app
-5. **Learner** - Courses mini-app
-6. **Secretary** - Personal secretary over a Telegram business connection
-7. **Wolt** - Restaurant notifications
-8. **Worldly** - Geography education
+5. **Israel Geo** - Street View confidence-circle game
+6. **Learner** - Courses mini-app
+7. **Secretary** - Personal secretary over a Telegram business connection
+8. **Wolt** - Restaurant notifications
+9. **Worldly** - Geography education
 
 Plus **Clutch** — a bot-less static SPA served by the Express server.
 

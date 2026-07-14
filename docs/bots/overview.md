@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 8 specialized Telegram bots plus one bot-less web feature. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Clutch is always initialized.
+MMPS includes 9 specialized Telegram bots plus one bot-less web feature. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Clutch is always initialized.
 
 ## The Bots
 
@@ -28,25 +28,31 @@ Telegram document importer and mini-app for browsing and editing expenses.
 - **Database**: `Expenses`
 - **[Learn more →](/bots/expenses)**
 
-### 5. **Learner** - Courses Mini-App
+### 5. **Israel Geo** - Street View Geography Game
+Telegram Mini App for confidence-circle guessing and personal Israel mastery.
+- **Features**: Daily Route, Passport, City Crowns, Navigator XP, monthly map, cosmetics
+- **Database**: `IsraelGeo`
+- **[Learn more →](/bots/israel-geo)**
+
+### 6. **Learner** - Courses Mini-App
 Telegram launcher and progress API for AI engineering courses.
 - **Features**: `/learner/` SPA, progress tracking, mini-app analytics
 - **Database**: `Learner`
 - **[Learn more →](/bots/learner)**
 
-### 6. **Secretary** - Telegram Business Assistant
+### 7. **Secretary** - Telegram Business Assistant
 Personal secretary for Telegram business conversations.
 - **Features**: Voice transcription, draft replies, daily summaries, one-tap actions, check-in nudges
 - **Database**: `Secretary`
 - **[Learn more →](/bots/secretary)**
 
-### 7. **Wolt** - Restaurant Notifications
+### 8. **Wolt** - Restaurant Notifications
 Watches Wolt restaurants and notifies when tracked restaurants open.
 - **Features**: Restaurant search, subscriptions, availability alerts, expiry cleanup
 - **Database**: `Wolt`
 - **[Learn more →](/bots/wolt)**
 
-### 8. **Worldly** - Geography Education
+### 9. **Worldly** - Geography Education
 Interactive geography quiz bot.
 - **Features**: Map, US map, flag, capital, random games, fire mode, daily quizzes
 - **Database**: `Worldly`
@@ -66,7 +72,7 @@ Static SPA served at `/clutch/*` with analytics forwarded to the Telegram notifi
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
-Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `SECRETARY`, `WOLT`, `WORLDLY`.
+Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `ISRAEL_GEO`, `LEARNER`, `SECRETARY`, `WOLT`, `WORLDLY`.
 
 ### Production Mode (All Bots)
 
@@ -74,7 +80,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `SECRET
 IS_PROD=true npm start
 ```
 
-Production initializes all 8 Telegram bots. Clutch initializes in both development and production.
+Production initializes all 9 Telegram bots. Clutch initializes in both development and production.
 
 ## Bot Architecture
 
@@ -117,6 +123,7 @@ Current bot databases:
 - `Chilli` - Chilli prompt versions
 - `Coach` - Coach users and subscriptions
 - `Expenses` - Expense and ingest records
+- `IsraelGeo` - Player progression, shared Daily Routes, and completed Daily attempts
 - `Learner` - Course progress
 - `Secretary` - Messages, actions, drafts, and nudges
 - `Wolt` - Wolt users and subscriptions
@@ -135,6 +142,7 @@ CHATBOT_TELEGRAM_BOT_TOKEN=...
 CHILLI_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
 EXPENSES_TELEGRAM_BOT_TOKEN=...
+ISRAEL_GEO_TELEGRAM_BOT_TOKEN=...
 LEARNER_TELEGRAM_BOT_TOKEN=...
 SECRETARY_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
@@ -151,6 +159,7 @@ Select a bot to explore:
 - **[Chilli](/bots/chilli)** - Hebrew cat persona
 - **[Coach](/bots/coach)** - Sports analytics
 - **[Expenses](/bots/expenses)** - Expense tracker
+- **[Israel Geo](/bots/israel-geo)** - Street View geography game
 - **[Learner](/bots/learner)** - Courses mini-app
 - **[Secretary](/bots/secretary)** - Telegram business assistant
 - **[Wolt](/bots/wolt)** - Restaurant alerts

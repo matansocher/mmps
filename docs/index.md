@@ -40,7 +40,7 @@ features:
 
 - **[Getting Started](/guide/getting-started)** - Set up MMPS in 5 minutes
 - **[Architecture](/architecture/overview)** - Understand the system design
-- **[Available Bots](/bots/overview)** - Explore all 8 bots and their features
+- **[Available Bots](/bots/overview)** - Explore all 9 bots and their features
 - **[Contributing](/development/contributing)** - Help improve MMPS
 - **[Deployment](/deployment/production)** - Deploy to production
 
