@@ -45,3 +45,11 @@ export { githubTool } from './github/github.tool';
 export { contactsTool } from './contacts/contacts.tool';
 
 export { meetupsTool } from './meetups/meetups.tool';
+
+export { twitterTool } from './twitter/twitter.tool';
+
+export { tiktokTool } from './tiktok/tiktok.tool';
+
+export { youtubeTool } from './youtube/youtube.tool';
+
+export { telegramChannelsTool } from './telegram-channels/telegram-channels.tool';

@@ -24,7 +24,7 @@ COACH_TELEGRAM_BOT_TOKEN=your-token
 SCORES_365_API_KEY=your-api-key
 
 # Optional
-MONGO_URI=mongodb://...
+MONGO_DB_URL=mongodb://...
 ```
 
 ## Getting Started
@@ -42,7 +42,7 @@ MONGO_URI=mongodb://...
 ### 2. Run the Bot
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=coach npm run start:dev
+LOCAL_ACTIVE_BOT_ID=COACH npm run dev
 ```
 
 ## Commands
@@ -50,23 +50,21 @@ LOCAL_ACTIVE_BOT_ID=coach npm run start:dev
 | Command | Description |
 |---------|-------------|
 | `/start` | Start the bot |
-| `/matches` | Today's matches |
-| `/standings [competition_id]` | League table |
-| `/predict [match_id]` | Match prediction |
+| `/matches` | Choose a competition and view matches |
+| `/tables` | Choose a competition and view its table |
+| `/actions` | Manage daily updates, custom leagues, contact, and mini-app access |
 
 ## Database
 
-**Database name**: `coach-db`
+**Database name**: `Coach`
 
 Collections:
-- `matches` - Match data
-- `competitions` - Competition information
-- `user_preferences` - User favorite teams/competitions
+- `User` - Telegram user details
+- `Subscription` - Daily update settings and custom league selections
 
 ## Scheduled Tasks
 
-- **Match Updates** - Every 10 minutes during match day
-- **Daily Summary** - 23:59 daily update
+- **Daily Match Summaries** - 12:59 and 23:59 in the project timezone for active subscribers
 
 ## Sports Covered
 

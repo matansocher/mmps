@@ -15,11 +15,11 @@ async function main() {
   // Load environment variables
   config({ path: join(cwd(), '.env.serve') });
 
-  // Use MONGO_URI from environment (same as used in the app)
-  const mongoUri = env.MONGO_URI;
+  // Use MONGO_DB_URL from environment (same as used in the app)
+  const mongoUri = env.MONGO_DB_URL;
 
   if (!mongoUri) {
-    console.error('MONGO_URI environment variable is not set');
+    console.error('MONGO_DB_URL environment variable is not set');
     process.exit(1);
   }
 

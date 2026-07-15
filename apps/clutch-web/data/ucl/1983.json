@@ -1,0 +1,140 @@
+{
+  "season": 1983,
+  "league": "UCL",
+  "format": "8-team",
+  "champion": "Hamburg",
+  "runnerUp": "Juventus",
+  "source": "https://en.wikipedia.org/wiki/1982%E2%80%9383_European_Cup",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Sporting CP",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Sociedad",
+            "wins": 0
+          },
+          "result": "1-2",
+          "winner": "Real Sociedad"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Dynamo Kyiv",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hamburg",
+            "wins": 0
+          },
+          "result": "2-4",
+          "winner": "Hamburg"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Aston Villa",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "2-5",
+          "winner": "Juventus"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Widzew Łódź",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Liverpool",
+            "wins": 0
+          },
+          "result": "4-3",
+          "winner": "Widzew Łódź"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Real Sociedad",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hamburg",
+            "wins": 0
+          },
+          "result": "2-3",
+          "winner": "Hamburg"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Widzew Łódź",
+            "wins": 0
+          },
+          "result": "4-2",
+          "winner": "Juventus"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hamburg",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Juventus",
+            "wins": 0
+          },
+          "result": "1-0",
+          "winner": "Hamburg"
+        }
+      ]
+    }
+  ]
+}

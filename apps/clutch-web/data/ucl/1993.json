@@ -1,0 +1,32 @@
+{
+  "season": 1993,
+  "league": "UCL",
+  "format": "Final",
+  "champion": "Marseille",
+  "runnerUp": "AC Milan",
+  "source": "https://en.wikipedia.org/wiki/1992-93_UEFA_Champions_League",
+  "rounds": [
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Marseille",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "AC Milan",
+            "wins": 0
+          },
+          "result": "1–0",
+          "winner": "Marseille"
+        }
+      ]
+    }
+  ]
+}

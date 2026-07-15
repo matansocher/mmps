@@ -30,7 +30,7 @@ export class SecretaryActionService {
   private readonly agent: any;
 
   constructor() {
-    const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0, apiKey: env.OPENAI_API_KEY });
+    const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
     const reactAgent = createAgent({ model, tools: [calendarTool, reminderTool], systemPrompt: ACTION_AGENT_PROMPT });
     this.agent = reactAgent.graph;
   }

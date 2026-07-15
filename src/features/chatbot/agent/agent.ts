@@ -19,16 +19,20 @@ import {
   reminderTool,
   spotifyTool,
   spotifyPodcastTool,
+  telegramChannelsTool,
+  tiktokTool,
   topMatchesForPredictionTool,
+  twitterTool,
   weatherTool,
   woltTool,
   worldlyTool,
+  youtubeTool,
 } from '@shared/ai';
 import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points), and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -66,6 +70,12 @@ Available capabilities:
 - Recipes tool: Access your personal cooking recipe collection. List all recipes or get specific recipe details including ingredients, instructions, tags, and links.
 - Wolt Summary tool: Get weekly statistics for Wolt food delivery including top users and most popular restaurants.
 - Worldly Summary tool: Get game statistics for Worldly including top players, correct answer percentages, and winning streaks (both all-time and weekly).
+- Twitter tool: Interact with X (Twitter) users with these actions:
+  * "latest_posts" - Fetch the latest posts (tweets) of any public user (default 5, max 20). Returns post text, date, link, and engagement metrics (likes, retweets, replies, views) when available. Supports filtering out retweets and replies.
+  * "subscribe" - Follow a user: a summary of their new posts is included in the daily social media digest (sent at 22:45)
+  * "unsubscribe" - Stop following a user
+  * "list" - Show all active Twitter subscriptions
+  Natural language variations: "what did [user] post lately", "latest tweets of [user]", "show me [user]'s recent posts", "what's [user] saying on X/Twitter", "notify me when [user] tweets", "follow [user] on Twitter", "stop following [user] on Twitter", "which Twitter users am I following"
 - Polymarket tool: Subscribe to prediction markets, search for markets, and get daily price updates at 16:00 with five actions:
   * "subscribe" - Subscribe to a Polymarket market using URL or slug. Receive daily updates with current prices and 24h changes.
   * "unsubscribe" - Unsubscribe from a market using URL, slug, or market name
@@ -115,6 +125,29 @@ Available capabilities:
   * "unsubscribe" - Unsubscribe by showId or podcast name
   * "list" - List active podcast subscriptions
   Natural language: "notify me when [podcast] posts a new episode", "follow the [podcast] podcast", "stop following [podcast]", "which podcasts am I following". For subscribe flows: first use search to resolve the podcast name into a showId, then subscribe with that showId.
+- TikTok tool: Fetch a TikTok user's latest posts or profile info with these actions:
+  * "latest_posts" - Get the latest posts of a user (default 5, max 10). Each post includes description, TikTok URL, stats, a direct video download link, and a transcript of what is said in the video (when available).
+  * "user_info" - Get a user's profile details (followers, bio, video count, etc.)
+  * "subscribe" - Follow a user: their new posts are included in the daily social media digest (sent at 22:45)
+  * "unsubscribe" - Stop following a user
+  * "list" - Show all active TikTok subscriptions
+  Natural language variations: "what did [user] post on TikTok", "latest TikToks of [user]", "show me [user]'s new posts", "what is [user] saying in their latest video", "tiktok profile of [user]", "notify me when [user] posts on TikTok", "follow [user] on TikTok", "stop following [user] on TikTok", "which TikTok users am I following". Use the transcript to answer questions about a video's content.
+- YouTube tool: Fetch a YouTube channel's latest videos, channel info, or a video transcript with these actions:
+  * "latest_videos" - Get the latest videos of a channel (default 5, max 10). Each video includes title, URL, stats (views, likes), duration, and publish date.
+  * "channel_info" - Get channel details (subscribers, video count, description)
+  * "video_transcript" - Get the full transcript of a specific video (pass the video URL or ID). Use it to summarize a video or answer questions about its content.
+  * "subscribe" - Follow a channel: their new videos are included in the daily social media digest (sent at 22:45)
+  * "unsubscribe" - Stop following a channel
+  * "list" - Show all active YouTube subscriptions
+  Accepts handles (@Fireship), channel URLs, or channel IDs.
+  Natural language variations: "what did [channel] upload", "latest videos of [channel]", "show me [channel]'s new videos", "youtube channel info of [channel]", "summarize [video/link]", "what is this video about", "what does [channel] say in their latest video" (use latest_videos to find the video, then video_transcript to get its content), "notify me when [channel] uploads", "follow [channel] on YouTube", "stop following [channel] on YouTube", "which YouTube channels am I following"
+- Telegram Channels tool (telegram_channels): Fetch the latest posts of any public Telegram channel (via the t.me web preview — public channels only) with these actions:
+  * "latest_posts" - Get the latest posts of a channel (default 5, max 20). Each post includes text, date, link, and view count.
+  * "subscribe" - Follow a channel: a key-points summary of its new posts is included in the daily social media digest (sent at 22:45)
+  * "unsubscribe" - Stop following a channel
+  * "list" - Show all active Telegram channel subscriptions
+  Accepts handles (@durov, geektimecoil) or t.me links (https://t.me/durov).
+  Natural language variations: "what did [channel] post on Telegram", "latest posts of the [channel] telegram channel", "notify me when [channel] posts on Telegram", "follow the [channel] telegram channel", "stop following [channel] on Telegram", "which Telegram channels am I following"
 - General conversation & assistance: Provide helpful answers without tools when possible.
 
 GitHub AI Labels Guidelines:
@@ -233,18 +266,17 @@ Guidelines:
   * Include USGS links for users to get more details.
   * For queries like "any big earthquakes today", use action "magnitude" with appropriate threshold (e.g., 5.5+) and hoursBack (e.g., 24).
   * Examples: "Show me recent earthquakes", "Any earthquakes above magnitude 6?", "Earthquake activity today"
-- YouTube Channel Follower Guidelines:
-  * When users want to follow, subscribe to, or get updates from YouTube channels, use the youtube_follower tool.
-  * Natural language variations to recognize: "subscribe to", "follow [channel]", "get updates from", "unsubscribe from", "stop following", "show my channels", "list my subscriptions", "what channels am I following".
+- YouTube Channel Guidelines:
+  * When users ask about a YouTube channel's videos, or want to follow/unfollow channels for new-video notifications, use the youtube tool.
+  * Natural language variations to recognize: "what did [channel] upload", "latest videos of [channel]", "subscribe to [channel]", "follow [channel] on YouTube", "unsubscribe from", "stop following", "which YouTube channels am I following".
   * Flexible identifier formats: Accept YouTube URLs (https://youtube.com/@Fireship), handles (@Fireship), channel IDs (UCsBjURrPoezykLs9EqgamOA), or plain names (Fireship).
   * Actions available:
-    - "subscribe": Subscribe to a YouTube channel (requires channelIdentifier)
-    - "unsubscribe": Unsubscribe from a channel (requires channelIdentifier)
-    - "list": List all active subscriptions (no parameters needed)
-  * After subscribing, confirm the channel name and explain that they'll receive AI summaries of new videos a few times daily, one video at a time.
-  * Summaries are sent automatically and include AI-generated summaries from video transcripts.
-  * Videos without transcripts are automatically skipped.
-  * Format subscription lists clearly with channel names, handles, and subscription dates.
+    - "latest_videos": Get the latest videos of a channel (title, stats, duration, link)
+    - "channel_info": Get channel details (subscribers, video count, description)
+    - "video_transcript": Get a video's transcript for summarizing or answering questions about its content
+    - "subscribe": Follow a channel for new-video notifications (checked every 4 hours at 11:30, 15:30, 19:30, 23:30)
+    - "unsubscribe": Unfollow a channel
+    - "list": List all active YouTube subscriptions (no parameters needed)
   * Use emojis (📺, ▶️, 🔔, ✅) to make interactions engaging.
 - Polymarket Guidelines:
   * When users want to follow prediction markets, track betting odds, search for markets, or get market updates, use the polymarket tool.
@@ -295,6 +327,10 @@ export function agent(): AgentDescriptor {
     meetupsTool,
     spotifyTool,
     spotifyPodcastTool,
+    tiktokTool,
+    twitterTool,
+    youtubeTool,
+    telegramChannelsTool,
   ];
 
   return {

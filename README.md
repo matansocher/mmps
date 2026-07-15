@@ -1,6 +1,6 @@
 # MMPS — Multi-Purpose Telegram Bots
 
-A TypeScript Node.js 24 app hosting **5 AI-powered Telegram bots** plus an Express HTTP server (Swagger, auth for the companion browser extension, mini-app endpoints). No framework — plain TS with manual DI.
+A TypeScript Node.js 24 app hosting **8 AI-powered Telegram bots** plus an Express HTTP server (Swagger, mini-app endpoints). No framework — plain TS with manual DI.
 
 **📚 [Full Documentation](https://matansocher.github.io/mmps/)** &nbsp;·&nbsp; **🤖 [AGENTS.md](./AGENTS.md)** (canonical onboarding for AI agents and humans) &nbsp;·&nbsp; **⚡ [Quick Start](#quick-start)**
 
@@ -16,19 +16,24 @@ cp .env.example .env          # then fill in values you need
 # At minimum: MONGO_DB_URL, LOCAL_ACTIVE_BOT_ID, the bot's *_TELEGRAM_BOT_TOKEN,
 # and one of OPENAI_API_KEY / ANTHROPIC_API_KEY.
 
-# Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, WOLT, WORLDLY)
+# Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, EXPENSES, LEARNER, SECRETARY, WOLT, WORLDLY)
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 ## Available Bots
 
-| ID         | Description                                                                 |
-|------------|-----------------------------------------------------------------------------|
-| `CHATBOT`  | AI assistant with 30+ tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.) |
-| `CHILLI`   | Persona bot — replies as the user's cat in Hebrew                           |
-| `COACH`    | Sports analytics, predictions, schedules. Bundled mini-app (`apps/coach-web`) |
-| `WOLT`     | Wolt restaurant availability watcher + notifications                        |
-| `WORLDLY`  | Geography quiz / education                                                  |
+| ID          | Description                                                                 |
+|-------------|-----------------------------------------------------------------------------|
+| `CHATBOT`   | AI assistant with 27 tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.). Dashboard mini-app (`apps/chatbot-web`) |
+| `CHILLI`    | Persona bot — replies as the user's cat in Hebrew                           |
+| `COACH`     | Sports analytics, predictions, schedules. Bundled mini-app (`apps/coach-web`) |
+| `EXPENSES`  | Expense tracker mini-app (`apps/expenses-web`)                              |
+| `LEARNER`   | Courses mini-app (`apps/learner-web`)                                       |
+| `SECRETARY` | Personal secretary over a Telegram business connection — transcription, AI draft replies, daily summaries |
+| `WOLT`      | Wolt restaurant availability watcher + notifications                        |
+| `WORLDLY`   | Geography quiz / education                                                  |
+
+Plus **Clutch** — a bot-less static SPA (`apps/clutch-web`) served by the Express server at `/clutch/*`.
 
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
@@ -36,9 +41,9 @@ Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
 - **Node.js 24.x** runtime, **TypeScript 5.9** (non-strict, ES2022).
 - **grammY** for Telegram. All bot code uses `@services/telegram`.
-- **LangChain / LangGraph** for agent + tool orchestration; `MemorySaver` for per-thread checkpoints.
-- **MongoDB** native driver (no ODM). Each bot has its own database (`chatbot-db`, `coach-db`, …).
-- **Express 5** runs alongside the bots — Swagger UI, auth endpoints, optional mini-app data routes per bot.
+- **LangChain / LangGraph** for agent + tool orchestration; the chatbot persists conversation memory in a Mongo-backed checkpointer.
+- **MongoDB** native driver (no ODM). Each bot has its own database (`Chatbot`, `Coach`, `Wolt`, …).
+- **Express 5** runs alongside the bots — Swagger UI, optional mini-app data routes per bot.
 - **Manual DI** via per-feature `init*` functions in `src/index.ts`.
 
 Full architecture overview: <https://matansocher.github.io/mmps/architecture/overview>.

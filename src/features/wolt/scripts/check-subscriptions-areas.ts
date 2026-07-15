@@ -10,7 +10,7 @@ const logger = new Logger('check-subscriptions-areas');
 
 async function main() {
   config({ path: join(cwd(), '.env.serve') });
-  const client = new MongoClient(env.MONGO_URI);
+  const client = new MongoClient(env.MONGO_DB_URL);
 
   try {
     await client.connect();

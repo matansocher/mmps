@@ -122,7 +122,7 @@ async function main(): Promise<void> {
   const results = await mapWithConcurrency(chosen, CONCURRENCY, async (example) => {
     const messages = toSecretaryMessages(example);
     const generated = await generateDraftReply(messages);
-    const draft = generated?.draft ?? '';
+    const draft = generated?.drafts[0] ?? '';
 
     const human = `Recent conversation:\n${renderContext(example)}\n\nMatan's REAL reply:\n${example.expectedReply}\n\nCANDIDATE draft to score:\n${draft}`;
     const scores = await judge.invoke([new SystemMessage(JUDGE_SYSTEM), new HumanMessage(human)]);

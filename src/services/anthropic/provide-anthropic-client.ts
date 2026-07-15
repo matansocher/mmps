@@ -5,7 +5,7 @@ let client: Anthropic;
 
 export function provideAnthropicClient(): Anthropic {
   if (!client) {
-    client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+    client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, timeout: 120_000, maxRetries: 2 });
   }
   return client;
 }

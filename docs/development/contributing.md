@@ -88,7 +88,7 @@ Creating a new bot:
    - `{bot}.config.ts` - Configuration
    - `types.ts` - Type definitions
    - `index.ts` - Barrel exports
-3. Add bot config to `main.ts`
+3. Add bot config to `src/index.ts`
 4. Create corresponding MongoDB database entry
 5. Add to documentation
 

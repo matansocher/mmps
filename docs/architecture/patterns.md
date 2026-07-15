@@ -13,7 +13,7 @@ Each bot uses initialization functions to set up its services, controllers, and 
 export async function initChatbot(): Promise<void> {
   // 1. Create connections
   await Promise.all([
-    createMongoConnection('chatbot-db'),
+    createMongoConnection('Chatbot'),
     connectGithubMcp().catch((err) => console.error(err)),
   ]);
 
@@ -34,7 +34,7 @@ export async function initChatbot(): Promise<void> {
 
 ### Main Entry Point
 
-Conditionally load bots in `main.ts`:
+Conditionally load bots in `src/index.ts`:
 
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
@@ -121,7 +121,7 @@ export class ChatbotService {
 ```typescript
 // functions, not classes
 function getCollection(): Collection<Conversation> {
-  return getMongoCollection<Conversation>('chatbot-db', 'conversations');
+  return getMongoCollection<Conversation>('Chatbot', 'conversations');
 }
 
 export async function createConversation(data: CreateConversationData): Promise<void> {

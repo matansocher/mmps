@@ -6,6 +6,9 @@ export async function downloadFile(bot: Bot, fileId: string, destDir: string): P
   const file = await bot.api.getFile(fileId);
   const fileUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
   const response = await fetch(fileUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download file ${fileId}: ${response.status} ${response.statusText}`);
+  }
   const buffer = Buffer.from(await response.arrayBuffer());
   const destPath = path.join(destDir, path.basename(file.file_path));
   await fs.writeFile(destPath, buffer);

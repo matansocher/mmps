@@ -6,9 +6,9 @@ Complete reference for all MMPS environment variables.
 
 ### MongoDB
 ```bash
-MONGO_URI=mongodb://localhost:27017
+MONGO_DB_URL=mongodb://localhost:27017
 # or
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/
+MONGO_DB_URL=mongodb+srv://user:pass@cluster.mongodb.net/
 ```
 
 ### Application
@@ -64,8 +64,8 @@ Create `.env` file in root:
 ```bash
 # .env
 IS_PROD=false
-MONGO_URI=mongodb://localhost:27017
-LOCAL_ACTIVE_BOT_ID=chatbot
+MONGO_DB_URL=mongodb://localhost:27017
+LOCAL_ACTIVE_BOT_ID=CHATBOT
 CHATBOT_TELEGRAM_BOT_TOKEN=...
 OPENAI_API_KEY=...
 ```

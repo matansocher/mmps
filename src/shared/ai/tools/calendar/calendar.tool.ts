@@ -1,5 +1,5 @@
 import { tool } from '@langchain/core/tools';
-import { endOfDay, startOfDay } from 'date-fns';
+import { fromZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CalendarEvent, createEvent, deleteEvent, formatEvent, getUpcomingEvents, listEvents } from '@services/google-calendar';
@@ -56,13 +56,11 @@ async function listEventsInternal(searchQuery?: string, startDate?: string, endD
   }
 
   if (startDate) {
-    const parsedStartDate = new Date(startDate);
-    options.timeMin = startOfDay(parsedStartDate).toISOString();
+    options.timeMin = fromZonedTime(`${startDate.split('T')[0]}T00:00:00`, DEFAULT_TIMEZONE).toISOString();
   }
 
   if (endDate) {
-    const parsedEndDate = new Date(endDate);
-    options.timeMax = endOfDay(parsedEndDate).toISOString();
+    options.timeMax = fromZonedTime(`${endDate.split('T')[0]}T23:59:59.999`, DEFAULT_TIMEZONE).toISOString();
   }
 
   const events = await listEvents(options);

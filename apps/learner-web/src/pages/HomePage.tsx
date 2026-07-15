@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { ORDERED_COURSES } from '../data/courses';
+import { ORDERED_COURSES, CATEGORIZED_COURSES, type Course } from '../data/courses';
 import { useProgress } from '../lib/progress';
 import { BookOpen, ChevronRight, Flame, Sparkles, Trophy } from '../lib/icons';
 import { haptic, hideBackButton } from '../lib/telegram';
@@ -134,65 +134,99 @@ export function HomePage() {
         </button>
       )}
 
-      {/* All courses */}
-      <div className="mt-8 flex items-center justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">All courses</h3>
-        <span className="text-xs text-text-muted">{ORDERED_COURSES.length} tracks</span>
-      </div>
+      {/* Courses by category (completed ones move to the bottom) */}
+      {(() => {
+        const isComplete = (c: Course) => readCount(c.id) >= c.lessons.length;
+        const sections = CATEGORIZED_COURSES.map((cat) => ({ name: cat.name, courses: cat.courses.filter((c) => !isComplete(c)) })).filter((cat) => cat.courses.length > 0);
+        const completed = ORDERED_COURSES.filter(isComplete);
 
-      <div className="mt-3 flex flex-col gap-2.5">
-        {ORDERED_COURSES.map((course) => {
-          const total = course.lessons.length;
-          const done = readCount(course.id);
-          const complete = done >= total;
-          const pct = total ? Math.round((done / total) * 100) : 0;
+        return (
+          <>
+            <div className="mt-8 flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">All courses</h3>
+              <span className="text-xs text-text-muted">{ORDERED_COURSES.length} tracks</span>
+            </div>
 
-          return (
-            <button
-              key={course.id}
-              onClick={() => open(course.id)}
-              className="pressable group flex items-center gap-3.5 rounded-2xl border border-border-subtle bg-bg-card p-2.5 text-left hover:border-border-strong hover:shadow-lift"
-            >
-              <span
-                className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                style={{ backgroundColor: `${course.color}1f`, boxShadow: complete ? `inset 0 0 0 1.5px ${course.color}` : undefined }}
-              >
-                {course.icon}
-                {complete && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent-success text-bg-base">
-                    <Trophy size={11} className="text-bg-base" />
-                  </span>
-                )}
-              </span>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="truncate text-sm font-bold text-text-primary">{course.title}</h2>
+            {sections.map((cat) => (
+              <div key={cat.name}>
+                <div className="mt-5 flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">{cat.name}</h4>
+                  <span className="text-[11px] text-text-muted">{cat.courses.length}</span>
                 </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg-elevated">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${pct}%`,
-                        background: complete ? '#5ee88a' : `linear-gradient(90deg, ${course.color}, #7c8cff)`,
-                        transition: 'width 500ms cubic-bezier(0.16,1,0.3,1)',
-                      }}
-                    />
-                  </div>
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-text-muted">
-                    {done}/{total}
-                  </span>
+                <div className="mt-2 flex flex-col gap-2.5">
+                  {cat.courses.map((course) => (
+                    <CourseRow key={course.id} course={course} done={readCount(course.id)} onOpen={open} />
+                  ))}
                 </div>
               </div>
+            ))}
 
-              <ChevronRight size={18} className="shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5" />
-            </button>
-          );
-        })}
-      </div>
+            {completed.length > 0 && (
+              <div>
+                <div className="mt-5 flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Completed</h4>
+                  <span className="text-[11px] text-text-muted">{completed.length}</span>
+                </div>
+                <div className="mt-2 flex flex-col gap-2.5">
+                  {completed.map((course) => (
+                    <CourseRow key={course.id} course={course} done={readCount(course.id)} onOpen={open} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
       </div>
     </div>
+  );
+}
+
+function CourseRow({ course, done, onOpen }: { readonly course: Course; readonly done: number; readonly onOpen: (id: string) => void }) {
+  const total = course.lessons.length;
+  const complete = done >= total;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+
+  return (
+    <button
+      onClick={() => onOpen(course.id)}
+      className="pressable group flex items-center gap-3.5 rounded-2xl border border-border-subtle bg-bg-card p-2.5 text-left hover:border-border-strong hover:shadow-lift"
+    >
+      <span
+        className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+        style={{ backgroundColor: `${course.color}1f`, boxShadow: complete ? `inset 0 0 0 1.5px ${course.color}` : undefined }}
+      >
+        {course.icon}
+        {complete && (
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent-success text-bg-base">
+            <Trophy size={11} className="text-bg-base" />
+          </span>
+        )}
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h2 className="truncate text-sm font-bold text-text-primary">{course.title}</h2>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg-elevated">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${pct}%`,
+                background: complete ? '#5ee88a' : `linear-gradient(90deg, ${course.color}, #7c8cff)`,
+                transition: 'width 500ms cubic-bezier(0.16,1,0.3,1)',
+              }}
+            />
+          </div>
+          <span className="shrink-0 text-xs font-semibold tabular-nums text-text-muted">
+            {done}/{total}
+          </span>
+        </div>
+      </div>
+
+      <ChevronRight size={18} className="shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5" />
+    </button>
   );
 }
 

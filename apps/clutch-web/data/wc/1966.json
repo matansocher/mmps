@@ -1,0 +1,140 @@
+{
+  "season": 1966,
+  "league": "WC",
+  "format": "16 teams, group stage then quarter-finals onward",
+  "champion": "England",
+  "runnerUp": "West Germany",
+  "source": "https://en.wikipedia.org/wiki/1966_FIFA_World_Cup",
+  "rounds": [
+    {
+      "round": "Quarter-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Argentina",
+            "wins": 0
+          },
+          "result": "1–0",
+          "winner": "England"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Uruguay",
+            "wins": 0
+          },
+          "result": "4–0",
+          "winner": "West Germany"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Portugal",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "North Korea",
+            "wins": 0
+          },
+          "result": "5–3",
+          "winner": "Portugal"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Soviet Union",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Hungary",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "Soviet Union"
+        }
+      ]
+    },
+    {
+      "round": "Semi-finals",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Portugal",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "England"
+        },
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "Soviet Union",
+            "wins": 0
+          },
+          "result": "2–1",
+          "winner": "West Germany"
+        }
+      ]
+    },
+    {
+      "round": "Final",
+      "conference": null,
+      "series": [
+        {
+          "higherSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "England",
+            "wins": 0
+          },
+          "lowerSeed": {
+            "seed": "",
+            "seedNumber": 0,
+            "team": "West Germany",
+            "wins": 0
+          },
+          "result": "4–2 (a.e.t.)",
+          "winner": "England"
+        }
+      ]
+    }
+  ]
+}

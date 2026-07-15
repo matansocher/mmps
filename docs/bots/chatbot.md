@@ -14,7 +14,7 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 
 ### Core Features
 - **Conversational AI** - Natural language understanding and generation
-- **Tool Integration** - 20+ tools for extending capabilities
+- **Tool Integration** - 27 tools for extending capabilities
 - **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
 - **Observability** - Cross-bot token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
 - **Error Handling** - Graceful degradation and fallbacks
@@ -113,7 +113,7 @@ To enable GitHub repository interactions:
 ### 4. Run the Bot
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
+LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 ### 5. Start Chatting
@@ -125,9 +125,7 @@ Open Telegram and search for your bot. Send `/start` to begin!
 | Command | Description |
 |---------|-------------|
 | `/start` | Start the bot |
-| `/help` | Get help and available commands |
-| `/status` | Check bot status |
-| `/clear` | Clear conversation history |
+| `/exercise` | Log a workout |
 
 ## Architecture
 
@@ -183,14 +181,13 @@ CHATBOT_USAGE_TRACKING=false   # disable token/cost metering
 
 ## Database
 
-**Database name**: `chatbot-db`
+**Database name**: `Chatbot` for LangGraph checkpoints and usage records; chatbot tools also use shared feature databases.
 
 Collections:
-- `conversations` - Chat history
-- `reminders` - User reminders
-- `users` - User profiles
+- LangGraph checkpoint collections - Durable conversation memory with 30-day TTL
+- `usage` - Per-turn token/cost records with 90-day TTL
 
-The `Chatbot` database additionally holds LangGraph checkpoints (memory) and the `usage` collection (per-turn token/cost records, 90-day TTL).
+Chatbot tools also connect to shared databases such as `Reminders`, `CalendarEvents`, `Trainer`, `Coach`, `Wolt`, `Worldly`, `Cooker`, and related follower/friends databases.
 
 ## Tool Development
 

@@ -5,6 +5,12 @@ import type { CreateReminderData, Reminder, UpdateReminderData } from '../types'
 
 const getCollection = () => getMongoCollection<Reminder>(DB_NAME, 'Reminders');
 
+export async function ensureReminderIndexes(): Promise<void> {
+  const collection = getCollection();
+  await collection.createIndex({ chatId: 1, dueDate: 1 });
+  await collection.createIndex({ status: 1, dueDate: 1 });
+}
+
 export async function createReminder(data: CreateReminderData): Promise<InsertOneResult<Reminder>> {
   const remindersCollection = getCollection();
   const reminder: Omit<Reminder, '_id'> = {

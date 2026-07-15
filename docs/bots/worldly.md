@@ -23,7 +23,7 @@ Worldly is an educational bot that teaches geography through interactive quizzes
 WORLDLY_TELEGRAM_BOT_TOKEN=your-token
 
 # Optional
-MONGO_URI=mongodb://...
+MONGO_DB_URL=mongodb://...
 ```
 
 ## Getting Started
@@ -36,18 +36,21 @@ MONGO_URI=mongodb://...
 ### 2. Run the Bot
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=worldly npm run start:dev
+LOCAL_ACTIVE_BOT_ID=WORLDLY npm run dev
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/start` | Start learning |
-| `/quiz` | Take a geography quiz |
-| `/challenge` | Daily geography challenge |
-| `/leaderboard` | View top scores |
-| `/stats` | Your statistics |
+| `/start` | Start daily geography games |
+| `/random` | Start a random game |
+| `/fire_mode` | Play continuous games |
+| `/map` | Guess a country from a map |
+| `/usmap` | Guess a US state from a map |
+| `/flag` | Guess a country from a flag |
+| `/capital` | Guess the country by capital |
+| `/actions` | Manage daily games, statistics, and contact |
 
 ## Quiz Categories
 
@@ -60,18 +63,18 @@ LOCAL_ACTIVE_BOT_ID=worldly npm run start:dev
 
 ## Database
 
-**Database name**: `worldly-db`
+**Database name**: `Worldly`
 
 Collections:
-- `users` - User profiles
-- `quizzes` - Quiz questions
-- `scores` - User scores and stats
-- `leaderboard` - Global rankings
+- `User` - Telegram user details
+- `Subscription` - Daily game subscription settings
+- `Country` - Country quiz data
+- `State` - US state quiz data
+- `GameLog` - Per-user quiz answers and results
 
 ## Scheduled Tasks
 
-- **Daily Challenge** - 12:00 UTC
-- **Leaderboard Update** - Daily at 23:59
+- **Daily Games** - 12:00, 17:00, and 20:00 in the project timezone for active subscribers
 
 ## Next Steps
 

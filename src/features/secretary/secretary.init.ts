@@ -1,6 +1,6 @@
 import { createMongoConnection } from '@core/mongo';
 import { provideTelegramBot } from '@services/telegram';
-import { DB_NAME } from './mongo';
+import { DB_NAME, ensureSecretaryMessageIndexes } from './mongo';
 import { SecretaryActionService } from './secretary-action.service';
 import { BOT_CONFIG } from './secretary.config';
 import { SecretaryController } from './secretary.controller';
@@ -11,6 +11,7 @@ import { SecretaryService } from './secretary.service';
 
 export async function initSecretary(): Promise<void> {
   await createMongoConnection(DB_NAME);
+  await ensureSecretaryMessageIndexes();
 
   const bot = provideTelegramBot(BOT_CONFIG);
 
