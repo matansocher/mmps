@@ -18,7 +18,7 @@ if (!HAS_KEY) {
   console.warn('\n⚠️  OPENAI_API_KEY is not set — skipping the chatbot routing eval (it needs the real model).\n');
 }
 
-// Real model calls are slow: 40 cases × 3 runs at concurrency 4. Give the batch plenty of room.
+// Real model calls are slow, especially for multi-step cases. Give the batch plenty of room.
 const BATCH_TIMEOUT_MS = 45 * 60 * 1000;
 
 describe.skipIf(!HAS_KEY)('chatbot system-prompt routing eval', () => {
@@ -26,10 +26,10 @@ describe.skipIf(!HAS_KEY)('chatbot system-prompt routing eval', () => {
   let report: EvalReport;
 
   beforeAll(async () => {
-    type Job = { caseId: string; input: string };
-    const jobs: Job[] = cases.flatMap((evalCase) => Array.from({ length: RUNS_PER_CASE }, () => ({ caseId: evalCase.id, input: evalCase.input })));
+    type Job = { caseId: string; evalCase: (typeof cases)[number] };
+    const jobs: Job[] = cases.flatMap((evalCase) => Array.from({ length: RUNS_PER_CASE }, () => ({ caseId: evalCase.id, evalCase })));
 
-    const runResults = await runPool(jobs, CONCURRENCY, (job) => runOnce(job.input));
+    const runResults = await runPool(jobs, CONCURRENCY, (job) => runOnce(job.evalCase));
 
     const runsByCase = new Map<string, RunResult[]>();
     jobs.forEach((job, index) => {
@@ -45,9 +45,9 @@ describe.skipIf(!HAS_KEY)('chatbot system-prompt routing eval', () => {
 
     report = buildReport([...caseResults.values()], RUNS_PER_CASE, CHAT_COMPLETIONS_MINI_MODEL);
     printReport(report);
-    const { jsonPath, markdownPath } = writeReports(report);
+    const { jsonPath, markdownPath, htmlPath } = writeReports(report);
     // eslint-disable-next-line no-console
-    console.log(`Reports written:\n  ${jsonPath}\n  ${markdownPath}`);
+    console.log(`Reports written:\n  ${jsonPath}\n  ${markdownPath}\n  ${htmlPath}`);
   }, BATCH_TIMEOUT_MS);
 
   afterAll(() => {
@@ -58,7 +58,8 @@ describe.skipIf(!HAS_KEY)('chatbot system-prompt routing eval', () => {
   });
 
   for (const evalCase of cases) {
-    it(`[${evalCase.category}] ${evalCase.id} — "${evalCase.input}"`, () => {
+    const input = Array.isArray(evalCase.input) ? evalCase.input.join(' → ') : evalCase.input;
+    it(`[${evalCase.category}] ${evalCase.id} — "${input}"`, () => {
       const result = caseResults.get(evalCase.id);
       expect(result, 'case result missing').toBeDefined();
 
@@ -67,6 +68,9 @@ describe.skipIf(!HAS_KEY)('chatbot system-prompt routing eval', () => {
 
       if (result!.argApplicable) {
         expect(result!.argPass, `wrong arguments for ${JSON.stringify(evalCase.expect)}; got: ${calls}`).toBe(true);
+      }
+      if (result!.workflowApplicable) {
+        expect(result!.workflowPass, `incomplete workflow for ${JSON.stringify(evalCase.expect)}; got: ${calls}`).toBe(true);
       }
     });
   }

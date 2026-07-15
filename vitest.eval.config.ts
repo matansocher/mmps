@@ -7,11 +7,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['test/eval/**/*.eval.ts'],
+    include: ['test/eval/**/*.eval.ts', 'test/eval/**/*.spec.ts'],
     setupFiles: ['test/eval/setup.ts'],
     testTimeout: 60_000,
     hookTimeout: 45 * 60 * 1000,
-    // One file, sequential — the harness already parallelizes case runs internally.
+    // Keep eval files sequential — the harness already parallelizes case runs internally.
     fileParallelism: false,
   },
   resolve: {

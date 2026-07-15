@@ -6,10 +6,10 @@ Token-costing evaluation suites that treat prompts like tested code. Kept **out 
 ## Chatbot routing eval
 
 Measures how well the chatbot's real system prompt (`src/features/chatbot/agent/agent.ts`)
-routes user messages to the right **tool + action** across 40 golden cases (every registered
-tool + its key actions, the trickiest arg cases, and no-tool guards). It reuses the exact
-production prompt and the real tool set, but swaps every tool body for a **spy** that records
-`{ name, args }` and returns a stub — so nothing hits Gmail/Mongo/etc. Only routing is under test.
+routes user messages through the correct **tools, arguments, and multi-step workflows** across
+46 golden cases. It reuses the exact production prompt and real tool schemas, but swaps every
+tool body for a spy. Cases can provide realistic fixture responses so ID-dependent workflows
+such as `list → delete` can complete without touching Gmail, Calendar, MongoDB, or other services.
 
 ### Run it
 
@@ -37,10 +37,13 @@ EVAL_RUNS=5 EVAL_CONCURRENCY=6 npm run eval:chatbot
 ### What you get
 
 - **Per-case pass/fail** — each golden case is a Vitest test; passes if the majority of its runs
-  routed to the expected tool (and matched critical args, where checked).
+  routed correctly, matched critical arguments, completed any expected ordered workflow, and
+  produced the expected confirmation/clarification response where configured.
 - **Aggregate report** (printed + written to `test/eval/results/`, gitignored):
   - `chatbot-routing.latest.json`
   - `chatbot-routing.latest.md`
+  - `chatbot-routing.latest.html` — responsive, self-contained dashboard with the run date,
+    summary metrics, measured cost, category results, and expandable failure details.
 
 ### Metrics
 
@@ -48,12 +51,13 @@ EVAL_RUNS=5 EVAL_CONCURRENCY=6 npm run eval:chatbot
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | **Routing accuracy**     | % of cases that routed to the correct tool (overall + per category).                                              |
 | **Argument correctness** | % of arg-checked cases with correct `action`/args (dates → 18:00 default, GitHub `implement`/`review` labels, …). |
+| **Workflow correctness** | % of workflow-checked cases that completed the expected ordered calls or confirmation response.                   |
 | **Over-trigger rate**    | % of no-tool cases where the agent wrongly called a tool.                                                         |
 | **Cost / latency**       | Total + per-run USD (via `UsageCallbackHandler`) and avg/p95 latency.                                             |
 
 ### Adding cases
 
-Edit `test/eval/chatbot/dataset.ts`. Each case:
+Edit `test/eval/chatbot/dataset.ts`. A direct tool case:
 
 ```ts
 {
@@ -68,11 +72,39 @@ Edit `test/eval/chatbot/dataset.ts`. Each case:
 }
 ```
 
+ID-dependent workflows can define ordered calls and realistic tool fixtures:
+
+```ts
+{
+  id: 'gmail-delete-01',
+  category: 'gmail',
+  input: 'delete the email from shani',
+  expect: {
+    tool: 'gmail',
+    sequence: [
+      { tool: 'gmail', action: 'list', args: { query: /from:shani/i } },
+      { tool: 'gmail', action: 'delete', args: { emailId: 'email-shani-1' } },
+    ],
+  },
+  fixtures: {
+    gmail: ({ action }) =>
+      action === 'list'
+        ? { emails: [{ id: 'email-shani-1', from: 'shani@example.com' }] }
+        : { success: true },
+  },
+}
+```
+
+Use an input array for multi-turn cases. For confirmation or clarification behavior, use
+`tool: null` with a `response` matcher.
+
 Guidelines:
 
-- Keep cases **single-turn** and self-contained (no reliance on prior conversation).
+- Keep cases self-contained. Use input arrays only when conversation context is what the case tests.
 - Only assert `action`/`args` where they actually matter — don't over-specify.
 - Use `tool: null` for smalltalk / general-knowledge messages that shouldn't call a tool.
+- Use ordered `sequence` expectations when a workflow must resolve an ID before acting.
+- Return realistic fixture IDs so the model can continue through every expected step.
 - Tag every case with a `category` so the per-domain breakdown stays meaningful.
 
 ### Design notes

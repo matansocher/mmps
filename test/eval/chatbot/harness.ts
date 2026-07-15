@@ -2,9 +2,10 @@ import { tool } from '@langchain/core/tools';
 import { ChatOpenAI } from '@langchain/openai';
 import { env } from 'node:process';
 import { agent, createAgentService } from '@features/chatbot/agent';
+import { formatAgentResponse } from '@features/chatbot/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { UsageCallbackHandler } from '@shared/ai';
-import type { CapturedCall, RunResult } from './types';
+import type { CapturedCall, EvalCase, RunResult, ToolFixture } from './types';
 
 // Prod-parity model. Temperature matches ChatbotService.
 const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
@@ -14,41 +15,64 @@ const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 
 // routing (which tool + args the prompt makes the model choose) without any side effects.
 const descriptor = agent();
 
-function buildSpyAgent() {
+async function resolveFixture(fixture: ToolFixture | undefined, args: Record<string, unknown>): Promise<unknown> {
+  if (typeof fixture === 'function') {
+    return await fixture(args);
+  }
+  return fixture ?? { ok: true, stub: true };
+}
+
+function buildSpyAgent(evalCase: EvalCase) {
   const calls: CapturedCall[] = [];
   const spyTools = descriptor.tools.map((realTool) => {
-    const anyTool = realTool as unknown as { name: string; description: string; schema: any };
     return tool(
       async (args: Record<string, unknown>) => {
-        calls.push({ name: anyTool.name, args });
-        return JSON.stringify({ ok: true, stub: true });
+        calls.push({ name: realTool.name, args });
+        const result = await resolveFixture(evalCase.fixtures?.[realTool.name], args);
+        return typeof result === 'string' ? result : JSON.stringify(result);
       },
-      { name: anyTool.name, description: anyTool.description, schema: anyTool.schema },
+      { name: realTool.name, description: realTool.description, schema: realTool.schema },
     );
   });
 
-  const service = createAgentService({ name: 'CHATBOT-EVAL', prompt: descriptor.prompt, tools: spyTools as any }, { model });
+  const service = createAgentService({ name: 'CHATBOT-EVAL', prompt: descriptor.prompt, tools: spyTools }, { model });
   return { service, calls };
 }
 
-const EMPTY_USAGE = { tokensIn: 0, tokensOut: 0, tokensTotal: 0, cost: 0, llmCalls: 0, toolCalls: 0 };
-
-// Run one user message through a fresh, isolated spy agent and capture the tool calls + usage.
-export async function runOnce(input: string): Promise<RunResult> {
-  const { service, calls } = buildSpyAgent();
+// Run one case through a fresh, isolated spy agent and capture tool calls, final response, and usage.
+export async function runOnce(evalCase: EvalCase): Promise<RunResult> {
+  const { service, calls } = buildSpyAgent(evalCase);
   const usage = new UsageCallbackHandler();
   const threadId = `eval-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const startedAt = Date.now();
+  const inputs = Array.isArray(evalCase.input) ? evalCase.input : [evalCase.input];
+  let response = '';
 
   try {
-    await service.invoke(input, { threadId, callbacks: [usage] });
+    for (const input of inputs) {
+      const result = await service.invoke(input, { threadId, callbacks: [usage] });
+      response = formatAgentResponse(result).message;
+    }
   } catch (err) {
-    return { calls, ...EMPTY_USAGE, durationMs: Date.now() - startedAt, error: err instanceof Error ? err.message : String(err) };
+    const summary = usage.summary();
+    return {
+      calls,
+      response,
+      tokensIn: summary.tokensIn,
+      tokensOut: summary.tokensOut,
+      tokensTotal: summary.tokensTotal,
+      cost: summary.cost,
+      llmCalls: summary.llmCalls,
+      toolCalls: summary.toolCalls,
+      durationMs: Date.now() - startedAt,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 
   const summary = usage.summary();
   return {
     calls,
+    response,
     tokensIn: summary.tokensIn,
     tokensOut: summary.tokensOut,
     tokensTotal: summary.tokensTotal,
