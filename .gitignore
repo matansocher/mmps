@@ -67,3 +67,13 @@ docs/.vitepress/cache/
 /src/features/secretary/scripts/eval/eval-dataset.json
 /src/features/secretary/scripts/eval/eval-report.json
 /test/eval/results
+
+# Chatbot prompt-eval — private real-conversation data + transient run reports (never commit)
+/chatbot-conversation.json
+/test/eval/results/
+
+# Never commit IDE/tsc-emitted JS from TS-only tooling/test files
+/test/**/*.js
+/test/**/*.js.map
+/vitest.*.config.js
+/vitest.*.config.js.map
