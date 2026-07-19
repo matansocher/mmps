@@ -1,16 +1,23 @@
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseHtmlPortfolio } from './migrate-html-portfolio';
 
 describe('parseHtmlPortfolio()', () => {
-  it('imports the repository HTML metadata with zero current amounts', async () => {
-    const html = await readFile(resolve(process.cwd(), 'savings-rebalance-calculator.html'), 'utf8');
+  it('parses the original holdings array from a raw calculator HTML export', () => {
+    const html = `
+      <input id="fxLimitInput" value="45">
+      <input id="solidTargetInput" value="20">
+      <script>
+        const originalHoldings = [
+          { id: "acwi", account: "managed", name: "MSCI ACWI", category: "Equity", geography: "World", target: 12, currency: "fx", type: "equity" },
+          { id: "bonds", account: "managed", name: "Government Bonds", category: "Bonds", geography: "Israel", target: 30, currency: "ils", type: "solid" }
+        ];
+      </script>
+    `;
 
     const result = parseHtmlPortfolio(html);
 
     expect(result.source).toEqual('original_holdings');
-    expect(result.holdings).toHaveLength(10);
+    expect(result.holdings).toHaveLength(2);
     expect(result.holdings.every((holding) => holding.currentAmountIls === 0)).toEqual(true);
     expect(result.holdings.find((holding) => holding.id === 'acwi')).toEqual(
       expect.objectContaining({
