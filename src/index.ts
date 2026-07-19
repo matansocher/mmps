@@ -12,8 +12,9 @@ import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { initClutch } from '@features/clutch';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
-import { BOT_CONFIG as learnerConfig, initLearner } from '@features/learner';
-import { BOT_CONFIG as secretaryConfig, initSecretary } from '@features/secretary';
+import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
+import { initSavings } from '@features/savings';
+import { initSecretary, BOT_CONFIG as secretaryConfig } from '@features/secretary';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
@@ -35,6 +36,11 @@ async function main() {
   });
 
   initClutch(app);
+  try {
+    await initSavings(app);
+  } catch (err) {
+    logger.error(`Failed to init savings app: ${err}`);
+  }
 
   registerSwaggerRoutes(app);
 

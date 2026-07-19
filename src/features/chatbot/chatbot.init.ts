@@ -12,7 +12,7 @@ import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
-import { DB_NAME as REMINDERS_DB_NAME, ensureReminderIndexes } from '@shared/reminders';
+import { ensureReminderIndexes, DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
 import { DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
 import { DB_NAME as SPOTIFY_FOLLOWER_DB_NAME } from '@shared/spotify-follower';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';

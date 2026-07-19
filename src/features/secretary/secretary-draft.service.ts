@@ -4,8 +4,8 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { buildInlineKeyboard } from '@services/telegram';
 import { createDraft, getDraftByShortId, getRecentMessagesForChat, setDraftMessageId, supersedePendingDraftsForChat, updateDraftStatus } from './mongo';
-import { DRAFT_CANCEL_CALLBACK_PREFIX, DRAFT_SEND_CALLBACK_PREFIX, IDLE_REPLY_DELAY_MS, OWNER_BUSINESS_CONNECTION_ID, REPLY_NEEDED_THRESHOLD } from './secretary.config';
 import { generateDraftReply, unansweredTail } from './secretary-draft.utils';
+import { DRAFT_CANCEL_CALLBACK_PREFIX, DRAFT_SEND_CALLBACK_PREFIX, IDLE_REPLY_DELAY_MS, OWNER_BUSINESS_CONNECTION_ID, REPLY_NEEDED_THRESHOLD } from './secretary.config';
 import { SecretaryService } from './secretary.service';
 
 const CONTEXT_MESSAGE_LIMIT = 20;

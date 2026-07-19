@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 8 specialized Telegram bots plus one bot-less web feature. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Clutch is always initialized.
+MMPS includes 8 specialized Telegram bots plus two bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Clutch and Savings are initialized independently of bot selection.
 
 ## The Bots
 
@@ -58,6 +58,12 @@ Static SPA served at `/clutch/*` with analytics forwarded to the Telegram notifi
 - **Database**: None
 - **[Learn more →](/bots/clutch)**
 
+### **Savings** - Shared Portfolio Rebalancer
+Password-protected React application served at `/savings/*` for managing one shared family portfolio with real ILS values.
+- **Features**: Reactive rebalancing, explicit saves, revision conflict protection, shared-password authentication
+- **Database**: `Savings`
+- **[Learn more →](/bots/savings)**
+
 ## Running Bots
 
 ### Development Mode (One Bot)
@@ -74,7 +80,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `SECRET
 IS_PROD=true npm start
 ```
 
-Production initializes all 8 Telegram bots. Clutch initializes in both development and production.
+Production initializes all 8 Telegram bots. Clutch and Savings initialize in both development and production.
 
 ## Bot Architecture
 
@@ -118,6 +124,7 @@ Current bot databases:
 - `Coach` - Coach users and subscriptions
 - `Expenses` - Expense and ingest records
 - `Learner` - Course progress
+- `Savings` - Shared portfolio settings and holdings
 - `Secretary` - Messages, actions, drafts, and nudges
 - `Wolt` - Wolt users and subscriptions
 - `Worldly` - Geography content, subscriptions, and game logs
@@ -142,6 +149,9 @@ WORLDLY_TELEGRAM_BOT_TOKEN=...
 
 # Bot-less Clutch analytics
 NOTIFIER_TELEGRAM_BOT_TOKEN=...
+
+# Bot-less Savings app
+SAVINGS_APP_PASSWORD=...
 ```
 
 ## Next Steps
@@ -156,6 +166,7 @@ Select a bot to explore:
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education
 - **[Clutch](/bots/clutch)** - Bot-less static SPA
+- **[Savings](/bots/savings)** - Shared portfolio rebalancer
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

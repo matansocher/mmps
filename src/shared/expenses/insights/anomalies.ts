@@ -46,11 +46,7 @@ function vendorStatsFromHistory(history: ReadonlyArray<Expense>): Map<string, Ve
   return out;
 }
 
-export function computeAnomalies(
-  candidates: ReadonlyArray<Expense>,
-  history: ReadonlyArray<Expense>,
-  opts: AnomalyOptions = {},
-): Expense[] {
+export function computeAnomalies(candidates: ReadonlyArray<Expense>, history: ReadonlyArray<Expense>, opts: AnomalyOptions = {}): Expense[] {
   const cfg = { ...DEFAULTS, ...opts };
   const stats = vendorStatsFromHistory(history);
   const flagged: Expense[] = [];

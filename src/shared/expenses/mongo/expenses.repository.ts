@@ -1,4 +1,4 @@
-import { ObjectId, type InsertOneResult } from 'mongodb';
+import { type InsertOneResult, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { DB_NAME, EXPENSES_COLLECTION } from '../constants';
 import type { CreateExpenseData, Expense, ExpenseCategory } from '../types';
@@ -59,10 +59,7 @@ export async function getExpensesByCategory(category: ExpenseCategory, from: Dat
   const col = getCollection();
   return col
     .find({
-      $and: [
-        { transactionDate: { $gte: from, $lt: to } },
-        { $or: [{ userCategory: category }, { userCategory: { $exists: false }, category }] },
-      ],
+      $and: [{ transactionDate: { $gte: from, $lt: to } }, { $or: [{ userCategory: category }, { userCategory: { $exists: false }, category }] }],
     })
     .sort({ transactionDate: -1 })
     .toArray();
@@ -86,11 +83,7 @@ export async function getAllExpensesByEffectiveVendor(vendorName: string): Promi
   const exact = new RegExp(`^${safe}$`, 'i');
   return col
     .find({
-      $or: [
-        { userVendor: exact },
-        { userVendor: { $exists: false }, vendor: exact },
-        { userVendor: null, vendor: exact },
-      ],
+      $or: [{ userVendor: exact }, { userVendor: { $exists: false }, vendor: exact }, { userVendor: null, vendor: exact }],
     })
     .sort({ transactionDate: -1 })
     .toArray();
@@ -106,11 +99,7 @@ export async function bulkUpdateExpensesByEffectiveVendor(vendorName: string, up
   const safe = escapeRegex(vendorName.trim());
   const exact = new RegExp(`^${safe}$`, 'i');
   const filter = {
-    $or: [
-      { userVendor: exact },
-      { userVendor: { $exists: false }, vendor: exact },
-      { userVendor: null, vendor: exact },
-    ],
+    $or: [{ userVendor: exact }, { userVendor: { $exists: false }, vendor: exact }, { userVendor: null, vendor: exact }],
   };
   const set: Record<string, unknown> = {};
   const unset: Record<string, ''> = {};

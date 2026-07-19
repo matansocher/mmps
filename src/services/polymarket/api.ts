@@ -1,4 +1,15 @@
-import type { EventOutcome, EventSummary, EventWithMarketsResponse, MarketSummary, MultiOutcomeEventSummary, PolymarketEvent, PolymarketEventWithMarkets, PolymarketMarket, SearchEventsResponse, TrendingMarketsResponse } from './types';
+import type {
+  EventOutcome,
+  EventSummary,
+  EventWithMarketsResponse,
+  MarketSummary,
+  MultiOutcomeEventSummary,
+  PolymarketEvent,
+  PolymarketEventWithMarkets,
+  PolymarketMarket,
+  SearchEventsResponse,
+  TrendingMarketsResponse,
+} from './types';
 import { buildPolymarketUrl, parseOutcomePrices } from './utils';
 
 const BASE_URL = 'https://gamma-api.polymarket.com/markets';

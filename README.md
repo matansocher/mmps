@@ -33,7 +33,9 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 | `WOLT`      | Wolt restaurant availability watcher + notifications                        |
 | `WORLDLY`   | Geography quiz / education                                                  |
 
-Plus **Clutch** — a bot-less static SPA (`apps/clutch-web`) served by the Express server at `/clutch/*`.
+Plus two bot-less web features:
+- **Clutch** — a static SPA (`apps/clutch-web`) served at `/clutch/*`.
+- **Savings** — a password-protected shared portfolio rebalancer (`apps/savings-web`) backed by MongoDB and served at `/savings/*`.
 
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
@@ -62,6 +64,7 @@ npm run docs:dev           # VitePress docs locally
 
 # Mini-app workspaces
 npm run dev:coach-web
+npm run dev:savings-web
 ```
 
 ### For AI agents (Claude Code, Copilot, Cursor, …)

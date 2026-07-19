@@ -20,16 +20,12 @@ export async function getSpotifyUserAccessToken(): Promise<string> {
   }
 
   try {
-    const response = await axios.post<SpotifyAuthResponse>(
-      SPOTIFY_ACCOUNTS_URL,
-      new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }),
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
-        },
+    const response = await axios.post<SpotifyAuthResponse>(SPOTIFY_ACCOUNTS_URL, new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
       },
-    );
+    });
 
     cachedUserAccessToken = response.data.access_token;
     userTokenExpirationTime = Date.now() + (response.data.expires_in - 300) * 1000;

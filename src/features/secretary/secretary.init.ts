@@ -2,11 +2,11 @@ import { createMongoConnection } from '@core/mongo';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME, ensureSecretaryMessageIndexes } from './mongo';
 import { SecretaryActionService } from './secretary-action.service';
-import { BOT_CONFIG } from './secretary.config';
-import { SecretaryController } from './secretary.controller';
 import { SecretaryDraftService } from './secretary-draft.service';
 import { SecretaryNudgeService } from './secretary-nudge.service';
 import { SecretarySchedulerService } from './secretary-scheduler.service';
+import { BOT_CONFIG } from './secretary.config';
+import { SecretaryController } from './secretary.controller';
 import { SecretaryService } from './secretary.service';
 
 export async function initSecretary(): Promise<void> {

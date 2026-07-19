@@ -17,8 +17,8 @@ import {
   polymarketTool,
   recipesTool,
   reminderTool,
-  spotifyTool,
   spotifyPodcastTool,
+  spotifyTool,
   telegramChannelsTool,
   tiktokTool,
   topMatchesForPredictionTool,
@@ -301,7 +301,6 @@ Guidelines:
   * Use emojis (📞, 👥, ✅, 🗑️) to make interactions engaging.
 `;
 
-
 export function agent(): AgentDescriptor {
   const tools = [
     weatherTool,
@@ -340,4 +339,3 @@ export function agent(): AgentDescriptor {
     tools,
   };
 }
-

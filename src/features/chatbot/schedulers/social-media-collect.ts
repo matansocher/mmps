@@ -1,6 +1,6 @@
 import { Logger, sleep } from '@core/utils';
-import { getUserVideos } from '@services/tiktok';
 import { fetchChannelPosts as fetchTelegramChannelPosts } from '@services/telegram-scraper';
+import { getUserVideos } from '@services/tiktok';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
 import { getVideosFromRSS } from '@services/youtube';
 import { createPendingPosts, getSubscriptionsGroupedByChatId, updateLastSeen } from '@shared/social-follower';

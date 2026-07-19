@@ -2,8 +2,8 @@ import { addDays } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from './constants';
 import type { CalendarEvent, CreateCalendarEventData, UpsertCalendarEventsResult } from '../types';
+import { DB_NAME } from './constants';
 
 const getCollection = () => getMongoCollection<CalendarEvent>(DB_NAME, 'events');
 

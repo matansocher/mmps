@@ -1,7 +1,7 @@
 import { read, utils } from 'xlsx';
 import type { Currency } from '@shared/expenses';
 import { categorizeFromSectorDiscount, detectSectionCurrency, typeFromHebrewType } from './categories';
-import { excelSerialToDate, type DiscountFileMeta, type ParsedRow, type ParserInput } from './types';
+import { type DiscountFileMeta, excelSerialToDate, type ParsedRow, type ParserInput } from './types';
 
 // Row 1 always contains a phrase like: "...לכרטיס ויזה זהב עסקי המסתיים ב-1220".
 const DISCOUNT_CARD_RE = /המסתיים ב[-־]?(\d{4})/;

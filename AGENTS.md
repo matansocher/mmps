@@ -10,12 +10,12 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 - **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **8 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **8 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. A ninth feature, `clutch`, is a bot-less static SPA (always initialized).
+- **8 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `clutch` and `savings` are bot-less web features initialized independently of bot selection.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/chatbot-web`, `apps/clutch-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/chatbot-web`, `apps/clutch-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web`, `apps/savings-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -119,7 +119,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 mmps/
 ├── src/
 │   ├── core/           # Config, mongo, openapi/swagger, services, utils
-│   ├── features/       # The bots (chatbot, chilli, clutch, coach, expenses, learner, secretary, wolt, worldly)
+│   ├── features/       # Bots plus clutch and savings web features
 │   ├── services/       # 30+ external service integrations
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
@@ -128,7 +128,8 @@ mmps/
 │   ├── clutch-web/
 │   ├── coach-web/
 │   ├── expenses-web/
-│   └── learner-web/
+│   ├── learner-web/
+│   └── savings-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
 ├── assets/             # Static assets (downloads dir, images)
@@ -186,6 +187,8 @@ src/services/{name}/
 | `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education. |
 
 **Not a bot:** `CLUTCH` (`src/features/clutch/`) is a static SPA (`apps/clutch-web`) served at `/clutch/*` with an analytics endpoint that forwards events to the notifier. It is always initialized (`initClutch(app)`), regardless of `LOCAL_ACTIVE_BOT_ID`.
+
+**Also not a bot:** `SAVINGS` (`src/features/savings/`) is a password-protected React SPA (`apps/savings-web`) served at `/savings/*`. It stores one shared family portfolio in the `Savings` MongoDB database, uses real ILS values with reactive rebalancing, and protects explicit saves with revision conflict detection. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
 **Boot logic** (`src/index.ts`):
 ```typescript
@@ -761,6 +764,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 **Convenience flags:**
 - `IS_PROD=true` runs all bots regardless of `LOCAL_ACTIVE_BOT_ID`.
 - `PORT` — Express port (default 3000).
+- `SAVINGS_APP_PASSWORD` — shared password for the standalone `/savings` portfolio app.
 
 Everything else is feature-specific (Spotify, GitHub App, Google services, Twilio, Pinecone, RapidAPI, etc.) and only needed if you exercise the corresponding tools.
 
@@ -793,8 +797,9 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, clutch-web)
+# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, clutch-web, savings-web)
 npm run dev:coach-web
+npm run dev:savings-web
 
 # Secretary prompt evals
 npm run eval:build        # build eval dataset

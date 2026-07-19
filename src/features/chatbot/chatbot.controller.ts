@@ -31,10 +31,6 @@ export class ChatbotController {
     await ctx.reply('Hi, I am your chatbot! How can I assist you today?');
   }
 
-
-
-
-
   private async exerciseHandler(ctx: Context): Promise<void> {
     await this.runAgentReply(ctx, 'I exercised', '🔥');
   }

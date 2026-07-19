@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'test/eval/**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'apps/savings-web/src/**/*.spec.ts', 'test/eval/**/*.spec.ts'],
     exclude: ['node_modules', 'test/integration'],
   },
   resolve: {

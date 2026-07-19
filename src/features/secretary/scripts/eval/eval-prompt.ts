@@ -166,7 +166,12 @@ function printReport(results: Result[]): void {
   logger.log(`\n══════════════ WORST ${worst.length} EXAMPLES ══════════════`);
   for (const r of worst) {
     logger.log(`\n— #${r.id} overall ${r.scores.overall} (tone ${r.scores.toneMatch}, len ${r.scores.lengthFit}, rel ${r.scores.relevance}, nat ${r.scores.naturalness}, send ${r.scores.wouldSend})`);
-    logger.log(`  context:\n${r.context.split('\n').map((l) => `    ${l}`).join('\n')}`);
+    logger.log(
+      `  context:\n${r.context
+        .split('\n')
+        .map((l) => `    ${l}`)
+        .join('\n')}`,
+    );
     logger.log(`  REAL : ${r.expectedReply.replace(/\n/g, ' / ')}`);
     logger.log(`  DRAFT: ${r.draft.replace(/\n/g, ' / ')}`);
     logger.log(`  ⚠️  ${r.scores.critique}`);

@@ -9,7 +9,9 @@ const chatId = MY_USER_ID;
 const schema = z.object({
   action: z
     .enum(['latest_posts', 'subscribe', 'unsubscribe', 'list'])
-    .describe('Action to perform: "latest_posts" fetches recent tweets, "subscribe" adds a user to the daily 22:45 social media digest, "unsubscribe" removes them, "list" shows current subscriptions'),
+    .describe(
+      'Action to perform: "latest_posts" fetches recent tweets, "subscribe" adds a user to the daily 22:45 social media digest, "unsubscribe" removes them, "list" shows current subscriptions',
+    ),
   username: z.string().optional().describe('The X (Twitter) username/handle, without the @ prefix (e.g., "elonmusk", "nasa"). Required for all actions except "list"'),
   count: z.number().min(1).max(20).optional().describe('Number of latest posts to fetch (default: 5, max: 20). Only used with "latest_posts"'),
   includeRetweets: z.boolean().optional().describe('Whether to include retweets (default: true). Only used with "latest_posts"'),

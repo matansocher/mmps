@@ -1,14 +1,24 @@
 import type { Express, Request, Response } from 'express';
 import { getDateString, Logger } from '@core/utils';
-import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { notify } from '@services/notifier';
+import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import type { TelegramBotConfig } from '@services/telegram';
 import { addSubscription, getSubscription, updateSubscription } from '@shared/coach';
 import { getSportsCompetitionMatches, getSportsCompetitions, getSportsMatchesSummary } from '@shared/sports';
-import { coachAuthMiddleware } from './auth.middleware';
-import type { AthleteDetailResponse, CompetitionDetailResponse, CompetitionsListResponse, FollowUpdateBody, FollowUpdateResponse, MatchDetailResponse, MatchSummary, TeamDetailResponse, TodayResponse } from './dto';
 import { fetchAthleteDetail } from './athlete-fetcher';
+import { coachAuthMiddleware } from './auth.middleware';
 import { fetchCompetitionStandingsAndBrackets } from './competition-fetcher';
+import type {
+  AthleteDetailResponse,
+  CompetitionDetailResponse,
+  CompetitionsListResponse,
+  FollowUpdateBody,
+  FollowUpdateResponse,
+  MatchDetailResponse,
+  MatchSummary,
+  TeamDetailResponse,
+  TodayResponse,
+} from './dto';
 import { fetchRichMatch } from './match-fetcher';
 import { fetchTeamDetail, fetchTeamRecentMatches } from './team-fetcher';
 import { toCompetitionRef, toMatchSummary } from './transformers';
@@ -123,11 +133,7 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       res.status(400).json({ error: 'invalid_id' });
       return;
     }
-    const [standingsAndBrackets, matchesDetails, competitions] = await Promise.all([
-      fetchCompetitionStandingsAndBrackets(id),
-      getSportsCompetitionMatches(id),
-      getSportsCompetitions(),
-    ]);
+    const [standingsAndBrackets, matchesDetails, competitions] = await Promise.all([fetchCompetitionStandingsAndBrackets(id), getSportsCompetitionMatches(id), getSportsCompetitions()]);
     const compMeta = competitions?.find((c) => c.id === id);
     if (!compMeta) {
       res.status(404).json({ error: 'competition_not_found' });
@@ -152,10 +158,7 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       res.status(404).json({ error: 'match_not_found' });
       return;
     }
-    const [homeRecentMatches, awayRecentMatches] = await Promise.all([
-      fetchTeamRecentMatches(rich.summary.home.id),
-      fetchTeamRecentMatches(rich.summary.away.id),
-    ]);
+    const [homeRecentMatches, awayRecentMatches] = await Promise.all([fetchTeamRecentMatches(rich.summary.home.id), fetchTeamRecentMatches(rich.summary.away.id)]);
     res.json({
       match: rich.summary,
       ...(rich.venue ? { venue: rich.venue } : {}),
