@@ -84,7 +84,7 @@ export function HomePage() {
         <div className="ambient animate-float" style={{ width: 260, height: 260, left: -80, top: -70, background: '#7c8cff' }} />
         <div className="ambient animate-float" style={{ width: 220, height: 220, right: -70, top: -20, background: '#5ee88a', animationDelay: '3s' }} />
 
-        <div className="relative mx-auto w-full max-w-2xl px-4 pb-6 pt-9">
+        <div className="relative mx-auto w-full max-w-2xl px-4 pb-6 pt-9" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2.75rem)' }}>
           <div className="flex items-center gap-4">
             <div className="relative flex items-center justify-center">
               <ProgressRing pct={overallPct} />
@@ -108,8 +108,8 @@ export function HomePage() {
 
       {/* Content container */}
       <div className="mx-auto w-full max-w-2xl px-4">
-      {/* Continue learning */}
-      {resume && (
+      {/* Start here — shown only when nothing has been started yet */}
+      {resume && !resumeStarted && (
         <button
           onClick={() => open(resume.id)}
           className="pressable group relative mt-6 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-accent-primary/40 bg-bg-card p-4 text-left shadow-glow"
@@ -123,21 +123,66 @@ export function HomePage() {
           </span>
           <div className="relative min-w-0 flex-1">
             <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent-primary">
-              <Sparkles size={13} /> {resumeStarted ? 'Continue learning' : 'Start here'}
+              <Sparkles size={13} /> Start here
             </div>
             <h2 className="mt-1 truncate text-base font-bold text-text-primary">{resume.title}</h2>
-            <p className="mt-0.5 text-xs text-text-muted">
-              {resumeStarted ? `Lesson ${Math.min(resumeDone + 1, resume.lessons.length)} of ${resume.lessons.length}` : `${resume.lessons.length} lessons · ${resume.quizzes.length} quizzes`}
-            </p>
+            <p className="mt-0.5 text-xs text-text-muted">{resume.lessons.length} lessons · {resume.quizzes.length} quizzes</p>
           </div>
           <ChevronRight className="relative shrink-0 text-accent-primary transition-transform group-hover:translate-x-0.5" />
         </button>
       )}
 
-      {/* Courses by category (completed ones move to the bottom) */}
+      {/* In Progress — courses you've started but not finished, always pinned to the top */}
+      {inProgress.length > 0 && (
+        <div className="mt-6">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-text-secondary">
+              <Flame size={14} className="text-accent-success" /> In Progress
+            </h3>
+            <span className="text-xs text-text-muted">{inProgress.length}</span>
+          </div>
+
+          <button
+            onClick={() => open(inProgress[0].id)}
+            className="pressable group relative mt-2.5 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-accent-primary/40 bg-bg-card p-4 text-left shadow-glow"
+          >
+            <div
+              className="pointer-events-none absolute inset-0 opacity-60"
+              style={{ background: `radial-gradient(400px 120px at 0% 0%, ${inProgress[0].color}22, transparent 70%)` }}
+            />
+            <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl" style={{ backgroundColor: `${inProgress[0].color}22` }}>
+              {inProgress[0].icon}
+            </span>
+            <div className="relative min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent-primary">
+                <Sparkles size={13} /> Continue learning
+              </div>
+              <h2 className="mt-1 truncate text-base font-bold text-text-primary">{inProgress[0].title}</h2>
+              <p className="mt-0.5 text-xs text-text-muted">
+                Lesson {Math.min(readCount(inProgress[0].id) + 1, inProgress[0].lessons.length)} of {inProgress[0].lessons.length}
+              </p>
+            </div>
+            <ChevronRight className="relative shrink-0 text-accent-primary transition-transform group-hover:translate-x-0.5" />
+          </button>
+
+          {inProgress.length > 1 && (
+            <div className="mt-2.5 flex flex-col gap-2.5">
+              {inProgress.slice(1).map((course) => (
+                <CourseRow key={course.id} course={course} done={readCount(course.id)} onOpen={open} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Courses by category (in-progress ones live in "In Progress" above; completed move to the bottom) */}
       {(() => {
         const isComplete = (c: Course) => readCount(c.id) >= c.lessons.length;
-        const sections = CATEGORIZED_COURSES.map((cat) => ({ name: cat.name, courses: cat.courses.filter((c) => !isComplete(c)) })).filter((cat) => cat.courses.length > 0);
+        const isInProgress = (c: Course) => {
+          const d = readCount(c.id);
+          return d > 0 && d < c.lessons.length;
+        };
+        const sections = CATEGORIZED_COURSES.map((cat) => ({ name: cat.name, courses: cat.courses.filter((c) => !isComplete(c) && !isInProgress(c)) })).filter((cat) => cat.courses.length > 0);
         const completed = ORDERED_COURSES.filter(isComplete);
 
         return (
