@@ -6,10 +6,10 @@ on:
       app-name:
         description: 'Heroku app name'
         required: true
-        default: mmps-a9baabab2459
+        default: mmps
         type: choice
         options:
-          - mmps-a9baabab2459
+          - mmps
 
 permissions:
   contents: read
