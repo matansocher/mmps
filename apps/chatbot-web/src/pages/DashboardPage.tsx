@@ -93,9 +93,8 @@ export function DashboardPage() {
     : `Reminders · ${pendingCount}`;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4">
+    <div className="max-w-2xl mx-auto px-4 pb-24 flex flex-col gap-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
       <header className="flex flex-col gap-3">
-        <DayPicker selected={selectedDate} onSelect={setSelectedDate} />
         <div>
           <div className="text-xs text-text-muted uppercase tracking-wide">{data?.isToday ? 'Today' : 'Day'}</div>
           <h1 className="text-xl font-semibold">{formatLongDate(selectedDate)}</h1>
@@ -197,6 +196,15 @@ export function DashboardPage() {
       )}
 
       {toast && <Toast message={toast.message} kind={toast.kind} onDismiss={() => setToast(null)} />}
+
+      <footer
+        className="fixed bottom-0 left-0 right-0 z-40 bg-bg-base/85 backdrop-blur-md border-t border-border-subtle"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="max-w-2xl mx-auto px-4 py-2.5">
+          <DayPicker selected={selectedDate} onSelect={setSelectedDate} />
+        </div>
+      </footer>
     </div>
   );
 }

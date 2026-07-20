@@ -5,7 +5,7 @@ import { QuizSection } from '../components/Quiz';
 import { getCourse, type Course } from '../data/courses';
 import { trackEvent } from '../lib/api';
 import { firstUnreadIndex, useProgress } from '../lib/progress';
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, List, Trophy } from '../lib/icons';
+import { Check, ChevronLeft, ChevronRight, List, Trophy } from '../lib/icons';
 import { haptic, showBackButton } from '../lib/telegram';
 
 export function CoursePage() {
@@ -80,21 +80,7 @@ function CourseReader({ course, onExit }: { readonly course: Course; readonly on
 
   return (
     <div ref={scrollRef} className="flex min-h-screen flex-col">
-      {/* Reading progress bar */}
-      <div className="fixed left-0 right-0 top-0 z-40 h-0.5 bg-transparent">
-        <div className="read-progress h-full bg-accent-primary" style={{ width: `${scrollPct}%` }} />
-      </div>
-
-      <header className="sticky top-0 z-30 border-b border-border-subtle bg-bg-base/85 backdrop-blur-md" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        <div className="mx-auto flex w-full max-w-2xl items-center px-3 py-2.5">
-          <button onClick={onExit} aria-label="Back to courses" className="pressable flex items-center gap-1.5 rounded-xl py-1 pl-1 pr-3 text-sm font-medium text-text-secondary hover:bg-bg-elevated">
-            <ArrowLeft />
-            Back
-          </button>
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-6 pt-5">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-6" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)' }}>
         {/* Course header — part of the page content */}
         <div className="mb-6 flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl" style={{ backgroundColor: `${course.color}1f` }}>
@@ -139,6 +125,10 @@ function CourseReader({ course, onExit }: { readonly course: Course; readonly on
       </main>
 
       <footer className="sticky bottom-0 z-30 border-t border-border-subtle bg-bg-base/85 backdrop-blur-md" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        {/* Reading progress — lives above the chapter nav so it stays visible past the iPhone's rounded corners */}
+        <div className="h-0.5 w-full bg-bg-elevated">
+          <div className="read-progress h-full bg-accent-primary" style={{ width: `${scrollPct}%` }} />
+        </div>
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-3 py-2.5">
           <button
             onClick={() => goTo(step - 1)}
