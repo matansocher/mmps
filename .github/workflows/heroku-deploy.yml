@@ -2,25 +2,20 @@ name: '🚀 Deploy to Heroku'
 
 on:
   workflow_dispatch:
-    inputs:
-      app-name:
-        description: 'Heroku app name'
-        required: true
-        default: mmps
-        type: choice
-        options:
-          - mmps
 
 permissions:
   contents: read
 
+env:
+  HEROKU_APP_NAME: mmps
+
 concurrency:
-  group: 'heroku-deployment-${{ inputs.app-name }}'
+  group: heroku-deployment-mmps
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: 'Deploy to ${{ inputs.app-name }}'
+    name: 'Deploy to Heroku'
     if: github.actor == 'matansocher'
     runs-on: ubuntu-latest
     environment:
@@ -34,25 +29,11 @@ jobs:
       - name: Deploy source to Heroku
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ inputs.app-name }}
         run: |
           if [ -z "$HEROKU_API_KEY" ]; then
             echo "::error::The HEROKU_API_KEY repository secret is required."
             exit 1
           fi
-
-          account_status="$(curl --silent --show-error --output /tmp/heroku-account.json --write-out '%{http_code}' \
-            --header 'Accept: application/vnd.heroku+json; version=3' \
-            --header "Authorization: Bearer ${HEROKU_API_KEY}" \
-            'https://api.heroku.com/account')"
-
-          if [ "$account_status" != '200' ]; then
-            echo "::error::HEROKU_API_KEY is invalid or has been revoked. Heroku account verification returned HTTP status ${account_status}."
-            exit 1
-          fi
-
-          account_email="$(jq --raw-output '.email' /tmp/heroku-account.json)"
-          masked_account_email="$(printf '%s' "$account_email" | sed -E 's/^(.).+(@.*)$/\1***\2/')"
 
           status="$(curl --silent --show-error --output /tmp/heroku-app.json --write-out '%{http_code}' \
             --header 'Accept: application/vnd.heroku+json; version=3' \
@@ -66,7 +47,7 @@ jobs:
               exit 1
               ;;
             403 | 404)
-              echo "::error::The API key belongs to '${masked_account_email}' but cannot access Heroku app '${HEROKU_APP_NAME}'. Confirm this is the app owner or an accepted collaborator."
+              echo "::error::The API key cannot access Heroku app '${HEROKU_APP_NAME}'. Confirm the app name and account access."
               exit 1
               ;;
             *)
