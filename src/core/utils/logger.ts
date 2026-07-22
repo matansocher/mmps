@@ -1,5 +1,6 @@
 import pc from 'picocolors';
 import { isProd } from '@core/config';
+import { forwardLogToNewRelic } from '@core/observability';
 
 type Level = 'LOG' | 'ERROR' | 'WARN' | 'DEBUG';
 
@@ -15,14 +16,17 @@ export class Logger {
 
   log(message: string): void {
     console.log(this.format('LOG', message));
+    forwardLogToNewRelic('LOG', this.context, message);
   }
 
   error(message: string): void {
     console.error(this.format('ERROR', message));
+    forwardLogToNewRelic('ERROR', this.context, message);
   }
 
   warn(message: string): void {
     console.warn(this.format('WARN', message));
+    forwardLogToNewRelic('WARN', this.context, message);
   }
 
   debug(message: string): void {

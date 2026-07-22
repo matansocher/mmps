@@ -92,7 +92,7 @@ export function HomePage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-accent-primary">{greeting}</p>
-              <h1 className="mt-0.5 text-2xl font-extrabold leading-tight text-text-primary">AI Engineering Masteryy</h1>
+              <h1 className="mt-0.5 text-2xl font-extrabold leading-tight text-text-primary">AI Engineering Mastery</h1>
               <p className="mt-1 text-sm text-text-muted">Bite-sized lessons that make you interview-ready.</p>
             </div>
           </div>
