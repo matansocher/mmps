@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 8 specialized Telegram bots plus one bot-less web feature. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Clutch is always initialized.
+MMPS includes 8 specialized Telegram bots. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID.
 
 ## The Bots
 
@@ -52,12 +52,6 @@ Interactive geography quiz bot.
 - **Database**: `Worldly`
 - **[Learn more →](/bots/worldly)**
 
-### **Clutch** - Bot-Less Web Feature
-Static SPA served at `/clutch/*` with analytics forwarded to the Telegram notifier.
-- **Features**: `apps/clutch-web`, `POST /clutch/api/events`, always initialized
-- **Database**: None
-- **[Learn more →](/bots/clutch)**
-
 ## Running Bots
 
 ### Development Mode (One Bot)
@@ -74,7 +68,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `SECRET
 IS_PROD=true npm start
 ```
 
-Production initializes all 8 Telegram bots. Clutch initializes in both development and production.
+Production initializes all 8 Telegram bots.
 
 ## Bot Architecture
 
@@ -140,8 +134,6 @@ SECRETARY_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 
-# Bot-less Clutch analytics
-NOTIFIER_TELEGRAM_BOT_TOKEN=...
 ```
 
 ## Next Steps
@@ -155,7 +147,6 @@ Select a bot to explore:
 - **[Secretary](/bots/secretary)** - Telegram business assistant
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education
-- **[Clutch](/bots/clutch)** - Bot-less static SPA
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

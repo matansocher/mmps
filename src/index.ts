@@ -9,7 +9,6 @@ import { closeRedisConnection } from '@core/services';
 import { gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
-import { initClutch } from '@features/clutch';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
 import { BOT_CONFIG as learnerConfig, initLearner } from '@features/learner';
@@ -33,8 +32,6 @@ async function main() {
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
   });
-
-  initClutch(app);
 
   registerSwaggerRoutes(app);
 

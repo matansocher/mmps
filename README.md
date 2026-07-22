@@ -33,8 +33,6 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 | `WOLT`      | Wolt restaurant availability watcher + notifications                        |
 | `WORLDLY`   | Geography quiz / education                                                  |
 
-Plus **Clutch** — a bot-less static SPA (`apps/clutch-web`) served by the Express server at `/clutch/*`.
-
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
 ## Architecture

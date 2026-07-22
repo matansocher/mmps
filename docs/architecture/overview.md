@@ -46,7 +46,7 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 ```
 src/
 ├── core/           # Core utilities, config, MongoDB setup
-├── features/       # Bot implementations (8 independent bots + clutch SPA)
+├── features/       # Bot implementations (8 independent bots)
 ├── services/       # External service integrations (30+ services)
 ├── shared/         # Shared utilities and AI tools
 └── index.ts        # Entry point with conditional bot loading
@@ -78,8 +78,6 @@ features/{bot-name}/
 6. **Secretary** - Personal secretary over a Telegram business connection
 7. **Wolt** - Restaurant notifications
 8. **Worldly** - Geography education
-
-Plus **Clutch** — a bot-less static SPA served by the Express server.
 
 ## Conditional Bot Loading
 
