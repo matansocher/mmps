@@ -10,12 +10,12 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 - **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **8 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **8 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. A ninth feature, `clutch`, is a bot-less static SPA (always initialized).
+- **8 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/chatbot-web`, `apps/clutch-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/chatbot-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -119,13 +119,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 mmps/
 ├── src/
 │   ├── core/           # Config, mongo, openapi/swagger, services, utils
-│   ├── features/       # The bots (chatbot, chilli, clutch, coach, expenses, learner, secretary, wolt, worldly)
+│   ├── features/       # The bots (chatbot, chilli, coach, expenses, learner, secretary, wolt, worldly)
 │   ├── services/       # 30+ external service integrations
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
 │   ├── chatbot-web/
-│   ├── clutch-web/
 │   ├── coach-web/
 │   ├── expenses-web/
 │   └── learner-web/
@@ -184,8 +183,6 @@ src/services/{name}/
 | `SECRETARY` | Secretary 🤝    | `src/features/secretary/`     | `SECRETARY_TELEGRAM_BOT_TOKEN`   | Personal secretary over a Telegram business connection — voice transcription, AI draft replies, daily chat summaries with one-tap actions, check-in nudges. Has eval scripts (`npm run eval:draft`). |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
 | `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education. |
-
-**Not a bot:** `CLUTCH` (`src/features/clutch/`) is a static SPA (`apps/clutch-web`) served at `/clutch/*` with an analytics endpoint that forwards events to the notifier. It is always initialized (`initClutch(app)`), regardless of `LOCAL_ACTIVE_BOT_ID`.
 
 **Boot logic** (`src/index.ts`):
 ```typescript
@@ -793,7 +790,7 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, clutch-web)
+# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web)
 npm run dev:coach-web
 
 # Secretary prompt evals

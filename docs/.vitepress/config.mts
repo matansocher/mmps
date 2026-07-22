@@ -70,7 +70,6 @@ export default defineConfig({
             { text: 'Chatbot', link: '/bots/chatbot' },
             { text: 'Chatbot — Deep Dive', link: '/bots/chatbot-deep-dive' },
             { text: 'Chilli', link: '/bots/chilli' },
-            { text: 'Clutch', link: '/bots/clutch' },
             { text: 'Coach', link: '/bots/coach' },
             { text: 'Expenses', link: '/bots/expenses' },
             { text: 'Learner', link: '/bots/learner' },
