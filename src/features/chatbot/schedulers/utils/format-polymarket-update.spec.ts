@@ -294,9 +294,9 @@ describe('toOutcomeSnapshots', () => {
     ]);
   });
 
-  it('should cap snapshots at the top 8 outcomes', () => {
+  it('should cap snapshots at the top 4 outcomes', () => {
     const outcomes = Array.from({ length: 12 }, (_, index) => createMockOutcome({ outcome: `Team ${index}`, probability: (12 - index) / 100 }));
-    expect(toOutcomeSnapshots(createMockEvent({ outcomes }))).toHaveLength(8);
+    expect(toOutcomeSnapshots(createMockEvent({ outcomes }))).toHaveLength(4);
   });
 });
 
@@ -321,14 +321,14 @@ describe('formatMultiOutcomeUpdateMessage', () => {
     expect(result).toContain('[View event](https://polymarket.com/event/world-cup-winner)');
   });
 
-  it('should show only the top 8 outcomes', () => {
+  it('should show only the top 4 outcomes', () => {
     const outcomes = Array.from({ length: 14 }, (_, index) => createMockOutcome({ outcome: `Team ${index}`, probability: (14 - index) / 100 }));
     const updates: MultiOutcomeUpdate[] = [{ subscription: createMockMultiSubscription(), event: createMockEvent({ outcomes }) }];
 
     const result = formatMultiOutcomeUpdateMessage(updates);
 
-    expect(result).toContain('8. Team 7');
-    expect(result).not.toContain('9. Team 8');
+    expect(result).toContain('4. Team 3');
+    expect(result).not.toContain('5. Team 4');
   });
 
   it('should show closed emoji for closed events', () => {
