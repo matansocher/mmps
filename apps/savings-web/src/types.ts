@@ -3,11 +3,15 @@ export type CurrencyExposure = 'fx' | 'ils';
 export type AssetType = 'equity' | 'solid';
 export type HoldingOwner = 'guy' | 'tody' | 'shared';
 
+export const GEOGRAPHY_LABELS = ['ארהב', 'ישראל', 'אירופה', 'אסיה'] as const;
+export type HoldingGeography = (typeof GEOGRAPHY_LABELS)[number];
+
+export type BreakdownRecord = Readonly<Record<string, number>>;
+
 export type Holding = {
   readonly id: string;
   readonly account: HoldingAccount;
   readonly name: string;
-  readonly category: string;
   readonly geography: string;
   readonly currentAmountIls: number;
   readonly targetAmountIls: number;
@@ -15,6 +19,9 @@ export type Holding = {
   readonly assetType: AssetType;
   readonly owner: HoldingOwner;
   readonly note: string;
+  readonly geographyBreakdown?: BreakdownRecord;
+  readonly currencyBreakdown?: BreakdownRecord;
+  readonly assetBreakdown?: BreakdownRecord;
 };
 
 export type HoldingDraft = Omit<Holding, 'id'>;

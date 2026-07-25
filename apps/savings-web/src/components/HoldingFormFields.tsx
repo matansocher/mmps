@@ -1,4 +1,8 @@
-import type { HoldingDraft } from '../types';
+import { dominantKey } from '../lib/breakdown';
+import type { BreakdownRecord, HoldingDraft } from '../types';
+import { GEOGRAPHY_LABELS } from '../types';
+import { BreakdownInput } from './BreakdownInput';
+import { FemaleIcon, MaleIcon } from './Icons';
 import { Select } from './Select';
 
 type HoldingFormFieldsProps = {
@@ -7,7 +11,55 @@ type HoldingFormFieldsProps = {
   readonly onChange: (changes: Partial<HoldingDraft>) => void;
 };
 
+function initCurrencyBreakdown(current: HoldingDraft['currencyExposure']): BreakdownRecord {
+  return current === 'fx' ? { fx: 100, ils: 0 } : { ils: 100, fx: 0 };
+}
+
+function initAssetBreakdown(current: HoldingDraft['assetType']): BreakdownRecord {
+  return current === 'solid' ? { solid: 100, equity: 0 } : { equity: 100, solid: 0 };
+}
+
+function initGeographyBreakdown(current: string): BreakdownRecord {
+  if (!current.trim()) return Object.fromEntries(GEOGRAPHY_LABELS.map((l, i) => [l, i === 0 ? 100 : 0]));
+  const result: Record<string, number> = {};
+  for (const label of GEOGRAPHY_LABELS) {
+    result[label] = label === current ? 100 : 0;
+  }
+  return result;
+}
+
 export function HoldingFormFields({ idPrefix, draft, onChange }: HoldingFormFieldsProps) {
+  const hasCurrencyBreakdown = draft.currencyBreakdown !== undefined;
+  const hasAssetBreakdown = draft.assetBreakdown !== undefined;
+  const hasGeographyBreakdown = draft.geographyBreakdown !== undefined;
+
+  function toggleCurrency(): void {
+    if (hasCurrencyBreakdown) {
+      const dominant = dominantKey(draft.currencyBreakdown!);
+      onChange({ currencyExposure: dominant === 'fx' ? 'fx' : 'ils', currencyBreakdown: undefined });
+    } else {
+      onChange({ currencyBreakdown: initCurrencyBreakdown(draft.currencyExposure) });
+    }
+  }
+
+  function toggleAsset(): void {
+    if (hasAssetBreakdown) {
+      const dominant = dominantKey(draft.assetBreakdown!);
+      onChange({ assetType: dominant === 'solid' ? 'solid' : 'equity', assetBreakdown: undefined });
+    } else {
+      onChange({ assetBreakdown: initAssetBreakdown(draft.assetType) });
+    }
+  }
+
+  function toggleGeography(): void {
+    if (hasGeographyBreakdown) {
+      const dominant = dominantKey(draft.geographyBreakdown!);
+      onChange({ geography: dominant || GEOGRAPHY_LABELS[0], geographyBreakdown: undefined });
+    } else {
+      onChange({ geographyBreakdown: initGeographyBreakdown(draft.geography) });
+    }
+  }
+
   return (
     <>
       <label htmlFor={`${idPrefix}-name`}>
@@ -44,30 +96,66 @@ export function HoldingFormFields({ idPrefix, draft, onChange }: HoldingFormFiel
         />
       </label>
       <label htmlFor={`${idPrefix}-currency`}>
-        חשיפת מטבע
-        <Select
-          id={`${idPrefix}-currency`}
-          name={`${idPrefix}-currency`}
-          value={draft.currencyExposure}
-          onChange={(nextValue) => onChange({ currencyExposure: nextValue === 'fx' ? 'fx' : 'ils' })}
-          options={[
-            { value: 'ils', label: 'שקלי' },
-            { value: 'fx', label: 'מט״ח' },
-          ]}
-        />
+        <span className="field-label-row">
+          חשיפת מטבע
+          <label className="breakdown-toggle">
+            <input type="checkbox" checked={hasCurrencyBreakdown} onChange={toggleCurrency} />
+            פיצול
+          </label>
+        </span>
+        {hasCurrencyBreakdown ? (
+          <BreakdownInput
+            idPrefix={`${idPrefix}-currency`}
+            options={[
+              { value: 'ils', label: 'שקלי' },
+              { value: 'fx', label: 'מט״ח' },
+            ]}
+            breakdown={draft.currencyBreakdown!}
+            onChange={(currencyBreakdown) => onChange({ currencyBreakdown })}
+          />
+        ) : (
+          <Select
+            id={`${idPrefix}-currency`}
+            name={`${idPrefix}-currency`}
+            value={draft.currencyExposure}
+            onChange={(nextValue) => onChange({ currencyExposure: nextValue === 'fx' ? 'fx' : 'ils' })}
+            options={[
+              { value: 'ils', label: 'שקלי' },
+              { value: 'fx', label: 'מט״ח' },
+            ]}
+          />
+        )}
       </label>
       <label htmlFor={`${idPrefix}-type`}>
-        סוג נכס
-        <Select
-          id={`${idPrefix}-type`}
-          name={`${idPrefix}-type`}
-          value={draft.assetType}
-          onChange={(nextValue) => onChange({ assetType: nextValue === 'solid' ? 'solid' : 'equity' })}
-          options={[
-            { value: 'equity', label: 'מנייתי' },
-            { value: 'solid', label: 'סולידי' },
-          ]}
-        />
+        <span className="field-label-row">
+          סוג נכס
+          <label className="breakdown-toggle">
+            <input type="checkbox" checked={hasAssetBreakdown} onChange={toggleAsset} />
+            פיצול
+          </label>
+        </span>
+        {hasAssetBreakdown ? (
+          <BreakdownInput
+            idPrefix={`${idPrefix}-asset`}
+            options={[
+              { value: 'equity', label: 'מנייתי' },
+              { value: 'solid', label: 'סולידי' },
+            ]}
+            breakdown={draft.assetBreakdown!}
+            onChange={(assetBreakdown) => onChange({ assetBreakdown })}
+          />
+        ) : (
+          <Select
+            id={`${idPrefix}-type`}
+            name={`${idPrefix}-type`}
+            value={draft.assetType}
+            onChange={(nextValue) => onChange({ assetType: nextValue === 'solid' ? 'solid' : 'equity' })}
+            options={[
+              { value: 'equity', label: 'מנייתי' },
+              { value: 'solid', label: 'סולידי' },
+            ]}
+          />
+        )}
       </label>
       <label htmlFor={`${idPrefix}-owner`}>
         בעלים
@@ -77,19 +165,36 @@ export function HoldingFormFields({ idPrefix, draft, onChange }: HoldingFormFiel
           value={draft.owner}
           onChange={(nextValue) => onChange({ owner: (nextValue === 'guy' || nextValue === 'tody' ? nextValue : 'shared') })}
           options={[
-            { value: 'guy', label: 'גוז 👦' },
-            { value: 'tody', label: 'תודי 👧' },
-            { value: 'shared', label: 'משותף 👦👧' },
+            { value: 'guy', label: <><MaleIcon className="select-owner-icon" /> גוז</> },
+            { value: 'tody', label: <><FemaleIcon className="select-owner-icon" /> תודי</> },
+            { value: 'shared', label: <><MaleIcon className="select-owner-icon" /><FemaleIcon className="select-owner-icon" /> משותף</> },
           ]}
         />
       </label>
-      <label htmlFor={`${idPrefix}-category`}>
-        קטגוריה
-        <input id={`${idPrefix}-category`} name={`${idPrefix}-category`} value={draft.category} onChange={(event) => onChange({ category: event.target.value })} autoComplete="off" />
-      </label>
       <label htmlFor={`${idPrefix}-geography`}>
-        אזור גיאוגרפי
-        <input id={`${idPrefix}-geography`} name={`${idPrefix}-geography`} value={draft.geography} onChange={(event) => onChange({ geography: event.target.value })} autoComplete="off" />
+        <span className="field-label-row">
+          אזור גיאוגרפי
+          <label className="breakdown-toggle">
+            <input type="checkbox" checked={hasGeographyBreakdown} onChange={toggleGeography} />
+            פיצול
+          </label>
+        </span>
+        {hasGeographyBreakdown ? (
+          <BreakdownInput
+            idPrefix={`${idPrefix}-geography`}
+            options={GEOGRAPHY_LABELS.map((label) => ({ value: label, label }))}
+            breakdown={draft.geographyBreakdown!}
+            onChange={(geographyBreakdown) => onChange({ geographyBreakdown })}
+          />
+        ) : (
+          <Select
+            id={`${idPrefix}-geography`}
+            name={`${idPrefix}-geography`}
+            value={draft.geography}
+            onChange={(nextValue) => onChange({ geography: nextValue })}
+            options={GEOGRAPHY_LABELS.map((label) => ({ value: label, label }))}
+          />
+        )}
       </label>
       <label className="full-width" htmlFor={`${idPrefix}-note`}>
         הערה

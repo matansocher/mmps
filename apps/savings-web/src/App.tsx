@@ -115,8 +115,10 @@ export function App() {
   }
 
   function applyTargets(settings: Pick<PortfolioSettings, 'fxLimitPercent' | 'solidTargetPercent' | 'geographyTargets'>): void {
-    setPortfolio((current) => (current ? { ...current, settings: { ...current.settings, ...settings } } : current));
-    setStatus((current) => (current === 'conflict' ? current : 'clean'));
+    if (!portfolio) return;
+    const nextPortfolio = { ...portfolio, settings: { ...portfolio.settings, ...settings } };
+    setPortfolio(nextPortfolio);
+    void savePortfolioDirectly(nextPortfolio);
   }
 
   function addHolding(draft: HoldingDraft): void {
@@ -125,16 +127,28 @@ export function App() {
       id: newHoldingId(),
       ...draft,
     };
-    setPortfolio({ ...portfolio, holdings: [...portfolio.holdings, holding] });
-    setStatus((current) => (current === 'conflict' ? current : 'clean'));
+    const nextPortfolio = { ...portfolio, holdings: [...portfolio.holdings, holding] };
+    setPortfolio(nextPortfolio);
+    void savePortfolioDirectly(nextPortfolio);
+  }
+
+  function updateHoldingFromModal(id: string, changes: Partial<Holding>): void {
+    if (!portfolio) return;
+    const nextPortfolio = {
+      ...portfolio,
+      holdings: portfolio.holdings.map((holding) => (holding.id === id ? { ...holding, ...changes } : holding)),
+    };
+    setPortfolio(nextPortfolio);
+    void savePortfolioDirectly(nextPortfolio);
   }
 
   function deleteHolding(id: string): void {
     if (!portfolio) return;
     const holding = portfolio.holdings.find((item) => item.id === id);
     if (!window.confirm(`למחוק את "${holding?.name || 'השורה'}"?`)) return;
-    setPortfolio({ ...portfolio, holdings: portfolio.holdings.filter((item) => item.id !== id) });
-    setStatus((current) => (current === 'conflict' ? current : 'clean'));
+    const nextPortfolio = { ...portfolio, holdings: portfolio.holdings.filter((item) => item.id !== id) };
+    setPortfolio(nextPortfolio);
+    void savePortfolioDirectly(nextPortfolio);
   }
 
   function revertChanges(): void {
@@ -144,11 +158,11 @@ export function App() {
     setStatus('clean');
   }
 
-  async function savePortfolio(): Promise<void> {
-    if (!portfolio || !hasChanges || status === 'saving' || status === 'conflict') return;
+  async function savePortfolioDirectly(portfolioToSave: Portfolio): Promise<void> {
+    if (status === 'saving' || status === 'conflict') return;
     setStatus('saving');
     try {
-      const response = await savingsApi.savePortfolio(portfolio);
+      const response = await savingsApi.savePortfolio(portfolioToSave);
       applyServerPortfolio(response.portfolio);
       setStatus('saved');
     } catch (error) {
@@ -159,6 +173,11 @@ export function App() {
       }
       setStatus('error');
     }
+  }
+
+  async function savePortfolio(): Promise<void> {
+    if (!portfolio || !hasChanges) return;
+    await savePortfolioDirectly(portfolio);
   }
 
   function acceptLatest(): void {
@@ -178,6 +197,7 @@ export function App() {
       status={status}
       hasChanges={hasChanges}
       onHoldingChange={updateHolding}
+      onModalHoldingChange={updateHoldingFromModal}
       onAddHolding={addHolding}
       onApplyTargets={applyTargets}
       onDeleteHolding={deleteHolding}

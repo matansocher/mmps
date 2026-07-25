@@ -14,7 +14,6 @@ function holding(overrides: Partial<Holding>): Holding {
     id: 'holding',
     account: 'manual',
     name: 'נכס',
-    category: 'קטגוריה',
     geography: 'ישראל',
     currentAmountIls: 0,
     targetAmountIls: 0,
@@ -90,5 +89,17 @@ describe('calculateRebalance()', () => {
     });
 
     expectFinite(result);
+  });
+
+  it('computes weighted fx and solid percentages from breakdowns', () => {
+    const result = calculateRebalance(
+      [
+        holding({ id: 'mixed', currentAmountIls: 100, currencyBreakdown: { fx: 70, ils: 30 }, assetBreakdown: { equity: 60, solid: 40 } }),
+      ],
+      settings,
+    );
+
+    expect(result.fxProjectedPercent).toBeCloseTo(70);
+    expect(result.solidProjectedPercent).toBeCloseTo(40);
   });
 });

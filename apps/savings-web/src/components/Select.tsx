@@ -1,10 +1,10 @@
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { CheckIcon, ChevronDownIcon } from './Icons';
 
 export type SelectOption = {
   readonly value: string;
-  readonly label: string;
+  readonly label: ReactNode;
 };
 
 type SelectProps = {

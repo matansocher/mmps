@@ -8,8 +8,8 @@ describe('parseHtmlPortfolio()', () => {
       <input id="solidTargetInput" value="20">
       <script>
         const originalHoldings = [
-          { id: "acwi", account: "managed", name: "MSCI ACWI", category: "Equity", geography: "World", target: 12, currency: "fx", type: "equity" },
-          { id: "bonds", account: "managed", name: "Government Bonds", category: "Bonds", geography: "Israel", target: 30, currency: "ils", type: "solid" }
+          { id: "acwi", account: "managed", name: "MSCI ACWI", geography: "World", target: 12, currency: "fx", type: "equity" },
+          { id: "bonds", account: "managed", name: "Government Bonds", geography: "Israel", target: 30, currency: "ils", type: "solid" }
         ];
       </script>
     `;
@@ -47,7 +47,6 @@ describe('parseHtmlPortfolio()', () => {
               "id": "custom",
               "account": "manual",
               "name": "Custom Fund",
-              "category": "Global",
               "geography": "World",
               "current": 72,
               "target": 40,
@@ -71,7 +70,6 @@ describe('parseHtmlPortfolio()', () => {
         id: 'custom',
         account: 'manual',
         name: 'Custom Fund',
-        category: 'Global',
         geography: 'World',
         currentAmountIls: 0,
         targetAmountIls: 40,

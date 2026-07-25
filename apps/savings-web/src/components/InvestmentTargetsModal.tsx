@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { distinctGeographyLabels, geographyColor } from '../lib/composition';
-import type { Holding, PortfolioSettings } from '../types';
-import { SplitRangeSlider, StackedAllocationSlider } from './AllocationSliders';
+import { useEffect, useRef, useState } from 'react';
+import { geographyColor } from '../lib/composition';
+import type { PortfolioSettings } from '../types';
+import { GEOGRAPHY_LABELS } from '../types';
 import { CloseIcon, SettingsIcon } from './Icons';
 
 type InvestmentTargetsModalProps = {
-  readonly holdings: readonly Holding[];
   readonly settings: PortfolioSettings;
   readonly onApply: (settings: Pick<PortfolioSettings, 'fxLimitPercent' | 'solidTargetPercent' | 'geographyTargets'>) => void;
   readonly onClose: () => void;
@@ -15,39 +14,27 @@ function percentageValue(value: number): number {
   return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
 }
 
-function normalizeWeightEntries(entries: readonly (readonly [string, number])[]): ReadonlyMap<string, number> {
-  const total = entries.reduce((sum, [, value]) => sum + percentageValue(value), 0);
-  if (total <= 0) return new Map(entries);
-  let allocated = 0;
-  return new Map(
-    entries.map(([id, value], index) => {
-      const normalized = index === entries.length - 1 ? Math.max(0, 100 - allocated) : Math.round((percentageValue(value) / total) * 1000) / 10;
-      allocated += normalized;
-      return [id, normalized] as const;
-    }),
-  );
-}
-
-export function InvestmentTargetsModal({ holdings, settings, onApply, onClose }: InvestmentTargetsModalProps) {
-  const geographyLabels = useMemo(() => distinctGeographyLabels(holdings), [holdings]);
-  const equalGeographyWeight = geographyLabels.length > 0 ? 100 / geographyLabels.length : 0;
+export function InvestmentTargetsModal({ settings, onApply, onClose }: InvestmentTargetsModalProps) {
+  const hasGeographyTargets = Object.keys(settings.geographyTargets ?? {}).length > 0;
   const [fxPercent, setFxPercent] = useState(settings.fxLimitPercent);
   const [solidPercent, setSolidPercent] = useState(settings.solidTargetPercent);
-  const [geographyTargets, setGeographyTargets] = useState<ReadonlyMap<string, number>>(() =>
-    normalizeWeightEntries(geographyLabels.map((label) => [label, settings.geographyTargets[label] ?? equalGeographyWeight])),
-  );
+  const [geoTargets, setGeoTargets] = useState<Record<string, number>>(() => {
+    const equalWeight = Math.round((100 / GEOGRAPHY_LABELS.length) * 10) / 10;
+    const result: Record<string, number> = {};
+    for (const label of GEOGRAPHY_LABELS) {
+      result[label] = settings.geographyTargets[label] ?? (hasGeographyTargets ? 0 : equalWeight);
+    }
+    const total = Object.values(result).reduce((sum, v) => sum + v, 0);
+    if (Math.abs(total - 100) > 0.5) {
+      const lastLabel = GEOGRAPHY_LABELS[GEOGRAPHY_LABELS.length - 1];
+      result[lastLabel] = Math.round(Math.max(0, 100 - (total - result[lastLabel])) * 10) / 10;
+    }
+    return result;
+  });
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const geographySegments = useMemo(
-    () =>
-      geographyLabels.map((label, index) => ({
-        key: label,
-        label,
-        percent: geographyTargets.get(label) ?? 0,
-        color: geographyColor(index),
-      })),
-    [geographyLabels, geographyTargets],
-  );
+  const geoTotal = Math.round(Object.values(geoTargets).reduce((sum, v) => sum + v, 0) * 10) / 10;
+  const geoIsValid = Math.abs(geoTotal - 100) < 0.5;
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -58,11 +45,30 @@ export function InvestmentTargetsModal({ holdings, settings, onApply, onClose }:
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  function handleGeoChange(label: string, rawValue: number): void {
+    setGeoTargets((current) => ({ ...current, [label]: percentageValue(rawValue) }));
+  }
+
+  function equalSplit(): void {
+    const base = Math.floor((100 / GEOGRAPHY_LABELS.length) * 10) / 10;
+    const result: Record<string, number> = {};
+    let allocated = 0;
+    GEOGRAPHY_LABELS.forEach((label, index) => {
+      if (index === GEOGRAPHY_LABELS.length - 1) {
+        result[label] = Math.round((100 - allocated) * 10) / 10;
+      } else {
+        result[label] = base;
+        allocated += base;
+      }
+    });
+    setGeoTargets(result);
+  }
+
   function applyTargets(): void {
     onApply({
       fxLimitPercent: percentageValue(fxPercent),
       solidTargetPercent: percentageValue(solidPercent),
-      geographyTargets: Object.fromEntries(geographyTargets),
+      geographyTargets: Object.fromEntries(Object.entries(geoTargets).map(([k, v]) => [k, percentageValue(v)])),
     });
     onClose();
   }
@@ -74,7 +80,7 @@ export function InvestmentTargetsModal({ holdings, settings, onApply, onClose }:
           <div>
             <span className="eyebrow">הגדרות אסטרטגיה</span>
             <h2 id="targets-title">יעדי השקעה</h2>
-            <p>גררו את הבקרים כדי לקבוע לאן שואפים להטות את התיק.</p>
+            <p>הגדירו את יעדי חלוקת התיק לפי מטבע, סוג נכס ואזור גיאוגרפי.</p>
           </div>
           <button ref={closeButtonRef} className="modal-close" type="button" onClick={onClose} aria-label="סגירת חלון יעדי ההשקעה">
             <CloseIcon />
@@ -82,37 +88,102 @@ export function InvestmentTargetsModal({ holdings, settings, onApply, onClose }:
         </header>
 
         <div className="target-limits">
-          <div className="target-slider-block">
-            <span className="target-slider-title">מטבע</span>
-            <SplitRangeSlider id="target-fx-limit" leftLabel="מט״ח" rightLabel="שקלי" leftColor="#176b73" rightColor="#c7d2da" value={fxPercent} onChange={setFxPercent} />
+          <div className="target-pair-block">
+            <span className="target-pair-title">מטבע</span>
+            <div className="target-pair-inputs">
+              <label className="target-pair-field">
+                <span>מט״ח</span>
+                <div className="input-with-unit target-percent-input">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={fxPercent || ''}
+                    onChange={(e) => setFxPercent(percentageValue(e.target.valueAsNumber))}
+                  />
+                  <span>%</span>
+                </div>
+              </label>
+              <label className="target-pair-field target-pair-complement">
+                <span>שקלי</span>
+                <div className="input-with-unit target-percent-input">
+                  <input type="number" readOnly value={100 - fxPercent} tabIndex={-1} />
+                  <span>%</span>
+                </div>
+              </label>
+            </div>
           </div>
-          <div className="target-slider-block">
-            <span className="target-slider-title">סוג נכס</span>
-            <SplitRangeSlider id="target-solid-allocation" leftLabel="סולידי" rightLabel="מנייתי" leftColor="#b17b16" rightColor="#4767a8" value={solidPercent} onChange={setSolidPercent} />
+          <div className="target-pair-block">
+            <span className="target-pair-title">סוג נכס</span>
+            <div className="target-pair-inputs">
+              <label className="target-pair-field">
+                <span>סולידי</span>
+                <div className="input-with-unit target-percent-input">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={solidPercent || ''}
+                    onChange={(e) => setSolidPercent(percentageValue(e.target.valueAsNumber))}
+                  />
+                  <span>%</span>
+                </div>
+              </label>
+              <label className="target-pair-field target-pair-complement">
+                <span>מנייתי</span>
+                <div className="input-with-unit target-percent-input">
+                  <input type="number" readOnly value={100 - solidPercent} tabIndex={-1} />
+                  <span>%</span>
+                </div>
+              </label>
+            </div>
           </div>
         </div>
 
         <div className="targets-heading">
           <div>
             <h3>יעדי אזור גיאוגרפי</h3>
-            <p>גררו את הקווים המפרידים בין האזורים כדי לשנות את היעד של כל אחד מהם.</p>
+            <p>הגדירו את אחוז היעד לכל אזור. הסכום צריך להגיע ל-100%.</p>
           </div>
+          <button type="button" className="target-equal-btn" onClick={equalSplit}>
+            חלוקה שווה
+          </button>
         </div>
 
-        {geographySegments.length === 0 ? (
-          <div className="empty-content compact">
-            <strong>אין עדיין נתוני אזור</strong>
-            <span>לאחר הוספת השקעות עם אזור גיאוגרפי ניתן יהיה להגדיר יעדים לכל אזור.</span>
+        <div className="target-geo-section">
+          <div className="target-geo-grid">
+            {GEOGRAPHY_LABELS.map((label, index) => (
+              <label className="target-geo-field" key={label}>
+                <span className="target-geo-label">
+                  <span className="target-geo-dot" style={{ background: geographyColor(index) }} />
+                  {label}
+                </span>
+                <div className="input-with-unit target-percent-input">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={geoTargets[label] || ''}
+                    onChange={(e) => handleGeoChange(label, e.target.valueAsNumber)}
+                  />
+                  <span>%</span>
+                </div>
+              </label>
+            ))}
           </div>
-        ) : (
-          <StackedAllocationSlider segments={geographySegments} onChange={setGeographyTargets} />
-        )}
+          <div className={`target-geo-total${geoIsValid ? '' : ' is-error'}`}>
+            סה״כ {geoTotal.toFixed(1)}%
+          </div>
+        </div>
 
         <footer className="modal-footer">
           <button type="button" onClick={onClose}>
             ביטול
           </button>
-          <button className="primary button-with-icon" type="button" onClick={applyTargets}>
+          <button className="primary button-with-icon" type="button" onClick={applyTargets} disabled={!geoIsValid}>
             <SettingsIcon />
             החלת היעדים
           </button>

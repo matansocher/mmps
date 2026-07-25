@@ -1,3 +1,4 @@
+import { effectiveGeography } from './breakdown';
 import type { Holding } from '../types';
 
 export type CompositionSlice = {
@@ -26,22 +27,21 @@ function nonNegative(value: number): number {
   return Number.isFinite(value) ? Math.max(0, value) : 0;
 }
 
-export function distinctGeographyLabels(holdings: readonly Holding[]): string[] {
-  const labels = new Set<string>();
-  for (const holding of holdings) {
-    labels.add(holding.geography.trim() || UNSPECIFIED_REGION);
-  }
-  return [...labels];
-}
-
 export function geographyComposition(holdings: readonly Holding[]): CompositionSlice[] {
   const byRegion = new Map<string, number>();
   let total = 0;
   for (const holding of holdings) {
     const amount = nonNegative(holding.currentAmountIls);
     if (amount <= 0) continue;
-    const label = holding.geography.trim() || UNSPECIFIED_REGION;
-    byRegion.set(label, (byRegion.get(label) ?? 0) + amount);
+    const geo = effectiveGeography(holding);
+    if (geo.size === 0) {
+      byRegion.set(UNSPECIFIED_REGION, (byRegion.get(UNSPECIFIED_REGION) ?? 0) + amount);
+    } else {
+      for (const [label, percent] of geo) {
+        const contribution = amount * percent / 100;
+        byRegion.set(label, (byRegion.get(label) ?? 0) + contribution);
+      }
+    }
     total += amount;
   }
   return [...byRegion.entries()].map(([label, amountIls]) => ({ label, amountIls, percent: total > 0 ? (amountIls / total) * 100 : 0 })).sort((first, second) => second.amountIls - first.amountIls);

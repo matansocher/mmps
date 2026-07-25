@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { hasInvalidBreakdown } from '../lib/breakdown';
 import type { Holding, HoldingDraft, PortfolioSettings } from '../types';
+import { GEOGRAPHY_LABELS } from '../types';
 import { HoldingFormFields } from './HoldingFormFields';
 import { CloseIcon, PlusIcon } from './Icons';
 import { SimulationPreview } from './SimulationPreview';
@@ -14,8 +16,7 @@ type InvestmentSimulationModalProps = {
 const EMPTY_DRAFT: HoldingDraft = {
   account: 'manual',
   name: '',
-  category: '',
-  geography: '',
+  geography: GEOGRAPHY_LABELS[0],
   currentAmountIls: 0,
   targetAmountIls: 0,
   currencyExposure: 'ils',
@@ -28,7 +29,7 @@ export function InvestmentSimulationModal({ holdings, settings, onAdd, onClose }
   const [draft, setDraft] = useState<HoldingDraft>(EMPTY_DRAFT);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const simulatedHoldings = useMemo(() => [...holdings, { id: 'investment-simulation', ...draft }], [draft, holdings]);
-  const canAdd = draft.name.trim().length > 0 && draft.currentAmountIls > 0;
+  const canAdd = draft.name.trim().length > 0 && draft.currentAmountIls > 0 && !hasInvalidBreakdown(draft);
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -48,7 +49,6 @@ export function InvestmentSimulationModal({ holdings, settings, onAdd, onClose }
     onAdd({
       ...draft,
       name: draft.name.trim(),
-      category: draft.category.trim(),
       geography: draft.geography.trim(),
       note: draft.note.trim(),
     });

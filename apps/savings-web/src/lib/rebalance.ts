@@ -1,3 +1,4 @@
+import { effectiveFxPercent, effectiveSolidPercent } from './breakdown';
 import type { Holding, PortfolioSettings } from '../types';
 
 export type CalculatedHolding = Holding & {
@@ -106,8 +107,8 @@ export function calculateRebalance(holdings: readonly Holding[], settings: Portf
   });
 
   const allocatedDepositIls = sum(rows.map((row) => row.allocationIls));
-  const fxProjectedIls = sum(rows.filter((row) => row.currencyExposure === 'fx').map((row) => row.projectedAmountIls));
-  const solidProjectedIls = sum(rows.filter((row) => row.assetType === 'solid').map((row) => row.projectedAmountIls));
+  const fxProjectedIls = sum(rows.map((row) => row.projectedAmountIls * effectiveFxPercent(row) / 100));
+  const solidProjectedIls = sum(rows.map((row) => row.projectedAmountIls * effectiveSolidPercent(row) / 100));
   const manualDriftPercent = sum(rows.filter((row) => row.account === 'manual').map((row) => Math.abs(row.projectedWithinAccountPercent - row.targetWithinAccountPercent))) / 2;
 
   return {

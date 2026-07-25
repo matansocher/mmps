@@ -1,5 +1,7 @@
-import { distinctGeographyLabels, geographyComposition } from './composition';
+import { effectiveFxPercent, effectiveSolidPercent } from './breakdown';
+import { geographyComposition } from './composition';
 import type { Holding, PortfolioSettings } from '../types';
+import { GEOGRAPHY_LABELS } from '../types';
 
 export type PortfolioExposure = {
   readonly fxPercent: number;
@@ -25,8 +27,8 @@ function sum(values: readonly number[]): number {
 
 export function computeExposure(holdings: readonly Holding[]): PortfolioExposure {
   const totalIls = sum(holdings.map((holding) => nonNegative(holding.currentAmountIls)));
-  const fxIls = sum(holdings.filter((holding) => holding.currencyExposure === 'fx').map((holding) => nonNegative(holding.currentAmountIls)));
-  const solidIls = sum(holdings.filter((holding) => holding.assetType === 'solid').map((holding) => nonNegative(holding.currentAmountIls)));
+  const fxIls = sum(holdings.map((holding) => nonNegative(holding.currentAmountIls) * effectiveFxPercent(holding) / 100));
+  const solidIls = sum(holdings.map((holding) => nonNegative(holding.currentAmountIls) * effectiveSolidPercent(holding) / 100));
   const geographyPercent = new Map(geographyComposition(holdings).map((slice) => [slice.label, slice.percent]));
 
   return {
@@ -69,20 +71,19 @@ function explainCandidate(before: PortfolioExposure, after: PortfolioExposure, s
 
 export function rankCandidates(holdings: readonly Holding[], settings: PortfolioSettings, depositAmountIls: number, topN = 3): AdvisorCandidate[] {
   if (depositAmountIls <= 0) return [];
-  const geographyLabels = distinctGeographyLabels(holdings);
   const beforeExposure = computeExposure(holdings);
-  const distanceBefore = distanceToTargets(beforeExposure, settings, geographyLabels);
+  const distanceBefore = distanceToTargets(beforeExposure, settings, GEOGRAPHY_LABELS);
 
   return holdings
     .map((holding) => {
       const afterExposure = computeExposure(depositedHoldings(holdings, holding.id, depositAmountIls));
-      const distanceAfter = distanceToTargets(afterExposure, settings, geographyLabels);
+      const distanceAfter = distanceToTargets(afterExposure, settings, GEOGRAPHY_LABELS);
       return {
         holding,
         improvement: distanceBefore - distanceAfter,
         distanceBefore,
         distanceAfter,
-        explanation: explainCandidate(beforeExposure, afterExposure, settings, geographyLabels),
+        explanation: explainCandidate(beforeExposure, afterExposure, settings, GEOGRAPHY_LABELS),
       };
     })
     .sort((first, second) => second.improvement - first.improvement)

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { hasBreakdown } from '../lib/breakdown';
 import { rankCandidates } from '../lib/allocationAdvisor';
 import { formatIls } from '../lib/format';
 import type { Holding, PortfolioSettings } from '../types';
@@ -106,9 +107,9 @@ export function DepositAdvisorModal({ holdings, settings, onApply, onClose }: De
                       <span className="advisor-candidate-body">
                         <span className="advisor-candidate-name">{candidate.holding.name}</span>
                         <span className="advisor-candidate-tags">
-                          <span className="tag">{CURRENCY_LABEL[candidate.holding.currencyExposure]}</span>
-                          <span className="tag">{ASSET_TYPE_LABEL[candidate.holding.assetType]}</span>
-                          {candidate.holding.geography ? <span className="tag">{candidate.holding.geography}</span> : null}
+                          <span className="tag">{CURRENCY_LABEL[candidate.holding.currencyExposure]}{hasBreakdown(candidate.holding, 'currency') ? ' (פיצול)' : ''}</span>
+                          <span className="tag">{ASSET_TYPE_LABEL[candidate.holding.assetType]}{hasBreakdown(candidate.holding, 'asset') ? ' (פיצול)' : ''}</span>
+                          {candidate.holding.geography ? <span className="tag">{candidate.holding.geography}{hasBreakdown(candidate.holding, 'geography') ? ' (פיצול)' : ''}</span> : null}
                         </span>
                         <span className="advisor-explanation">{candidate.explanation}</span>
                       </span>

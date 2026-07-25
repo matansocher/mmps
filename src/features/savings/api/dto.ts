@@ -1,3 +1,4 @@
+import { SAVINGS_GEOGRAPHY_LABELS } from '../constants';
 import type { SavingsHolding, SavingsPortfolio, SavingsPortfolioDocument, SavingsSettings } from '../types';
 
 const MAX_HOLDINGS = 50;
@@ -69,8 +70,8 @@ function parseString(value: unknown, maxLength: number, required = false): strin
 function isGeographyTargets(value: unknown): value is Readonly<Record<string, number>> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const entries = Object.entries(value as Record<string, unknown>);
-  if (entries.length > MAX_HOLDINGS) return false;
-  if (!entries.every(([key, amount]) => key.trim().length > 0 && key.length <= MAX_TEXT_LENGTH && isFiniteNumberInRange(amount, 0, 100))) return false;
+  if (entries.length > SAVINGS_GEOGRAPHY_LABELS.length) return false;
+  if (!entries.every(([key, amount]) => (SAVINGS_GEOGRAPHY_LABELS as readonly string[]).includes(key) && isFiniteNumberInRange(amount, 0, 100))) return false;
   if (entries.length === 0) return true;
   const total = entries.reduce((sum, [, amount]) => sum + (amount as number), 0);
   return Math.abs(total - 100) < 0.5;
@@ -87,18 +88,32 @@ function isSavingsSettings(value: unknown): value is SavingsSettings {
   );
 }
 
+function isOptionalBreakdown(value: unknown, allowedKeys: readonly string[]): boolean {
+  if (value === undefined || value === null) return true;
+  if (typeof value !== 'object' || Array.isArray(value)) return false;
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (entries.length === 0) return false;
+  if (!entries.every(([key, amount]) => allowedKeys.includes(key) && isFiniteNumberInRange(amount, 0, 100))) return false;
+  const total = entries.reduce((sum, [, amount]) => sum + (amount as number), 0);
+  return Math.abs(total - 100) < 0.5;
+}
+
+function parseOptionalBreakdown(value: unknown, allowedKeys: readonly string[]): Record<string, number> | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!isOptionalBreakdown(value, allowedKeys)) return undefined;
+  return value as Record<string, number>;
+}
+
 function parseSavingsHolding(value: unknown): SavingsHolding | null {
   if (!value || typeof value !== 'object') return null;
   const holding = value as Record<string, unknown>;
   const id = parseString(holding.id, 100, true);
   const name = parseString(holding.name, MAX_NAME_LENGTH);
-  const category = parseString(holding.category, MAX_TEXT_LENGTH);
   const geography = parseString(holding.geography, MAX_TEXT_LENGTH);
   const note = parseString(holding.note, MAX_NOTE_LENGTH);
   if (
     id === null ||
     name === null ||
-    category === null ||
     geography === null ||
     note === null ||
     (holding.account !== 'managed' && holding.account !== 'manual') ||
@@ -106,16 +121,18 @@ function parseSavingsHolding(value: unknown): SavingsHolding | null {
     !isFiniteNumberInRange(holding.targetAmountIls, 0, MAX_AMOUNT_ILS) ||
     (holding.currencyExposure !== 'fx' && holding.currencyExposure !== 'ils') ||
     (holding.assetType !== 'equity' && holding.assetType !== 'solid') ||
-    (holding.owner !== 'guy' && holding.owner !== 'tody' && holding.owner !== 'shared')
+    (holding.owner !== 'guy' && holding.owner !== 'tody' && holding.owner !== 'shared') ||
+    !isOptionalBreakdown(holding.geographyBreakdown, SAVINGS_GEOGRAPHY_LABELS) ||
+    !isOptionalBreakdown(holding.currencyBreakdown, ['fx', 'ils']) ||
+    !isOptionalBreakdown(holding.assetBreakdown, ['equity', 'solid'])
   ) {
     return null;
   }
 
-  return {
+  const result: SavingsHolding = {
     id,
     account: holding.account,
     name,
-    category,
     geography,
     currentAmountIls: holding.currentAmountIls,
     targetAmountIls: holding.targetAmountIls,
@@ -123,6 +140,17 @@ function parseSavingsHolding(value: unknown): SavingsHolding | null {
     assetType: holding.assetType,
     owner: holding.owner,
     note,
+  };
+
+  const geographyBreakdown = parseOptionalBreakdown(holding.geographyBreakdown, SAVINGS_GEOGRAPHY_LABELS as readonly string[]);
+  const currencyBreakdown = parseOptionalBreakdown(holding.currencyBreakdown, ['fx', 'ils']);
+  const assetBreakdown = parseOptionalBreakdown(holding.assetBreakdown, ['equity', 'solid']);
+
+  return {
+    ...result,
+    ...(geographyBreakdown ? { geographyBreakdown } : {}),
+    ...(currencyBreakdown ? { currencyBreakdown } : {}),
+    ...(assetBreakdown ? { assetBreakdown } : {}),
   };
 }
 

@@ -20,7 +20,6 @@ type HtmlHolding = {
   readonly id?: unknown;
   readonly account?: unknown;
   readonly name?: unknown;
-  readonly category?: unknown;
   readonly geography?: unknown;
   readonly current?: unknown;
   readonly target?: unknown;
@@ -95,7 +94,6 @@ function migrateHolding(holding: HtmlHolding, index: number): SavingsHolding {
     id: text(holding.id, `html-holding-${index + 1}`),
     account: holding.account === 'managed' ? 'managed' : 'manual',
     name,
-    category: text(holding.category),
     geography: text(holding.geography),
     currentAmountIls: 0,
     targetAmountIls: nonNegativeNumber(holding.target),

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { dominantKey, hasInvalidBreakdown } from '../lib/breakdown';
 import type { Holding, HoldingDraft, PortfolioSettings } from '../types';
 import { HoldingFormFields } from './HoldingFormFields';
 import { CloseIcon, SaveIcon, TrashIcon } from './Icons';
@@ -17,7 +18,6 @@ function draftFromHolding(holding: Holding): HoldingDraft {
   return {
     account: holding.account,
     name: holding.name,
-    category: holding.category,
     geography: holding.geography,
     currentAmountIls: holding.currentAmountIls,
     targetAmountIls: holding.targetAmountIls,
@@ -25,6 +25,9 @@ function draftFromHolding(holding: Holding): HoldingDraft {
     assetType: holding.assetType,
     owner: holding.owner,
     note: holding.note,
+    ...(holding.geographyBreakdown ? { geographyBreakdown: holding.geographyBreakdown } : {}),
+    ...(holding.currencyBreakdown ? { currencyBreakdown: holding.currencyBreakdown } : {}),
+    ...(holding.assetBreakdown ? { assetBreakdown: holding.assetBreakdown } : {}),
   };
 }
 
@@ -33,7 +36,7 @@ export function EditHoldingModal({ holding, holdings, settings, onSave, onDelete
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const simulatedHoldings = useMemo(() => holdings.map((item) => (item.id === holding.id ? { ...item, ...draft } : item)), [holdings, holding.id, draft]);
   const addedAmountIls = draft.currentAmountIls - holding.currentAmountIls;
-  const canSave = draft.name.trim().length > 0;
+  const canSave = draft.name.trim().length > 0 && !hasInvalidBreakdown(draft);
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -50,12 +53,21 @@ export function EditHoldingModal({ holding, holdings, settings, onSave, onDelete
 
   function saveChanges(): void {
     if (!canSave) return;
+    let synced = { ...draft };
+    if (synced.currencyBreakdown) {
+      synced = { ...synced, currencyExposure: dominantKey(synced.currencyBreakdown) === 'fx' ? 'fx' : 'ils' };
+    }
+    if (synced.assetBreakdown) {
+      synced = { ...synced, assetType: dominantKey(synced.assetBreakdown) === 'solid' ? 'solid' : 'equity' };
+    }
+    if (synced.geographyBreakdown) {
+      synced = { ...synced, geography: dominantKey(synced.geographyBreakdown) || draft.geography };
+    }
     onSave(holding.id, {
-      ...draft,
-      name: draft.name.trim(),
-      category: draft.category.trim(),
-      geography: draft.geography.trim(),
-      note: draft.note.trim(),
+      ...synced,
+      name: synced.name.trim(),
+      geography: synced.geography.trim(),
+      note: synced.note.trim(),
     });
   }
 

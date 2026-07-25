@@ -3,11 +3,12 @@ export type SavingsCurrencyExposure = 'fx' | 'ils';
 export type SavingsAssetType = 'equity' | 'solid';
 export type SavingsOwner = 'guy' | 'tody' | 'shared';
 
+export type BreakdownRecord = Readonly<Record<string, number>>;
+
 export type SavingsHolding = {
   readonly id: string;
   readonly account: SavingsAccount;
   readonly name: string;
-  readonly category: string;
   readonly geography: string;
   readonly currentAmountIls: number;
   readonly targetAmountIls: number;
@@ -15,6 +16,9 @@ export type SavingsHolding = {
   readonly assetType: SavingsAssetType;
   readonly owner: SavingsOwner;
   readonly note: string;
+  readonly geographyBreakdown?: BreakdownRecord;
+  readonly currencyBreakdown?: BreakdownRecord;
+  readonly assetBreakdown?: BreakdownRecord;
 };
 
 export type SavingsSettings = {

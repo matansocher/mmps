@@ -116,6 +116,24 @@ export function CheckIcon(props: IconProps) {
   );
 }
 
+export function MaleIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" {...props}>
+      <circle cx="12" cy="7.5" r="3.25" />
+      <path strokeLinecap="round" d="M5 21c0-3.87 3.13-7 7-7s7 3.13 7 7" />
+    </svg>
+  );
+}
+
+export function FemaleIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" {...props}>
+      <circle cx="12" cy="7" r="3.25" />
+      <path strokeLinecap="round" d="M7 21l2.5-8c.5-1.5 1.4-2.25 2.5-2.25s2 .75 2.5 2.25L17 21" />
+    </svg>
+  );
+}
+
 export function LightbulbIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" {...props}>

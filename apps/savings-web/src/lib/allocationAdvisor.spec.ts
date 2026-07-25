@@ -14,7 +14,6 @@ function holding(overrides: Partial<Holding>): Holding {
     id: 'holding',
     account: 'manual',
     name: 'נכס',
-    category: 'קטגוריה',
     geography: 'ישראל',
     currentAmountIls: 0,
     targetAmountIls: 0,
@@ -44,6 +43,17 @@ describe('computeExposure()', () => {
     expect(exposure.solidPercent).toBeCloseTo(60);
     expect(exposure.geographyPercent.get('ארהב')).toBeCloseTo(60);
     expect(exposure.geographyPercent.get('ישראל')).toBeCloseTo(40);
+  });
+
+  it('computes weighted exposure from breakdowns', () => {
+    const holdings = [
+      holding({ id: 'mixed', currentAmountIls: 100, currencyBreakdown: { fx: 60, ils: 40 }, assetBreakdown: { equity: 30, solid: 70 }, geographyBreakdown: { 'ישראל': 50, 'ארהב': 50 } }),
+    ];
+    const exposure = computeExposure(holdings);
+    expect(exposure.fxPercent).toBeCloseTo(60);
+    expect(exposure.solidPercent).toBeCloseTo(70);
+    expect(exposure.geographyPercent.get('ישראל')).toBeCloseTo(50);
+    expect(exposure.geographyPercent.get('ארהב')).toBeCloseTo(50);
   });
 });
 
