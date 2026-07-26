@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A catalog of public Hello Interview YouTube videos." />
+    <title>Hello Interview Video Catalog</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        background: #0b1020;
+        color: #eef2ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 48px 24px 72px;
+      }
+      header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 36px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        letter-spacing: -0.055em;
+      }
+      header p {
+        color: #a5b4fc;
+        margin: 10px 0 0;
+        line-height: 1.5;
+      }
+      .channel-link,
+      .watch {
+        color: #fff;
+        background: #e11d48;
+        padding: 11px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .channel-link:hover,
+      .watch:hover {
+        background: #be123c;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) repeat(2, minmax(150px, auto));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .control {
+        min-height: 44px;
+        border: 1px solid #42526f;
+        border-radius: 9px;
+        background: #111936;
+        color: #eef2ff;
+        font: inherit;
+        padding: 10px 12px;
+      }
+      .control:focus-visible,
+      .channel-link:focus-visible,
+      .watch:focus-visible,
+      h2 a:focus-visible {
+        outline: 3px solid #fda4af;
+        outline-offset: 3px;
+      }
+      #video-count {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 22px;
+      }
+      .card {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #263353;
+        border-radius: 14px;
+        background: #111936;
+        box-shadow: 0 8px 28px #02061755;
+      }
+      .thumbnail {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        display: block;
+        background: #1e293b;
+      }
+      .thumbnail img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .duration {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        padding: 3px 6px;
+        border-radius: 4px;
+        background: #020617e8;
+        color: #fff;
+        font-size: 0.76rem;
+        font-weight: 700;
+      }
+      .content {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        padding: 17px;
+      }
+      h2 {
+        margin: 0;
+        font-size: 1.06rem;
+        line-height: 1.35;
+        letter-spacing: -0.015em;
+      }
+      h2 a {
+        color: inherit;
+        text-decoration: none;
+      }
+      h2 a:hover {
+        color: #fda4af;
+      }
+      .description {
+        flex: 1;
+        margin: 10px 0 16px;
+        color: #bec8e8;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: #94a3b8;
+        font-size: 0.8rem;
+      }
+      .metadata {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+        color: #a5b4fc;
+        font-size: 0.78rem;
+      }
+      .watch {
+        padding: 7px 10px;
+        border-radius: 7px;
+        font-size: 0.8rem;
+      }
+      @media (max-width: 620px) {
+        main {
+          padding: 32px 16px 48px;
+        }
+        header {
+          grid-template-columns: 1fr;
+        }
+        .channel-link {
+          width: fit-content;
+        }
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Hello Interview</h1>
+          <p>Public YouTube video catalog, newest first. Metadata collected July 22, 2026.</p>
+        </div>
+        <a class="channel-link" href="https://www.youtube.com/@hello_interview/videos" target="_blank" rel="noreferrer">Open channel</a>
+      </header>
+      <div class="controls" aria-label="Video filters">
+        <input class="control" id="video-search" type="search" placeholder="Search videos" aria-label="Search videos" />
+        <select class="control" id="length-filter" aria-label="Filter by video length">
+          <option value="all">All lengths</option>
+          <option value="short">Under 15 minutes</option>
+          <option value="medium">15 to 30 minutes</option>
+          <option value="long">30 to 60 minutes</option>
+          <option value="extended">Over 60 minutes</option>
+        </select>
+        <select class="control" id="video-sort" aria-label="Sort videos">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="views-desc">Most views</option>
+          <option value="views-asc">Fewest views</option>
+          <option value="duration-desc">Longest</option>
+          <option value="duration-asc">Shortest</option>
+        </select>
+      </div>
+      <div id="video-count" aria-live="polite"></div>
+      <section class="grid" id="videos" aria-label="Video catalog"></section>
+    </main>
+    <script>
+      const videos = [
+        ['A1kX8fJx53c', 'AI Coding Interview w/ Meta Staff Engineer', '53:22', '2026-05-18'],
+        ['DOFflggE_0Q', 'Distributed Transactions Explained: 2 Phase Commit vs Saga Pattern', '14:46', '2026-05-05'],
+        ['RuGY_1pap74', 'Senior System Design Mock Interview: Design an e-commerce platform', '1:11:33', '2026-04-26'],
+        ['EX5uZV3Tzss', 'Real-Time Collaboration Explained - System Design', '15:36', '2026-04-14'],
+        ['fODT0ldeBiU', 'Low-Level Design Interview: Design an Elevator w/ a Ex-Meta Staff Engineer', '1:01:27', '2026-03-25'],
+        ['1HOVtQ-_fcE', 'Kafka vs RabbitMQ', '10:56', '2026-03-22'],
+        ['1ISRd0bS714', 'Message Queues in System Design Interviews w/ Meta Staff Engineer', '26:46', '2026-03-01'],
+        ['d8rmosXttTE', 'Concurrency in Low-level Design Interviews w/ Staff Engineer', '22:31', '2026-01-29'],
+        ['s6nGkoGJhXk', 'Low-Level Design Interview: Design Amazon Locker w/ a Ex-Meta Staff Engineer', '50:56', '2026-01-13'],
+        ['9UI4ikKP3Ws', 'Low-Level Design Interview: Design Connect Four w/ a Ex-Meta Staff Engineer', '59:50', '2026-01-01'],
+        ['Qd76ZmfRs_Q', 'How do Time Series Databases Work?', '37:15', '2025-12-01'],
+        ['1NngTUYPdpI', 'Caching in System Design Interviews w/ Meta Staff Engineer', '30:14', '2025-11-12'],
+        ['L521gizea4s', 'Sharding in System Design Interviews w/ Meta Staff Engineer', '30:34', '2025-11-02'],
+        ['CAda15Tawlg', 'Behavioral Interview: Common Questions Broken Down by Ex-Meta & Amazon Senior Managers', '1:06:49', '2025-10-24'],
+        ['y-tA2NW4LNY', 'Top-K System Design Interview Breakdown w/ Ex-Meta Senior Manager', '1:31:38', '2025-10-19'],
+        ['TUcPS6dsWx4', 'Data Modeling in System Design Interviews w/ Meta Staff Engineer', '30:35', '2025-09-23'],
+        ['MIJFyUPG4Z4', 'Design a Distributed Rate Limiter w/ a Ex-Meta Staff Engineer: System Design Breakdown', '55:58', '2025-08-19'],
+        ['DQ57zYedMdQ', 'API Design in System Design Interviews w/ Meta Staff Engineer', '28:40', '2025-07-27'],
+        ['tgJKcKH_Ap8', 'Leetcode 200: Number of Islands - Coding Question Walkthrough', '24:23', '2025-07-20'],
+        ['l38XL9914fs', 'Design FB Post Search: System Design Interview breakdown w/ ex Meta Interviewer', '1:08:27', '2025-06-19'],
+        ['yz1jtze4qr8', 'System Design Mock Interview: Design Yelp w/ Meta Staff Engineer', '38:10', '2025-06-15'],
+        ['o8nSXW-B7Rw', 'OpenAI & Meta Senior/Staff System Design Mock Interview: Design Online Auction', '1:02:53', '2025-06-10'],
+        ['Qj4-GruzyDU', 'Design FB News Feed System Design Interview w/ ex: Meta Senior Manager', '26:12', '2025-06-05'],
+        ['RvaMHMxHjp4', 'Object Storage in System Design Interviews w/ Ex-Meta Staff Engineer', '12:37', '2025-06-02'],
+        ['Ru54dxzCyD0', 'How to Prepare for System Design Interviews w/ Meta Staff Engineer', '18:27', '2025-05-21'],
+        ['9KUC_nHydZg', 'Harmful Content Detection / Content Moderation | ML System Design Problem Breakdown', '53:35', '2025-05-04'],
+        ['7-6F3b14baA', 'API Gateways in System Design Interviews w/ Ex-Meta Staff Engineer', '6:25', '2025-04-17'],
+        ['IUrQ5_g3XKs', 'System Design Interview: Design YouTube w/ a Ex-Meta Staff Engineer', '42:39', '2025-03-09'],
+        ['SHkbPm1Wrno', 'Networking Essentials for System Design Interviews w/ Ex Meta Senior Manager', '1:08:02', '2025-03-02'],
+        ['vccwdhfqIrI', 'Consistent Hashing: Easy Explanation for System Design Interviews', '7:14', '2025-02-20'],
+        ['IgyU0iFIoqM', 'Data Structures for Big Data in Interviews - Bloom Filters, Count-Min Sketch, HyperLogLog', '25:51', '2025-02-15'],
+        ['BHCSL_ZifI0', 'DB Indexing in System Design Interviews - B-tree, Geospatial, Inverted Index, and more!', '14:16', '2025-02-09'],
+        ['GncgOIiMII8', 'Recommendation System Infra Basics 1', '9:44', '2025-01-26'],
+        ['LjLx0fCd1k8', 'System Design Interview: Design Live Comments w/ a Ex-Meta Staff Engineer', '56:15', '2025-01-12'],
+        ['cr6p0n0N-VA', 'Design Whatsapp: System Design Interview w/ a Ex-Meta Senior Manager', '58:12', '2024-12-20'],
+        ['VdrEq0cODu4', 'CAP Theorem in System Design Interviews', '13:56', '2024-11-17'],
+        ['iUU4O1sWtJA', 'Beginner System Design Interview: Design Bitly w/ a Ex-Meta Staff Engineer', '59:30', '2024-11-03'],
+        ['qJ9_ABtT6RQ', 'Interview with a Databricks Head of Applied AI: Industry Trends, How to Move Ahead, and Keeping Sane', '28:11', '2024-10-22'],
+        ['18Fg5Akhkqw', 'System Design Interview: Design Tinder w/ a Ex-Meta Staff Engineer', '1:13:22', '2024-09-22'],
+        ['suPO02S0cR8', 'Coding Interview Fundamentals: Post-Order Traversal', '26:08', '2024-09-18'],
+        ['PuZvF2EyfBM', 'Elasticsearch Deep Dive w/ a Ex-Meta Senior Manager for System Design Interviews', '44:03', '2024-09-08'],
+        ['ZztKT-KVqwA', 'Coding Interview Fundamentals: Depth-First Search and Recursion (Binary Trees)', '21:28', '2024-09-01'],
+        ['pFTyGG4mORk', 'Design Yelp, Meta Staff Product Architecture: Hello Interview Mock', '1:03:24', '2024-08-19'],
+        ['1xHADtekTNg', 'System Design Interview: Design LeetCode (Online Judge) w/ a Ex-Meta Staff Engineer', '1:03:34', '2024-08-14'],
+        ['DU8o-OTeoCc', 'Kafka System Design Deep Dive w/ a Ex-Meta Staff Engineer', '43:31', '2024-07-21'],
+        ['3Hb5An-NaX8', 'Interview with a Meta EM: AI Impact on SWEs, Team Match, Ramp-Up, How to Learn', '45:14', '2024-07-05'],
+        ['fmT5nlEkl3U', 'Redis Deep Dive w/ a Ex-Meta Senior Manager', '31:00', '2024-06-26'],
+        ['krsuaUp__pM', 'Design a Web Crawler System Design Interview w/ a Ex-Meta Staff Engineer', '1:05:04', '2024-06-16'],
+        ['Zcv_899yqhI', 'Design an Ad Click Aggregator w/ a Ex-Meta Staff Engineer System Design Interview', '1:02:22', '2024-05-15'],
+        ['_UZ1ngy-kOI', 'Design Dropbox or Google Drive w/ a Ex-Meta Staff Engineer System Design Interview', '58:08', '2024-04-24'],
+        ['lsKU38RKQSo', 'Design Uber w/ a Ex-Meta Staff Engineer: System Design Interview breakdown', '1:03:05', '2024-04-03'],
+        ['fhdPyoO6aXI', 'System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer', '58:39', '2024-03-14'],
+        ['tgSe27eoBG0', 'Design FB Live Comments: Hello Interview Mock', '59:50', '2024-02-27'],
+        ['Nfa-uUHuFHg', 'System Design Interview Walkthrough: Design Twitter', '23:04', '2023-09-12'],
+      ];
+
+      const viewCounts = {
+        A1kX8fJx53c: 63154,
+        DOFflggE_0Q: 153624,
+        RuGY_1pap74: 22889,
+        EX5uZV3Tzss: 33873,
+        fODT0ldeBiU: 54102,
+        '1HOVtQ-_fcE': 219891,
+        '1ISRd0bS714': 171640,
+        d8rmosXttTE: 129119,
+        s6nGkoGJhXk: 34218,
+        '9UI4ikKP3Ws': 45960,
+        Qd76ZmfRs_Q: 45064,
+        '1NngTUYPdpI': 199002,
+        L521gizea4s: 137820,
+        CAda15Tawlg: 145725,
+        'y-tA2NW4LNY': 94330,
+        TUcPS6dsWx4: 134357,
+        MIJFyUPG4Z4: 222844,
+        DQ57zYedMdQ: 247529,
+        tgJKcKH_Ap8: 18373,
+        l38XL9914fs: 71246,
+        yz1jtze4qr8: 38827,
+        'o8nSXW-B7Rw': 58331,
+        'Qj4-GruzyDU': 117956,
+        RvaMHMxHjp4: 82857,
+        Ru54dxzCyD0: 236190,
+        '9KUC_nHydZg': 56209,
+        '7-6F3b14baA': 233052,
+        IUrQ5_g3XKs: 216316,
+        SHkbPm1Wrno: 242851,
+        vccwdhfqIrI: 149466,
+        IgyU0iFIoqM: 63605,
+        BHCSL_ZifI0: 226028,
+        GncgOIiMII8: 58156,
+        LjLx0fCd1k8: 127578,
+        'cr6p0n0N-VA': 289670,
+        VdrEq0cODu4: 199004,
+        iUU4O1sWtJA: 332505,
+        qJ9_ABtT6RQ: 15646,
+        '18Fg5Akhkqw': 152082,
+        suPO02S0cR8: 12771,
+        PuZvF2EyfBM: 187906,
+        'ZztKT-KVqwA': 12870,
+        pFTyGG4mORk: 43460,
+        '1xHADtekTNg': 153268,
+        'DU8o-OTeoCc': 551892,
+        '3Hb5An-NaX8': 29258,
+        fmT5nlEkl3U: 328208,
+        krsuaUp__pM: 206328,
+        Zcv_899yqhI: 239964,
+        '_UZ1ngy-kOI': 371291,
+        lsKU38RKQSo: 514011,
+        fhdPyoO6aXI: 840784,
+        tgSe27eoBG0: 114624,
+        'Nfa-uUHuFHg': 280345,
+      };
+
+      const formatDate = (date) => new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
+      const formatViews = (views) => new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(views);
+      const escapeHtml = (value) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+      const durationInSeconds = (duration) => duration.split(':').reduce((seconds, part) => seconds * 60 + Number(part), 0);
+      const container = document.querySelector('#videos');
+      const search = document.querySelector('#video-search');
+      const lengthFilter = document.querySelector('#length-filter');
+      const sort = document.querySelector('#video-sort');
+      const count = document.querySelector('#video-count');
+
+      function matchesLength(duration, filter) {
+        const seconds = durationInSeconds(duration);
+        if (filter === 'short') return seconds < 15 * 60;
+        if (filter === 'medium') return seconds >= 15 * 60 && seconds < 30 * 60;
+        if (filter === 'long') return seconds >= 30 * 60 && seconds < 60 * 60;
+        if (filter === 'extended') return seconds >= 60 * 60;
+        return true;
+      }
+
+      function renderVideos() {
+        const query = search.value.trim().toLowerCase();
+        const visibleVideos = videos
+          .filter(([, title, duration]) => title.toLowerCase().includes(query) && matchesLength(duration, lengthFilter.value))
+          .sort(([firstId, , firstDuration, firstDate], [secondId, , secondDuration, secondDate]) => {
+            if (sort.value === 'oldest') return firstDate.localeCompare(secondDate);
+            if (sort.value === 'views-desc') return (viewCounts[secondId] ?? 0) - (viewCounts[firstId] ?? 0);
+            if (sort.value === 'views-asc') return (viewCounts[firstId] ?? 0) - (viewCounts[secondId] ?? 0);
+            if (sort.value === 'duration-desc') return durationInSeconds(secondDuration) - durationInSeconds(firstDuration);
+            if (sort.value === 'duration-asc') return durationInSeconds(firstDuration) - durationInSeconds(secondDuration);
+            return secondDate.localeCompare(firstDate);
+          });
+
+        count.textContent = `${visibleVideos.length} of ${videos.length} public videos`;
+        container.innerHTML = visibleVideos
+          .map(([id, title, duration, date]) => {
+            const url = `https://www.youtube.com/watch?v=${id}`;
+            const safeTitle = escapeHtml(title);
+            return `
+          <article class="card">
+            <a class="thumbnail" href="${url}" target="_blank" rel="noreferrer" aria-label="Watch ${safeTitle}">
+              <img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy">
+              <span class="duration">${duration}</span>
+            </a>
+            <div class="content">
+              <h2><a href="${url}" target="_blank" rel="noreferrer">${safeTitle}</a></h2>
+              <p class="description">A Hello Interview video covering ${safeTitle}.</p>
+              <div class="metadata"><span>${formatViews(viewCounts[id] ?? 0)} views</span><span>${duration}</span></div>
+              <div class="footer">
+                <time datetime="${date}">${formatDate(date)}</time>
+                <a class="watch" href="${url}" target="_blank" rel="noreferrer">Watch</a>
+              </div>
+            </div>
+          </article>`;
+          })
+          .join('');
+      }
+
+      [search, lengthFilter, sort].forEach((control) => control.addEventListener('input', renderVideos));
+      renderVideos();
+    </script>
+  </body>
+</html>
