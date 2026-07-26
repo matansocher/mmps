@@ -68,7 +68,7 @@ MMPS is a multi-purpose Telegram bot platform built with plain TypeScript and No
 7. **Wolt** - Restaurant availability notifications
 8. **Worldly** - Geography education and trivia challenges
 
-Plus two bot-less web features: **Clutch**, a static sports SPA, and **Savings**, a password-protected MongoDB-backed portfolio rebalancer.
+Plus a bot-less web features: **Savings**, a password-protected MongoDB-backed portfolio rebalancer.
 
 ## Get Started
 

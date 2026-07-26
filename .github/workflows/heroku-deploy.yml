@@ -1,0 +1,60 @@
+name: '🚀 Deploy to Heroku'
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  HEROKU_APP_NAME: mmps
+
+concurrency:
+  group: heroku-deployment-mmps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 'Deploy to Heroku'
+    if: github.actor == 'matansocher'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy source to Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          if [ -z "$HEROKU_API_KEY" ]; then
+            echo "::error::The HEROKU_API_KEY repository secret is required."
+            exit 1
+          fi
+
+          status="$(curl --silent --show-error --output /tmp/heroku-app.json --write-out '%{http_code}' \
+            --header 'Accept: application/vnd.heroku+json; version=3' \
+            --header "Authorization: Bearer ${HEROKU_API_KEY}" \
+            "https://api.heroku.com/apps/${HEROKU_APP_NAME}")"
+
+          case "$status" in
+            200) ;;
+            401)
+              echo "::error::HEROKU_API_KEY is invalid or has been revoked. Generate a new API key from Heroku account settings."
+              exit 1
+              ;;
+            403 | 404)
+              echo "::error::The API key cannot access Heroku app '${HEROKU_APP_NAME}'. Confirm the app name and account access."
+              exit 1
+              ;;
+            *)
+              echo "::error::Heroku app preflight failed with HTTP status ${status}."
+              cat /tmp/heroku-app.json
+              exit 1
+              ;;
+          esac
+
+          git push "https://:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git" HEAD:main

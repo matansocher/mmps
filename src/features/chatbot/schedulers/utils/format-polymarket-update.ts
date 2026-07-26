@@ -2,7 +2,7 @@ import { buildPolymarketUrl } from '@services/polymarket';
 import type { EventOutcome, MarketSummary, MultiOutcomeEventSummary } from '@services/polymarket';
 import type { OutcomeSnapshot, Subscription } from '@shared/polymarket-follower';
 
-const TOP_OUTCOMES_LIMIT = 8;
+const TOP_OUTCOMES_LIMIT = 4;
 
 export type MarketUpdate = {
   readonly subscription: Subscription;

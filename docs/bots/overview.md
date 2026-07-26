@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 8 specialized Telegram bots plus two bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Clutch and Savings are initialized independently of bot selection.
+MMPS includes 8 specialized Telegram bots plus a bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings is initialized independently of bot selection.
 
 ## The Bots
 
@@ -52,12 +52,6 @@ Interactive geography quiz bot.
 - **Database**: `Worldly`
 - **[Learn more →](/bots/worldly)**
 
-### **Clutch** - Bot-Less Web Feature
-Static SPA served at `/clutch/*` with analytics forwarded to the Telegram notifier.
-- **Features**: `apps/clutch-web`, `POST /clutch/api/events`, always initialized
-- **Database**: None
-- **[Learn more →](/bots/clutch)**
-
 ### **Savings** - Shared Portfolio Rebalancer
 Password-protected React application served at `/savings/*` for managing one shared family portfolio with real ILS values.
 - **Features**: Reactive rebalancing, explicit saves, revision conflict protection, shared-password authentication
@@ -80,7 +74,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `SECRET
 IS_PROD=true npm start
 ```
 
-Production initializes all 8 Telegram bots. Clutch and Savings initialize in both development and production.
+Production initializes all 8 Telegram bots. Savings initialize in development and production.
 
 ## Bot Architecture
 
@@ -165,7 +159,6 @@ Select a bot to explore:
 - **[Secretary](/bots/secretary)** - Telegram business assistant
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education
-- **[Clutch](/bots/clutch)** - Bot-less static SPA
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
 
 Or explore:

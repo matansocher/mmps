@@ -20,7 +20,7 @@
     "build:chatbot-web": "npm run build --workspace=@mmps/chatbot-web",
     "build:expenses-web": "npm run build --workspace=@mmps/expenses-web",
     "build:savings-web": "npm run build --workspace=@mmps/savings-web",
-    "build:web-apps": "npm run build:coach-web && npm run build:chatbot-web && npm run build:expenses-web && npm run build:learner-web && npm run build:clutch-web && npm run build:savings-web",
+    "build:web-apps": "npm run build:coach-web && npm run build:chatbot-web && npm run build:expenses-web && npm run build:learner-web && npm run build:savings-web",
     "dev:coach-web": "npm run dev --workspace=@mmps/coach-web",
     "dev:chatbot-web": "npm run dev --workspace=@mmps/chatbot-web",
     "dev:expenses-web": "npm run dev --workspace=@mmps/expenses-web",
@@ -49,9 +49,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "build:learner-web": "npm run build --workspace=@mmps/learner-web",
-    "dev:learner-web": "npm run dev --workspace=@mmps/learner-web",
-    "build:clutch-web": "npm run build --workspace=@mmps/clutch-web",
-    "dev:clutch-web": "npm run dev --workspace=@mmps/clutch-web"
+    "dev:learner-web": "npm run dev --workspace=@mmps/learner-web"
   },
   "keywords": [
     "express",

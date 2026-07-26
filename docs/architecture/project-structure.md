@@ -40,7 +40,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (8 bots + clutch and savings web apps)
+├── features/              # Bot implementations (8 bots + savings web app)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── schedulers/    # Scheduler implementations
@@ -53,7 +53,6 @@ src/
 │   │   └── index.ts                     # Exports
 │   │
 │   ├── chilli/            # Cat persona bot (Hebrew)
-│   ├── clutch/            # Static SPA (no bot)
 │   ├── coach/             # Sports bot
 │   ├── expenses/          # Expense tracker mini-app bot
 │   ├── learner/           # Courses mini-app bot
