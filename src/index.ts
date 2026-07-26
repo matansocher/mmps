@@ -34,7 +34,6 @@ async function main() {
     res.json({ success: true });
   });
 
-  initClutch(app);
   try {
     await initSavings(app);
   } catch (err) {
