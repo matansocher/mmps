@@ -1,7 +1,7 @@
 import type { InsertOneResult, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from './constants';
 import type { CreateReminderData, Reminder, UpdateReminderData } from '../types';
+import { DB_NAME } from './constants';
 
 const getCollection = () => getMongoCollection<Reminder>(DB_NAME, 'Reminders');
 

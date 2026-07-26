@@ -133,9 +133,7 @@ export async function fetchTeamDetail(teamId: number): Promise<TeamDetailRespons
     if (!competitor) return null;
 
     const rawSquad: RawAthlete[] = squadRes?.data?.squads?.[0]?.athletes ?? [];
-    const squad: SquadPlayer[] = rawSquad
-      .filter((a) => (a.position?.id ?? 0) > 0)
-      .map(toSquadPlayer);
+    const squad: SquadPlayer[] = rawSquad.filter((a) => (a.position?.id ?? 0) > 0).map(toSquadPlayer);
 
     return {
       team: {

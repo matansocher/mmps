@@ -33,6 +33,9 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 | `WOLT`      | Wolt restaurant availability watcher + notifications                        |
 | `WORLDLY`   | Geography quiz / education                                                  |
 
+Plus a bot-less web feature:
+- **Savings** — a password-protected shared portfolio rebalancer (`apps/savings-web`) backed by MongoDB and served at `/savings/*`.
+
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
 ## Architecture
@@ -60,6 +63,7 @@ npm run docs:dev           # VitePress docs locally
 
 # Mini-app workspaces
 npm run dev:coach-web
+npm run dev:savings-web
 ```
 
 ### For AI agents (Claude Code, Copilot, Cursor, …)

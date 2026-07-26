@@ -73,6 +73,7 @@ export default defineConfig({
             { text: 'Coach', link: '/bots/coach' },
             { text: 'Expenses', link: '/bots/expenses' },
             { text: 'Learner', link: '/bots/learner' },
+            { text: 'Savings', link: '/bots/savings' },
             { text: 'Secretary', link: '/bots/secretary' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },

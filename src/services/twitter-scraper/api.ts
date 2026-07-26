@@ -140,26 +140,22 @@ async function fetchViaGraphql(username: string): Promise<{ user: ScrapedUser; t
 // while plain node:https gets the real response — so this path avoids fetch.
 function httpsGetText(url: string, redirectsLeft = 3): Promise<string> {
   return new Promise((resolve, reject) => {
-    const req = https.get(
-      url,
-      { headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/xml, text/xml' }, timeout: FETCH_TIMEOUT_MS },
-      (res) => {
-        if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location && redirectsLeft > 0) {
-          res.resume();
-          resolve(httpsGetText(new URL(res.headers.location, url).href, redirectsLeft - 1));
-          return;
-        }
-        if (res.statusCode !== 200) {
-          res.resume();
-          reject(new Error(`HTTP ${res.statusCode}`));
-          return;
-        }
-        const chunks: Buffer[] = [];
-        res.on('data', (chunk) => chunks.push(chunk));
-        res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-        res.on('error', reject);
-      },
-    );
+    const req = https.get(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/xml, text/xml' }, timeout: FETCH_TIMEOUT_MS }, (res) => {
+      if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location && redirectsLeft > 0) {
+        res.resume();
+        resolve(httpsGetText(new URL(res.headers.location, url).href, redirectsLeft - 1));
+        return;
+      }
+      if (res.statusCode !== 200) {
+        res.resume();
+        reject(new Error(`HTTP ${res.statusCode}`));
+        return;
+      }
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      res.on('error', reject);
+    });
     req.on('timeout', () => req.destroy(new Error('timeout')));
     req.on('error', reject);
   });

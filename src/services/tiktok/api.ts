@@ -1,14 +1,4 @@
-import type {
-  RapidAPIDownloadResponse,
-  RapidAPIUserPostsResponse,
-  TikTokPost,
-  TikTokTranscript,
-  TikTokUserInfo,
-  TikTokVideo,
-  TikwmResponse,
-  TranscriptResponse,
-  UserVideosResponse,
-} from './types';
+import type { RapidAPIDownloadResponse, RapidAPIUserPostsResponse, TikTokPost, TikTokTranscript, TikTokUserInfo, TikTokVideo, TikwmResponse, TranscriptResponse, UserVideosResponse } from './types';
 import {
   extractSecUid,
   fetchUserInfo,

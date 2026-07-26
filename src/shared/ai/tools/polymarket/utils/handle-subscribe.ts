@@ -78,12 +78,7 @@ async function resolveMultiOutcomeEvent(slug: string): Promise<MultiOutcomeEvent
   }
 }
 
-async function subscribeToMultiOutcomeEvent(
-  chatId: number,
-  event: MultiOutcomeEventSummary,
-  expiredSubscriptions: unknown,
-  expiredMessage: string | null,
-): Promise<string> {
+async function subscribeToMultiOutcomeEvent(chatId: number, event: MultiOutcomeEventSummary, expiredSubscriptions: unknown, expiredMessage: string | null): Promise<string> {
   if (event.closed || event.outcomes.length === 0) {
     return JSON.stringify({ success: false, error: 'This event is already closed and cannot be subscribed to', expiredSubscriptions, expiredMessage });
   }

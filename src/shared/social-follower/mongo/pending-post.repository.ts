@@ -14,9 +14,7 @@ export async function createPendingPosts(posts: CreatePendingPostData[]): Promis
   const collection = getCollection();
   const collectedAt = new Date();
   // Skip posts already collected (collector retries after a crash between insert and lastSeen update)
-  const existing = await collection
-    .find({ $or: posts.map(({ platform, username, chatId, postId }) => ({ platform, username, chatId, postId })) })
-    .toArray();
+  const existing = await collection.find({ $or: posts.map(({ platform, username, chatId, postId }) => ({ platform, username, chatId, postId })) }).toArray();
   const existingKeys = new Set(existing.map((post) => `${post.platform}:${post.username}:${post.chatId}:${post.postId}`));
   const newPosts = posts.filter((post) => !existingKeys.has(`${post.platform}:${post.username}:${post.chatId}:${post.postId}`));
   if (!newPosts.length) {

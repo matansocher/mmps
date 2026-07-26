@@ -2,7 +2,7 @@ import type { Express, Request, Response } from 'express';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import type { TelegramBotConfig } from '@services/telegram';
-import { getProgress, saveCourseProgress, type ReadMap } from '../mongo';
+import { getProgress, type ReadMap, saveCourseProgress } from '../mongo';
 import { learnerAuthMiddleware } from './auth.middleware';
 
 const logger = new Logger('LearnerApiController');

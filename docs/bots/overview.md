@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 8 specialized Telegram bots. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID.
+MMPS includes 8 specialized Telegram bots plus a bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings is initialized independently of bot selection.
 
 ## The Bots
 
@@ -52,6 +52,12 @@ Interactive geography quiz bot.
 - **Database**: `Worldly`
 - **[Learn more →](/bots/worldly)**
 
+### **Savings** - Shared Portfolio Rebalancer
+Password-protected React application served at `/savings/*` for managing one shared family portfolio with real ILS values.
+- **Features**: Reactive rebalancing, explicit saves, revision conflict protection, shared-password authentication
+- **Database**: `Savings`
+- **[Learn more →](/bots/savings)**
+
 ## Running Bots
 
 ### Development Mode (One Bot)
@@ -68,7 +74,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `SECRET
 IS_PROD=true npm start
 ```
 
-Production initializes all 8 Telegram bots.
+Production initializes all 8 Telegram bots. Savings initialize in development and production.
 
 ## Bot Architecture
 
@@ -112,6 +118,7 @@ Current bot databases:
 - `Coach` - Coach users and subscriptions
 - `Expenses` - Expense and ingest records
 - `Learner` - Course progress
+- `Savings` - Shared portfolio settings and holdings
 - `Secretary` - Messages, actions, drafts, and nudges
 - `Wolt` - Wolt users and subscriptions
 - `Worldly` - Geography content, subscriptions, and game logs
@@ -134,6 +141,10 @@ SECRETARY_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 
+NOTIFIER_TELEGRAM_BOT_TOKEN=...
+
+# Bot-less Savings app
+SAVINGS_APP_PASSWORD=...
 ```
 
 ## Next Steps
@@ -147,6 +158,7 @@ Select a bot to explore:
 - **[Secretary](/bots/secretary)** - Telegram business assistant
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education
+- **[Savings](/bots/savings)** - Shared portfolio rebalancer
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

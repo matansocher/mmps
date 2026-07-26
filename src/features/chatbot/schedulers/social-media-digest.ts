@@ -1,12 +1,12 @@
 import type { Bot } from 'grammy';
 import type { ObjectId } from 'mongodb';
+import { z } from 'zod';
 import { Logger } from '@core/utils';
-import { GPT_SMALL_MODEL } from '@services/openai/constants';
 import { getResponse } from '@services/openai';
+import { GPT_SMALL_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage } from '@services/telegram';
 import { deletePendingPosts, getPendingPosts } from '@shared/social-follower';
 import type { PendingPost, SocialPlatform } from '@shared/social-follower';
-import { z } from 'zod';
 
 const logger = new Logger('SocialMediaDigestScheduler');
 

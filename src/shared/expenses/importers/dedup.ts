@@ -22,15 +22,10 @@ export function sameCalendarDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-export type DupResult =
-  | { readonly kind: 'unique' }
-  | { readonly kind: 'duplicate'; readonly match: Expense }
-  | { readonly kind: 'ambiguous'; readonly candidates: ReadonlyArray<Expense> };
+export type DupResult = { readonly kind: 'unique' } | { readonly kind: 'duplicate'; readonly match: Expense } | { readonly kind: 'ambiguous'; readonly candidates: ReadonlyArray<Expense> };
 
 export function findDuplicate(row: ParsedRow, pool: ReadonlyArray<Expense>): DupResult {
-  const sameDateAmount = pool.filter(
-    (e) => e.currency === row.currency && Math.abs(e.amount - row.amount) < 0.01 && sameCalendarDay(e.transactionDate, row.transactionDate),
-  );
+  const sameDateAmount = pool.filter((e) => e.currency === row.currency && Math.abs(e.amount - row.amount) < 0.01 && sameCalendarDay(e.transactionDate, row.transactionDate));
   if (sameDateAmount.length === 0) return { kind: 'unique' };
 
   const vendorMatches = sameDateAmount.filter((e) => isVendorMatch(effectiveVendor(e), row.vendor));

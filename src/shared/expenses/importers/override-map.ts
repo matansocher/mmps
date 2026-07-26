@@ -2,7 +2,6 @@
 // is stored on that single document. Without this map, every future statement reintroduces the
 // original raw vendor text and re-derives the category from the sector — silently undoing the
 // user's correction for all new charges.
-
 import type { Expense, ExpenseCategory } from '@shared/expenses';
 import { normalizeName } from './dedup';
 

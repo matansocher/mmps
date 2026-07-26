@@ -1,5 +1,4 @@
 // Hebrew → category/type heuristics (avoid an LLM round-trip when sector is recognised).
-
 import type { Currency, ExpenseCategory, ExpenseType } from '@shared/expenses';
 
 export const SECTOR_TO_CATEGORY_DISCOUNT: Record<string, ExpenseCategory> = {

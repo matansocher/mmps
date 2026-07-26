@@ -9,7 +9,9 @@ const chatId = MY_USER_ID;
 const schema = z.object({
   action: z
     .enum(['latest_posts', 'subscribe', 'unsubscribe', 'list'])
-    .describe('Action to perform: "latest_posts" fetches recent posts of a public channel, "subscribe" adds a channel to the daily 22:45 social media digest (its new posts are summarized into key points), "unsubscribe" removes them, "list" shows current subscriptions'),
+    .describe(
+      'Action to perform: "latest_posts" fetches recent posts of a public channel, "subscribe" adds a channel to the daily 22:45 social media digest (its new posts are summarized into key points), "unsubscribe" removes them, "list" shows current subscriptions',
+    ),
   channel: z.string().optional().describe('The public Telegram channel handle, without the @ prefix (e.g., "durov", "geektimecoil"). Also accepts t.me links. Required for all actions except "list"'),
   count: z.number().min(1).max(20).optional().describe('Number of latest posts to fetch (default: 5, max: 20). Only used with "latest_posts"'),
 });

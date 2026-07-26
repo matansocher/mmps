@@ -18,7 +18,9 @@ const draftSchema = z.object({
     .array(z.string().describe('A ready-to-send reply option, in her language'))
     .min(1)
     .max(6)
-    .describe(`Exactly ${DRAFT_OPTIONS_COUNT} DISTINCT reply options for the owner to choose from, best-guess first. Each option must be meaningfully different in angle/tone, not a reworded duplicate.`),
+    .describe(
+      `Exactly ${DRAFT_OPTIONS_COUNT} DISTINCT reply options for the owner to choose from, best-guess first. Each option must be meaningfully different in angle/tone, not a reworded duplicate.`,
+    ),
   summary: z.string().describe('A one-line summary of what she talked about'),
   replyNeeded: z.number().min(0).max(1).describe('Probability (0 to 1) that the owner actually needs to reply: low for acknowledgements/closings, high for questions/requests/plans'),
 });

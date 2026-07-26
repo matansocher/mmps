@@ -7,9 +7,9 @@ import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { registry } from '@core/openapi';
 import { Logger } from '@core/utils';
+import { fetchEmailFull, fetchUserEmails, markEmailAsRead, trashEmail } from '@services/gmail';
 import { createEvent, deleteEvent, listEvents } from '@services/google-calendar';
 import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-calendar';
-import { fetchEmailFull, fetchUserEmails, markEmailAsRead, trashEmail } from '@services/gmail';
 import { aggregateUsage } from '@shared/ai';
 import { createReminder, deleteReminder, getPendingRemindersDueOnOrBefore, getReminderById, getRemindersCompletedBetween, updateReminder, updateReminderStatus } from '@shared/reminders';
 import { chatbotAuthMiddleware } from './auth.middleware';
@@ -30,7 +30,6 @@ import type {
 extendZodWithOpenApi(z);
 
 const logger = new Logger('ChatbotApiController');
-
 
 // --- Zod schemas for OpenAPI ---
 
@@ -527,9 +526,7 @@ export function registerChatbotApiRoutes(app: Express): void {
         entry.tokensTotal += r.tokensTotal;
         dayMap.set(r.day, entry);
       }
-      const perDay = [...dayMap.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([day, v]) => ({ day, ...v }));
+      const perDay = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([day, v]) => ({ day, ...v }));
 
       const sourceMap = new Map<string, { cost: number; turns: number; tokensTotal: number }>();
       for (const r of rows) {
@@ -539,9 +536,7 @@ export function registerChatbotApiRoutes(app: Express): void {
         entry.tokensTotal += r.tokensTotal;
         sourceMap.set(r.source, entry);
       }
-      const perSource = [...sourceMap.entries()]
-        .sort((a, b) => b[1].cost - a[1].cost)
-        .map(([source, v]) => ({ source, ...v }));
+      const perSource = [...sourceMap.entries()].sort((a, b) => b[1].cost - a[1].cost).map(([source, v]) => ({ source, ...v }));
 
       res.json({ days, totals: { cost: totalCost, turns: totalTurns, tokensTotal: totalTokens }, perDay, perSource });
     } catch (err) {
@@ -629,7 +624,5 @@ export function registerChatbotApiRoutes(app: Express): void {
     }
   });
 
-
   logger.log('Chatbot API routes registered at /api/chatbot/*');
 }
-

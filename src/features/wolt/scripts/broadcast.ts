@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { Bot, GrammyError } from 'grammy';
 import { join } from 'node:path';
-import { cwd, env, argv } from 'node:process';
+import { argv, cwd, env } from 'node:process';
 import { Logger } from '@core/utils';
 import { BOT_CONFIG } from '../wolt.config';
 
