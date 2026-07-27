@@ -23,6 +23,11 @@ export const ACTION_CALLBACK_PREFIX = 'sec:act:';
 // Smart reply drafts: after the other side goes unanswered for this long, suggest a draft reply.
 export const IDLE_REPLY_DELAY_MS = 5 * 60 * 1000;
 
+// Days of week (0 = Sunday .. 6 = Saturday, Asia/Jerusalem) the smart-reply suggestions and
+// forgotten-reply nudges are active. Everything else is suppressed to avoid wasteful runs.
+// The daily summary is unaffected and still runs every day.
+export const SUGGESTION_ACTIVE_WEEKDAYS = [1, 2, 3, 4]; // Monday, Tuesday, Wednesday, Thursday
+
 // Smart reply drafts: how many distinct options to offer per suggestion (all produced in a single LLM call).
 export const DRAFT_OPTIONS_COUNT = Math.min(4, Math.max(2, Number(env.SECRETARY_DRAFT_OPTIONS ?? 4)));
 

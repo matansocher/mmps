@@ -177,7 +177,9 @@ export class SecretaryController {
       await ctx.answerCallbackQuery();
       return;
     }
-    await this.draftService.handleCancel(ctx);
+    // Cancelling a suggestion also stands down the 1-hour forgotten-reply nudge for that chat.
+    const chatId = await this.draftService.handleCancel(ctx);
+    if (chatId !== null) await this.nudgeService.onOwnerReply(chatId);
   }
 
   private async nudgeReplyHandler(ctx: Context): Promise<void> {

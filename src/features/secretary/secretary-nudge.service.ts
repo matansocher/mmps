@@ -5,7 +5,7 @@ import { Logger } from '@core/utils';
 import { buildInlineKeyboard } from '@services/telegram';
 import { createNudge, getNudgeByShortId, getRecentMessagesForChat, type SecretaryMessage, setNudgeMessageId, supersedePendingNudgesForChat, updateNudgeStatus } from './mongo';
 import { SecretaryDraftService } from './secretary-draft.service';
-import { generateDraftReply } from './secretary-draft.utils';
+import { generateDraftReply, isSuggestionActiveDay } from './secretary-draft.utils';
 import { NUDGE_DELAY_MS, NUDGE_DISMISS_CALLBACK_PREFIX, NUDGE_REPLY_CALLBACK_PREFIX, NUDGE_SNOOZE_CALLBACK_PREFIX, REPLY_NEEDED_THRESHOLD } from './secretary.config';
 
 const CONTEXT_MESSAGE_LIMIT = 20;
@@ -49,6 +49,11 @@ export class SecretaryNudgeService {
   }
 
   private async sendNudge(chatId: number): Promise<void> {
+    if (!isSuggestionActiveDay()) {
+      this.logger.log(`Skipping nudge for ${chatId}: suggestions are inactive today.`);
+      return;
+    }
+
     const messages = await getRecentMessagesForChat(chatId, CONTEXT_MESSAGE_LIMIT);
     if (messages.length === 0) return;
 
