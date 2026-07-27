@@ -38,26 +38,6 @@ npm run dev:savings-web
 
 The Vite server proxies `/api/savings/*` to the Express server on port 3000.
 
-## Importing the HTML Portfolio
-
-The migration imports investment names, classifications, notes, and target weights from `savings-rebalance-calculator.html`. Every current ILS amount is deliberately set to zero so the real values can be entered afterward in the application.
-
-```bash
-MONGO_DB_URL=mongodb://localhost:27017 npx tsx src/features/savings/scripts/migrate-html-portfolio.ts
-```
-
-Pass a different exported HTML file as the first argument when needed:
-
-```bash
-MONGO_DB_URL=mongodb://localhost:27017 npx tsx src/features/savings/scripts/migrate-html-portfolio.ts /path/to/savings-rebalance-calculator.html
-```
-
-The script refuses to replace an existing shared portfolio. Use `--force` only when intentionally overwriting it:
-
-```bash
-MONGO_DB_URL=mongodb://localhost:27017 npx tsx src/features/savings/scripts/migrate-html-portfolio.ts /path/to/file.html --force
-```
-
 ## API Routes
 
 - `POST /api/savings/auth/login` - Validate the shared password and create a signed session
