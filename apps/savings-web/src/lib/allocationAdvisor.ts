@@ -42,8 +42,11 @@ export function computeExposure(holdings: readonly Holding[]): PortfolioExposure
 export function distanceToTargets(exposure: PortfolioExposure, settings: PortfolioSettings, geographyLabels: readonly string[]): number {
   const fxGap = Math.abs(exposure.fxPercent - settings.fxLimitPercent);
   const solidGap = Math.abs(exposure.solidPercent - settings.solidTargetPercent);
-  const geographyGaps = geographyLabels.map((label) => Math.abs((exposure.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)));
-  const geographyGap = geographyGaps.length > 0 ? Math.max(...geographyGaps) : 0;
+  // Sum every region's gap so the geography category captures the whole allocation, not just its
+  // single worst region. This lets the score tell an over-target region apart from an under-target
+  // one: depositing into a region that is already over target grows its gap and is penalized, while
+  // depositing into an under-target region shrinks two fronts at once.
+  const geographyGap = sum(geographyLabels.map((label) => Math.abs((exposure.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0))));
   // Square each category's gap so the category farthest from its target dominates the score.
   // This makes a deposit that shrinks the largest gap yield the biggest improvement, instead of
   // treating a category already near its target the same as one far from it.
@@ -52,15 +55,17 @@ export function distanceToTargets(exposure: PortfolioExposure, settings: Portfol
 
 type CategoryGap = { readonly key: string; readonly gap: number };
 
-// The individual per-category gaps (in percentage points), geography split into one entry per region.
-// Used to identify the single category that is currently farthest from its target so the ranking can
-// prioritize closing it, rather than optimizing only the net sum (which a holding can "game" by
-// helping several small gaps while worsening the dominant one).
+// The individual per-category gaps (in percentage points). Geography is a single aggregate entry
+// (the sum of every region's gap) so the category matches the score in distanceToTargets and can
+// distinguish an over-target region from an under-target one. Used to identify the single category
+// currently farthest from its target so the ranking can prioritize closing it, rather than
+// optimizing only the net sum (which a holding can "game" by helping several small gaps while
+// worsening the dominant one).
 function categoryGaps(exposure: PortfolioExposure, settings: PortfolioSettings, geographyLabels: readonly string[]): CategoryGap[] {
   return [
     { key: 'fx', gap: Math.abs(exposure.fxPercent - settings.fxLimitPercent) },
     { key: 'solid', gap: Math.abs(exposure.solidPercent - settings.solidTargetPercent) },
-    ...geographyLabels.map((label) => ({ key: `geo:${label}`, gap: Math.abs((exposure.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)) })),
+    { key: 'geo', gap: sum(geographyLabels.map((label) => Math.abs((exposure.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)))) },
   ];
 }
 
@@ -73,22 +78,22 @@ function depositedHoldings(holdings: readonly Holding[], holdingId: string, depo
 }
 
 function explainCandidate(before: PortfolioExposure, after: PortfolioExposure, settings: PortfolioSettings, geographyLabels: readonly string[], primaryKey?: string): string {
-  const movers: { readonly key: string; readonly label: string; readonly reduction: number }[] = [
-    { key: 'fx', label: 'חשיפת המט״ח', reduction: Math.abs(before.fxPercent - settings.fxLimitPercent) - Math.abs(after.fxPercent - settings.fxLimitPercent) },
-    { key: 'solid', label: 'איזון סולידי-מנייתי', reduction: Math.abs(before.solidPercent - settings.solidTargetPercent) - Math.abs(after.solidPercent - settings.solidTargetPercent) },
-    ...geographyLabels.map((label) => ({
-      key: `geo:${label}`,
-      label: `אזור ${label}`,
-      reduction: Math.abs((before.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)) - Math.abs((after.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)),
-    })),
-  ];
+  const geoReduction = (label: string): number =>
+    Math.abs((before.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)) - Math.abs((after.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0));
+
+  const fxMover = { key: 'fx', label: 'חשיפת המט״ח', reduction: Math.abs(before.fxPercent - settings.fxLimitPercent) - Math.abs(after.fxPercent - settings.fxLimitPercent) };
+  const solidMover = { key: 'solid', label: 'איזון סולידי-מנייתי', reduction: Math.abs(before.solidPercent - settings.solidTargetPercent) - Math.abs(after.solidPercent - settings.solidTargetPercent) };
+  // Aggregate geography mover (whole category) for the warning, plus per-region movers for the
+  // positive message so it can name the specific region(s) the deposit helped.
+  const geoMover = { key: 'geo', label: 'החלוקה לפי אזור', reduction: sum(geographyLabels.map(geoReduction)) };
+  const regionMovers = geographyLabels.map((label) => ({ key: `geo:${label}`, label: `אזור ${label}`, reduction: geoReduction(label) }));
 
   // Warn when the deposit pushes the farthest category further from its target, so a candidate that
   // only helps smaller gaps isn't presented as if it fixed the dominant problem.
-  const primaryMover = primaryKey ? movers.find((mover) => mover.key === primaryKey) : undefined;
+  const primaryMover = primaryKey ? [fxMover, solidMover, geoMover].find((mover) => mover.key === primaryKey) : undefined;
   if (primaryMover && primaryMover.reduction < -0.05) return `שימו לב: מרחיקה מהיעד את ${primaryMover.label} (המרכיב הרחוק ביותר כרגע).`;
 
-  const topMovers = movers
+  const topMovers = [fxMover, solidMover, ...regionMovers]
     .filter((mover) => mover.reduction > 0.05)
     .sort((first, second) => second.reduction - first.reduction)
     .slice(0, 2)

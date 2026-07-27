@@ -79,10 +79,10 @@ describe('distanceToTargets()', () => {
     expect(distanceToTargets(farOneCategory, settings, ['ישראל', 'ארהב'])).toBeGreaterThan(distanceToTargets(closeTwoCategories, settings, ['ישראל', 'ארהב']));
   });
 
-  it('uses the single worst region gap for the geography category', () => {
+  it('sums every region gap for the geography category', () => {
     const oneRegionFar: PortfolioExposure = { fxPercent: 50, solidPercent: 50, geographyPercent: new Map([['ישראל', 70], ['ארהב', 30]]) };
-    // Worst region gap is 20 → 400; fx and solid contribute nothing.
-    expect(distanceToTargets(oneRegionFar, settings, ['ישראל', 'ארהב'])).toBeCloseTo(400);
+    // ישראל 20 over + ארהב 20 under = summed geography gap 40 → 40^2 = 1600; fx and solid contribute nothing.
+    expect(distanceToTargets(oneRegionFar, settings, ['ישראל', 'ארהב'])).toBeCloseTo(1600);
   });
 });
 
@@ -121,34 +121,59 @@ describe('rankCandidates()', () => {
   });
 
   it('prioritizes the manual holding that closes the farthest category first', () => {
-    // fx is 30% off target (far); geography is only ~7% off (near). The manual holding that fixes
-    // the far fx gap should rank ahead of one that only nudges the already-near geography split.
+    // fx is far from target; geography is balanced (near). The manual holding that fixes the far fx
+    // gap should rank ahead of one that only nudges the already-near geography split.
+    // Before: fx 20%, solid 100%, ישראל 50%, ארהב 50%. Targets fx 50, solid 100, geo 50/50.
+    // → fx gap 30 (far), solid 0, geo 0 (near). fx is the single farthest category.
+    const balancedSettings: PortfolioSettings = { ...settings, fxLimitPercent: 50, solidTargetPercent: 100, geographyTargets: { ישראל: 50, ארהב: 50 } };
     const holdings = [
-      holding({ id: 'ils-anchor', account: 'managed', currentAmountIls: 80, currencyExposure: 'ils', assetType: 'solid', geography: 'ישראל' }),
-      holding({ id: 'fx-fixer', account: 'manual', currentAmountIls: 20, currencyExposure: 'fx', assetType: 'equity', geography: 'ישראל' }),
-      holding({ id: 'geo-nudger', account: 'manual', currentAmountIls: 20, currencyExposure: 'ils', assetType: 'solid', geography: 'ארהב' }),
+      holding({ id: 'ils-anchor-il', account: 'managed', currentAmountIls: 40, currencyExposure: 'ils', assetType: 'solid', geography: 'ישראל' }),
+      holding({ id: 'ils-anchor-us', account: 'managed', currentAmountIls: 40, currencyExposure: 'ils', assetType: 'solid', geography: 'ארהב' }),
+      holding({ id: 'fx-fixer', account: 'manual', currentAmountIls: 10, currencyExposure: 'fx', assetType: 'solid', geography: 'ישראל' }),
+      holding({ id: 'geo-nudger', account: 'manual', currentAmountIls: 10, currencyExposure: 'ils', assetType: 'solid', geography: 'ישראל' }),
     ];
-    const ranked = rankCandidates(holdings, settings, 60, 3);
+    const ranked = rankCandidates(holdings, balancedSettings, 60, 3);
     expect(ranked[0]?.holding.id).toEqual('fx-fixer');
   });
 
   it('does not rank a holding that worsens the dominant category, even if it helps smaller gaps', () => {
-    // Dominant gap is geography ישראל: 60% vs 25% target (gap 35). fx is only 5% off.
-    // 'israel-fx' improves fx but pushes ישראל further over target -> must not rank first.
-    // 'us-fixer' pulls ישראל down toward target -> should rank first.
+    // Dominant category is geography: ישראל 60% vs 25% target dominates the summed geo gap.
+    // 'israel-fx' pushes ישראל further over target -> worsens the dominant category -> must not rank
+    // first. 'europe-fixer' fills an under-target region (אירופה at 0% vs 25%) and pulls ישראל down,
+    // improving the geography category -> should rank first.
     const geoSettings: PortfolioSettings = { ...settings, fxLimitPercent: 65, solidTargetPercent: 0, geographyTargets: { ישראל: 25, ארהב: 25, אסיה: 25, אירופה: 25 } };
     const holdings = [
       holding({ id: 'israel-anchor', account: 'managed', currentAmountIls: 60, currencyExposure: 'fx', assetType: 'equity', geography: 'ישראל' }),
       holding({ id: 'us-anchor', account: 'managed', currentAmountIls: 20, currencyExposure: 'ils', assetType: 'equity', geography: 'ארהב' }),
       holding({ id: 'asia-anchor', account: 'managed', currentAmountIls: 20, currencyExposure: 'fx', assetType: 'equity', geography: 'אסיה' }),
       holding({ id: 'israel-fx', account: 'manual', currentAmountIls: 0, currencyExposure: 'fx', assetType: 'equity', geography: 'ישראל' }),
-      holding({ id: 'us-fixer', account: 'manual', currentAmountIls: 0, currencyExposure: 'fx', assetType: 'equity', geography: 'ארהב' }),
+      holding({ id: 'europe-fixer', account: 'manual', currentAmountIls: 0, currencyExposure: 'fx', assetType: 'equity', geography: 'אירופה' }),
     ];
     const ranked = rankCandidates(holdings, geoSettings, 40, 3);
-    expect(ranked[0]?.holding.id).toEqual('us-fixer');
+    expect(ranked[0]?.holding.id).toEqual('europe-fixer');
     expect(ranked[0]?.primaryImprovement).toBeGreaterThan(0);
     // The ישראל holding worsens the dominant geography gap -> negative primary improvement.
     const israelCandidate = ranked.find((candidate) => candidate.holding.id === 'israel-fx');
     expect(israelCandidate?.primaryImprovement ?? 0).toBeLessThan(0);
+  });
+
+  it('prefers an under-target region over an already-over-target one when both shrink the worst region', () => {
+    // Geography before: ישראל 43 (target 25, way over), ארהב 43 (target 35, over), אסיה 8 (target 20,
+    // under), אירופה 6 (target 20, under). Both a USA and an Asia deposit shrink ישראל's share about
+    // equally, but USA is already over its own target while Asia is under. The Asia holding must win.
+    const geoSettings: PortfolioSettings = { ...settings, fxLimitPercent: 50, solidTargetPercent: 100, geographyTargets: { ישראל: 25, ארהב: 35, אסיה: 20, אירופה: 20 } };
+    const holdings = [
+      holding({ id: 'israel-anchor', account: 'managed', currentAmountIls: 43, currencyExposure: 'ils', assetType: 'solid', geography: 'ישראל' }),
+      holding({ id: 'us-anchor', account: 'managed', currentAmountIls: 43, currencyExposure: 'fx', assetType: 'solid', geography: 'ארהב' }),
+      holding({ id: 'asia-anchor', account: 'managed', currentAmountIls: 8, currencyExposure: 'fx', assetType: 'solid', geography: 'אסיה' }),
+      holding({ id: 'europe-anchor', account: 'managed', currentAmountIls: 6, currencyExposure: 'fx', assetType: 'solid', geography: 'אירופה' }),
+      holding({ id: 'us-manual', account: 'manual', currentAmountIls: 0, currencyExposure: 'fx', assetType: 'solid', geography: 'ארהב' }),
+      holding({ id: 'asia-manual', account: 'manual', currentAmountIls: 0, currencyExposure: 'fx', assetType: 'solid', geography: 'אסיה' }),
+    ];
+    const ranked = rankCandidates(holdings, geoSettings, 20, 3);
+    expect(ranked[0]?.holding.id).toEqual('asia-manual');
+    const usCandidate = ranked.find((candidate) => candidate.holding.id === 'us-manual');
+    const asiaCandidate = ranked.find((candidate) => candidate.holding.id === 'asia-manual');
+    expect(asiaCandidate?.primaryImprovement ?? 0).toBeGreaterThan(usCandidate?.primaryImprovement ?? 0);
   });
 });
