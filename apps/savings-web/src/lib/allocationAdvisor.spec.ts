@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Holding, PortfolioSettings } from '../types';
+import type { PortfolioExposure } from './allocationAdvisor';
 import { computeExposure, distanceToTargets, rankCandidates } from './allocationAdvisor';
 
 const settings: PortfolioSettings = {
@@ -70,6 +71,19 @@ describe('distanceToTargets()', () => {
     const exposure = computeExposure([holding({ id: 'a', currentAmountIls: 100, currencyExposure: 'ils', assetType: 'equity', geography: 'ישראל' })]);
     expect(distanceToTargets(exposure, settings, ['ישראל', 'ארהב'])).toBeGreaterThan(0);
   });
+
+  it('weights the farthest category more heavily than a near one (squared gaps)', () => {
+    // One category 20% off contributes 400; two categories 10% off each contribute only 200 combined.
+    const farOneCategory: PortfolioExposure = { fxPercent: 70, solidPercent: 50, geographyPercent: new Map([['ישראל', 50], ['ארהב', 50]]) };
+    const closeTwoCategories: PortfolioExposure = { fxPercent: 60, solidPercent: 60, geographyPercent: new Map([['ישראל', 50], ['ארהב', 50]]) };
+    expect(distanceToTargets(farOneCategory, settings, ['ישראל', 'ארהב'])).toBeGreaterThan(distanceToTargets(closeTwoCategories, settings, ['ישראל', 'ארהב']));
+  });
+
+  it('uses the single worst region gap for the geography category', () => {
+    const oneRegionFar: PortfolioExposure = { fxPercent: 50, solidPercent: 50, geographyPercent: new Map([['ישראל', 70], ['ארהב', 30]]) };
+    // Worst region gap is 20 → 400; fx and solid contribute nothing.
+    expect(distanceToTargets(oneRegionFar, settings, ['ישראל', 'ארהב'])).toBeCloseTo(400);
+  });
 });
 
 describe('rankCandidates()', () => {
@@ -94,5 +108,27 @@ describe('rankCandidates()', () => {
   it('limits the result to topN candidates', () => {
     const holdings = [holding({ id: 'a' }), holding({ id: 'b' }), holding({ id: 'c' }), holding({ id: 'd' })];
     expect(rankCandidates(holdings, settings, 100, 3)).toHaveLength(3);
+  });
+
+  it('only suggests manual holdings, never managed ones', () => {
+    const holdings = [
+      holding({ id: 'managed-a', account: 'managed', currentAmountIls: 50, currencyExposure: 'fx', assetType: 'equity', geography: 'ארהב' }),
+      holding({ id: 'manual-a', account: 'manual', currentAmountIls: 50, currencyExposure: 'ils', assetType: 'solid', geography: 'ישראל' }),
+    ];
+    const ranked = rankCandidates(holdings, settings, 100, 3);
+    expect(ranked.every((candidate) => candidate.holding.account === 'manual')).toBe(true);
+    expect(ranked.some((candidate) => candidate.holding.id === 'managed-a')).toBe(false);
+  });
+
+  it('prioritizes the manual holding that closes the farthest category first', () => {
+    // fx is 30% off target (far); geography is only ~7% off (near). The manual holding that fixes
+    // the far fx gap should rank ahead of one that only nudges the already-near geography split.
+    const holdings = [
+      holding({ id: 'ils-anchor', account: 'managed', currentAmountIls: 80, currencyExposure: 'ils', assetType: 'solid', geography: 'ישראל' }),
+      holding({ id: 'fx-fixer', account: 'manual', currentAmountIls: 20, currencyExposure: 'fx', assetType: 'equity', geography: 'ישראל' }),
+      holding({ id: 'geo-nudger', account: 'manual', currentAmountIls: 20, currencyExposure: 'ils', assetType: 'solid', geography: 'ארהב' }),
+    ];
+    const ranked = rankCandidates(holdings, settings, 60, 3);
+    expect(ranked[0]?.holding.id).toEqual('fx-fixer');
   });
 });

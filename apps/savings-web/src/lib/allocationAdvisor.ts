@@ -42,8 +42,11 @@ export function distanceToTargets(exposure: PortfolioExposure, settings: Portfol
   const fxGap = Math.abs(exposure.fxPercent - settings.fxLimitPercent);
   const solidGap = Math.abs(exposure.solidPercent - settings.solidTargetPercent);
   const geographyGaps = geographyLabels.map((label) => Math.abs((exposure.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)));
-  const geographyGap = geographyGaps.length > 0 ? sum(geographyGaps) / geographyGaps.length : 0;
-  return fxGap + solidGap + geographyGap;
+  const geographyGap = geographyGaps.length > 0 ? Math.max(...geographyGaps) : 0;
+  // Square each category's gap so the category farthest from its target dominates the score.
+  // This makes a deposit that shrinks the largest gap yield the biggest improvement, instead of
+  // treating a category already near its target the same as one far from it.
+  return fxGap * fxGap + solidGap * solidGap + geographyGap * geographyGap;
 }
 
 function depositedHoldings(holdings: readonly Holding[], holdingId: string, depositAmountIls: number): Holding[] {
@@ -74,7 +77,11 @@ export function rankCandidates(holdings: readonly Holding[], settings: Portfolio
   const beforeExposure = computeExposure(holdings);
   const distanceBefore = distanceToTargets(beforeExposure, settings, GEOGRAPHY_LABELS);
 
+  // Only manual holdings (חלק בתיק = ידני) are under the user's control, so the deposit can only be
+  // suggested there. Managed holdings are excluded as candidates, but the exposure/distance is still
+  // computed over the whole portfolio so the effect on the full portfolio is measured correctly.
   return holdings
+    .filter((holding) => holding.account === 'manual')
     .map((holding) => {
       const afterExposure = computeExposure(depositedHoldings(holdings, holding.id, depositAmountIls));
       const distanceAfter = distanceToTargets(afterExposure, settings, GEOGRAPHY_LABELS);
