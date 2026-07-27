@@ -131,4 +131,24 @@ describe('rankCandidates()', () => {
     const ranked = rankCandidates(holdings, settings, 60, 3);
     expect(ranked[0]?.holding.id).toEqual('fx-fixer');
   });
+
+  it('does not rank a holding that worsens the dominant category, even if it helps smaller gaps', () => {
+    // Dominant gap is geography ישראל: 60% vs 25% target (gap 35). fx is only 5% off.
+    // 'israel-fx' improves fx but pushes ישראל further over target -> must not rank first.
+    // 'us-fixer' pulls ישראל down toward target -> should rank first.
+    const geoSettings: PortfolioSettings = { ...settings, fxLimitPercent: 65, solidTargetPercent: 0, geographyTargets: { ישראל: 25, ארהב: 25, אסיה: 25, אירופה: 25 } };
+    const holdings = [
+      holding({ id: 'israel-anchor', account: 'managed', currentAmountIls: 60, currencyExposure: 'fx', assetType: 'equity', geography: 'ישראל' }),
+      holding({ id: 'us-anchor', account: 'managed', currentAmountIls: 20, currencyExposure: 'ils', assetType: 'equity', geography: 'ארהב' }),
+      holding({ id: 'asia-anchor', account: 'managed', currentAmountIls: 20, currencyExposure: 'fx', assetType: 'equity', geography: 'אסיה' }),
+      holding({ id: 'israel-fx', account: 'manual', currentAmountIls: 0, currencyExposure: 'fx', assetType: 'equity', geography: 'ישראל' }),
+      holding({ id: 'us-fixer', account: 'manual', currentAmountIls: 0, currencyExposure: 'fx', assetType: 'equity', geography: 'ארהב' }),
+    ];
+    const ranked = rankCandidates(holdings, geoSettings, 40, 3);
+    expect(ranked[0]?.holding.id).toEqual('us-fixer');
+    expect(ranked[0]?.primaryImprovement).toBeGreaterThan(0);
+    // The ישראל holding worsens the dominant geography gap -> negative primary improvement.
+    const israelCandidate = ranked.find((candidate) => candidate.holding.id === 'israel-fx');
+    expect(israelCandidate?.primaryImprovement ?? 0).toBeLessThan(0);
+  });
 });

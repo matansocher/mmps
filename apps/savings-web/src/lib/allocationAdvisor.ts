@@ -12,6 +12,7 @@ export type PortfolioExposure = {
 export type AdvisorCandidate = {
   readonly holding: Holding;
   readonly improvement: number;
+  readonly primaryImprovement: number;
   readonly distanceBefore: number;
   readonly distanceAfter: number;
   readonly explanation: string;
@@ -49,19 +50,44 @@ export function distanceToTargets(exposure: PortfolioExposure, settings: Portfol
   return fxGap * fxGap + solidGap * solidGap + geographyGap * geographyGap;
 }
 
+type CategoryGap = { readonly key: string; readonly gap: number };
+
+// The individual per-category gaps (in percentage points), geography split into one entry per region.
+// Used to identify the single category that is currently farthest from its target so the ranking can
+// prioritize closing it, rather than optimizing only the net sum (which a holding can "game" by
+// helping several small gaps while worsening the dominant one).
+function categoryGaps(exposure: PortfolioExposure, settings: PortfolioSettings, geographyLabels: readonly string[]): CategoryGap[] {
+  return [
+    { key: 'fx', gap: Math.abs(exposure.fxPercent - settings.fxLimitPercent) },
+    { key: 'solid', gap: Math.abs(exposure.solidPercent - settings.solidTargetPercent) },
+    ...geographyLabels.map((label) => ({ key: `geo:${label}`, gap: Math.abs((exposure.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)) })),
+  ];
+}
+
+function gapForCategory(exposure: PortfolioExposure, settings: PortfolioSettings, geographyLabels: readonly string[], key: string): number {
+  return categoryGaps(exposure, settings, geographyLabels).find((entry) => entry.key === key)?.gap ?? 0;
+}
+
 function depositedHoldings(holdings: readonly Holding[], holdingId: string, depositAmountIls: number): Holding[] {
   return holdings.map((holding) => (holding.id === holdingId ? { ...holding, currentAmountIls: nonNegative(holding.currentAmountIls) + depositAmountIls } : holding));
 }
 
-function explainCandidate(before: PortfolioExposure, after: PortfolioExposure, settings: PortfolioSettings, geographyLabels: readonly string[]): string {
-  const movers: { readonly label: string; readonly reduction: number }[] = [
-    { label: 'חשיפת המט״ח', reduction: Math.abs(before.fxPercent - settings.fxLimitPercent) - Math.abs(after.fxPercent - settings.fxLimitPercent) },
-    { label: 'איזון סולידי-מנייתי', reduction: Math.abs(before.solidPercent - settings.solidTargetPercent) - Math.abs(after.solidPercent - settings.solidTargetPercent) },
+function explainCandidate(before: PortfolioExposure, after: PortfolioExposure, settings: PortfolioSettings, geographyLabels: readonly string[], primaryKey?: string): string {
+  const movers: { readonly key: string; readonly label: string; readonly reduction: number }[] = [
+    { key: 'fx', label: 'חשיפת המט״ח', reduction: Math.abs(before.fxPercent - settings.fxLimitPercent) - Math.abs(after.fxPercent - settings.fxLimitPercent) },
+    { key: 'solid', label: 'איזון סולידי-מנייתי', reduction: Math.abs(before.solidPercent - settings.solidTargetPercent) - Math.abs(after.solidPercent - settings.solidTargetPercent) },
     ...geographyLabels.map((label) => ({
+      key: `geo:${label}`,
       label: `אזור ${label}`,
       reduction: Math.abs((before.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)) - Math.abs((after.geographyPercent.get(label) ?? 0) - (settings.geographyTargets[label] ?? 0)),
     })),
   ];
+
+  // Warn when the deposit pushes the farthest category further from its target, so a candidate that
+  // only helps smaller gaps isn't presented as if it fixed the dominant problem.
+  const primaryMover = primaryKey ? movers.find((mover) => mover.key === primaryKey) : undefined;
+  if (primaryMover && primaryMover.reduction < -0.05) return `שימו לב: מרחיקה מהיעד את ${primaryMover.label} (המרכיב הרחוק ביותר כרגע).`;
+
   const topMovers = movers
     .filter((mover) => mover.reduction > 0.05)
     .sort((first, second) => second.reduction - first.reduction)
@@ -77,6 +103,11 @@ export function rankCandidates(holdings: readonly Holding[], settings: Portfolio
   const beforeExposure = computeExposure(holdings);
   const distanceBefore = distanceToTargets(beforeExposure, settings, GEOGRAPHY_LABELS);
 
+  // The single category currently farthest from its target. The ranking prioritizes shrinking this
+  // gap so a deposit can't win merely by nudging several small gaps while worsening the dominant one.
+  const farthest = categoryGaps(beforeExposure, settings, GEOGRAPHY_LABELS).sort((first, second) => second.gap - first.gap)[0];
+  const primaryGapBefore = farthest?.gap ?? 0;
+
   // Only manual holdings (חלק בתיק = ידני) are under the user's control, so the deposit can only be
   // suggested there. Managed holdings are excluded as candidates, but the exposure/distance is still
   // computed over the whole portfolio so the effect on the full portfolio is measured correctly.
@@ -85,14 +116,18 @@ export function rankCandidates(holdings: readonly Holding[], settings: Portfolio
     .map((holding) => {
       const afterExposure = computeExposure(depositedHoldings(holdings, holding.id, depositAmountIls));
       const distanceAfter = distanceToTargets(afterExposure, settings, GEOGRAPHY_LABELS);
+      const primaryGapAfter = farthest ? gapForCategory(afterExposure, settings, GEOGRAPHY_LABELS, farthest.key) : 0;
       return {
         holding,
         improvement: distanceBefore - distanceAfter,
+        primaryImprovement: primaryGapBefore - primaryGapAfter,
         distanceBefore,
         distanceAfter,
-        explanation: explainCandidate(beforeExposure, afterExposure, settings, GEOGRAPHY_LABELS),
+        explanation: explainCandidate(beforeExposure, afterExposure, settings, GEOGRAPHY_LABELS, farthest?.key),
       };
     })
-    .sort((first, second) => second.improvement - first.improvement)
+    // Primary: how much the deposit closes the farthest category's gap. Secondary: total distance
+    // improvement, used as a tiebreaker when the primary effect is effectively equal.
+    .sort((first, second) => (Math.abs(second.primaryImprovement - first.primaryImprovement) > 0.01 ? second.primaryImprovement - first.primaryImprovement : second.improvement - first.improvement))
     .slice(0, topN);
 }
