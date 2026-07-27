@@ -91,7 +91,7 @@ export function DepositAdvisorModal({ holdings, settings, onApply, onClose }: De
             ) : candidates.length === 0 ? (
               <div className="empty-content compact">
                 <strong>אין השקעות להצגה</strong>
-                <span>יש להוסיף השקעה קיימת לפני שימוש ביעוץ ההפקדה.</span>
+                <span>ההמלצות ניתנות רק להשקעות שחלקן בתיק מוגדר כ״ידני״. יש להוסיף השקעה כזו לפני שימוש ביעוץ ההפקדה.</span>
               </div>
             ) : (
               <ul className="advisor-candidate-list">
