@@ -842,6 +842,15 @@ Skills tailored to MMPS live in `.agents/skills/` (the vendor-neutral SKILL.md c
 
 Skills live in `.agents/skills/{name}/SKILL.md` and follow the standard `SKILL.md` frontmatter (`name`, `description`). Instruction files follow the same single-source rule: `AGENTS.md` is canonical, and `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are symlinks to it.
 
+### Copilot CLI custom agents (`.github/agents/`)
+
+Copilot CLI also discovers **custom agents** from `.github/agents/*.md` — each file is YAML frontmatter (`name`, `description`, optional `tools:` list) plus a markdown body that serves as the agent's system prompt. This directory mirrors 4 of the skills above as delegatable sub-agents (same single-source philosophy — the `.agents/skills/` SKILL.md files remain canonical, and the agent files are self-contained restatements aimed at autonomous sub-agent runs):
+
+- `planner.md` — read-only codebase exploration → structured implementation plan (plans only, no code).
+- `integration-research.md` — research an external site/API/MCP/host → MMPS feasibility + integration plan (research only).
+- `fact-checker.md` — verify factual claims via web/official sources and propose corrections (edits gated on explicit user approval).
+- `review-style.md` — read-only audit of changed `.ts` files against MMPS conventions (reports only, never auto-fixes).
+
 ---
 
 ## Quick Reference
