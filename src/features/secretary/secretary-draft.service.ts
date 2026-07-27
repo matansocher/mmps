@@ -158,7 +158,8 @@ export class SecretaryDraftService {
     }
   }
 
-  async handleCancel(ctx: Context): Promise<void> {
+  // Returns the cancelled draft's chatId (or null) so the caller can also stand down the nudge for that chat.
+  async handleCancel(ctx: Context): Promise<number | null> {
     const shortId = (ctx.callbackQuery?.data ?? '').slice(DRAFT_CANCEL_CALLBACK_PREFIX.length);
     const draft = await getDraftByShortId(shortId);
     if (draft && draft.status === 'pending') await updateDraftStatus(shortId, 'cancelled');
@@ -169,5 +170,6 @@ export class SecretaryDraftService {
       this.logger.error(`Failed to remove draft buttons: ${err}`);
     }
     await ctx.answerCallbackQuery({ text: 'Dismissed' });
+    return draft?.chatId ?? null;
   }
 }
