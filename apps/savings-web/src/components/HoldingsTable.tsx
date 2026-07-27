@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { effectiveGeography } from '../lib/breakdown';
 import { formatIls, formatPercent } from '../lib/format';
 import type { BreakdownRecord, Holding } from '../types';
 import { GEOGRAPHY_LABELS } from '../types';
@@ -97,12 +98,16 @@ function hasActiveFilters(filters: FilterState): boolean {
   return filters.owner.size > 0 || filters.account.size > 0 || filters.currency.size > 0 || filters.asset.size > 0 || filters.geography.size > 0;
 }
 
+function holdingGeographies(holding: Holding): readonly string[] {
+  return [...effectiveGeography(holding).keys()];
+}
+
 function matchesFilters(holding: Holding, filters: FilterState): boolean {
   if (filters.owner.size > 0 && !filters.owner.has(holding.owner)) return false;
   if (filters.account.size > 0 && !filters.account.has(holding.account)) return false;
   if (filters.currency.size > 0 && !filters.currency.has(holding.currencyExposure)) return false;
   if (filters.asset.size > 0 && !filters.asset.has(holding.assetType)) return false;
-  if (filters.geography.size > 0 && !filters.geography.has(holding.geography)) return false;
+  if (filters.geography.size > 0 && !holdingGeographies(holding).some((geo) => filters.geography.has(geo))) return false;
   return true;
 }
 
@@ -140,7 +145,7 @@ export function HoldingsTable({ holdings, editable, onAmountChange, onRowClick }
   const activeGeographies = useMemo(() => {
     const set = new Set<string>();
     for (const h of holdings) {
-      if (h.geography) set.add(h.geography);
+      for (const geo of holdingGeographies(h)) set.add(geo);
     }
     return [...set].sort((a, b) => {
       const ai = (GEOGRAPHY_LABELS as readonly string[]).indexOf(a);
