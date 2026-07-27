@@ -1,11 +1,13 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
+import { toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
 import { z } from 'zod';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { GPT_5_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import type { SecretaryMessage } from './mongo';
-import { DRAFT_GENERATION_PROMPT, DRAFT_OPTIONS_COUNT, OWNER_NAME } from './secretary.config';
+import { DRAFT_GENERATION_PROMPT, DRAFT_OPTIONS_COUNT, OWNER_NAME, SUGGESTION_ACTIVE_WEEKDAYS } from './secretary.config';
 
 export type DraftReply = {
   readonly drafts: string[]; // distinct ready-to-send reply options, best-guess first
@@ -33,6 +35,12 @@ export function unansweredTail(messages: SecretaryMessage[]): SecretaryMessage[]
     tail.unshift(messages[i]);
   }
   return tail;
+}
+
+// Whether smart-reply suggestions / nudges are active right now (Mon–Thu in Asia/Jerusalem).
+export function isSuggestionActiveDay(now: Date = new Date()): boolean {
+  const weekday = toZonedTime(now, DEFAULT_TIMEZONE).getDay();
+  return SUGGESTION_ACTIVE_WEEKDAYS.includes(weekday);
 }
 
 // Assemble the user prompt fed to the draft model from the recent conversation.
