@@ -1700,14 +1700,59 @@ table.standings td .club img {
   font-size: 12px;
 }
 
-/* Drag-and-drop lineup editing (pitch↔pitch, bench↔pitch) */
-.fm-slot[draggable='true'] {
+/* Drag-and-drop lineup editing (pitch↔pitch, bench↔pitch) — pointer-event based */
+.fm-slot,
+.fm-bench-row {
+  /* Stop touch/pen gestures from scrolling the page mid-drag so our pointer
+     handlers keep the token; harmless for mouse. */
+  touch-action: none;
+}
+
+.fm-slot:not(:disabled),
+.fm-bench-row:not(.unavailable):not(:disabled) {
   cursor: grab;
+}
+
+.fm-editor-layout.is-dragging {
+  cursor: grabbing;
+}
+
+.fm-editor-layout.is-dragging .fm-slot,
+.fm-editor-layout.is-dragging .fm-bench-row {
+  cursor: grabbing;
 }
 
 .fm-slot.dragging,
 .fm-bench-row.dragging {
   opacity: 0.4;
+}
+
+/* Floating drag token — a normal element we position at the cursor every
+   pointermove, so it can never drift away from the pointer. */
+.fm-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 2147483647;
+  will-change: transform;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.fm-drag-ghost img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .fm-slot.drop-hover .disc {
@@ -1721,14 +1766,6 @@ table.standings td .club img {
 
 .fm-bench-row {
   user-select: none;
-}
-
-.fm-bench-row[draggable='true'] {
-  cursor: grab;
-}
-
-.fm-bench-row.not-actionable {
-  cursor: grab;
 }
 
 .fm-bench-row.unavailable {
