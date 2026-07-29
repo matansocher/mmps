@@ -11,6 +11,7 @@ import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
+import { initFootballManager } from '@features/football-manager';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initSavings } from '@features/savings';
 import { initSecretary, BOT_CONFIG as secretaryConfig } from '@features/secretary';
@@ -38,6 +39,12 @@ async function main() {
     await initSavings(app);
   } catch (err) {
     logger.error(`Failed to init savings app: ${err}`);
+  }
+
+  try {
+    await initFootballManager(app);
+  } catch (err) {
+    logger.error(`Failed to init football-manager app: ${err}`);
   }
 
   registerSwaggerRoutes(app);

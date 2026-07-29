@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/lineupeditor.tsx","./src/components/livematch.tsx","./src/components/prematch.tsx","./src/lib/api.ts","./src/screens/careerscreen.tsx","./src/screens/loginscreen.tsx","./src/screens/pickclubscreen.tsx"],"version":"5.9.3"}
