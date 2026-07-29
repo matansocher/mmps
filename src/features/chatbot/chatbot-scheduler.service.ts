@@ -66,7 +66,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`30 18 * * *`, async () => socialMediaCollect(['tiktok']));
 
-    createSchedule(`30 11-23 * * *`, async () => socialMediaCollect(['telegram']));
+    createSchedule(`30 * * * *`, async () => socialMediaCollect(['telegram']));
 
     createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
 
