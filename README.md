@@ -46,6 +46,7 @@ Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 - **MongoDB** native driver (no ODM). Each bot has its own database (`Chatbot`, `Coach`, `Wolt`, …).
 - **Express 5** runs alongside the bots — Swagger UI, optional mini-app data routes per bot.
 - **Manual DI** via per-feature `init*` functions in `src/index.ts`.
+- **Observability** — OpenTelemetry ships traces, metrics, and logs to Grafana Cloud in production (bootstrapped via a `node --import` preload). Off locally.
 
 Full architecture overview: <https://matansocher.github.io/mmps/architecture/overview>.
 

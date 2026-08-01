@@ -96,6 +96,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **Code Quality:** ESLint 9 (flat config), Prettier 3
 - **Vector DB:** `@pinecone-database/pinecone`
 - **Telegram MTProto:** `telegram` (for client-mode features, separate from bot)
+- **Observability:** `@opentelemetry/*` (OTLP traces/metrics/logs to Grafana Cloud; bootstrapped via a `node --import` preload)
 - **Other notable:** `canvas`, `sharp`, `cheerio`, `youtube-transcript-plus`, `googleapis`, `twilio`, `yahoo-finance2`, `octokit`, `vitepress` (docs)
 
 ### Code Formatting
@@ -118,7 +119,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ```
 mmps/
 ├── src/
-│   ├── core/           # Config, mongo, openapi/swagger, services, utils
+│   ├── core/           # Config, mongo, openapi/swagger, telemetry, services, utils
 │   ├── features/       # Bots plus savings web feature
 │   ├── services/       # 30+ external service integrations
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
@@ -762,6 +763,12 @@ The full list is in `.env.example`. Everything that the code references via `env
 - `IS_PROD=true` runs all bots regardless of `LOCAL_ACTIVE_BOT_ID`.
 - `PORT` — Express port (default 3000).
 - `SAVINGS_APP_PASSWORD` — shared password for the standalone `/savings` portfolio app.
+
+**Observability (Grafana Cloud via OpenTelemetry) — production only:**
+- `OTEL_EXPORTER_OTLP_ENDPOINT` — Grafana OTLP gateway (e.g. `https://otlp-gateway-prod-<region>.grafana.net/otlp`). Empty = telemetry disabled (local dev).
+- `OTEL_SERVICE_NAME` (default `mmps`), `OTEL_EXPORTER_OTLP_PROTOCOL` (`http/protobuf`).
+- `GRAFANA_OTLP_INSTANCE_ID` + `GRAFANA_OTLP_TOKEN` — used to build the OTLP Basic auth header **in code** (avoids the fragile `OTEL_EXPORTER_OTLP_HEADERS` parsing).
+- `OTEL_DEBUG=true` — logs OTLP export attempts/errors while troubleshooting.
 
 Everything else is feature-specific (Spotify, GitHub App, Google services, Twilio, Pinecone, RapidAPI, etc.) and only needed if you exercise the corresponding tools.
 
