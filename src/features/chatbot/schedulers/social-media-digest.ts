@@ -13,7 +13,7 @@ const logger = new Logger('SocialMediaDigestScheduler');
 const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦', youtube: 'YouTube 📺', telegram: 'Telegram 📣' } as const;
 const SUMMARIZED_PLATFORMS: SocialPlatform[] = ['twitter']; // chatty platforms get AI topic summaries; the rest list each post
 const MAX_FALLBACK_POSTS = 15; // raw listing cap when summarization fails
-const LONG_POST_THRESHOLD = 280; // posts longer than this are AI-shortened in per-post listings
+const LONG_POST_THRESHOLD = 280; // posts longer than this hard-truncate when AI shortening fails
 
 const summarySchema = z.object({
   keyPoints: z.array(z.string()).describe('The key points of what the author posted about, one bullet per distinct topic'),
@@ -97,39 +97,39 @@ function telegramPostLine(text: string, url: string | null): string {
 }
 
 // Renders one line per Telegram post (newest first) with a direct message link.
-// Posts longer than LONG_POST_THRESHOLD are AI-shortened in a single batched call.
+// Every post is AI-shortened to a 1-2 sentence description so the digest stays scannable.
 async function buildTelegramListingSection(userPosts: PendingPost[]): Promise<string> {
-  const displayTexts = await shortenLongPosts(userPosts.map((post) => post.text));
+  const displayTexts = await shortenPosts(userPosts.map((post) => post.text));
   const lines = userPosts.map((post, i) => telegramPostLine(displayTexts[i], post.url));
   return `${sectionHeader(userPosts)}\n${lines.join('\n')}`;
 }
 
-// Returns display text per post, shortening only posts over the threshold. All long
-// posts are shortened in one AI call (index-aligned); on failure they hard-truncate.
-async function shortenLongPosts(texts: (string | null)[]): Promise<string[]> {
-  const longIndexes = texts.map((text, i) => (isLongPost(text) ? i : -1)).filter((i) => i !== -1);
-  if (!longIndexes.length) {
+// Returns display text per post, shortening every post with text into a 1-2 sentence
+// description in one AI call (index-aligned); on failure they hard-truncate long posts.
+async function shortenPosts(texts: (string | null)[]): Promise<string[]> {
+  const indexesToShorten = texts.map((text, i) => (text?.trim() ? i : -1)).filter((i) => i !== -1);
+  if (!indexesToShorten.length) {
     return texts.map((text) => text ?? '');
   }
 
-  const longTexts = longIndexes.map((i) => texts[i]);
+  const postsToShorten = indexesToShorten.map((i) => texts[i]);
   const instructions = [
     `You shorten social media posts so a daily digest stays scannable.`,
-    `You will receive ${longTexts.length} long posts. Return exactly ${longTexts.length} shortened versions, in the same order.`,
-    `Each shortened version is 1-2 short sentences capturing the main point. Do not add opinions or information not in the post.`,
+    `You will receive ${postsToShorten.length} posts. Return exactly ${postsToShorten.length} shortened versions, in the same order.`,
+    `Each shortened version is 1-2 short sentences describing what the post is about. Do not add opinions or information not in the post.`,
     `Write each shortened version in the same language the post is written in.`,
   ].join('\n');
-  const input = longTexts.map((text, i) => `Post ${i + 1}:\n${text}`).join('\n\n');
+  const input = postsToShorten.map((text, i) => `Post ${i + 1}:\n${text}`).join('\n\n');
 
   try {
     const { result } = await getResponse({ instructions, input, schema: shortenSchema, model: GPT_SMALL_MODEL, store: false });
-    if (result.shortened.length !== longTexts.length) {
-      throw new Error(`expected ${longTexts.length} shortened posts, got ${result.shortened.length}`);
+    if (result.shortened.length !== postsToShorten.length) {
+      throw new Error(`expected ${postsToShorten.length} shortened posts, got ${result.shortened.length}`);
     }
-    const shortenedByIndex = new Map(longIndexes.map((originalIndex, k) => [originalIndex, result.shortened[k]]));
+    const shortenedByIndex = new Map(indexesToShorten.map((originalIndex, k) => [originalIndex, result.shortened[k]]));
     return texts.map((text, i) => shortenedByIndex.get(i) ?? text ?? '');
   } catch (err) {
-    logger.error(`Failed to shorten long Telegram posts, falling back to truncation: ${err.message}`);
+    logger.error(`Failed to shorten Telegram posts, falling back to truncation: ${err.message}`);
     return texts.map((text) => (isLongPost(text) ? `${text.slice(0, LONG_POST_THRESHOLD)}…` : (text ?? '')));
   }
 }
