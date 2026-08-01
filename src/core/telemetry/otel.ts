@@ -10,6 +10,13 @@ import { env } from 'node:process';
 
 let sdk: NodeSDK | null = null;
 
+function buildAuthHeaders(): Record<string, string> | undefined {
+  const { GRAFANA_OTLP_INSTANCE_ID, GRAFANA_OTLP_TOKEN } = env;
+  if (!GRAFANA_OTLP_INSTANCE_ID || !GRAFANA_OTLP_TOKEN) return undefined;
+  const credentials = Buffer.from(`${GRAFANA_OTLP_INSTANCE_ID}:${GRAFANA_OTLP_TOKEN}`).toString('base64');
+  return { Authorization: `Basic ${credentials}` }; // built in code to avoid fragile OTEL_EXPORTER_OTLP_HEADERS parsing
+}
+
 export function startTelemetry(): void {
   if (sdk) return;
   if (!env.OTEL_EXPORTER_OTLP_ENDPOINT) return; // not configured — stay silent (local dev / no observability)
@@ -18,6 +25,8 @@ export function startTelemetry(): void {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG); // surfaces OTLP export attempts/errors in logs
   }
 
+  const headers = buildAuthHeaders();
+
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: env.OTEL_SERVICE_NAME || 'mmps',
     [ATTR_SERVICE_VERSION]: env.npm_package_version || '1.0.0',
@@ -25,9 +34,9 @@ export function startTelemetry(): void {
 
   sdk = new NodeSDK({
     resource,
-    traceExporter: new OTLPTraceExporter(),
+    traceExporter: new OTLPTraceExporter({ headers }),
     metricReader: new PeriodicExportingMetricReader({
-      exporter: new OTLPMetricExporter(),
+      exporter: new OTLPMetricExporter({ headers }),
       exportIntervalMillis: 60_000,
     }),
     instrumentations: [
