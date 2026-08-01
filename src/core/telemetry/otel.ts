@@ -1,3 +1,4 @@
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -12,6 +13,10 @@ let sdk: NodeSDK | null = null;
 export function startTelemetry(): void {
   if (sdk) return;
   if (!env.OTEL_EXPORTER_OTLP_ENDPOINT) return; // not configured — stay silent (local dev / no observability)
+
+  if (env.OTEL_DEBUG === 'true') {
+    diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG); // surfaces OTLP export attempts/errors in logs
+  }
 
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: env.OTEL_SERVICE_NAME || 'mmps',
