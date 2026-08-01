@@ -1,8 +1,10 @@
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
+import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
@@ -39,6 +41,7 @@ export function startTelemetry(): void {
       exporter: new OTLPMetricExporter({ headers }),
       exportIntervalMillis: 60_000,
     }),
+    logRecordProcessors: [new BatchLogRecordProcessor({ exporter: new OTLPLogExporter({ headers }) })],
     instrumentations: [
       getNodeAutoInstrumentations({
         '@opentelemetry/instrumentation-fs': { enabled: false }, // too noisy for this workload
