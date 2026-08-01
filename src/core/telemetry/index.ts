@@ -1,0 +1,1 @@
+export { startTelemetry } from './otel';

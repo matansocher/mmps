@@ -32,7 +32,7 @@ export class Logger {
   private format(level: Level, message: string): string {
     const timestamp = new Date().toISOString();
     if (isProd) {
-      return `${timestamp} | ${this.context} | ${message}`;
+      return JSON.stringify({ timestamp, level, context: this.context, message }); // single-line JSON for Loki parsing
     }
     return `${timestamp} ${levelColor[level](level)} ${pc.dim(this.context)} ${message}`;
   }
