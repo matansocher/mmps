@@ -91,7 +91,7 @@ export default defineConfig({
                     items: [
                         { text: 'Production Setup', link: '/deployment/production' },
                         { text: 'Environment Variables', link: '/deployment/environment-variables' },
-                        { text: 'Monitoring', link: '/deployment/monitoring' },
+                        { text: 'Monitoring & Observability', link: '/deployment/monitoring' },
                     ],
                 },
             ],

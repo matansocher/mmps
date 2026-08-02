@@ -57,6 +57,20 @@ SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
 SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
 ```
 
+### Observability (Grafana Cloud)
+Ships traces, metrics, and logs to Grafana Cloud via OpenTelemetry. Set only in production (Heroku); leave `OTEL_EXPORTER_OTLP_ENDPOINT` empty to disable locally. Values come from your Grafana Cloud stack's **OpenTelemetry** connection page.
+
+```bash
+OTEL_SERVICE_NAME=mmps
+OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-<region>.grafana.net/otlp
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+GRAFANA_OTLP_INSTANCE_ID=your-instance-id       # username for OTLP Basic auth
+GRAFANA_OTLP_TOKEN=your-grafana-access-token     # password for OTLP Basic auth
+OTEL_DEBUG=                                       # "true" to log OTLP export attempts while troubleshooting
+```
+
+The Basic auth header is built in code from `GRAFANA_OTLP_INSTANCE_ID` + `GRAFANA_OTLP_TOKEN`. See [Monitoring & Observability](/deployment/monitoring).
+
 ## Development
 
 Create `.env` file in root:
