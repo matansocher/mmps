@@ -47,7 +47,7 @@ export class Logger {
       severityNumber: levelSeverity[level],
       severityText: level,
       body: message,
-      attributes: { context: this.context },
+      attributes: { context: this.context, message }, // duplicated as an attribute so Loki exposes it as structured metadata for alert templating
     });
   }
 
