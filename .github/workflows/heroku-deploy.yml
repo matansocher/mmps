@@ -16,7 +16,7 @@ concurrency:
 jobs:
   deploy:
     name: 'Deploy to Heroku'
-    if: github.actor == 'matansocher'
+    if: github.actor == 'matansocher' || contains(github.actor, 'mmps-companion')
     runs-on: ubuntu-latest
     environment:
       name: production

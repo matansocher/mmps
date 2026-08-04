@@ -9,15 +9,18 @@ import {
   getPRChecks,
   getPRReviews,
   getPullRequest,
+  HEROKU_DEPLOY_WORKFLOW_FILE,
   listIssues,
   listPRFiles,
   listPullRequests,
+  mergePullRequest,
+  triggerWorkflow,
   updateIssue,
 } from '@services/github';
 
 const schema = z.object({
   action: z
-    .enum(['create_issue', 'get_issue', 'update_issue', 'comment_issue', 'comment_pr', 'add_labels', 'list_issues', 'list_prs', 'get_pr_checks', 'get_pr', 'list_pr_files', 'get_pr_reviews'])
+    .enum(['create_issue', 'get_issue', 'update_issue', 'comment_issue', 'comment_pr', 'add_labels', 'list_issues', 'list_prs', 'get_pr_checks', 'get_pr', 'list_pr_files', 'get_pr_reviews', 'deploy', 'merge_pr'])
     .describe('The GitHub action to perform'),
   title: z.string().optional().describe('Issue title (for create_issue and update_issue)'),
   body: z.string().optional().describe('Issue/comment body text'),
@@ -26,6 +29,7 @@ const schema = z.object({
   labels: z.array(z.string()).optional().describe('Labels to assign to issue'),
   assignees: z.array(z.string()).optional().describe('GitHub usernames to assign'),
   state: z.enum(['open', 'closed']).optional().describe('Issue/PR state filter'),
+  mergeMethod: z.enum(['merge', 'squash', 'rebase']).optional().describe('Merge strategy for merge_pr (defaults to squash)'),
 });
 
 async function runner(input: z.infer<typeof schema>) {
@@ -118,6 +122,17 @@ async function runner(input: z.infer<typeof schema>) {
       return JSON.stringify(result);
     }
 
+    case 'deploy': {
+      const result = await triggerWorkflow(HEROKU_DEPLOY_WORKFLOW_FILE);
+      return JSON.stringify(result);
+    }
+
+    case 'merge_pr': {
+      if (!input.prNumber) return JSON.stringify({ error: 'prNumber is required for merge_pr' });
+      const result = await mergePullRequest(input.prNumber, input.mergeMethod);
+      return JSON.stringify(result);
+    }
+
     default:
       return JSON.stringify({ error: `Unknown action: ${input.action}` });
   }
@@ -126,6 +141,6 @@ async function runner(input: z.infer<typeof schema>) {
 export const githubTool = tool(runner, {
   name: 'github',
   description:
-    'Interact with the GitHub repository matansocher/mmps (the ONLY repo — never ask the user which repo, branch, or file). Can create, read, update issues and PRs, add labels, list them, and check PR status checks. To build or change anything in the code (a "new feature", bug fix, or behavior change), use create_issue with a detailed description of the request, then add_labels with the "implement" label to that issue to trigger the automated implementation workflow.',
+    'Interact with the GitHub repository matansocher/mmps (the ONLY repo — never ask the user which repo, branch, or file). Can create, read, update issues and PRs, add labels, list them, and check PR status checks. To build or change anything in the code (a "new feature", bug fix, or behavior change), use create_issue with a detailed description of the request, then add_labels with the "implement" label to that issue to trigger the automated implementation workflow. To deploy the repo to production (Heroku), use the "deploy" action, which dispatches the Heroku deploy GitHub Actions workflow. To merge an open pull request into the base branch, use the "merge_pr" action with the PR number (defaults to squash merge).',
   schema,
 });
