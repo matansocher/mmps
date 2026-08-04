@@ -10,6 +10,7 @@ import {
   exerciseReminder,
   footballUpdate,
   makavdiaUpdate,
+  morningBrief,
   polymarketUpdate,
   // rainRadarAlert,
   reminderCheck,
@@ -37,6 +38,8 @@ export class ChatbotSchedulerService {
 
   init(): void {
     createSchedule(`00 23 * * *`, async () => dailySummary(this.bot, this.chatbotService));
+
+    createSchedule(`00 8 * * *`, async () => morningBrief(this.bot, this.chatbotService));
 
     createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot));
 
