@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { ChatbotService } from './chatbot.service';
+import type { SecretaryMessageService } from './secretary';
 import {
   birthdayReminder,
   dailySummary,
@@ -14,6 +15,8 @@ import {
   polymarketUpdate,
   // rainRadarAlert,
   reminderCheck,
+  secretaryCheckIn,
+  secretaryDailyDigest,
   socialMediaCollect,
   socialMediaDigest,
   sportsCalendar,
@@ -34,6 +37,7 @@ export class ChatbotSchedulerService {
   constructor(
     private readonly chatbotService: ChatbotService,
     private readonly bot: Bot,
+    private readonly secretaryMessageService: SecretaryMessageService,
   ) {}
 
   init(): void {
@@ -72,6 +76,10 @@ export class ChatbotSchedulerService {
     createSchedule(`30 * * * *`, async () => socialMediaCollect(['telegram']));
 
     createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
+
+    createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
+
+    createSchedule(`13 11 * * 1,2,3`, async () => secretaryCheckIn(this.bot, this.secretaryMessageService));
 
     // createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
   }

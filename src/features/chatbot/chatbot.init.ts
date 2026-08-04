@@ -24,6 +24,7 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
+import { DB_NAME as SECRETARY_DB_NAME, ensureSecretaryMessageIndexes, SecretaryActionService, SecretaryMessageService } from './secretary';
 
 const logger = new Logger('initChatbot');
 
@@ -42,11 +43,13 @@ export async function initChatbot(app: Express): Promise<void> {
     FRIENDS_DB_NAME,
     MEET_FRIENDS_DB_NAME,
     USAGE_DB_NAME,
+    SECRETARY_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 
   await ensureUsageIndexes();
   await ensureReminderIndexes();
+  await ensureSecretaryMessageIndexes();
 
   // Build the checkpointer BEFORE provideTelegramBot(), which calls bot.start().
   // grammY locks the bot against new listeners once polling begins, so any `await`
@@ -57,8 +60,10 @@ export async function initChatbot(app: Express): Promise<void> {
   const bot = provideTelegramBot(BOT_CONFIG);
 
   const chatbotService = new ChatbotService(checkpointer);
-  const chatbotController = new ChatbotController(chatbotService, bot);
-  const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot);
+  const secretaryMessageService = new SecretaryMessageService();
+  const secretaryActionService = new SecretaryActionService();
+  const chatbotController = new ChatbotController(chatbotService, bot, secretaryMessageService, secretaryActionService);
+  const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot, secretaryMessageService);
 
   chatbotController.init();
   chatbotScheduler.init();
