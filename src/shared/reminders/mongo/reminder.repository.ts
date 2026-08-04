@@ -119,7 +119,10 @@ export async function reactivateSnoozedReminders(): Promise<number> {
   const remindersCollection = getCollection();
   const now = new Date();
 
-  const result = await remindersCollection.updateMany({ status: 'snoozed', snoozedUntil: { $lte: now } }, { $set: { status: 'pending' }, $unset: { snoozedUntil: '' } });
+  const result = await remindersCollection.updateMany(
+    { status: 'snoozed', snoozedUntil: { $lte: now } },
+    { $set: { status: 'pending' }, $unset: { snoozedUntil: '', notifiedAt: '' } },
+  );
 
   return result.modifiedCount;
 }

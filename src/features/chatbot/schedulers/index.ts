@@ -8,6 +8,8 @@ export { footballUpdate } from './football-update';
 export { footballPredictionsResults } from './football-predictions-results';
 export { makavdiaUpdate } from './makavdia-update';
 export { reminderCheck } from './reminder-check';
+export { buildReminderKeyboard, parseReminderCallbackData, resolveSnoozeUntil, describeSnoozeOption } from './reminder-actions';
+export type { ReminderAction, ReminderSnoozeOption, ParsedReminderCallback } from './reminder-actions';
 export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
 export { polymarketUpdate } from './polymarket-update';
