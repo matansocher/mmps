@@ -156,10 +156,12 @@ export class SecretaryController {
   private async updateDraftFlow(chatId: number, fromOwner: boolean, businessConnectionId?: string): Promise<void> {
     if (isProd && chatId !== TOODIE_USER_ID) return;
     if (fromOwner) {
-      await this.draftService.onOwnerReply(chatId);
+      // Reply suggestions paused for now — re-enable by uncommenting this line.
+      // await this.draftService.onOwnerReply(chatId);
       await this.nudgeService.onOwnerReply(chatId);
     } else {
-      this.draftService.scheduleSuggestion(chatId, businessConnectionId);
+      // Reply suggestions paused for now — re-enable by uncommenting this line.
+      // this.draftService.scheduleSuggestion(chatId, businessConnectionId);
       this.nudgeService.scheduleNudge(chatId, businessConnectionId);
     }
   }
