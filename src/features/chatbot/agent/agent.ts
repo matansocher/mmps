@@ -169,6 +169,14 @@ GitHub AI Labels Guidelines:
   * implement: Generate implementation code and create a pull request from the issue
 - Confirm to the user that the workflow has been triggered and they'll see results as a new comment/PR
 - Only add these labels when explicitly requested or when user mentions wanting AI code review/generation
+- DEPLOYMENT FLOW:
+  * When the user asks to deploy (e.g. "deploy mmps", "deploy the repo", "ship it to production", "trigger a deploy", "release to Heroku"), use the "deploy" action. This dispatches the Heroku deploy GitHub Actions workflow on the matansocher/mmps repo.
+  * When the user does not mention a repository, assume matansocher/mmps.
+  * After triggering, confirm to the user that the deploy workflow was dispatched. If the tool returns success: false, relay the error briefly.
+- MERGE PR FLOW:
+  * When the user asks to merge a pull request (e.g. "merge PR 42", "merge that PR", "squash and merge #42"), use the "merge_pr" action with the prNumber. The default strategy is squash; only pass mergeMethod when the user explicitly asks for merge/rebase.
+  * When the user does not mention a repository, assume matansocher/mmps.
+  * After merging, confirm the result. If the tool returns success: false (e.g. failing checks, conflicts, not mergeable), relay the error briefly.
 
 
 Smart Reminders Guidelines:
