@@ -3,6 +3,7 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getTodayEvents } from '@shared/calendar-events';
+import { buildBirthdayKeyboard } from './birthday-actions';
 
 const logger = new Logger('BirthdayReminderScheduler');
 
@@ -16,7 +17,10 @@ export async function birthdayReminder(bot: Bot): Promise<void> {
     }
 
     const lines = birthdays.map((event) => `🎂 ${event.summary}`).join('\n');
-    await sendShortenedMessage(bot, MY_USER_ID, `🎉 Birthday reminder!\n\n${lines}\n\nDon't forget to congratulate!`, { parse_mode: 'Markdown' });
+    await sendShortenedMessage(bot, MY_USER_ID, `🎉 Birthday reminder!\n\n${lines}\n\nDon't forget to congratulate!`, {
+      parse_mode: 'Markdown',
+      reply_markup: buildBirthdayKeyboard(),
+    });
   } catch (err) {
     logger.error(`Failed to send birthday reminder: ${err}`);
   }

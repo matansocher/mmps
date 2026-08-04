@@ -9,9 +9,12 @@ import { analyzeImage } from '@services/openai/utils/analyze-image';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
 import { getReminderById, updateReminderStatus } from '@shared/reminders';
+import { addExercise } from '@shared/trainer';
 import { IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { describeSnoozeOption, parseReminderCallbackData, resolveSnoozeUntil } from './schedulers';
+import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
+
+const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
 
 export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
@@ -35,6 +38,25 @@ export class ChatbotController {
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
+    const { data } = getCallbackQueryData(ctx);
+
+    if (parseReminderCallbackData(data)) {
+      await this.handleReminderCallback(ctx);
+      return;
+    }
+    if (parseExerciseCallbackData(data)) {
+      await this.handleExerciseCallback(ctx);
+      return;
+    }
+    if (parseBirthdayCallbackData(data)) {
+      await this.handleBirthdayCallback(ctx);
+      return;
+    }
+
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+
+  private async handleReminderCallback(ctx: Context): Promise<void> {
     const { chatId, data } = getCallbackQueryData(ctx);
 
     const parsed = parseReminderCallbackData(data);
@@ -65,6 +87,54 @@ export class ChatbotController {
       await ctx.answerCallbackQuery({ text: `Snoozed for ${label}` }).catch(() => {});
     } catch (err) {
       this.logger.error(`Error handling reminder callback: ${err}`);
+      await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
+    }
+  }
+
+  private async handleExerciseCallback(ctx: Context): Promise<void> {
+    const { chatId, data } = getCallbackQueryData(ctx);
+
+    const action = parseExerciseCallbackData(data);
+    if (!action) {
+      await ctx.answerCallbackQuery().catch(() => {});
+      return;
+    }
+
+    try {
+      switch (action) {
+        case 'done':
+          await addExercise(chatId);
+          await ctx.editMessageText('💪 *Logged!* Great work today.', { parse_mode: 'Markdown' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Exercise logged' }).catch(() => {});
+          break;
+        case 'skip':
+          await ctx.editMessageText('👌 No worries, skipped for today.', { parse_mode: 'Markdown' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Skipped for today' }).catch(() => {});
+          break;
+        case 'remind':
+          setTimeout(() => {
+            sendExerciseReminder(this.bot, this.chatbotService).catch((err) => this.logger.error(`Failed to re-send exercise reminder: ${err}`));
+          }, EXERCISE_REMIND_DELAY_MS);
+          await ctx.editMessageText('😴 Okay, I will remind you again in 1 hour.', { parse_mode: 'Markdown' }).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Reminding in 1 hour' }).catch(() => {});
+          break;
+      }
+    } catch (err) {
+      this.logger.error(`Error handling exercise callback: ${err}`);
+      await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
+    }
+  }
+
+  private async handleBirthdayCallback(ctx: Context): Promise<void> {
+    const { chatId } = getCallbackQueryData(ctx);
+
+    try {
+      await ctx.answerCallbackQuery({ text: 'Drafting a message...' }).catch(() => {});
+      const prompt = `Draft a warm, personal birthday message for each person whose birthday is today (check my calendar for today's birthday events). Keep each message short and heartfelt, ready to copy and send. If there are multiple birthdays, provide one message per person.`;
+      const { message } = await this.chatbotService.processMessage(prompt, chatId);
+      await sendRichMessage(this.bot, chatId, message);
+    } catch (err) {
+      this.logger.error(`Error handling birthday callback: ${err}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
     }
   }
