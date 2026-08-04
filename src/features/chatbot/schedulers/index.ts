@@ -25,3 +25,5 @@ export { spotifyPodcastUpdate } from './spotify-podcast-update';
 export { rainRadarAlert } from './rain-radar-alert';
 export { upcomingEventAlert } from './upcoming-event-alert';
 export { usageSummary } from './usage-summary';
+export { secretaryDailyDigest } from './secretary-daily-digest';
+export { secretaryCheckIn } from './secretary-check-in';

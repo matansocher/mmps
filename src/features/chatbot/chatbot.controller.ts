@@ -1,7 +1,7 @@
 import type { Bot, Context } from 'grammy';
 import type { ReactionTypeEmoji } from 'grammy/types';
 import { env } from 'node:process';
-import { LOCAL_FILES_PATH } from '@core/config';
+import { LOCAL_FILES_PATH, MY_USER_ID, TOODIE_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
@@ -13,8 +13,23 @@ import { addExercise } from '@shared/trainer';
 import { IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
+import {
+  ACTION_CALLBACK_PREFIX,
+  buildActionsKeyboard,
+  CHECK_IN_MESSAGE,
+  CHECK_IN_SEND_CALLBACK,
+  getActionByShortId,
+  getActionsByMessageId,
+  OWNER_BUSINESS_CONNECTION_ID,
+  type SecretaryActionService,
+  type SecretaryMessageService,
+  TRANSCRIPTION_HEADER,
+  updateActionStatus,
+} from './secretary';
 
 const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
+
+const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
 
 export class ChatbotController {
   private readonly logger = new Logger(ChatbotController.name);
@@ -22,11 +37,17 @@ export class ChatbotController {
   constructor(
     private readonly chatbotService: ChatbotService,
     private readonly bot: Bot,
+    private readonly secretaryMessageService: SecretaryMessageService,
+    private readonly secretaryActionService: SecretaryActionService,
   ) {}
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));
     this.bot.command('exercise', (ctx) => this.exerciseHandler(ctx));
+    this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
+    this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
+    this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${ACTION_CALLBACK_PREFIX}`), (ctx) => this.secretaryActionHandler(ctx));
     this.bot.on('message:text', (ctx) => this.messageHandler(ctx));
     this.bot.on('message:photo', (ctx) => this.photoHandler(ctx));
     this.bot.on(['message:audio', 'message:voice'], (ctx) => this.audioHandler(ctx));
@@ -35,6 +56,109 @@ export class ChatbotController {
 
   private async startHandler(ctx: Context): Promise<void> {
     await ctx.reply('Hi, I am your chatbot! How can I assist you today?');
+  }
+
+  private businessConnectionHandler(ctx: Context): void {
+    const connection = ctx.businessConnection;
+    if (!connection) return;
+    this.logger.log(`Business connection: id=${connection.id} enabled=${connection.is_enabled} userChatId=${connection.user_chat_id}`);
+  }
+
+  // Log every business-chat message (both sides). Voice notes are transcribed, echoed into the
+  // chat as the owner, and stored so the daily summary stays complete.
+  private async businessMessageHandler(ctx: Context): Promise<void> {
+    const message = ctx.businessMessage;
+    if (!message) return;
+
+    const chatId = message.chat.id;
+    const fromOwner = ctx.from?.id === MY_USER_ID;
+    const senderName = ctx.from?.first_name ?? undefined;
+    const senderUsername = ctx.from?.username ?? undefined;
+    const businessConnectionId = message.business_connection_id;
+
+    const voiceFileId = message.voice?.file_id ?? message.audio?.file_id;
+
+    if (voiceFileId) {
+      const transcript = await this.transcribeBusinessVoice(voiceFileId);
+      if (transcript) {
+        await this.bot.api.sendMessage(chatId, `${TRANSCRIPTION_HEADER}\n${transcript}`, businessConnectionId ? { business_connection_id: businessConnectionId } : undefined);
+        await this.secretaryMessageService.storeMessage({ chatId, fromOwner, text: transcript, transcribed: true, senderName, senderUsername });
+      }
+      return;
+    }
+
+    const text = message.text ?? message.caption;
+    if (!text) return;
+
+    await this.secretaryMessageService.storeMessage({ chatId, fromOwner, text, senderName, senderUsername });
+  }
+
+  private async transcribeBusinessVoice(fileId: string): Promise<string> {
+    try {
+      const audioFilePath = await downloadFile(this.bot, fileId, LOCAL_FILES_PATH);
+      return await getTranscriptFromAudio(audioFilePath);
+    } catch (err) {
+      this.logger.error(`Failed to transcribe business voice: ${err}`);
+      return '';
+    }
+  }
+
+  private async checkInSendHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    if (!OWNER_BUSINESS_CONNECTION_ID) {
+      await ctx.answerCallbackQuery({ text: 'Missing business connection id or target user id.', show_alert: true });
+      return;
+    }
+
+    try {
+      await this.bot.api.sendMessage(TOODIE_USER_ID, CHECK_IN_MESSAGE, { business_connection_id: OWNER_BUSINESS_CONNECTION_ID });
+      await ctx.editMessageText(`Sent ✅\n\n"${CHECK_IN_MESSAGE}"`);
+      await ctx.answerCallbackQuery({ text: 'Sent ✅' });
+    } catch (err) {
+      this.logger.error(`Failed to send check-in message: ${err}`);
+      await ctx.answerCallbackQuery({ text: 'Failed to send.', show_alert: true });
+    }
+  }
+
+  // One-tap execution of a suggested calendar/reminder action via the AI agent.
+  private async secretaryActionHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    const data = ctx.callbackQuery?.data ?? '';
+    const shortId = data.slice(ACTION_CALLBACK_PREFIX.length);
+    const action = await getActionByShortId(shortId);
+
+    if (!action) {
+      await ctx.answerCallbackQuery({ text: 'Action not found.', show_alert: true });
+      return;
+    }
+    if (action.status === 'done') {
+      await ctx.answerCallbackQuery({ text: 'Already done ✅' });
+      return;
+    }
+
+    await ctx.answerCallbackQuery({ text: 'Working… ⏳' });
+
+    const { ok, text } = await this.secretaryActionService.execute(action.instruction);
+    await updateActionStatus(shortId, ok ? 'done' : 'failed', text);
+
+    if (action.messageId) {
+      try {
+        const refreshed = await getActionsByMessageId(action.messageId);
+        await ctx.editMessageReplyMarkup({ reply_markup: buildActionsKeyboard(refreshed) });
+      } catch (err) {
+        this.logger.error(`Failed to refresh action keyboard: ${err}`);
+      }
+    }
+
+    await ctx.reply(`${ok ? '✅' : '❌'} ${text}`);
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {

@@ -12,7 +12,9 @@ describe('ChatbotController E2E', () => {
     testBot = createTestBot(BOT_CONFIG);
     processMessage = vi.fn().mockResolvedValue({ message: 'stub reply', toolResults: [] });
     const chatbotService = { processMessage } as any;
-    const controller = new ChatbotController(chatbotService, testBot.bot);
+    const secretaryMessageService = { storeMessage: vi.fn(), hasSpokenWithChatToday: vi.fn(), buildDailySummaries: vi.fn(), clearMessagesBefore: vi.fn() } as any;
+    const secretaryActionService = { execute: vi.fn() } as any;
+    const controller = new ChatbotController(chatbotService, testBot.bot, secretaryMessageService, secretaryActionService);
     controller.init();
   });
 
