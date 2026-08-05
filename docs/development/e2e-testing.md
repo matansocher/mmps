@@ -19,7 +19,6 @@ Each spec wires up the real controller against stub services and the harness bot
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BOT_CONFIG } from '@src/features/coach/coach.config';
 import { CoachController } from '@src/features/coach/coach.controller';
-import { CoachLauncherService } from '@src/features/coach/launcher.service';
 import { buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
 
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
@@ -30,8 +29,7 @@ describe('CoachController E2E', () => {
   beforeEach(() => {
     resetUpdateBuilderCounters();
     testBot = createTestBot(BOT_CONFIG);
-    const launcher = new CoachLauncherService(testBot.bot);
-    const controller = new CoachController(coachServiceStub, testBot.bot, launcher);
+    const controller = new CoachController(coachServiceStub, testBot.bot);
     controller.init();
   });
 

@@ -1,4 +1,5 @@
 import type { Bot, Context } from 'grammy';
+import { env } from 'node:process';
 import { MY_USER_NAME } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
@@ -8,7 +9,6 @@ import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoade
 import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
-import { CoachLauncherService } from './launcher.service';
 import { getDateFromUserInput } from './utils';
 
 const loaderMessage = '⚽️ אני אוסף את כל התוצאות, שניה אחת...';
@@ -30,7 +30,6 @@ export class CoachController {
   constructor(
     private readonly coachService: CoachService,
     private readonly bot: Bot,
-    private readonly launcher: CoachLauncherService,
   ) {}
 
   init(): void {
@@ -75,6 +74,15 @@ export class CoachController {
     await ctx.reply('לאיזה ליגה?', { reply_markup: keyboard });
   }
 
+  buildKeyboard(): { inline_keyboard: { text: string; web_app: { url: string } }[][] } | null {
+    const url = env.COACH_MINI_APP_URL;
+    if (!url) {
+      this.logger.warn('COACH_MINI_APP_URL not configured');
+      return null;
+    }
+    return { inline_keyboard: [[{ text: '📱 פתח אפליקציה', web_app: { url } }]] };
+  }
+
   private async actionsHandler(ctx: Context): Promise<void> {
     const { chatId } = getMessageData(ctx);
     const subscription = await getSubscription(chatId);
@@ -86,7 +94,7 @@ export class CoachController {
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
     await ctx.reply('👨‍🏫 איך אני יכול לעזור?', { reply_markup: keyboard });
-    const launcherKeyboard = this.launcher.buildKeyboard();
+    const launcherKeyboard = this.buildKeyboard();
     if (launcherKeyboard) {
       await this.bot.api.sendMessage(chatId, '📱 או פתח את האפליקציה', { reply_markup: launcherKeyboard });
     }
@@ -117,6 +125,13 @@ export class CoachController {
     const { chatId, userDetails, data: response } = getCallbackQueryData(ctx);
 
     const [action, resource, subAction] = response.split(' - ');
+    const parseIdOrThrow = (value: string): number => {
+      const id = Number(value);
+      if (!Number.isInteger(id)) {
+        throw new Error(`Invalid callback id: ${value}`);
+      }
+      return id;
+    };
     try {
       switch (action) {
         case BOT_ACTIONS.START:
@@ -135,15 +150,16 @@ export class CoachController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CONTACT }, userDetails);
           break;
         case BOT_ACTIONS.TABLE:
-          await this.tableHandler(ctx, Number(resource));
+          await this.tableHandler(ctx, parseIdOrThrow(resource));
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.TABLE }, userDetails);
           break;
         case BOT_ACTIONS.MATCH: {
-          await this.competitionMatchesHandler(ctx, Number(resource));
+          const competitionId = parseIdOrThrow(resource);
+          await this.competitionMatchesHandler(ctx, competitionId);
           await ctx.deleteMessage().catch(() => {});
           const leagueName = Object.entries(COMPETITION_IDS_MAP)
-            .filter(([, value]) => value === Number(resource))
+            .filter(([, value]) => value === competitionId)
             .map(([key]) => key)[0];
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.MATCH, league: leagueName }, userDetails);
           break;
@@ -154,7 +170,7 @@ export class CoachController {
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES }, userDetails);
           break;
         case BOT_ACTIONS.CUSTOM_LEAGUES_SELECT:
-          await this.customLeaguesSelectHandler(ctx, chatId, Number(resource), Number(subAction));
+          await this.customLeaguesSelectHandler(ctx, chatId, parseIdOrThrow(resource), parseIdOrThrow(subAction));
           await ctx.deleteMessage().catch(() => {});
           notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CUSTOM_LEAGUES_SELECT }, userDetails);
           break;
@@ -189,7 +205,7 @@ export class CoachController {
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
     await ctx.reply(userExists ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
-    const launcherKeyboard = this.launcher.buildKeyboard();
+    const launcherKeyboard = this.buildKeyboard();
     if (launcherKeyboard) {
       await this.bot.api.sendMessage(chatId, '📱 גם יש לי אפליקציה — לתצוגה ויזואלית:', { reply_markup: launcherKeyboard });
     }

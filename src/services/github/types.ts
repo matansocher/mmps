@@ -76,3 +76,14 @@ export type GitHubServiceResponse<T> = {
   readonly data?: T;
   readonly error?: string;
 };
+
+export type TriggerWorkflowResult = {
+  readonly workflow: string;
+  readonly ref: string;
+};
+
+export type MergePullRequestResult = {
+  readonly merged: boolean;
+  readonly message: string;
+  readonly sha?: string;
+};

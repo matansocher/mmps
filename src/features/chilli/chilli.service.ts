@@ -21,7 +21,7 @@ export class ChilliService {
   private readonly aiService: AiService;
 
   constructor() {
-    const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.8, apiKey: env.OPENAI_API_KEY });
+    const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.8, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 
     this.aiService = createAgentService({ name: 'CHILLI', prompt: 'את צ׳ילי החתולה.', tools: [] }, { model });
   }

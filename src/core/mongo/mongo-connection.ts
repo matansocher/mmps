@@ -6,6 +6,7 @@ const clients: MongoClient[] = [];
 
 export async function createMongoConnection(dbName: string): Promise<void> {
   const mongoUri = env.MONGO_DB_URL;
+  if (!mongoUri) throw new Error('MONGO_DB_URL environment variable is not set');
   const client = new MongoClient(mongoUri);
   await client.connect();
   clients.push(client);
@@ -14,6 +15,7 @@ export async function createMongoConnection(dbName: string): Promise<void> {
 
 export function getMongoCollection<T = any>(dbName: string, collectionName: string): Collection<T> {
   const db = connections.get(dbName);
+  if (!db) throw new Error(`No mongo connection for db '${dbName}' — call createMongoConnection('${dbName}') first`);
   return db.collection<T>(collectionName);
 }
 

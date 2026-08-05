@@ -10,4 +10,6 @@ export { getPRChecks } from './get-pr-checks';
 export { getPullRequest } from './get-pull-request';
 export { listPRFiles } from './list-pr-files';
 export { getPRReviews } from './get-pr-reviews';
+export { triggerWorkflow } from './trigger-workflow';
+export { mergePullRequest } from './merge-pull-request';
 export { initOctokit } from './octokit';

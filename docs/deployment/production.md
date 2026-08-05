@@ -24,6 +24,16 @@ npm start
 # Check logs for errors
 ```
 
+## Manual Heroku Deployment
+
+The **🚀 Deploy to Heroku** GitHub Actions workflow deploys the ref selected when manually running it. It pushes that source to Heroku's `main` branch, where Heroku runs the normal build and release process.
+
+Before the first deployment, create a repository Actions secret named `HEROKU_API_KEY` containing a [Heroku API key](https://devcenter.heroku.com/articles/authentication#api-token-storage). Then, in GitHub, open **Actions → 🚀 Deploy to Heroku → Run workflow**, select the ref to deploy, and enter the Heroku app name.
+
+The workflow uses the `production` GitHub environment. Configure required production variables in Heroku; application secrets are never copied into GitHub Actions.
+
+Only the `matansocher` GitHub account can run the deployment job. A workflow dispatch by any other account is skipped before it can access the Heroku API key.
+
 ## Environment Variables
 
 Set all required variables in production:
@@ -33,7 +43,7 @@ Set all required variables in production:
 IS_PROD=true
 
 # MongoDB
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/
+MONGO_DB_URL=mongodb+srv://user:pass@cluster.mongodb.net/
 
 # AI APIs
 OPENAI_API_KEY=sk-...
@@ -81,10 +91,12 @@ pm2 logs mmps
 docker build -t mmps .
 
 # Run container
-docker run -e MONGO_URI=... -e OPENAI_API_KEY=... mmps
+docker run -e MONGO_DB_URL=... -e OPENAI_API_KEY=... mmps
 ```
 
 ## Monitoring & Logging
+
+Production telemetry (traces, metrics, logs) is exported to **Grafana Cloud** via OpenTelemetry. Set the `OTEL_*` / `GRAFANA_OTLP_*` config vars on Heroku and view APM, logs, and alerts in Grafana. Full details: [Monitoring & Observability](/deployment/monitoring).
 
 ### Google Sheets Logging
 

@@ -55,7 +55,7 @@ export class ChilliController {
         return;
       }
 
-      const model = new ChatOpenAI({ model: GPT_SMALL_MODEL, apiKey: env.OPENAI_API_KEY }); // temperature: 0.2
+      const model = new ChatOpenAI({ model: GPT_SMALL_MODEL, apiKey: env.OPENAI_API_KEY, timeout: 120_000 }); // temperature: 0.2
       const response = await model.invoke([
         { role: 'system', content: CONSOLIDATION_PROMPT },
         { role: 'user', content: `הפרומפט הנוכחי:\n${currentPrompt}\n\nעדכון חדש:\n${updateText}` },

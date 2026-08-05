@@ -4,10 +4,14 @@ import { Logger } from './logger';
 let shuttingDown = false;
 const HARD_TIMEOUT_MS = 10_000;
 
-const shutdown = (logger: Logger, reason: string, err: unknown, close: () => Promise<void>) => {
+const shutdown = (logger: Logger, reason: string, err: unknown, close: () => Promise<void>, exitCode: number) => {
   if (shuttingDown) return;
   shuttingDown = true;
-  logger.error(`Unhandled failure by '${reason}'! ${err}`);
+  if (exitCode === 0) {
+    logger.log(`Shutting down gracefully on '${reason}'`);
+  } else {
+    logger.error(`Unhandled failure by '${reason}'! ${err}`);
+  }
 
   const timer = setTimeout(() => {
     logger.error(`Hard-exiting after timeout by '${reason}'!`);
@@ -17,7 +21,7 @@ const shutdown = (logger: Logger, reason: string, err: unknown, close: () => Pro
 
   close().finally(() => {
     clearTimeout(timer);
-    exit(1);
+    exit(exitCode);
   });
 };
 
@@ -34,8 +38,8 @@ export function gracefulShutdown(...closes: (() => Promise<unknown> | unknown)[]
   };
 
   process
-    .once('uncaughtException', (e) => shutdown(logger, 'uncaughtException', e, close))
-    .once('unhandledRejection', (r) => shutdown(logger, 'unhandledRejection', r, close))
-    .once('SIGTERM', () => shutdown(logger, 'SIGTERM', new Error('SIGTERM'), close))
-    .once('SIGINT', () => shutdown(logger, 'SIGINT', new Error('SIGINT'), close));
+    .once('uncaughtException', (e) => shutdown(logger, 'uncaughtException', e, close, 1))
+    .once('unhandledRejection', (r) => shutdown(logger, 'unhandledRejection', r, close, 1))
+    .once('SIGTERM', () => shutdown(logger, 'SIGTERM', null, close, 0))
+    .once('SIGINT', () => shutdown(logger, 'SIGINT', null, close, 0));
 }

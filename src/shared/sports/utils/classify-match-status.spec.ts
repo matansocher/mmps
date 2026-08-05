@@ -14,7 +14,13 @@ const liveMatch: MatchDetails = {
 };
 
 const finishedMatch: MatchDetails = { ...liveMatch, statusText: 'הסתיים', gameTime: 90 };
-const scheduledMatch: MatchDetails = { ...liveMatch, statusText: '20:00', gameTime: 0, homeCompetitor: { ...liveMatch.homeCompetitor, score: -1 }, awayCompetitor: { ...liveMatch.awayCompetitor, score: -1 } };
+const scheduledMatch: MatchDetails = {
+  ...liveMatch,
+  statusText: '20:00',
+  gameTime: 0,
+  homeCompetitor: { ...liveMatch.homeCompetitor, score: -1 },
+  awayCompetitor: { ...liveMatch.awayCompetitor, score: -1 },
+};
 
 describe('classifyMatchStatus()', () => {
   it('classifies live matches by positive gameTime and non-final status', () => {

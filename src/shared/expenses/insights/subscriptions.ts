@@ -100,5 +100,5 @@ export function detectSubscriptions(expenses: ReadonlyArray<Expense>, opts: Dete
 }
 
 export function monthlyEquivalent(s: Subscription): number {
-  return Math.round((s.avgAmount * (30 / s.cadenceDays)) * 100) / 100;
+  return Math.round(s.avgAmount * (30 / s.cadenceDays) * 100) / 100;
 }

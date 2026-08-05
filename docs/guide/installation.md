@@ -53,7 +53,7 @@ You can also run MMPS in Docker:
 
 ```bash
 docker build -t mmps .
-docker run -e MONGO_URI=mongodb://host.docker.internal:27017 mmps
+docker run -e MONGO_DB_URL=mongodb://host.docker.internal:27017 mmps
 ```
 
 ## Next Steps

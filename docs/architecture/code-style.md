@@ -153,8 +153,8 @@ Use `Promise.all()` for independent operations:
 
 ```typescript
 await Promise.all([
-  createMongoConnection('chatbot-db'),
-  createMongoConnection('coach-db'),
+  createMongoConnection('Chatbot'),
+  createMongoConnection('Coach'),
   connectGithubMcp().catch((err) => console.error(err)),
 ]);
 ```

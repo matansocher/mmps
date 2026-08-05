@@ -1,7 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BOT_CONFIG } from '@src/features/chatbot/chatbot.config';
 import { ChatbotController } from '@src/features/chatbot/chatbot.controller';
-import { ChatbotLauncherService } from '@src/features/chatbot/launcher.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
 
 describe('ChatbotController E2E', () => {
@@ -13,8 +12,9 @@ describe('ChatbotController E2E', () => {
     testBot = createTestBot(BOT_CONFIG);
     processMessage = vi.fn().mockResolvedValue({ message: 'stub reply', toolResults: [] });
     const chatbotService = { processMessage } as any;
-    const launcher = new ChatbotLauncherService(testBot.bot);
-    const controller = new ChatbotController(chatbotService, testBot.bot, launcher);
+    const secretaryMessageService = { storeMessage: vi.fn(), hasSpokenWithChatToday: vi.fn(), buildDailySummaries: vi.fn(), clearMessagesBefore: vi.fn() } as any;
+    const secretaryActionService = { execute: vi.fn() } as any;
+    const controller = new ChatbotController(chatbotService, testBot.bot, secretaryMessageService, secretaryActionService);
     controller.init();
   });
 

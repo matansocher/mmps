@@ -3,6 +3,7 @@ export type PolymarketMarket = {
   readonly question: string;
   readonly slug: string;
   readonly conditionId: string;
+  readonly groupItemTitle?: string; // Outcome label within a multi-outcome event, e.g. "France"
   readonly outcomes: string; // Stringified JSON array: '["Yes", "No"]'
   readonly outcomePrices: string; // Stringified JSON array: '["0.65", "0.35"]'
   readonly volume: string;
@@ -53,6 +54,7 @@ export type PolymarketEvent = {
   readonly volume24hr: number;
   readonly volume: number;
   readonly liquidity: number;
+  readonly negRisk?: boolean; // true for multi-outcome events (e.g. "World Cup Winner")
 };
 
 export type EventSummary = {
@@ -79,4 +81,23 @@ export type EventWithMarketsResponse = {
   readonly event: EventSummary;
   readonly markets: MarketSummary[];
   readonly fetchedAt: string;
+};
+
+export type EventOutcome = {
+  readonly outcome: string; // Clean outcome label, e.g. "France"
+  readonly probability: number; // Yes price, 0..1
+  readonly oneDayPriceChange: number | null;
+  readonly marketSlug: string;
+};
+
+export type MultiOutcomeEventSummary = {
+  readonly id: string;
+  readonly title: string;
+  readonly slug: string;
+  readonly volume24hr: number;
+  readonly active: boolean;
+  readonly closed: boolean;
+  readonly negRisk: boolean;
+  readonly outcomes: EventOutcome[]; // Sorted by probability, descending
+  readonly polymarketUrl: string;
 };

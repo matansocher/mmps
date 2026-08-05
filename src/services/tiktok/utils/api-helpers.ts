@@ -39,18 +39,30 @@ export function getSupadataApiBaseUrl(): string {
   return SUPADATA_API_BASE_URL;
 }
 
-export async function fetchUserInfo(username: string): Promise<RapidAPIUserInfoResponse> {
-  const url = new URL(`${TIKTOK_API_BASE_URL}/api/user/info`);
-  url.searchParams.append('uniqueId', username);
-
-  const response = await fetch(url.toString(), { method: 'GET', headers: getRapidApiHeaders() });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to get user info: ${response.status} - ${errorText}`);
+// The API occasionally returns an empty 200 body — retry a couple of times.
+export async function rapidApiGet<T>(path: string, params: Record<string, string | number>): Promise<T> {
+  const url = new URL(`${TIKTOK_API_BASE_URL}${path}`);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, String(value));
   }
 
-  return (await response.json()) as RapidAPIUserInfoResponse;
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const response = await fetch(url.toString(), { method: 'GET', headers: getRapidApiHeaders() });
+    const body = await response.text();
+    if (response.ok && body) {
+      return JSON.parse(body) as T;
+    }
+    if (attempt === maxAttempts) {
+      throw new Error(`${path} failed: HTTP ${response.status} - ${body || '(empty body)'}`);
+    }
+    await sleep(1500);
+  }
+  throw new Error(`${path} failed`);
+}
+
+export async function fetchUserInfo(username: string): Promise<RapidAPIUserInfoResponse> {
+  return rapidApiGet<RapidAPIUserInfoResponse>('/api/user/info', { uniqueId: username });
 }
 
 export async function pollTranscriptJob(jobId: string, maxAttempts = 30, intervalMs = 2000): Promise<TikTokTranscript> {

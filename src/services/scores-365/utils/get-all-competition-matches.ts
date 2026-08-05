@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import type { CompetitionDetails, Competition, MatchDetails } from '../interface';
+import type { Competition, CompetitionDetails, MatchDetails } from '../interface';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 import { getMatchDetails } from '../utils';
 

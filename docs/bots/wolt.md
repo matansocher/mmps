@@ -23,7 +23,7 @@ Wolt bot monitors restaurant availability on the Wolt delivery platform and send
 WOLT_TELEGRAM_BOT_TOKEN=your-token
 
 # Optional
-MONGO_URI=mongodb://...
+MONGO_DB_URL=mongodb://...
 ```
 
 ## Getting Started
@@ -36,32 +36,29 @@ MONGO_URI=mongodb://...
 ### 2. Run the Bot
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=wolt npm run start:dev
+LOCAL_ACTIVE_BOT_ID=WOLT npm run dev
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/start` | Setup location |
-| `/add [restaurant]` | Add favorite restaurant |
-| `/favorites` | View favorite restaurants |
-| `/available` | Check availability now |
-| `/settings` | Configure notifications |
+| `/start` | Start the bot and save user details |
+| `/list` | View open restaurant alerts |
+| `/contact` | Show the contact message |
 
 ## Database
 
-**Database name**: `wolt-db`
+**Database name**: `Wolt`
 
 Collections:
-- `users` - User locations and preferences
-- `favorites` - Favorite restaurants
-- `availability` - Current availability cache
+- `User` - Telegram user details
+- `Subscription` - Active and archived restaurant availability alerts
 
 ## Scheduled Tasks
 
-- **Availability Check** - Every 5 minutes
-- **Notification Sending** - Real-time when availability changes
+- **Availability Check** - Adaptive interval based on time of day
+- **Expired Subscription Cleanup** - Archives subscriptions after the configured expiration window
 
 ## Next Steps
 

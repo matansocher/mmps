@@ -1,9 +1,15 @@
 import type { InsertOneResult, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { DB_NAME } from './constants';
 import type { CreateReminderData, Reminder, UpdateReminderData } from '../types';
+import { DB_NAME } from './constants';
 
 const getCollection = () => getMongoCollection<Reminder>(DB_NAME, 'Reminders');
+
+export async function ensureReminderIndexes(): Promise<void> {
+  const collection = getCollection();
+  await collection.createIndex({ chatId: 1, dueDate: 1 });
+  await collection.createIndex({ status: 1, dueDate: 1 });
+}
 
 export async function createReminder(data: CreateReminderData): Promise<InsertOneResult<Reminder>> {
   const remindersCollection = getCollection();
@@ -113,7 +119,10 @@ export async function reactivateSnoozedReminders(): Promise<number> {
   const remindersCollection = getCollection();
   const now = new Date();
 
-  const result = await remindersCollection.updateMany({ status: 'snoozed', snoozedUntil: { $lte: now } }, { $set: { status: 'pending' }, $unset: { snoozedUntil: '' } });
+  const result = await remindersCollection.updateMany(
+    { status: 'snoozed', snoozedUntil: { $lte: now } },
+    { $set: { status: 'pending' }, $unset: { snoozedUntil: '', notifiedAt: '' } },
+  );
 
   return result.modifiedCount;
 }

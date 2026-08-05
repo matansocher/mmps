@@ -2,9 +2,9 @@ import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '@services/scores-365';
+import type { MatchDetails, Team } from '@services/scores-365';
 import type { LineupPlayer, LineupSide, MatchEvent, MatchSide, MatchSummary, RoundInfo } from './dto';
 import { classifyStatus, toMatchSummary } from './transformers';
-import type { MatchDetails, Team } from '@services/scores-365';
 
 const logger = new Logger('CoachMatchFetcher');
 
@@ -158,9 +158,7 @@ function buildRound(game: RawGame): RoundInfo | undefined {
 function mapEvent(e: RawEvent, homeId: number, memberIndex: Map<number, RawMember>): MatchEvent {
   const side: MatchSide = e.competitorId === homeId ? 'home' : 'away';
   const player = e.playerId ? memberIndex.get(e.playerId) : undefined;
-  const extras = (e.extraPlayers ?? [])
-    .map((id) => memberIndex.get(id)?.name)
-    .filter((n): n is string => Boolean(n));
+  const extras = (e.extraPlayers ?? []).map((id) => memberIndex.get(id)?.name).filter((n): n is string => Boolean(n));
   return {
     minute: e.gameTime,
     addedTime: e.addedTime,

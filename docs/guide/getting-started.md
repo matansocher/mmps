@@ -36,7 +36,7 @@ OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 
 # Database
-MONGO_URI=mongodb://localhost:27017
+MONGO_DB_URL=mongodb://localhost:27017
 
 # Bot Tokens
 CHATBOT_TELEGRAM_BOT_TOKEN=<your-chatbot-token>
@@ -44,7 +44,7 @@ COACH_TELEGRAM_BOT_TOKEN=<your-coach-token>
 # ... other bot tokens
 
 # Optional: Which bot to run in development
-LOCAL_ACTIVE_BOT_ID=chatbot
+LOCAL_ACTIVE_BOT_ID=CHATBOT
 ```
 
 See [Configuration](/guide/environment-setup) for a complete list of variables.
@@ -54,13 +54,13 @@ See [Configuration](/guide/environment-setup) for a complete list of variables.
 ### Development Mode
 
 ```bash
-npm run start:dev
+npm run dev
 ```
 
 Or run a specific bot:
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
+LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 ### Production Mode
@@ -95,7 +95,7 @@ If you get an error about port being in use, check which bot is running in devel
 
 ### MongoDB Connection Error
 
-Ensure MongoDB is running and `MONGO_URI` is correctly configured in your `.env` file.
+Ensure MongoDB is running and `MONGO_DB_URL` is correctly configured in your `.env` file.
 
 ### Missing API Keys
 

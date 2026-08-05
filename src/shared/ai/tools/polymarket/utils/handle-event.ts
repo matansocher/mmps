@@ -1,4 +1,4 @@
-import { getEventBySlug } from '@services/polymarket';
+import { getEventBySlug, getEventOutcomes } from '@services/polymarket';
 
 export async function handleEvent(slug: string): Promise<string> {
   if (!slug) {
@@ -6,6 +6,12 @@ export async function handleEvent(slug: string): Promise<string> {
   }
 
   try {
+    // Multi-outcome events (e.g. "World Cup Winner") return one probability per outcome
+    const multiOutcomeResult = await tryHandleMultiOutcomeEvent(slug);
+    if (multiOutcomeResult) {
+      return multiOutcomeResult;
+    }
+
     const { event, markets } = await getEventBySlug(slug);
 
     if (markets.length === 0) {
@@ -44,5 +50,37 @@ export async function handleEvent(slug: string): Promise<string> {
     });
   } catch (err) {
     return JSON.stringify({ success: false, error: `Failed to fetch event: ${err.message}` });
+  }
+}
+
+async function tryHandleMultiOutcomeEvent(slug: string): Promise<string | null> {
+  try {
+    const event = await getEventOutcomes(slug);
+
+    if (!event.negRisk && event.outcomes.length <= 1) {
+      return null;
+    }
+
+    const outcomes = event.outcomes.map((outcome, index) => ({
+      rank: index + 1,
+      outcome: outcome.outcome,
+      probability: outcome.probability,
+      probabilityPercent: `${(outcome.probability * 100).toFixed(1)}%`,
+      oneDayPriceChange: outcome.oneDayPriceChange,
+    }));
+
+    return JSON.stringify({
+      success: true,
+      type: 'multi',
+      message: `Event "${event.title}" has ${outcomes.length} possible outcomes (probabilities shown per outcome)`,
+      event: {
+        title: event.title,
+        slug: event.slug,
+        url: event.polymarketUrl,
+      },
+      outcomes,
+    });
+  } catch {
+    return null;
   }
 }

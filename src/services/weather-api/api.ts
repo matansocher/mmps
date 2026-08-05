@@ -1,8 +1,15 @@
 import axios from 'axios';
+import { addDays, differenceInCalendarDays, parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { env } from 'node:process';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { CurrentWeather, DayForecast, HourlyWeather, TomorrowForecast } from './types';
 
 const baseURL = 'https://api.weatherapi.com/v1';
+
+function zonedDayKey(date: Date): string {
+  return formatInTimeZone(date, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
+}
 
 export async function getHourlyForecast(location: string, daysAhead: number = 0): Promise<TomorrowForecast> {
   const apiKey = env.WEATHERAPI_KEY;
@@ -10,9 +17,7 @@ export async function getHourlyForecast(location: string, daysAhead: number = 0)
     throw new Error('WeatherAPI key not configured');
   }
 
-  const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + daysAhead);
-  const targetDateStr = targetDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  const targetDateStr = zonedDayKey(addDays(new Date(), daysAhead)); // Format: YYYY-MM-DD
 
   const response = await axios.get(`${baseURL}/forecast.json`, {
     params: {
@@ -108,9 +113,8 @@ export async function getForecastWeather(location: string, date: string): Promis
     throw new Error('WeatherAPI key not configured');
   }
 
-  const targetDate = new Date(date);
-  const now = new Date();
-  const diffDays = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const targetDateStr = date.split('T')[0]; // Format: YYYY-MM-DD
+  const diffDays = differenceInCalendarDays(parseISO(targetDateStr), parseISO(zonedDayKey(new Date())));
 
   if (diffDays < 0) {
     throw new Error('Forecast date must be today or in the future.');
@@ -131,7 +135,6 @@ export async function getForecastWeather(location: string, date: string): Promis
   });
 
   const data = response.data;
-  const targetDateStr = targetDate.toISOString().split('T')[0];
 
   const dayForecast = data.forecast.forecastday.find((day: any) => day.date === targetDateStr);
 

@@ -1,4 +1,5 @@
-import { extractSlugFromUrl, getMarketBySlug } from '@services/polymarket';
+import { extractSlugFromUrl, getEventOutcomes, getMarketBySlug } from '@services/polymarket';
+import type { MultiOutcomeEventSummary } from '@services/polymarket';
 import { createSubscription, getSubscriptionBySlug } from '@shared/polymarket-follower';
 import { checkAndCleanExpiredSubscriptions } from './check-expired-subscriptions';
 
@@ -25,6 +26,12 @@ export async function handleSubscribe(chatId: number, marketIdentifier: string):
       });
     }
 
+    // Try to resolve as a multi-outcome event first (e.g. "World Cup Winner")
+    const multiEvent = await resolveMultiOutcomeEvent(slug);
+    if (multiEvent) {
+      return subscribeToMultiOutcomeEvent(chatId, multiEvent, expiredSubscriptions, expiredMessage);
+    }
+
     // Fetch market data to validate and get details
     const market = await getMarketBySlug(slug);
 
@@ -37,6 +44,7 @@ export async function handleSubscribe(chatId: number, marketIdentifier: string):
       marketSlug: market.slug,
       marketQuestion: market.question,
       chatId,
+      type: 'binary',
     });
 
     const yesPct = (market.yesPrice * 100).toFixed(1);
@@ -57,4 +65,47 @@ export async function handleSubscribe(chatId: number, marketIdentifier: string):
   } catch (err) {
     return JSON.stringify({ success: false, error: `Failed to subscribe: ${err.message}` });
   }
+}
+
+async function resolveMultiOutcomeEvent(slug: string): Promise<MultiOutcomeEventSummary | null> {
+  try {
+    const event = await getEventOutcomes(slug);
+    const isMultiOutcome = event.negRisk || event.outcomes.length > 1;
+    return isMultiOutcome ? event : null;
+  } catch {
+    // Not an event slug (likely a single market slug) - fall back to binary handling
+    return null;
+  }
+}
+
+async function subscribeToMultiOutcomeEvent(chatId: number, event: MultiOutcomeEventSummary, expiredSubscriptions: unknown, expiredMessage: string | null): Promise<string> {
+  if (event.closed || event.outcomes.length === 0) {
+    return JSON.stringify({ success: false, error: 'This event is already closed and cannot be subscribed to', expiredSubscriptions, expiredMessage });
+  }
+
+  await createSubscription({
+    marketId: event.id,
+    marketSlug: event.slug,
+    marketQuestion: event.title,
+    chatId,
+    type: 'multi',
+  });
+
+  const topOutcomes = event.outcomes.slice(0, 3).map((outcome) => `${outcome.outcome} ${(outcome.probability * 100).toFixed(1)}%`);
+  const baseMessage = `Successfully subscribed to Polymarket event: "${event.title}" (${event.outcomes.length} outcomes)`;
+  const message = expiredMessage ? `${expiredMessage}\n\n${baseMessage}` : baseMessage;
+
+  return JSON.stringify({
+    success: true,
+    message,
+    market: {
+      question: event.title,
+      slug: event.slug,
+      type: 'multi',
+      outcomeCount: event.outcomes.length,
+      topOutcomes,
+      url: event.polymarketUrl,
+    },
+    expiredSubscriptions,
+  });
 }

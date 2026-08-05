@@ -6,11 +6,15 @@
 
 The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropic's Claude. It provides intelligent conversation with access to external tools like weather, reminders, calendar integration, GitHub, and more.
 
+::: tip Deep dive
+For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoDB checkpointer, summarization, and token/cost observability — see the [Chatbot Deep Dive](/bots/chatbot-deep-dive).
+:::
+
 ## Features
 
 ### Core Features
 - **Conversational AI** - Natural language understanding and generation
-- **Tool Integration** - 20+ tools for extending capabilities
+- **Tool Integration** - 27 tools for extending capabilities
 - **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
 - **Observability** - Cross-bot token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
 - **Error Handling** - Graceful degradation and fallbacks
@@ -109,7 +113,7 @@ To enable GitHub repository interactions:
 ### 4. Run the Bot
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
+LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 ### 5. Start Chatting
@@ -121,9 +125,7 @@ Open Telegram and search for your bot. Send `/start` to begin!
 | Command | Description |
 |---------|-------------|
 | `/start` | Start the bot |
-| `/help` | Get help and available commands |
-| `/status` | Check bot status |
-| `/clear` | Clear conversation history |
+| `/exercise` | Log a workout |
 
 ## Architecture
 
@@ -164,7 +166,7 @@ CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summ
 
 Token/cost metering is **cross-bot**. The shared module lives in `shared/ai/usage/` and is used by every live AI call site in the repo. A `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to each `invoke` as a runtime callback; it sums token usage across the whole call (ReAct loop, structured output, or summarization) and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` then logs a `💰 usage` line and persists an aggregated record tagged with the originating bot.
 
-Instrumented sources: `chatbot`, `chilli`, `secretary` (daily summary, action agent, smart-reply drafts), and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
+Instrumented sources: `chatbot`, `chilli`, and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
 
 - **Cost** is computed from a price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens). `resolveModelPrice` does a longest-prefix match so dated snapshots (e.g. `gpt-4.1-mini-2025-04-14`) resolve correctly. Unknown models report cost `0` and log a warning.
 - **Storage** — one record per call in db `Chatbot`, collection `usage` (`shared/ai/usage/`), with a **90-day TTL**. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.
@@ -179,14 +181,13 @@ CHATBOT_USAGE_TRACKING=false   # disable token/cost metering
 
 ## Database
 
-**Database name**: `chatbot-db`
+**Database name**: `Chatbot` for LangGraph checkpoints and usage records; chatbot tools also use shared feature databases.
 
 Collections:
-- `conversations` - Chat history
-- `reminders` - User reminders
-- `users` - User profiles
+- LangGraph checkpoint collections - Durable conversation memory with 30-day TTL
+- `usage` - Per-turn token/cost records with 90-day TTL
 
-The `Chatbot` database additionally holds LangGraph checkpoints (memory) and the `usage` collection (per-turn token/cost records, 90-day TTL).
+Chatbot tools also connect to shared databases such as `Reminders`, `CalendarEvents`, `Trainer`, `Coach`, `Wolt`, `Worldly`, `Cooker`, and related follower/friends databases.
 
 ## Tool Development
 

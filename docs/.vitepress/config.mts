@@ -68,7 +68,12 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/bots/overview' },
             { text: 'Chatbot', link: '/bots/chatbot' },
+            { text: 'Chatbot — Deep Dive', link: '/bots/chatbot-deep-dive' },
+            { text: 'Chilli', link: '/bots/chilli' },
             { text: 'Coach', link: '/bots/coach' },
+            { text: 'Expenses', link: '/bots/expenses' },
+            { text: 'Learner', link: '/bots/learner' },
+            { text: 'Savings', link: '/bots/savings' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },
           ],
@@ -92,7 +97,7 @@ export default defineConfig({
           items: [
             { text: 'Production Setup', link: '/deployment/production' },
             { text: 'Environment Variables', link: '/deployment/environment-variables' },
-            { text: 'Monitoring', link: '/deployment/monitoring' },
+            { text: 'Monitoring & Observability', link: '/deployment/monitoring' },
           ],
         },
       ],

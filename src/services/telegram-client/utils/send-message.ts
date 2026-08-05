@@ -1,7 +1,7 @@
 import { Api } from 'telegram';
 import { Logger } from '@core/utils';
-import { Peer } from '../types';
 import { provideTelegramClient } from '../provide-telegram-client';
+import { Peer } from '../types';
 
 const logger = new Logger('TelegramClientSendMessage');
 
