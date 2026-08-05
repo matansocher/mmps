@@ -2,7 +2,7 @@ import { endOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getTodayEvents } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
@@ -51,6 +51,6 @@ Please format the response nicely with emojis and make it feel like a friendly g
     }
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your morning brief.').catch(() => {});
-    logger.error(`Failed to generate/send morning brief: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to generate/send morning brief: ${getErrorMessage(err)}`);
   }
 }

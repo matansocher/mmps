@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getGmailClient } from './auth';
 import { decodeBase64Url, extractBody, flattenParts, stripHtml } from './parts';
 
@@ -60,7 +60,7 @@ export async function fetchUserEmails(q: string, maxResults: number): Promise<Em
     }
     return cleanedEmails;
   } catch (err) {
-    logger.error(`Failed to fetch emails: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to fetch emails: ${getErrorMessage(err)}`);
     return [];
   }
 }
@@ -70,7 +70,7 @@ export async function trashEmail(messageId: string) {
     const gmail = await getGmailClient();
     await gmail.users.messages.trash({ userId: 'me', id: messageId });
   } catch (err) {
-    logger.error(`Failed to trash email: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to trash email: ${getErrorMessage(err)}`);
     return null;
   }
 }
@@ -132,6 +132,6 @@ export async function sendEmail({ recipient, subject, body }: SendEmailOpts): Pr
     const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw: base64EncodedEmail } });
     return res.data.id;
   } catch (err) {
-    logger.error(`Failed to send email: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to send email: ${getErrorMessage(err)}`);
   }
 }

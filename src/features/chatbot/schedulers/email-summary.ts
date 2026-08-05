@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
@@ -41,6 +41,6 @@ Use the gmail tool with action "list" to fetch my 10 most recent unread emails (
     }
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your email summary.').catch(() => {});
-    logger.error(`Failed to generate/send email summary: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to generate/send email summary: ${getErrorMessage(err)}`);
   }
 }

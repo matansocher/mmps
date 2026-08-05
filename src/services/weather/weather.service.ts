@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import * as imsApi from '@services/ims';
 import * as weatherApi from '@services/weather-api';
 import type { CurrentWeather, DayForecast, HourlyWeather, TomorrowForecast } from '@services/weather-api/types';
@@ -13,7 +13,7 @@ export async function getCurrentWeather(location: string): Promise<CurrentWeathe
       logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getCurrentWeather(imsLocationId);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${getErrorMessage(err)}, falling back to WeatherAPI`);
     }
   }
 
@@ -34,7 +34,7 @@ export async function getHourlyForecast(location: string, daysAhead: number = 0)
       logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getHourlyForecast(imsLocationId, daysAhead);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${getErrorMessage(err)}, falling back to WeatherAPI`);
     }
   }
 
@@ -58,7 +58,7 @@ export async function getSpecificHourWeather(location: string, hour: number): Pr
       logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getSpecificHourWeather(imsLocationId, hour);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${getErrorMessage(err)}, falling back to WeatherAPI`);
     }
   }
 
@@ -83,7 +83,7 @@ export async function getForecastWeather(location: string, date: string): Promis
       logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getForecastWeather(imsLocationId, date);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${getErrorMessage(err)}, falling back to WeatherAPI`);
     }
   }
 

@@ -1,6 +1,6 @@
 import type { Bot, Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { sleep } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
@@ -30,7 +30,7 @@ export class WorldlyController {
     this.bot.command(CAPITAL.command.replace('/', ''), (ctx) => this.capitalHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
-    this.bot.catch((err) => this.logger.error(`${err instanceof Error ? err.message : String(err)}`));
+    this.bot.catch((err) => this.logger.error(`${getErrorMessage(err)}`));
   }
 
   async startHandler(ctx: Context): Promise<void> {

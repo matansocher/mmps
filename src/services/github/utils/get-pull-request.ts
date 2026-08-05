@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequest } from '../types';
 import { mapPullRequest } from './mappers';
@@ -20,7 +20,7 @@ export async function getPullRequest(prNumber: number): Promise<GitHubServiceRes
       data: mapPullRequest(response.data as any),
     };
   } catch (err) {
-    const errorMsg = `Failed to get PR #${prNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to get PR #${prNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return { success: false, error: errorMsg };
   }

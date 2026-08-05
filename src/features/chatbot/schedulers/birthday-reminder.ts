@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { getTodayEvents } from '@shared/calendar-events';
 import { buildBirthdayKeyboard } from './birthday-actions';
@@ -22,6 +22,6 @@ export async function birthdayReminder(bot: Bot): Promise<void> {
       reply_markup: buildBirthdayKeyboard(),
     });
   } catch (err) {
-    logger.error(`Failed to send birthday reminder: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to send birthday reminder: ${getErrorMessage(err)}`);
   }
 }

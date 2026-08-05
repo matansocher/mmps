@@ -1,7 +1,7 @@
 import type { Bot } from 'grammy';
 import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
@@ -31,6 +31,6 @@ export async function footballUpdate(bot: Bot, chatbotService: ChatbotService): 
       await sendShortenedMessage(bot, MY_USER_ID, `${response.message}${footer}`, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to send football update: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to send football update: ${getErrorMessage(err)}`);
   }
 }

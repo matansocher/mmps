@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getDueReminders, markReminderNotified, reactivateSnoozedReminders } from '@shared/reminders';
 import { buildReminderKeyboard } from './reminder-actions';
 
@@ -32,12 +32,12 @@ export async function reminderCheck(bot: Bot): Promise<void> {
 
         logger.log(`Sent reminder ${reminder._id.toString()} to chat ${reminder.chatId}`);
       } catch (err) {
-        logger.error(`Failed to send reminder ${reminder._id.toString()} to chat ${reminder.chatId}: ${err instanceof Error ? err.message : String(err)}`);
+        logger.error(`Failed to send reminder ${reminder._id.toString()} to chat ${reminder.chatId}: ${getErrorMessage(err)}`);
       }
     }
 
     logger.log(`Successfully processed ${dueReminders.length} reminder(s)`);
   } catch (err) {
-    logger.error(`Failed to check reminders: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to check reminders: ${getErrorMessage(err)}`);
   }
 }

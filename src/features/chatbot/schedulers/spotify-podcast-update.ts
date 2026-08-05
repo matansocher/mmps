@@ -1,5 +1,5 @@
 import type { Bot } from 'grammy';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getShowEpisodes, getSpotifyAccessToken } from '@services/spotify';
 import type { SpotifyEpisode } from '@services/spotify';
 import { sendShortenedMessage } from '@services/telegram';
@@ -45,7 +45,7 @@ async function processSubscriptionsForChat(bot: Bot, chatId: number, subscriptio
         lastEpisodeReleaseDate: newEpisodes[0].release_date,
       });
     } catch (err) {
-      logger.error(`Failed to fetch episodes for show ${subscription.showName}: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`Failed to fetch episodes for show ${subscription.showName}: ${getErrorMessage(err)}`);
     }
   }
 

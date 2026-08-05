@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('WeeklyExerciseSummaryScheduler');
@@ -22,6 +22,6 @@ export async function weeklyExerciseSummary(bot: Bot, chatbotService: ChatbotSer
       await bot.api.sendMessage(MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to send weekly exercise summary: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to send weekly exercise summary: ${getErrorMessage(err)}`);
   }
 }

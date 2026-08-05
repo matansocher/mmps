@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, IssueComment } from '../types';
 import { mapComment } from './mappers';
@@ -21,7 +21,7 @@ export async function createPullRequestComment(prNumber: number, body: string): 
       data: mapComment(response.data),
     };
   } catch (err) {
-    const errorMsg = `Failed to comment on PR #${prNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to comment on PR #${prNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

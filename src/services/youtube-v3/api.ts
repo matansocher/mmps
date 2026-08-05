@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import type { Video, YouTubeChannelResponse, YouTubeSearchResponse } from './types';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -86,7 +86,7 @@ export async function fetchTranscript(videoId: string): Promise<string> {
     logger.warn(`Unexpected response format for videoId ${videoId}`);
     return null;
   } catch (err) {
-    logger.error(`Failed to fetch transcript for videoId ${videoId}: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to fetch transcript for videoId ${videoId}: ${getErrorMessage(err)}`);
     return null;
   }
 }

@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, MergePullRequestResult } from '../types';
 import { getOctokit } from './octokit';
@@ -26,7 +26,7 @@ export async function mergePullRequest(prNumber: number, mergeMethod: MergeMetho
       },
     };
   } catch (err) {
-    const errorMsg = `Failed to merge PR #${prNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to merge PR #${prNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

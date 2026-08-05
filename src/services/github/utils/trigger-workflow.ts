@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER, HEROKU_DEPLOY_DEFAULT_REF } from '../constants';
 import type { GitHubServiceResponse, TriggerWorkflowResult } from '../types';
 import { getOctokit } from './octokit';
@@ -20,7 +20,7 @@ export async function triggerWorkflow(workflowFile: string, ref: string = HEROKU
       data: { workflow: workflowFile, ref },
     };
   } catch (err) {
-    const errorMsg = `Failed to trigger workflow '${workflowFile}' on ref '${ref}': ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to trigger workflow '${workflowFile}' on ref '${ref}': ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

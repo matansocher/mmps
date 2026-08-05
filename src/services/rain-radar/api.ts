@@ -2,7 +2,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { DEFAULT_VIEW, IMS_RADAR_CONFIG } from './constants';
 import { createRadarOverlay, fetchMapTiles } from './map-utils';
 import type { GeneratedRadarImage, ImsRadarResponse, RainRadarOptions } from './types';
@@ -83,7 +83,7 @@ export async function generateRainRadarImage(options: RainRadarOptions = {}): Pr
       imageModified: latestImage.modified,
     };
   } catch (err) {
-    logger.error(`Failed to generate IMS radar image: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to generate IMS radar image: ${getErrorMessage(err)}`);
     throw new Error('IMS radar service is currently unavailable. Please try again later.');
   }
 }

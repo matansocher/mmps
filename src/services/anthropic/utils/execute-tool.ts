@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_OPUS_MODEL } from '../constants';
 import { provideAnthropicClient } from '../provide-anthropic-client';
 
@@ -26,7 +26,7 @@ export async function executeTool<T>(tool: Tool, content: string): Promise<T> {
 
     throw new Error('No tool output found in the response');
   } catch (err) {
-    logger.error(`Error executing tool ${tool.name}: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Error executing tool ${tool.name}: ${getErrorMessage(err)}`);
     return null;
   }
 }

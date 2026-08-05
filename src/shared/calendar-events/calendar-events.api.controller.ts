@@ -2,7 +2,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import type { Express, Request, Response } from 'express';
 import { z } from 'zod';
 import { registry } from '@core/openapi';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { upsertCalendarEvents } from './mongo';
 import type { CreateCalendarEventData } from './types';
 
@@ -105,7 +105,7 @@ export function registerCalendarEventsRoutes(app: Express): void {
 
       res.json({ success: true, data: result });
     } catch (err) {
-      logger.error(`Failed to sync calendar events: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`Failed to sync calendar events: ${getErrorMessage(err)}`);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   });

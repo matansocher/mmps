@@ -1,7 +1,7 @@
 import type { Bot } from 'grammy';
 import { InputFile } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getCurrentWeather } from '@services/ims';
 import { generateRainRadarImage } from '@services/rain-radar';
 import { sendShortenedMessage } from '@services/telegram';
@@ -22,7 +22,7 @@ export async function rainRadarAlert(bot: Bot): Promise<void> {
     logger.log(`Rain chance in Kfar Saba: ${weather.chanceOfRain}% — generating radar image`);
 
     const radarResult = await generateRainRadarImage().catch((err) => {
-      logger.error(`Failed to generate radar image: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`Failed to generate radar image: ${getErrorMessage(err)}`);
       return undefined;
     });
 
@@ -38,6 +38,6 @@ export async function rainRadarAlert(bot: Bot): Promise<void> {
       logger.log('Sent rain radar alert (text only)');
     }
   } catch (err) {
-    logger.error(`Failed to check rain radar: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to check rain radar: ${getErrorMessage(err)}`);
   }
 }

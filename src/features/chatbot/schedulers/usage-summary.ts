@@ -2,7 +2,7 @@ import { format, subDays } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { formatNumber, Logger } from '@core/utils';
+import { formatNumber, getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { aggregateUsage } from '@shared/ai';
 import type { UsageAggregateRow } from '@shared/ai';
@@ -30,7 +30,7 @@ export async function usageSummary(bot: Bot): Promise<void> {
     const message = buildUsageSummaryMessage(rows, thisWeekRows, weekStartDay, from, to);
     await sendShortenedMessage(bot, MY_USER_ID, message, { parse_mode: 'Markdown' });
   } catch (err) {
-    logger.error(`Failed to send weekly usage summary: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to send weekly usage summary: ${getErrorMessage(err)}`);
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create the weekly usage summary.').catch(() => {});
   }
 }

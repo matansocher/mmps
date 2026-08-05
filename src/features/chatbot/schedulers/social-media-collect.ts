@@ -1,4 +1,4 @@
-import { Logger, sleep } from '@core/utils';
+import { getErrorMessage, Logger, sleep } from '@core/utils';
 import { fetchChannelPosts as fetchTelegramChannelPosts } from '@services/telegram-scraper';
 import { getUserVideos } from '@services/tiktok';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
@@ -50,7 +50,7 @@ async function collectSubscription(subscription: SocialSubscription): Promise<vo
       logger.log(`Collected ${newPosts.length} new posts from ${platform}/@${username}`);
     }
   } catch (err) {
-    logger.error(`Failed to check ${platform}/@${username}: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to check ${platform}/@${username}: ${getErrorMessage(err)}`);
   }
 }
 

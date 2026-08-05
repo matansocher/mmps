@@ -6,7 +6,7 @@ import { isProd } from '@core/config';
 import { closeMongoConnections } from '@core/mongo';
 import { registerSwaggerRoutes } from '@core/openapi';
 import { closeRedisConnection } from '@core/services';
-import { gracefulShutdown, Logger } from '@core/utils';
+import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
@@ -36,7 +36,7 @@ async function main() {
   try {
     await initSavings(app);
   } catch (err) {
-    logger.error(`Failed to init savings app: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
   }
 
   registerSwaggerRoutes(app);
@@ -47,7 +47,7 @@ async function main() {
     try {
       await init();
     } catch (err) {
-      logger.error(`Failed to init bot '${config.id}': ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
     }
   };
 
@@ -69,6 +69,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  new Logger('index').error(`Fatal error during startup: ${err instanceof Error ? err.message : String(err)}`);
+  new Logger('index').error(`Fatal error during startup: ${getErrorMessage(err)}`);
   process.exit(1);
 });

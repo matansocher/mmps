@@ -1,5 +1,5 @@
 import { getMongoCollection } from '@core/mongo';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { Subscription } from '../types';
 import { DB_NAME } from './constants';
 
@@ -14,7 +14,7 @@ export async function getActiveSubscriptions(chatId: number = null): Promise<Sub
     if (chatId) filter['chatId'] = chatId;
     return subscriptionCollection.find(filter).toArray();
   } catch (err) {
-    logger.error(`getActiveSubscriptions - err: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`getActiveSubscriptions - err: ${getErrorMessage(err)}`);
     return [];
   }
 }

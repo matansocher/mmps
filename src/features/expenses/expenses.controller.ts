@@ -1,6 +1,6 @@
 import type { Bot, Context } from 'grammy';
 import { env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getMessageData, MessageLoader } from '@services/telegram';
 import { detectFormat, importParsedFiles, parseInput } from '@shared/expenses/importers';
@@ -96,8 +96,8 @@ export class ExpensesController {
         );
       } catch (err) {
         this.logger.error(`documentHandler ${fileName}: ${err instanceof Error ? (err.stack ?? err.message) : err}`);
-        await ctx.reply(`❌ \`${fileName}\` — failed to import: ${err instanceof Error ? err.message : String(err)}`, { parse_mode: 'Markdown' });
-        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.IMPORT_FAILED, reason: 'error', fileName, error: err instanceof Error ? err.message : String(err) }, userDetails);
+        await ctx.reply(`❌ \`${fileName}\` — failed to import: ${getErrorMessage(err)}`, { parse_mode: 'Markdown' });
+        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.IMPORT_FAILED, reason: 'error', fileName, error: getErrorMessage(err) }, userDetails);
       }
     });
   }

@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from 'express';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import type { TelegramBotConfig } from '@services/telegram';
 import { getProgress, type ReadMap, saveCourseProgress } from '../mongo';
@@ -57,7 +57,7 @@ export function registerLearnerApiRoutes(app: Express, deps: LearnerApiDeps): vo
       const courses = await getProgress(req.learnerUser!.chatId);
       res.json({ courses });
     } catch (err) {
-      logger.error(`Failed to load progress: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`Failed to load progress: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'load_failed' });
     }
   });
@@ -73,7 +73,7 @@ export function registerLearnerApiRoutes(app: Express, deps: LearnerApiDeps): vo
       await saveCourseProgress(req.learnerUser!.chatId, courseId, lessonIds as string[]);
       res.status(204).end();
     } catch (err) {
-      logger.error(`Failed to save progress: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`Failed to save progress: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'save_failed' });
     }
   });

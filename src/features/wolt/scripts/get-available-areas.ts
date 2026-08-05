@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getAllCities } from '../utils/get-restaurants-data';
 
 const logger = new Logger('get-available-areas');
@@ -13,7 +13,7 @@ async function main() {
     logger.log('slugs');
     logger.log(slugs);
   } catch (err) {
-    logger.error(`Error during insertion: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Error during insertion: ${getErrorMessage(err)}`);
   }
 }
 

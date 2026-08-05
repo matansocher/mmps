@@ -1,7 +1,7 @@
 import bigInt from 'big-integer';
 import { Api, type TelegramClient } from 'telegram';
 import type { EntityLike } from 'telegram/define';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { provideTelegramClient } from '../provide-telegram-client';
 import { getConversationDetails } from './listen';
 import type { ConversationDetails, SenderDetails, TelegramMessage } from './listen';
@@ -36,7 +36,7 @@ export async function fetchLatestMessageId(channelId: string): Promise<number | 
     const messages = await client.getMessages(entity, { limit: 1 });
     return messages?.[0]?.id ?? null;
   } catch (err) {
-    logger.error(`Failed to fetch latest message id for ${channelId}: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to fetch latest message id for ${channelId}: ${getErrorMessage(err)}`);
     return null;
   }
 }
@@ -73,7 +73,7 @@ export async function fetchNewChannelMessages(channelId: string, minId: number):
 
     return { conversation, latestId, items };
   } catch (err) {
-    logger.error(`Failed to fetch new messages for ${channelId}: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to fetch new messages for ${channelId}: ${getErrorMessage(err)}`);
     return { conversation: null, latestId: minId, items: [] };
   }
 }

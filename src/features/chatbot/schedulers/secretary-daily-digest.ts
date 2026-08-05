@@ -1,7 +1,7 @@
 import type { Bot } from 'grammy';
 import { randomUUID } from 'node:crypto';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { buildActionsKeyboard, createActions, type CreateSecretaryActionData, type SecretaryMessageService, type SecretarySummaryAction, setActionsMessageId } from '../secretary';
 
@@ -35,6 +35,6 @@ export async function secretaryDailyDigest(bot: Bot, messageService: SecretaryMe
     const deleted = await messageService.clearMessagesBefore(cutoff);
     logger.log(`Sent ${summaries.length} daily summaries, cleared ${deleted} messages.`);
   } catch (err) {
-    logger.error(`Failed to send daily summaries: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to send daily summaries: ${getErrorMessage(err)}`);
   }
 }

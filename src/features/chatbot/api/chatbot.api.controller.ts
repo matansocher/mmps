@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { registry } from '@core/openapi';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { fetchEmailFull, fetchUserEmails, markEmailAsRead, trashEmail } from '@services/gmail';
 import { createEvent, deleteEvent, listEvents } from '@services/google-calendar';
 import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-calendar';
@@ -318,7 +318,7 @@ async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
     const timeMax = addDays(date, 1).toISOString();
     return await listEvents({ timeMin, timeMax, singleEvents: true, orderBy: 'startTime', maxResults: 250 });
   } catch (err) {
-    logger.warn(`Failed to fetch calendar events for ${dateKey(date)}: ${err instanceof Error ? err.message : String(err)}`);
+    logger.warn(`Failed to fetch calendar events for ${dateKey(date)}: ${getErrorMessage(err)}`);
     return [];
   }
 }
@@ -354,7 +354,7 @@ export function registerChatbotApiRoutes(app: Express): void {
         reminders: reminders.map(toReminderDto),
       });
     } catch (err) {
-      logger.error(`dashboard failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`dashboard failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'dashboard_failed' });
     }
   });
@@ -380,7 +380,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       }
       res.status(201).json(toReminderDto(created));
     } catch (err) {
-      logger.error(`reminder create failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`reminder create failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'create_failed' });
     }
   });
@@ -428,7 +428,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       }
       res.json(toReminderDto(updated));
     } catch (err) {
-      logger.error(`reminder update failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`reminder update failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'update_failed' });
     }
   });
@@ -448,7 +448,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       }
       res.status(204).end();
     } catch (err) {
-      logger.error(`reminder delete failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`reminder delete failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'delete_failed' });
     }
   });
@@ -474,7 +474,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       });
       res.status(201).json(toEventDto(created, 'event-created'));
     } catch (err) {
-      logger.error(`calendar event create failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`calendar event create failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'create_failed' });
     }
   });
@@ -498,7 +498,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       }
       res.status(204).end();
     } catch (err) {
-      logger.error(`calendar event delete failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`calendar event delete failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'delete_failed' });
     }
   });
@@ -540,7 +540,7 @@ export function registerChatbotApiRoutes(app: Express): void {
 
       res.json({ days, totals: { cost: totalCost, turns: totalTurns, tokensTotal: totalTokens }, perDay, perSource });
     } catch (err) {
-      logger.error(`usage failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`usage failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'usage_failed' });
     }
   });
@@ -550,7 +550,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       const emails = (await fetchUserEmails('is:unread in:inbox', 10)) ?? [];
       res.json({ emails });
     } catch (err) {
-      logger.error(`emails failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`emails failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'emails_failed' });
     }
   });
@@ -569,7 +569,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       }
       res.json({ id: email.id, from: email.from, subject: email.subject, date: email.date, bodyText: email.bodyText });
     } catch (err) {
-      logger.error(`email fetch failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`email fetch failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'emails_failed' });
     }
   });
@@ -584,7 +584,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       await markEmailAsRead(id);
       res.status(204).end();
     } catch (err) {
-      logger.error(`mark read failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`mark read failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'mark_read_failed' });
     }
   });
@@ -599,7 +599,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       await trashEmail(id);
       res.status(204).end();
     } catch (err) {
-      logger.error(`email delete failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`email delete failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'delete_failed' });
     }
   });
@@ -619,7 +619,7 @@ export function registerChatbotApiRoutes(app: Express): void {
         .sort((a, b) => a.date.localeCompare(b.date));
       res.json({ birthdays });
     } catch (err) {
-      logger.error(`birthdays failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`birthdays failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'birthdays_failed' });
     }
   });

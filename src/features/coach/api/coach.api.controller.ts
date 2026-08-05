@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from 'express';
-import { getDateString, Logger } from '@core/utils';
+import { getDateString, getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import type { TelegramBotConfig } from '@services/telegram';
@@ -122,7 +122,7 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       notify(botConfig, { action: 'FOLLOW_LEAGUE', competitionId: id, follow: body.follow, source: 'mini_app' }, userDetails);
       res.json({ following: isFollowing(id, next) });
     } catch (err) {
-      logger.error(`follow toggle failed for chatId=${chatId} id=${id}: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`follow toggle failed for chatId=${chatId} id=${id}: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'update_failed' });
     }
   });

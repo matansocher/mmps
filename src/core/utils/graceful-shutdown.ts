@@ -1,4 +1,5 @@
 import { exit } from 'node:process';
+import { getErrorMessage } from '@core/utils';
 import { Logger } from './logger';
 
 let shuttingDown = false;
@@ -10,7 +11,7 @@ const shutdown = (logger: Logger, reason: string, err: unknown, close: () => Pro
   if (exitCode === 0) {
     logger.log(`Shutting down gracefully on '${reason}'`);
   } else {
-    logger.error(`Unhandled failure by '${reason}'! ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Unhandled failure by '${reason}'! ${getErrorMessage(err)}`);
   }
 
   const timer = setTimeout(() => {
@@ -32,7 +33,7 @@ export function gracefulShutdown(...closes: (() => Promise<unknown> | unknown)[]
       try {
         await fn();
       } catch (err) {
-        logger.error(`An error occurred during graceful shutdown! ${err instanceof Error ? err.message : String(err)}`);
+        logger.error(`An error occurred during graceful shutdown! ${getErrorMessage(err)}`);
       }
     }
   };

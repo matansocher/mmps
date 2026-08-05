@@ -5,7 +5,7 @@ import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, WIFE_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import { deleteMessagesBefore, getMessagesForChatBetween, saveMessage, type SecretaryMessage, type SecretarySummaryAction } from './mongo';
@@ -96,7 +96,7 @@ export class SecretaryMessageService {
       const summary = `🗒️ Daily summary — ${otherName} (${dateStr})\n\n${body}`;
       return { summary, actions: (result.actions ?? []) as SecretarySummaryAction[] };
     } catch (err) {
-      this.logger.error(`Failed to summarize chat ${messages[0]?.chatId}: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Failed to summarize chat ${messages[0]?.chatId}: ${getErrorMessage(err)}`);
       return null;
     }
   }

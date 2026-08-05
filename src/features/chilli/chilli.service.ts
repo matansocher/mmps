@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
 import { DEFAULT_TIMEZONE, isProd, MY_USER_ID } from '@core/config/main.config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
@@ -44,7 +44,7 @@ export class ChilliService {
       const lastMessage = messages[messages.length - 1];
       return lastMessage.content as string;
     } catch (err) {
-      this.logger.error(`Error processing message for user ${chatId}: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Error processing message for user ${chatId}: ${getErrorMessage(err)}`);
       return 'מיאו... משהו השתבש. נסו שוב.';
     }
   }

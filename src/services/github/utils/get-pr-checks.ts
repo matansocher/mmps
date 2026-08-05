@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequestCheck } from '../types';
 import { getOctokit } from './octokit';
@@ -32,7 +32,7 @@ export async function getPRChecks(prNumber: number): Promise<GitHubServiceRespon
 
     return { success: true, data: checks };
   } catch (err) {
-    const errorMsg = `Failed to get PR checks for #${prNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to get PR checks for #${prNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return { success: false, error: errorMsg };
   }

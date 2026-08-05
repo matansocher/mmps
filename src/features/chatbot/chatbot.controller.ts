@@ -2,7 +2,7 @@ import type { Bot, Context } from 'grammy';
 import type { ReactionTypeEmoji } from 'grammy/types';
 import { env } from 'node:process';
 import { LOCAL_FILES_PATH, MY_USER_ID, WIFE_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
 import { analyzeImage } from '@services/openai/utils/analyze-image';
@@ -98,7 +98,7 @@ export class ChatbotController {
       const audioFilePath = await downloadFile(this.bot, fileId, LOCAL_FILES_PATH);
       return await getTranscriptFromAudio(audioFilePath);
     } catch (err) {
-      this.logger.error(`Failed to transcribe business voice: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Failed to transcribe business voice: ${getErrorMessage(err)}`);
       return '';
     }
   }
@@ -119,7 +119,7 @@ export class ChatbotController {
       await ctx.editMessageText(`Sent ✅\n\n"${CHECK_IN_MESSAGE}"`);
       await ctx.answerCallbackQuery({ text: 'Sent ✅' });
     } catch (err) {
-      this.logger.error(`Failed to send check-in message: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Failed to send check-in message: ${getErrorMessage(err)}`);
       await ctx.answerCallbackQuery({ text: 'Failed to send.', show_alert: true });
     }
   }
@@ -154,7 +154,7 @@ export class ChatbotController {
         const refreshed = await getActionsByMessageId(action.messageId);
         await ctx.editMessageReplyMarkup({ reply_markup: buildActionsKeyboard(refreshed) });
       } catch (err) {
-        this.logger.error(`Failed to refresh action keyboard: ${err instanceof Error ? err.message : String(err)}`);
+        this.logger.error(`Failed to refresh action keyboard: ${getErrorMessage(err)}`);
       }
     }
 
@@ -210,7 +210,7 @@ export class ChatbotController {
       await ctx.editMessageText(`😴 *Snoozed for ${label}*\n${reminder.message}`, { parse_mode: 'Markdown' }).catch(() => {});
       await ctx.answerCallbackQuery({ text: `Snoozed for ${label}` }).catch(() => {});
     } catch (err) {
-      this.logger.error(`Error handling reminder callback: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Error handling reminder callback: ${getErrorMessage(err)}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
     }
   }
@@ -237,14 +237,14 @@ export class ChatbotController {
           break;
         case 'remind':
           setTimeout(() => {
-            sendExerciseReminder(this.bot, this.chatbotService).catch((err) => this.logger.error(`Failed to re-send exercise reminder: ${err instanceof Error ? err.message : String(err)}`));
+            sendExerciseReminder(this.bot, this.chatbotService).catch((err) => this.logger.error(`Failed to re-send exercise reminder: ${getErrorMessage(err)}`));
           }, EXERCISE_REMIND_DELAY_MS);
           await ctx.editMessageText('😴 Okay, I will remind you again in 1 hour.', { parse_mode: 'Markdown' }).catch(() => {});
           await ctx.answerCallbackQuery({ text: 'Reminding in 1 hour' }).catch(() => {});
           break;
       }
     } catch (err) {
-      this.logger.error(`Error handling exercise callback: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Error handling exercise callback: ${getErrorMessage(err)}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
     }
   }
@@ -258,7 +258,7 @@ export class ChatbotController {
       const { message } = await this.chatbotService.processMessage(prompt, chatId);
       await sendRichMessage(this.bot, chatId, message);
     } catch (err) {
-      this.logger.error(`Error handling birthday callback: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Error handling birthday callback: ${getErrorMessage(err)}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
     }
   }

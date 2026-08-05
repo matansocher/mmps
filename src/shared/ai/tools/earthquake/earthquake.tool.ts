@@ -1,6 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { formatEarthquake, getEarthquakesAboveMagnitude, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 import { generateEarthquakeMapImage } from '@services/earthquake-map';
 
@@ -55,7 +55,7 @@ async function runner({ action, limit, minMagnitude, hoursBack }: z.infer<typeof
         place: firstQuake.properties.place,
       });
     } catch (err) {
-      logger.error(`Failed to generate earthquake map: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`Failed to generate earthquake map: ${getErrorMessage(err)}`);
     }
 
     const formattedQuakes = relevantEarthquakes.map((quake, index) => {

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { findPlace } from './find-place';
 
 const logger = new Logger('get-place-details');
@@ -72,7 +72,7 @@ export async function getPlaceDetails(placeName: string): Promise<PlaceDetailsRe
       };
     }
   } catch (err) {
-    logger.error(`Error getting place details: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Error getting place details: ${getErrorMessage(err)}`);
     return {
       success: false,
       error: err.message || 'Unknown error occurred',

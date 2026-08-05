@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { RestaurantsList, WoltRestaurant } from '@shared/wolt';
 import { getRestaurantsList } from './utils';
 import { TOO_OLD_LIST_THRESHOLD_MS } from './wolt.config';
@@ -27,7 +27,7 @@ export class RestaurantsService {
         restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
       }
     } catch (err) {
-      this.logger.error(`Failed to refresh restaurants list: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Failed to refresh restaurants list: ${getErrorMessage(err)}`);
     }
   }
 }

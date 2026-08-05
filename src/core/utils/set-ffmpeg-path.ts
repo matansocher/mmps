@@ -1,12 +1,12 @@
 import { exec } from 'child_process';
 import ffmpeg from 'fluent-ffmpeg';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 
 export function setFfmpegPath() {
   const logger = new Logger(setFfmpegPath.name);
   exec('which ffmpeg', (err, stdout: string) => {
     if (err) {
-      logger.error(`which ffmpeg exec - Error finding ffmpeg: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error(`which ffmpeg exec - Error finding ffmpeg: ${getErrorMessage(err)}`);
       return;
     }
     logger.log(`which ffmpeg exec - ffmpeg path: ${stdout.trim()}`);

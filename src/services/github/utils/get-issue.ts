@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, Issue } from '../types';
 import { mapIssue } from './mappers';
@@ -20,7 +20,7 @@ export async function getIssue(issueNumber: number): Promise<GitHubServiceRespon
       data: mapIssue(response.data),
     };
   } catch (err) {
-    const errorMsg = `Failed to get issue #${issueNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to get issue #${issueNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

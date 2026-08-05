@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import { MongoClient } from 'mongodb';
 import { join } from 'node:path';
 import { cwd, env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { DB_NAME, Subscription } from '@shared/wolt';
 import { getRestaurantsList } from '../utils';
 
@@ -48,7 +48,7 @@ async function main() {
     // logger.log('areasCount');
     // logger.log(areasCount);
   } catch (err) {
-    logger.error(`Error during insertion: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Error during insertion: ${getErrorMessage(err)}`);
   } finally {
     await client.close();
     logger.log('Disconnected from MongoDB.');

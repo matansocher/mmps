@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { CalendarEvent, listEvents } from '@services/google-calendar';
 
 const logger = new Logger('UpcomingEventAlertScheduler');
@@ -46,10 +46,10 @@ export async function upcomingEventAlert(bot: Bot): Promise<void> {
       try {
         await bot.api.sendMessage(MY_USER_ID, buildMessage(event), { parse_mode: 'Markdown' });
       } catch (err) {
-        logger.error(`Failed to send alert for event ${event.id}: ${err instanceof Error ? err.message : String(err)}`);
+        logger.error(`Failed to send alert for event ${event.id}: ${getErrorMessage(err)}`);
       }
     }
   } catch (err) {
-    logger.error(`Failed to check upcoming events: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to check upcoming events: ${getErrorMessage(err)}`);
   }
 }

@@ -1,9 +1,8 @@
 import type { Bot } from 'grammy';
 import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { ChatbotService } from './chatbot.service';
-import type { SecretaryMessageService } from './secretary';
 import {
   birthdayReminder,
   dailySummary,
@@ -26,11 +25,12 @@ import {
   weeklyExerciseSummary,
 } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
+import type { SecretaryMessageService } from './secretary';
 
 const logger = new Logger('ChatbotScheduler');
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
-  const onError = (err: unknown) => logger.error(`Scheduled task failed: ${err instanceof Error ? err.message : String(err)}`);
+  const onError = (err: unknown) => logger.error(`Scheduled task failed: ${getErrorMessage(err)}`);
   cron.schedule(expression, () => handler().catch(onError), { timezone });
 }
 

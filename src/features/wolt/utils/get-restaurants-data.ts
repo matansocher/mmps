@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { chunk, Logger, sleep } from '@core/utils';
+import { chunk, getErrorMessage, Logger, sleep } from '@core/utils';
 import type { WoltRestaurant } from '@shared/wolt';
 import {
   CITIES_BASE_URL,
@@ -89,7 +89,7 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
 
     return restaurants;
   } catch (err) {
-    logger.error(`Failed to fetch restaurants list: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to fetch restaurants list: ${getErrorMessage(err)}`);
     return [];
   }
 }
@@ -109,7 +109,7 @@ async function getCitiesList(): Promise<WoltCity[]> {
         return { areaSlug: slug, lon: location.coordinates[0], lat: location.coordinates[1] };
       });
   } catch (err) {
-    logger.error(`Failed to fetch cities list: ${err instanceof Error ? err.message : String(err)}`);
+    logger.error(`Failed to fetch cities list: ${getErrorMessage(err)}`);
     return [];
   }
 }

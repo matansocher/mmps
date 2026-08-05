@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequestReview } from '../types';
 import { getOctokit } from './octokit';
@@ -25,7 +25,7 @@ export async function getPRReviews(prNumber: number): Promise<GitHubServiceRespo
 
     return { success: true, data: reviews };
   } catch (err) {
-    const errorMsg = `Failed to get reviews for PR #${prNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to get reviews for PR #${prNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return { success: false, error: errorMsg };
   }
