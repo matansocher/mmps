@@ -4,14 +4,12 @@ export const isProd = env.IS_PROD === 'true';
 
 export const MMPS_BASE_URL = env.MMPS_BASE_URL || 'https://mmps-a9baabab2459.herokuapp.com';
 
-export const MY_USER_ID = 862305226;
-export const TOODIE_USER_ID = 1332013273;
-export const MY_USER_NAME = '@daninave1';
+export const MY_USER_ID = Number(env.MY_USER_ID);
+export const WIFE_USER_ID = Number(env.WIFE_USER_ID);
+export const MY_USER_NAME = env.MY_USER_NAME;
 
 export const DEFAULT_TIMEZONE = 'Asia/Jerusalem';
 
 export const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export const LOCAL_FILES_PATH = './assets/downloads';
-
-export const PORT = Number(env.PORT) || 3000;

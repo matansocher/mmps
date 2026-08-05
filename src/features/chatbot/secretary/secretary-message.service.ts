@@ -4,7 +4,7 @@ import { endOfDay, format, startOfDay } from 'date-fns';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
 import { z } from 'zod';
-import { DEFAULT_TIMEZONE, TOODIE_USER_ID } from '@core/config';
+import { DEFAULT_TIMEZONE, WIFE_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
@@ -69,7 +69,7 @@ export class SecretaryMessageService {
     const { start, end } = todayWindow();
 
     const summaries: DailySummary[] = [];
-    const chatId = TOODIE_USER_ID;
+    const chatId = WIFE_USER_ID;
     const messages = await getMessagesForChatBetween(chatId, start, end);
     if (messages.length === 0) return summaries;
     const result = await this.summarizeChat(messages);

@@ -20,7 +20,7 @@ declare module 'express-serve-static-core' {
 
 export async function expensesAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (env.NODE_ENV !== 'production') {
-    const devUserId = req.header('X-Expenses-Dev-User') || env.DEV_USER_ID;
+    const devUserId = req.header('X-Expenses-Dev-User') || env.MY_USER_ID;
     if (devUserId) {
       const id = Number(devUserId);
       if (!Number.isFinite(id)) {
