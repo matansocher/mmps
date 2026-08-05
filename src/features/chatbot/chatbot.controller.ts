@@ -1,7 +1,7 @@
 import type { Bot, Context } from 'grammy';
 import type { ReactionTypeEmoji } from 'grammy/types';
 import { env } from 'node:process';
-import { LOCAL_FILES_PATH, MY_USER_ID, TOODIE_USER_ID } from '@core/config';
+import { LOCAL_FILES_PATH, MY_USER_ID, WIFE_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
 import { imgurUploadImage } from '@services/imgur';
@@ -115,7 +115,7 @@ export class ChatbotController {
     }
 
     try {
-      await this.bot.api.sendMessage(TOODIE_USER_ID, CHECK_IN_MESSAGE, { business_connection_id: OWNER_BUSINESS_CONNECTION_ID });
+      await this.bot.api.sendMessage(WIFE_USER_ID, CHECK_IN_MESSAGE, { business_connection_id: OWNER_BUSINESS_CONNECTION_ID });
       await ctx.editMessageText(`Sent ✅\n\n"${CHECK_IN_MESSAGE}"`);
       await ctx.answerCallbackQuery({ text: 'Sent ✅' });
     } catch (err) {
