@@ -144,7 +144,12 @@ export class WoltController {
           break;
         }
         case BOT_ACTIONS.CHANGE_PAGE: {
-          await this.changePage(ctx, userDetails, restaurantName, parseInt(page));
+          const pageNumber = parseInt(page, 10);
+          if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+            await ctx.answerCallbackQuery({ text: 'לא הבנתי את הבקשה שלך 😕' });
+            break;
+          }
+          await this.changePage(ctx, userDetails, restaurantName, pageNumber);
           break;
         }
         default: {

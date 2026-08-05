@@ -1,93 +1,78 @@
-# Monitoring & Logging
+# Monitoring & Observability
 
-Monitoring and logging setup for production.
+MMPS ships traces, metrics, and logs to **Grafana Cloud** via **OpenTelemetry (OTLP)**. This gives Application Performance Monitoring (APM), searchable logs, and alerting on the free tier.
 
-## Google Sheets Logging
+## How it works
 
-In production, logs are automatically sent to Google Sheets.
+Telemetry is bootstrapped through a Node.js `--import` preload so it is initialized **before** any application code runs.
 
-### Setup
+- `src/core/telemetry/otel.ts` — builds the OpenTelemetry `NodeSDK` with three pipelines (traces, metrics, logs), all pointing at the same OTLP endpoint.
+- `src/core/telemetry/register.ts` — the preload entry (`node --import ./dist/core/telemetry/register.js`) that calls `startTelemetry()`.
+- `package.json` `start`/`debug` scripts wire the preload; the Heroku `Procfile` inherits it via `npm start`.
 
-1. Create Google Cloud service account
-2. Create spreadsheet
-3. Share spreadsheet with service account email
-4. Set environment variables:
+Local dev (`npm run dev`) uses `tsx watch`, which does **not** run the preload, so telemetry stays off locally. If `OTEL_EXPORTER_OTLP_ENDPOINT` is empty, `startTelemetry()` returns early and the app runs with no telemetry.
+
+### Signals
+
+| Signal | Exporter | What you get |
+|--------|----------|--------------|
+| Traces | `OTLPTraceExporter` + auto-instrumentations | Request/tool spans, latency, dependency map (Application Observability) |
+| Metrics | `OTLPMetricExporter` (60s interval) | Runtime + HTTP metrics |
+| Logs | `OTLPLogExporter` (batch) | Every `logger.log/error/warn/debug` as a log record, correlated with the active trace |
+
+Log records are emitted by the `Logger` class (`src/core/utils/logger.ts`): in production each call also emits an OTEL log record (severity + `context` attribute) alongside the console output. Console output is unchanged.
+
+### Auth
+
+Grafana's OTLP gateway uses HTTP Basic auth. Rather than rely on the fragile `OTEL_EXPORTER_OTLP_HEADERS` env-var parsing, the header is built in code from `GRAFANA_OTLP_INSTANCE_ID` and `GRAFANA_OTLP_TOKEN`:
+
+```
+Authorization: Basic base64(<instanceID>:<token>)
+```
+
+## Configuration
+
+Set these as Heroku config vars (Settings → Config Vars). They are **not** needed locally.
 
 ```bash
-SHEETS_CLIENT_EMAIL=...@iam.gserviceaccount.com
-SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-SHEETS_LOGS_SPREADSHEET_ID=spreadsheet-id
+OTEL_SERVICE_NAME=mmps
+OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-<region>.grafana.net/otlp
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+GRAFANA_OTLP_INSTANCE_ID=<your instance id>
+GRAFANA_OTLP_TOKEN=<your grafana cloud access token>
+OTEL_DEBUG=            # set to "true" to log OTLP export attempts/errors while troubleshooting
 ```
 
-### Log Levels
+The endpoint, instance ID, and token come from your Grafana Cloud stack's **OpenTelemetry** connection page. See [Environment Variables](/deployment/environment-variables#observability-grafana-cloud).
 
-```typescript
-logger.log('Info message');      // General info
-logger.warn('Warning message');   // Warnings
-logger.error('Error message');    // Errors
-logger.debug('Debug message');    // Debug (dev only)
-```
+## Viewing telemetry in Grafana
 
-## Monitoring Metrics
+- **APM / traces** — Application Observability, filter by `service_name="mmps"`.
+- **Logs** — Explore → Loki data source, query `{service_name="mmps"}`. Add `| json | level="ERROR"` (or `|= "ERROR"`) to filter errors.
+- **Metrics** — Explore → Prometheus data source.
 
-### Key Metrics
+## Alerting on errors
 
-- **Response Time** - Bot response latency
-- **Error Rate** - Percentage of failed requests
-- **API Rate Limits** - External API usage
-- **Memory Usage** - Process memory consumption
-- **Database Connections** - MongoDB connection pool
+Alerts are configured in Grafana (no code). To notify on any error log:
 
-### Using PM2
-
-```bash
-# Monitor all processes
-pm2 monit
-
-# Save monitoring data
-pm2 save
-pm2 resurrect
-```
-
-### Alerting
-
-Set up alerts for:
-- Error rate > 5%
-- Response time > 5s
-- Memory usage > 80%
-- Database connection failures
-
-## Health Checks
-
-Implement health check endpoint:
-
-```bash
-curl http://localhost:3000/health
-# Returns: { status: 'ok', uptime: 3600 }
-```
+1. **Contact point** — Alerts & IRM → Alerting → Contact points → add a **Telegram** integration (bot token + chat ID). Test it.
+2. **Alert rule** — Alerts & IRM → Alerting → Alert rules → new rule:
+   - Data source: the Loki logs source.
+   - Query (Code mode):
+     ```text
+     count_over_time({service_name="mmps"} | json | level="ERROR" [5m])
+     ```
+     If the JSON `level` field is not detected, fall back to a raw match: `count_over_time({service_name="mmps"} |= "ERROR" [5m])`.
+   - Condition: `IS ABOVE 0`.
+   - Evaluation: 1m interval, 0s pending period (fire immediately).
+   - Route to the Telegram contact point.
 
 ## Troubleshooting
 
-### Memory Leak
-
-1. Monitor: `pm2 monit`
-2. Check for unclosed connections
-3. Review MongoDB operations
-4. Restart if necessary: `pm2 restart mmps`
-
-### High CPU Usage
-
-1. Check active tasks: `top`
-2. Review logs for errors
-3. Check API rate limiting
-4. Optimize database queries
-
-### Database Issues
-
-1. Check connection: `mongosh "..."`
-2. Monitor connection pool
-3. Check indexes
-4. Review slow queries
+- **`401 no credentials provided`** — the auth header is missing. Confirm `GRAFANA_OTLP_INSTANCE_ID` and `GRAFANA_OTLP_TOKEN` are set; the code builds the header from them.
+- **`401 authentication error: invalid token`** — the header is being sent but the token/instance ID is wrong. Re-copy the token; verify with a direct curl to `<endpoint>/v1/traces`.
+- **Traces/metrics work but no logs** — the logs pipeline needs the `OTLPLogExporter` (added in `otel.ts`). Confirm the deploy includes it.
+- Set `OTEL_DEBUG=true` on Heroku to surface OTLP export attempts and errors in the app logs, then turn it off (verbose).
 
 ## Next Steps
 

@@ -5,6 +5,7 @@ import { CalendarEvent, listEvents } from '@services/google-calendar';
 
 const logger = new Logger('UpcomingEventAlertScheduler');
 
+export const LEAD_MINUTES = 15;
 export const WINDOW_MINUTES = 15;
 const GRACE_MS = 60 * 1000;
 
@@ -14,7 +15,7 @@ function buildMessage(event: CalendarEvent): string {
   const title = event.summary || 'Untitled Event';
   const startStr = formatTime(event.start.dateTime!);
   const endStr = event.end?.dateTime ? ` - ${formatTime(event.end.dateTime)}` : '';
-  const lines = [`📅 *Upcoming event*`, ``, `*${title}*`, `🕒 ${startStr}${endStr}`];
+  const lines = [`📅 *Upcoming event* (in ~${LEAD_MINUTES} min)`, ``, `*${title}*`, `🕒 ${startStr}${endStr}`];
   if (event.location) lines.push(`📍 ${event.location}`);
   if (event.description) lines.push(``, event.description);
   return lines.join('\n');
@@ -23,15 +24,16 @@ function buildMessage(event: CalendarEvent): string {
 export async function upcomingEventAlert(bot: Bot): Promise<void> {
   try {
     const now = new Date();
-    const windowEnd = new Date(now.getTime() + WINDOW_MINUTES * 60 * 1000);
+    const windowStart = new Date(now.getTime() + LEAD_MINUTES * 60 * 1000);
+    const windowEnd = new Date(windowStart.getTime() + WINDOW_MINUTES * 60 * 1000);
 
-    const events = await listEvents({ timeMin: now.toISOString(), timeMax: windowEnd.toISOString(), singleEvents: true, orderBy: 'startTime' });
+    const events = await listEvents({ timeMin: windowStart.toISOString(), timeMax: windowEnd.toISOString(), singleEvents: true, orderBy: 'startTime' });
 
     const upcoming = (events || []).filter((event) => {
       if (!event.start?.dateTime) return false;
       if (event.status === 'cancelled') return false;
       const startTime = new Date(event.start.dateTime).getTime();
-      return startTime >= now.getTime() - GRACE_MS && startTime <= windowEnd.getTime();
+      return startTime >= windowStart.getTime() - GRACE_MS && startTime <= windowEnd.getTime();
     });
 
     if (!upcoming.length) {

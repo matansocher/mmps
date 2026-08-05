@@ -8,7 +8,6 @@ import {
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
-  expensesTool,
   githubTool,
   gmailTool,
   makavdiaTool,
@@ -16,16 +15,18 @@ import {
   matchSummaryTool,
   meetupsTool,
   polymarketTool,
-  preferencesTool,
   recipesTool,
   reminderTool,
-  selfieTool,
+  spotifyPodcastTool,
   spotifyTool,
+  telegramChannelsTool,
+  tiktokTool,
   topMatchesForPredictionTool,
+  twitterTool,
   weatherTool,
   woltTool,
   worldlyTool,
-  youtubeFollowerTool,
+  youtubeTool,
 } from '@shared/ai';
 import { AgentDescriptor, OrchestratorDescriptor } from '../types';
 
@@ -40,18 +41,17 @@ Context:
 
 How to handle a request:
 1. For general conversation, answer directly without tools.
-2. You directly hold these tools — use them yourself: weather, earthquake monitoring, smart reminders, personal preferences/memory, contacts to call, and friends to meet up with.
+2. You directly hold these tools — use them yourself: weather, earthquake monitoring, smart reminders, contacts to call, and friends to meet up with.
 3. For anything else, delegate to the matching specialist via its delegate_to_* tool:
    - SPORTS — football/soccer results, tables, fixtures, competition info, match summaries and predictions, and NBA player Deni Avdija stats.
    - DEV — GitHub issues/PRs for matansocher/mmps, and any request to build/add/change/fix code.
-   - MEDIA — music/Spotify, YouTube channel follows, recipes, Wolt & Worldly stats, personal Telegram message history, expenses, Polymarket markets, Gmail, calendar, and exercise logging/analytics.
+   - MEDIA — music/Spotify, podcast/YouTube/TikTok/Twitter/Telegram follows, recipes, Wolt & Worldly stats, Polymarket markets, Gmail, calendar, and exercise logging/analytics.
 4. When delegating, pass a complete, SELF-CONTAINED request to the specialist — include any relevant context from the conversation, because the specialist has no access to the chat history.
 5. When a specialist returns an answer, relay it to the user faithfully — keep its details, formatting, and emojis. Do not rewrite or summarize it away.
 
 Behavior guidelines:
 - Be concise but informative; keep responses brief and to the point.
 - Use tools only when they actually help; answer directly otherwise.
-- Proactively check saved preferences when they could personalize an answer (e.g. food, movies, scheduling).
 - Use markdown for lists, code, and structured data. Use emojis where they enhance engagement.
 - Always confirm details before destructive or outbound actions (sending email, deleting a playlist, etc.).
 - Be respectful, approachable, and professional.
@@ -72,7 +72,7 @@ After acting, confirm what you did, including issue/PR numbers.
 `;
 
 const MEDIA_PROMPT = `
-You are the LIFESTYLE specialist for a personal assistant. You handle music, media, food, personal stats, email, calendar, expenses, prediction markets, and exercise.
+You are the LIFESTYLE specialist for a personal assistant. You handle music, media, food, personal stats, email, calendar, prediction markets, social media follows, and exercise.
 Use the most relevant tool; each tool's description tells you exactly how and when to use it. Be concise and friendly, using markdown and emojis where helpful.
 Always confirm details before destructive or outbound actions (sending an email, deleting a playlist).
 `;
@@ -101,14 +101,29 @@ function mediaAgent(): AgentDescriptor {
   return {
     name: 'MEDIA',
     description:
-      'Delegate here: music/Spotify, YouTube channel follows, cooking recipes, Wolt & Worldly statistics, personal Telegram message history, expense tracking, Polymarket prediction markets, Gmail, calendar events, and exercise logging/analytics. Pass a complete, self-contained request.',
+      'Delegate here: music/Spotify and podcast follows, YouTube channel follows and video transcripts, TikTok and X (Twitter) user posts, public Telegram channel posts, cooking recipes, Wolt & Worldly statistics, Polymarket prediction markets, Gmail, calendar events, and exercise logging/analytics. Pass a complete, self-contained request.',
     prompt: MEDIA_PROMPT,
-    tools: [spotifyTool, youtubeFollowerTool, recipesTool, woltTool, worldlyTool, selfieTool, expensesTool, polymarketTool, gmailTool, calendarTool, exerciseTool, exerciseAnalyticsTool],
+    tools: [
+      spotifyTool,
+      spotifyPodcastTool,
+      youtubeTool,
+      tiktokTool,
+      twitterTool,
+      telegramChannelsTool,
+      recipesTool,
+      woltTool,
+      worldlyTool,
+      polymarketTool,
+      gmailTool,
+      calendarTool,
+      exerciseTool,
+      exerciseAnalyticsTool,
+    ],
   };
 }
 
 export function orchestrator(): OrchestratorDescriptor {
-  const tools = [weatherTool, earthquakeTool, reminderTool, preferencesTool, contactsTool, meetupsTool];
+  const tools = [weatherTool, earthquakeTool, reminderTool, contactsTool, meetupsTool];
 
   return {
     name: AGENT_NAME,
@@ -117,4 +132,3 @@ export function orchestrator(): OrchestratorDescriptor {
     agents: [sportsAgent(), devAgent(), mediaAgent()],
   };
 }
-

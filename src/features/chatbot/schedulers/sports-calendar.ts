@@ -80,7 +80,7 @@ export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): 
    - location: The venue from the match data
 
 6. After creating calendar events, send me a summary message in English:
-   - If events were created: "✅ Added [X] matches to the calendar:" followed by the list grouped by day with brief explanation why each was added
+   - If events were created: "✅ Added [X] matches to the calendar:" followed by the list of game names only (e.g., "⚽ [Home Team] vs [Away Team]"). Do NOT include any explanation of why each match was added.
    - If no matches found: "No matches coming up for my favorite teams, the World Cup, or other important fixtures 🤷‍♂️"`;
 
     const response = await chatbotService.processMessage(prompt, MY_USER_ID);

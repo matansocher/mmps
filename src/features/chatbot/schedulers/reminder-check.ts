@@ -2,6 +2,7 @@ import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { Logger } from '@core/utils';
 import { getDueReminders, markReminderNotified, reactivateSnoozedReminders } from '@shared/reminders';
+import { buildReminderKeyboard } from './reminder-actions';
 
 const logger = new Logger('ReminderCheckScheduler');
 
@@ -25,7 +26,7 @@ export async function reminderCheck(bot: Bot): Promise<void> {
           timeStyle: 'short',
         })}_`;
 
-        await bot.api.sendMessage(reminder.chatId, message, { parse_mode: 'Markdown' });
+        await bot.api.sendMessage(reminder.chatId, message, { parse_mode: 'Markdown', reply_markup: buildReminderKeyboard(reminder._id.toString()) });
 
         await markReminderNotified(reminder._id, reminder.chatId);
 

@@ -9,9 +9,8 @@ import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
-import { ToolCallbackOptions, UsageCallbackHandler, recordModelUsage } from '@shared/ai';
-import { orchestrator } from './agent';
-import { AiService, createAgentService } from './agent';
+import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
+import { AiService, createAgentService, orchestrator } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
@@ -22,7 +21,7 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor(checkpointer?: BaseCheckpointSaver) {
-    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
+    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,

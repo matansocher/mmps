@@ -1,4 +1,4 @@
-import type { MatchDetails, CompetitionTableRow, Competition } from '@services/scores-365';
+import type { Competition, CompetitionTableRow, MatchDetails } from '@services/scores-365';
 import { classifyMatchStatus } from '@shared/sports';
 import type { CompetitionRef, MatchStatus, MatchSummary, TableRow } from './dto';
 

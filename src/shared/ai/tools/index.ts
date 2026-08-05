@@ -30,6 +30,7 @@ export { googleMapsPlaceTool } from './maps/google-maps-place.tool';
 export { googlePlaceDetailsTool } from './maps/google-place-details.tool';
 
 export { spotifyTool } from './music/spotify.tool';
+export { spotifyPodcastTool } from './music/podcast-follower/spotify-podcast.tool';
 
 export { recipesTool } from './recipes/recipes.tool';
 
@@ -37,13 +38,7 @@ export { woltTool } from './wolt/wolt.tool';
 
 export { worldlyTool } from './worldly/worldly.tool';
 
-export { preferencesTool } from './preferences';
-
-export { youtubeFollowerTool } from './youtube-follower';
-
 export { polymarketTool } from './polymarket';
-
-export { selfieTool } from './selfie/selfie.tool';
 
 export { githubTool } from './github/github.tool';
 
@@ -51,4 +46,10 @@ export { contactsTool } from './contacts/contacts.tool';
 
 export { meetupsTool } from './meetups/meetups.tool';
 
-export { expensesTool } from './expenses/expenses.tool';
+export { twitterTool } from './twitter/twitter.tool';
+
+export { tiktokTool } from './tiktok/tiktok.tool';
+
+export { youtubeTool } from './youtube/youtube.tool';
+
+export { telegramChannelsTool } from './telegram-channels/telegram-channels.tool';

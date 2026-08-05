@@ -26,7 +26,6 @@ Show 4 different times throughout the day (morning, noon, afternoon, and evening
 2. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
    - Extract the person's name from the event title
    - If there are birthdays tomorrows, dont add the birthday section.
-3. **Exercises**: Mention if I exercised today or not. Keep it brief (1-2 sentences max).
 
 Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
 
@@ -36,7 +35,7 @@ Please format the response nicely with emojis and make it feel like a friendly g
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.');
+    await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
     logger.error(`Failed to generate/send daily summary: ${err}`);
   }
 }

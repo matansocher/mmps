@@ -1,28 +1,43 @@
 import type { Bot, Context } from 'grammy';
+import { env } from 'node:process';
 import { Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getMessageData, MessageLoader } from '@services/telegram';
 import { detectFormat, importParsedFiles, parseInput } from '@shared/expenses/importers';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, MAX_FILE_SIZE_BYTES, XLSX_EXT_RE } from './expenses.config';
-import { ExpensesLauncherService } from './launcher.service';
 import { fetchDocumentBuffer, formatFileSummary } from './utils';
 
 export class ExpensesController {
   private readonly logger = new Logger(ExpensesController.name);
 
-  constructor(
-    private readonly bot: Bot,
-    private readonly launcher: ExpensesLauncherService,
-  ) {}
+  constructor(private readonly bot: Bot) {}
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));
     this.bot.on('message:document', (ctx) => this.documentHandler(ctx));
   }
 
+  private buildKeyboard(): { inline_keyboard: { text: string; web_app: { url: string } }[][] } | null {
+    const url = env.EXPENSES_MINI_APP_URL;
+    if (!url) {
+      this.logger.warn('EXPENSES_MINI_APP_URL not configured');
+      return null;
+    }
+    return { inline_keyboard: [[{ text: '📱 Open expenses', web_app: { url } }]] };
+  }
+
+  private async sendLauncher(chatId: number, intro = '💰 Here is your expenses tracker:'): Promise<void> {
+    const reply_markup = this.buildKeyboard();
+    if (!reply_markup) {
+      await this.bot.api.sendMessage(chatId, 'The app is not configured yet. Try again later.');
+      return;
+    }
+    await this.bot.api.sendMessage(chatId, intro, { reply_markup });
+  }
+
   private async startHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails } = getMessageData(ctx);
-    await this.launcher.sendLauncher(chatId);
+    await this.sendLauncher(chatId);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
   }
 

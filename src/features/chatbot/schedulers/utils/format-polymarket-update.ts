@@ -1,10 +1,17 @@
 import { buildPolymarketUrl } from '@services/polymarket';
-import type { MarketSummary } from '@services/polymarket';
-import type { Subscription } from '@shared/polymarket-follower';
+import type { EventOutcome, MarketSummary, MultiOutcomeEventSummary } from '@services/polymarket';
+import type { OutcomeSnapshot, Subscription } from '@shared/polymarket-follower';
+
+const TOP_OUTCOMES_LIMIT = 4;
 
 export type MarketUpdate = {
   readonly subscription: Subscription;
   readonly market: MarketSummary;
+};
+
+export type MultiOutcomeUpdate = {
+  readonly subscription: Subscription;
+  readonly event: MultiOutcomeEventSummary;
 };
 
 export type ExpiredMarketInfo = {
@@ -27,6 +34,31 @@ export function formatDailyUpdateMessage(updates: MarketUpdate[]): string {
   });
 
   return header + marketLines.join('\n\n');
+}
+
+export function formatMultiOutcomeUpdateMessage(updates: MultiOutcomeUpdate[]): string {
+  const header = `*Polymarket Events Update*\n\n`;
+
+  const eventLines = updates.map(({ subscription, event }) => {
+    const statusEmoji = event.closed ? '🔒' : event.active ? '🟢' : '⏸️';
+    const topOutcomes = event.outcomes.slice(0, TOP_OUTCOMES_LIMIT);
+
+    const outcomeLines = topOutcomes.map((outcome, index) => {
+      const pct = (outcome.probability * 100).toFixed(1);
+      const changeStr = formatOutcomeChange(outcome, subscription.lastNotifiedOutcomes ?? null);
+      return `   ${index + 1}. ${outcome.outcome}: ${pct}% ${changeStr}`.trimEnd();
+    });
+
+    return `${statusEmoji} *${event.title}*
+${outcomeLines.join('\n')}
+   [View event](${buildPolymarketUrl(event.slug)})`;
+  });
+
+  return header + eventLines.join('\n\n');
+}
+
+export function toOutcomeSnapshots(event: MultiOutcomeEventSummary): OutcomeSnapshot[] {
+  return event.outcomes.slice(0, TOP_OUTCOMES_LIMIT).map((outcome) => ({ outcome: outcome.outcome, probability: outcome.probability }));
 }
 
 export function formatExpiredMarketsSection(expiredMarkets: ExpiredMarketInfo[]): string {
@@ -57,4 +89,25 @@ export function formatPriceChange(oneDayPriceChange: number | null, lastNotified
   }
 
   return '';
+}
+
+export function formatOutcomeChange(outcome: EventOutcome, lastNotifiedOutcomes: OutcomeSnapshot[] | null): string {
+  // Prefer API's 24h change if available
+  if (outcome.oneDayPriceChange !== null) {
+    return renderChange(outcome.oneDayPriceChange);
+  }
+
+  // Fallback: calculate from last notified snapshot for this outcome
+  const previous = lastNotifiedOutcomes?.find((snapshot) => snapshot.outcome === outcome.outcome);
+  if (previous) {
+    return renderChange(outcome.probability - previous.probability);
+  }
+
+  return '';
+}
+
+function renderChange(change: number): string {
+  const changePercent = (change * 100).toFixed(1);
+  const emoji = change > 0 ? '📈' : change < 0 ? '📉' : '➡️';
+  return `${emoji} (${change >= 0 ? '+' : ''}${changePercent}%)`;
 }

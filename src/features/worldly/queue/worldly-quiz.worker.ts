@@ -3,8 +3,8 @@ import { createWorker } from '@core/queue';
 import { notify } from '@services/notifier';
 import { BLOCKED_ERROR } from '@services/telegram';
 import { getUserDetails, updateSubscription } from '@shared/worldly';
-import { WorldlyService } from '../worldly.service';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from '../worldly.config';
+import { WorldlyService } from '../worldly.service';
 import { WORLDLY_QUIZ_QUEUE } from './worldly-quiz.queue';
 import type { WorldlyJobData } from './worldly-quiz.queue';
 

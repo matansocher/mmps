@@ -1,14 +1,13 @@
-import type { RapidAPIUserPostsResponse, TikTokTranscript, TikTokUserInfo, TikTokVideo, TranscriptResponse, UserVideosResponse } from './types';
+import type { RapidAPIDownloadResponse, RapidAPIUserPostsResponse, TikTokPost, TikTokTranscript, TikTokUserInfo, TikTokVideo, TikwmResponse, TranscriptResponse, UserVideosResponse } from './types';
 import {
   extractSecUid,
   fetchUserInfo,
   formatUserInfo,
   formatVideo,
-  getRapidApiHeaders,
   getSupadataApiBaseUrl,
   getSupadataHeaders,
-  getTikTokApiBaseUrl,
   pollTranscriptJob,
+  rapidApiGet,
   validateRapidApiKey,
   validateSupadataApiKey,
 } from './utils';
@@ -55,24 +54,12 @@ export async function getUserSecUid(username: string): Promise<string> {
 export async function getUserVideosBySecUid(secUid: string, count = 5, cursor?: string): Promise<UserVideosResponse> {
   validateRapidApiKey();
 
-  const url = new URL(`${getTikTokApiBaseUrl()}/api/user/posts`);
-  url.searchParams.append('secUid', secUid);
-  url.searchParams.append('count', count.toString());
+  const params: Record<string, string | number> = { secUid, count };
   if (cursor) {
-    url.searchParams.append('cursor', cursor);
+    params.cursor = cursor;
   }
 
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: getRapidApiHeaders(),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to get user videos: ${response.status} - ${errorText}`);
-  }
-
-  const data = (await response.json()) as RapidAPIUserPostsResponse;
+  const data = await rapidApiGet<RapidAPIUserPostsResponse>('/api/user/posts', params);
   return parseVideosResponse(data);
 }
 
@@ -151,4 +138,42 @@ export async function getTranscriptText(videoUrl: string): Promise<string> {
   }
 
   return '';
+}
+
+// The playAddr returned by /api/user/posts is session-bound (403s outside the proxy),
+// so resolve a fresh downloadable URL: tikwm (free) first, RapidAPI download as fallback.
+export async function getVideoDownloadUrl(videoUrl: string): Promise<string> {
+  try {
+    const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}`);
+    const data = (await response.json()) as TikwmResponse;
+    if (data.code === 0 && data.data?.play) {
+      return data.data.play;
+    }
+  } catch {
+    // fall through to RapidAPI
+  }
+
+  validateRapidApiKey();
+  const data = await rapidApiGet<RapidAPIDownloadResponse>('/api/download/video', { url: videoUrl });
+  const play = data.play || data.data?.play;
+  if (!play) {
+    throw new Error(`No downloadable video url found for ${videoUrl}`);
+  }
+  return play;
+}
+
+export async function getLatestPosts(username: string, count = 5): Promise<TikTokPost[]> {
+  const { videos } = await getUserVideos(username, count);
+
+  return Promise.all(
+    videos.slice(0, count).map(async (video) => {
+      const [downloadUrl, transcript] = await Promise.all([
+        getVideoDownloadUrl(video.url).catch(() => null),
+        getTranscriptText(video.url)
+          .then((text) => text.trim() || null)
+          .catch(() => null),
+      ]);
+      return { ...video, downloadUrl, transcript };
+    }),
+  );
 }

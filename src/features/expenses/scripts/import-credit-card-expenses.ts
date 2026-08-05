@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import { DB_NAME, ensureExpenseIndexes } from '@shared/expenses';
-import { detectFormat, type FileMeta, importParsedFiles, parseInput, type ParsedRow } from '@shared/expenses/importers';
+import { detectFormat, type FileMeta, importParsedFiles, type ParsedRow, parseInput } from '@shared/expenses/importers';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_EXPENSES_DIR = resolve(SCRIPT_DIR, 'expenses');

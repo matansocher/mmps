@@ -89,14 +89,7 @@ export async function fetchMapTiles(zoom: number, width: number, height: number)
 // RADAR OVERLAY
 // ============================================================================
 
-export async function createRadarOverlay(
-  radarBuffer: Buffer,
-  zoom: number,
-  viewLeft: number,
-  viewTop: number,
-  width: number,
-  height: number,
-): Promise<{ input: Buffer; left: number; top: number }> {
+export async function createRadarOverlay(radarBuffer: Buffer, zoom: number, viewLeft: number, viewTop: number, width: number, height: number): Promise<{ input: Buffer; left: number; top: number }> {
   const radarTopPx = latToY(RADAR_BOUNDS.north, zoom);
   const radarBottomPx = latToY(RADAR_BOUNDS.south, zoom);
   const radarLeftPx = lonToX(RADAR_BOUNDS.west, zoom);

@@ -164,14 +164,9 @@ function monthlyTotalsForCurrency(expenses: ReadonlyArray<Expense>, currency: st
   return [...buckets.entries()].map(([month, total]) => ({ month, total: Math.round(total * 100) / 100 }));
 }
 
-function buildCategoryDetail(
-  category: ExpenseCategory,
-  expenses: ReadonlyArray<Expense>,
-  scopeMonth: string | null,
-  monthlyContextExpenses?: ReadonlyArray<Expense>,
-): ExpenseCategoryDetailResponse {
+function buildCategoryDetail(category: ExpenseCategory, expenses: ReadonlyArray<Expense>, scopeMonth: string | null, monthlyContextExpenses?: ReadonlyArray<Expense>): ExpenseCategoryDetailResponse {
   const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-  const primaryCurrency = pickPrimaryCurrency(sorted.length > 0 ? sorted : monthlyContextExpenses ?? []);
+  const primaryCurrency = pickPrimaryCurrency(sorted.length > 0 ? sorted : (monthlyContextExpenses ?? []));
   const primary = sorted.filter((e) => e.currency === primaryCurrency);
   const total = primary.reduce((s, e) => s + e.amount, 0);
   const count = primary.length;
@@ -444,7 +439,6 @@ export function registerExpensesApiRoutes(app: Express): void {
       res.status(500).json({ error: 'subscriptions_failed' });
     }
   });
-
 
   app.get('/api/expenses', async (req: Request, res: Response<ExpensesMonthResponse | { error: string }>) => {
     try {

@@ -11,3 +11,9 @@ export function getRedisConnection(): Redis {
   }
   return connection;
 }
+
+export async function closeRedisConnection(): Promise<void> {
+  if (!connection) return;
+  await connection.quit();
+  connection = null;
+}

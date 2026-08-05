@@ -60,7 +60,7 @@ export type ManualExpenseInput = {
 };
 
 async function categorize(input: ManualExpenseInput): Promise<z.infer<typeof categorizationSchema>> {
-  const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0, apiKey: env.OPENAI_API_KEY }).withStructuredOutput(categorizationSchema, {
+  const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0, apiKey: env.OPENAI_API_KEY, timeout: 120_000 }).withStructuredOutput(categorizationSchema, {
     name: 'categorize_expense',
   });
   const userPrompt = `Vendor: ${input.vendor}\nAmount: ${input.amount} ${input.currency ?? DEFAULT_CURRENCY}`;

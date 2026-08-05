@@ -32,6 +32,36 @@ export type SpotifyPlaylist = Readonly<{
   external_urls: { spotify: string };
 }>;
 
+export type SpotifyShow = Readonly<{
+  id: string;
+  name: string;
+  publisher: string;
+  description: string;
+  total_episodes: number;
+  external_urls: { spotify: string };
+}>;
+
+export type SpotifyEpisode = Readonly<{
+  id: string;
+  name: string;
+  description: string;
+  release_date: string;
+  duration_ms: number;
+  external_urls: { spotify: string };
+}>;
+
+export type SpotifySearchShowsResponse = Readonly<{
+  query: string;
+  shows: SpotifyShow[];
+  total: number;
+}>;
+
+export type SpotifyShowEpisodesResponse = Readonly<{
+  showId: string;
+  episodes: SpotifyEpisode[];
+  total: number;
+}>;
+
 export type SpotifySearchTracksResponse = Readonly<{
   query: string;
   tracks: SpotifyTrack[];

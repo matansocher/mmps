@@ -7,7 +7,7 @@ Guide to running MMPS in different modes during development.
 The standard way to develop and test locally:
 
 ```bash
-npm run start:dev
+npm run dev
 ```
 
 This uses `tsx watch` to automatically reload when you make changes.
@@ -17,7 +17,7 @@ This uses `tsx watch` to automatically reload when you make changes.
 By default, all bots run in production mode. In development, run one bot at a time:
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev
+LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 Available bot IDs: `chatbot`, `coach`, `wolt`, `worldly`
@@ -88,16 +88,16 @@ npm test:watch
 
 1. Create a test Telegram bot with @BotFather
 2. Add the token to `.env`: `CHATBOT_TELEGRAM_BOT_TOKEN=...`
-3. Run: `LOCAL_ACTIVE_BOT_ID=chatbot npm run start:dev`
+3. Run: `LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev`
 4. Open Telegram and find your bot
 5. Send `/start` to begin testing
 
 ### Testing Multiple Bots
 
-To test multiple bots without running separate instances, comment out bots in `main.ts`:
+To test multiple bots without running separate instances, comment out bots in `src/index.ts`:
 
 ```typescript
-// Temporarily disable in main.ts
+// Temporarily disable in src/index.ts
 // if (shouldInitBot(coachConfig)) await initCoach();
 ```
 
@@ -134,7 +134,7 @@ npm run lint     # Check for code style issues
 brew services list  # macOS
 mongo --eval "db.adminCommand('ping')"
 
-# Check MONGO_URI in .env
+# Check MONGO_DB_URL in .env
 # For local: mongodb://localhost:27017
 # For Atlas: mongodb+srv://username:password@...
 ```

@@ -72,6 +72,11 @@ export async function trashEmail(messageId: string) {
   }
 }
 
+export async function markEmailAsRead(messageId: string): Promise<void> {
+  const gmail = await getGmailClient();
+  await gmail.users.messages.modify({ userId: 'me', id: messageId, requestBody: { removeLabelIds: ['UNREAD'] } });
+}
+
 export async function listMessageIds(q: string, maxResults: number): Promise<string[]> {
   const gmail = await getGmailClient();
   const response = await gmail.users.messages.list({ userId: 'me', q, maxResults });

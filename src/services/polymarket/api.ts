@@ -1,4 +1,15 @@
-import type { EventSummary, EventWithMarketsResponse, MarketSummary, PolymarketEvent, PolymarketEventWithMarkets, PolymarketMarket, SearchEventsResponse, TrendingMarketsResponse } from './types';
+import type {
+  EventOutcome,
+  EventSummary,
+  EventWithMarketsResponse,
+  MarketSummary,
+  MultiOutcomeEventSummary,
+  PolymarketEvent,
+  PolymarketEventWithMarkets,
+  PolymarketMarket,
+  SearchEventsResponse,
+  TrendingMarketsResponse,
+} from './types';
 import { buildPolymarketUrl, parseOutcomePrices } from './utils';
 
 const BASE_URL = 'https://gamma-api.polymarket.com/markets';
@@ -92,6 +103,45 @@ export async function searchEventsByTag(keyword: string, limit: number = 10): Pr
     events: events.map(toEventSummary),
     keyword,
     fetchedAt: new Date().toISOString(),
+  };
+}
+
+export async function getEventOutcomes(slug: string): Promise<MultiOutcomeEventSummary> {
+  const url = `${EVENTS_URL}/slug/${slug}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Event not found: ${response.status}`);
+  }
+
+  const event = (await response.json()) as PolymarketEventWithMarkets;
+  return toMultiOutcomeEventSummary(event);
+}
+
+function toMultiOutcomeEventSummary(event: PolymarketEventWithMarkets): MultiOutcomeEventSummary {
+  const outcomes: EventOutcome[] = (event.markets || [])
+    .filter((market) => !market.closed && Boolean(market.outcomePrices))
+    .map((market) => {
+      const { yesPrice } = parseOutcomePrices(market.outcomePrices);
+      return {
+        outcome: market.groupItemTitle || market.question,
+        probability: yesPrice,
+        oneDayPriceChange: market.oneDayPriceChange ?? null,
+        marketSlug: market.slug,
+      };
+    })
+    .sort((a, b) => b.probability - a.probability);
+
+  return {
+    id: event.id,
+    title: event.title,
+    slug: event.slug,
+    volume24hr: event.volume24hr,
+    active: event.active,
+    closed: event.closed,
+    negRisk: Boolean(event.negRisk),
+    outcomes,
+    polymarketUrl: buildPolymarketUrl(event.slug),
   };
 }
 

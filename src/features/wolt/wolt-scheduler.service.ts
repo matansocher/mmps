@@ -29,7 +29,7 @@ export class WoltSchedulerService {
     await this.handleIntervalFlow();
 
     const timeout = setTimeout(() => {
-      this.scheduleInterval();
+      this.scheduleInterval().catch((err) => this.logger.error(`Error in scheduled interval: ${err}`));
     }, secondsToNextRefresh * 1000);
 
     this.timeouts.set(JOB_NAME, timeout);

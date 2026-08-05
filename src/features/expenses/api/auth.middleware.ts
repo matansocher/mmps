@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { env } from 'node:process';
+import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { verifyExpensesInitData } from './telegram-init-data';
 
@@ -20,7 +21,7 @@ declare module 'express-serve-static-core' {
 
 export async function expensesAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (env.NODE_ENV !== 'production') {
-    const devUserId = req.header('X-Expenses-Dev-User') || env.DEV_USER_ID;
+    const devUserId = req.header('X-Expenses-Dev-User') || MY_USER_ID;
     if (devUserId) {
       const id = Number(devUserId);
       if (!Number.isFinite(id)) {

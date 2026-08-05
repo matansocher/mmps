@@ -30,12 +30,14 @@ const schema = z.object({
       'remove_tracks_from_playlist',
     ])
     .describe(
-      'The action to perform: search_track (search for songs), search_artist (search for artists), get_track_info (get detailed track information), search_playlist (search for public playlists), get_artist_top_tracks (get top tracks by artist), create_playlist (create a new playlist on the user account), add_tracks_to_playlist (add tracks to an existing playlist), get_user_playlists (list the user\'s playlists), delete_playlist (delete/unfollow a playlist from the user account), remove_tracks_from_playlist (remove tracks from an existing playlist)',
+      "The action to perform: search_track (search for songs), search_artist (search for artists), get_track_info (get detailed track information), search_playlist (search for public playlists), get_artist_top_tracks (get top tracks by artist), create_playlist (create a new playlist on the user account), add_tracks_to_playlist (add tracks to an existing playlist), get_user_playlists (list the user's playlists), delete_playlist (delete/unfollow a playlist from the user account), remove_tracks_from_playlist (remove tracks from an existing playlist)",
     ),
   query: z
     .string()
     .optional()
-    .describe('Search query for track/artist/playlist search. For get_track_info, the track ID. For get_artist_top_tracks, the artist ID. Not required for create_playlist, add_tracks_to_playlist, or get_user_playlists.'),
+    .describe(
+      'Search query for track/artist/playlist search. For get_track_info, the track ID. For get_artist_top_tracks, the artist ID. Not required for create_playlist, add_tracks_to_playlist, or get_user_playlists.',
+    ),
   limit: z.number().int().min(1).max(50).default(5).describe('Number of results to return (1-50, default 5)'),
   market: z.string().length(2).default('IL').describe('Market/country code (ISO 3166-1 alpha-2, e.g., US, GB, DE)'),
   playlistName: z.string().optional().describe('Name of the playlist to create (required for create_playlist)'),

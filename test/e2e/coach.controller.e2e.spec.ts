@@ -1,7 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BOT_ACTIONS, BOT_CONFIG } from '@src/features/coach/coach.config';
 import { CoachController } from '@src/features/coach/coach.controller';
-import { CoachLauncherService } from '@src/features/coach/launcher.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildCallbackQueryUpdate, buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
 
 vi.mock('@services/notifier', () => ({
@@ -40,8 +39,7 @@ describe('CoachController E2E', () => {
     resetUpdateBuilderCounters();
     vi.clearAllMocks();
     testBot = createTestBot(BOT_CONFIG);
-    const launcher = new CoachLauncherService(testBot.bot);
-    const controller = new CoachController(createCoachServiceStub(), testBot.bot, launcher);
+    const controller = new CoachController(createCoachServiceStub(), testBot.bot);
     controller.init();
   });
 

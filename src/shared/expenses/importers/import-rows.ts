@@ -1,19 +1,11 @@
 // Reusable importer pipeline — used by both the standalone script and the expenses bot's
 // document-upload handler. Caller supplies parsed rows; we handle dedup + override-inheritance
 // + insertion. Pure of any file-system / Telegram concerns.
-
-import {
-  createExpense,
-  type CreateExpenseData,
-  effectiveVendor,
-  type Expense,
-  getAllOverriddenExpenses,
-  getExpensesBetween,
-} from '@shared/expenses';
+import { createExpense, type CreateExpenseData, effectiveVendor, type Expense, getAllOverriddenExpenses, getExpensesBetween } from '@shared/expenses';
 import { findDuplicate, normalizeName } from './dedup';
-import { buildOverrideMap, findOverride, type OverrideEntry, registerOverride } from './override-map';
 import { parseDiscountFile } from './discount-parser';
 import { parseIsracardFile } from './isracard-parser';
+import { buildOverrideMap, findOverride, type OverrideEntry, registerOverride } from './override-map';
 import type { FileMeta, ParsedRow, ParserInput } from './types';
 
 export type AiCategorizedRow = {
@@ -86,10 +78,7 @@ export async function parseInput(input: ParserInput, meta: FileMeta): Promise<Pa
   return parseIsracardFile(input, meta);
 }
 
-export async function importParsedFiles(
-  parsedFiles: ReadonlyArray<{ readonly meta: FileMeta; readonly rows: ReadonlyArray<ParsedRow> }>,
-  options: ImportOptions = {},
-): Promise<ImportSummary> {
+export async function importParsedFiles(parsedFiles: ReadonlyArray<{ readonly meta: FileMeta; readonly rows: ReadonlyArray<ParsedRow> }>, options: ImportOptions = {}): Promise<ImportSummary> {
   const { dryRun = false } = options;
   const everyRow = parsedFiles.flatMap((b) => [...b.rows]);
   if (everyRow.length === 0) {

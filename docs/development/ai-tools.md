@@ -60,18 +60,31 @@ const schema = z.object({
 
 ## Registering Tools
 
-Add to chatbot agent in `features/chatbot/agent/index.ts`:
+1. Export from the barrel `src/shared/ai/tools/index.ts`:
 
 ```typescript
-import { weatherTool } from '@shared/ai/tools/weather';
+export * from './weather/weather.tool';
+```
 
-export function getTools() {
-  return [
+2. Add to the tools array in `src/features/chatbot/agent/agent.ts`:
+
+```typescript
+import { weatherTool } from '@shared/ai/tools';
+
+export function agent(): AgentDescriptor {
+  const tools = [
     weatherTool,
     // ... other tools
   ];
+  return { name: AGENT_NAME, prompt: AGENT_PROMPT, description: AGENT_DESCRIPTION, tools };
 }
 ```
+
+3. Update the agent's system prompt in `agent.ts` so the model knows when to use the tool.
+
+::: tip
+Use the `/scaffold-ai-tool` skill to generate all of this automatically.
+:::
 
 ## Testing Tools
 
@@ -89,15 +102,16 @@ describe('weatherTool', () => {
 
 ## Available Tools
 
-The chatbot has 20+ tools:
-- Weather
-- Reminders
-- Calendar
-- GitHub
-- Google Sheets
-- Web Search
-- Todo Lists
-- And more
+27 tools are registered in `src/features/chatbot/agent/agent.ts`, grouped by domain:
+
+- **Personal / productivity**: calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics
+- **Media / social**: spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels
+- **Information**: weather, earthquake
+- **Sports / games**: competitions-list, competition-matches, competition-table, match-summary, top-matches-for-prediction, match-prediction, makavdia, wolt, worldly
+- **Markets**: polymarket
+- **Dev tooling**: github
+
+Additional tool directories exist in `src/shared/ai/tools/` (audio, crypto, flights, image, maps, music, rain-radar, stocks) but are not currently registered.
 
 ## GitHub Tool
 
@@ -131,7 +145,7 @@ GITHUB_APP_INSTALLATION_ID=456789
 
 ### Actions
 
-The GitHub tool supports 8 actions:
+The GitHub tool supports 12 actions:
 
 - `create_issue` - Create a new issue with title, body, labels, assignees
 - `get_issue` - Get details of a specific issue
@@ -141,6 +155,10 @@ The GitHub tool supports 8 actions:
 - `add_labels` - Add labels to an issue or pull request
 - `list_issues` - List issues (filter by state, labels)
 - `list_prs` - List pull requests (filter by state)
+- `get_pr` - Get details of a specific pull request
+- `get_pr_checks` - Get CI/CD status checks for a pull request
+- `list_pr_files` - List files changed in a pull request
+- `get_pr_reviews` - Get reviews for a pull request
 
 ### Service Architecture
 

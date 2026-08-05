@@ -7,13 +7,17 @@ Detailed breakdown of the MMPS directory structure.
 ```
 mmps/
 ├── src/                    # Source code
+├── apps/                   # npm workspaces — Vite mini-apps (chatbot-web, coach-web, expenses-web, learner-web, savings-web)
 ├── docs/                   # VitePress documentation
 ├── dist/                   # Compiled JavaScript (generated)
 ├── coverage/               # Test coverage reports (generated)
 ├── .github/
 │   └── workflows/          # GitHub Actions
+├── .agents/
+│   └── skills/             # Project-local agent skills (SKILL.md format)
 ├── .husky/                 # Git hooks
 ├── scripts/                # Utility scripts
+├── AGENTS.md               # Canonical agent instructions (CLAUDE.md, GEMINI.md, .github/copilot-instructions.md are symlinks)
 ├── package.json            # Dependencies and scripts
 ├── tsconfig.json           # TypeScript config
 ├── vitest.config.ts        # Test config (unit)
@@ -36,9 +40,10 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (4 bots)
+├── features/              # Bot implementations (7 bots + savings web app)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
+│   │   ├── schedulers/    # Scheduler implementations
 │   │   ├── chatbot.init.ts              # Initialization
 │   │   ├── chatbot.controller.ts        # Telegram handlers
 │   │   ├── chatbot.service.ts           # Business logic
@@ -47,32 +52,33 @@ src/
 │   │   ├── types.ts                     # Type definitions
 │   │   └── index.ts                     # Exports
 │   │
+│   ├── chilli/            # Cat persona bot (Hebrew)
 │   ├── coach/             # Sports bot
+│   ├── expenses/          # Expense tracker mini-app bot
+│   ├── learner/           # Courses mini-app bot
+│   ├── savings/           # Shared MongoDB-backed portfolio SPA
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot
 │
 ├── services/              # External service integrations (30+ services)
-│   ├── telegram-grammy/   # Telegram bot framework
+│   ├── telegram/          # grammY bot utilities (THE telegram service)
+│   ├── telegram-client/   # MTProto user-mode client
 │   ├── openai/            # OpenAI integration
 │   ├── anthropic/         # Anthropic integration
-│   ├── mongodb/           # MongoDB setup
-│   ├── google/            # Google services
 │   ├── scores-365/        # Sports data API
 │   ├── weather/           # Weather services
 │   └── ...
 │
-├── shared/                # Shared utilities
-│   ├── ai/                # AI tools (20+ tools)
+├── shared/                # Cross-bot business logic
+│   ├── ai/                # Agents, tools, usage tracking, utils
 │   │   └── tools/         # Individual tools
 │   │       ├── weather/
 │   │       ├── reminders/
 │   │       └── ...
 │   ├── sports/            # Sports utilities
-│   ├── telegram/          # Telegram utilities
-│   ├── utils/             # Utility functions
-│   └── index.ts           # Exports
+│   └── ...                # reminders, friends, expenses, etc.
 │
-└── main.ts                # Application entry point
+└── index.ts               # Application entry point
 ```
 
 ## Feature Directory Pattern
@@ -140,20 +146,21 @@ services/github/
 
 ```
 shared/ai/
-├── tools/                             # All AI tools
+├── tools/                             # All AI tools (27+ tool directories)
 │   ├── weather/
 │   │   └── weather.tool.ts
 │   ├── reminders/
 │   │   └── reminder.tool.ts
 │   ├── calendar/
 │   ├── github/
-│   ├── google-sheets/
 │   ├── twitter/
-│   └── ... (20+ tools total)
+│   └── ...
 │
-└── services/                          # AI service utilities
-    ├── ai.service.ts                  # Main AI service
-    └── tool-callback-handler.ts       # Tool execution callbacks
+├── usage/                             # Token/cost usage tracking (repository + record helpers)
+└── utils/                             # AI utilities
+    ├── tool-callback-handler.ts       # Tool execution callbacks
+    ├── usage-callback-handler.ts      # Token usage metering
+    └── model-pricing.ts               # USD-per-token pricing table
 ```
 
 ## Configuration Files

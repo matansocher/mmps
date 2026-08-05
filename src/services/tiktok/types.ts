@@ -137,3 +137,22 @@ export type TranscriptJobResponse = {
   readonly result?: TikTokTranscript;
   readonly error?: string;
 };
+
+export type TikTokPost = TikTokVideo & {
+  readonly downloadUrl: string | null; // direct mp4 url (short-lived), null if resolution failed
+  readonly transcript: string | null; // null when the video has no speech or transcription failed
+};
+
+export type TikwmResponse = {
+  readonly code: number;
+  readonly data?: {
+    readonly play?: string;
+  };
+};
+
+export type RapidAPIDownloadResponse = {
+  readonly play?: string;
+  readonly data?: {
+    readonly play?: string;
+  };
+};

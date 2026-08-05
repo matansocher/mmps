@@ -29,6 +29,14 @@ export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;
 
+// The restaurants endpoint returns 1-3MB per city and answers bursts with 429s. When routed through
+// WOLT_RELAY_URL (a free Google Apps Script web app) the relay also serializes concurrent invocations, so
+// fanning out all cities at once queues them up until they exceed the global 30s axios timeout. Fetch the
+// cities in small batches instead, and give relay requests extra headroom over the global timeout.
+export const MAX_CONCURRENT_RESTAURANTS_REQUESTS = 2;
+export const DELAY_BETWEEN_RESTAURANTS_BATCHES_MS = 500;
+export const RELAY_REQUEST_TIMEOUT_MS = 45_000;
+
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 export const RESTAURANTS_BASE_URL = 'https://restaurant-api.wolt.com/v1/pages/restaurants';
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';

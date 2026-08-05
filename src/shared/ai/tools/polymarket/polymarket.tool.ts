@@ -46,23 +46,25 @@ export const polymarketTool = tool(runner, {
   description: `Manage Polymarket prediction market subscriptions, search for markets, and view trending markets.
 
 Actions:
-- subscribe: Subscribe to a Polymarket prediction market using URL or slug. You'll receive daily updates at 16:00 with current prices and 24h changes.
-- unsubscribe: Unsubscribe from a market using URL, slug, or market name.
+- subscribe: Subscribe to a Polymarket prediction market or multi-outcome event using URL or slug. Works for both binary Yes/No markets and multi-outcome events like "World Cup Winner" (where each team/candidate has its own probability). You'll receive daily updates at 16:00 with current prices and 24h changes.
+- unsubscribe: Unsubscribe from a market or event using URL, slug, or name.
 - list: List all active Polymarket subscriptions.
 - trending: Show top 10 trending markets by 24-hour trading volume.
 - search: Search for markets by keyword/topic. Returns events sorted by 24h volume. Common keywords: "bitcoin", "trump", "fed", "sports", "crypto", "elections".
-- event: Get all markets under a specific event by its slug. Returns detailed market info including prices and volume.
+- event: Get a specific event by its slug. For multi-outcome events (e.g. "world-cup-winner") returns each outcome with its probability; for regular events returns the underlying markets.
 
-When users mention following/tracking prediction markets, betting odds, or want market updates, use this tool.
+When users mention following/tracking prediction markets, betting odds, election/tournament winners, or want market updates, use this tool.
 
 Examples:
 - "Subscribe to the Fed rate decision market" -> subscribe with marketIdentifier
 - "Track polymarket.com/event/fed-decision-in-january" -> subscribe with URL
+- "Follow the World Cup winner odds" / "Track polymarket.com/event/world-cup-winner" -> subscribe with URL (multi-outcome)
 - "Unsubscribe from Fed market" -> unsubscribe with market name
 - "Show my Polymarket subscriptions" -> list
 - "What's trending on Polymarket?" -> trending
 - "Search for bitcoin markets" -> search with keyword "bitcoin"
 - "Find Trump-related predictions" -> search with keyword "trump"
+- "Who's favorite to win the World Cup?" -> event with slug "world-cup-winner"
 - "What markets are under israel-strikes-iran-by-february-28-2026?" -> event with slug`,
   schema,
 });

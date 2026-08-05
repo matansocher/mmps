@@ -108,42 +108,53 @@ export async function listen({ conversationsIds = [], includeOutgoing = false }:
     return;
   }
 
-  telegramClient.addEventHandler(async (event: NewMessageEvent) => {
-    try {
-      const messageData = extractMessageData(event);
-      logger.log(`[monitor] event received: channelId=${messageData?.channelId} userId=${messageData?.userId} isVoice=${messageData?.isVoice} hasText=${!!messageData?.text}`);
-      if (!messageData?.text && !messageData?.isVoice) {
-        return;
-      }
+  telegramClient.addEventHandler(
+    async (event: NewMessageEvent) => {
+      try {
+        const messageData = extractMessageData(event);
+        logger.log(`[monitor] event received: channelId=${messageData?.channelId} userId=${messageData?.userId} isVoice=${messageData?.isVoice} hasText=${!!messageData?.text}`);
+        if (!messageData?.text && !messageData?.isVoice) {
+          return;
+        }
 
-      const channelId = messageData.channelId;
-      const userId = messageData.userId;
-      if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
-        logger.log(`[monitor] filtered out channelId=${channelId} userId=${userId} (not in conversationsIds)`);
-        return;
-      }
+        const channelId = messageData.channelId;
+        const userId = messageData.userId;
+        if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
+          logger.log(`[monitor] filtered out channelId=${channelId} userId=${userId} (not in conversationsIds)`);
+          return;
+        }
 
-      const chat = await event.message.getChat();
-      const entityId = chat ?? event.message.peerId ?? userId;
-      if (!entityId) {
-        logger.warn('No entityId found in message');
-        return;
+        const chat = await event.message.getChat();
+        const entityId = chat ?? event.message.peerId ?? userId;
+        if (!entityId) {
+          logger.warn('No entityId found in message');
+          return;
+        }
+        const chatAny = chat as any;
+        const channelDetails = chat
+          ? {
+              id: chat.id.toString(),
+              createdDate: chatAny.date ?? null,
+              title: chatAny.title ?? null,
+              firstName: chatAny.firstName ?? null,
+              lastName: chatAny.lastName ?? null,
+              userName: chatAny.username ?? null,
+              photo: null,
+            }
+          : await getConversationDetails(telegramClient, entityId);
+        if (!channelDetails?.id || channelDetails.id === 'null') {
+          logger.warn(`No conversation details found for channelId: ${channelId}, userId: ${userId}`);
+          return;
+        }
+        if (EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
+          return;
+        }
+        const senderDetails = userId ? await getSenderDetails(telegramClient, userId) : null;
+        await callback(messageData, channelDetails, senderDetails);
+      } catch (err) {
+        logger.error(`Error handling telegram event: ${err}`);
       }
-      const chatAny = chat as any;
-      const channelDetails = chat
-        ? { id: chat.id.toString(), createdDate: chatAny.date ?? null, title: chatAny.title ?? null, firstName: chatAny.firstName ?? null, lastName: chatAny.lastName ?? null, userName: chatAny.username ?? null, photo: null }
-        : await getConversationDetails(telegramClient, entityId);
-      if (!channelDetails?.id || channelDetails.id === 'null') {
-        logger.warn(`No conversation details found for channelId: ${channelId}, userId: ${userId}`);
-        return;
-      }
-      if (EXCLUDED_CHANNELS.some((excludedChannel) => channelDetails.id.includes(excludedChannel))) {
-        return;
-      }
-      const senderDetails = userId ? await getSenderDetails(telegramClient, userId) : null;
-      await callback(messageData, channelDetails, senderDetails);
-    } catch (err) {
-      logger.error(`Error handling telegram event: ${err}`);
-    }
-  }, new NewMessage(includeOutgoing ? {} : { incoming: true }));
+    },
+    new NewMessage(includeOutgoing ? {} : { incoming: true }),
+  );
 }

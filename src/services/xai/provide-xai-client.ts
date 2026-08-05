@@ -5,7 +5,7 @@ let xai: OpenAI;
 
 export function provideXAiClient(): OpenAI {
   if (!xai) {
-    xai = new OpenAI({ apiKey: env.XAI_API_KEY, baseURL: 'https://api.x.ai/v1' });
+    xai = new OpenAI({ apiKey: env.XAI_API_KEY, baseURL: 'https://api.x.ai/v1', timeout: 120_000, maxRetries: 2 });
   }
   return xai;
 }
