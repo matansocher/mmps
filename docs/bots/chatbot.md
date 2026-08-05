@@ -166,7 +166,7 @@ CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summ
 
 Token/cost metering is **cross-bot**. The shared module lives in `shared/ai/usage/` and is used by every live AI call site in the repo. A `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to each `invoke` as a runtime callback; it sums token usage across the whole call (ReAct loop, structured output, or summarization) and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` then logs a `💰 usage` line and persists an aggregated record tagged with the originating bot.
 
-Instrumented sources: `chatbot`, `chilli`, `secretary` (daily summary, action agent, smart-reply drafts), and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
+Instrumented sources: `chatbot`, `chilli`, and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
 
 - **Cost** is computed from a price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens). `resolveModelPrice` does a longest-prefix match so dated snapshots (e.g. `gpt-4.1-mini-2025-04-14`) resolve correctly. Unknown models report cost `0` and log a warning.
 - **Storage** — one record per call in db `Chatbot`, collection `usage` (`shared/ai/usage/`), with a **90-day TTL**. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.

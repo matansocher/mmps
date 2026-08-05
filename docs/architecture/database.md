@@ -54,7 +54,6 @@ Each bot/domain gets its own PascalCase database (defined in each module's `mong
 - `Expenses`
 - `Learner`
 - `Savings`
-- `Secretary`
 - `Wolt`
 - `Worldly`
 - Plus shared domains: `Reminders`, `Friends`, `Trainer`, and more

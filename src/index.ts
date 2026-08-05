@@ -13,7 +13,6 @@ import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initSavings } from '@features/savings';
-import { initSecretary, BOT_CONFIG as secretaryConfig } from '@features/secretary';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
@@ -57,7 +56,6 @@ async function main() {
   await initBot(coachConfig, () => initCoach(app));
   await initBot(expensesConfig, () => initExpenses(app));
   await initBot(learnerConfig, () => initLearner(app));
-  await initBot(secretaryConfig, () => initSecretary());
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
 

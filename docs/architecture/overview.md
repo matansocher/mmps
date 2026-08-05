@@ -75,9 +75,8 @@ features/{bot-name}/
 3. **Coach** - Sports analytics and predictions
 4. **Expenses** - Expense tracker mini-app
 5. **Learner** - Courses mini-app
-6. **Secretary** - Personal secretary over a Telegram business connection
-7. **Wolt** - Restaurant notifications
-8. **Worldly** - Geography education
+6. **Wolt** - Restaurant notifications
+7. **Worldly** - Geography education
 
 ## Conditional Bot Loading
 

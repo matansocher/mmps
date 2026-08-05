@@ -8,9 +8,9 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **8 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **7 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **8 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `secretary`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
+- **7 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
@@ -182,7 +182,6 @@ src/services/{name}/
 | `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
 | `EXPENSES`  | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`    | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
 | `LEARNER`   | Learner 🎓      | `src/features/learner/`       | `LEARNER_TELEGRAM_BOT_TOKEN`     | Courses mini-app (`apps/learner-web`) served at `/learner/`. |
-| `SECRETARY` | Secretary 🤝    | `src/features/secretary/`     | `SECRETARY_TELEGRAM_BOT_TOKEN`   | Personal secretary over a Telegram business connection — voice transcription, AI draft replies, daily chat summaries with one-tap actions, check-in nudges. Has eval scripts (`npm run eval:draft`). |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
 | `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education. |
 
@@ -205,12 +204,11 @@ await initBot(chilliConfig, () => initChilli());
 await initBot(coachConfig, () => initCoach(app));
 await initBot(expensesConfig, () => initExpenses(app));
 await initBot(learnerConfig, () => initLearner(app));
-await initBot(secretaryConfig, () => initSecretary());
 await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all eight run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all seven run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
 
 ---
 
@@ -571,7 +569,7 @@ There is no manual history truncation any more — the old `truncateThread` was 
 
 Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.
 
-- **Instrumented sources.** `chatbot`, `chilli`, `secretary` (`summarizeChat`, action agent, `generateDraftReply`), `expenses` (`manual-entry` categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
+- **Instrumented sources.** `chatbot`, `chilli`, `expenses` (`manual-entry` categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
 - **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens) + `computeModelCost()`. `resolveModelPrice()` does longest-prefix matching so dated snapshots (`gpt-4.1-mini-2025-04-14`) resolve. Unknown models → cost `0` + `logger.warn`.
 - **Sink.** db `Chatbot`, collection `usage` (`shared/ai/usage/`), 90-day TTL. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ source?, chatId?, from?, to? })` groups per source + user per day (`Asia/Jerusalem`). The `Chatbot` Mongo connection is registered by `chatbot.init`; non-chatbot bots only persist when chatbot is also booted (prod always; locally needs `LOCAL_ACTIVE_BOT_ID=CHATBOT`), otherwise writes fail silently.
 - **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
@@ -755,7 +753,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 
 **Required for any local dev:**
 - `MONGO_DB_URL` — Mongo connection string (the main code path uses this).
-- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | EXPENSES | LEARNER | SECRETARY | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
+- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | EXPENSES | LEARNER | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
 - One of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (depending on which agents you exercise).
 - The `*_TELEGRAM_BOT_TOKEN` for whichever bot you set as `LOCAL_ACTIVE_BOT_ID`.
 
@@ -804,10 +802,6 @@ npm run docs:build
 # Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, savings-web)
 npm run dev:coach-web
 npm run dev:savings-web
-
-# Secretary prompt evals
-npm run eval:build        # build eval dataset
-npm run eval:draft        # evaluate draft-reply prompt
 ```
 
 ---
