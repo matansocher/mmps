@@ -6,7 +6,7 @@ This page goes deeper than the [Chatbot overview](/bots/chatbot) — it explains
 
 ## 1. What it is (30-second version)
 
-The **chatbot** is one of eight Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
+The **chatbot** is one of seven Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
 
 Key engineering properties:
 
@@ -121,7 +121,7 @@ The **system prompt** is large and deliberately explicit: it names every tool, i
 - **`service.ts` (`AiService`)** — Thin wrapper around the compiled graph. Its job is to build the `RunnableConfig`: sets `configurable.thread_id`, merges default + per-call callbacks, and applies the recursion limit. Exposes `invoke`, `stream`, `getState`.
 
 ::: tip Separation of concerns
-`AgentDescriptor` = declarative config, `factory` = construction, `AiService` = runtime config/invocation. Same infra is reused by other bots (chilli, secretary), which is why it lives in a factory rather than being inlined.
+`AgentDescriptor` = declarative config, `factory` = construction, `AiService` = runtime config/invocation. Same infra is reused by other bots (chilli), which is why it lives in a factory rather than being inlined.
 :::
 
 ## 7. Tools with Zod schemas

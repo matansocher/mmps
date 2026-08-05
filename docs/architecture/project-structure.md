@@ -40,7 +40,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (8 bots + savings web app)
+├── features/              # Bot implementations (7 bots + savings web app)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── schedulers/    # Scheduler implementations
@@ -57,7 +57,6 @@ src/
 │   ├── expenses/          # Expense tracker mini-app bot
 │   ├── learner/           # Courses mini-app bot
 │   ├── savings/           # Shared MongoDB-backed portfolio SPA
-│   ├── secretary/         # Personal secretary (business connection)
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot
 │

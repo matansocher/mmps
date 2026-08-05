@@ -40,7 +40,7 @@ features:
 
 - **[Getting Started](/guide/getting-started)** - Set up MMPS in 5 minutes
 - **[Architecture](/architecture/overview)** - Understand the system design
-- **[Available Bots](/bots/overview)** - Explore all 8 bots and their features
+- **[Available Bots](/bots/overview)** - Explore all 7 bots and their features
 - **[Contributing](/development/contributing)** - Help improve MMPS
 - **[Deployment](/deployment/production)** - Deploy to production
 
@@ -64,9 +64,8 @@ MMPS is a multi-purpose Telegram bot platform built with plain TypeScript and No
 3. **Coach** - Sports predictions and analytics with real-time data
 4. **Expenses** - Expense tracker with a Telegram mini-app
 5. **Learner** - Courses mini-app
-6. **Secretary** - Personal secretary over a Telegram business connection
-7. **Wolt** - Restaurant availability notifications
-8. **Worldly** - Geography education and trivia challenges
+6. **Wolt** - Restaurant availability notifications
+7. **Worldly** - Geography education and trivia challenges
 
 Plus a bot-less web features: **Savings**, a password-protected MongoDB-backed portfolio rebalancer.
 
