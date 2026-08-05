@@ -32,12 +32,12 @@ export async function reminderCheck(bot: Bot): Promise<void> {
 
         logger.log(`Sent reminder ${reminder._id.toString()} to chat ${reminder.chatId}`);
       } catch (err) {
-        logger.error(`Failed to send reminder ${reminder._id.toString()} to chat ${reminder.chatId}: ${err.message}`);
+        logger.error(`Failed to send reminder ${reminder._id.toString()} to chat ${reminder.chatId}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
     logger.log(`Successfully processed ${dueReminders.length} reminder(s)`);
   } catch (err) {
-    logger.error(`Failed to check reminders: ${err.message}`);
+    logger.error(`Failed to check reminders: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

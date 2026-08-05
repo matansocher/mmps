@@ -51,6 +51,6 @@ Please format the response nicely with emojis and make it feel like a friendly g
     }
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your morning brief.').catch(() => {});
-    logger.error(`Failed to generate/send morning brief: ${err}`);
+    logger.error(`Failed to generate/send morning brief: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

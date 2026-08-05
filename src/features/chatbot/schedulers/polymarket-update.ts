@@ -68,7 +68,7 @@ async function processBinarySubscription(chatId: number, subscription: Subscript
     updates.push({ subscription, market });
     await updateSubscription(subscription.marketId, chatId, { lastNotifiedPrice: market.yesPrice, marketQuestion: market.question });
   } catch (err) {
-    logger.error(`Failed to fetch market ${subscription.marketSlug}: ${err.message}`);
+    logger.error(`Failed to fetch market ${subscription.marketSlug}: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -87,6 +87,6 @@ async function processMultiOutcomeSubscription(chatId: number, subscription: Sub
     multiUpdates.push({ subscription, event });
     await updateSubscription(subscription.marketId, chatId, { lastNotifiedOutcomes: toOutcomeSnapshots(event), marketQuestion: event.title });
   } catch (err) {
-    logger.error(`Failed to fetch event ${subscription.marketSlug}: ${err.message}`);
+    logger.error(`Failed to fetch event ${subscription.marketSlug}: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

@@ -36,7 +36,7 @@ export async function fetchLatestMessageId(channelId: string): Promise<number | 
     const messages = await client.getMessages(entity, { limit: 1 });
     return messages?.[0]?.id ?? null;
   } catch (err) {
-    logger.error(`Failed to fetch latest message id for ${channelId}: ${err}`);
+    logger.error(`Failed to fetch latest message id for ${channelId}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }
@@ -73,7 +73,7 @@ export async function fetchNewChannelMessages(channelId: string, minId: number):
 
     return { conversation, latestId, items };
   } catch (err) {
-    logger.error(`Failed to fetch new messages for ${channelId}: ${err}`);
+    logger.error(`Failed to fetch new messages for ${channelId}: ${err instanceof Error ? err.message : String(err)}`);
     return { conversation: null, latestId: minId, items: [] };
   }
 }

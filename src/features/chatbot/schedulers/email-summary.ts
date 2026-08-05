@@ -41,6 +41,6 @@ Use the gmail tool with action "list" to fetch my 10 most recent unread emails (
     }
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your email summary.').catch(() => {});
-    logger.error(`Failed to generate/send email summary: ${err}`);
+    logger.error(`Failed to generate/send email summary: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

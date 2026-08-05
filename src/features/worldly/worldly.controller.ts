@@ -30,7 +30,7 @@ export class WorldlyController {
     this.bot.command(CAPITAL.command.replace('/', ''), (ctx) => this.capitalHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
-    this.bot.catch((err) => this.logger.error(`${err}`));
+    this.bot.catch((err) => this.logger.error(`${err instanceof Error ? err.message : String(err)}`));
   }
 
   async startHandler(ctx: Context): Promise<void> {

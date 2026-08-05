@@ -44,7 +44,7 @@ export class ChilliService {
       const lastMessage = messages[messages.length - 1];
       return lastMessage.content as string;
     } catch (err) {
-      this.logger.error(`Error processing message for user ${chatId}: ${err}`);
+      this.logger.error(`Error processing message for user ${chatId}: ${err instanceof Error ? err.message : String(err)}`);
       return 'מיאו... משהו השתבש. נסו שוב.';
     }
   }

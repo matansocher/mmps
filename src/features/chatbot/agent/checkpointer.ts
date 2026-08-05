@@ -17,7 +17,7 @@ export async function createChatbotCheckpointer(): Promise<MongoDBSaver> {
   const checkpointer = new MongoDBSaver({ client: client as never, dbName: CHECKPOINTS_DB_NAME, ttl: THIRTY_DAYS_IN_SECONDS });
 
   const errors = await checkpointer.setup();
-  errors.forEach((err) => logger.error(`checkpointer setup error: ${err.message}`));
+  errors.forEach((err) => logger.error(`checkpointer setup error: ${err instanceof Error ? err.message : String(err)}`));
 
   logger.log(`Chatbot checkpointer ready (db: ${CHECKPOINTS_DB_NAME}, ttl: ${THIRTY_DAYS_IN_SECONDS}s)`);
   return checkpointer;

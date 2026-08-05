@@ -45,7 +45,7 @@ export async function rankRestaurantsByRelevance(restaurants: WoltRestaurant[], 
       return rankA - rankB;
     });
   } catch (err) {
-    logger.error(`Failed to rank restaurants: ${err}`);
+    logger.error(`Failed to rank restaurants: ${err instanceof Error ? err.message : String(err)}`);
     return restaurants;
   }
 }

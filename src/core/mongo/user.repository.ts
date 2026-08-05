@@ -20,7 +20,7 @@ export function createUserRepository(dbName: string) {
       await userCollection.insertOne(user);
       return false;
     } catch (err) {
-      logger.error(`saveUserDetails - err: ${err}`);
+      logger.error(`saveUserDetails - err: ${err instanceof Error ? err.message : String(err)}`);
       return false;
     }
   }
@@ -30,7 +30,7 @@ export function createUserRepository(dbName: string) {
       const userCollection = getCollection();
       return userCollection.findOne({ chatId });
     } catch (err) {
-      logger.error(`getUserDetails - err: ${err}`);
+      logger.error(`getUserDetails - err: ${err instanceof Error ? err.message : String(err)}`);
       return null;
     }
   }

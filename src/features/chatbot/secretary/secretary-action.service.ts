@@ -52,7 +52,7 @@ export class SecretaryActionService {
       const ok = toolMessages.length > 0 && !anyFailure;
       return { ok, text: ok ? text : text || 'The action could not be completed.' };
     } catch (err) {
-      this.logger.error(`Action execution failed: ${err}`);
+      this.logger.error(`Action execution failed: ${err instanceof Error ? err.message : String(err)}`);
       return { ok: false, text: `Failed to perform the action: ${err}` };
     }
   }

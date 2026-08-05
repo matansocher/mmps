@@ -13,7 +13,7 @@ async function main() {
     logger.log('slugs');
     logger.log(slugs);
   } catch (err) {
-    logger.error(`Error during insertion: ${err}`);
+    logger.error(`Error during insertion: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

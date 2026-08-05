@@ -46,8 +46,8 @@ export async function generateRainRadarImage(options: RainRadarOptions = {}): Pr
         if (buf.length > 0) {
           radarBuffer = buf;
           latestImage = img;
-          logger.log(`Latest radar image: ${imageUrl}`);
-          logger.log(`Forecast time: ${latestImage.forecast_time}, Modified: ${latestImage.modified}`);
+          logger.debug(`Latest radar image: ${imageUrl}`);
+          logger.debug(`Forecast time: ${latestImage.forecast_time}, Modified: ${latestImage.modified}`);
           break;
         }
       } catch {
@@ -64,7 +64,7 @@ export async function generateRainRadarImage(options: RainRadarOptions = {}): Pr
     const overlay = await createRadarOverlay(radarBuffer, zoom, viewLeft, viewTop, width, height);
 
     // 4. Composite radar on map
-    logger.log('Compositing radar overlay on map...');
+    logger.debug('Compositing radar overlay on map...');
     const compositeImage = await sharp(mapBuffer).composite([overlay]).png().toBuffer();
 
     // 5. Save
@@ -83,7 +83,7 @@ export async function generateRainRadarImage(options: RainRadarOptions = {}): Pr
       imageModified: latestImage.modified,
     };
   } catch (err) {
-    logger.error(`Failed to generate IMS radar image: ${err}`);
+    logger.error(`Failed to generate IMS radar image: ${err instanceof Error ? err.message : String(err)}`);
     throw new Error('IMS radar service is currently unavailable. Please try again later.');
   }
 }

@@ -27,11 +27,11 @@ export async function provideTelegramClient(): Promise<TelegramClient> {
         phoneNumber: null,
         password: null,
         phoneCode: null,
-        onError: (err) => logger.error(`${err}`),
+        onError: (err) => logger.error(`${err instanceof Error ? err.message : String(err)}`),
       });
       await newClient.connect();
     } catch (err) {
-      logger.error(`Failed to connect telegram client: ${err}`);
+      logger.error(`Failed to connect telegram client: ${err instanceof Error ? err.message : String(err)}`);
       // Reset so a later call can retry with a fresh client instead of reusing a broken one.
       try {
         await newClient.disconnect();
@@ -63,7 +63,7 @@ function startHealthCheck(): void {
       await client.getMe();
       logger.log('Health check passed');
     } catch (err) {
-      logger.error(`Health check failed: ${err}`);
+      logger.error(`Health check failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }, HEALTH_CHECK_INTERVAL_MS);
 }

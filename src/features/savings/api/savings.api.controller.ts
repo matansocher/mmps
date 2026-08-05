@@ -56,7 +56,7 @@ export function registerSavingsApiRoutes(app: Express): void {
       const portfolio = (await getSavingsPortfolio()) ?? EMPTY_SAVINGS_PORTFOLIO;
       res.json({ portfolio: toSavingsPortfolioDto(portfolio) });
     } catch (err) {
-      logger.error(`Failed to load savings portfolio: ${err}`);
+      logger.error(`Failed to load savings portfolio: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'portfolio_load_failed' });
     }
   });
@@ -80,7 +80,7 @@ export function registerSavingsApiRoutes(app: Express): void {
 
       res.json({ portfolio: toSavingsPortfolioDto(result.portfolio) });
     } catch (err) {
-      logger.error(`Failed to save savings portfolio: ${err}`);
+      logger.error(`Failed to save savings portfolio: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'portfolio_save_failed' });
     }
   });

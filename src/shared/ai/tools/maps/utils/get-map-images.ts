@@ -41,7 +41,7 @@ export async function getMapImages(placeName: string): Promise<MapImagesResult> 
 
     return { success: true, placeName, placeInfo, mapImageUrl };
   } catch (err) {
-    logger.error(`Error getting map images: ${err}`);
+    logger.error(`Error getting map images: ${err instanceof Error ? err.message : String(err)}`);
     return { success: false, placeName, error: err.message || 'Unknown error occurred' };
   }
 }

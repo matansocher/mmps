@@ -25,7 +25,7 @@ async function main() {
   // await initConsoleOverride();
   const app = express();
   const port = env.PORT || 3000;
-  const logger = new Logger('main.ts');
+  const logger = new Logger('index');
 
   app.use(express.json());
 
@@ -36,7 +36,7 @@ async function main() {
   try {
     await initSavings(app);
   } catch (err) {
-    logger.error(`Failed to init savings app: ${err}`);
+    logger.error(`Failed to init savings app: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   registerSwaggerRoutes(app);
@@ -47,7 +47,7 @@ async function main() {
     try {
       await init();
     } catch (err) {
-      logger.error(`Failed to init bot '${config.id}': ${err}`);
+      logger.error(`Failed to init bot '${config.id}': ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -69,6 +69,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  new Logger('main.ts').error(`Fatal error during startup: ${err}`);
+  new Logger('index').error(`Fatal error during startup: ${err instanceof Error ? err.message : String(err)}`);
   process.exit(1);
 });

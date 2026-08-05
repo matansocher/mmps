@@ -22,6 +22,6 @@ export async function birthdayReminder(bot: Bot): Promise<void> {
       reply_markup: buildBirthdayKeyboard(),
     });
   } catch (err) {
-    logger.error(`Failed to send birthday reminder: ${err}`);
+    logger.error(`Failed to send birthday reminder: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

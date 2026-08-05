@@ -72,7 +72,7 @@ export async function getPlaceDetails(placeName: string): Promise<PlaceDetailsRe
       };
     }
   } catch (err) {
-    logger.error(`Error getting place details: ${err}`);
+    logger.error(`Error getting place details: ${err instanceof Error ? err.message : String(err)}`);
     return {
       success: false,
       error: err.message || 'Unknown error occurred',

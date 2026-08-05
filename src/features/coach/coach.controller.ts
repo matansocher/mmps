@@ -181,7 +181,7 @@ export class CoachController {
 
       await ctx.answerCallbackQuery().catch(() => {});
     } catch (err) {
-      this.logger.error(`Error handling callback query, ${err}`);
+      this.logger.error(`Error handling callback query, ${err instanceof Error ? err.message : String(err)}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true });
     }
   }

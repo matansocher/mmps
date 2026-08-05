@@ -1,7 +1,10 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
+import { Logger } from '@core/utils';
 import { formatEarthquake, getEarthquakesAboveMagnitude, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 import { generateEarthquakeMapImage } from '@services/earthquake-map';
+
+const logger = new Logger('earthquake-tool');
 
 const schema = z.object({
   action: z.enum(['recent', 'magnitude']).describe('Action to perform: "recent" for recent earthquakes, "magnitude" for earthquakes above a threshold'),
@@ -52,7 +55,7 @@ async function runner({ action, limit, minMagnitude, hoursBack }: z.infer<typeof
         place: firstQuake.properties.place,
       });
     } catch (err) {
-      console.error(`Failed to generate earthquake map: ${err}`);
+      logger.error(`Failed to generate earthquake map: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     const formattedQuakes = relevantEarthquakes.map((quake, index) => {

@@ -53,7 +53,7 @@ export async function fetchAthleteDetail(athleteId: number): Promise<AthleteDeta
       imageVersion: athlete.imageVersion,
     };
   } catch (err) {
-    logger.error(`fetchAthleteDetail failed for ${athleteId}: ${err}`);
+    logger.error(`fetchAthleteDetail failed for ${athleteId}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }

@@ -14,7 +14,7 @@ export async function getActiveSubscriptions(chatId: number = null): Promise<Sub
     if (chatId) filter['chatId'] = chatId;
     return subscriptionCollection.find(filter).toArray();
   } catch (err) {
-    logger.error(`getActiveSubscriptions - err: ${err}`);
+    logger.error(`getActiveSubscriptions - err: ${err instanceof Error ? err.message : String(err)}`);
     return [];
   }
 }

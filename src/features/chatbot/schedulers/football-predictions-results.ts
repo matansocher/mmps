@@ -57,6 +57,6 @@ Keep it engaging, honest about mistakes, and celebrate successes!`;
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to send evening football update: ${err}`);
+    logger.error(`Failed to send evening football update: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

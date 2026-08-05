@@ -30,7 +30,7 @@ export async function sendMessage({ name, number, message }: SendMessageOptions)
 
     return { peer: importedUser, id: sent.id };
   } catch (err) {
-    logger.error(`Failed to send telegram-client message: ${err}`);
+    logger.error(`Failed to send telegram-client message: ${err instanceof Error ? err.message : String(err)}`);
     return;
   }
 }

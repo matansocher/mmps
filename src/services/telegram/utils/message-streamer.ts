@@ -95,7 +95,7 @@ export class MessageStreamer {
         }
         return;
       }
-      this.logger.error(`Failed to send draft: ${err}`);
+      this.logger.error(`Failed to send draft: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 }

@@ -42,12 +42,12 @@ async function sendToUser(bot: Bot, chatId: number): Promise<'sent' | 'blocked' 
           await bot.api.sendMessage(chatId, MESSAGE);
           return 'sent';
         } catch (retryErr) {
-          logger.error(`${sendToUser.name} - retry failed for ${chatId} - ${retryErr}`);
+          logger.error(`Retry failed for chatId ${chatId}: ${retryErr instanceof Error ? retryErr.message : String(retryErr)}`);
           return 'failed';
         }
       }
     }
-    logger.error(`${sendToUser.name} - failed for ${chatId} - ${err}`);
+    logger.error(`Failed to send broadcast to chatId ${chatId}: ${err instanceof Error ? err.message : String(err)}`);
     return 'failed';
   }
 }
@@ -82,4 +82,4 @@ async function main(): Promise<void> {
   logger.log(`Done. sent=${tally.sent} blocked=${tally.blocked} failed=${tally.failed}`);
 }
 
-main().catch((err) => logger.error(`${err}`));
+main().catch((err) => logger.error(`${err instanceof Error ? err.message : String(err)}`));

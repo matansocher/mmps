@@ -22,6 +22,6 @@ export async function weeklyExerciseSummary(bot: Bot, chatbotService: ChatbotSer
       await bot.api.sendMessage(MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to send weekly exercise summary: ${err}`);
+    logger.error(`Failed to send weekly exercise summary: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

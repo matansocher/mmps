@@ -30,6 +30,6 @@ export async function exerciseReminder(bot: Bot, chatbotService: ChatbotService)
   try {
     await sendExerciseReminder(bot, chatbotService);
   } catch (err) {
-    logger.error(`Failed to send exercise reminder: ${err}`);
+    logger.error(`Failed to send exercise reminder: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

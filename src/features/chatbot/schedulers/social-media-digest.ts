@@ -46,7 +46,7 @@ async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost
     try {
       sections.push(await buildUserSection(userPosts));
     } catch (err) {
-      logger.error(`Failed to build digest section for ${userPosts[0].platform}/@${userPosts[0].username}: ${err.message}`);
+      logger.error(`Failed to build digest section for ${userPosts[0].platform}/@${userPosts[0].username}: ${err instanceof Error ? err.message : String(err)}`);
       sections.push(buildListingSection(userPosts, MAX_FALLBACK_POSTS));
     }
   }
@@ -56,7 +56,7 @@ async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost
     await sendShortenedMessage(bot, chatId, message, { parse_mode: 'Markdown' }).catch(() => sendShortenedMessage(bot, chatId, message.replace(/[*_`[\]]/g, '')));
     await deletePendingPosts(posts.map((post) => post._id).filter(Boolean) as ObjectId[]);
   } catch (err) {
-    logger.error(`Failed to send digest to chat ${chatId}, keeping posts for next digest: ${err.message}`);
+    logger.error(`Failed to send digest to chat ${chatId}, keeping posts for next digest: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -129,7 +129,7 @@ async function shortenPosts(texts: (string | null)[]): Promise<string[]> {
     const shortenedByIndex = new Map(indexesToShorten.map((originalIndex, k) => [originalIndex, result.shortened[k]]));
     return texts.map((text, i) => shortenedByIndex.get(i) ?? text ?? '');
   } catch (err) {
-    logger.error(`Failed to shorten Telegram posts, falling back to truncation: ${err.message}`);
+    logger.error(`Failed to shorten Telegram posts, falling back to truncation: ${err instanceof Error ? err.message : String(err)}`);
     return texts.map((text) => (isLongPost(text) ? `${text.slice(0, LONG_POST_THRESHOLD)}…` : (text ?? '')));
   }
 }

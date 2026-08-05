@@ -35,6 +35,6 @@ export async function secretaryDailyDigest(bot: Bot, messageService: SecretaryMe
     const deleted = await messageService.clearMessagesBefore(cutoff);
     logger.log(`Sent ${summaries.length} daily summaries, cleared ${deleted} messages.`);
   } catch (err) {
-    logger.error(`Failed to send daily summaries: ${err}`);
+    logger.error(`Failed to send daily summaries: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

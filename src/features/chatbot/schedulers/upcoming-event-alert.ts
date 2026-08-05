@@ -46,10 +46,10 @@ export async function upcomingEventAlert(bot: Bot): Promise<void> {
       try {
         await bot.api.sendMessage(MY_USER_ID, buildMessage(event), { parse_mode: 'Markdown' });
       } catch (err) {
-        logger.error(`Failed to send alert for event ${event.id}: ${err.message}`);
+        logger.error(`Failed to send alert for event ${event.id}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   } catch (err) {
-    logger.error(`Failed to check upcoming events: ${err}`);
+    logger.error(`Failed to check upcoming events: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

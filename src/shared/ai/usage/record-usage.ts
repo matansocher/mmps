@@ -34,5 +34,5 @@ export function recordModelUsage({ source, chatId, handler, durationMs }: Record
     durationMs,
     llmCalls: usage.llmCalls,
     toolCalls: usage.toolCalls,
-  }).catch((err) => logger.error(`Failed to persist usage record (source=${source}): ${err}`));
+  }).catch((err) => logger.error(`Failed to persist usage record (source=${source}): ${err instanceof Error ? err.message : String(err)}`));
 }

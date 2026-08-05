@@ -89,6 +89,6 @@ export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): 
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to add important games to calendar: ${err}`);
+    logger.error(`Failed to add important games to calendar: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

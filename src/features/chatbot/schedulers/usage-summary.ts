@@ -30,7 +30,7 @@ export async function usageSummary(bot: Bot): Promise<void> {
     const message = buildUsageSummaryMessage(rows, thisWeekRows, weekStartDay, from, to);
     await sendShortenedMessage(bot, MY_USER_ID, message, { parse_mode: 'Markdown' });
   } catch (err) {
-    logger.error(`Failed to send weekly usage summary: ${err}`);
+    logger.error(`Failed to send weekly usage summary: ${err instanceof Error ? err.message : String(err)}`);
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create the weekly usage summary.').catch(() => {});
   }
 }

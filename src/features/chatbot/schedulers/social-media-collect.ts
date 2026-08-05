@@ -50,7 +50,7 @@ async function collectSubscription(subscription: SocialSubscription): Promise<vo
       logger.log(`Collected ${newPosts.length} new posts from ${platform}/@${username}`);
     }
   } catch (err) {
-    logger.error(`Failed to check ${platform}/@${username}: ${err.message}`);
+    logger.error(`Failed to check ${platform}/@${username}: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

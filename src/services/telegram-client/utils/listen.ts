@@ -67,7 +67,7 @@ function extractMessageData(event: NewMessageEvent): TelegramMessage {
 
 export async function getConversationDetails(telegramClient: TelegramClient, entityId: EntityLike): Promise<ConversationDetails | null> {
   const entity = await telegramClient.getEntity(entityId).catch((err) => {
-    logger.error(`Failed to get conversation details for entity ${entityId}: ${err}`);
+    logger.error(`Failed to get conversation details for entity ${entityId}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   });
   return {
@@ -83,7 +83,7 @@ export async function getConversationDetails(telegramClient: TelegramClient, ent
 
 async function getSenderDetails(telegramClient: TelegramClient, userId: string): Promise<SenderDetails | null> {
   const user = await telegramClient.getEntity(userId).catch((err) => {
-    logger.error(`Failed to get sender details for user ${userId}: ${err}`);
+    logger.error(`Failed to get sender details for user ${userId}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   });
   if (!user) return null;
@@ -104,7 +104,7 @@ export async function listen({ conversationsIds = [], includeOutgoing = false }:
     await telegramClient.getDialogs({});
     logger.log('Loaded dialogs into entity cache');
   } catch (err) {
-    logger.error(`Failed to start telegram client listener: ${err}`);
+    logger.error(`Failed to start telegram client listener: ${err instanceof Error ? err.message : String(err)}`);
     return;
   }
 
@@ -112,7 +112,7 @@ export async function listen({ conversationsIds = [], includeOutgoing = false }:
     async (event: NewMessageEvent) => {
       try {
         const messageData = extractMessageData(event);
-        logger.log(`[monitor] event received: channelId=${messageData?.channelId} userId=${messageData?.userId} isVoice=${messageData?.isVoice} hasText=${!!messageData?.text}`);
+        logger.debug(`Event received: channelId=${messageData?.channelId} userId=${messageData?.userId} isVoice=${messageData?.isVoice} hasText=${!!messageData?.text}`);
         if (!messageData?.text && !messageData?.isVoice) {
           return;
         }
@@ -120,7 +120,7 @@ export async function listen({ conversationsIds = [], includeOutgoing = false }:
         const channelId = messageData.channelId;
         const userId = messageData.userId;
         if (conversationsIds.length && !conversationsIds.includes(channelId) && !conversationsIds.includes(userId)) {
-          logger.log(`[monitor] filtered out channelId=${channelId} userId=${userId} (not in conversationsIds)`);
+          logger.debug(`Filtered out message: channelId=${channelId} userId=${userId} (not in conversationsIds)`);
           return;
         }
 
@@ -152,7 +152,7 @@ export async function listen({ conversationsIds = [], includeOutgoing = false }:
         const senderDetails = userId ? await getSenderDetails(telegramClient, userId) : null;
         await callback(messageData, channelDetails, senderDetails);
       } catch (err) {
-        logger.error(`Error handling telegram event: ${err}`);
+        logger.error(`Error handling telegram event: ${err instanceof Error ? err.message : String(err)}`);
       }
     },
     new NewMessage(includeOutgoing ? {} : { incoming: true }),

@@ -10,14 +10,14 @@ export async function getCurrentWeather(location: string): Promise<CurrentWeathe
 
   if (imsLocationId) {
     try {
-      logger.log(`Using IMS for ${location} (ID: ${imsLocationId})`);
+      logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getCurrentWeather(imsLocationId);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
     }
   }
 
-  logger.log(`Using WeatherAPI for ${location}`);
+  logger.debug(`Using WeatherAPI for ${location}`);
   return weatherApi.getCurrentWeather(location);
 }
 
@@ -26,19 +26,19 @@ export async function getHourlyForecast(location: string, daysAhead: number = 0)
 
   if (imsLocationId) {
     if (daysAhead > 4) {
-      logger.log(`IMS only supports 5-day forecast, using WeatherAPI for ${location} (${daysAhead} days ahead)`);
+      logger.debug(`IMS only supports 5-day forecast, using WeatherAPI for ${location} (${daysAhead} days ahead)`);
       return await weatherApi.getHourlyForecast(location, daysAhead);
     }
 
     try {
-      logger.log(`Using IMS for ${location} (ID: ${imsLocationId})`);
+      logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getHourlyForecast(imsLocationId, daysAhead);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
     }
   }
 
-  logger.log(`Using WeatherAPI for ${location}`);
+  logger.debug(`Using WeatherAPI for ${location}`);
   return await weatherApi.getHourlyForecast(location, daysAhead);
 }
 
@@ -55,14 +55,14 @@ export async function getSpecificHourWeather(location: string, hour: number): Pr
 
   if (imsLocationId) {
     try {
-      logger.log(`Using IMS for ${location} (ID: ${imsLocationId})`);
+      logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getSpecificHourWeather(imsLocationId, hour);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
     }
   }
 
-  logger.log(`Using WeatherAPI for ${location}`);
+  logger.debug(`Using WeatherAPI for ${location}`);
   return await weatherApi.getSpecificHourWeather(location, hour);
 }
 
@@ -75,18 +75,18 @@ export async function getForecastWeather(location: string, date: string): Promis
     const diffDays = Math.ceil((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDays > 4) {
-      logger.log(`IMS only supports 5-day forecast, using WeatherAPI for ${location} (${date})`);
+      logger.debug(`IMS only supports 5-day forecast, using WeatherAPI for ${location} (${date})`);
       return await weatherApi.getForecastWeather(location, date);
     }
 
     try {
-      logger.log(`Using IMS for ${location} (ID: ${imsLocationId})`);
+      logger.debug(`Using IMS for ${location} (ID: ${imsLocationId})`);
       return await imsApi.getForecastWeather(imsLocationId, date);
     } catch (err) {
-      logger.warn(`IMS failed for ${location}: ${err}, falling back to WeatherAPI`);
+      logger.warn(`IMS failed for ${location}: ${err instanceof Error ? err.message : String(err)}, falling back to WeatherAPI`);
     }
   }
 
-  logger.log(`Using WeatherAPI for ${location}`);
+  logger.debug(`Using WeatherAPI for ${location}`);
   return await weatherApi.getForecastWeather(location, date);
 }

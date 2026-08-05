@@ -122,7 +122,7 @@ export function registerCoachApiRoutes(app: Express, deps: CoachApiDeps): void {
       notify(botConfig, { action: 'FOLLOW_LEAGUE', competitionId: id, follow: body.follow, source: 'mini_app' }, userDetails);
       res.json({ following: isFollowing(id, next) });
     } catch (err) {
-      logger.error(`follow toggle failed for chatId=${chatId} id=${id}: ${err}`);
+      logger.error(`follow toggle failed for chatId=${chatId} id=${id}: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'update_failed' });
     }
   });

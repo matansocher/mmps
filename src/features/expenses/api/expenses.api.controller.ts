@@ -409,7 +409,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       const rows = await searchExpenses(q, 50);
       res.json({ expenses: rows.map(toExpenseDto) });
     } catch (err) {
-      logger.error(`search failed: ${err}`);
+      logger.error(`search failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'search_failed' });
     }
   });
@@ -435,7 +435,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       }));
       res.json({ subscriptions: dto });
     } catch (err) {
-      logger.error(`subscriptions failed: ${err}`);
+      logger.error(`subscriptions failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'subscriptions_failed' });
     }
   });
@@ -507,7 +507,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         anomalyExpenseIds,
       });
     } catch (err) {
-      logger.error(`expenses month failed: ${err}`);
+      logger.error(`expenses month failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'expenses_failed' });
     }
   });
@@ -531,7 +531,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       }
       res.json(buildCategoryDetail(category, scoped, scopeMonth, allCategoryExpenses));
     } catch (err) {
-      logger.error(`expenses category failed: ${err}`);
+      logger.error(`expenses category failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'category_failed' });
     }
   });
@@ -547,7 +547,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       const expenses = await getAllExpensesByEffectiveVendor(name);
       res.json(buildVendorDetail(name, expenses));
     } catch (err) {
-      logger.error(`expenses vendor failed: ${err}`);
+      logger.error(`expenses vendor failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'vendor_failed' });
     }
   });
@@ -585,7 +585,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       res.json({ modifiedCount, vendor: buildVendorDetail(refreshedName, expenses) });
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.API_VENDOR_UPDATE, vendor: name, userVendor: body.userVendor, userCategory: body.userCategory, modifiedCount }, toUserDetails(req));
     } catch (err) {
-      logger.error(`expenses vendor bulk-update failed: ${err}`);
+      logger.error(`expenses vendor bulk-update failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'bulk_update_failed' });
     }
   });
@@ -637,7 +637,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         toUserDetails(req),
       );
     } catch (err) {
-      logger.error(`expense update failed: ${err}`);
+      logger.error(`expense update failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'update_failed' });
     }
   });
@@ -694,7 +694,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         toUserDetails(req),
       );
     } catch (err) {
-      logger.error(`manual expense create failed: ${err}`);
+      logger.error(`manual expense create failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'create_failed' });
     }
   });
@@ -704,7 +704,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       const cards = await getDistinctCards();
       res.json({ cards });
     } catch (err) {
-      logger.error(`list cards failed: ${err}`);
+      logger.error(`list cards failed: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'list_failed' });
     }
   });

@@ -30,7 +30,8 @@ import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 const logger = new Logger('ChatbotScheduler');
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
-  cron.schedule(expression, () => handler().catch((err) => logger.error(`Scheduled task failed: ${err}`)), { timezone });
+  const onError = (err: unknown) => logger.error(`Scheduled task failed: ${err instanceof Error ? err.message : String(err)}`);
+  cron.schedule(expression, () => handler().catch(onError), { timezone });
 }
 
 export class ChatbotSchedulerService {

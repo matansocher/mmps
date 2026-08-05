@@ -115,7 +115,7 @@ export async function fetchTeamRecentMatches(teamId: number): Promise<TeamRecent
       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
       .slice(0, RECENT_MATCH_LIMIT);
   } catch (err) {
-    logger.error(`fetchTeamRecentMatches failed for ${teamId}: ${err}`);
+    logger.error(`fetchTeamRecentMatches failed for ${teamId}: ${err instanceof Error ? err.message : String(err)}`);
     return [];
   }
 }
@@ -150,7 +150,7 @@ export async function fetchTeamDetail(teamId: number): Promise<TeamDetailRespons
       squad,
     };
   } catch (err) {
-    logger.error(`fetchTeamDetail failed for ${teamId}: ${err}`);
+    logger.error(`fetchTeamDetail failed for ${teamId}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }

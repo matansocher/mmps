@@ -35,7 +35,7 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
       try {
         await this.options.onToolStart(toolName, input, metadata);
       } catch (err) {
-        this.logger.error(`Error in onToolStart callback for ${toolName}: ${err}`);
+        this.logger.error(`Error in onToolStart callback for ${toolName}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   }
@@ -55,7 +55,7 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
       try {
         await this.options.onToolEnd(toolName || 'unknown', output, { duration });
       } catch (err) {
-        this.logger.error(`Error in onToolEnd callback for ${toolName}: ${err}`);
+        this.logger.error(`Error in onToolEnd callback for ${toolName}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   }
@@ -75,7 +75,7 @@ export class ToolCallbackHandler extends BaseCallbackHandler {
       try {
         await this.options.onToolError(toolName || 'unknown', error, { duration });
       } catch (err) {
-        this.logger.error(`Error in onToolError callback for ${toolName}: ${err}`);
+        this.logger.error(`Error in onToolError callback for ${toolName}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   }

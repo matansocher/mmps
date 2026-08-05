@@ -111,7 +111,7 @@ export async function fetchRichMatch(matchId: number): Promise<RichMatchData | n
       awayLineup: buildLineup(game.awayCompetitor, memberIndex),
     };
   } catch (err) {
-    logger.error(`fetchRichMatch failed: ${err}`);
+    logger.error(`fetchRichMatch failed: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }

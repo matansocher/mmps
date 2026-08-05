@@ -97,6 +97,6 @@ Important: Do NOT include any internal thoughts, reasoning about your process, o
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to send football update: ${err}`);
+    logger.error(`Failed to send football update: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

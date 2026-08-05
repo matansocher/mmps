@@ -26,7 +26,7 @@ export async function executeTool<T>(tool: Tool, content: string): Promise<T> {
 
     throw new Error('No tool output found in the response');
   } catch (err) {
-    logger.error(`Error executing tool ${tool.name}: ${err}`);
+    logger.error(`Error executing tool ${tool.name}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }

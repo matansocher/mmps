@@ -63,7 +63,7 @@ export async function earthquakeMonitor(bot: Bot): Promise<void> {
 
         seenEarthquakeIds.add(quake.id);
       } catch (err) {
-        logger.error(`Failed to send alert for earthquake ${quake.id}: ${err.message}`);
+        logger.error(`Failed to send alert for earthquake ${quake.id}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
@@ -77,7 +77,7 @@ export async function earthquakeMonitor(bot: Bot): Promise<void> {
 
     logger.log(`Successfully processed ${newEarthquakes.length} new earthquake(s)`);
   } catch (err) {
-    logger.error(`Failed to check earthquakes: ${err.message}`);
+    logger.error(`Failed to check earthquakes: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

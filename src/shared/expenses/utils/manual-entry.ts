@@ -88,7 +88,7 @@ export async function categorizeVendor(input: {
     const llm = await categorize(input);
     return { category: llm.category, type: llm.type };
   } catch (err) {
-    logger.warn(`categorizeVendor failed for "${input.vendor}", defaulting to other/card_alert: ${err}`);
+    logger.warn(`categorizeVendor failed for "${input.vendor}", defaulting to other/card_alert: ${err instanceof Error ? err.message : String(err)}`);
     return { category: 'other', type: 'card_alert' };
   }
 }
@@ -105,7 +105,7 @@ export async function createManualExpense(input: ManualExpenseInput): Promise<Ex
     try {
       llm = await categorize(input);
     } catch (err) {
-      logger.warn(`Categorize failed, defaulting to "other"/"receipt": ${err}`);
+      logger.warn(`Categorize failed, defaulting to "other"/"receipt": ${err instanceof Error ? err.message : String(err)}`);
       llm = { category: 'other', type: 'receipt', vendor: input.vendor.trim() };
     }
   }

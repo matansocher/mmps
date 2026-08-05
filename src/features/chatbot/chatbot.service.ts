@@ -75,7 +75,7 @@ export class ChatbotService {
       const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)]);
       return { response: agentResponse, structured: structured as z.infer<T> };
     } catch (err) {
-      this.logger.error(`Error processing message for user ${chatId}: ${err}`);
+      this.logger.error(`Error processing message for user ${chatId}: ${err instanceof Error ? err.message : String(err)}`);
       if (responseSchema) {
         throw err;
       }

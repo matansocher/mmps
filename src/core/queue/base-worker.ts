@@ -29,7 +29,7 @@ export function createWorker<T extends BaseJobData>(config: WorkerConfig<T>): Wo
   });
 
   worker.on('failed', (job, err) => {
-    logger.error(`Job ${job?.id} failed: ${err.message}`);
+    logger.error(`Job ${job?.id} failed: ${err instanceof Error ? err.message : String(err)}`);
     if (config.onFailed) {
       config.onFailed(job, err);
     }

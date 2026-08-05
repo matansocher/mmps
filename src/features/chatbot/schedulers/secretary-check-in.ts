@@ -15,6 +15,6 @@ export async function secretaryCheckIn(bot: Bot, messageService: SecretaryMessag
     const keyboard = buildInlineKeyboard([{ text: 'Send ✅', data: CHECK_IN_SEND_CALLBACK, style: 'success' }]);
     await bot.api.sendMessage(MY_USER_ID, `Send this to her?\n\n"${CHECK_IN_MESSAGE}"`, { reply_markup: keyboard });
   } catch (err) {
-    logger.error(`Failed to send check-in prompt: ${err}`);
+    logger.error(`Failed to send check-in prompt: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

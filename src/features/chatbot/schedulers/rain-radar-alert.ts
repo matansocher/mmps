@@ -22,7 +22,7 @@ export async function rainRadarAlert(bot: Bot): Promise<void> {
     logger.log(`Rain chance in Kfar Saba: ${weather.chanceOfRain}% — generating radar image`);
 
     const radarResult = await generateRainRadarImage().catch((err) => {
-      logger.error(`Failed to generate radar image: ${err}`);
+      logger.error(`Failed to generate radar image: ${err instanceof Error ? err.message : String(err)}`);
       return undefined;
     });
 
@@ -38,6 +38,6 @@ export async function rainRadarAlert(bot: Bot): Promise<void> {
       logger.log('Sent rain radar alert (text only)');
     }
   } catch (err) {
-    logger.error(`Failed to check rain radar: ${err}`);
+    logger.error(`Failed to check rain radar: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

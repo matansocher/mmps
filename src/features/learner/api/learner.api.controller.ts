@@ -57,7 +57,7 @@ export function registerLearnerApiRoutes(app: Express, deps: LearnerApiDeps): vo
       const courses = await getProgress(req.learnerUser!.chatId);
       res.json({ courses });
     } catch (err) {
-      logger.error(`Failed to load progress: ${err}`);
+      logger.error(`Failed to load progress: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'load_failed' });
     }
   });
@@ -73,7 +73,7 @@ export function registerLearnerApiRoutes(app: Express, deps: LearnerApiDeps): vo
       await saveCourseProgress(req.learnerUser!.chatId, courseId, lessonIds as string[]);
       res.status(204).end();
     } catch (err) {
-      logger.error(`Failed to save progress: ${err}`);
+      logger.error(`Failed to save progress: ${err instanceof Error ? err.message : String(err)}`);
       res.status(500).json({ error: 'save_failed' });
     }
   });

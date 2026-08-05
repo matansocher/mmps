@@ -48,7 +48,7 @@ async function main() {
     // logger.log('areasCount');
     // logger.log(areasCount);
   } catch (err) {
-    logger.error(`Error during insertion: ${err}`);
+    logger.error(`Error during insertion: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     await client.close();
     logger.log('Disconnected from MongoDB.');

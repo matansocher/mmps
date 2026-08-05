@@ -32,6 +32,6 @@ export async function makavdiaUpdate(bot: Bot, chatbotService: ChatbotService): 
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to send makavdia update: ${err}`);
+    logger.error(`Failed to send makavdia update: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

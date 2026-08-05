@@ -96,7 +96,7 @@ export class SecretaryMessageService {
       const summary = `🗒️ Daily summary — ${otherName} (${dateStr})\n\n${body}`;
       return { summary, actions: (result.actions ?? []) as SecretarySummaryAction[] };
     } catch (err) {
-      this.logger.error(`Failed to summarize chat ${messages[0]?.chatId}: ${err}`);
+      this.logger.error(`Failed to summarize chat ${messages[0]?.chatId}: ${err instanceof Error ? err.message : String(err)}`);
       return null;
     }
   }

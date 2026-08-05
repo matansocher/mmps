@@ -84,12 +84,12 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
     }
 
     if (failedAreas.length) {
-      logger.warn(`${getRestaurantsList.name} - could not fetch restaurants for areas: ${failedAreas.join(', ')}`);
+      logger.warn(`Could not fetch restaurants for areas: ${failedAreas.join(', ')}`);
     }
 
     return restaurants;
   } catch (err) {
-    logger.error(`${getRestaurantsList.name} - err - ${err}`);
+    logger.error(`Failed to fetch restaurants list: ${err instanceof Error ? err.message : String(err)}`);
     return [];
   }
 }
@@ -109,7 +109,7 @@ async function getCitiesList(): Promise<WoltCity[]> {
         return { areaSlug: slug, lon: location.coordinates[0], lat: location.coordinates[1] };
       });
   } catch (err) {
-    logger.error(`${getCitiesList.name} - err - ${err}`);
+    logger.error(`Failed to fetch cities list: ${err instanceof Error ? err.message : String(err)}`);
     return [];
   }
 }

@@ -12,7 +12,7 @@ export async function fetchBuffer(url: string, headers: Record<string, string> =
     });
     return Buffer.from(response.data);
   } catch (err) {
-    logger.warn(`Failed to fetch tile: ${url}, error - ${err}`);
+    logger.warn(`Failed to fetch tile ${url}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }
