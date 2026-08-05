@@ -4,7 +4,7 @@ import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/te
 
 const logger = new Logger('notifier');
 
-const NOTIFIER_CHAT_ID = 862305226;
+const NOTIFIER_CHAT_ID = MY_USER_ID;
 const botConfig = {
   id: 'NOTIFIER',
   name: 'Notifier Bot 🦔',

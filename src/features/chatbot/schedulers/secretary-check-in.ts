@@ -1,5 +1,5 @@
 import type { Bot } from 'grammy';
-import { MY_USER_ID, TOODIE_USER_ID } from '@core/config';
+import { MY_USER_ID, WIFE_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { buildInlineKeyboard } from '@services/telegram';
 import { CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, type SecretaryMessageService } from '../secretary';
@@ -8,7 +8,7 @@ const logger = new Logger('SecretaryCheckIn');
 
 export async function secretaryCheckIn(bot: Bot, messageService: SecretaryMessageService): Promise<void> {
   try {
-    if (await messageService.hasSpokenWithChatToday(TOODIE_USER_ID)) {
+    if (await messageService.hasSpokenWithChatToday(WIFE_USER_ID)) {
       logger.log('Skipping check-in prompt: already spoke today.');
       return;
     }
