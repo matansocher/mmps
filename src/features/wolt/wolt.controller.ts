@@ -95,7 +95,7 @@ export class WoltController {
       // user knows the bot is working rather than assuming it errored.
       const loader = new MessageLoader(this.bot, chatId, messageId, {
         reactionEmoji: '👀',
-        loaderMessage: 'רגע, מחפש את המסעדות הכי טובות בשבילך 🍔',
+        loaderMessage: 'מחפש את המסעדות הכי טובות בשבילך 🍔',
         loadingAction: 'typing',
       });
       // MessageLoader swallows errors thrown inside the action, so capture and re-throw to keep the existing
