@@ -6,7 +6,7 @@ const mockRestaurants = [
   { name: 'Pizza Palace', area: 'haifa' },
   { name: 'Sushi Place', area: 'jerusalem' },
   { name: 'burger king', area: 'petah-tikva' },
-  { name: 'Burger Joint', area: 'netanya' },
+  { name: 'Burger Joint', area: 'hasharon' },
 ] as WoltRestaurant[];
 
 describe('getRestaurantsByName()', () => {
@@ -38,7 +38,7 @@ describe('getRestaurantsByName()', () => {
   it('sorts results by area based on CITIES_SLUGS_SUPPORTED order', () => {
     const result = getRestaurantsByName(mockRestaurants, 'burger');
     const areas = result.map((r) => r.area);
-    const expectedOrder = ['tel-aviv', 'petah-tikva', 'netanya'];
+    const expectedOrder = ['tel-aviv', 'petah-tikva', 'hasharon'];
     expect(areas).toEqual(expectedOrder);
   });
 
