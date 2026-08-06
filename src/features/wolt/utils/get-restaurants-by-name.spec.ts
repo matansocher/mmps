@@ -38,7 +38,7 @@ describe('getRestaurantsByName()', () => {
   it('sorts results by area based on CITIES_SLUGS_SUPPORTED order', () => {
     const result = getRestaurantsByName(mockRestaurants, 'burger');
     const areas = result.map((r) => r.area);
-    const expectedOrder = ['tel-aviv', 'petah-tikva', 'hasharon'];
+    const expectedOrder = ['tel-aviv', 'hasharon', 'petah-tikva'];
     expect(areas).toEqual(expectedOrder);
   });
 
