@@ -6,7 +6,7 @@ import { getVideosFromRSS } from '@services/youtube';
 import { createPendingPosts, getSubscriptionsGroupedByChatId, updateLastSeen } from '@shared/social-follower';
 import type { SocialPlatform, SocialSubscription, UpdateLastSeenData } from '@shared/social-follower';
 
-const logger = new Logger('SocialMediaCollectScheduler');
+const logger = new Logger('chatbot:scheduler:social-media-collect');
 
 const SLEEP_BETWEEN_USERS_MS = 5000; // be gentle with anonymous scraping endpoints
 

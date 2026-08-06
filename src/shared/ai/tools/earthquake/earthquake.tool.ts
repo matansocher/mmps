@@ -4,7 +4,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { formatEarthquake, getEarthquakesAboveMagnitude, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 import { generateEarthquakeMapImage } from '@services/earthquake-map';
 
-const logger = new Logger('earthquake-tool');
+const logger = new Logger('ai:tool:earthquake');
 
 const schema = z.object({
   action: z.enum(['recent', 'magnitude']).describe('Action to perform: "recent" for recent earthquakes, "magnitude" for earthquakes above a threshold'),

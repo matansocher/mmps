@@ -11,7 +11,7 @@ export type ToolCallbackOptions = {
 
 export class ToolCallbackHandler extends BaseCallbackHandler {
   name = 'ToolCallbackHandler';
-  private readonly logger = new Logger(ToolCallbackHandler.name);
+  private readonly logger = new Logger('ai:tool-callback');
   private readonly options: ToolCallbackOptions;
   private toolStartTimes: Map<string, number> = new Map();
 

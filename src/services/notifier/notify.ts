@@ -37,8 +37,8 @@ export function notify(bot: TelegramBotConfig, options: NotifyOptions, userDetai
   try {
     const notyMessageText = getNotyMessageText(bot.name, options, userDetails);
     const botInstance = provideTelegramBot(botConfig);
-    void botInstance.api.sendMessage(NOTIFIER_CHAT_ID, notyMessageText).catch((err) => logger.error(`Failed to send notification: ${getErrorMessage(err)}`));
+    void botInstance.api.sendMessage(NOTIFIER_CHAT_ID, notyMessageText).catch((err) => logger.error(`Failed to send notification for ${bot.id} (${options.action}): ${getErrorMessage(err)}`));
   } catch (err) {
-    logger.error(`Failed to build notification: ${getErrorMessage(err)}`);
+    logger.error(`Failed to build notification for ${bot.id} (${options.action}): ${getErrorMessage(err)}`);
   }
 }

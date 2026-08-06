@@ -5,7 +5,7 @@ import { argv, cwd, env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
 import { BOT_CONFIG } from '../wolt.config';
 
-const logger = new Logger('wolt-broadcast');
+const logger = new Logger('wolt:script:broadcast');
 
 // Paste the affected chat ids here, e.g. [123456789, 987654321].
 const CHAT_IDS: number[] = [5660723464, 253901676, 5205717975, 7404564565, 1809195019, 2012077456, 186702734, 5833146559, 597884902, 398475771, 1198554451];

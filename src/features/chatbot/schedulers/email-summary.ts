@@ -4,7 +4,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
-const logger = new Logger('EmailSummaryScheduler');
+const logger = new Logger('chatbot:scheduler:email-summary');
 
 export async function emailSummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {

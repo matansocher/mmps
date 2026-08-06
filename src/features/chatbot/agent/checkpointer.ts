@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb';
 import { env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
 
-const logger = new Logger('chatbot-checkpointer');
+const logger = new Logger('chatbot:checkpointer');
 
 const CHECKPOINTS_DB_NAME = 'Chatbot';
 const THIRTY_DAYS_IN_SECONDS = 30 * 24 * 60 * 60;

@@ -6,7 +6,7 @@ import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
-const logger = new Logger('MakavdiaUpdateScheduler');
+const logger = new Logger('chatbot:scheduler:makavdia-update');
 
 const makavdiaResponseSchema = z.object({
   hasGame: z.boolean().describe('Whether Deni Avdija had a game today'),

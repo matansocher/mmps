@@ -7,7 +7,7 @@ import { DEFAULT_VIEW, IMS_RADAR_CONFIG } from './constants';
 import { createRadarOverlay, fetchMapTiles } from './map-utils';
 import type { GeneratedRadarImage, ImsRadarResponse, RainRadarOptions } from './types';
 
-const logger = new Logger('RainRadarService');
+const logger = new Logger('rain-radar');
 
 export async function generateRainRadarImage(options: RainRadarOptions = {}): Promise<GeneratedRadarImage> {
   const { zoom = DEFAULT_VIEW.zoom, width = DEFAULT_VIEW.width, height = DEFAULT_VIEW.height } = options;

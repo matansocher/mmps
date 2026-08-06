@@ -3,7 +3,7 @@ import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { CalendarEvent, listEvents } from '@services/google-calendar';
 
-const logger = new Logger('UpcomingEventAlertScheduler');
+const logger = new Logger('chatbot:scheduler:upcoming-event-alert');
 
 export const LEAD_MINUTES = 15;
 export const WINDOW_MINUTES = 15;

@@ -12,7 +12,7 @@ export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANAL
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
 export class WoltSchedulerService {
-  private readonly logger = new Logger(WoltSchedulerService.name);
+  private readonly logger = new Logger('wolt:scheduler');
   private timeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   constructor(private readonly bot: Bot) {}

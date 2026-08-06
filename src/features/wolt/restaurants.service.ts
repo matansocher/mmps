@@ -9,7 +9,7 @@ let restaurantsList: RestaurantsList = {
 };
 
 export class RestaurantsService {
-  private readonly logger = new Logger(RestaurantsService.name);
+  private readonly logger = new Logger('wolt:restaurants');
 
   async getRestaurants(): Promise<WoltRestaurant[]> {
     const { lastUpdated } = restaurantsList;

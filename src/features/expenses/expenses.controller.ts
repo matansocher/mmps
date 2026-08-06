@@ -8,7 +8,7 @@ import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, MAX_FILE_SIZE_BYTES, XLSX_EXT_RE } fr
 import { fetchDocumentBuffer, formatFileSummary } from './utils';
 
 export class ExpensesController {
-  private readonly logger = new Logger(ExpensesController.name);
+  private readonly logger = new Logger('expenses:controller');
 
   constructor(private readonly bot: Bot) {}
 

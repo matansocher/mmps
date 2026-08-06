@@ -5,7 +5,7 @@ import { getTodayExercise } from '@shared/trainer';
 import type { ChatbotService } from '../chatbot.service';
 import { buildExerciseKeyboard } from './exercise-actions';
 
-const logger = new Logger('ExerciseReminderScheduler');
+const logger = new Logger('chatbot:scheduler:exercise-reminder');
 
 export async function sendExerciseReminder(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   const todayExercise = await getTodayExercise(MY_USER_ID);

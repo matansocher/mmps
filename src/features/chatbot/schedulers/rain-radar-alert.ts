@@ -6,7 +6,7 @@ import { getCurrentWeather } from '@services/ims';
 import { generateRainRadarImage } from '@services/rain-radar';
 import { sendShortenedMessage } from '@services/telegram';
 
-const logger = new Logger('RainRadarAlertScheduler');
+const logger = new Logger('chatbot:scheduler:rain-radar-alert');
 
 const KFAR_SABA_LOCATION_ID = 16;
 const RAIN_CHANCE_THRESHOLD = 20;

@@ -3,7 +3,7 @@ import { Logger } from '@core/utils';
 import type { UserDetails } from '../types';
 import { getMessageData } from './get-message-data';
 
-const logger = new Logger('applyAllowlist');
+const logger = new Logger('telegram:allowlist');
 
 export type AllowlistOptions = {
   readonly denyMessage?: string;

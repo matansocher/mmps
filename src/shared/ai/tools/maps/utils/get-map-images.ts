@@ -7,7 +7,7 @@ import { downloadImage } from './download-image';
 import { findPlace, PlaceInfo } from './find-place';
 import { getStaticMapUrl } from './get-static-map-url';
 
-const logger = new Logger('get-map-images');
+const logger = new Logger('ai:tool:maps:get-map-images');
 
 export type MapImagesResult = {
   success: boolean;

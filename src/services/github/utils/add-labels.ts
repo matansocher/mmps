@@ -3,7 +3,7 @@ import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse } from '../types';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('AddLabels');
+const logger = new Logger('github:add-labels');
 
 export async function addLabels(issueNumber: number, labels: string[]): Promise<GitHubServiceResponse<string[]>> {
   try {

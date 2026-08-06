@@ -3,7 +3,7 @@ import { getMongoCollection } from './mongo-connection';
 import type { User } from './types';
 
 export function createUserRepository(dbName: string) {
-  const logger = new Logger(`${dbName}-UserRepository`);
+  const logger = new Logger(`mongo:${dbName}:user-repo`);
   const getCollection = () => getMongoCollection<User>(dbName, 'User');
 
   async function saveUserDetails(userDetails: any): Promise<boolean> {

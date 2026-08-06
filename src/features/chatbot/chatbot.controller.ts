@@ -32,7 +32,7 @@ const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
 const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
 
 export class ChatbotController {
-  private readonly logger = new Logger(ChatbotController.name);
+  private readonly logger = new Logger('chatbot:controller');
 
   constructor(
     private readonly chatbotService: ChatbotService,

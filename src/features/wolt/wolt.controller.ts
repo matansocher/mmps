@@ -11,7 +11,7 @@ import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
 export class WoltController {
-  private readonly logger = new Logger(WoltController.name);
+  private readonly logger = new Logger('wolt:controller');
 
   constructor(private readonly bot: Bot) {}
 

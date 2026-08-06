@@ -4,7 +4,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { getDueReminders, markReminderNotified, reactivateSnoozedReminders } from '@shared/reminders';
 import { buildReminderKeyboard } from './reminder-actions';
 
-const logger = new Logger('ReminderCheckScheduler');
+const logger = new Logger('chatbot:scheduler:reminder-check');
 
 export async function reminderCheck(bot: Bot): Promise<void> {
   try {

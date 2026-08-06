@@ -8,7 +8,7 @@ import { createSavingsSessionToken, passwordsMatch } from './auth';
 import { savingsAuthMiddleware } from './auth.middleware';
 import { EMPTY_SAVINGS_PORTFOLIO, parseSaveSavingsPortfolioBody, type SaveSavingsPortfolioBody, type SavingsApiError, type SavingsPortfolioResponse, toSavingsPortfolioDto } from './dto';
 
-const logger = new Logger('SavingsApiController');
+const logger = new Logger('savings:api');
 
 type LoginBody = {
   readonly password?: unknown;

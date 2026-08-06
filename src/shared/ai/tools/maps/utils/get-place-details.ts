@@ -3,7 +3,7 @@ import { env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
 import { findPlace } from './find-place';
 
-const logger = new Logger('get-place-details');
+const logger = new Logger('ai:tool:maps:get-place-details');
 
 export type PlaceDetails = {
   name: string;

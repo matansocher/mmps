@@ -25,7 +25,7 @@ const getKeyboardOptions = () => {
 };
 
 export class CoachController {
-  private readonly logger = new Logger(CoachController.name);
+  private readonly logger = new Logger('coach:controller');
 
   constructor(
     private readonly coachService: CoachService,

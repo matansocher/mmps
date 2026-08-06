@@ -11,7 +11,7 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATO
 import { WorldlyService } from './worldly.service';
 
 export class WorldlyController {
-  private readonly logger = new Logger(WorldlyController.name);
+  private readonly logger = new Logger('worldly:controller');
 
   constructor(
     private readonly worldlyService: WorldlyService,

@@ -6,7 +6,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { DB_NAME, Subscription } from '@shared/wolt';
 import { getRestaurantsList } from '../utils';
 
-const logger = new Logger('check-subscriptions-areas');
+const logger = new Logger('wolt:script:check-subscriptions-areas');
 
 async function main() {
   config({ path: join(cwd(), '.env.serve') });

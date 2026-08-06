@@ -54,7 +54,7 @@ import type {
   UpdateExpenseBody,
 } from './dto';
 
-const logger = new Logger('ExpensesApiController');
+const logger = new Logger('expenses:api');
 
 const EXPENSE_TYPES: ReadonlyArray<ExpenseType> = ['receipt', 'card_alert', 'bill'];
 

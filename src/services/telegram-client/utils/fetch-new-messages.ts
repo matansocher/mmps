@@ -6,7 +6,7 @@ import { provideTelegramClient } from '../provide-telegram-client';
 import { getConversationDetails } from './listen';
 import type { ConversationDetails, SenderDetails, TelegramMessage } from './listen';
 
-const logger = new Logger('TelegramClientPoller');
+const logger = new Logger('telegram-client:poller');
 
 // Broadcast channel ids come in as raw positive ids (e.g. "1406113886"). gramJS would otherwise
 // treat a bare positive id as a PeerUser, so we wrap it in a PeerChannel and resolve its access hash

@@ -17,7 +17,7 @@ import { ChatbotResponse, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
 export class ChatbotService {
-  private readonly logger = new Logger(ChatbotService.name);
+  private readonly logger = new Logger('chatbot:service');
   private readonly model: ChatOpenAI;
   private readonly aiService: AiService;
 

@@ -4,7 +4,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { buildInlineKeyboard } from '@services/telegram';
 import { CHECK_IN_MESSAGE, CHECK_IN_SEND_CALLBACK, type SecretaryMessageService } from '../secretary';
 
-const logger = new Logger('SecretaryCheckIn');
+const logger = new Logger('chatbot:scheduler:secretary-check-in');
 
 export async function secretaryCheckIn(bot: Bot, messageService: SecretaryMessageService): Promise<void> {
   try {

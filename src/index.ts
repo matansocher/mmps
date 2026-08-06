@@ -25,7 +25,7 @@ async function main() {
   // await initConsoleOverride();
   const app = express();
   const port = env.PORT || 3000;
-  const logger = new Logger('index');
+  const logger = new Logger('bootstrap');
 
   app.use(express.json());
 
@@ -69,6 +69,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  new Logger('index').error(`Fatal error during startup: ${getErrorMessage(err)}`);
+  new Logger('bootstrap').error(`Fatal error during startup: ${getErrorMessage(err)}`);
   process.exit(1);
 });

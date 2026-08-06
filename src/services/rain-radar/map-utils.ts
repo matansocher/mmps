@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { Logger } from '@core/utils';
 import { RADAR_BOUNDS, RADAR_OPACITY, TILE_SIZE } from './constants';
 
-const logger = new Logger('RainRadarMapUtils');
+const logger = new Logger('rain-radar:map-utils');
 
 // ============================================================================
 // WEB MERCATOR PROJECTION

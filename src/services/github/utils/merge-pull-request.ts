@@ -3,7 +3,7 @@ import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, MergePullRequestResult } from '../types';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('MergePullRequest');
+const logger = new Logger('github:merge-pull-request');
 
 type MergeMethod = 'merge' | 'squash' | 'rebase';
 

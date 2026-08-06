@@ -9,7 +9,7 @@ import { createExpense } from '../mongo';
 import { type Currency, DEFAULT_CURRENCY, EXPENSE_CATEGORIES, type ExpenseCategory } from '../types';
 import type { CreateExpenseData, Expense, ExpenseType } from '../types';
 
-const logger = new Logger('manual-entry');
+const logger = new Logger('expenses:manual-entry');
 
 const TYPES: ReadonlyArray<ExpenseType> = ['receipt', 'card_alert', 'bill'];
 

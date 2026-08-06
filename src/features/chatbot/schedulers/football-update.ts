@@ -6,7 +6,7 @@ import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
-const logger = new Logger('FootballUpdateScheduler');
+const logger = new Logger('chatbot:scheduler:football-update');
 
 const footballUpdateResponseSchema = z.object({
   hasMatches: z.boolean().describe('Whether there are any matches today'),

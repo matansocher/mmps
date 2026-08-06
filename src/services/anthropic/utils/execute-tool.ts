@@ -3,7 +3,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { ANTHROPIC_DEFAULT_MAX_TOKENS, ANTHROPIC_OPUS_MODEL } from '../constants';
 import { provideAnthropicClient } from '../provide-anthropic-client';
 
-const logger = new Logger('AnthropicToolExecutor');
+const logger = new Logger('anthropic:execute-tool');
 
 export type Tool = Anthropic.Messages.Tool;
 

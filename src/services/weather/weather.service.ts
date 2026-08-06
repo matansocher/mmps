@@ -3,7 +3,7 @@ import * as imsApi from '@services/ims';
 import * as weatherApi from '@services/weather-api';
 import type { CurrentWeather, DayForecast, HourlyWeather, TomorrowForecast } from '@services/weather-api/types';
 
-const logger = new Logger('WeatherService');
+const logger = new Logger('weather');
 
 export async function getCurrentWeather(location: string): Promise<CurrentWeather> {
   const imsLocationId = imsApi.getImsLocationId(location);

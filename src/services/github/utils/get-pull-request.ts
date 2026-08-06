@@ -4,7 +4,7 @@ import type { GitHubServiceResponse, PullRequest } from '../types';
 import { mapPullRequest } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('GetPullRequest');
+const logger = new Logger('github:get-pull-request');
 
 export async function getPullRequest(prNumber: number): Promise<GitHubServiceResponse<PullRequest>> {
   try {

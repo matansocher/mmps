@@ -1,7 +1,7 @@
 import { getErrorMessage, Logger } from '@core/utils';
 import { getAllCities } from '../utils/get-restaurants-data';
 
-const logger = new Logger('get-available-areas');
+const logger = new Logger('wolt:script:get-available-areas');
 
 async function main() {
   try {

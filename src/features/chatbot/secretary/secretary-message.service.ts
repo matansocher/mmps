@@ -39,7 +39,7 @@ const todayWindow = () => {
 };
 
 export class SecretaryMessageService {
-  private readonly logger = new Logger(SecretaryMessageService.name);
+  private readonly logger = new Logger('chatbot:secretary-message');
   private readonly model: ChatOpenAI;
 
   constructor() {

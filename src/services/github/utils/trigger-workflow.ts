@@ -3,7 +3,7 @@ import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER, HEROKU_DEPLOY_DEFAULT_REF } from '
 import type { GitHubServiceResponse, TriggerWorkflowResult } from '../types';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('TriggerWorkflow');
+const logger = new Logger('github:trigger-workflow');
 
 export async function triggerWorkflow(workflowFile: string, ref: string = HEROKU_DEPLOY_DEFAULT_REF): Promise<GitHubServiceResponse<TriggerWorkflowResult>> {
   try {

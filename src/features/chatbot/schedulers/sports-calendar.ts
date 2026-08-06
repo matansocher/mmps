@@ -6,7 +6,7 @@ import type { ChatbotService } from '../chatbot.service';
 
 export const LIKED_TEAMS: string[] = ['Real Madrid', 'Barcelona', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Manchester City FC', 'Chelsea FC', 'Bayern Munich', 'Maccabi Haifa'];
 
-const logger = new Logger('SportsCalendarScheduler');
+const logger = new Logger('chatbot:scheduler:sports-calendar');
 
 const getDaysToAdd = (dayOfWeek: number): number => {
   if (dayOfWeek === 0) {

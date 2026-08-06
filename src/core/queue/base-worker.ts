@@ -10,7 +10,7 @@ export function createWorker<T extends BaseJobData>(config: WorkerConfig<T>): Wo
   const redisUrl = env.REDIS_URL;
   if (!redisUrl) throw new Error('REDIS_URL not defined');
 
-  const logger = new Logger(`${config.queueName}-worker`);
+  const logger = new Logger(`queue:${config.queueName}:worker`);
 
   const worker = new Worker<T>(config.queueName, config.handler, {
     connection: {

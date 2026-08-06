@@ -4,7 +4,7 @@ import type { GitHubServiceResponse, Issue } from '../types';
 import { mapIssue } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('ListIssues');
+const logger = new Logger('github:list-issues');
 
 type IssueState = 'open' | 'closed' | 'all';
 

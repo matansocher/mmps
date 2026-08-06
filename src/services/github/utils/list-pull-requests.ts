@@ -4,7 +4,7 @@ import type { GitHubServiceResponse, PullRequest } from '../types';
 import { mapPullRequest } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('ListPullRequests');
+const logger = new Logger('github:list-pull-requests');
 
 type PRState = 'open' | 'closed' | 'all';
 

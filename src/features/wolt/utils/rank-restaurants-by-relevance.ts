@@ -4,7 +4,7 @@ import { getResponse } from '@services/openai';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import type { WoltRestaurant } from '@shared/wolt';
 
-const logger = new Logger('rankRestaurantsByRelevance');
+const logger = new Logger('wolt:rank-restaurants');
 
 const RankedRestaurantsSchema = z.object({
   rankedNames: z.array(z.string()),

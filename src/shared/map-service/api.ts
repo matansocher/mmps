@@ -5,7 +5,7 @@ import { DEFAULT_TILE_RANGE, DEFAULT_TILE_SIZE, DEFAULT_ZOOM, OPENSTREETMAP_TILE
 import type { MapOptions } from './types';
 import { fetchBuffer, latLonToTile } from './utils';
 
-const logger = new Logger('MapService');
+const logger = new Logger('map-service');
 
 export async function generateMapImage(options: MapOptions, outputDir: string, filename: string): Promise<string> {
   const { lat, lon, zoom = DEFAULT_ZOOM, tileRange = DEFAULT_TILE_RANGE, tileSize = DEFAULT_TILE_SIZE, addMarker = false } = options;

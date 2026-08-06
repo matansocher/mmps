@@ -5,7 +5,7 @@ import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
-const logger = new Logger('FootballPredictionsScheduler');
+const logger = new Logger('chatbot:scheduler:football-predictions');
 
 export async function footballPredictions(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {

@@ -3,7 +3,7 @@ import { env } from 'node:process';
 import { Logger } from '@core/utils';
 
 export class LearnerController {
-  private readonly logger = new Logger(LearnerController.name);
+  private readonly logger = new Logger('learner:controller');
 
   constructor(private readonly bot: Bot) {}
 

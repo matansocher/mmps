@@ -3,7 +3,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { provideTelegramClient } from '../provide-telegram-client';
 import { Peer } from '../types';
 
-const logger = new Logger('TelegramClientSendMessage');
+const logger = new Logger('telegram-client:send-message');
 
 type SendMessageOptions = {
   readonly name: string;

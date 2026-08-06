@@ -7,7 +7,7 @@ import type { Subscription } from '@shared/polymarket-follower';
 import { formatDailyUpdateMessage, formatExpiredMarketsSection, formatMultiOutcomeUpdateMessage, toOutcomeSnapshots } from './utils';
 import type { ExpiredMarketInfo, MarketUpdate, MultiOutcomeUpdate } from './utils';
 
-const logger = new Logger('PolymarketUpdateScheduler');
+const logger = new Logger('chatbot:scheduler:polymarket-update');
 
 export async function polymarketUpdate(bot: Bot): Promise<void> {
   const subscriptionsByChatId = await getSubscriptionsGroupedByChatId();

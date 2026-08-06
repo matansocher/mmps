@@ -27,7 +27,7 @@ const shutdown = (logger: Logger, reason: string, err: unknown, close: () => Pro
 };
 
 export function gracefulShutdown(...closes: (() => Promise<unknown> | unknown)[]): void {
-  const logger = new Logger('graceful-shutdown');
+  const logger = new Logger('core:graceful-shutdown');
   const close = async () => {
     for (const fn of closes) {
       try {

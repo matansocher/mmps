@@ -23,7 +23,7 @@ import { fetchRichMatch } from './match-fetcher';
 import { fetchTeamDetail, fetchTeamRecentMatches } from './team-fetcher';
 import { toCompetitionRef, toMatchSummary } from './transformers';
 
-const logger = new Logger('CoachApiController');
+const logger = new Logger('coach:api');
 
 const ALL_LEAGUE_IDS = Object.values(COMPETITION_IDS_MAP);
 

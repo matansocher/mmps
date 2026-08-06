@@ -6,7 +6,7 @@ import type { MatchDetails, Team } from '@services/scores-365';
 import type { LineupPlayer, LineupSide, MatchEvent, MatchSide, MatchSummary, RoundInfo } from './dto';
 import { classifyStatus, toMatchSummary } from './transformers';
 
-const logger = new Logger('CoachMatchFetcher');
+const logger = new Logger('coach:match-fetcher');
 
 type RawMember = {
   id: number;

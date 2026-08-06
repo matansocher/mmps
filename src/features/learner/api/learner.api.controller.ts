@@ -5,7 +5,7 @@ import type { TelegramBotConfig } from '@services/telegram';
 import { getProgress, type ReadMap, saveCourseProgress } from '../mongo';
 import { learnerAuthMiddleware } from './auth.middleware';
 
-const logger = new Logger('LearnerApiController');
+const logger = new Logger('learner:api');
 
 export type LearnerApiDeps = {
   readonly botConfig: TelegramBotConfig;

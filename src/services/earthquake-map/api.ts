@@ -5,7 +5,7 @@ import { generateMapImage } from '@shared/map-service';
 import { EARTHQUAKE_MAP_CONFIG } from './constants';
 import type { EarthquakeMapOptions } from './types';
 
-const logger = new Logger('EarthquakeMapService');
+const logger = new Logger('earthquake-map');
 
 export async function generateEarthquakeMapImage(options: EarthquakeMapOptions): Promise<string> {
   const { lat, lon, magnitude, place } = options;

@@ -1,6 +1,6 @@
 import { Logger } from '@core/utils';
 
-const logger = new Logger('model-pricing');
+const logger = new Logger('ai:model-pricing');
 
 const PER_MILLION = 1_000_000;
 

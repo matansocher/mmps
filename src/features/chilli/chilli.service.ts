@@ -17,7 +17,7 @@ function buildUserContext(chatId: number): string {
 }
 
 export class ChilliService {
-  private readonly logger = new Logger(ChilliService.name);
+  private readonly logger = new Logger('chilli:service');
   private readonly aiService: AiService;
 
   constructor() {

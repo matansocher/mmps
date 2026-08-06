@@ -9,7 +9,7 @@ import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { ChatbotService } from '../chatbot.service';
 import { formatEventsForPrompt } from './utils/events';
 
-const logger = new Logger('MorningBriefScheduler');
+const logger = new Logger('chatbot:scheduler:morning-brief');
 
 const WEATHER_LOCATION = 'Kfar Saba';
 

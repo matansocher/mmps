@@ -3,7 +3,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { Subscription } from '../types';
 import { DB_NAME } from './constants';
 
-const logger = new Logger('subscription');
+const logger = new Logger('wolt:subscription');
 
 const getCollection = () => getMongoCollection<Subscription>(DB_NAME, 'Subscription');
 

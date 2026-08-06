@@ -3,7 +3,7 @@ import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import type { ChatbotService } from '../chatbot.service';
 
-const logger = new Logger('WeeklyExerciseSummaryScheduler');
+const logger = new Logger('chatbot:scheduler:weekly-exercise-summary');
 
 export async function weeklyExerciseSummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {

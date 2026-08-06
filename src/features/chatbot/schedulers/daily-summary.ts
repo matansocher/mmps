@@ -6,7 +6,7 @@ import { getTomorrowEvents } from '@shared/calendar-events';
 import type { ChatbotService } from '../chatbot.service';
 import { formatEventsForPrompt } from './utils/events';
 
-const logger = new Logger('DailySummaryScheduler');
+const logger = new Logger('chatbot:scheduler:daily-summary');
 
 export async function dailySummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {

@@ -13,7 +13,7 @@ export type MessageStreamerOptions = {
 };
 
 export class MessageStreamer {
-  private readonly logger = new Logger(MessageStreamer.name);
+  private readonly logger = new Logger('telegram:message-streamer');
   private readonly bot: Bot;
   private readonly chatId: number;
   private readonly draftId: number;

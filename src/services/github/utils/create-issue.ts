@@ -4,7 +4,7 @@ import type { CreateIssueInput, GitHubServiceResponse, Issue } from '../types';
 import { mapIssue } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('CreateIssue');
+const logger = new Logger('github:create-issue');
 
 export async function createIssue(input: CreateIssueInput): Promise<GitHubServiceResponse<Issue>> {
   try {

@@ -5,7 +5,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import { buildActionsKeyboard, createActions, type CreateSecretaryActionData, type SecretaryMessageService, type SecretarySummaryAction, setActionsMessageId } from '../secretary';
 
-const logger = new Logger('SecretaryDailyDigest');
+const logger = new Logger('chatbot:scheduler:secretary-daily-digest');
 
 // Send a summary; when it has actionable items, attach one-tap buttons backed by persisted actions.
 async function sendSummaryWithActions(bot: Bot, summary: string, actions: SecretarySummaryAction[]): Promise<void> {

@@ -5,7 +5,7 @@ import { Logger } from '@core/utils';
 import type { TelegramBotConfig } from '../types';
 import { getBotToken } from './get-bot-token';
 
-const logger = new Logger('TelegramBotsFactory');
+const logger = new Logger('telegram:bot-factory');
 const botInstances = new Map<string, Bot>();
 
 export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {

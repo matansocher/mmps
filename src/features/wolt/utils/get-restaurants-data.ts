@@ -60,7 +60,7 @@ async function fetchCityRestaurants(city: WoltCity): Promise<WoltRestaurant[]> {
 }
 
 export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
-  const logger = new Logger(getRestaurantsList.name);
+  const logger = new Logger('wolt:get-restaurants-list');
   try {
     const cities = await getCitiesList();
     const restaurants: WoltRestaurant[] = [];
@@ -100,7 +100,7 @@ export async function getAllCities() {
 }
 
 async function getCitiesList(): Promise<WoltCity[]> {
-  const logger = new Logger(getCitiesList.name);
+  const logger = new Logger('wolt:get-cities-list');
   try {
     const rawCities = await getAllCities();
     return rawCities

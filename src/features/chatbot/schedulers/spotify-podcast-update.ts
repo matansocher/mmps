@@ -8,7 +8,7 @@ import type { Subscription } from '@shared/spotify-follower';
 import { formatPodcastUpdateMessage } from './utils';
 import type { PodcastEpisodeUpdate } from './utils';
 
-const logger = new Logger('SpotifyPodcastUpdateScheduler');
+const logger = new Logger('chatbot:scheduler:spotify-podcast-update');
 
 const MARKET = 'IL';
 const EPISODES_LIMIT = 20;

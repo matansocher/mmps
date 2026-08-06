@@ -26,7 +26,7 @@ export function buildActionsKeyboard(actions: ReadonlyArray<Pick<SecretaryAction
 }
 
 export class SecretaryActionService {
-  private readonly logger = new Logger(SecretaryActionService.name);
+  private readonly logger = new Logger('chatbot:secretary-action');
   private readonly agent: any;
 
   constructor() {

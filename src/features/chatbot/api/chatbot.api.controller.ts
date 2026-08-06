@@ -29,7 +29,7 @@ import type {
 
 extendZodWithOpenApi(z);
 
-const logger = new Logger('ChatbotApiController');
+const logger = new Logger('chatbot:api');
 
 // --- Zod schemas for OpenAPI ---
 

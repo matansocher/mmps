@@ -8,7 +8,7 @@ import type { CreateCalendarEventData } from './types';
 
 extendZodWithOpenApi(z);
 
-const logger = new Logger('CalendarEventsApiController');
+const logger = new Logger('calendar-events:api');
 
 // Zod schemas for OpenAPI documentation
 const CalendarEventDateTimeSchema = z.object({

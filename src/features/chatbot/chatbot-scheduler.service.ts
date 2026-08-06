@@ -27,7 +27,7 @@ import {
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 import type { SecretaryMessageService } from './secretary';
 
-const logger = new Logger('ChatbotScheduler');
+const logger = new Logger('chatbot:scheduler');
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
   const onError = (err: unknown) => logger.error(`Scheduled task failed: ${getErrorMessage(err)}`);

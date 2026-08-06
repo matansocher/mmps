@@ -2,7 +2,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import type { UsageCallbackHandler } from '../utils';
 import { saveUsageRecord } from './usage.repository';
 
-const logger = new Logger('ai-usage');
+const logger = new Logger('ai:usage');
 
 export type RecordUsageParams = {
   readonly source: string;

@@ -5,7 +5,7 @@ import { sendShortenedMessage } from '@services/telegram';
 import { getTodayEvents } from '@shared/calendar-events';
 import { buildBirthdayKeyboard } from './birthday-actions';
 
-const logger = new Logger('BirthdayReminderScheduler');
+const logger = new Logger('chatbot:scheduler:birthday-reminder');
 
 export async function birthdayReminder(bot: Bot): Promise<void> {
   try {

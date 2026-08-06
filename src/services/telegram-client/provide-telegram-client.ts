@@ -4,7 +4,7 @@ import { LogLevel } from 'telegram/extensions/Logger.js';
 import { StringSession } from 'telegram/sessions/index.js';
 import { getErrorMessage, Logger } from '@core/utils';
 
-const logger = new Logger('TelegramClientProvider');
+const logger = new Logger('telegram-client:provider');
 const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 let client: TelegramClient;

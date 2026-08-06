@@ -8,7 +8,7 @@ import { sendShortenedMessage } from '@services/telegram';
 import { deletePendingPosts, getPendingPosts } from '@shared/social-follower';
 import type { PendingPost, SocialPlatform } from '@shared/social-follower';
 
-const logger = new Logger('SocialMediaDigestScheduler');
+const logger = new Logger('chatbot:scheduler:social-media-digest');
 
 const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦', youtube: 'YouTube 📺', telegram: 'Telegram 📣' } as const;
 const SUMMARIZED_PLATFORMS: SocialPlatform[] = ['twitter']; // chatty platforms get AI topic summaries; the rest list each post

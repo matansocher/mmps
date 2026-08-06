@@ -4,7 +4,7 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { verifyExpensesInitData } from './telegram-init-data';
 
-const logger = new Logger('expensesAuthMiddleware');
+const logger = new Logger('expenses:api:auth');
 
 export type ExpensesRequestUser = {
   readonly telegramUserId: number;

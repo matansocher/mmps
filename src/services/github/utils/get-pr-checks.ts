@@ -3,7 +3,7 @@ import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequestCheck } from '../types';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('GetPRChecks');
+const logger = new Logger('github:get-pr-checks');
 
 export async function getPRChecks(prNumber: number): Promise<GitHubServiceResponse<readonly PullRequestCheck[]>> {
   try {

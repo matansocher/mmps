@@ -4,7 +4,7 @@ import type { GitHubServiceResponse, IssueComment } from '../types';
 import { mapComment } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('CreatePullRequestComment');
+const logger = new Logger('github:create-pr-comment');
 
 export async function createPullRequestComment(prNumber: number, body: string): Promise<GitHubServiceResponse<IssueComment>> {
   try {

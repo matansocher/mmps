@@ -7,7 +7,7 @@ import { sendShortenedMessage } from '@services/telegram';
 import { aggregateUsage } from '@shared/ai';
 import type { UsageAggregateRow } from '@shared/ai';
 
-const logger = new Logger('UsageSummaryScheduler');
+const logger = new Logger('chatbot:scheduler:usage-summary');
 
 const LOOKBACK_DAYS = 7;
 const PREVIOUS_WEEKS = 3;

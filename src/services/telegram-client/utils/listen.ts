@@ -5,7 +5,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { EXCLUDED_CHANNELS } from '../constants';
 import { provideTelegramClient } from '../provide-telegram-client';
 
-const logger = new Logger('TelegramClientListener');
+const logger = new Logger('telegram-client:listener');
 
 type ListenerOptions = {
   readonly conversationsIds?: string[];

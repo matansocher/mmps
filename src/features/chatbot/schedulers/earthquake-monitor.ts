@@ -6,7 +6,7 @@ import { type Earthquake, formatEarthquake, getRecentEarthquakes, shouldNotifyAb
 import { generateEarthquakeMapImage } from '@services/earthquake-map';
 import { sendShortenedMessage } from '@services/telegram';
 
-const logger = new Logger('EarthquakeMonitorScheduler');
+const logger = new Logger('chatbot:scheduler:earthquake-monitor');
 
 const seenEarthquakeIds = new Set<string>();
 

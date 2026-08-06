@@ -4,7 +4,7 @@ import type { GitHubServiceResponse, IssueComment } from '../types';
 import { mapComment } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('CreateIssueComment');
+const logger = new Logger('github:create-issue-comment');
 
 export async function createIssueComment(issueNumber: number, body: string): Promise<GitHubServiceResponse<IssueComment>> {
   try {

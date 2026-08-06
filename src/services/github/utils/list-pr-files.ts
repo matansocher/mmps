@@ -3,7 +3,7 @@ import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequestFile } from '../types';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('ListPRFiles');
+const logger = new Logger('github:list-pr-files');
 
 export async function listPRFiles(prNumber: number): Promise<GitHubServiceResponse<readonly PullRequestFile[]>> {
   try {
