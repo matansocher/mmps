@@ -5,7 +5,9 @@ import type { WoltRestaurant } from '@shared/wolt';
 import {
   CITIES_BASE_URL,
   CITIES_SLUGS_SUPPORTED,
+  DELAY_BETWEEN_CITY_RETRIES_MS,
   DELAY_BETWEEN_RESTAURANTS_BATCHES_MS,
+  MAX_CITY_FETCH_RETRIES,
   MAX_CONCURRENT_RESTAURANTS_REQUESTS,
   RELAY_REQUEST_TIMEOUT_MS,
   RESTAURANT_LINK_BASE_URL,
@@ -59,32 +61,56 @@ async function fetchCityRestaurants(city: WoltCity): Promise<WoltRestaurant[]> {
   });
 }
 
+type CityFetchResult = {
+  readonly restaurants: WoltRestaurant[];
+  readonly failedCities: WoltCity[];
+};
+
+// Both the relay (Apps Script serializes invocations) and Wolt's edge (429s on bursts) choke when all
+// cities are requested at once, so walk through them in small batches.
+async function fetchCitiesInBatches(cities: WoltCity[]): Promise<CityFetchResult> {
+  const restaurants: WoltRestaurant[] = [];
+  const failedCities: WoltCity[] = [];
+
+  const batches = chunk(cities, MAX_CONCURRENT_RESTAURANTS_REQUESTS);
+  for (const [batchIndex, batch] of batches.entries()) {
+    const results = await Promise.allSettled(batch.map((city) => fetchCityRestaurants(city)));
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        restaurants.push(...result.value);
+      } else {
+        failedCities.push(batch[index]);
+      }
+    });
+    if (batchIndex < batches.length - 1) {
+      await sleep(DELAY_BETWEEN_RESTAURANTS_BATCHES_MS);
+    }
+  }
+
+  return { restaurants, failedCities };
+}
+
 export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
   const logger = new Logger('wolt:get-restaurants-list');
   try {
     const cities = await getCitiesList();
     const restaurants: WoltRestaurant[] = [];
-    const failedAreas: string[] = [];
 
-    // Both the relay (Apps Script serializes invocations) and Wolt's edge (429s on bursts) choke when all
-    // cities are requested at once, so walk through them in small batches.
-    const batches = chunk(cities, MAX_CONCURRENT_RESTAURANTS_REQUESTS);
-    for (const [batchIndex, batch] of batches.entries()) {
-      const results = await Promise.allSettled(batch.map((city) => fetchCityRestaurants(city)));
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          restaurants.push(...result.value);
-        } else {
-          failedAreas.push(`${batch[index].areaSlug} (${result.reason})`);
-        }
-      });
-      if (batchIndex < batches.length - 1) {
-        await sleep(DELAY_BETWEEN_RESTAURANTS_BATCHES_MS);
+    // A city can fail on a transient 429/timeout while its neighbours succeed. Retry only the ones that
+    // failed, with a growing backoff, so a single flaky response doesn't drop a whole city from the cache.
+    let citiesToFetch = cities;
+    for (let attempt = 0; attempt <= MAX_CITY_FETCH_RETRIES && citiesToFetch.length; attempt++) {
+      if (attempt > 0) {
+        logger.warn(`Retrying ${citiesToFetch.length} failed area(s) (attempt ${attempt}/${MAX_CITY_FETCH_RETRIES}): ${citiesToFetch.map((c) => c.areaSlug).join(', ')}`);
+        await sleep(DELAY_BETWEEN_CITY_RETRIES_MS * attempt);
       }
+      const { restaurants: fetched, failedCities } = await fetchCitiesInBatches(citiesToFetch);
+      restaurants.push(...fetched);
+      citiesToFetch = failedCities;
     }
 
-    if (failedAreas.length) {
-      logger.warn(`Could not fetch restaurants for areas: ${failedAreas.join(', ')}`);
+    if (citiesToFetch.length) {
+      logger.warn(`Could not fetch restaurants for areas after ${MAX_CITY_FETCH_RETRIES} retries: ${citiesToFetch.map((c) => c.areaSlug).join(', ')}`);
     }
 
     return restaurants;
