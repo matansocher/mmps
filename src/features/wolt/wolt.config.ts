@@ -37,6 +37,11 @@ export const MAX_CONCURRENT_RESTAURANTS_REQUESTS = 2;
 export const DELAY_BETWEEN_RESTAURANTS_BATCHES_MS = 500;
 export const RELAY_REQUEST_TIMEOUT_MS = 45_000;
 
+// A city can fail on a transient 429/timeout while the rest succeed. Rather than silently dropping it from
+// that refresh, retry only the failed cities a few times with a growing backoff so we don't miss cities.
+export const MAX_CITY_FETCH_RETRIES = 2;
+export const DELAY_BETWEEN_CITY_RETRIES_MS = 1500;
+
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 export const RESTAURANTS_BASE_URL = 'https://restaurant-api.wolt.com/v1/pages/restaurants';
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';

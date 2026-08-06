@@ -4,7 +4,7 @@ import { MY_USER_NAME } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
+import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
@@ -81,7 +81,7 @@ export class WoltController {
   }
 
   async textHandler(ctx: Context): Promise<void> {
-    const { userDetails, text: rawRestaurant } = getMessageData(ctx);
+    const { chatId, messageId, userDetails, text: rawRestaurant } = getMessageData(ctx);
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     try {
@@ -90,41 +90,65 @@ export class WoltController {
         return;
       }
 
-      const restaurants = await restaurantsService.getRestaurants();
-      let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
-      if (!matchedRestaurants.length) {
-        const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, 'לפעמים השרתים של וולט לא מחזירים את כל המסעדות, אבל אני בודק פתרונות אפשריים לזה'].join('\n');
-        await ctx.reply(replyText);
-        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
-        return;
-      }
-
-      if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
-        await ctx.replyWithChatAction('typing');
-        matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
-      }
-
-      let buttons: { text: string; data: string; style?: 'danger' | 'success' | 'primary' }[] = matchedRestaurants.map((restaurant) => {
-        return {
-          text: `${restaurant.name} - ${restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`,
-          data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
-          style: (restaurant.isOnline ? 'success' : 'danger') as 'success' | 'danger',
-        };
+      // The first search after the cache expires triggers a full multi-city refresh that can take a few
+      // seconds. Show a reaction + typing action immediately, and a loader message if it runs long, so the
+      // user knows the bot is working rather than assuming it errored.
+      const loader = new MessageLoader(this.bot, chatId, messageId, {
+        reactionEmoji: '👀',
+        loaderMessage: 'רגע, מחפש את המסעדות הכי טובות בשבילך 🍔',
+        loadingAction: 'typing',
       });
-
-      if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
-        buttons = [...buttons.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW)];
-        buttons.push({ text: 'דף הבא (2) ➡️', data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, 2].join(INLINE_KEYBOARD_SEPARATOR) });
+      // MessageLoader swallows errors thrown inside the action, so capture and re-throw to keep the existing
+      // error analytics working.
+      let searchError: unknown;
+      await loader.handleMessageWithLoader(async () => {
+        try {
+          await this.searchRestaurants(ctx, userDetails, restaurant, rawRestaurant);
+        } catch (err) {
+          searchError = err;
+        }
+      });
+      if (searchError) {
+        throw searchError;
       }
-
-      const keyboard = buildInlineKeyboard(buttons);
-      const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
-      await ctx.reply(replyText, { reply_markup: keyboard });
-      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
     } catch (err) {
       notify(BOT_CONFIG, { restaurant, action: ANALYTIC_EVENT_NAMES.ERROR, error: `${err}`, method: this.textHandler.name }, userDetails);
       throw err;
     }
+  }
+
+  private async searchRestaurants(ctx: Context, userDetails: UserDetails, restaurant: string, rawRestaurant: string): Promise<void> {
+    const restaurants = await restaurantsService.getRestaurants();
+    let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
+    if (!matchedRestaurants.length) {
+      const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, 'לפעמים השרתים של וולט לא מחזירים את כל המסעדות, אבל אני בודק פתרונות אפשריים לזה'].join('\n');
+      await ctx.reply(replyText);
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
+      return;
+    }
+
+    if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
+      await ctx.replyWithChatAction('typing');
+      matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
+    }
+
+    let buttons: { text: string; data: string; style?: 'danger' | 'success' | 'primary' }[] = matchedRestaurants.map((restaurant) => {
+      return {
+        text: `${restaurant.name} - ${restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`,
+        data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
+        style: (restaurant.isOnline ? 'success' : 'danger') as 'success' | 'danger',
+      };
+    });
+
+    if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
+      buttons = [...buttons.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW)];
+      buttons.push({ text: 'דף הבא (2) ➡️', data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, 2].join(INLINE_KEYBOARD_SEPARATOR) });
+    }
+
+    const keyboard = buildInlineKeyboard(buttons);
+    const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
+    await ctx.reply(replyText, { reply_markup: keyboard });
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
