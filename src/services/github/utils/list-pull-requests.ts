@@ -1,10 +1,10 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequest } from '../types';
 import { mapPullRequest } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('ListPullRequests');
+const logger = new Logger('github:list-pull-requests');
 
 type PRState = 'open' | 'closed' | 'all';
 
@@ -22,7 +22,7 @@ export async function listPullRequests(state?: string): Promise<GitHubServiceRes
       data: response.data.map(mapPullRequest),
     };
   } catch (err) {
-    const errorMsg = `Failed to list pull requests: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to list pull requests: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

@@ -1,9 +1,9 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse } from '../types';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('AddLabels');
+const logger = new Logger('github:add-labels');
 
 export async function addLabels(issueNumber: number, labels: string[]): Promise<GitHubServiceResponse<string[]>> {
   try {
@@ -20,7 +20,7 @@ export async function addLabels(issueNumber: number, labels: string[]): Promise<
       data: response.data.map((label) => (typeof label === 'string' ? label : label.name || '')),
     };
   } catch (err) {
-    const errorMsg = `Failed to add labels to #${issueNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to add labels to #${issueNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

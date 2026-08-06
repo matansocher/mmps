@@ -1,7 +1,7 @@
 import type { Bot, Context } from 'grammy';
 import { InlineKeyboard } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getDateNumber, hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
@@ -11,7 +11,7 @@ import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
 export class WoltController {
-  private readonly logger = new Logger(WoltController.name);
+  private readonly logger = new Logger('wolt:controller');
 
   constructor(private readonly bot: Bot) {}
 
@@ -22,7 +22,7 @@ export class WoltController {
     this.bot.command(CONTACT.command.replace('/', ''), (ctx) => this.contactHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
-    this.bot.catch((err) => this.logger.error(`${err}`));
+    this.bot.catch((err) => this.logger.error(`${getErrorMessage(err)}`));
   }
 
   async startHandler(ctx: Context): Promise<void> {
@@ -159,7 +159,7 @@ export class WoltController {
         }
       }
     } catch (err) {
-      this.logger.error(`${this.callbackQueryHandler.name} - error - ${err}`);
+      this.logger.error(`Failed to handle callback query: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, what: action, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
       throw err;
     }

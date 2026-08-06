@@ -4,7 +4,7 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { verifyLearnerInitData } from './telegram-init-data';
 
-const logger = new Logger('learnerAuthMiddleware');
+const logger = new Logger('learner:api:auth');
 
 export type LearnerRequestUser = {
   readonly telegramUserId: number;

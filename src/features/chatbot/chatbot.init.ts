@@ -24,9 +24,9 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
-import { DB_NAME as SECRETARY_DB_NAME, ensureSecretaryMessageIndexes, SecretaryActionService, SecretaryMessageService } from './secretary';
+import { ensureSecretaryMessageIndexes, DB_NAME as SECRETARY_DB_NAME, SecretaryActionService, SecretaryMessageService } from './secretary';
 
-const logger = new Logger('initChatbot');
+const logger = new Logger('chatbot:init');
 
 export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [

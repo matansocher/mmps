@@ -4,7 +4,7 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { verifyCoachInitData } from './telegram-init-data';
 
-const logger = new Logger('coachAuthMiddleware');
+const logger = new Logger('coach:api:auth');
 
 export type CoachRequestUser = {
   readonly telegramUserId: number;

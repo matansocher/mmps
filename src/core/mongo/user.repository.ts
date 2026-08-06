@@ -1,9 +1,9 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getMongoCollection } from './mongo-connection';
 import type { User } from './types';
 
 export function createUserRepository(dbName: string) {
-  const logger = new Logger(`${dbName}-UserRepository`);
+  const logger = new Logger(`mongo:${dbName}:user-repo`);
   const getCollection = () => getMongoCollection<User>(dbName, 'User');
 
   async function saveUserDetails(userDetails: any): Promise<boolean> {
@@ -20,7 +20,7 @@ export function createUserRepository(dbName: string) {
       await userCollection.insertOne(user);
       return false;
     } catch (err) {
-      logger.error(`saveUserDetails - err: ${err}`);
+      logger.error(`saveUserDetails - err: ${getErrorMessage(err)}`);
       return false;
     }
   }
@@ -30,7 +30,7 @@ export function createUserRepository(dbName: string) {
       const userCollection = getCollection();
       return userCollection.findOne({ chatId });
     } catch (err) {
-      logger.error(`getUserDetails - err: ${err}`);
+      logger.error(`getUserDetails - err: ${getErrorMessage(err)}`);
       return null;
     }
   }

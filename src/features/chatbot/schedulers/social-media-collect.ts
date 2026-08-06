@@ -1,4 +1,4 @@
-import { Logger, sleep } from '@core/utils';
+import { getErrorMessage, Logger, sleep } from '@core/utils';
 import { fetchChannelPosts as fetchTelegramChannelPosts } from '@services/telegram-scraper';
 import { getUserVideos } from '@services/tiktok';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
@@ -6,7 +6,7 @@ import { getVideosFromRSS } from '@services/youtube';
 import { createPendingPosts, getSubscriptionsGroupedByChatId, updateLastSeen } from '@shared/social-follower';
 import type { SocialPlatform, SocialSubscription, UpdateLastSeenData } from '@shared/social-follower';
 
-const logger = new Logger('SocialMediaCollectScheduler');
+const logger = new Logger('chatbot:scheduler:social-media-collect');
 
 const SLEEP_BETWEEN_USERS_MS = 5000; // be gentle with anonymous scraping endpoints
 
@@ -50,7 +50,7 @@ async function collectSubscription(subscription: SocialSubscription): Promise<vo
       logger.log(`Collected ${newPosts.length} new posts from ${platform}/@${username}`);
     }
   } catch (err) {
-    logger.error(`Failed to check ${platform}/@${username}: ${err.message}`);
+    logger.error(`Failed to check ${platform}/@${username}: ${getErrorMessage(err)}`);
   }
 }
 

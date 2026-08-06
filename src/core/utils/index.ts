@@ -4,6 +4,7 @@ export { deleteFile } from './delete-file';
 export { extractAudioFromVideo } from './extract-audio-from-video';
 export { formatNumber } from './format-number';
 export { generateRandomString } from './generate-random-string';
+export { getErrorMessage } from './get-error-message';
 export { getDateDescription } from './get-date-description';
 export { getDateNumber } from './get-date-number';
 export { getDateString } from './get-date-string';

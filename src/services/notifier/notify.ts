@@ -1,5 +1,5 @@
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/telegram';
 
 const logger = new Logger('notifier');
@@ -37,8 +37,8 @@ export function notify(bot: TelegramBotConfig, options: NotifyOptions, userDetai
   try {
     const notyMessageText = getNotyMessageText(bot.name, options, userDetails);
     const botInstance = provideTelegramBot(botConfig);
-    void botInstance.api.sendMessage(NOTIFIER_CHAT_ID, notyMessageText).catch((err) => logger.error(`Failed to send notification: ${err}`));
+    void botInstance.api.sendMessage(NOTIFIER_CHAT_ID, notyMessageText).catch((err) => logger.error(`Failed to send notification for ${bot.id} (${options.action}): ${getErrorMessage(err)}`));
   } catch (err) {
-    logger.error(`Failed to send notification: ${err}`);
+    logger.error(`Failed to build notification for ${bot.id} (${options.action}): ${getErrorMessage(err)}`);
   }
 }

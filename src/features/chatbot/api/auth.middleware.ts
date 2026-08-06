@@ -4,7 +4,7 @@ import { MY_USER_ID } from '@core/config';
 import { Logger } from '@core/utils';
 import { verifyChatbotInitData } from './telegram-init-data';
 
-const logger = new Logger('chatbotAuthMiddleware');
+const logger = new Logger('chatbot:api:auth');
 
 export type ChatbotRequestUser = {
   readonly telegramUserId: number;

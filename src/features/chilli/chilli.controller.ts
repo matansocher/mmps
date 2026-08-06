@@ -21,7 +21,7 @@ const CONSOLIDATION_PROMPT = `אתה עוזר שמעדכן פרומפט של ב�
 החזר רק את הפרומפט המעודכן, בלי הסברים נוספים.`;
 
 export class ChilliController {
-  private readonly logger = new Logger(ChilliController.name);
+  private readonly logger = new Logger('chilli:controller');
 
   constructor(
     private readonly chilliService: ChilliService,

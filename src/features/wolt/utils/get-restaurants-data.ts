@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { env } from 'node:process';
-import { chunk, Logger, sleep } from '@core/utils';
+import { chunk, getErrorMessage, Logger, sleep } from '@core/utils';
 import type { WoltRestaurant } from '@shared/wolt';
 import {
   CITIES_BASE_URL,
@@ -60,7 +60,7 @@ async function fetchCityRestaurants(city: WoltCity): Promise<WoltRestaurant[]> {
 }
 
 export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
-  const logger = new Logger(getRestaurantsList.name);
+  const logger = new Logger('wolt:get-restaurants-list');
   try {
     const cities = await getCitiesList();
     const restaurants: WoltRestaurant[] = [];
@@ -84,12 +84,12 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
     }
 
     if (failedAreas.length) {
-      logger.warn(`${getRestaurantsList.name} - could not fetch restaurants for areas: ${failedAreas.join(', ')}`);
+      logger.warn(`Could not fetch restaurants for areas: ${failedAreas.join(', ')}`);
     }
 
     return restaurants;
   } catch (err) {
-    logger.error(`${getRestaurantsList.name} - err - ${err}`);
+    logger.error(`Failed to fetch restaurants list: ${getErrorMessage(err)}`);
     return [];
   }
 }
@@ -100,7 +100,7 @@ export async function getAllCities() {
 }
 
 async function getCitiesList(): Promise<WoltCity[]> {
-  const logger = new Logger(getCitiesList.name);
+  const logger = new Logger('wolt:get-cities-list');
   try {
     const rawCities = await getAllCities();
     return rawCities
@@ -109,7 +109,7 @@ async function getCitiesList(): Promise<WoltCity[]> {
         return { areaSlug: slug, lon: location.coordinates[0], lat: location.coordinates[1] };
       });
   } catch (err) {
-    logger.error(`${getCitiesList.name} - err - ${err}`);
+    logger.error(`Failed to fetch cities list: ${getErrorMessage(err)}`);
     return [];
   }
 }

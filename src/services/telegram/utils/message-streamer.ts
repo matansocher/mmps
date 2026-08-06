@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import { GrammyError } from 'grammy';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 
 const MIN_UPDATE_INTERVAL_MS = 500;
 const DEFAULT_UPDATE_INTERVAL_MS = 1500;
@@ -13,7 +13,7 @@ export type MessageStreamerOptions = {
 };
 
 export class MessageStreamer {
-  private readonly logger = new Logger(MessageStreamer.name);
+  private readonly logger = new Logger('telegram:message-streamer');
   private readonly bot: Bot;
   private readonly chatId: number;
   private readonly draftId: number;
@@ -95,7 +95,7 @@ export class MessageStreamer {
         }
         return;
       }
-      this.logger.error(`Failed to send draft: ${err}`);
+      this.logger.error(`Failed to send draft: ${getErrorMessage(err)}`);
     }
   }
 }

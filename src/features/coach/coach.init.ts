@@ -11,7 +11,7 @@ import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';
 import { CoachService } from './coach.service';
 
-const logger = new Logger('initCoach');
+const logger = new Logger('coach:init');
 
 export async function initCoach(app: Express): Promise<void> {
   await createMongoConnection(DB_NAME);

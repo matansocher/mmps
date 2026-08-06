@@ -29,7 +29,7 @@ const REPO_ROOT = resolve(SCRIPT_DIR, '../../../..');
 
 config({ path: resolve(REPO_ROOT, '.env') });
 
-const logger = new Logger('import-card-xlsx');
+const logger = new Logger('expenses:script:import-card-xlsx');
 
 const CONFIG = {
   folder: 'expenses' as string,

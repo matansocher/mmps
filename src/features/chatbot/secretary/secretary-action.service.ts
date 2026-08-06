@@ -3,7 +3,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import type { InlineKeyboard } from 'grammy';
 import { createAgent } from 'langchain';
 import { env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { buildInlineKeyboard } from '@services/telegram';
 import { calendarTool, recordModelUsage, reminderTool, UsageCallbackHandler } from '@shared/ai';
@@ -26,7 +26,7 @@ export function buildActionsKeyboard(actions: ReadonlyArray<Pick<SecretaryAction
 }
 
 export class SecretaryActionService {
-  private readonly logger = new Logger(SecretaryActionService.name);
+  private readonly logger = new Logger('chatbot:secretary-action');
   private readonly agent: any;
 
   constructor() {
@@ -52,7 +52,7 @@ export class SecretaryActionService {
       const ok = toolMessages.length > 0 && !anyFailure;
       return { ok, text: ok ? text : text || 'The action could not be completed.' };
     } catch (err) {
-      this.logger.error(`Action execution failed: ${err}`);
+      this.logger.error(`Action execution failed: ${getErrorMessage(err)}`);
       return { ok: false, text: `Failed to perform the action: ${err}` };
     }
   }

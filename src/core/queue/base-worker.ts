@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq';
 import { env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import type { BaseJobData, WorkerConfig } from './types';
 
 const DEFAULT_CONCURRENCY = 10;
@@ -10,7 +10,7 @@ export function createWorker<T extends BaseJobData>(config: WorkerConfig<T>): Wo
   const redisUrl = env.REDIS_URL;
   if (!redisUrl) throw new Error('REDIS_URL not defined');
 
-  const logger = new Logger(`${config.queueName}-worker`);
+  const logger = new Logger(`queue:${config.queueName}:worker`);
 
   const worker = new Worker<T>(config.queueName, config.handler, {
     connection: {
@@ -29,7 +29,7 @@ export function createWorker<T extends BaseJobData>(config: WorkerConfig<T>): Wo
   });
 
   worker.on('failed', (job, err) => {
-    logger.error(`Job ${job?.id} failed: ${err.message}`);
+    logger.error(`Job ${job?.id} failed: ${getErrorMessage(err)}`);
     if (config.onFailed) {
       config.onFailed(job, err);
     }

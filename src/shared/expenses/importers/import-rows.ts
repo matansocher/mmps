@@ -1,6 +1,7 @@
 // Reusable importer pipeline — used by both the standalone script and the expenses bot's
 // document-upload handler. Caller supplies parsed rows; we handle dedup + override-inheritance
 // + insertion. Pure of any file-system / Telegram concerns.
+import { getErrorMessage } from '@core/utils';
 import { createExpense, type CreateExpenseData, effectiveVendor, type Expense, getAllOverriddenExpenses, getExpensesBetween } from '@shared/expenses';
 import { findDuplicate, normalizeName } from './dedup';
 import { parseDiscountFile } from './discount-parser';
@@ -147,7 +148,7 @@ export async function importParsedFiles(parsedFiles: ReadonlyArray<{ readonly me
           liveExisting.push(newExpense);
           registerOverride(overrideMap, newExpense);
         } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
+          const message = getErrorMessage(err);
           if (message.includes('E11000') || message.toLowerCase().includes('duplicate key')) {
             skipped++;
             continue;

@@ -1,13 +1,12 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
-import { getDateString } from '@core/utils';
+import { getDateString, getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
 export const LIKED_TEAMS: string[] = ['Real Madrid', 'Barcelona', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Manchester City FC', 'Chelsea FC', 'Bayern Munich', 'Maccabi Haifa'];
 
-const logger = new Logger('SportsCalendarScheduler');
+const logger = new Logger('chatbot:scheduler:sports-calendar');
 
 const getDaysToAdd = (dayOfWeek: number): number => {
   if (dayOfWeek === 0) {
@@ -89,6 +88,6 @@ export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): 
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to add important games to calendar: ${err}`);
+    logger.error(`Failed to add important games to calendar: ${getErrorMessage(err)}`);
   }
 }
