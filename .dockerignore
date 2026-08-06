@@ -1,0 +1,62 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Node
+node_modules
+apps/*/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist
+apps/*/dist
+docs/.vitepress/dist
+docs/.vitepress/cache
+coverage
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.idea
+.vscode
+.DS_Store
+*.swp
+
+# Tooling / CI / local state
+.github
+.husky
+.claude
+.copilot
+.nvmrc
+.prettierignore
+.prettierrc.json
+eslint.config.mjs
+commitlint.config.cjs
+release.config.cjs
+vitest.config.ts
+vitest.integration.config.ts
+vitest.e2e.config.ts
+
+# Test artifacts
+test
+**/*.spec.ts
+
+# Runtime data (lives in a volume, never bake into image)
+assets/downloads
+assets/files
+assets/recordings
+
+# Misc
+*.log
+README.md
+AGENTS.md
+CLAUDE.md
+docs
+scripts
