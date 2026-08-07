@@ -9,7 +9,7 @@ type ModelPrice = {
   readonly output: number; // USD per 1M output tokens
 };
 
-// USD per 1,000,000 tokens. Source: OpenAI API pricing (developers.openai.com), captured 2026-06.
+// USD per 1,000,000 tokens. Source: OpenAI API pricing (developers.openai.com), captured 2026-08.
 // Prices drift — verify against https://platform.openai.com/docs/pricing when they look off.
 // Only models that actually flow through our agents are listed; unknown models report cost 0.
 export const MODEL_PRICING: Record<string, ModelPrice> = {
