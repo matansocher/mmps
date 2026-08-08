@@ -10,15 +10,22 @@ const logger = new Logger('chatbot:scheduler:transfer-collect');
 // Player-quality gate: notable enough to report regardless of how likely the move is.
 const MIN_PROMINENCE = 50; // 0-92 caliber + media attention score
 const MIN_MARKET_VALUE_EUR = 20_000_000;
+// Probability floor: skip long-shot rumours unless the money is big enough to matter anyway.
+const MIN_PROBABILITY = 30;
+const BIG_MONEY_EUR = 30_000_000;
 
 // A move qualifies when either the selling or buying club is in a top-5 league
-// (catches arrivals, internal moves and top-5 players leaving) and the player is notable.
+// (catches arrivals, internal moves and top-5 players leaving), the player is notable,
+// and it is either likely (>= 30%) or a big-money move (> EUR 30M) at any probability.
 function isQualifying(rumour: TransferRumour): boolean {
   const inTop5 = [rumour.fromClub?.leagueId, rumour.toClub?.leagueId].some((leagueId) => leagueId != null && TOP5_LEAGUE_IDS.includes(leagueId));
   if (!inTop5) {
     return false;
   }
-  return rumour.prominence >= MIN_PROMINENCE || (rumour.marketValueEur ?? 0) >= MIN_MARKET_VALUE_EUR;
+  const marketValue = rumour.marketValueEur ?? 0;
+  const isNotable = rumour.prominence >= MIN_PROMINENCE || marketValue >= MIN_MARKET_VALUE_EUR;
+  const passesProbability = rumour.probability >= MIN_PROBABILITY || marketValue > BIG_MONEY_EUR;
+  return isNotable && passesProbability;
 }
 
 function toPendingRumour(rumour: TransferRumour): CreatePendingRumourData {
