@@ -3,14 +3,14 @@ import { sleep } from '@core/utils';
 import { BOOKING_API_BASE_URL, BOOKING_API_HOST } from '../constants';
 
 export function validateRapidApiKey(): void {
-  if (!env.RAPIDAPI_KEY) {
-    throw new Error('RAPIDAPI_KEY is not configured. Subscribe to booking-com15 at https://rapidapi.com/DataCrawler/api/booking-com15');
+  if (!env.RAPIDAPI_BOOKING_KEY) {
+    throw new Error('RAPIDAPI_BOOKING_KEY is not configured. Subscribe to booking-com15 at https://rapidapi.com/DataCrawler/api/booking-com15');
   }
 }
 
 function getRapidApiHeaders(): Record<string, string> {
   return {
-    'x-rapidapi-key': env.RAPIDAPI_KEY,
+    'x-rapidapi-key': env.RAPIDAPI_BOOKING_KEY,
     'x-rapidapi-host': BOOKING_API_HOST,
   };
 }
