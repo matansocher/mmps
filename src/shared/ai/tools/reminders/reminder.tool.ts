@@ -56,6 +56,7 @@ Actions:
 
 When the user mentions saving something for later, setting a reminder, or asking to be reminded about something, use this tool to create a reminder.
 Parse natural language dates and times into ISO 8601 format in the user's local timezone (without Z suffix) before calling this tool.
+IMPORTANT: When the user gives only a date with no specific time (e.g. "remind me on October 31st"), default to 18:00 (6 PM) on that date — never midnight. Respect any explicit time the user does provide.
 
 Examples:
 - "Remind me to call mom tomorrow at 3pm" → create with dueDate

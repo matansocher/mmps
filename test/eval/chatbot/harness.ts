@@ -1,7 +1,8 @@
 import { tool } from '@langchain/core/tools';
 import { ChatOpenAI } from '@langchain/openai';
 import { env } from 'node:process';
-import { agent, createAgentService } from '@features/chatbot/agent';
+import { createAgentService, orchestrator } from '@features/chatbot/agent';
+import type { AgentDescriptor } from '@features/chatbot/types';
 import { formatAgentResponse } from '@features/chatbot/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { UsageCallbackHandler } from '@shared/ai';
@@ -10,10 +11,11 @@ import type { CapturedCall, EvalCase, RunResult, ToolFixture } from './types';
 // Prod-parity model. Temperature matches ChatbotService.
 const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
 
-// The real chatbot descriptor — we reuse its exact system prompt and the real tool set,
-// but swap every tool body for a spy that records the call and returns a stub. This tests
-// routing (which tool + args the prompt makes the model choose) without any side effects.
-const descriptor = agent();
+// The real chatbot orchestrator — we reuse its exact system prompt, tools, and specialist
+// sub-agents, but swap every tool body for a spy that records the call and returns a stub.
+// This tests routing (which tool + args the prompt makes the model choose, across the
+// supervisor and every specialist) without any side effects.
+const descriptor = orchestrator();
 
 async function resolveFixture(fixture: ToolFixture | undefined, args: Record<string, unknown>): Promise<unknown> {
   if (typeof fixture === 'function') {
@@ -24,8 +26,9 @@ async function resolveFixture(fixture: ToolFixture | undefined, args: Record<str
 
 function buildSpyAgent(evalCase: EvalCase) {
   const calls: CapturedCall[] = [];
-  const spyTools = descriptor.tools.map((realTool) => {
-    return tool(
+
+  const spyTool = (realTool: AgentDescriptor['tools'][number]) =>
+    tool(
       async (args: Record<string, unknown>) => {
         calls.push({ name: realTool.name, args });
         const result = await resolveFixture(evalCase.fixtures?.[realTool.name], args);
@@ -33,9 +36,10 @@ function buildSpyAgent(evalCase: EvalCase) {
       },
       { name: realTool.name, description: realTool.description, schema: realTool.schema },
     );
-  });
 
-  const service = createAgentService({ name: 'CHATBOT-EVAL', prompt: descriptor.prompt, tools: spyTools }, { model });
+  const spyAgents = descriptor.agents.map((specialist) => ({ ...specialist, tools: specialist.tools.map(spyTool) }));
+
+  const service = createAgentService({ name: 'CHATBOT-EVAL', prompt: descriptor.prompt, tools: (descriptor.tools ?? []).map(spyTool), agents: spyAgents }, { model });
   return { service, calls };
 }
 
