@@ -28,9 +28,9 @@ jobs:
       - name: Install dependencies (self-healing lockfile)
         run: |
           npm ci || {
-            echo "::warning::npm ci failed — package-lock.json is out of sync with package.json (often a macOS-generated lock dropping Linux-only optional deps). Regenerating a clean lockfile with 'rm -rf node_modules package-lock.json && npm install'."
+            echo "::warning::npm ci failed — package-lock.json is out of sync with package.json (often a macOS-generated lock dropping Linux-only optional deps). Regenerating a clean lockfile with 'rm -rf node_modules package-lock.json && npm install --include=optional'."
             rm -rf node_modules package-lock.json
-            npm install
+            npm install --include=optional
           }
 
       - name: Build
