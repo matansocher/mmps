@@ -82,7 +82,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`0 21 * * *`, async () => transferDigest(this.bot));
 
-    createSchedule(`0 9 * * *`, async () => hotelPriceCheck(this.bot));
+    createSchedule(`0 17 * * *`, async () => hotelPriceCheck(this.bot));
 
     createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
 
