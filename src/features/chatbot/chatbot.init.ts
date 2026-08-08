@@ -16,6 +16,7 @@ import { ensureReminderIndexes, DB_NAME as REMINDERS_DB_NAME } from '@shared/rem
 import { DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
 import { DB_NAME as SPOTIFY_FOLLOWER_DB_NAME } from '@shared/spotify-follower';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
+import { DB_NAME as TRANSFER_TRACKER_DB_NAME } from '@shared/transfer-tracker';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
 import { createChatbotCheckpointer } from './agent';
@@ -39,6 +40,7 @@ export async function initChatbot(app: Express): Promise<void> {
     POLYMARKET_DB_NAME,
     SOCIAL_FOLLOWER_DB_NAME,
     SPOTIFY_FOLLOWER_DB_NAME,
+    TRANSFER_TRACKER_DB_NAME,
     CALENDAR_EVENTS_DB_NAME,
     FRIENDS_DB_NAME,
     MEET_FRIENDS_DB_NAME,

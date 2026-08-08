@@ -19,6 +19,8 @@ import {
   socialMediaDigest,
   sportsCalendar,
   spotifyPodcastUpdate,
+  transferCollect,
+  transferDigest,
   upcomingEventAlert,
   usageSummary,
   weeklyExerciseSummary,
@@ -74,6 +76,10 @@ export class ChatbotSchedulerService {
     createSchedule(`30 * * * *`, async () => socialMediaCollect(['telegram']));
 
     createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
+
+    createSchedule(`15 * * * *`, async () => transferCollect());
+
+    createSchedule(`0 21 * * *`, async () => transferDigest(this.bot));
 
     createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
 
