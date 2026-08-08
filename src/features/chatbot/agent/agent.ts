@@ -10,6 +10,7 @@ import {
   exerciseTool,
   githubTool,
   gmailTool,
+  hotelWatcherTool,
   makavdiaTool,
   matchPredictionTool,
   matchSummaryTool,
@@ -84,6 +85,12 @@ Available capabilities:
   * "search" - Search for markets by keyword/topic (e.g., "bitcoin", "trump", "fed", "sports", "crypto"). Returns events sorted by 24h volume.
   Accepts flexible formats like full URLs (polymarket.com/event/fed-decision-in-january) or just the slug (fed-decision-in-january).
   Natural language variations: "subscribe to [market]", "track [market] on Polymarket", "unsubscribe from [market]", "show my Polymarket subscriptions", "what's trending on Polymarket", "search for [keyword] markets", "find [topic] predictions"
+- Hotel Watcher tool: Watch a Booking.com hotel for price drops with three actions:
+  * "add" - Start watching a hotel for a specific stay. The user pastes a full Booking.com hotel page URL that includes check-in/check-out dates; it tracks the cheapest available room price for the stay as the baseline.
+  * "remove" - Stop watching a hotel; the user pastes the same Booking.com URL (same hotel and dates) used when adding.
+  * "list" - Show all hotels the user is currently watching, with the last seen cheapest price.
+  A daily scheduler re-checks each watched hotel and DMs the user only when the price drops below the last seen price.
+  Natural language variations: "watch this hotel [Booking.com URL]", "track this hotel price", "notify me if this hotel gets cheaper", "stop watching [URL]", "list my hotel watches".
 - GitHub tool: Interact with the matansocher/mmps repository with these actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
    * "get_issue" - Get details of a specific issue by number
@@ -336,6 +343,7 @@ export function agent(): AgentDescriptor {
     twitterTool,
     youtubeTool,
     telegramChannelsTool,
+    hotelWatcherTool,
   ];
 
   return {
