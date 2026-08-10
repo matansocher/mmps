@@ -2,8 +2,7 @@ import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getLiveRumours, TOP5_LEAGUE_IDS } from '@services/transfer-tracker';
 import type { TransferRumour } from '@services/transfer-tracker';
-import { createPendingRumours, getLastSeenAt, setLastSeenAt } from '@shared/transfer-tracker';
-import type { CreatePendingRumourData } from '@shared/transfer-tracker';
+import { getLastSeenAt, getSentRumourKeys, setLastSeenAt, upsertPendingRumours } from '@shared/transfer-tracker';import type { CreatePendingRumourData } from '@shared/transfer-tracker';
 
 const logger = new Logger('chatbot:scheduler:transfer-collect');
 
@@ -57,10 +56,13 @@ export async function transferCollect(): Promise<void> {
       return;
     }
 
-    const qualifying = rumours.filter(isQualifying);
+    // A live rumour keeps being re-reported after it is settled; drop the stages we have
+    // already finished announcing so a done deal doesn't come back every evening.
+    const alreadySent = await getSentRumourKeys(MY_USER_ID);
+    const qualifying = rumours.filter((rumour) => isQualifying(rumour) && !alreadySent.has(`${rumour.id}:${rumour.status}`));
     // Persist pending rumours before advancing the cursor — a crash in between re-collects
-    // instead of losing rumours (createPendingRumours dedupes by rumourId + reportedAt).
-    await createPendingRumours(qualifying.map(toPendingRumour));
+    // instead of losing rumours (upsertPendingRumours keeps one document per rumour).
+    await upsertPendingRumours(qualifying.map(toPendingRumour));
 
     const newestAt = rumours.reduce((max, rumour) => (new Date(rumour.reportedAt) > max ? new Date(rumour.reportedAt) : max), new Date(rumours[0].reportedAt));
     await setLastSeenAt(newestAt);
