@@ -143,7 +143,7 @@ Tools (weather, reminders, etc.)
 
 ### Scheduled Tasks
 
-- **Daily Summary** - Generates daily summary at 23:00
+- **Daily Summary** - Generates daily summary at 22:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
 

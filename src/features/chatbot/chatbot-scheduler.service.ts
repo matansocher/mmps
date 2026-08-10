@@ -44,7 +44,7 @@ export class ChatbotSchedulerService {
   ) {}
 
   init(): void {
-    createSchedule(`00 23 * * *`, async () => dailySummary(this.bot, this.chatbotService));
+    createSchedule(`00 22 * * *`, async () => dailySummary(this.bot, this.chatbotService));
 
     createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot));
 

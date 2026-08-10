@@ -268,7 +268,7 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 
 | Job | Schedule | What |
 |-----|----------|------|
-| Nightly summary | 23:00 | Weather + calendar + exercise, phrased as a goodnight message. |
+| Nightly summary | 22:00 | Weather + calendar + exercise, phrased as a goodnight message. |
 | Football | 12:59 / 23:59 | Match updates & predictions. |
 | Reminders / events | every 15m | Fires due reminders & upcoming-event alerts. |
 | Earthquake monitor | every N min | USGS polling with lookback window. |
