@@ -1,4 +1,4 @@
-import type { Filter, InsertOneResult, ObjectId } from 'mongodb';
+import { ObjectId, type Filter, type InsertOneResult } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import type { CreateReminderData, Reminder, UpdateReminderData } from '../types';
 import { DB_NAME } from './constants';
@@ -36,7 +36,6 @@ export async function getDueReminders(): Promise<Reminder[]> {
 
 export async function markReminderNotified(id: string | ObjectId, chatId: number): Promise<boolean> {
   const remindersCollection = getCollection();
-  const { ObjectId } = await import('mongodb');
   const result = await remindersCollection.updateOne({ _id: new ObjectId(id), chatId }, { $set: { notifiedAt: new Date() } });
   return result.modifiedCount > 0;
 }
@@ -66,14 +65,12 @@ export async function getRemindersByUser(chatId: number, includeCompleted = fals
 
 export async function getReminderById(id: string | ObjectId, chatId: number): Promise<Reminder | null> {
   const remindersCollection = getCollection();
-  const { ObjectId } = await import('mongodb');
 
   return remindersCollection.findOne({ _id: new ObjectId(id), chatId });
 }
 
 export async function updateReminderStatus(id: string | ObjectId, chatId: number, status: 'completed' | 'snoozed', timestamp?: Date): Promise<boolean> {
   const remindersCollection = getCollection();
-  const { ObjectId } = await import('mongodb');
 
   const update: UpdateReminderData = { status };
 
@@ -90,7 +87,6 @@ export async function updateReminderStatus(id: string | ObjectId, chatId: number
 
 export async function updateReminder(id: string | ObjectId, chatId: number, updates: UpdateReminderData): Promise<boolean> {
   const remindersCollection = getCollection();
-  const { ObjectId } = await import('mongodb');
 
   const result = await remindersCollection.updateOne({ _id: new ObjectId(id), chatId }, { $set: updates });
 
@@ -99,7 +95,6 @@ export async function updateReminder(id: string | ObjectId, chatId: number, upda
 
 export async function deleteReminder(id: string | ObjectId, chatId: number): Promise<boolean> {
   const remindersCollection = getCollection();
-  const { ObjectId } = await import('mongodb');
 
   const result = await remindersCollection.deleteOne({ _id: new ObjectId(id), chatId });
   return result.deletedCount > 0;
