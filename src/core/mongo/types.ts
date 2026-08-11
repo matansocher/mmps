@@ -7,5 +7,9 @@ export type User = {
   readonly firstName: string;
   readonly lastName: string;
   readonly username: string;
-  readonly createAt: Date;
+  readonly createdAt: Date;
 };
+
+export type UserDetails = Omit<User, '_id' | 'createdAt'>;
+
+export type SaveUserResult = 'created' | 'updated';
