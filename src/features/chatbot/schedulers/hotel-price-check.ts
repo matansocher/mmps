@@ -1,13 +1,13 @@
 import { type Bot, InlineKeyboard } from 'grammy';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getHotelPrice } from '@services/booking';
-import { getActiveWatches, updateLastPrice } from '@shared/hotel-watcher';
+import { getActiveWatches, updateLowestPrice } from '@shared/hotel-watcher';
 import type { HotelWatch } from '@shared/hotel-watcher';
 
 const logger = new Logger('chatbot:scheduler:hotel-price-check');
 
 // Re-checks every active hotel watch once a day and DMs the user only when the
-// cheapest available price for the stay drops below the last seen price.
+// cheapest available price for the stay reaches a new observed low.
 export async function hotelPriceCheck(bot: Bot): Promise<void> {
   const watches = await getActiveWatches();
   if (!watches.length) {
@@ -29,12 +29,7 @@ async function checkWatch(bot: Bot, watch: HotelWatch): Promise<void> {
 
     if (current.price < watch.lastPrice) {
       await notifyDrop(bot, watch, current.price);
-    }
-
-    // Always store the newest price so the next drop is measured against it
-    // (this also lets the baseline rise again when a cheaper room sells out).
-    if (current.price !== watch.lastPrice) {
-      await updateLastPrice(chatId, hotelId, checkinDate, checkoutDate, current.price);
+      await updateLowestPrice(chatId, hotelId, checkinDate, checkoutDate, current.price);
     }
   } catch (err) {
     logger.error(`Failed to check hotel ${hotelId} for chatId ${chatId}: ${getErrorMessage(err)}`);

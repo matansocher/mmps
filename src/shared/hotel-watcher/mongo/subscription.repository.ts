@@ -29,8 +29,8 @@ export async function createWatch(data: CreateHotelWatchData): Promise<InsertOne
   return getCollection().insertOne(watch as HotelWatch);
 }
 
-export async function updateLastPrice(chatId: number, hotelId: string, checkinDate: string, checkoutDate: string, lastPrice: number): Promise<UpdateResult> {
-  return getCollection().updateOne({ chatId, hotelId, checkinDate, checkoutDate, isActive: true }, { $set: { lastPrice, updatedAt: new Date() } });
+export async function updateLowestPrice(chatId: number, hotelId: string, checkinDate: string, checkoutDate: string, lowestPrice: number): Promise<UpdateResult> {
+  return getCollection().updateOne({ chatId, hotelId, checkinDate, checkoutDate, isActive: true }, { $set: { lastPrice: lowestPrice, updatedAt: new Date() } });
 }
 
 export async function removeWatch(chatId: number, hotelId: string, checkinDate: string, checkoutDate: string): Promise<UpdateResult> {
