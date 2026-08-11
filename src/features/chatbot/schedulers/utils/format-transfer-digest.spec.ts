@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PendingRumour } from '@shared/transfer-tracker';
-import { formatTransferDigest, shortClubName, shortFee } from './format-transfer-digest';
+import { formatTransferDigest, formatTransferDigestFallback, shortClubName, shortFee } from './format-transfer-digest';
 
 function makeRumour(overrides: Partial<PendingRumour> = {}): PendingRumour {
   return {
@@ -79,6 +79,12 @@ describe('formatTransferDigest()', () => {
     expect(message).toContain('100%');
   });
 
+  it('should separate each table from its heading so Telegram parses it as a table', () => {
+    const message = formatTransferDigest([makeRumour({ status: 'confirmed' })]);
+
+    expect(message).toContain('**✅ Confirmed**\n\n| Player | Move | Fee | % |');
+  });
+
   it('should not render a section that has no rumours', () => {
     const message = formatTransferDigest([makeRumour({ status: 'confirmed' })]);
 
@@ -101,5 +107,56 @@ describe('formatTransferDigest()', () => {
     const message = formatTransferDigest([makeRumour({ playerName: 'Odd | Name' })]);
 
     expect(message).toContain('Odd \\| Name');
+  });
+});
+
+describe('formatTransferDigestFallback()', () => {
+  it('should render grouped two-line cards without table syntax', () => {
+    const [message] = formatTransferDigestFallback([
+      makeRumour({
+        status: 'confirmed',
+        probability: 100,
+        feeLabel: '£28.9m–£34m',
+        playerName: 'Ousmane Diomande',
+        fromClub: 'Sporting CP',
+        toClub: 'Nottingham Forest',
+      }),
+    ]);
+
+    expect(message).toContain('✅ Confirmed (1)');
+    expect(message).toContain('• Ousmane Diomande · 100% · £28.9m');
+    expect(message).toContain("  Sporting → Nott'm Forest");
+    expect(message).not.toContain('| Player |');
+    expect(message).not.toContain('|:--|');
+  });
+
+  it('should keep probability in every section', () => {
+    const messages = formatTransferDigestFallback([
+      makeRumour({ rumourId: 'confirmed', status: 'confirmed', probability: 100 }),
+      makeRumour({ rumourId: 'collapsed', status: 'collapsed', probability: 2 }),
+    ]);
+    const message = messages.join('\n');
+
+    expect(message).toContain('Player One · 100%');
+    expect(message).toContain('Player One · 2%');
+  });
+
+  it('should split large digests without dropping players', () => {
+    const rumours = Array.from({ length: 100 }, (_, index) =>
+      makeRumour({
+        rumourId: `player-${index}`,
+        playerName: `Player ${index}`,
+        fromClub: `Very Long Selling Club ${index}`,
+        toClub: `Very Long Buying Club ${index}`,
+      }),
+    );
+
+    const messages = formatTransferDigestFallback(rumours);
+
+    expect(messages.length).toBeGreaterThan(1);
+    expect(messages.every((message) => message.length <= 3900)).toBe(true);
+    for (let index = 0; index < rumours.length; index += 1) {
+      expect(messages.join('\n')).toContain(`Player ${index} ·`);
+    }
   });
 });

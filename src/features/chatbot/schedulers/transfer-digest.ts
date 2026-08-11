@@ -1,10 +1,10 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { sendRichMessage } from '@services/telegram';
+import { sendShortenedMessage } from '@services/telegram';
 import { getPendingRumours, markPendingRumoursSent } from '@shared/transfer-tracker';
 import type { PendingRumour } from '@shared/transfer-tracker';
-import { formatTransferDigest, shortClubName } from './utils';
+import { formatTransferDigest, formatTransferDigestFallback, shortClubName } from './utils';
 
 const logger = new Logger('chatbot:scheduler:transfer-digest');
 
@@ -18,10 +18,21 @@ export async function transferDigest(bot: Bot): Promise<void> {
 
   const rumours = dedupeByMove(pending);
   try {
-    await sendRichMessage(bot, MY_USER_ID, formatTransferDigest(rumours));
+    await sendDigest(bot, rumours);
     await markPendingRumoursSent(pending);
   } catch (err) {
     logger.error(`Failed to send transfer digest, keeping rumours for next digest: ${getErrorMessage(err)}`);
+  }
+}
+
+async function sendDigest(bot: Bot, rumours: readonly PendingRumour[]): Promise<void> {
+  try {
+    await bot.api.sendRichMessage(MY_USER_ID, { markdown: formatTransferDigest(rumours) });
+  } catch (err) {
+    logger.error(`Telegram rejected the rich transfer table; sending readable fallback: ${getErrorMessage(err)}`);
+    for (const message of formatTransferDigestFallback(rumours)) {
+      await sendShortenedMessage(bot, MY_USER_ID, message);
+    }
   }
 }
 

@@ -50,6 +50,8 @@ const SECTIONS: readonly { readonly status: string; readonly label: string }[] =
   { status: 'collapsed', label: '❌ Collapsed' },
 ];
 
+const FALLBACK_MAX_LENGTH = 3900;
+
 export function shortClubName(name: string | null): string {
   if (!name) {
     return '?';
@@ -103,22 +105,73 @@ function row(rumour: PendingRumour): string {
   return `| ${playerCell(rumour)} | ${cell(move)} | ${cell(shortFee(rumour))} | ${rumour.probability}% |`;
 }
 
+function sortedGroup(rumours: readonly PendingRumour[], status: string): PendingRumour[] {
+  return rumours
+    .filter((rumour) => rumour.status === status)
+    .sort((a, b) => b.probability - a.probability || (b.marketValueEur ?? 0) - (a.marketValueEur ?? 0));
+}
+
 // Groups rumours into one table per deal stage. Status becomes a section heading rather
 // than a column, which is what keeps the table narrow enough to fit on a phone.
 export function formatTransferDigest(rumours: readonly PendingRumour[]): string {
-  const sections = SECTIONS.map(({ status, label }) => ({ label, group: rumours.filter((rumour) => rumour.status === status) }))
+  const sections = SECTIONS.map(({ status, label }) => ({ label, group: sortedGroup(rumours, status) }))
     .filter(({ group }) => group.length > 0)
-    .map(({ label, group }) => {
-      const sorted = [...group].sort((a, b) => b.probability - a.probability || (b.marketValueEur ?? 0) - (a.marketValueEur ?? 0));
-      return [`**${label}**`, '| Player | Move | Fee | % |', '|:--|:--|--:|--:|', ...sorted.map(row)].join('\n');
-    });
+    .map(({ label, group }) => [`**${label}**`, '', '| Player | Move | Fee | % |', '|:--|:--|--:|--:|', ...group.map(row)].join('\n'));
 
   // Any unexpected status still gets reported rather than silently dropped.
   const known = new Set(SECTIONS.map(({ status }) => status));
   const other = rumours.filter((rumour) => !known.has(rumour.status));
   if (other.length) {
-    sections.push([`**📌 Other**`, '| Player | Move | Fee | % |', '|:--|:--|--:|--:|', ...other.map(row)].join('\n'));
+    sections.push([`**📌 Other**`, '', '| Player | Move | Fee | % |', '|:--|:--|--:|--:|', ...other.map(row)].join('\n'));
   }
 
   return [`**Transfer news** ⚽️ (${rumours.length})`, ...sections].join('\n\n');
+}
+
+function fallbackRow(rumour: PendingRumour): string {
+  const player = (rumour.playerName ?? 'Unknown').replace(/\s+/g, ' ').trim();
+  const move = `${shortClubName(rumour.fromClub)} → ${shortClubName(rumour.toClub)}`;
+  return `• ${player} · ${rumour.probability}% · ${shortFee(rumour)}\n  ${move}`;
+}
+
+// Standard Telegram messages do not support Markdown tables. If rich messages are
+// unavailable, render compact two-line cards and split safely below Telegram's limit.
+export function formatTransferDigestFallback(rumours: readonly PendingRumour[]): string[] {
+  const title = `Transfer news ⚽️ (${rumours.length})`;
+  const chunks: string[] = [];
+  let current = title;
+
+  const append = (text: string, continuationHeading?: string): void => {
+    if (`${current}\n\n${text}`.length <= FALLBACK_MAX_LENGTH) {
+      current += `\n\n${text}`;
+      return;
+    }
+    chunks.push(current);
+    current = `${title} — continued${continuationHeading ? `\n\n${continuationHeading}` : ''}\n\n${text}`;
+  };
+
+  for (const { status, label } of SECTIONS) {
+    const group = sortedGroup(rumours, status);
+    if (!group.length) {
+      continue;
+    }
+    const heading = `${label} (${group.length})`;
+    append(heading);
+    for (const rumour of group) {
+      append(fallbackRow(rumour), `${heading} — continued`);
+    }
+  }
+
+  const known = new Set(SECTIONS.map(({ status }) => status));
+  const other = rumours.filter((rumour) => !known.has(rumour.status));
+  if (other.length) {
+    const heading = `📌 Other (${other.length})`;
+    append(heading);
+    for (const rumour of other) {
+      append(fallbackRow(rumour), `${heading} — continued`);
+    }
+  }
+
+  chunks.push(current);
+  return chunks;
 }
