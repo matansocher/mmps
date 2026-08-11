@@ -1,4 +1,4 @@
-import { addDays, endOfMonth, subMonths } from 'date-fns';
+import { subMonths } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { effectiveCategory, effectiveVendor, type Expense } from '@shared/expenses';
@@ -16,13 +16,19 @@ export type Baseline = {
 };
 
 export function getMonthBoundaries(ym: string): { ym: string; start: Date; endExclusive: Date; daysInMonth: number } {
+  const match = /^(\d{4})-(\d{2})$/.exec(ym);
+  const year = Number(match?.[1]);
+  const month = Number(match?.[2]);
+  if (!match || month < 1 || month > 12) throw new RangeError(`Invalid month: ${ym}`);
+
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
   const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
-  const endDay = endOfMonth(toZonedTime(start, DEFAULT_TIMEZONE));
   return {
     ym,
     start,
-    endExclusive: fromZonedTime(formatInTimeZone(addDays(endDay, 1), DEFAULT_TIMEZONE, "yyyy-MM-dd'T'00:00:00"), DEFAULT_TIMEZONE),
-    daysInMonth: endDay.getDate(),
+    endExclusive: fromZonedTime(`${nextYear}-${String(nextMonth).padStart(2, '0')}-01T00:00:00`, DEFAULT_TIMEZONE),
+    daysInMonth: new Date(Date.UTC(year, month, 0)).getUTCDate(),
   };
 }
 
