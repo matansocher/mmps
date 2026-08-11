@@ -187,7 +187,7 @@ export class CoachController {
   }
 
   private async userStart(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
-    const userExists = await saveUserDetails(userDetails);
+    const saveResult = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
     if (subscription) {
@@ -204,7 +204,7 @@ export class CoachController {
       `אם תרצה להפסיק לקבל ממני עדכונים, תוכל להשתמש בפקודה פה למטה`,
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
-    await ctx.reply(userExists ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
+    await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
     const launcherKeyboard = this.buildKeyboard();
     if (launcherKeyboard) {
       await this.bot.api.sendMessage(chatId, '📱 גם יש לי אפליקציה — לתצוגה ויזואלית:', { reply_markup: launcherKeyboard });

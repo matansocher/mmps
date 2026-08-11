@@ -192,7 +192,7 @@ export class WorldlyController {
   }
 
   private async userStart(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
-    const userExists = await saveUserDetails(userDetails);
+    const saveResult = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
     if (subscription) {
@@ -209,7 +209,7 @@ export class WorldlyController {
       `אם אתם רוצים שאני אפסיק לשלוח משחקים בכל יום, אפשר פשוט לבקש ממני בפקודה ׳פעולות׳, פה למטה 👇`,
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אשלח משחקים בכל יום 🟢`;
-    await ctx.reply(userExists ? existingUserReplyText : newUserReplyText);
+    await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText);
   }
 
   private async stopHandler(ctx: Context, chatId: number): Promise<void> {

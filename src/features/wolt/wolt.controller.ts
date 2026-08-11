@@ -27,7 +27,7 @@ export class WoltController {
 
   async startHandler(ctx: Context): Promise<void> {
     const { userDetails } = getMessageData(ctx);
-    const userExists = await saveUserDetails(userDetails);
+    const saveResult = await saveUserDetails(userDetails);
 
     const newUserReplyText = [
       `שלום {firstName}!`,
@@ -38,9 +38,9 @@ export class WoltController {
       .join('\n')
       .replace('{firstName}', userDetails.firstName || userDetails.username || '');
     const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
-    await ctx.reply(userExists ? existingUserReplyText : newUserReplyText);
+    await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText);
 
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: !userExists }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: saveResult === 'created' }, userDetails);
   }
 
   async contactHandler(ctx: Context): Promise<void> {
