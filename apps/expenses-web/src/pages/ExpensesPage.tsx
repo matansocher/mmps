@@ -51,13 +51,15 @@ export function ExpensesPage() {
   const [anomaliesModal, setAnomaliesModal] = useState(false);
   const [heatmapOpen, setHeatmapOpen] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (showError = true): Promise<boolean> => {
     try {
       setLoading(true);
       const r = await api.expensesMonth(selectedMonth);
       setData(r);
+      return true;
     } catch {
-      setToast({ message: 'Failed to load', kind: 'error' });
+      if (showError) setToast({ message: 'Failed to load', kind: 'error' });
+      return false;
     } finally {
       setLoading(false);
     }
@@ -83,24 +85,36 @@ export function ExpensesPage() {
     if (!editing) return;
     const targetVendor = editing.vendor;
     const updated = await api.updateExpense(editing.id, body);
+    const updateEditedExpense = () => {
+      setData((prev) =>
+        prev ? { ...prev, expenses: prev.expenses.map((e) => (e.id === updated.id ? updated : e)) } : prev,
+      );
+    };
     if (propagateToVendor && (body.userVendor !== undefined || body.userCategory !== undefined)) {
       const bulkUpdates: { userVendor?: string; userCategory?: ExpenseCategory } = {};
       if (body.userVendor !== undefined) bulkUpdates.userVendor = updated.vendor;
       if (body.userCategory !== undefined) bulkUpdates.userCategory = updated.category;
       try {
         await api.bulkUpdateVendor({ name: targetVendor, ...bulkUpdates });
-        await load();
-        setEditing(null);
-        haptic('success');
-        setToast({ message: 'Updated all charges', kind: 'success' });
-        return;
       } catch {
-        // fall through to single-update toast
+        updateEditedExpense();
+        setEditing(null);
+        haptic('error');
+        setToast({ message: 'Updated this charge, but failed to update all charges', kind: 'error' });
+        return;
       }
+      const refreshed = await load(false);
+      if (!refreshed) updateEditedExpense();
+      setEditing(null);
+      haptic(refreshed ? 'success' : 'error');
+      setToast(
+        refreshed
+          ? { message: 'Updated all charges', kind: 'success' }
+          : { message: 'Updated all charges, but failed to refresh', kind: 'error' },
+      );
+      return;
     }
-    setData((prev) =>
-      prev ? { ...prev, expenses: prev.expenses.map((e) => (e.id === updated.id ? updated : e)) } : prev,
-    );
+    updateEditedExpense();
     setEditing(null);
     haptic('success');
     setToast({ message: 'Updated', kind: 'success' });
