@@ -1,4 +1,4 @@
-import type { InsertOneResult, ObjectId } from 'mongodb';
+import type { Filter, InsertOneResult, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import type { CreateReminderData, Reminder, UpdateReminderData } from '../types';
 import { DB_NAME } from './constants';
@@ -59,11 +59,7 @@ export async function getRemindersCompletedBetween(chatId: number, from: Date, t
 
 export async function getRemindersByUser(chatId: number, includeCompleted = false): Promise<Reminder[]> {
   const remindersCollection = getCollection();
-  const query: any = { chatId };
-
-  if (!includeCompleted) {
-    query.status = { $in: ['pending', 'snoozed'] };
-  }
+  const query: Filter<Reminder> = includeCompleted ? { chatId } : { chatId, status: { $in: ['pending', 'snoozed'] } };
 
   return remindersCollection.find(query).sort({ dueDate: 1 }).toArray();
 }
@@ -119,10 +115,7 @@ export async function reactivateSnoozedReminders(): Promise<number> {
   const remindersCollection = getCollection();
   const now = new Date();
 
-  const result = await remindersCollection.updateMany(
-    { status: 'snoozed', snoozedUntil: { $lte: now } },
-    { $set: { status: 'pending' }, $unset: { snoozedUntil: '', notifiedAt: '' } },
-  );
+  const result = await remindersCollection.updateMany({ status: 'snoozed', snoozedUntil: { $lte: now } }, { $set: { status: 'pending' }, $unset: { snoozedUntil: '', notifiedAt: '' } });
 
   return result.modifiedCount;
 }
