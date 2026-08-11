@@ -88,8 +88,8 @@ Available capabilities:
 - Hotel Watcher tool: Watch a Booking.com hotel for price drops with three actions:
   * "add" - Start watching a hotel for a specific stay. The user pastes a full Booking.com hotel page URL that includes check-in/check-out dates; it tracks the cheapest available room price for the stay as the baseline.
   * "remove" - Stop watching a hotel; the user pastes the same Booking.com URL (same hotel and dates) used when adding.
-  * "list" - Show all hotels the user is currently watching, with the last seen cheapest price.
-  A daily scheduler re-checks each watched hotel and DMs the user only when the price drops below the last seen price.
+  * "list" - Show all hotels the user is currently watching, with the lowest observed price.
+  A daily scheduler re-checks each watched hotel and DMs the user only when the price reaches a new observed low.
   Natural language variations: "watch this hotel [Booking.com URL]", "track this hotel price", "notify me if this hotel gets cheaper", "stop watching [URL]", "list my hotel watches".
 - GitHub tool: Interact with the matansocher/mmps repository with these actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees

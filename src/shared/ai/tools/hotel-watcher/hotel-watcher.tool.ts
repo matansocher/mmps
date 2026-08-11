@@ -84,7 +84,7 @@ async function handleList(): Promise<string> {
     hotel: watch.hotelName ?? watch.hotelId,
     checkin: watch.checkinDate,
     checkout: watch.checkoutDate,
-    lastPrice: `${watch.currency} ${watch.lastPrice}`,
+    lowestPrice: `${watch.currency} ${watch.lastPrice}`,
   }));
 
   return JSON.stringify({ success: true, watches: summary });
@@ -112,8 +112,8 @@ export const hotelWatcherTool = tool(runner, {
   description: `Watch a Booking.com hotel for price drops and get notified.
 
 Actions:
-- add: Start watching a hotel for a specific stay. Provide the full Booking.com hotel page URL (it must include the check-in and check-out dates). Tracks the cheapest available room price for the stay and stores it as the baseline. A daily scheduler re-checks the price and DMs you when it drops below the last seen price.
+- add: Start watching a hotel for a specific stay. Provide the full Booking.com hotel page URL (it must include the check-in and check-out dates). Stores the current cheapest available room price as the initial baseline. A daily scheduler re-checks the price, DMs you when it reaches a new low, and lowers the baseline to that price.
 - remove: Stop watching a hotel. Provide the same Booking.com URL (same hotel and dates) used when adding.
-- list: List all hotels you are currently watching, with their last seen cheapest price.`,
+- list: List all hotels you are currently watching, with their lowest observed price.`,
   schema,
 });
