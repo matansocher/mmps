@@ -1,6 +1,5 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import { addDays, differenceInCalendarDays, parseISO, subDays } from 'date-fns';
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { addDays, subDays } from 'date-fns';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
@@ -9,7 +8,6 @@ import { registry } from '@core/openapi';
 import { getErrorMessage, Logger } from '@core/utils';
 import { fetchEmailFull, fetchUserEmails, markEmailAsRead, trashEmail } from '@services/gmail';
 import { createEvent, deleteEvent, listEvents } from '@services/google-calendar';
-import type { CalendarEvent as GoogleCalendarEvent } from '@services/google-calendar';
 import { aggregateUsage } from '@shared/ai';
 import { createReminder, deleteReminder, getPendingRemindersDueOnOrBefore, getReminderById, getRemindersCompletedBetween, updateReminder, updateReminderStatus } from '@shared/reminders';
 import { chatbotAuthMiddleware } from './auth.middleware';
@@ -21,11 +19,11 @@ import type {
   FullEmailDto,
   ReminderDto,
   UnreadEmailsResponse,
-  UpcomingBirthdayDto,
   UpcomingBirthdaysResponse,
   UpdateReminderBody,
   UsageResponse,
 } from './dto';
+import { buildDashboardResponse, buildUsageResponse, dateKey, parseSelectedDate, toEventDto, toReminderDto, toUpcomingBirthdays } from './transformers';
 
 extendZodWithOpenApi(z);
 
@@ -272,47 +270,7 @@ registry.registerPath({
   },
 });
 
-function dateKey(date: Date): string {
-  return formatInTimeZone(date, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
-}
-
-function isBirthdayEvent(summary: string): boolean {
-  return summary.toLowerCase().includes('birthday');
-}
-
-function toEventDto(event: GoogleCalendarEvent, fallbackId: string): EventDto {
-  const isAllDay = Boolean(event.start?.date && !event.start?.dateTime);
-  const startValue = (event.start?.dateTime ?? event.start?.date) as string | undefined;
-  const endValue = event.end?.dateTime ?? event.end?.date;
-  return {
-    id: event.id ?? fallbackId,
-    summary: event.summary ?? '(no title)',
-    start: startValue ?? '',
-    end: endValue,
-    isAllDay,
-    isBirthday: isBirthdayEvent(event.summary ?? ''),
-    location: event.location,
-  };
-}
-
-function toReminderDto(r: { _id: ObjectId; message: string; dueDate: Date; status: 'pending' | 'snoozed' | 'completed'; snoozedUntil?: Date }): ReminderDto {
-  return {
-    id: r._id.toString(),
-    message: r.message,
-    dueDate: r.dueDate.toISOString(),
-    status: r.status,
-    snoozedUntil: r.snoozedUntil?.toISOString(),
-  };
-}
-
-function parseSelectedDate(raw: unknown): Date {
-  if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    return fromZonedTime(`${raw}T00:00:00`, DEFAULT_TIMEZONE);
-  }
-  return fromZonedTime(`${dateKey(new Date())}T00:00:00`, DEFAULT_TIMEZONE);
-}
-
-async function fetchEventsForDate(date: Date): Promise<GoogleCalendarEvent[]> {
+async function fetchEventsForDate(date: Date) {
   try {
     const timeMin = date.toISOString();
     const timeMax = addDays(date, 1).toISOString();
@@ -331,8 +289,6 @@ export function registerChatbotApiRoutes(app: Express): void {
       const { chatId } = req.chatbotUser!;
       const now = new Date();
       const selectedDate = parseSelectedDate(req.query.date);
-      const selectedKey = dateKey(selectedDate);
-      const isToday = selectedKey === dateKey(now);
       const selectedDayEnd = addDays(selectedDate, 1);
 
       const [googleEvents, pendingReminders, completedReminders] = await Promise.all([
@@ -341,18 +297,8 @@ export function registerChatbotApiRoutes(app: Express): void {
         getRemindersCompletedBetween(chatId, selectedDate, selectedDayEnd),
       ]);
 
-      const eventDtos = googleEvents.map((event, idx) => toEventDto(event, `event-${idx}`));
-      const birthdays = eventDtos.filter((e) => e.isBirthday);
-      const events = eventDtos.filter((e) => !e.isBirthday);
       const reminders = [...pendingReminders, ...completedReminders];
-
-      res.json({
-        date: selectedKey,
-        isToday,
-        birthdays,
-        events,
-        reminders: reminders.map(toReminderDto),
-      });
+      res.json(buildDashboardResponse(selectedDate, now, googleEvents, reminders));
     } catch (err) {
       logger.error(`dashboard failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'dashboard_failed' });
@@ -510,35 +456,7 @@ export function registerChatbotApiRoutes(app: Express): void {
       const from = subDays(new Date(), days);
       const rows = await aggregateUsage({ from });
 
-      const totalCost = rows.reduce((s, r) => s + r.cost, 0);
-      const totalTurns = rows.reduce((s, r) => s + r.turns, 0);
-      const totalTokens = rows.reduce((s, r) => s + r.tokensTotal, 0);
-
-      const dayMap = new Map<string, { cost: number; turns: number; tokensTotal: number }>();
-      for (let i = 0; i < days; i++) {
-        const key = dateKey(addDays(from, i + 1));
-        dayMap.set(key, { cost: 0, turns: 0, tokensTotal: 0 });
-      }
-      for (const r of rows) {
-        const entry = dayMap.get(r.day) ?? { cost: 0, turns: 0, tokensTotal: 0 };
-        entry.cost += r.cost;
-        entry.turns += r.turns;
-        entry.tokensTotal += r.tokensTotal;
-        dayMap.set(r.day, entry);
-      }
-      const perDay = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([day, v]) => ({ day, ...v }));
-
-      const sourceMap = new Map<string, { cost: number; turns: number; tokensTotal: number }>();
-      for (const r of rows) {
-        const entry = sourceMap.get(r.source) ?? { cost: 0, turns: 0, tokensTotal: 0 };
-        entry.cost += r.cost;
-        entry.turns += r.turns;
-        entry.tokensTotal += r.tokensTotal;
-        sourceMap.set(r.source, entry);
-      }
-      const perSource = [...sourceMap.entries()].sort((a, b) => b[1].cost - a[1].cost).map(([source, v]) => ({ source, ...v }));
-
-      res.json({ days, totals: { cost: totalCost, turns: totalTurns, tokensTotal: totalTokens }, perDay, perSource });
+      res.json(buildUsageResponse(rows, days, from));
     } catch (err) {
       logger.error(`usage failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'usage_failed' });
@@ -608,16 +526,7 @@ export function registerChatbotApiRoutes(app: Express): void {
     try {
       const now = new Date();
       const events = await listEvents({ timeMin: now.toISOString(), timeMax: addDays(now, 7).toISOString(), singleEvents: true, orderBy: 'startTime', maxResults: 250 });
-      const todayKey = dateKey(now);
-      const birthdays: UpcomingBirthdayDto[] = events
-        .filter((e) => e.start && isBirthdayEvent(e.summary ?? ''))
-        .map((e): UpcomingBirthdayDto => {
-          const dateStr = (e.start!.date ?? dateKey(new Date(e.start!.dateTime!))) as string;
-          const inDays = differenceInCalendarDays(parseISO(dateStr), parseISO(todayKey));
-          return { id: e.id ?? '', summary: e.summary ?? '(no title)', date: dateStr, inDays };
-        })
-        .sort((a, b) => a.date.localeCompare(b.date));
-      res.json({ birthdays });
+      res.json({ birthdays: toUpcomingBirthdays(events, now) });
     } catch (err) {
       logger.error(`birthdays failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'birthdays_failed' });
