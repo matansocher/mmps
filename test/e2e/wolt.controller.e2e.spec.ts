@@ -37,7 +37,7 @@ describe('WoltController E2E', () => {
 
   describe('/start', () => {
     it('greets a new user with the long welcome', async () => {
-      mocks.saveUserDetails.mockResolvedValue(false);
+      mocks.saveUserDetails.mockResolvedValue('created');
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/start' }));
 
@@ -49,7 +49,7 @@ describe('WoltController E2E', () => {
     });
 
     it('greets a returning user with the short reply', async () => {
-      mocks.saveUserDetails.mockResolvedValue(true);
+      mocks.saveUserDetails.mockResolvedValue('updated');
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/start' }));
 

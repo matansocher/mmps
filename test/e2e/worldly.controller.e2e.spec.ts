@@ -58,7 +58,7 @@ describe('WorldlyController E2E', () => {
 
   describe('/start', () => {
     it('greets a new user and creates a subscription', async () => {
-      mocks.saveUserDetails.mockResolvedValue(false);
+      mocks.saveUserDetails.mockResolvedValue('created');
       mocks.getSubscription.mockResolvedValue(null);
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/start' }));
@@ -71,7 +71,7 @@ describe('WorldlyController E2E', () => {
     });
 
     it('reactivates the subscription for a returning user', async () => {
-      mocks.saveUserDetails.mockResolvedValue(true);
+      mocks.saveUserDetails.mockResolvedValue('updated');
       mocks.getSubscription.mockResolvedValue({ chatId: 1, isActive: false });
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/start' }));

@@ -45,7 +45,7 @@ describe('CoachController E2E', () => {
 
   describe('/start', () => {
     it('greets a new user with the long welcome and creates a subscription', async () => {
-      mocks.saveUserDetails.mockResolvedValue(false);
+      mocks.saveUserDetails.mockResolvedValue('created');
       mocks.getSubscription.mockResolvedValue(null);
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/start' }));
@@ -61,7 +61,7 @@ describe('CoachController E2E', () => {
     });
 
     it('greets a returning user with the short reply and reactivates subscription', async () => {
-      mocks.saveUserDetails.mockResolvedValue(true);
+      mocks.saveUserDetails.mockResolvedValue('updated');
       mocks.getSubscription.mockResolvedValue({ chatId: 1, isActive: false });
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/start' }));
