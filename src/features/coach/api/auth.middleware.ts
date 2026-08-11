@@ -1,10 +1,7 @@
-import type { NextFunction, Request, Response } from 'express';
+import type { Request } from 'express';
 import { env } from 'node:process';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
-import { verifyCoachInitData } from './telegram-init-data';
-
-const logger = new Logger('coach:api:auth');
+import { createTelegramMiniAppAuthMiddleware } from '@shared/telegram-mini-app-auth';
 
 export type CoachRequestUser = {
   readonly telegramUserId: number;
@@ -18,44 +15,18 @@ declare module 'express-serve-static-core' {
   }
 }
 
-export async function coachAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
-  if (env.NODE_ENV !== 'production') {
-    const devUserId = req.header('X-Coach-Dev-User') || MY_USER_ID;
-    if (devUserId) {
-      const id = Number(devUserId);
-      if (!Number.isFinite(id)) {
-        res.status(400).json({ error: 'invalid_dev_user' });
-        return;
-      }
-      req.coachUser = { telegramUserId: id, chatId: id, username: 'devuser' };
-      next();
-      return;
-    }
-  }
-
-  const initData = req.header('X-Telegram-Init-Data');
-  if (!initData) {
-    res.status(401).json({ error: 'missing_init_data' });
-    return;
-  }
-
-  const botToken = env.COACH_TELEGRAM_BOT_TOKEN;
-  if (!botToken) {
-    logger.error('COACH_TELEGRAM_BOT_TOKEN not configured');
-    res.status(500).json({ error: 'bot_not_configured' });
-    return;
-  }
-
-  const verified = verifyCoachInitData(initData, botToken);
-  if (!verified) {
-    res.status(401).json({ error: 'invalid_init_data' });
-    return;
-  }
-
-  req.coachUser = {
+export const coachAuthMiddleware = createTelegramMiniAppAuthMiddleware<CoachRequestUser>({
+  devHeader: 'X-Coach-Dev-User',
+  defaultDevUserId: MY_USER_ID,
+  botTokenName: 'COACH_TELEGRAM_BOT_TOKEN',
+  getBotToken: () => env.COACH_TELEGRAM_BOT_TOKEN,
+  loggerName: 'coach:api:auth',
+  mapUser: (verified) => ({
     telegramUserId: verified.telegramUserId,
     chatId: verified.telegramUserId,
     username: verified.username,
-  };
-  next();
-}
+  }),
+  assignUser: (req, user) => {
+    req.coachUser = user;
+  },
+});
