@@ -2,6 +2,11 @@ function sameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+type AutoRefreshState = {
+  readonly selectedDate: string;
+  readonly shouldRefresh: boolean;
+};
+
 export function formatMatchDate(iso: string): string {
   const d = new Date(iso);
   const today = new Date();
@@ -20,6 +25,14 @@ export function dateStringFromOffset(offsetDays: number): string {
   const d = new Date();
   d.setDate(d.getDate() + offsetDays);
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+export function getAutoRefreshState(selectedDate: string, previousToday: string, currentToday: string, hasLiveMatches: boolean): AutoRefreshState {
+  const nextSelectedDate = selectedDate === previousToday ? currentToday : selectedDate;
+  return {
+    selectedDate: nextSelectedDate,
+    shouldRefresh: nextSelectedDate === selectedDate && (selectedDate === currentToday || hasLiveMatches),
+  };
 }
 
 export function addDays(dateStr: string, days: number): string {
