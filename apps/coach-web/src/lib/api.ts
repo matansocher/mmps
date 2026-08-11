@@ -1,19 +1,12 @@
-import { getInitData } from './telegram';
+import { createJsonRequester } from '@mmps/web-api';
 import type { AthleteDetailResponse, CompetitionDetailResponse, CompetitionsListResponse, FollowUpdateResponse, MatchDetailResponse, TeamDetailResponse, TodayResponse } from '../types';
+import { getInitData } from './telegram';
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      'X-Telegram-Init-Data': getInitData(),
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
-  if (!res.ok) throw new Error(`request_failed_${res.status}`);
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
-}
+const request = createJsonRequester({
+  headers: () => ({
+    'X-Telegram-Init-Data': getInitData(),
+  }),
+});
 
 export const api = {
   open: () => request<void>('/api/coach/open', { method: 'POST' }),

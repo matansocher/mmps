@@ -1,38 +1,14 @@
+import { ApiError, createJsonRequester } from '@mmps/web-api';
 import type { Portfolio, PortfolioResponse, RevisionConflictResponse } from '../types';
 
-export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly body: unknown,
-  ) {
-    super(`request_failed_${status}`);
-  }
-}
+export { ApiError };
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
-
-  const text = await response.text();
-  let body: unknown;
-  if (text) {
-    try {
-      body = JSON.parse(text) as unknown;
-    } catch {
-      body = text;
-    }
-  }
-
-  if (!response.ok) throw new ApiError(response.status, body);
-  return body as T;
-}
+const request = createJsonRequester({
+  credentials: 'include',
+  headers: () => ({
+    Accept: 'application/json',
+  }),
+});
 
 export function isRevisionConflictResponse(value: unknown): value is RevisionConflictResponse {
   if (!value || typeof value !== 'object') return false;
