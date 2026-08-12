@@ -64,6 +64,20 @@ export type MatchDetails = {
   readonly channel: string;
 };
 
+export type UpcomingMatch = {
+  readonly id: number;
+  readonly sourceCompetitionId: number;
+  readonly competitionId: number;
+  readonly competitionName: string;
+  readonly stage?: string;
+  readonly startTime: string;
+  readonly venue?: string;
+  readonly homeTeam: Competitor;
+  readonly awayTeam: Competitor;
+  readonly remainingHomeMatches: number;
+  readonly remainingAwayMatches: number;
+};
+
 export type CompetitionTableDetails = {
   readonly competition: Competition & { icon: string };
   readonly competitionTable: CompetitionTableRow[];

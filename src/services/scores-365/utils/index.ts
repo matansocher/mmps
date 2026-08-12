@@ -6,5 +6,6 @@ export { getMakavdiaResults } from './get-makavdia-results';
 export { getMatchDetails } from './get-match-details';
 export { getMatchesForCompetition } from './get-matches-for-competition';
 export { getMatchesSummaryDetails } from './get-matches-summary-details';
+export { getUpcomingMatches } from './get-upcoming-matches';
 export { getMatchTrends } from './get-match-trends';
 export { getPregameData } from './get-pregame-data';
