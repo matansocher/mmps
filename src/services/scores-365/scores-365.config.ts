@@ -2,6 +2,7 @@ export const SCORES_365_API_URL = 'https://webws.365scores.com/web';
 
 export const APP_TYPE_ID = 5;
 export const LANGUAGE_ID = 2;
+export const ENGLISH_LANGUAGE_ID = 1;
 export const COUNTRY_ID = 6;
 
 export const COMPETITION_IDS_MAP = {

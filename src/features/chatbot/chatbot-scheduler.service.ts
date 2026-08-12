@@ -52,7 +52,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`30 9 * * *`, async () => makavdiaUpdate(this.bot, this.chatbotService));
 
-    createSchedule(`00 10 * * 0,3`, async () => sportsCalendar(this.bot, this.chatbotService));
+    createSchedule(`00 10 * * 0,3`, async () => sportsCalendar(this.bot));
 
     createSchedule(`0 19 * * *`, async () => exerciseReminder(this.bot, this.chatbotService));
 

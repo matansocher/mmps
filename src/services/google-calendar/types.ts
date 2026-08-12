@@ -27,6 +27,9 @@ export type CalendarEvent = {
   };
   recurrence?: string[];
   status?: 'confirmed' | 'tentative' | 'cancelled';
+  extendedProperties?: {
+    private?: Record<string, string>;
+  };
 };
 
 export type CalendarListOptions = {
