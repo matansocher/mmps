@@ -1,5 +1,5 @@
 import type { CompetitionTableRow, UpcomingMatch } from '@services/scores-365';
-import { FAVORITE_TEAM_IDS, ISRAELI_DERBY_TEAM_PAIRS, SPORTS_CALENDAR_COMPETITION_IDS } from '../sports-calendar.config';
+import { FAVORITE_TEAM_IDS, ISRAELI_DERBY_TEAM_IDS, SPORTS_CALENDAR_COMPETITION_IDS } from '../sports-calendar.config';
 
 export type SportsCalendarCategory = 'favorite-team' | 'world-cup' | 'champions-league' | 'israeli-derby' | 'title-decider' | 'israeli-top-four';
 
@@ -12,9 +12,7 @@ function isFavoriteTeamMatch(match: UpcomingMatch): boolean {
 }
 
 function isDerby(match: UpcomingMatch): boolean {
-  return ISRAELI_DERBY_TEAM_PAIRS.some(([firstTeamId, secondTeamId]) => {
-    return (match.homeTeam.id === firstTeamId && match.awayTeam.id === secondTeamId) || (match.homeTeam.id === secondTeamId && match.awayTeam.id === firstTeamId);
-  });
+  return ISRAELI_DERBY_TEAM_IDS.has(match.homeTeam.id) && ISRAELI_DERBY_TEAM_IDS.has(match.awayTeam.id);
 }
 
 export function selectSportsCalendarMatches(matches: UpcomingMatch[], table: CompetitionTableRow[] = []): SelectedSportsMatch[] {
