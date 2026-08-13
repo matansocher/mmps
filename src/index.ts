@@ -12,6 +12,7 @@ import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
+import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
@@ -38,6 +39,8 @@ async function main() {
   } catch (err) {
     logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
   }
+
+  registerPortfolioApiRoutes(app);
 
   registerSwaggerRoutes(app);
 
