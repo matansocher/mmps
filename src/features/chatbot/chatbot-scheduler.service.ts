@@ -20,8 +20,6 @@ import {
   socialMediaDigest,
   sportsCalendar,
   spotifyPodcastUpdate,
-  transferCollect,
-  transferDigest,
   upcomingEventAlert,
   usageSummary,
   weeklyExerciseSummary,
@@ -77,10 +75,6 @@ export class ChatbotSchedulerService {
     createSchedule(`30 * * * *`, async () => socialMediaCollect(['telegram']));
 
     createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
-
-    createSchedule(`15 * * * *`, async () => transferCollect());
-
-    createSchedule(`0 21 * * *`, async () => transferDigest(this.bot));
 
     createSchedule(`0 17 * * *`, async () => hotelPriceCheck(this.bot));
 
