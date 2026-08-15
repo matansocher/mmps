@@ -1,14 +1,12 @@
 import type { Bot } from 'grammy';
-import { getResponse } from '@services/openai';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendRichMessage } from '@services/telegram';
 import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather, TomorrowForecast } from '@services/weather';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { dailySummary } from './daily-summary';
 
-vi.mock('@services/openai', () => ({ getResponse: vi.fn() }));
-vi.mock('@services/telegram', () => ({ sendShortenedMessage: vi.fn() }));
+vi.mock('@services/telegram', () => ({ sendRichMessage: vi.fn() }));
 vi.mock('@services/weather', () => ({ getTomorrowHourlyForecast: vi.fn() }));
 vi.mock('@shared/calendar-events', () => ({ getTomorrowEvents: vi.fn() }));
 
@@ -38,11 +36,12 @@ function createForecast(): TomorrowForecast {
   };
 }
 
-function createEvent(summary: string): CalendarEvent {
+function createEvent(summary: string, location?: string): CalendarEvent {
   return {
     _id: undefined as never,
     googleEventId: summary,
     summary,
+    location,
     start: { dateTime: '2026-08-16T09:00:00+03:00' },
     end: { dateTime: '2026-08-16T10:00:00+03:00' },
     createdAt: new Date(),
@@ -51,14 +50,11 @@ function createEvent(summary: string): CalendarEvent {
 }
 
 function lastSentMessage(): string {
-  return vi.mocked(sendShortenedMessage).mock.calls.at(-1)![2];
+  return vi.mocked(sendRichMessage).mock.calls.at(-1)![2];
 }
 
 describe('dailySummary()', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(getResponse).mockResolvedValue({ id: 'x', result: { greeting: '🌙 Good night!', closing: 'Rest up.' } });
-  });
+  beforeEach(() => vi.clearAllMocks());
 
   it('should fetch weather and calendar in parallel', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
@@ -70,25 +66,40 @@ describe('dailySummary()', () => {
     expect(getTomorrowEvents).toHaveBeenCalledTimes(1);
   });
 
-  it('should include only the four target hours in the weather section', async () => {
+  it('should render the weather section as a table of the four target hours', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue({ ...createForecast(), hourly: [createHour(9, 20), ...createForecast().hourly] });
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
 
     await dailySummary(bot);
 
     const message = lastSentMessage();
-    expect(message).toContain('10:00 - 28°C');
-    expect(message).toContain('22:00 - 24°C');
+    expect(message).toContain('| Time | Temp | Conditions |');
+    expect(message).toContain('| 10:00 | 28°C | Sunny |');
+    expect(message).toContain('| 22:00 | 24°C | Sunny |');
     expect(message).not.toContain('09:00');
   });
 
-  it('should add a birthdays section when a birthday event exists', async () => {
+  it('should render the calendar section as a table', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
-    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Dana birthday')]);
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Dentist', 'Weizmann 12')]);
 
     await dailySummary(bot);
 
-    expect(lastSentMessage()).toContain('🎂 Dana birthday');
+    const message = lastSentMessage();
+    expect(message).toContain('| Time | Event | Location |');
+    expect(message).toContain('| 09:00-10:00 | Dentist | Weizmann 12 |');
+  });
+
+  it('should list a birthday once, in its own section and not in the calendar table', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup'), createEvent('Dana birthday')]);
+
+    await dailySummary(bot);
+
+    const message = lastSentMessage();
+    expect(message).toContain('🎂 Dana birthday');
+    expect(message.match(/Dana birthday/g)).toHaveLength(1);
+    expect(message).toContain('| 09:00-10:00 | Standup |  |');
   });
 
   it('should omit the birthdays section when there are none', async () => {
@@ -100,6 +111,17 @@ describe('dailySummary()', () => {
     expect(lastSentMessage()).not.toContain('Birthdays');
   });
 
+  it('should not include a greeting or closing line', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
+
+    await dailySummary(bot);
+
+    const message = lastSentMessage();
+    expect(message).not.toContain('Good night');
+    expect(message.startsWith('*🌤 Weather for tomorrow*')).toBe(true);
+  });
+
   it('should still send a summary when the forecast fails', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockRejectedValue(new Error('weather down'));
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
@@ -109,15 +131,5 @@ describe('dailySummary()', () => {
     const message = lastSentMessage();
     expect(message).toContain('Not available');
     expect(message).toContain('Standup');
-  });
-
-  it('should fall back to static framing when the LLM call fails', async () => {
-    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
-    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
-    vi.mocked(getResponse).mockRejectedValue(new Error('openai down'));
-
-    await dailySummary(bot);
-
-    expect(lastSentMessage()).toContain('🌙 Good night!');
   });
 });

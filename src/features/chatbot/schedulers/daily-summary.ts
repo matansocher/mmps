@@ -1,70 +1,47 @@
 import type { Bot } from 'grammy';
-import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { getResponse } from '@services/openai';
-import { GPT_SMALL_MODEL } from '@services/openai/constants';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendRichMessage } from '@services/telegram';
 import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather } from '@services/weather';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { CHATBOT_CONFIG } from '../chatbot.config';
-import { formatEventsForPrompt } from './utils/events';
+import { formatEventTime } from './utils/events';
 
 const logger = new Logger('chatbot:scheduler:daily-summary');
 
 const SUMMARY_HOURS = [10, 14, 18, 22];
 
-const DEFAULT_GREETING = '🌙 Good night!';
-const DEFAULT_CLOSING = 'Get some rest and be ready for tomorrow 💪';
+function isBirthday(event: CalendarEvent): boolean {
+  return event.summary.toLowerCase().includes('birthday');
+}
 
-const summarySchema = z.object({
-  greeting: z.string(),
-  closing: z.string(),
-});
-
-function formatWeatherLines(hourly: ReadonlyArray<HourlyWeather>): string {
-  return SUMMARY_HOURS.map((hour) => hourly.find((entry) => entry.hour === hour))
+function buildWeatherTable(hourly: ReadonlyArray<HourlyWeather>): string {
+  const rows = SUMMARY_HOURS.map((hour) => hourly.find((entry) => entry.hour === hour))
     .filter((entry): entry is HourlyWeather => !!entry)
-    .map((entry) => `- ${String(entry.hour).padStart(2, '0')}:00 - ${Math.round(entry.temperature)}°C, ${entry.condition}`)
-    .join('\n');
-}
+    .map((entry) => `| ${String(entry.hour).padStart(2, '0')}:00 | ${Math.round(entry.temperature)}°C | ${entry.condition} |`);
 
-function formatBirthdayLines(events: CalendarEvent[]): string {
-  return events
-    .filter((event) => event.summary.toLowerCase().includes('birthday'))
-    .map((event) => `- 🎂 ${event.summary}`)
-    .join('\n');
-}
-
-function buildMessage(weather: string, events: string, birthdays: string, greeting: string, closing: string): string {
-  const sections = [greeting, `*🌤 Weather for tomorrow*\n${weather || '- Not available'}`, `*📅 Calendar*\n${events || '- Nothing scheduled'}`];
-  if (birthdays) {
-    sections.push(`*🎉 Birthdays*\n${birthdays}`);
+  if (!rows.length) {
+    return '*🌤 Weather for tomorrow*\nNot available';
   }
-  sections.push(closing);
-  return sections.join('\n\n');
+  return ['*🌤 Weather for tomorrow*', '| Time | Temp | Conditions |', '|:-----|-----:|:-----------|', ...rows].join('\n');
 }
 
-// The greeting and closing are the only parts that need an LLM; everything else is
-// deterministic formatting, so this deliberately runs outside the agent (no tools, one call).
-async function generateFraming(weather: string, events: string, birthdays: string): Promise<{ greeting: string; closing: string }> {
-  const instructions = [
-    `You write the opening and closing lines of a warm nightly summary message sent to one person over Telegram.`,
-    `The greeting is a short good-night greeting starting with "🌙 Good night!".`,
-    `The closing is one encouraging sentence about preparing for tomorrow.`,
-    `Keep both to a single short sentence each. Do not repeat the weather or calendar details.`,
-  ].join('\n');
-  const input = [`Weather:\n${weather || 'unavailable'}`, `Calendar:\n${events || 'nothing scheduled'}`, `Birthdays:\n${birthdays || 'none'}`].join('\n\n');
-
-  try {
-    const { result } = await getResponse({ instructions, input, schema: summarySchema, model: GPT_SMALL_MODEL, store: false });
-    return { greeting: result.greeting || DEFAULT_GREETING, closing: result.closing || DEFAULT_CLOSING };
-  } catch (err) {
-    logger.error(`Failed to generate summary framing, falling back to static text: ${getErrorMessage(err)}`);
-    return { greeting: DEFAULT_GREETING, closing: DEFAULT_CLOSING };
+function buildCalendarTable(events: CalendarEvent[]): string {
+  if (!events.length) {
+    return '*📅 Calendar*\nNothing scheduled';
   }
+  const rows = events.map((event) => `| ${formatEventTime(event)} | ${event.summary} | ${event.location ?? ''} |`);
+  return ['*📅 Calendar*', '| Time | Event | Location |', '|:-----|:------|:---------|', ...rows].join('\n');
+}
+
+function buildBirthdaysSection(events: CalendarEvent[]): string | null {
+  const birthdays = events.filter(isBirthday);
+  if (!birthdays.length) {
+    return null;
+  }
+  return ['*🎉 Birthdays*', ...birthdays.map((event) => `- 🎂 ${event.summary}`)].join('\n');
 }
 
 export async function dailySummary(bot: Bot): Promise<void> {
@@ -77,13 +54,10 @@ export async function dailySummary(bot: Bot): Promise<void> {
       getTomorrowEvents(),
     ]);
 
-    const weather = forecast ? formatWeatherLines(forecast.hourly) : '';
-    const calendar = events.length ? formatEventsForPrompt(events) : '';
-    const birthdays = formatBirthdayLines(events);
+    // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
+    const sections = [buildWeatherTable(forecast?.hourly ?? []), buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events)];
 
-    const { greeting, closing } = await generateFraming(weather, calendar, birthdays);
-
-    await sendShortenedMessage(bot, MY_USER_ID, buildMessage(weather, calendar, birthdays, greeting, closing), { parse_mode: 'Markdown' });
+    await sendRichMessage(bot, MY_USER_ID, sections.filter(Boolean).join('\n\n'));
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
     logger.error(`Failed to generate/send daily summary: ${getErrorMessage(err)}`);
