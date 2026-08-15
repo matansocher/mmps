@@ -14,6 +14,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
 export const CHATBOT_CONFIG = {
   // Toggle per-turn token/cost observability. Defaults on; set CHATBOT_USAGE_TRACKING=false to disable.
   usageTracking: env.CHATBOT_USAGE_TRACKING !== 'false',
+  // Location used by the nightly summary's weather section.
+  summaryLocation: env.CHATBOT_SUMMARY_LOCATION || 'Kfar Saba',
   summarization: {
     // Summarize once a thread grows past this many messages.
     triggerMessages: parseInt(env.CHATBOT_SUMMARY_TRIGGER_MESSAGES || '40', 10),

@@ -4,7 +4,7 @@ import { DAYS_OF_WEEK, MY_USER_ID } from '@core/config';
 import { getLongestStreak, getStars, getStreak } from '@core/utils';
 import { createImage } from '@services/openai';
 import { searchMeme } from '@services/tenor';
-import { getExercises } from '@shared/trainer';
+import { getExercises, getWeeklyExerciseStats } from '@shared/trainer';
 import { BROKEN_RECORD_IMAGE_PROMPT, getLastWeekDates } from './utils';
 
 const schema = z.object({
@@ -17,30 +17,18 @@ async function runner({ action }: z.infer<typeof schema>) {
 
     switch (action) {
       case 'weekly_summary': {
-        const exercises = await getExercises(chatId);
-        const exercisesDates = exercises.map((exercise) => exercise.createdAt);
-
-        const { lastSunday, lastSaturday } = getLastWeekDates();
-        const lastWeekExercises = exercisesDates.filter((exerciseDate) => {
-          return exerciseDate.getTime() > lastSunday.getTime() && exerciseDate.getTime() < lastSaturday.getTime();
-        });
-
-        const currentStreak = getStreak(lastWeekExercises);
-        const longestStreak = getLongestStreak(exercisesDates);
-
-        const exercisesDays = lastWeekExercises.map((exerciseDate) => DAYS_OF_WEEK[exerciseDate.getDay()]);
-        const weekStars = getStars(lastWeekExercises.length);
+        const stats = await getWeeklyExerciseStats(chatId);
 
         return JSON.stringify({
           weekSummary: {
-            exerciseCount: lastWeekExercises.length,
-            exerciseDays: exercisesDays,
-            weekRating: weekStars,
-            currentStreak,
-            longestStreak,
+            exerciseCount: stats.exerciseCount,
+            exerciseDays: stats.exercisedWeekdays.map((weekday) => DAYS_OF_WEEK[weekday]),
+            weekRating: getStars(stats.exerciseCount),
+            currentStreak: stats.currentStreak,
+            longestStreak: stats.longestStreak,
             dateRange: {
-              from: lastSunday.toISOString().split('T')[0],
-              to: lastSaturday.toISOString().split('T')[0],
+              from: stats.weekStart.toISOString().split('T')[0],
+              to: stats.weekEnd.toISOString().split('T')[0],
             },
           },
           message: 'Weekly summary generated successfully',

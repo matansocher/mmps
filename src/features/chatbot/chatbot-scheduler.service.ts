@@ -44,7 +44,7 @@ export class ChatbotSchedulerService {
   ) {}
 
   init(): void {
-    createSchedule(`00 23 * * *`, async () => dailySummary(this.bot, this.chatbotService));
+    createSchedule(`00 23 * * *`, async () => dailySummary(this.bot));
 
     createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot));
 
@@ -56,7 +56,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`0 19 * * *`, async () => exerciseReminder(this.bot, this.chatbotService));
 
-    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot, this.chatbotService));
+    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot));
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
 
