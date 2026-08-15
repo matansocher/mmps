@@ -21,6 +21,8 @@ export { polymarketUpdate } from './polymarket-update';
 export { socialMediaCollect } from './social-media-collect';
 export { socialMediaDigest } from './social-media-digest';
 export { spotifyPodcastUpdate } from './spotify-podcast-update';
+export { transferCollect } from './transfer-collect';
+export { transferDigest } from './transfer-digest';
 export { hotelPriceCheck } from './hotel-price-check';
 export { rainRadarAlert } from './rain-radar-alert';
 export { upcomingEventAlert } from './upcoming-event-alert';
