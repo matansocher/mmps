@@ -1,39 +1,89 @@
 import type { Bot } from 'grammy';
+import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
+import { getResponse } from '@services/openai';
+import { GPT_SMALL_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage } from '@services/telegram';
+import { getTomorrowHourlyForecast } from '@services/weather';
+import type { HourlyWeather } from '@services/weather';
 import { getTomorrowEvents } from '@shared/calendar-events';
-import type { ChatbotService } from '../chatbot.service';
+import type { CalendarEvent } from '@shared/calendar-events';
+import { CHATBOT_CONFIG } from '../chatbot.config';
 import { formatEventsForPrompt } from './utils/events';
 
 const logger = new Logger('chatbot:scheduler:daily-summary');
 
-export async function dailySummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
+const SUMMARY_HOURS = [10, 14, 18, 22];
+
+const DEFAULT_GREETING = '🌙 Good night!';
+const DEFAULT_CLOSING = 'Get some rest and be ready for tomorrow 💪';
+
+const summarySchema = z.object({
+  greeting: z.string(),
+  closing: z.string(),
+});
+
+function formatWeatherLines(hourly: ReadonlyArray<HourlyWeather>): string {
+  return SUMMARY_HOURS.map((hour) => hourly.find((entry) => entry.hour === hour))
+    .filter((entry): entry is HourlyWeather => !!entry)
+    .map((entry) => `- ${String(entry.hour).padStart(2, '0')}:00 - ${Math.round(entry.temperature)}°C, ${entry.condition}`)
+    .join('\n');
+}
+
+function formatBirthdayLines(events: CalendarEvent[]): string {
+  return events
+    .filter((event) => event.summary.toLowerCase().includes('birthday'))
+    .map((event) => `- 🎂 ${event.summary}`)
+    .join('\n');
+}
+
+function buildMessage(weather: string, events: string, birthdays: string, greeting: string, closing: string): string {
+  const sections = [greeting, `*🌤 Weather for tomorrow*\n${weather || '- Not available'}`, `*📅 Calendar*\n${events || '- Nothing scheduled'}`];
+  if (birthdays) {
+    sections.push(`*🎉 Birthdays*\n${birthdays}`);
+  }
+  sections.push(closing);
+  return sections.join('\n\n');
+}
+
+// The greeting and closing are the only parts that need an LLM; everything else is
+// deterministic formatting, so this deliberately runs outside the agent (no tools, one call).
+async function generateFraming(weather: string, events: string, birthdays: string): Promise<{ greeting: string; closing: string }> {
+  const instructions = [
+    `You write the opening and closing lines of a warm nightly summary message sent to one person over Telegram.`,
+    `The greeting is a short good-night greeting starting with "🌙 Good night!".`,
+    `The closing is one encouraging sentence about preparing for tomorrow.`,
+    `Keep both to a single short sentence each. Do not repeat the weather or calendar details.`,
+  ].join('\n');
+  const input = [`Weather:\n${weather || 'unavailable'}`, `Calendar:\n${events || 'nothing scheduled'}`, `Birthdays:\n${birthdays || 'none'}`].join('\n\n');
+
   try {
-    const events = await getTomorrowEvents();
-    const calendarSection = events.length > 0 ? `Here are my calendar events for tomorrow:\n${formatEventsForPrompt(events)}` : 'No events scheduled for tomorrow.';
+    const { result } = await getResponse({ instructions, input, schema: summarySchema, model: GPT_SMALL_MODEL, store: false });
+    return { greeting: result.greeting || DEFAULT_GREETING, closing: result.closing || DEFAULT_CLOSING };
+  } catch (err) {
+    logger.error(`Failed to generate summary framing, falling back to static text: ${getErrorMessage(err)}`);
+    return { greeting: DEFAULT_GREETING, closing: DEFAULT_CLOSING };
+  }
+}
 
-    const prompt = `Good evening! Please create my nightly summary with the following information:
+export async function dailySummary(bot: Bot): Promise<void> {
+  try {
+    const [forecast, events] = await Promise.all([
+      getTomorrowHourlyForecast(CHATBOT_CONFIG.summaryLocation).catch((err) => {
+        logger.error(`Failed to fetch tomorrow's forecast: ${getErrorMessage(err)}`);
+        return null;
+      }),
+      getTomorrowEvents(),
+    ]);
 
-**Weather for Tomorrow:**
-Use the weather tool with action "tomorrow_hourly" for location "Kfar Saba" to get tomorrow's hourly weather forecast.
-Format the weather data as: hour - degrees (e.g., "08:00 - 18°C")
-Show 4 different times throughout the day (morning, noon, afternoon, and evening - e.g., 10:00, 14:00, 18:00, 22:00).
+    const weather = forecast ? formatWeatherLines(forecast.hourly) : '';
+    const calendar = events.length ? formatEventsForPrompt(events) : '';
+    const birthdays = formatBirthdayLines(events);
 
-**Additional Information:**
-1. **Calendar**: ${calendarSection}
-   Format as a bulleted list where each event has its own bullet point. Do NOT use the calendar tool — the data is already provided above.
-2. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
-   - Extract the person's name from the event title
-   - If there are birthdays tomorrows, dont add the birthday section.
+    const { greeting, closing } = await generateFraming(weather, calendar, birthdays);
 
-Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
-
-    const response = await chatbotService.processMessage(prompt, MY_USER_ID);
-
-    if (response?.message) {
-      await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
-    }
+    await sendShortenedMessage(bot, MY_USER_ID, buildMessage(weather, calendar, birthdays, greeting, closing), { parse_mode: 'Markdown' });
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
     logger.error(`Failed to generate/send daily summary: ${getErrorMessage(err)}`);
