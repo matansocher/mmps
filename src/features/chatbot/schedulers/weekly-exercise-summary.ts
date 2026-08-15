@@ -1,26 +1,38 @@
+import { format } from 'date-fns';
 import type { Bot } from 'grammy';
-import { MY_USER_ID } from '@core/config';
-import { getErrorMessage, Logger } from '@core/utils';
-import type { ChatbotService } from '../chatbot.service';
+import { DAYS_OF_WEEK, MY_USER_ID } from '@core/config';
+import { getErrorMessage, getStars, Logger } from '@core/utils';
+import { sendRichMessage } from '@services/telegram';
+import { getWeeklyExerciseStats, type WeeklyExerciseStats } from '@shared/trainer';
 
 const logger = new Logger('chatbot:scheduler:weekly-exercise-summary');
 
-export async function weeklyExerciseSummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
+function buildDaysTable({ exercisedWeekdays }: WeeklyExerciseStats): string {
+  const header = `| ${DAYS_OF_WEEK.map((day) => day.slice(0, 3)).join(' | ')} |`;
+  const divider = `|${DAYS_OF_WEEK.map(() => ':---:').join('|')}|`;
+  const marks = `| ${DAYS_OF_WEEK.map((_, index) => (exercisedWeekdays.includes(index) ? '✅' : '—')).join(' | ')} |`;
+  return [header, divider, marks].join('\n');
+}
+
+function buildStatsTable({ exerciseCount, currentStreak, longestStreak }: WeeklyExerciseStats): string {
+  return [
+    '| Metric | Value |',
+    '|:-------|------:|',
+    `| Workouts | ${exerciseCount} |`,
+    `| Rating | ${getStars(exerciseCount)} |`,
+    `| Current streak | ${currentStreak} |`,
+    `| Longest streak | ${longestStreak} |`,
+  ].join('\n');
+}
+
+export async function weeklyExerciseSummary(bot: Bot): Promise<void> {
   try {
-    const prompt = `Generate my weekly exercise summary.
-    Use the exercise_analytics tool with action "weekly_summary" to get my weekly stats.
-    Format the response with:
-    - Last week's exercise days (show which days I exercised)
-    - Weekly rating with stars
-    - Current streak and longest streak
-    - Encouraging message for the upcoming week
-    Use emojis to make it engaging and motivational.`;
+    const stats = await getWeeklyExerciseStats(MY_USER_ID);
+    const range = `${format(stats.weekStart, 'dd/MM')} - ${format(stats.weekEnd, 'dd/MM')}`;
 
-    const response = await chatbotService.processMessage(prompt, MY_USER_ID);
+    const message = [`*🏋️ Weekly exercise summary* (${range})`, buildDaysTable(stats), buildStatsTable(stats)].join('\n\n');
 
-    if (response?.message) {
-      await bot.api.sendMessage(MY_USER_ID, response.message, { parse_mode: 'Markdown' });
-    }
+    await sendRichMessage(bot, MY_USER_ID, message);
   } catch (err) {
     logger.error(`Failed to send weekly exercise summary: ${getErrorMessage(err)}`);
   }

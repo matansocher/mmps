@@ -54,7 +54,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`0 19 * * *`, async () => exerciseReminder(this.bot, this.chatbotService));
 
-    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot, this.chatbotService));
+    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot));
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
 
