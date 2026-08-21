@@ -8,6 +8,7 @@ import {
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
+  gameReleasesTool,
   githubTool,
   gmailTool,
   hotelWatcherTool,
@@ -91,6 +92,14 @@ Available capabilities:
   * "list" - Show all hotels the user is currently watching, with the lowest observed price.
   A daily scheduler re-checks each watched hotel and DMs the user only when the price reaches a new observed low.
   Natural language variations: "watch this hotel [Booking.com URL]", "track this hotel price", "notify me if this hotel gets cheaper", "stop watching [URL]", "list my hotel watches".
+
+- Game Releases tool: Follow upcoming PS5 games and track their release dates (data from IGDB) with four actions:
+  * "search" - Search the PS5 catalog by name, returning up to 5 matches with their igdbId and release date. Use this first when the name is ambiguous, then follow by igdbId.
+  * "follow" - Start following an upcoming PS5 game, by name or igdbId. Games that are already out cannot be followed.
+  * "unfollow" - Stop following a game, by name or igdbId.
+  * "list" - Show every followed game with its release date and days remaining.
+  A weekly digest (Sundays 10:00) lists all followed games with days until release, and a daily check DMs the user when a date shifts (delayed, moved up, or a TBA game finally gets a date) or when the game releases — at which point it is unfollowed automatically.
+  Natural language variations: "follow GTA 6", "when does Wolverine come out", "what games am I waiting for", "how long until Death Stranding 2", "stop following Silksong".
 - GitHub tool: Interact with the matansocher/mmps repository with these actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
    * "get_issue" - Get details of a specific issue by number
@@ -344,6 +353,7 @@ export function agent(): AgentDescriptor {
     youtubeTool,
     telegramChannelsTool,
     hotelWatcherTool,
+    gameReleasesTool,
   ];
 
   return {
