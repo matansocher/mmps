@@ -11,6 +11,66 @@ cp .env.example .env
 # Edit .env with your API keys and bot tokens
 ```
 
+## Doppler (recommended)
+
+Instead of hand-managing a `.env` file across multiple machines, this repo is
+wired up for [Doppler](https://www.doppler.com/). Doppler stores your secrets
+centrally and the CLI downloads them into a local `.env` on demand, so every
+machine you develop on stays in sync without copying secrets around.
+
+### One-time install
+
+```bash
+# macOS (gnupg is required for signature verification)
+brew install gnupg
+brew install dopplerhq/cli/doppler
+
+# verify
+doppler --version
+```
+
+Other operating systems: see the [Doppler CLI install guide](https://docs.doppler.com/docs/install-cli).
+
+### One-time per machine
+
+```bash
+# Authenticate the CLI with your Doppler workplace (opens a browser)
+doppler login
+
+# Select the mmps project + dev config for this repo.
+# doppler.yaml pins the project/config, so this is non-interactive.
+npm run doppler:setup
+```
+
+### Day-to-day
+
+```bash
+# Just run the app as usual — the `predev` hook refreshes .env from Doppler first
+npm run dev
+npm run dev:debug   # same auto-refresh before the debugger boots
+
+# Or refresh .env on demand without starting the app
+npm run doppler:download
+```
+
+`npm run dev` and `npm run dev:debug` each trigger an npm `pre` hook that runs
+`doppler:download` first, so `.env` is always current — there's no separate
+command to remember. The app still loads `.env` through `dotenv` exactly as
+before, so nothing about the runtime changes.
+
+The refresh is safe by design (`doppler-download.mjs`): it writes to a temp file
+and only swaps it into `.env` on success, and if the Doppler CLI isn't installed
+or you aren't set up it prints a warning and continues with your existing `.env`
+— so a hand-managed `.env` still works. Production (`npm start` / `npm run
+build`) is untouched and never calls Doppler; deploys get secrets from the
+environment as usual.
+
+::: tip
+`.env` and `.doppler/` are git-ignored. The `doppler.yaml` at the repo root is
+committed and only records which project/config to use — never any secret
+values.
+:::
+
 ## Required Variables
 
 These variables must be set for the application to run:
