@@ -86,9 +86,9 @@ export class ChatbotSchedulerService {
 
     createSchedule(`0 17 * * *`, async () => hotelPriceCheck(this.bot));
 
-    createSchedule(`0 9 * * *`, async () => gameReleaseCheck(this.bot));
+    createSchedule(`15 11 * * *`, async () => gameReleaseCheck(this.bot));
 
-    createSchedule(`0 10 * * 0`, async () => gameReleaseDigest(this.bot));
+    createSchedule(`20 11 * * 0`, async () => gameReleaseDigest(this.bot));
 
     createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
 
