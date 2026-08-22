@@ -7,6 +7,10 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'apps/coach-web/src/**/*.spec.ts', 'apps/savings-web/src/**/*.spec.ts', 'test/eval/**/*.spec.ts'],
     exclude: ['node_modules', 'test/integration'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'cobertura'],
+    },
   },
   resolve: {
     alias: {
