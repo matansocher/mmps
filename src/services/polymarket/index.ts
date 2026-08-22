@@ -1,4 +1,4 @@
-export { getTrendingMarkets, getMarketBySlug, getMarketById, getEventBySlug, getEventOutcomes, searchEventsByTag } from './api';
+export { getTrendingMarkets, getMarketBySlug, getMarketById, getEventBySlug, getEventOutcomes, searchEvents, searchEventsByTag } from './api';
 export type {
   PolymarketMarket,
   MarketSummary,

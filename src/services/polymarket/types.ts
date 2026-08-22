@@ -64,6 +64,7 @@ export type EventSummary = {
   readonly volume24hr: number;
   readonly active: boolean;
   readonly closed: boolean;
+  readonly endDate: string | null; // ISO date string
   readonly polymarketUrl: string;
 };
 
@@ -75,6 +76,10 @@ export type SearchEventsResponse = {
 
 export type PolymarketEventWithMarkets = PolymarketEvent & {
   readonly markets: PolymarketMarket[];
+};
+
+export type PublicSearchResponse = {
+  readonly events: PolymarketEvent[];
 };
 
 export type EventWithMarketsResponse = {
