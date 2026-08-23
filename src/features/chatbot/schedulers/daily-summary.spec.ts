@@ -119,7 +119,48 @@ describe('dailySummary()', () => {
 
     const message = lastSentMessage();
     expect(message).not.toContain('Good night');
-    expect(message.startsWith('*🌤 Weather for tomorrow*')).toBe(true);
+    expect(message.startsWith('**🌤 Weather for tomorrow**')).toBe(true);
+  });
+
+  it('should separate every section heading from its table with a blank line', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup'), createEvent('Dana birthday')]);
+
+    await dailySummary(bot);
+
+    const message = lastSentMessage();
+    expect(message).toContain('**🌤 Weather for tomorrow**\n\n| Time |');
+    expect(message).toContain('**📅 Calendar**\n\n| Time |');
+    expect(message).toContain('**🎉 Birthdays**\n\n- 🎂');
+  });
+
+  it('should separate the fallback lines from their heading with a blank line', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue({ ...createForecast(), hourly: [] });
+    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
+
+    await dailySummary(bot);
+
+    const message = lastSentMessage();
+    expect(message).toContain('**🌤 Weather for tomorrow**\n\nNot available');
+    expect(message).toContain('**📅 Calendar**\n\nNothing scheduled');
+  });
+
+  it('should keep a multi-line event location on a single table row', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Yoman', 'Zoom\nmeeting\n  id 123')]);
+
+    await dailySummary(bot);
+
+    expect(lastSentMessage()).toContain('| 09:00-10:00 | Yoman | Zoom meeting id 123 |');
+  });
+
+  it('should escape pipes coming from calendar text', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('BI weekly | backlog', 'Room | 2')]);
+
+    await dailySummary(bot);
+
+    expect(lastSentMessage()).toContain('| 09:00-10:00 | BI weekly \\| backlog | Room \\| 2 |');
   });
 
   it('should still send a summary when the forecast fails', async () => {

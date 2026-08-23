@@ -17,23 +17,28 @@ function isBirthday(event: CalendarEvent): boolean {
   return event.summary.toLowerCase().includes('birthday');
 }
 
+// Table cells take inline content only, so collapse whitespace and escape pipes.
+function cell(text: string): string {
+  return text.replace(/\s+/g, ' ').replace(/\|/g, '\\|').trim();
+}
+
 function buildWeatherTable(hourly: ReadonlyArray<HourlyWeather>): string {
   const rows = SUMMARY_HOURS.map((hour) => hourly.find((entry) => entry.hour === hour))
     .filter((entry): entry is HourlyWeather => !!entry)
-    .map((entry) => `| ${String(entry.hour).padStart(2, '0')}:00 | ${Math.round(entry.temperature)}°C | ${entry.condition} |`);
+    .map((entry) => `| ${String(entry.hour).padStart(2, '0')}:00 | ${Math.round(entry.temperature)}°C | ${cell(entry.condition)} |`);
 
   if (!rows.length) {
-    return '*🌤 Weather for tomorrow*\nNot available';
+    return ['**🌤 Weather for tomorrow**', '', 'Not available'].join('\n');
   }
-  return ['*🌤 Weather for tomorrow*', '| Time | Temp | Conditions |', '|:-----|-----:|:-----------|', ...rows].join('\n');
+  return ['**🌤 Weather for tomorrow**', '', '| Time | Temp | Conditions |', '|:-----|-----:|:-----------|', ...rows].join('\n');
 }
 
 function buildCalendarTable(events: CalendarEvent[]): string {
   if (!events.length) {
-    return '*📅 Calendar*\nNothing scheduled';
+    return ['**📅 Calendar**', '', 'Nothing scheduled'].join('\n');
   }
-  const rows = events.map((event) => `| ${formatEventTime(event)} | ${event.summary} | ${event.location ?? ''} |`);
-  return ['*📅 Calendar*', '| Time | Event | Location |', '|:-----|:------|:---------|', ...rows].join('\n');
+  const rows = events.map((event) => `| ${formatEventTime(event)} | ${cell(event.summary)} | ${cell(event.location ?? '')} |`);
+  return ['**📅 Calendar**', '', '| Time | Event | Location |', '|:-----|:------|:---------|', ...rows].join('\n');
 }
 
 function buildBirthdaysSection(events: CalendarEvent[]): string | null {
@@ -41,7 +46,7 @@ function buildBirthdaysSection(events: CalendarEvent[]): string | null {
   if (!birthdays.length) {
     return null;
   }
-  return ['*🎉 Birthdays*', ...birthdays.map((event) => `- 🎂 ${event.summary}`)].join('\n');
+  return ['**🎉 Birthdays**', '', ...birthdays.map((event) => `- 🎂 ${cell(event.summary)}`)].join('\n');
 }
 
 export async function dailySummary(bot: Bot): Promise<void> {
