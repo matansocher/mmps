@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import { getErrorMessage, Logger } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendRichMessage } from '@services/telegram';
 import { formatDaysUntilRelease, getActiveFollows, getDaysUntilRelease } from '@shared/game-releases';
 import type { GameFollow } from '@shared/game-releases';
 
@@ -14,20 +14,12 @@ function sortKey(follow: GameFollow): number {
 export function buildDigestMessage(follows: readonly GameFollow[], now: Date = new Date()): string {
   const sorted = [...follows].sort((a, b) => sortKey(a) - sortKey(b));
 
-  const lines: string[] = [];
-  lines.push('🎮 *Games you are waiting for*');
-  lines.push('');
+  const rows = sorted.map((follow) => {
+    const release = follow.releaseDate ? `${follow.releaseHuman} · ${formatDaysUntilRelease(getDaysUntilRelease(follow.releaseDate, now))}` : follow.releaseHuman;
+    return `| ${follow.name} | ${release} |`;
+  });
 
-  for (const follow of sorted) {
-    if (!follow.releaseDate) {
-      lines.push(`• *${follow.name}* — ${follow.releaseHuman}`);
-      continue;
-    }
-    const days = getDaysUntilRelease(follow.releaseDate, now);
-    lines.push(`• *${follow.name}* — ${follow.releaseHuman} · ${formatDaysUntilRelease(days)}`);
-  }
-
-  return lines.join('\n');
+  return ['🎮 *Games you are waiting for*', '', '| Game | Release |', '|:-----|:--------|', ...rows].join('\n');
 }
 
 // Weekly rundown of every followed game with its countdown.
@@ -46,8 +38,7 @@ export async function gameReleaseDigest(bot: Bot): Promise<void> {
     }
 
     for (const [chatId, chatFollows] of followsByChatId) {
-      const message = buildDigestMessage(chatFollows);
-      await sendShortenedMessage(bot, chatId, message, { parse_mode: 'Markdown' }).catch(() => sendShortenedMessage(bot, chatId, message.replace(/[*_`[\]]/g, '')));
+      await sendRichMessage(bot, chatId, buildDigestMessage(chatFollows));
     }
   } catch (err) {
     logger.error(`Failed to send the weekly game release digest: ${getErrorMessage(err)}`);
