@@ -24,7 +24,13 @@ const NOW = new Date('2026-08-21T12:00:00Z');
 describe('buildDigestMessage()', () => {
   it('should list a dated game with its countdown', () => {
     const message = buildDigestMessage([buildFollow({ name: 'Wolverine' })], NOW);
-    expect(message).toContain('• *Wolverine* — Sep 15, 2026 · in 25 days');
+    expect(message).toContain('| Wolverine | Sep 15, 2026 · in 25 days |');
+  });
+
+  it('should render a markdown table header', () => {
+    const message = buildDigestMessage([buildFollow()], NOW);
+    expect(message).toContain('| Game | Release |');
+    expect(message).toContain('|:-----|:--------|');
   });
 
   it('should sort dated games by release date ascending', () => {
@@ -48,8 +54,7 @@ describe('buildDigestMessage()', () => {
 
   it('should render undated games without a countdown', () => {
     const message = buildDigestMessage([buildFollow({ name: 'Silksong', releaseDate: null, releaseHuman: 'Q4 2026', releaseStatus: 'upcoming' })], NOW);
-    expect(message).toContain('• *Silksong* — Q4 2026');
-    expect(message).not.toContain('Silksong* — Q4 2026 ·');
+    expect(message).toContain('| Silksong | Q4 2026 |');
   });
 
   it('should use release-day wording on the day itself', () => {
