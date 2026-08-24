@@ -9,7 +9,7 @@ import { BOT_CONFIG } from './learner.config';
 import { LearnerController } from './learner.controller';
 import { DB_NAME } from './mongo';
 
-const logger = new Logger('initLearner');
+const logger = new Logger('learner:init');
 
 export async function initLearner(app: Express): Promise<void> {
   await createMongoConnection(DB_NAME);

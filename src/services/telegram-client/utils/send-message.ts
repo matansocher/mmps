@@ -1,9 +1,9 @@
 import { Api } from 'telegram';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { provideTelegramClient } from '../provide-telegram-client';
 import { Peer } from '../types';
 
-const logger = new Logger('TelegramClientSendMessage');
+const logger = new Logger('telegram-client:send-message');
 
 type SendMessageOptions = {
   readonly name: string;
@@ -30,7 +30,7 @@ export async function sendMessage({ name, number, message }: SendMessageOptions)
 
     return { peer: importedUser, id: sent.id };
   } catch (err) {
-    logger.error(`Failed to send telegram-client message: ${err}`);
+    logger.error(`Failed to send telegram-client message: ${getErrorMessage(err)}`);
     return;
   }
 }

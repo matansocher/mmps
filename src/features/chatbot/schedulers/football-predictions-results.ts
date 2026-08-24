@@ -1,11 +1,11 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
 import type { ChatbotService } from '../chatbot.service';
 
-const logger = new Logger('FootballUpdateEveningScheduler');
+const logger = new Logger('chatbot:scheduler:football-predictions-results');
 
 export async function footballPredictionsResults(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
@@ -57,6 +57,6 @@ Keep it engaging, honest about mistakes, and celebrate successes!`;
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
     }
   } catch (err) {
-    logger.error(`Failed to send evening football update: ${err}`);
+    logger.error(`Failed to send evening football update: ${getErrorMessage(err)}`);
   }
 }

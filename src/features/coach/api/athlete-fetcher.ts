@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '@services/scores-365';
 import type { AthleteDetailResponse } from './dto';
 
-const logger = new Logger('CoachAthleteFetcher');
+const logger = new Logger('coach:athlete-fetcher');
 
 const POSITION_MAP: Record<number, string> = { 1: 'GK', 2: 'DF', 3: 'MF', 4: 'FW' };
 
@@ -53,7 +53,7 @@ export async function fetchAthleteDetail(athleteId: number): Promise<AthleteDeta
       imageVersion: athlete.imageVersion,
     };
   } catch (err) {
-    logger.error(`fetchAthleteDetail failed for ${athleteId}: ${err}`);
+    logger.error(`fetchAthleteDetail failed for ${athleteId}: ${getErrorMessage(err)}`);
     return null;
   }
 }

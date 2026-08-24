@@ -2,10 +2,10 @@ import { config } from 'dotenv';
 import { Bot, GrammyError } from 'grammy';
 import { join } from 'node:path';
 import { argv, cwd, env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { BOT_CONFIG } from '../wolt.config';
 
-const logger = new Logger('wolt-broadcast');
+const logger = new Logger('wolt:script:broadcast');
 
 // Paste the affected chat ids here, e.g. [123456789, 987654321].
 const CHAT_IDS: number[] = [5660723464, 253901676, 5205717975, 7404564565, 1809195019, 2012077456, 186702734, 5833146559, 597884902, 398475771, 1198554451];
@@ -42,12 +42,12 @@ async function sendToUser(bot: Bot, chatId: number): Promise<'sent' | 'blocked' 
           await bot.api.sendMessage(chatId, MESSAGE);
           return 'sent';
         } catch (retryErr) {
-          logger.error(`${sendToUser.name} - retry failed for ${chatId} - ${retryErr}`);
+          logger.error(`Retry failed for chatId ${chatId}: ${getErrorMessage(retryErr)}`);
           return 'failed';
         }
       }
     }
-    logger.error(`${sendToUser.name} - failed for ${chatId} - ${err}`);
+    logger.error(`Failed to send broadcast to chatId ${chatId}: ${getErrorMessage(err)}`);
     return 'failed';
   }
 }
@@ -82,4 +82,4 @@ async function main(): Promise<void> {
   logger.log(`Done. sent=${tally.sent} blocked=${tally.blocked} failed=${tally.failed}`);
 }
 
-main().catch((err) => logger.error(`${err}`));
+main().catch((err) => logger.error(`${getErrorMessage(err)}`));

@@ -22,8 +22,8 @@ describe('core user repository', () => {
   });
 
   describe('saveUserDetails', () => {
-    it('should insert a new user and return false (not existing)', async () => {
-      const wasExisting = await userRepo.saveUserDetails({
+    it('should insert a new user and return created', async () => {
+      const saveResult = await userRepo.saveUserDetails({
         chatId: 1001,
         telegramUserId: 5001,
         firstName: 'John',
@@ -31,7 +31,7 @@ describe('core user repository', () => {
         username: 'johndoe',
       });
 
-      expect(wasExisting).toBe(false);
+      expect(saveResult).toBe('created');
 
       const user = await userRepo.getUserDetails(1001);
       expect(user).not.toBeNull();
@@ -39,7 +39,7 @@ describe('core user repository', () => {
       expect(user.username).toBe('johndoe');
     });
 
-    it('should update an existing user and return true', async () => {
+    it('should update an existing user and return updated', async () => {
       await userRepo.saveUserDetails({
         chatId: 2002,
         telegramUserId: 6002,
@@ -48,7 +48,7 @@ describe('core user repository', () => {
         username: 'janesmith',
       });
 
-      const wasExisting = await userRepo.saveUserDetails({
+      const saveResult = await userRepo.saveUserDetails({
         chatId: 2002,
         telegramUserId: 6002,
         firstName: 'Janet',
@@ -56,7 +56,7 @@ describe('core user repository', () => {
         username: 'janetsmith',
       });
 
-      expect(wasExisting).toBe(true);
+      expect(saveResult).toBe('updated');
 
       const user = await userRepo.getUserDetails(2002);
       expect(user.firstName).toBe('Janet');

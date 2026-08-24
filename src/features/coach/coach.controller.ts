@@ -1,7 +1,7 @@
 import type { Bot, Context } from 'grammy';
 import { env } from 'node:process';
 import { MY_USER_NAME } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
@@ -25,7 +25,7 @@ const getKeyboardOptions = () => {
 };
 
 export class CoachController {
-  private readonly logger = new Logger(CoachController.name);
+  private readonly logger = new Logger('coach:controller');
 
   constructor(
     private readonly coachService: CoachService,
@@ -181,13 +181,13 @@ export class CoachController {
 
       await ctx.answerCallbackQuery().catch(() => {});
     } catch (err) {
-      this.logger.error(`Error handling callback query, ${err}`);
+      this.logger.error(`Error handling callback query, ${getErrorMessage(err)}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true });
     }
   }
 
   private async userStart(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
-    const userExists = await saveUserDetails(userDetails);
+    const saveResult = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
     if (subscription) {
@@ -204,7 +204,7 @@ export class CoachController {
       `אם תרצה להפסיק לקבל ממני עדכונים, תוכל להשתמש בפקודה פה למטה`,
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
-    await ctx.reply(userExists ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
+    await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
     const launcherKeyboard = this.buildKeyboard();
     if (launcherKeyboard) {
       await this.bot.api.sendMessage(chatId, '📱 גם יש לי אפליקציה — לתצוגה ויזואלית:', { reply_markup: launcherKeyboard });

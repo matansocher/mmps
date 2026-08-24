@@ -1,6 +1,6 @@
 import type { Bot, Context } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { sleep } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
@@ -11,7 +11,7 @@ import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATO
 import { WorldlyService } from './worldly.service';
 
 export class WorldlyController {
-  private readonly logger = new Logger(WorldlyController.name);
+  private readonly logger = new Logger('worldly:controller');
 
   constructor(
     private readonly worldlyService: WorldlyService,
@@ -30,7 +30,7 @@ export class WorldlyController {
     this.bot.command(CAPITAL.command.replace('/', ''), (ctx) => this.capitalHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
-    this.bot.catch((err) => this.logger.error(`${err}`));
+    this.bot.catch((err) => this.logger.error(`${getErrorMessage(err)}`));
   }
 
   async startHandler(ctx: Context): Promise<void> {
@@ -192,7 +192,7 @@ export class WorldlyController {
   }
 
   private async userStart(ctx: Context, chatId: number, userDetails: UserDetails): Promise<void> {
-    const userExists = await saveUserDetails(userDetails);
+    const saveResult = await saveUserDetails(userDetails);
 
     const subscription = await getSubscription(chatId);
     if (subscription) {
@@ -209,7 +209,7 @@ export class WorldlyController {
       `אם אתם רוצים שאני אפסיק לשלוח משחקים בכל יום, אפשר פשוט לבקש ממני בפקודה ׳פעולות׳, פה למטה 👇`,
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אשלח משחקים בכל יום 🟢`;
-    await ctx.reply(userExists ? existingUserReplyText : newUserReplyText);
+    await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText);
   }
 
   private async stopHandler(ctx: Context, chatId: number): Promise<void> {

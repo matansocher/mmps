@@ -5,7 +5,7 @@ import { Logger } from '@core/utils';
 import { registerSavingsApiRoutes } from './api';
 import { SAVINGS_DB_NAME } from './constants';
 
-const logger = new Logger('initSavings');
+const logger = new Logger('savings:init');
 
 export async function initSavings(app: Express): Promise<void> {
   await createMongoConnection(SAVINGS_DB_NAME);

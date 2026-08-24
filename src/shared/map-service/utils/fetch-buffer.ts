@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 
-const logger = new Logger('fetch-buffer');
+const logger = new Logger('map-service:fetch-buffer');
 
 export async function fetchBuffer(url: string, headers: Record<string, string> = {}): Promise<Buffer | null> {
   try {
@@ -12,7 +12,7 @@ export async function fetchBuffer(url: string, headers: Record<string, string> =
     });
     return Buffer.from(response.data);
   } catch (err) {
-    logger.warn(`Failed to fetch tile: ${url}, error - ${err}`);
+    logger.warn(`Failed to fetch tile ${url}: ${getErrorMessage(err)}`);
     return null;
   }
 }

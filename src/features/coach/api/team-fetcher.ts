@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '@services/scores-365';
 import type { MatchStatus, SquadPlayer, TeamDetailResponse, TeamRecentMatch } from './dto';
 
-const logger = new Logger('CoachTeamFetcher');
+const logger = new Logger('coach:team-fetcher');
 
 const POSITION_MAP: Record<number, string> = { 1: 'GK', 2: 'DF', 3: 'MF', 4: 'FW' };
 
@@ -115,7 +115,7 @@ export async function fetchTeamRecentMatches(teamId: number): Promise<TeamRecent
       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
       .slice(0, RECENT_MATCH_LIMIT);
   } catch (err) {
-    logger.error(`fetchTeamRecentMatches failed for ${teamId}: ${err}`);
+    logger.error(`fetchTeamRecentMatches failed for ${teamId}: ${getErrorMessage(err)}`);
     return [];
   }
 }
@@ -150,7 +150,7 @@ export async function fetchTeamDetail(teamId: number): Promise<TeamDetailRespons
       squad,
     };
   } catch (err) {
-    logger.error(`fetchTeamDetail failed for ${teamId}: ${err}`);
+    logger.error(`fetchTeamDetail failed for ${teamId}: ${getErrorMessage(err)}`);
     return null;
   }
 }

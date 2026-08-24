@@ -1,8 +1,8 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import type { UsageCallbackHandler } from '../utils';
 import { saveUsageRecord } from './usage.repository';
 
-const logger = new Logger('ai-usage');
+const logger = new Logger('ai:usage');
 
 export type RecordUsageParams = {
   readonly source: string;
@@ -34,5 +34,5 @@ export function recordModelUsage({ source, chatId, handler, durationMs }: Record
     durationMs,
     llmCalls: usage.llmCalls,
     toolCalls: usage.toolCalls,
-  }).catch((err) => logger.error(`Failed to persist usage record (source=${source}): ${err}`));
+  }).catch((err) => logger.error(`Failed to persist usage record (source=${source}): ${getErrorMessage(err)}`));
 }

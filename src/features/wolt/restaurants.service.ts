@@ -1,4 +1,4 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { RestaurantsList, WoltRestaurant } from '@shared/wolt';
 import { getRestaurantsList } from './utils';
 import { TOO_OLD_LIST_THRESHOLD_MS } from './wolt.config';
@@ -9,7 +9,7 @@ let restaurantsList: RestaurantsList = {
 };
 
 export class RestaurantsService {
-  private readonly logger = new Logger(RestaurantsService.name);
+  private readonly logger = new Logger('wolt:restaurants');
 
   async getRestaurants(): Promise<WoltRestaurant[]> {
     const { lastUpdated } = restaurantsList;
@@ -25,10 +25,9 @@ export class RestaurantsService {
       const restaurants = await getRestaurantsList();
       if (restaurants.length) {
         restaurantsList = { restaurants, lastUpdated: new Date().getTime() };
-        // this.logger.log(`${this.refreshRestaurants.name} - Restaurants list was refreshed successfully`);
       }
     } catch (err) {
-      this.logger.error(`${this.refreshRestaurants.name} - error - ${err}`);
+      this.logger.error(`Failed to refresh restaurants list: ${getErrorMessage(err)}`);
     }
   }
 }

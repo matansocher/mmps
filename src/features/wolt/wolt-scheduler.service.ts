@@ -1,7 +1,7 @@
 import { toZonedTime } from 'date-fns-tz';
 import { type Bot, InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
@@ -12,7 +12,7 @@ export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANAL
 const JOB_NAME = 'wolt-scheduler-job-interval';
 
 export class WoltSchedulerService {
-  private readonly logger = new Logger(WoltSchedulerService.name);
+  private readonly logger = new Logger('wolt:scheduler');
   private timeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   constructor(private readonly bot: Bot) {}
@@ -29,7 +29,7 @@ export class WoltSchedulerService {
     await this.handleIntervalFlow();
 
     const timeout = setTimeout(() => {
-      this.scheduleInterval().catch((err) => this.logger.error(`Error in scheduled interval: ${err}`));
+      this.scheduleInterval().catch((err) => this.logger.error(`Error in scheduled interval: ${getErrorMessage(err)}`));
     }, secondsToNextRefresh * 1000);
 
     this.timeouts.set(JOB_NAME, timeout);
@@ -53,7 +53,7 @@ export class WoltSchedulerService {
       try {
         await this.bot.api.sendPhoto(chatId, restaurantPhoto, { reply_markup: keyboard, caption: replyText });
       } catch (err) {
-        this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
+        this.logger.warn(`Failed to send alert photo for chatId ${chatId}, retrying without photo: ${getErrorMessage(err)}`);
         notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
         await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
       }
@@ -61,7 +61,7 @@ export class WoltSchedulerService {
       await archiveSubscription(chatId, restaurantName, true);
       await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
-      this.logger.error(`${this.alertSubscription.name} - error - ${err}`);
+      this.logger.error(`Failed to alert subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
@@ -91,7 +91,7 @@ export class WoltSchedulerService {
       }
       this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
-      this.logger.error(`${this.cleanSubscription.name} - error - ${err}`);
+      this.logger.error(`Failed to clean subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }

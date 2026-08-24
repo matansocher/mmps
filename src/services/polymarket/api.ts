@@ -7,6 +7,7 @@ import type {
   PolymarketEvent,
   PolymarketEventWithMarkets,
   PolymarketMarket,
+  PublicSearchResponse,
   SearchEventsResponse,
   TrendingMarketsResponse,
 } from './types';
@@ -14,6 +15,7 @@ import { buildPolymarketUrl, parseOutcomePrices } from './utils';
 
 const BASE_URL = 'https://gamma-api.polymarket.com/markets';
 const EVENTS_URL = 'https://gamma-api.polymarket.com/events';
+const SEARCH_URL = 'https://gamma-api.polymarket.com/public-search';
 
 export async function getTrendingMarkets(limit: number = 10): Promise<TrendingMarketsResponse> {
   const params = new URLSearchParams({
@@ -106,6 +108,29 @@ export async function searchEventsByTag(keyword: string, limit: number = 10): Pr
   };
 }
 
+export async function searchEvents(query: string, limit: number = 10): Promise<SearchEventsResponse> {
+  const params = new URLSearchParams({
+    q: query,
+    limit_per_type: limit.toString(),
+    events_status: 'active',
+  });
+
+  const url = `${SEARCH_URL}?${params.toString()}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to search events: ${response.status}`);
+  }
+
+  const { events } = (await response.json()) as PublicSearchResponse;
+
+  return {
+    events: (events || []).map(toEventSummary),
+    keyword: query,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
 export async function getEventOutcomes(slug: string): Promise<MultiOutcomeEventSummary> {
   const url = `${EVENTS_URL}/slug/${slug}`;
 
@@ -171,6 +196,7 @@ function toEventSummary(event: PolymarketEvent): EventSummary {
     volume24hr: event.volume24hr,
     active: event.active,
     closed: event.closed,
+    endDate: event.endDate ?? null,
     polymarketUrl: buildPolymarketUrl(event.slug),
   };
 }

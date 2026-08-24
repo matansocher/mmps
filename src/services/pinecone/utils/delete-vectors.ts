@@ -1,7 +1,7 @@
 import { Logger } from '@core/utils';
 import { providePineconeClient } from './provide-pinecone-client';
 
-const logger = new Logger('PineconeDelete');
+const logger = new Logger('pinecone:delete');
 
 export async function deleteVectorsById(indexName: string, ids: string[]): Promise<void> {
   const pinecone = providePineconeClient();

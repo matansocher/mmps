@@ -2,14 +2,14 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ObjectId } from 'mongodb';
 import { env } from 'node:process';
 import { z } from 'zod';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import { createExpense } from '../mongo';
 import { type Currency, DEFAULT_CURRENCY, EXPENSE_CATEGORIES, type ExpenseCategory } from '../types';
 import type { CreateExpenseData, Expense, ExpenseType } from '../types';
 
-const logger = new Logger('manual-entry');
+const logger = new Logger('expenses:manual-entry');
 
 const TYPES: ReadonlyArray<ExpenseType> = ['receipt', 'card_alert', 'bill'];
 
@@ -88,7 +88,7 @@ export async function categorizeVendor(input: {
     const llm = await categorize(input);
     return { category: llm.category, type: llm.type };
   } catch (err) {
-    logger.warn(`categorizeVendor failed for "${input.vendor}", defaulting to other/card_alert: ${err}`);
+    logger.warn(`categorizeVendor failed for "${input.vendor}", defaulting to other/card_alert: ${getErrorMessage(err)}`);
     return { category: 'other', type: 'card_alert' };
   }
 }
@@ -105,7 +105,7 @@ export async function createManualExpense(input: ManualExpenseInput): Promise<Ex
     try {
       llm = await categorize(input);
     } catch (err) {
-      logger.warn(`Categorize failed, defaulting to "other"/"receipt": ${err}`);
+      logger.warn(`Categorize failed, defaulting to "other"/"receipt": ${getErrorMessage(err)}`);
       llm = { category: 'other', type: 'receipt', vendor: input.vendor.trim() };
     }
   }

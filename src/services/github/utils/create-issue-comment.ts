@@ -1,10 +1,10 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, IssueComment } from '../types';
 import { mapComment } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('CreateIssueComment');
+const logger = new Logger('github:create-issue-comment');
 
 export async function createIssueComment(issueNumber: number, body: string): Promise<GitHubServiceResponse<IssueComment>> {
   try {
@@ -21,7 +21,7 @@ export async function createIssueComment(issueNumber: number, body: string): Pro
       data: mapComment(response.data),
     };
   } catch (err) {
-    const errorMsg = `Failed to comment on issue #${issueNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to comment on issue #${issueNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

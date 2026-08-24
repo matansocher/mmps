@@ -1,5 +1,19 @@
 import { describe, expect, test } from 'vitest';
-import { isLongPost, targetKeyPointsCount } from './social-media-digest';
+import type { PendingPost, SocialPlatform } from '@shared/social-follower';
+import { groupPostsByUser, isLongPost, targetKeyPointsCount } from './social-media-digest';
+
+function pendingPost(platform: SocialPlatform, username: string, postId: string): PendingPost {
+  return {
+    platform,
+    username,
+    chatId: 1,
+    postId,
+    text: null,
+    url: null,
+    postedAt: new Date(),
+    collectedAt: new Date(),
+  };
+}
 
 describe('targetKeyPointsCount()', () => {
   test.each([
@@ -24,5 +38,31 @@ describe('isLongPost()', () => {
     { label: 'over threshold (281)', text: 'a'.repeat(281), expected: true },
   ])('should return $expected for $label', ({ text, expected }) => {
     expect(isLongPost(text)).toEqual(expected);
+  });
+});
+
+describe('groupPostsByUser()', () => {
+  test('should group accounts by platform while preserving account and post order', () => {
+    const posts = [
+      pendingPost('youtube', 'youtube-one', 'youtube-1'),
+      pendingPost('telegram', 'telegram-one', 'telegram-1'),
+      pendingPost('twitter', 'twitter-one', 'twitter-1'),
+      pendingPost('telegram', 'telegram-two', 'telegram-2'),
+      pendingPost('youtube', 'youtube-one', 'youtube-2'),
+      pendingPost('tiktok', 'tiktok-one', 'tiktok-1'),
+      pendingPost('telegram', 'telegram-one', 'telegram-3'),
+    ];
+
+    const groupedPosts = groupPostsByUser(posts);
+
+    expect(groupedPosts.map((userPosts) => `${userPosts[0].platform}:${userPosts[0].username}`)).toEqual([
+      'telegram:telegram-one',
+      'telegram:telegram-two',
+      'twitter:twitter-one',
+      'youtube:youtube-one',
+      'tiktok:tiktok-one',
+    ]);
+    expect(groupedPosts[0].map((post) => post.postId)).toEqual(['telegram-1', 'telegram-3']);
+    expect(groupedPosts[3].map((post) => post.postId)).toEqual(['youtube-1', 'youtube-2']);
   });
 });

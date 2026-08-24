@@ -1,17 +1,18 @@
 import type { Bot } from 'grammy';
 import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { ChatbotService } from './chatbot.service';
-import type { SecretaryMessageService } from './secretary';
 import {
   birthdayReminder,
   dailySummary,
   earthquakeMonitor,
   exerciseReminder,
   footballUpdate,
+  gameReleaseCheck,
+  gameReleaseDigest,
+  hotelPriceCheck,
   makavdiaUpdate,
-  morningBrief,
   polymarketUpdate,
   // rainRadarAlert,
   reminderCheck,
@@ -21,16 +22,20 @@ import {
   socialMediaDigest,
   sportsCalendar,
   spotifyPodcastUpdate,
+  transferCollect,
+  transferDigest,
   upcomingEventAlert,
   usageSummary,
   weeklyExerciseSummary,
 } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
+import type { SecretaryMessageService } from './secretary';
 
-const logger = new Logger('ChatbotScheduler');
+const logger = new Logger('chatbot:scheduler');
 
 function createSchedule(expression: string, handler: () => Promise<void>, timezone: string = DEFAULT_TIMEZONE): void {
-  cron.schedule(expression, () => handler().catch((err) => logger.error(`Scheduled task failed: ${err}`)), { timezone });
+  const onError = (err: unknown) => logger.error(`Scheduled task failed: ${getErrorMessage(err)}`);
+  cron.schedule(expression, () => handler().catch(onError), { timezone });
 }
 
 export class ChatbotSchedulerService {
@@ -41,9 +46,7 @@ export class ChatbotSchedulerService {
   ) {}
 
   init(): void {
-    createSchedule(`00 23 * * *`, async () => dailySummary(this.bot, this.chatbotService));
-
-    createSchedule(`00 8 * * *`, async () => morningBrief(this.bot, this.chatbotService));
+    createSchedule(`00 23 * * *`, async () => dailySummary(this.bot));
 
     createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot));
 
@@ -51,11 +54,11 @@ export class ChatbotSchedulerService {
 
     createSchedule(`30 9 * * *`, async () => makavdiaUpdate(this.bot, this.chatbotService));
 
-    createSchedule(`00 10 * * 0,3`, async () => sportsCalendar(this.bot, this.chatbotService));
+    createSchedule(`00 10 * * 0,3`, async () => sportsCalendar(this.bot));
 
     createSchedule(`0 19 * * *`, async () => exerciseReminder(this.bot, this.chatbotService));
 
-    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot, this.chatbotService));
+    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot));
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
 
@@ -76,6 +79,16 @@ export class ChatbotSchedulerService {
     createSchedule(`30 * * * *`, async () => socialMediaCollect(['telegram']));
 
     createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
+
+    createSchedule(`15 * * * *`, async () => transferCollect());
+
+    createSchedule(`0 21 * * *`, async () => transferDigest(this.bot));
+
+    createSchedule(`0 17 * * *`, async () => hotelPriceCheck(this.bot));
+
+    createSchedule(`15 11 * * *`, async () => gameReleaseCheck(this.bot));
+
+    createSchedule(`20 11 * * 0`, async () => gameReleaseDigest(this.bot));
 
     createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
 

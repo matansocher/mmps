@@ -6,12 +6,13 @@ import { isProd } from '@core/config';
 import { closeMongoConnections } from '@core/mongo';
 import { registerSwaggerRoutes } from '@core/openapi';
 import { closeRedisConnection } from '@core/services';
-import { gracefulShutdown, Logger } from '@core/utils';
+import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
+import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
@@ -25,7 +26,7 @@ async function main() {
   // await initConsoleOverride();
   const app = express();
   const port = env.PORT || 3000;
-  const logger = new Logger('main.ts');
+  const logger = new Logger('bootstrap');
 
   app.use(express.json());
 
@@ -36,8 +37,10 @@ async function main() {
   try {
     await initSavings(app);
   } catch (err) {
-    logger.error(`Failed to init savings app: ${err}`);
+    logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
   }
+
+  registerPortfolioApiRoutes(app);
 
   registerSwaggerRoutes(app);
 
@@ -47,7 +50,7 @@ async function main() {
     try {
       await init();
     } catch (err) {
-      logger.error(`Failed to init bot '${config.id}': ${err}`);
+      logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
     }
   };
 
@@ -69,6 +72,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  new Logger('main.ts').error(`Fatal error during startup: ${err}`);
+  new Logger('bootstrap').error(`Fatal error during startup: ${getErrorMessage(err)}`);
   process.exit(1);
 });

@@ -1,9 +1,9 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { GitHubServiceResponse, PullRequestFile } from '../types';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('ListPRFiles');
+const logger = new Logger('github:list-pr-files');
 
 export async function listPRFiles(prNumber: number): Promise<GitHubServiceResponse<readonly PullRequestFile[]>> {
   try {
@@ -24,7 +24,7 @@ export async function listPRFiles(prNumber: number): Promise<GitHubServiceRespon
 
     return { success: true, data: files };
   } catch (err) {
-    const errorMsg = `Failed to list files for PR #${prNumber}: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to list files for PR #${prNumber}: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return { success: false, error: errorMsg };
   }

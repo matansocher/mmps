@@ -1,11 +1,11 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getTodayExercise } from '@shared/trainer';
 import type { ChatbotService } from '../chatbot.service';
 import { buildExerciseKeyboard } from './exercise-actions';
 
-const logger = new Logger('ExerciseReminderScheduler');
+const logger = new Logger('chatbot:scheduler:exercise-reminder');
 
 export async function sendExerciseReminder(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   const todayExercise = await getTodayExercise(MY_USER_ID);
@@ -30,6 +30,6 @@ export async function exerciseReminder(bot: Bot, chatbotService: ChatbotService)
   try {
     await sendExerciseReminder(bot, chatbotService);
   } catch (err) {
-    logger.error(`Failed to send exercise reminder: ${err}`);
+    logger.error(`Failed to send exercise reminder: ${getErrorMessage(err)}`);
   }
 }

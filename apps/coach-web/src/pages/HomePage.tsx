@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
-import { addDays, dateStringFromOffset, formatDateHeader } from '../lib/format';
+import { addDays, dateStringFromOffset, formatDateHeader, getAutoRefreshState } from '../lib/format';
 import type { TodayResponse } from '../types';
 import { LiveMatchCard } from '../components/LiveMatchCard';
 import { LeagueSection } from '../components/LeagueSection';
@@ -13,8 +13,8 @@ import { CalendarSheet } from '../components/CalendarSheet';
 const AUTO_REFRESH_MS = 60_000;
 
 export function HomePage() {
-  const today = useMemo(() => dateStringFromOffset(0), []);
-  const [selectedDate, setSelectedDate] = useState<string>(today);
+  const [today, setToday] = useState(() => dateStringFromOffset(0));
+  const [selectedDate, setSelectedDate] = useState<string>(() => dateStringFromOffset(0));
   const [data, setData] = useState<TodayResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +59,18 @@ export function HomePage() {
   useEffect(() => {
     const tick = () => {
       if (document.hidden) return;
-      if (selectedDate === today || (data && data.live.length > 0)) {
+
+      const currentToday = dateStringFromOffset(0);
+      const refreshState = getAutoRefreshState(selectedDate, today, currentToday, Boolean(data?.live.length));
+      if (currentToday !== today) {
+        setToday(currentToday);
+        if (refreshState.selectedDate !== selectedDate) {
+          setSelectedDate(refreshState.selectedDate);
+          return;
+        }
+      }
+
+      if (refreshState.shouldRefresh) {
         loadDay(selectedDate, true);
       }
     };

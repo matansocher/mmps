@@ -2,7 +2,7 @@ import { AssistantStream } from 'openai/lib/AssistantStream';
 import { Logger } from '@core/utils';
 
 export async function streamResponse(threadId: string, stream: AssistantStream, onStreamData: (data: string) => void): Promise<string> {
-  const logger = new Logger(streamResponse.name);
+  const logger = new Logger('openai:stream-response');
   let content = '';
 
   try {

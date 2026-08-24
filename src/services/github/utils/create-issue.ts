@@ -1,10 +1,10 @@
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { GITHUB_REPO_NAME, GITHUB_REPO_OWNER } from '../constants';
 import type { CreateIssueInput, GitHubServiceResponse, Issue } from '../types';
 import { mapIssue } from './mappers';
 import { getOctokit } from './octokit';
 
-const logger = new Logger('CreateIssue');
+const logger = new Logger('github:create-issue');
 
 export async function createIssue(input: CreateIssueInput): Promise<GitHubServiceResponse<Issue>> {
   try {
@@ -23,7 +23,7 @@ export async function createIssue(input: CreateIssueInput): Promise<GitHubServic
       data: mapIssue(response.data),
     };
   } catch (err) {
-    const errorMsg = `Failed to create issue: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = `Failed to create issue: ${getErrorMessage(err)}`;
     logger.error(errorMsg);
     return {
       success: false,

@@ -1,14 +1,14 @@
 import type { Express, Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { SAVINGS_SESSION_COOKIE, SAVINGS_SESSION_TTL_SECONDS } from '../constants';
 import { getSavingsPortfolio, saveSavingsPortfolio } from '../mongo';
 import { createSavingsSessionToken, passwordsMatch } from './auth';
 import { savingsAuthMiddleware } from './auth.middleware';
 import { EMPTY_SAVINGS_PORTFOLIO, parseSaveSavingsPortfolioBody, type SaveSavingsPortfolioBody, type SavingsApiError, type SavingsPortfolioResponse, toSavingsPortfolioDto } from './dto';
 
-const logger = new Logger('SavingsApiController');
+const logger = new Logger('savings:api');
 
 type LoginBody = {
   readonly password?: unknown;
@@ -56,7 +56,7 @@ export function registerSavingsApiRoutes(app: Express): void {
       const portfolio = (await getSavingsPortfolio()) ?? EMPTY_SAVINGS_PORTFOLIO;
       res.json({ portfolio: toSavingsPortfolioDto(portfolio) });
     } catch (err) {
-      logger.error(`Failed to load savings portfolio: ${err}`);
+      logger.error(`Failed to load savings portfolio: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'portfolio_load_failed' });
     }
   });
@@ -80,7 +80,7 @@ export function registerSavingsApiRoutes(app: Express): void {
 
       res.json({ portfolio: toSavingsPortfolioDto(result.portfolio) });
     } catch (err) {
-      logger.error(`Failed to save savings portfolio: ${err}`);
+      logger.error(`Failed to save savings portfolio: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'portfolio_save_failed' });
     }
   });

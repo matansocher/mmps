@@ -37,32 +37,41 @@ export const MAX_CONCURRENT_RESTAURANTS_REQUESTS = 2;
 export const DELAY_BETWEEN_RESTAURANTS_BATCHES_MS = 500;
 export const RELAY_REQUEST_TIMEOUT_MS = 45_000;
 
+// A city can fail on a transient 429/timeout while the rest succeed. Rather than silently dropping it from
+// that refresh, retry only the failed cities a few times with a growing backoff so we don't miss cities.
+export const MAX_CITY_FETCH_RETRIES = 2;
+export const DELAY_BETWEEN_CITY_RETRIES_MS = 1500;
+
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 export const RESTAURANTS_BASE_URL = 'https://restaurant-api.wolt.com/v1/pages/restaurants';
 export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
 
 // the order of this array is important, this will determine the order of multiple results in restaurants search
-export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'haifa', 'petah-tikva', 'rishon-lezion-hashfela-area', 'jerusalem', 'netanya'];
-// 'afula-emek-yizrael-area'
-// 'ashdod-and-lachish-area'
-// 'ashkelon'
-// 'beer-sheva'
-// 'eilat'
-// 'haifa'
-// 'hasharon'
-// 'jerusalem'
-// 'karmiel-area'
-// 'kiryat-shmona-area'
-// 'mevaseret-zion-area'
-// 'modiin'
-// 'nazareth---nof-hagalil-area'
-// 'netivot-sderot-area'
-// 'pardes-hanna'
-// 'petah-tikva'
-// 'rishon-lezion-hashfela-area'
-// 'rosh-pinna---zefat-area'
-// 'tel-aviv'
-// 'yokneam'
+export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'petah-tikva'];
+// acre-nahariya-area - Acre - Nahariya Area
+// afula-emek-yizrael-area - Afula & Emek Yizrael area
+// ashdod-and-lachish-area - Ashdod and Lachish Area
+// ashkelon - Ashkelon
+// beer-sheva - Beer Sheva
+// beit-shemesh-area - Beit Shemesh Area
+// eilat - Eilat
+// haifa - Haifa & HaKrayot
+// hasharon - Hasharon area
+// jerusalem - Jerusalem
+// karmiel-area - Karmiel area
+// kiryat-shmona-area - Kiryat Shmona area
+// maalot-tarshiha-area - Ma'alot Tarshiha Area
+// mevaseret-zion-area - Mevaseret Zion Area
+// modiin - Modi'in
+// nazareth---nof-hagalil-area - Nazareth - Nof Hagalil area
+// netivot-sderot-area - Netivot - Sderot area
+// pardes-hanna - Pardes Hanna - Hadera area
+// petah-tikva - Petah Tikva
+// rishon-lezion-hashfela-area - Rishon Lezion & Hashfela area
+// rosh-pinna---zefat-area - Rosh Pinna - Zefat area
+// tiberias-area - Tiberias Area
+// tel-aviv - TLV - Herzliya area
+// yokneam - Yokneam - Tivon area
 
 export const HOUR_OF_DAY_TO_REFRESH_MAP = {
   0: SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS.SLOW,

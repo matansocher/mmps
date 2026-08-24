@@ -5,12 +5,12 @@ import { DEFAULT_TILE_RANGE, DEFAULT_TILE_SIZE, DEFAULT_ZOOM, OPENSTREETMAP_TILE
 import type { MapOptions } from './types';
 import { fetchBuffer, latLonToTile } from './utils';
 
-const logger = new Logger('MapService');
+const logger = new Logger('map-service');
 
 export async function generateMapImage(options: MapOptions, outputDir: string, filename: string): Promise<string> {
   const { lat, lon, zoom = DEFAULT_ZOOM, tileRange = DEFAULT_TILE_RANGE, tileSize = DEFAULT_TILE_SIZE, addMarker = false } = options;
 
-  logger.log(`Generating map image for Lat: ${lat}, Lon: ${lon}, Zoom: ${zoom}`);
+  logger.debug(`Generating map image for Lat: ${lat}, Lon: ${lon}, Zoom: ${zoom}`);
 
   const center = latLonToTile(lat, lon, zoom);
   const tilesX = tileRange * 2 + 1;
@@ -18,7 +18,7 @@ export async function generateMapImage(options: MapOptions, outputDir: string, f
   const width = tilesX * tileSize;
   const height = tilesY * tileSize;
 
-  logger.log(`Grid: ${tilesX}x${tilesY} tiles, Image: ${width}x${height} pixels`);
+  logger.debug(`Grid: ${tilesX}x${tilesY} tiles, Image: ${width}x${height} pixels`);
 
   const mapLayers: { input: Buffer; left: number; top: number }[] = [];
   const gridPromises = [];
@@ -34,7 +34,7 @@ export async function generateMapImage(options: MapOptions, outputDir: string, f
 
           const mapUrl = `${OPENSTREETMAP_TILE_URL}/${zoom}/${tx}/${ty}.png`;
 
-          logger.log(`Fetching: ${mapUrl}`);
+          logger.debug(`Fetching: ${mapUrl}`);
 
           const mapBuf = await fetchBuffer(mapUrl, { 'User-Agent': 'MMPS-MapService/1.0' });
 
@@ -80,7 +80,7 @@ export async function generateMapImage(options: MapOptions, outputDir: string, f
       left: 0,
     });
 
-    logger.log(`Added red marker at center (${markerX}, ${markerY})`);
+    logger.debug(`Added red marker at center (${markerX}, ${markerY})`);
   }
 
   const outputPath = path.join(outputDir, filename);
@@ -91,6 +91,6 @@ export async function generateMapImage(options: MapOptions, outputDir: string, f
     .composite(allLayers)
     .toFile(outputPath);
 
-  logger.log(`Map image saved to: ${outputPath}`);
+  logger.debug(`Map image saved to: ${outputPath}`);
   return outputPath;
 }

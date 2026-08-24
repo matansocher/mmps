@@ -1,12 +1,12 @@
 import type { Bot } from 'grammy';
 import { InputFile } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { type Earthquake, formatEarthquake, getRecentEarthquakes, shouldNotifyAboutEarthquake } from '@services/earthquake-api';
 import { generateEarthquakeMapImage } from '@services/earthquake-map';
 import { sendShortenedMessage } from '@services/telegram';
 
-const logger = new Logger('EarthquakeMonitorScheduler');
+const logger = new Logger('chatbot:scheduler:earthquake-monitor');
 
 const seenEarthquakeIds = new Set<string>();
 
@@ -63,7 +63,7 @@ export async function earthquakeMonitor(bot: Bot): Promise<void> {
 
         seenEarthquakeIds.add(quake.id);
       } catch (err) {
-        logger.error(`Failed to send alert for earthquake ${quake.id}: ${err.message}`);
+        logger.error(`Failed to send alert for earthquake ${quake.id}: ${getErrorMessage(err)}`);
       }
     }
 
@@ -77,7 +77,7 @@ export async function earthquakeMonitor(bot: Bot): Promise<void> {
 
     logger.log(`Successfully processed ${newEarthquakes.length} new earthquake(s)`);
   } catch (err) {
-    logger.error(`Failed to check earthquakes: ${err.message}`);
+    logger.error(`Failed to check earthquakes: ${getErrorMessage(err)}`);
   }
 }
 

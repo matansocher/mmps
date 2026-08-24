@@ -3,7 +3,7 @@ import { Logger } from '@core/utils';
 import { categorizeVendor, type Currency, type ExpenseCategory, type ExpenseType } from '@shared/expenses';
 import type { IsracardFileMeta, ParsedRow, ParserInput } from './types';
 
-const logger = new Logger('isracard-parser');
+const logger = new Logger('expenses:isracard-parser');
 
 const SECTOR_TO_CATEGORY_ISRACARD: Record<string, ExpenseCategory> = {
   'מסעדות, קפה וברים': 'restaurants',

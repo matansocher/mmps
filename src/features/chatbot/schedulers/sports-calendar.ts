@@ -1,94 +1,184 @@
+import { addDays, addHours } from 'date-fns';
+import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
-import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
-import { getDateString } from '@core/utils';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
+import { getDateString, getErrorMessage, Logger } from '@core/utils';
+import type { CalendarEvent } from '@services/google-calendar';
+import { createEvent, deleteEvent, listEvents, updateEvent } from '@services/google-calendar';
+import { COMPETITION_IDS_MAP, getCompetitionTable, getUpcomingMatches } from '@services/scores-365';
 import { sendShortenedMessage } from '@services/telegram';
-import type { ChatbotService } from '../chatbot.service';
+import { SPORTS_CALENDAR_EVENT_DURATION_HOURS, SPORTS_CALENDAR_SOURCE } from './sports-calendar.config';
+import { selectSportsCalendarMatches } from './utils';
+import type { SelectedSportsMatch } from './utils';
 
-export const LIKED_TEAMS: string[] = ['Real Madrid', 'Barcelona', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Manchester City FC', 'Chelsea FC', 'Bayern Munich', 'Maccabi Haifa'];
+const logger = new Logger('chatbot:scheduler:sports-calendar');
+const SOURCE_PROPERTY = 'source';
+const MATCH_ID_PROPERTY = 'scores365MatchId';
+const COMPETITION_ID_PROPERTY = 'scores365CompetitionId';
 
-const logger = new Logger('SportsCalendarScheduler');
-
-const getDaysToAdd = (dayOfWeek: number): number => {
-  if (dayOfWeek === 0) {
-    return 2; // Sunday to Tuesday
-  } else if (dayOfWeek === 3) {
-    return 3; // Wednesday to Saturday
-  }
-  return 2; // Fallback
+type DateRange = {
+  readonly startDate: string;
+  readonly endDate: string;
 };
 
-const handleDates = (): { dayOfWeek: number; startDate: string; endDate: string } => {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-
-  const startDate = getDateString();
-  const daysToAdd = getDaysToAdd(dayOfWeek);
-
-  const endDateObj = new Date();
-  endDateObj.setDate(endDateObj.getDate() + daysToAdd);
-  const endDate = endDateObj.toISOString().split('T')[0];
-
-  return { dayOfWeek, startDate, endDate };
+type SyncResult = {
+  readonly added: SelectedSportsMatch[];
+  readonly updated: SelectedSportsMatch[];
+  readonly removed: CalendarEvent[];
 };
 
-export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): Promise<void> {
+function getDateRange(now = new Date()): DateRange {
+  const zonedNow = toZonedTime(now, DEFAULT_TIMEZONE);
+  const daysToAdd = zonedNow.getDay() === 3 ? 3 : 2;
+  return {
+    startDate: getDateString(now),
+    endDate: formatInTimeZone(addDays(now, daysToAdd), DEFAULT_TIMEZONE, 'yyyy-MM-dd'),
+  };
+}
+
+function getEventMetadata(match: SelectedSportsMatch): Record<string, string> {
+  return {
+    [SOURCE_PROPERTY]: SPORTS_CALENDAR_SOURCE,
+    [MATCH_ID_PROPERTY]: match.id.toString(),
+    [COMPETITION_ID_PROPERTY]: match.competitionId.toString(),
+  };
+}
+
+function toCalendarEvent(match: SelectedSportsMatch): CalendarEvent {
+  return {
+    summary: `⚽ ${match.homeTeam.name} vs ${match.awayTeam.name}`,
+    description: match.competitionName,
+    location: match.venue,
+    start: {
+      dateTime: match.startTime,
+      timeZone: DEFAULT_TIMEZONE,
+    },
+    end: {
+      dateTime: addHours(new Date(match.startTime), SPORTS_CALENDAR_EVENT_DURATION_HOURS).toISOString(),
+      timeZone: DEFAULT_TIMEZONE,
+    },
+    extendedProperties: {
+      private: getEventMetadata(match),
+    },
+  };
+}
+
+function isManagedEvent(event: CalendarEvent): boolean {
+  return event.extendedProperties?.private?.[SOURCE_PROPERTY] === SPORTS_CALENDAR_SOURCE;
+}
+
+function eventNeedsUpdate(existing: CalendarEvent, desired: CalendarEvent): boolean {
+  return (
+    existing.summary !== desired.summary ||
+    existing.description !== desired.description ||
+    existing.location !== desired.location ||
+    new Date(existing.start.dateTime).getTime() !== new Date(desired.start.dateTime).getTime() ||
+    new Date(existing.end.dateTime).getTime() !== new Date(desired.end.dateTime).getTime() ||
+    existing.extendedProperties?.private?.[COMPETITION_ID_PROPERTY] !== desired.extendedProperties?.private?.[COMPETITION_ID_PROPERTY]
+  );
+}
+
+async function getManagedEvents(startDate: string, endDate: string): Promise<CalendarEvent[]> {
+  const timeMin = fromZonedTime(`${startDate}T00:00:00`, DEFAULT_TIMEZONE).toISOString();
+  const timeMax = addDays(fromZonedTime(`${endDate}T00:00:00`, DEFAULT_TIMEZONE), 1).toISOString();
+  const events = await listEvents({ timeMin, timeMax, maxResults: 250 });
+  return events.filter(isManagedEvent);
+}
+
+async function getIsraeliPremierLeagueTable() {
   try {
-    const { dayOfWeek, startDate, endDate } = handleDates();
-    const dateRangeLabel = dayOfWeek === 0 ? 'the next 3 days (Sunday-Tuesday)' : 'the next 4 days (Wednesday-Saturday)';
-
-    const favoriteTeams = Array.from(new Set(LIKED_TEAMS));
-
-    const prompt = `Check football matches from ${startDate} to ${endDate} (${dateRangeLabel}) and add the relevant ones to my calendar.
-
-1. Use the top_matches_for_prediction tool to get ALL upcoming matches for this period. Pass both date="${startDate}" and endDate="${endDate}" parameters.
-
-2. **My Favorite Teams**: ${favoriteTeams.join(', ')}
-
-3. **Match Selection Rules** - Four categories of matches to add:
-
-   **CATEGORY A - Favorite Team Matches (ALWAYS add, no exceptions):**
-   - ⭐ Add ALL matches involving any of my favorite teams: ${favoriteTeams.join(', ')}
-   - Include ALL competition types: league matches, cup matches, Champions League (any round), Europa League, etc.
-   - Do NOT skip any favorite team match - add every single one within the timeframe
-
-   **CATEGORY B - World Cup Matches (ALWAYS add, no exceptions):**
-   - 🌍 Add ALL FIFA World Cup matches, regardless of which teams are playing
-   - Include every stage: group stage, Round of 16, Quarter-finals, Semi-finals, Third-place, and Final
-   - Do NOT skip any World Cup match - add every single one within the timeframe
-
-   **CATEGORY C - Champions League Matches (ALWAYS add, no exceptions):**
-   - 🏆 Add ALL UEFA Champions League matches, regardless of which teams are playing
-   - Include every stage: league phase/group stage, Round of 16, Quarter-finals, Semi-finals, and Final
-   - Do NOT skip any Champions League match - add every single one within the timeframe
-
-   **CATEGORY D - Other Important Matches (add only if truly exceptional):**
-   - 🇮🇱 **Israeli Premier League Derby**: True historic derbies (e.g., Tel Aviv derby, Haifa derby)
-   - 🥇 **Title Decider**: Top 2 teams, within 3 points, playing each other in the final 5 rounds
-   - ⚽ **Israeli Premier League Top Match**: Top 4 teams playing each other
-
-4. **EXPLICIT EXCLUSIONS for Category D only** - Do NOT add:
-   - Regular league matches between mid-table teams
-   - Matches between teams with >8 points difference
-   - Early round cup matches
-   - Friendlies
-
-5. For each selected match, use the calendar tool to create an event:
-   - title: "⚽ [Home Team] vs [Away Team]" (in English)
-   - description: Include league name
-   - startDateTime: Use the match's actual start time
-   - location: The venue from the match data
-
-6. After creating calendar events, send me a summary message in English:
-   - If events were created: "✅ Added [X] matches to the calendar:" followed by the list of game names only (e.g., "⚽ [Home Team] vs [Away Team]"). Do NOT include any explanation of why each match was added.
-   - If no matches found: "No matches coming up for my favorite teams, the World Cup, or other important fixtures 🤷‍♂️"`;
-
-    const response = await chatbotService.processMessage(prompt, MY_USER_ID);
-
-    if (response?.message) {
-      await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
-    }
+    return (await getCompetitionTable(COMPETITION_IDS_MAP.LIGAT_HAAL))?.competitionTable ?? [];
   } catch (err) {
-    logger.error(`Failed to add important games to calendar: ${err}`);
+    logger.warn(`Israeli Premier League standings are unavailable; skipping standings-based matches: ${getErrorMessage(err)}`);
+    return [];
+  }
+}
+
+async function syncSportsCalendar(matches: SelectedSportsMatch[], existingEvents: CalendarEvent[]): Promise<SyncResult> {
+  const added: SelectedSportsMatch[] = [];
+  const updated: SelectedSportsMatch[] = [];
+  const removed: CalendarEvent[] = [];
+  const eventsByMatchId = new Map<string, CalendarEvent>();
+
+  for (const event of existingEvents) {
+    const matchId = event.extendedProperties?.private?.[MATCH_ID_PROPERTY];
+    if (!event.id) {
+      continue;
+    }
+    if (!matchId) {
+      try {
+        await deleteEvent(event.id);
+        removed.push(event);
+      } catch (err) {
+        logger.error(`Failed to delete malformed managed calendar event ${event.id}: ${getErrorMessage(err)}`);
+      }
+      continue;
+    }
+    const duplicate = eventsByMatchId.get(matchId);
+    if (duplicate) {
+      try {
+        await deleteEvent(event.id);
+        removed.push(event);
+      } catch (err) {
+        logger.error(`Failed to delete duplicate calendar event ${event.id}: ${getErrorMessage(err)}`);
+      }
+      continue;
+    }
+    eventsByMatchId.set(matchId, event);
+  }
+
+  for (const match of matches) {
+    const matchId = match.id.toString();
+    const existing = eventsByMatchId.get(matchId);
+    const desired = toCalendarEvent(match);
+    if (existing) {
+      eventsByMatchId.delete(matchId);
+    }
+    try {
+      if (!existing) {
+        await createEvent(desired);
+        added.push(match);
+      } else if (eventNeedsUpdate(existing, desired)) {
+        await updateEvent(existing.id, desired);
+        updated.push(match);
+      }
+    } catch (err) {
+      logger.error(`Failed to sync match ${match.id}: ${getErrorMessage(err)}`);
+    }
+  }
+
+  for (const staleEvent of eventsByMatchId.values()) {
+    try {
+      await deleteEvent(staleEvent.id);
+      removed.push(staleEvent);
+    } catch (err) {
+      logger.error(`Failed to remove stale calendar event ${staleEvent.id}: ${getErrorMessage(err)}`);
+    }
+  }
+
+  return { added, updated, removed };
+}
+
+function formatSummary(matches: SelectedSportsMatch[], result: SyncResult): string {
+  if (matches.length === 0) {
+    return result.removed.length > 0
+      ? `✅ Sports calendar synced. Removed ${result.removed.length} cancelled or no longer relevant match${result.removed.length === 1 ? '' : 'es'}.`
+      : 'No matches coming up for my favorite teams, the World Cup, or other important fixtures 🤷‍♂️';
+  }
+
+  const changes = [`Added ${result.added.length}`, `updated ${result.updated.length}`, `removed ${result.removed.length}`].join(', ');
+  const matchList = matches.map((match) => `⚽ ${match.homeTeam.name} vs ${match.awayTeam.name}`).join('\n');
+  return `✅ Sports calendar synced (${changes}):\n${matchList}`;
+}
+
+export async function sportsCalendar(bot: Bot): Promise<void> {
+  try {
+    const { startDate, endDate } = getDateRange();
+    const [matches, table, existingEvents] = await Promise.all([getUpcomingMatches(startDate, endDate), getIsraeliPremierLeagueTable(), getManagedEvents(startDate, endDate)]);
+    const selectedMatches = selectSportsCalendarMatches(matches, table);
+    const result = await syncSportsCalendar(selectedMatches, existingEvents);
+    await sendShortenedMessage(bot, MY_USER_ID, formatSummary(selectedMatches, result));
+  } catch (err) {
+    logger.error(`Failed to sync sports calendar: ${getErrorMessage(err)}`);
   }
 }

@@ -1,5 +1,5 @@
 import type { Bot } from 'grammy';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getEventOutcomes, getMarketById } from '@services/polymarket';
 import { sendShortenedMessage } from '@services/telegram';
 import { getSubscriptionsGroupedByChatId, removeSubscription, updateSubscription } from '@shared/polymarket-follower';
@@ -7,7 +7,7 @@ import type { Subscription } from '@shared/polymarket-follower';
 import { formatDailyUpdateMessage, formatExpiredMarketsSection, formatMultiOutcomeUpdateMessage, toOutcomeSnapshots } from './utils';
 import type { ExpiredMarketInfo, MarketUpdate, MultiOutcomeUpdate } from './utils';
 
-const logger = new Logger('PolymarketUpdateScheduler');
+const logger = new Logger('chatbot:scheduler:polymarket-update');
 
 export async function polymarketUpdate(bot: Bot): Promise<void> {
   const subscriptionsByChatId = await getSubscriptionsGroupedByChatId();
@@ -68,7 +68,7 @@ async function processBinarySubscription(chatId: number, subscription: Subscript
     updates.push({ subscription, market });
     await updateSubscription(subscription.marketId, chatId, { lastNotifiedPrice: market.yesPrice, marketQuestion: market.question });
   } catch (err) {
-    logger.error(`Failed to fetch market ${subscription.marketSlug}: ${err.message}`);
+    logger.error(`Failed to fetch market ${subscription.marketSlug}: ${getErrorMessage(err)}`);
   }
 }
 
@@ -87,6 +87,6 @@ async function processMultiOutcomeSubscription(chatId: number, subscription: Sub
     multiUpdates.push({ subscription, event });
     await updateSubscription(subscription.marketId, chatId, { lastNotifiedOutcomes: toOutcomeSnapshots(event), marketQuestion: event.title });
   } catch (err) {
-    logger.error(`Failed to fetch event ${subscription.marketSlug}: ${err.message}`);
+    logger.error(`Failed to fetch event ${subscription.marketSlug}: ${getErrorMessage(err)}`);
   }
 }

@@ -1,9 +1,9 @@
-import { addDays, endOfMonth, subMonths } from 'date-fns';
-import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { addDays, subMonths } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import type { Express, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import type { UserDetails } from '@services/telegram';
 import {
@@ -13,9 +13,6 @@ import {
   type Currency,
   DEFAULT_CURRENCY,
   detectSubscriptions,
-  effectiveCategory,
-  effectiveType,
-  effectiveVendor,
   type Expense,
   EXPENSE_CATEGORIES,
   type ExpenseCategory,
@@ -25,12 +22,12 @@ import {
   getAllExpensesByEffectiveVendor,
   getDistinctCards,
   getExpensesBetween,
-  monthlyEquivalent,
   searchExpenses,
   SUPPORTED_CURRENCIES,
 } from '@shared/expenses';
 import { updateUserOverrides } from '@shared/expenses/mongo/expenses.repository';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from '../expenses.config';
+import { buildBaseline, enrichCategoryDeltas, getMonthBoundaries, parseSelectedMonth, prevYm, zonedDayOfMonth } from './analytics';
 import { expensesAuthMiddleware } from './auth.middleware';
 import { NOTES_MAX_LENGTH } from './dto';
 import type {
@@ -38,346 +35,18 @@ import type {
   BulkUpdateVendorResponse,
   CardListResponse,
   CreateManualExpenseBody,
-  ExpenseCategoryBreakdown,
-  ExpenseCategoryDelta,
   ExpenseCategoryDetailResponse,
-  ExpenseCategoryDto,
-  ExpenseChargeDto,
   ExpenseDto,
-  ExpenseMonthlyPoint,
   ExpensesMonthResponse,
-  ExpenseTotal,
-  ExpenseTypeBreakdown,
-  ExpenseTypeDto,
   ExpenseVendorDetailResponse,
   SubscriptionDto,
   UpdateExpenseBody,
 } from './dto';
+import { buildCategoryDetail, buildVendorDetail, categoryBreakdown, computeTopCharges, pickPrimaryCurrency, toExpenseDto, toSubscriptionDto, totalsByCurrency, typeBreakdown } from './transformers';
 
-const logger = new Logger('ExpensesApiController');
+const logger = new Logger('expenses:api');
 
 const EXPENSE_TYPES: ReadonlyArray<ExpenseType> = ['receipt', 'card_alert', 'bill'];
-
-function toExpenseDto(e: Expense): ExpenseDto {
-  const vendor = effectiveVendor(e);
-  const category = effectiveCategory(e) as ExpenseCategoryDto;
-  const type = effectiveType(e) as ExpenseTypeDto;
-  return {
-    id: e._id!.toString(),
-    vendor,
-    category,
-    amount: e.amount,
-    currency: e.currency,
-    type,
-    transactionDate: e.transactionDate.toISOString(),
-    ...(e.card ? { card: e.card } : {}),
-    ...(e.notes ? { notes: e.notes } : {}),
-    originalVendor: e.userVendor && e.vendor !== e.userVendor ? e.vendor : undefined,
-    originalCategory: e.userCategory && e.category !== e.userCategory ? (e.category as ExpenseCategoryDto) : undefined,
-    originalType: e.userType && e.type !== e.userType ? (e.type as ExpenseTypeDto) : undefined,
-  };
-}
-
-function totalsByCurrency(expenses: ReadonlyArray<Expense>): ExpenseTotal[] {
-  const acc = new Map<string, number>();
-  for (const e of expenses) acc.set(e.currency, (acc.get(e.currency) ?? 0) + e.amount);
-  return Array.from(acc.entries()).map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
-}
-
-function categoryBreakdown(expenses: ReadonlyArray<Expense>): ExpenseCategoryBreakdown[] {
-  const map = new Map<string, ExpenseCategoryBreakdown>();
-  for (const e of expenses) {
-    const cat = effectiveCategory(e) as ExpenseCategoryDto;
-    const key = `${cat}|${e.currency}`;
-    const existing = map.get(key);
-    if (existing) map.set(key, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
-    else map.set(key, { category: cat, currency: e.currency, total: e.amount, count: 1 });
-  }
-  return Array.from(map.values())
-    .map((c) => ({ ...c, total: Math.round(c.total * 100) / 100 }))
-    .sort((a, b) => b.total - a.total);
-}
-
-function typeBreakdown(expenses: ReadonlyArray<Expense>): ExpenseTypeBreakdown[] {
-  const map = new Map<string, ExpenseTypeBreakdown>();
-  for (const e of expenses) {
-    const t = effectiveType(e) as ExpenseTypeDto;
-    const key = `${t}|${e.currency}`;
-    const existing = map.get(key);
-    if (existing) map.set(key, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
-    else map.set(key, { type: t, currency: e.currency, total: e.amount, count: 1 });
-  }
-  return Array.from(map.values())
-    .map((t) => ({ ...t, total: Math.round(t.total * 100) / 100 }))
-    .sort((a, b) => b.total - a.total);
-}
-
-function parseSelectedMonth(raw: unknown): { ym: string; start: Date; endExclusive: Date } {
-  const todayYm = formatInTimeZone(new Date(), DEFAULT_TIMEZONE, 'yyyy-MM');
-  const ym = typeof raw === 'string' && /^\d{4}-\d{2}$/.test(raw) ? raw : todayYm;
-  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
-  const zoned = toZonedTime(start, DEFAULT_TIMEZONE);
-  const endDay = endOfMonth(zoned);
-  const endExclusive = fromZonedTime(formatInTimeZone(addDays(endDay, 1), DEFAULT_TIMEZONE, "yyyy-MM-dd'T'00:00:00"), DEFAULT_TIMEZONE);
-  return { ym, start, endExclusive };
-}
-
-function getMonthBoundaries(ym: string): { ym: string; start: Date; endExclusive: Date; daysInMonth: number } {
-  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
-  const startZoned = toZonedTime(start, DEFAULT_TIMEZONE);
-  const endDay = endOfMonth(startZoned);
-  const daysInMonth = endDay.getDate();
-  const endExclusive = fromZonedTime(formatInTimeZone(addDays(endDay, 1), DEFAULT_TIMEZONE, "yyyy-MM-dd'T'00:00:00"), DEFAULT_TIMEZONE);
-  return { ym, start, endExclusive, daysInMonth };
-}
-
-function prevYm(ym: string, monthsBack: number): string {
-  const start = fromZonedTime(`${ym}-01T00:00:00`, DEFAULT_TIMEZONE);
-  const prev = subMonths(toZonedTime(start, DEFAULT_TIMEZONE), monthsBack);
-  return formatInTimeZone(fromZonedTime(prev, DEFAULT_TIMEZONE), DEFAULT_TIMEZONE, 'yyyy-MM');
-}
-
-function zonedDayOfMonth(d: Date): number {
-  return parseInt(formatInTimeZone(d, DEFAULT_TIMEZONE, 'd'), 10);
-}
-
-function pickPrimaryCurrency(expenses: ReadonlyArray<Expense>): string {
-  if (expenses.length === 0) return DEFAULT_CURRENCY;
-  const totals = new Map<string, number>();
-  for (const e of expenses) totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount);
-  return [...totals.entries()].sort((a, b) => b[1] - a[1])[0][0];
-}
-
-function monthlyTotalsForCurrency(expenses: ReadonlyArray<Expense>, currency: string, months = 12): ExpenseMonthlyPoint[] {
-  const buckets = new Map<string, number>();
-  const now = new Date();
-  for (let i = months - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const ym = formatInTimeZone(d, DEFAULT_TIMEZONE, 'yyyy-MM');
-    buckets.set(ym, 0);
-  }
-  for (const e of expenses) {
-    if (e.currency !== currency) continue;
-    const ym = formatInTimeZone(e.transactionDate, DEFAULT_TIMEZONE, 'yyyy-MM');
-    if (buckets.has(ym)) buckets.set(ym, (buckets.get(ym) ?? 0) + e.amount);
-  }
-  return [...buckets.entries()].map(([month, total]) => ({ month, total: Math.round(total * 100) / 100 }));
-}
-
-function buildCategoryDetail(category: ExpenseCategory, expenses: ReadonlyArray<Expense>, scopeMonth: string | null, monthlyContextExpenses?: ReadonlyArray<Expense>): ExpenseCategoryDetailResponse {
-  const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-  const primaryCurrency = pickPrimaryCurrency(sorted.length > 0 ? sorted : (monthlyContextExpenses ?? []));
-  const primary = sorted.filter((e) => e.currency === primaryCurrency);
-  const total = primary.reduce((s, e) => s + e.amount, 0);
-  const count = primary.length;
-  const avg = count > 0 ? total / count : 0;
-  const firstDate = sorted.length > 0 ? sorted[sorted.length - 1].transactionDate.toISOString() : null;
-  const lastDate = sorted.length > 0 ? sorted[0].transactionDate.toISOString() : null;
-
-  const vendorMap = new Map<string, { vendor: string; total: number; count: number }>();
-  for (const e of primary) {
-    const v = effectiveVendor(e);
-    const existing = vendorMap.get(v);
-    if (existing) vendorMap.set(v, { ...existing, total: existing.total + e.amount, count: existing.count + 1 });
-    else vendorMap.set(v, { vendor: v, total: e.amount, count: 1 });
-  }
-  const topVendors = [...vendorMap.values()]
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5)
-    .map((v) => ({ ...v, total: Math.round(v.total * 100) / 100 }));
-
-  const barsSource = monthlyContextExpenses ?? sorted;
-
-  return {
-    category: category as ExpenseCategoryDto,
-    scope: scopeMonth ? 'month' : 'all',
-    month: scopeMonth,
-    currency: primaryCurrency,
-    total: Math.round(total * 100) / 100,
-    count,
-    avg: Math.round(avg * 100) / 100,
-    firstDate,
-    lastDate,
-    totals: totalsByCurrency(sorted),
-    monthlyTotals: monthlyTotalsForCurrency(barsSource, primaryCurrency, 12),
-    topVendors,
-    expenses: sorted.map(toExpenseDto),
-  };
-}
-
-function buildVendorDetail(name: string, expenses: ReadonlyArray<Expense>): ExpenseVendorDetailResponse {
-  const sorted = [...expenses].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
-  const primaryCurrency = pickPrimaryCurrency(sorted);
-  const primary = sorted.filter((e) => e.currency === primaryCurrency);
-  const total = primary.reduce((s, e) => s + e.amount, 0);
-  const count = primary.length;
-  const avg = count > 0 ? total / count : 0;
-  const firstDate = sorted.length > 0 ? sorted[sorted.length - 1].transactionDate.toISOString() : null;
-  const lastDate = sorted.length > 0 ? sorted[0].transactionDate.toISOString() : null;
-
-  let dominantCategory: ExpenseVendorDetailResponse['dominantCategory'] = null;
-  if (primary.length > 0) {
-    const catMap = new Map<string, number>();
-    for (const e of primary) {
-      const cat = effectiveCategory(e) as string;
-      catMap.set(cat, (catMap.get(cat) ?? 0) + e.amount);
-    }
-    const top = [...catMap.entries()].sort((a, b) => b[1] - a[1])[0];
-    dominantCategory = { category: top[0] as ExpenseCategoryDto, share: total > 0 ? top[1] / total : 0 };
-  }
-
-  const displayVendor = sorted.length > 0 ? effectiveVendor(sorted[0]) : name;
-
-  return {
-    vendor: displayVendor,
-    currency: primaryCurrency,
-    total: Math.round(total * 100) / 100,
-    count,
-    avg: Math.round(avg * 100) / 100,
-    firstDate,
-    lastDate,
-    totals: totalsByCurrency(sorted),
-    dominantCategory,
-    monthlyTotals: monthlyTotalsForCurrency(sorted, primaryCurrency, 12),
-    expenses: sorted.map(toExpenseDto),
-  };
-}
-
-type BaselineMonth = {
-  readonly ym: string;
-  readonly start: Date;
-  readonly endExclusive: Date;
-  readonly daysInMonth: number;
-  readonly expenses: ReadonlyArray<Expense>;
-};
-
-type Baseline = {
-  readonly monthCount: number;
-  readonly months: ReadonlyArray<BaselineMonth>;
-  readonly avgFullMonthTotal: number;
-  readonly avgToDateTotal: number;
-  readonly byCategoryAvg: Map<string, number>;
-  readonly byCategoryMonthsPresent: Map<string, number>;
-  readonly byVendorAvg: Map<string, number>;
-  readonly byVendorMonthsPresent: Map<string, number>;
-  readonly allVendors: Set<string>;
-};
-
-function buildBaseline(allExpenses: ReadonlyArray<Expense>, selectedYm: string, throughDayOfSelected: number, primaryCurrency: string): Baseline {
-  const candidates: BaselineMonth[] = [];
-  for (let i = 1; i <= 3; i++) {
-    const b = getMonthBoundaries(prevYm(selectedYm, i));
-    const monthExp = allExpenses.filter((e) => e.currency === primaryCurrency && e.transactionDate >= b.start && e.transactionDate < b.endExclusive);
-    if (monthExp.length === 0) continue;
-    candidates.push({ ...b, expenses: monthExp });
-  }
-  const months = candidates;
-  const monthCount = months.length;
-
-  if (monthCount === 0) {
-    return {
-      monthCount: 0,
-      months: [],
-      avgFullMonthTotal: 0,
-      avgToDateTotal: 0,
-      byCategoryAvg: new Map(),
-      byCategoryMonthsPresent: new Map(),
-      byVendorAvg: new Map(),
-      byVendorMonthsPresent: new Map(),
-      allVendors: new Set(),
-    };
-  }
-
-  let sumFull = 0;
-  let sumToDate = 0;
-  const byCatTotals = new Map<string, number>();
-  const byCatPresent = new Map<string, number>();
-  const byVenTotals = new Map<string, number>();
-  const byVenPresent = new Map<string, number>();
-  const allVendors = new Set<string>();
-
-  for (const m of months) {
-    const seenCats = new Set<string>();
-    const seenVens = new Set<string>();
-    for (const e of m.expenses) {
-      sumFull += e.amount;
-      const day = zonedDayOfMonth(e.transactionDate);
-      const compareThrough = Math.min(throughDayOfSelected, m.daysInMonth);
-      if (day <= compareThrough) sumToDate += e.amount;
-      const cat = effectiveCategory(e) as string;
-      const ven = effectiveVendor(e);
-      byCatTotals.set(cat, (byCatTotals.get(cat) ?? 0) + e.amount);
-      byVenTotals.set(ven, (byVenTotals.get(ven) ?? 0) + e.amount);
-      seenCats.add(cat);
-      seenVens.add(ven);
-      allVendors.add(ven);
-    }
-    for (const c of seenCats) byCatPresent.set(c, (byCatPresent.get(c) ?? 0) + 1);
-    for (const v of seenVens) byVenPresent.set(v, (byVenPresent.get(v) ?? 0) + 1);
-  }
-
-  const avgFullMonthTotal = sumFull / monthCount;
-  const avgToDateTotal = sumToDate / monthCount;
-  const byCategoryAvg = new Map<string, number>();
-  for (const [k, v] of byCatTotals) byCategoryAvg.set(k, v / monthCount);
-  const byVendorAvg = new Map<string, number>();
-  for (const [k, v] of byVenTotals) byVendorAvg.set(k, v / monthCount);
-
-  return {
-    monthCount,
-    months,
-    avgFullMonthTotal,
-    avgToDateTotal,
-    byCategoryAvg,
-    byCategoryMonthsPresent: byCatPresent,
-    byVendorAvg,
-    byVendorMonthsPresent: byVenPresent,
-    allVendors,
-  };
-}
-
-function enrichCategoryDeltas(monthExpensesPrimary: ReadonlyArray<Expense>, baseline: Baseline | null, primaryCurrency: string): ExpenseCategoryDelta[] {
-  const totals = new Map<string, { total: number; count: number }>();
-  for (const e of monthExpensesPrimary) {
-    const cat = effectiveCategory(e) as string;
-    const cur = totals.get(cat) ?? { total: 0, count: 0 };
-    totals.set(cat, { total: cur.total + e.amount, count: cur.count + 1 });
-  }
-  const out: ExpenseCategoryDelta[] = [];
-  for (const [cat, { total, count }] of totals) {
-    const baseAvg = baseline?.byCategoryAvg.get(cat) ?? null;
-    const present = baseline?.byCategoryMonthsPresent.get(cat) ?? 0;
-    const showDelta = !!baseline && baseline.monthCount >= 2 && present >= 2 && baseAvg !== null && baseAvg > 0;
-    out.push({
-      category: cat as ExpenseCategoryDto,
-      currency: primaryCurrency,
-      currentTotal: round2(total),
-      currentCount: count,
-      comparableHistoricAvg: baseAvg !== null ? round2(baseAvg) : null,
-      percentVsHistoric: showDelta ? Math.round(((total - (baseAvg as number)) / (baseAvg as number)) * 100) : null,
-    });
-  }
-  return out.sort((a, b) => b.currentTotal - a.currentTotal);
-}
-
-function computeTopCharges(monthExpensesPrimary: ReadonlyArray<Expense>, limit: number): ExpenseChargeDto[] {
-  return [...monthExpensesPrimary]
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, limit)
-    .map((e) => ({
-      id: e._id!.toString(),
-      vendor: effectiveVendor(e),
-      amount: round2(e.amount),
-      currency: e.currency,
-      transactionDate: e.transactionDate.toISOString(),
-      category: effectiveCategory(e) as ExpenseCategoryDto,
-      ...(e.card ? { card: e.card } : {}),
-    }));
-}
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
 
 function toUserDetails(req: Pick<Request, 'expensesUser'>): UserDetails | undefined {
   const u = req.expensesUser;
@@ -409,7 +78,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       const rows = await searchExpenses(q, 50);
       res.json({ expenses: rows.map(toExpenseDto) });
     } catch (err) {
-      logger.error(`search failed: ${err}`);
+      logger.error(`search failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'search_failed' });
     }
   });
@@ -420,22 +89,10 @@ export function registerExpensesApiRoutes(app: Express): void {
       const from = subMonths(to, 12);
       const window = await getExpensesBetween(from, addDays(to, 1));
       const subs = detectSubscriptions(window);
-      const dto: SubscriptionDto[] = subs.map((s) => ({
-        vendor: s.vendor,
-        category: s.category as ExpenseCategoryDto,
-        currency: s.currency,
-        amount: s.amount,
-        avgAmount: s.avgAmount,
-        cadenceDays: s.cadenceDays,
-        monthlyEquivalent: monthlyEquivalent(s),
-        occurrences: s.occurrences,
-        firstChargedAt: s.firstChargedAt,
-        lastChargedAt: s.lastChargedAt,
-        nextExpectedAt: s.nextExpectedAt,
-      }));
+      const dto: SubscriptionDto[] = subs.map(toSubscriptionDto);
       res.json({ subscriptions: dto });
     } catch (err) {
-      logger.error(`subscriptions failed: ${err}`);
+      logger.error(`subscriptions failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'subscriptions_failed' });
     }
   });
@@ -507,7 +164,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         anomalyExpenseIds,
       });
     } catch (err) {
-      logger.error(`expenses month failed: ${err}`);
+      logger.error(`expenses month failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'expenses_failed' });
     }
   });
@@ -531,7 +188,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       }
       res.json(buildCategoryDetail(category, scoped, scopeMonth, allCategoryExpenses));
     } catch (err) {
-      logger.error(`expenses category failed: ${err}`);
+      logger.error(`expenses category failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'category_failed' });
     }
   });
@@ -547,7 +204,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       const expenses = await getAllExpensesByEffectiveVendor(name);
       res.json(buildVendorDetail(name, expenses));
     } catch (err) {
-      logger.error(`expenses vendor failed: ${err}`);
+      logger.error(`expenses vendor failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'vendor_failed' });
     }
   });
@@ -585,7 +242,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       res.json({ modifiedCount, vendor: buildVendorDetail(refreshedName, expenses) });
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.API_VENDOR_UPDATE, vendor: name, userVendor: body.userVendor, userCategory: body.userCategory, modifiedCount }, toUserDetails(req));
     } catch (err) {
-      logger.error(`expenses vendor bulk-update failed: ${err}`);
+      logger.error(`expenses vendor bulk-update failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'bulk_update_failed' });
     }
   });
@@ -637,7 +294,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         toUserDetails(req),
       );
     } catch (err) {
-      logger.error(`expense update failed: ${err}`);
+      logger.error(`expense update failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'update_failed' });
     }
   });
@@ -694,7 +351,7 @@ export function registerExpensesApiRoutes(app: Express): void {
         toUserDetails(req),
       );
     } catch (err) {
-      logger.error(`manual expense create failed: ${err}`);
+      logger.error(`manual expense create failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'create_failed' });
     }
   });
@@ -704,7 +361,7 @@ export function registerExpensesApiRoutes(app: Express): void {
       const cards = await getDistinctCards();
       res.json({ cards });
     } catch (err) {
-      logger.error(`list cards failed: ${err}`);
+      logger.error(`list cards failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'list_failed' });
     }
   });

@@ -11,7 +11,7 @@ import { registerExpensesApiRoutes } from './api';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './expenses.config';
 import { ExpensesController } from './expenses.controller';
 
-const logger = new Logger('initExpenses');
+const logger = new Logger('expenses:init');
 
 const ALLOWED_USER_IDS: ReadonlyArray<number> = [MY_USER_ID, WIFE_USER_ID];
 

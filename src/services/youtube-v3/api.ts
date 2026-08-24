@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { env } from 'node:process';
+import { getErrorMessage, Logger } from '@core/utils';
 import type { Video, YouTubeChannelResponse, YouTubeSearchResponse } from './types';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+
+const logger = new Logger('youtube-v3');
 
 export async function getChannelIdFromHandle(handle: string): Promise<string> {
   const apiKey = env.YOUTUBE_API_KEY;
@@ -56,7 +59,7 @@ export async function fetchTranscript(videoId: string): Promise<string> {
   }
 
   try {
-    console.log(`fetchTranscript: Fetching transcript for videoId: ${videoId} using RapidAPI`);
+    logger.debug(`Fetching transcript for videoId ${videoId} using RapidAPI`);
 
     const response = await axios.get('https://youtube-transcriptor.p.rapidapi.com/transcript', {
       params: {
@@ -70,20 +73,20 @@ export async function fetchTranscript(videoId: string): Promise<string> {
     });
 
     if (!response.data || response.data.error) {
-      console.log(`fetchTranscript: No transcript available for videoId: ${videoId}`);
+      logger.debug(`No transcript available for videoId ${videoId}`);
       return null;
     }
 
     if (Array.isArray(response.data)) {
       const fullText = response.data[0].transcriptionAsText;
-      console.log(`fetchTranscript: Successfully fetched transcript for videoId: ${videoId}, length: ${fullText.length} characters`);
+      logger.debug(`Successfully fetched transcript for videoId ${videoId}, length: ${fullText.length} characters`);
       return fullText;
     }
 
-    console.log(`fetchTranscript: Unexpected response format for videoId: ${videoId}`);
+    logger.warn(`Unexpected response format for videoId ${videoId}`);
     return null;
   } catch (err) {
-    console.error(`fetchTranscript: Failed to fetch transcript for videoId: ${videoId}: ${err.message}`);
+    logger.error(`Failed to fetch transcript for videoId ${videoId}: ${getErrorMessage(err)}`);
     return null;
   }
 }

@@ -2,9 +2,9 @@ import { env } from 'node:process';
 import { TelegramClient } from 'telegram';
 import { LogLevel } from 'telegram/extensions/Logger.js';
 import { StringSession } from 'telegram/sessions/index.js';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 
-const logger = new Logger('TelegramClientProvider');
+const logger = new Logger('telegram-client:provider');
 const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 let client: TelegramClient;
@@ -27,11 +27,11 @@ export async function provideTelegramClient(): Promise<TelegramClient> {
         phoneNumber: null,
         password: null,
         phoneCode: null,
-        onError: (err) => logger.error(`${err}`),
+        onError: (err) => logger.error(`${getErrorMessage(err)}`),
       });
       await newClient.connect();
     } catch (err) {
-      logger.error(`Failed to connect telegram client: ${err}`);
+      logger.error(`Failed to connect telegram client: ${getErrorMessage(err)}`);
       // Reset so a later call can retry with a fresh client instead of reusing a broken one.
       try {
         await newClient.disconnect();
@@ -63,7 +63,7 @@ function startHealthCheck(): void {
       await client.getMe();
       logger.log('Health check passed');
     } catch (err) {
-      logger.error(`Health check failed: ${err}`);
+      logger.error(`Health check failed: ${getErrorMessage(err)}`);
     }
   }, HEALTH_CHECK_INTERVAL_MS);
 }

@@ -7,7 +7,7 @@ import { summarizationMiddleware } from 'langchain';
 import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
@@ -17,7 +17,7 @@ import { ChatbotResponse, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
 export class ChatbotService {
-  private readonly logger = new Logger(ChatbotService.name);
+  private readonly logger = new Logger('chatbot:service');
   private readonly model: ChatOpenAI;
   private readonly aiService: AiService;
 
@@ -75,7 +75,7 @@ export class ChatbotService {
       const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)]);
       return { response: agentResponse, structured: structured as z.infer<T> };
     } catch (err) {
-      this.logger.error(`Error processing message for user ${chatId}: ${err}`);
+      this.logger.error(`Error processing message for user ${chatId}: ${getErrorMessage(err)}`);
       if (responseSchema) {
         throw err;
       }

@@ -1,16 +1,17 @@
 import type { Bot } from 'grammy';
 import type { ObjectId } from 'mongodb';
 import { z } from 'zod';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { GPT_SMALL_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage } from '@services/telegram';
 import { deletePendingPosts, getPendingPosts } from '@shared/social-follower';
 import type { PendingPost, SocialPlatform } from '@shared/social-follower';
 
-const logger = new Logger('SocialMediaDigestScheduler');
+const logger = new Logger('chatbot:scheduler:social-media-digest');
 
 const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦', youtube: 'YouTube 📺', telegram: 'Telegram 📣' } as const;
+const DIGEST_PLATFORM_ORDER: readonly SocialPlatform[] = ['telegram', 'twitter', 'youtube', 'tiktok'];
 const SUMMARIZED_PLATFORMS: SocialPlatform[] = ['twitter']; // chatty platforms get AI topic summaries; the rest list each post
 const MAX_FALLBACK_POSTS = 15; // raw listing cap when summarization fails
 const LONG_POST_THRESHOLD = 280; // posts longer than this hard-truncate when AI shortening fails
@@ -40,13 +41,12 @@ export async function socialMediaDigest(bot: Bot): Promise<void> {
 
 async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost[]): Promise<void> {
   const sections: string[] = [];
-  const postsByUser = groupBy(posts, (post) => `${post.platform}:${post.username}`);
 
-  for (const userPosts of postsByUser.values()) {
+  for (const userPosts of groupPostsByUser(posts)) {
     try {
       sections.push(await buildUserSection(userPosts));
     } catch (err) {
-      logger.error(`Failed to build digest section for ${userPosts[0].platform}/@${userPosts[0].username}: ${err.message}`);
+      logger.error(`Failed to build digest section for ${userPosts[0].platform}/@${userPosts[0].username}: ${getErrorMessage(err)}`);
       sections.push(buildListingSection(userPosts, MAX_FALLBACK_POSTS));
     }
   }
@@ -56,7 +56,7 @@ async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost
     await sendShortenedMessage(bot, chatId, message, { parse_mode: 'Markdown' }).catch(() => sendShortenedMessage(bot, chatId, message.replace(/[*_`[\]]/g, '')));
     await deletePendingPosts(posts.map((post) => post._id).filter(Boolean) as ObjectId[]);
   } catch (err) {
-    logger.error(`Failed to send digest to chat ${chatId}, keeping posts for next digest: ${err.message}`);
+    logger.error(`Failed to send digest to chat ${chatId}, keeping posts for next digest: ${getErrorMessage(err)}`);
   }
 }
 
@@ -129,7 +129,7 @@ async function shortenPosts(texts: (string | null)[]): Promise<string[]> {
     const shortenedByIndex = new Map(indexesToShorten.map((originalIndex, k) => [originalIndex, result.shortened[k]]));
     return texts.map((text, i) => shortenedByIndex.get(i) ?? text ?? '');
   } catch (err) {
-    logger.error(`Failed to shorten Telegram posts, falling back to truncation: ${err.message}`);
+    logger.error(`Failed to shorten Telegram posts, falling back to truncation: ${getErrorMessage(err)}`);
     return texts.map((text) => (isLongPost(text) ? `${text.slice(0, LONG_POST_THRESHOLD)}…` : (text ?? '')));
   }
 }
@@ -155,6 +155,11 @@ async function buildSummarySection(userPosts: PendingPost[]): Promise<string> {
 // Summary length scales with volume: 4 posts -> 2 points, 100 posts -> 10 points
 export function targetKeyPointsCount(postsCount: number): number {
   return Math.min(10, Math.max(2, Math.ceil(postsCount / 10)));
+}
+
+export function groupPostsByUser(posts: PendingPost[]): PendingPost[][] {
+  const postsByUser = groupBy(posts, (post) => `${post.platform}:${post.username}`);
+  return DIGEST_PLATFORM_ORDER.flatMap((platform) => [...postsByUser.values()].filter((userPosts) => userPosts[0].platform === platform));
 }
 
 function groupBy<T>(items: T[], keyOf: (item: T) => string): Map<string, T[]> {

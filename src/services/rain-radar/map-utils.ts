@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { Logger } from '@core/utils';
 import { RADAR_BOUNDS, RADAR_OPACITY, TILE_SIZE } from './constants';
 
-const logger = new Logger('RainRadarMapUtils');
+const logger = new Logger('rain-radar:map-utils');
 
 // ============================================================================
 // WEB MERCATOR PROJECTION
@@ -101,7 +101,7 @@ export async function createRadarOverlay(radarBuffer: Buffer, zoom: number, view
   const radarX = Math.round(radarLeftPx - viewLeft);
   const radarY = Math.round(radarTopPx - viewTop);
 
-  logger.log(`Radar overlay: ${radarWidthPx}x${radarHeightPx}px, position: (${radarX}, ${radarY})`);
+  logger.debug(`Radar overlay: ${radarWidthPx}x${radarHeightPx}px, position: (${radarX}, ${radarY})`);
 
   const radarPng = await sharp(radarBuffer, { animated: false }).png().toBuffer();
   const resized = await sharp(radarPng).resize(radarWidthPx, radarHeightPx, { kernel: sharp.kernel.lanczos3 }).ensureAlpha().toBuffer();

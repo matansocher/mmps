@@ -18,11 +18,12 @@ jobs:
     name: 'Deploy to Heroku'
     if: github.actor == 'matansocher' || contains(github.actor, 'mmps-companion')
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: production
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 

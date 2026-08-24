@@ -1,41 +1,70 @@
 import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
-import { Logger } from '@core/utils';
-import { sendShortenedMessage } from '@services/telegram';
+import { getErrorMessage, Logger } from '@core/utils';
+import { sendRichMessage } from '@services/telegram';
+import { getTomorrowHourlyForecast } from '@services/weather';
+import type { HourlyWeather } from '@services/weather';
 import { getTomorrowEvents } from '@shared/calendar-events';
-import type { ChatbotService } from '../chatbot.service';
-import { formatEventsForPrompt } from './utils/events';
+import type { CalendarEvent } from '@shared/calendar-events';
+import { CHATBOT_CONFIG } from '../chatbot.config';
+import { formatEventTime } from './utils/events';
 
-const logger = new Logger('DailySummaryScheduler');
+const logger = new Logger('chatbot:scheduler:daily-summary');
 
-export async function dailySummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
+const SUMMARY_HOURS = [10, 14, 18, 22];
+
+function isBirthday(event: CalendarEvent): boolean {
+  return event.summary.toLowerCase().includes('birthday');
+}
+
+// Table cells take inline content only, so collapse whitespace and escape pipes.
+function cell(text: string): string {
+  return text.replace(/\s+/g, ' ').replace(/\|/g, '\\|').trim();
+}
+
+function buildWeatherTable(hourly: ReadonlyArray<HourlyWeather>): string {
+  const rows = SUMMARY_HOURS.map((hour) => hourly.find((entry) => entry.hour === hour))
+    .filter((entry): entry is HourlyWeather => !!entry)
+    .map((entry) => `| ${String(entry.hour).padStart(2, '0')}:00 | ${Math.round(entry.temperature)}°C | ${cell(entry.condition)} |`);
+
+  if (!rows.length) {
+    return ['**🌤 Weather for tomorrow**', '', 'Not available'].join('\n');
+  }
+  return ['**🌤 Weather for tomorrow**', '', '| Time | Temp | Conditions |', '|:-----|-----:|:-----------|', ...rows].join('\n');
+}
+
+function buildCalendarTable(events: CalendarEvent[]): string {
+  if (!events.length) {
+    return ['**📅 Calendar**', '', 'Nothing scheduled'].join('\n');
+  }
+  const rows = events.map((event) => `| ${formatEventTime(event)} | ${cell(event.summary)} | ${cell(event.location ?? '')} |`);
+  return ['**📅 Calendar**', '', '| Time | Event | Location |', '|:-----|:------|:---------|', ...rows].join('\n');
+}
+
+function buildBirthdaysSection(events: CalendarEvent[]): string | null {
+  const birthdays = events.filter(isBirthday);
+  if (!birthdays.length) {
+    return null;
+  }
+  return ['**🎉 Birthdays**', '', ...birthdays.map((event) => `- 🎂 ${cell(event.summary)}`)].join('\n');
+}
+
+export async function dailySummary(bot: Bot): Promise<void> {
   try {
-    const events = await getTomorrowEvents();
-    const calendarSection = events.length > 0 ? `Here are my calendar events for tomorrow:\n${formatEventsForPrompt(events)}` : 'No events scheduled for tomorrow.';
+    const [forecast, events] = await Promise.all([
+      getTomorrowHourlyForecast(CHATBOT_CONFIG.summaryLocation).catch((err) => {
+        logger.error(`Failed to fetch tomorrow's forecast: ${getErrorMessage(err)}`);
+        return null;
+      }),
+      getTomorrowEvents(),
+    ]);
 
-    const prompt = `Good evening! Please create my nightly summary with the following information:
+    // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
+    const sections = [buildWeatherTable(forecast?.hourly ?? []), buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events)];
 
-**Weather for Tomorrow:**
-Use the weather tool with action "tomorrow_hourly" for location "Kfar Saba" to get tomorrow's hourly weather forecast.
-Format the weather data as: hour - degrees (e.g., "08:00 - 18°C")
-Show 4 different times throughout the day (morning, noon, afternoon, and evening - e.g., 10:00, 14:00, 18:00, 22:00).
-
-**Additional Information:**
-1. **Calendar**: ${calendarSection}
-   Format as a bulleted list where each event has its own bullet point. Do NOT use the calendar tool — the data is already provided above.
-2. **Birthday Reminders**: Check if any of tomorrow's calendar events are birthdays (events with "birthday" in the title). For each birthday you find:
-   - Extract the person's name from the event title
-   - If there are birthdays tomorrows, dont add the birthday section.
-
-Please format the response nicely with emojis and make it feel like a friendly good night message. Start with a short warm greeting like "🌙 Good night!" and end with a message encouraging me to prepare for tomorrow's challenges.`;
-
-    const response = await chatbotService.processMessage(prompt, MY_USER_ID);
-
-    if (response?.message) {
-      await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
-    }
+    await sendRichMessage(bot, MY_USER_ID, sections.filter(Boolean).join('\n\n'));
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
-    logger.error(`Failed to generate/send daily summary: ${err}`);
+    logger.error(`Failed to generate/send daily summary: ${getErrorMessage(err)}`);
   }
 }
