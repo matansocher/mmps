@@ -29,5 +29,6 @@ export { gameReleaseDigest } from './game-release-digest';
 export { rainRadarAlert } from './rain-radar-alert';
 export { upcomingEventAlert } from './upcoming-event-alert';
 export { usageSummary } from './usage-summary';
+export { modelPricingCheck } from './model-pricing-check';
 export { secretaryDailyDigest } from './secretary-daily-digest';
 export { secretaryCheckIn } from './secretary-check-in';

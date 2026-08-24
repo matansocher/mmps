@@ -8,6 +8,7 @@ export type UsageRecord = {
   readonly tokensIn: number;
   readonly tokensOut: number;
   readonly tokensTotal: number;
+  readonly tokensCached: number; // subset of tokensIn billed at the cheaper cache-hit rate
   readonly cost: number; // USD
   readonly durationMs: number;
   readonly llmCalls: number;

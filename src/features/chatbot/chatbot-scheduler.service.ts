@@ -13,6 +13,7 @@ import {
   gameReleaseDigest,
   hotelPriceCheck,
   makavdiaUpdate,
+  modelPricingCheck,
   polymarketUpdate,
   // rainRadarAlert,
   reminderCheck,
@@ -61,6 +62,8 @@ export class ChatbotSchedulerService {
     createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot));
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
+
+    createSchedule(`0 10 1 * *`, async () => modelPricingCheck(this.bot));
 
     createSchedule(`*/15 * * * *`, async () => reminderCheck(this.bot));
 
