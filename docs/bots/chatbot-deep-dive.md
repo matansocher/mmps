@@ -230,8 +230,9 @@ handler sums tokens per model across the whole ReAct loop (incl. summarization L
         → collection usage (db Chatbot), 90-day TTL
 ```
 
-- **Pricing** — `model-pricing.ts` holds USD-per-1M-token rates; `computeModelCost()` multiplies tokens by rate. `resolveModelPrice()` does **longest-prefix matching** so dated snapshots like `gpt-4.1-mini-2025-04-14` resolve to the base price. Unknown model → cost 0 + a warn (never crashes).
-- **Record fields** — `source, chatId, model, tokensIn/Out/Total, cost, durationMs, llmCalls, toolCalls, createdAt`.
+- **Pricing** — `model-pricing.ts` holds USD-per-1M-token rates (`input`, `output`, `cachedInput`); `computeModelCost()` splits input into cached vs uncached and bills each at its own rate. `resolveModelPrice()` matches **dated snapshots only** (`gpt-4.1-mini-2025-04-14` → `gpt-4.1-mini`) — siblings such as `gpt-5-mini` need their own entry, because inheriting `gpt-5` rates would overstate their cost 5x. Unknown model → cost 0 + a warn (never crashes).
+- **Pricing drift check** — a monthly cron (`modelPricingCheck`, 1st at 10:00) parses OpenAI's docs markdown (`pricing.md`) and diffs the published rates against `MODEL_PRICING`, DMing the owner only on a mismatch. Deterministic parse, no AI in the loop.
+- **Record fields** — `source, chatId, model, tokensIn/Out/Total, tokensCached, cost, durationMs, llmCalls, toolCalls, createdAt`.
 - **Aggregation** — `aggregateUsage()` groups by source + user + day (Asia/Jerusalem) via a Mongo aggregation pipeline.
 - **Weekly report** — a Saturday 22:30 cron (`usageSummary`) DMs the owner a 7-day cost/usage breakdown.
 - **Kill-switch** — `CHATBOT_USAGE_TRACKING=false` disables it. Fire-and-forget writes mean metering never blocks or breaks a reply.

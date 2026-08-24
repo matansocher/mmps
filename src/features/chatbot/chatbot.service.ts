@@ -60,20 +60,25 @@ export class ChatbotService {
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();
-      const result = await this.aiService.invoke(contextualMessage, { threadId, callbacks: usageHandler ? [usageHandler] : undefined });
-      if (usageHandler) {
-        recordModelUsage({ source: 'chatbot', chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
+      // Recorded in `finally` so the turn's usage is captured even if a later step throws, and so
+      // the follow-up structured-output call below is billed as part of the same turn.
+      try {
+        const result = await this.aiService.invoke(contextualMessage, { threadId, callbacks: usageHandler ? [usageHandler] : undefined });
+
+        const agentResponse = formatAgentResponse(result);
+
+        if (!responseSchema) {
+          return agentResponse;
+        }
+
+        const structuredModel = this.model.withStructuredOutput(responseSchema);
+        const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)], { callbacks: usageHandler ? [usageHandler] : undefined });
+        return { response: agentResponse, structured: structured as z.infer<T> };
+      } finally {
+        if (usageHandler) {
+          recordModelUsage({ source: 'chatbot', chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
+        }
       }
-
-      const agentResponse = formatAgentResponse(result);
-
-      if (!responseSchema) {
-        return agentResponse;
-      }
-
-      const structuredModel = this.model.withStructuredOutput(responseSchema);
-      const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)]);
-      return { response: agentResponse, structured: structured as z.infer<T> };
     } catch (err) {
       this.logger.error(`Error processing message for user ${chatId}: ${getErrorMessage(err)}`);
       if (responseSchema) {
