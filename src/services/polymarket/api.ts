@@ -145,7 +145,8 @@ export async function getEventOutcomes(slug: string): Promise<MultiOutcomeEventS
 
 function toMultiOutcomeEventSummary(event: PolymarketEventWithMarkets): MultiOutcomeEventSummary {
   const outcomes: EventOutcome[] = (event.markets || [])
-    .filter((market) => !market.closed && Boolean(market.outcomePrices))
+    // Multi-outcome events ship unresolved placeholder markets ("Team A", "Other") that are inactive with a flat 50/50 price
+    .filter((market) => market.active && !market.closed && Boolean(market.outcomePrices))
     .map((market) => {
       const { yesPrice } = parseOutcomePrices(market.outcomePrices);
       return {
