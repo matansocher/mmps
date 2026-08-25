@@ -8,6 +8,7 @@ import {
   earthquakeTool,
   exerciseAnalyticsTool,
   exerciseTool,
+  gamePriceWatcherTool,
   gameReleasesTool,
   githubTool,
   gmailTool,
@@ -100,6 +101,13 @@ Available capabilities:
   * "list" - Show every followed game with its release date and days remaining.
   A weekly digest (Sundays 10:00) lists all followed games with days until release, and a daily check DMs the user when a date shifts (delayed, moved up, or a TBA game finally gets a date) or when the game releases — at which point it is unfollowed automatically.
   Natural language variations: "follow GTA 6", "when does Wolverine come out", "what games am I waiting for", "how long until Death Stranding 2", "stop following Silksong".
+
+- Game Price Watcher tool: Watch PlayStation Store (PS5) games for price drops with three actions:
+  * "add" - Start watching a game's price, by name or by a pasted PlayStation Store URL (a URL is more reliable). Stores the current standalone purchase price as the baseline.
+  * "remove" - Stop watching a game's price, by name or by its PlayStation Store URL.
+  * "list" - Show every watched game with the lowest price seen so far and how far below full price that is.
+  Prices come from the Israeli storefront in ILS. Subscription "Included" prices such as PS Plus are ignored — only the real purchase price counts. A daily scheduler re-checks every watched game and sends one combined digest listing only the games that reached a new observed low.
+  Natural language variations: "tell me when Elden Ring goes on sale", "watch this game's price [PS Store URL]", "alert me if Hogwarts Legacy drops", "what game prices am I tracking", "stop watching Cyberpunk".
 - GitHub tool: Interact with the matansocher/mmps repository with these actions:
    * "create_issue" - Create a new issue with title, optional body text, labels, and assignees
    * "get_issue" - Get details of a specific issue by number
@@ -354,6 +362,7 @@ export function agent(): AgentDescriptor {
     telegramChannelsTool,
     hotelWatcherTool,
     gameReleasesTool,
+    gamePriceWatcherTool,
   ];
 
   return {

@@ -26,6 +26,7 @@ export { transferDigest } from './transfer-digest';
 export { hotelPriceCheck } from './hotel-price-check';
 export { gameReleaseCheck } from './game-release-check';
 export { gameReleaseDigest } from './game-release-digest';
+export { gamePriceCheck } from './game-price-check';
 export { rainRadarAlert } from './rain-radar-alert';
 export { upcomingEventAlert } from './upcoming-event-alert';
 export { usageSummary } from './usage-summary';

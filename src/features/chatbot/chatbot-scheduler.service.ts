@@ -9,6 +9,7 @@ import {
   earthquakeMonitor,
   exerciseReminder,
   footballUpdate,
+  gamePriceCheck,
   gameReleaseCheck,
   gameReleaseDigest,
   hotelPriceCheck,
@@ -92,6 +93,8 @@ export class ChatbotSchedulerService {
     createSchedule(`15 11 * * *`, async () => gameReleaseCheck(this.bot));
 
     createSchedule(`20 11 * * 0`, async () => gameReleaseDigest(this.bot));
+
+    createSchedule(`30 11 * * *`, async () => gamePriceCheck(this.bot));
 
     createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
 

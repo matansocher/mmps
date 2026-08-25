@@ -11,6 +11,7 @@ export type IgdbGame = {
   readonly name: string;
   readonly slug: string | null;
   readonly coverUrl: string | null;
+  readonly psStoreProductId: string | null; // PlayStation Store product id, when IGDB has the mapping
   readonly release: GameReleaseInfo;
 };
 
@@ -24,12 +25,19 @@ export type IgdbReleaseDateResponse = {
   readonly m?: number;
 };
 
+export type IgdbExternalGameResponse = {
+  readonly category?: number;
+  readonly uid?: string;
+  readonly url?: string;
+};
+
 export type IgdbGameResponse = {
   readonly id: number;
   readonly name: string;
   readonly slug?: string;
   readonly cover?: { readonly image_id?: string };
   readonly release_dates?: readonly IgdbReleaseDateResponse[];
+  readonly external_games?: readonly IgdbExternalGameResponse[];
 };
 
 export type TwitchTokenResponse = {
