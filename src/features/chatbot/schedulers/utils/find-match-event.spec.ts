@@ -35,6 +35,11 @@ describe('tokenizeTeamName()', () => {
   it('should deduplicate repeated tokens', () => {
     expect(tokenizeTeamName('Haifa Haifa')).toEqual(['haifa']);
   });
+
+  it('should fold diacritics so accented and plain spellings agree', () => {
+    expect(tokenizeTeamName('Málaga CF')).toEqual(['malaga']);
+    expect(tokenizeTeamName('Atlético Madrid')).toEqual(['atletico', 'madrid']);
+  });
 });
 
 describe('isMatchEventFor()', () => {
@@ -73,6 +78,31 @@ describe('isMatchEventFor()', () => {
   it('should reject when only one of the two teams is present', () => {
     const event = createEvent({ title: 'RCD Espanyol de Barcelona vs. Getafe CF' });
     expect(isMatchEventFor(event, 'Real Madrid', 'Espanyol', KICKOFF)).toEqual(false);
+  });
+
+  it('should reject a different fixture that merely shares a word with both teams', () => {
+    const event = createEvent({ title: 'MH Maccabi Tel Aviv vs. FC Lugano', endDate: '2026-08-22T19:00:00Z' });
+    expect(isMatchEventFor(event, 'Maccabi Haifa', 'Maccabi Tel Aviv', KICKOFF)).toEqual(false);
+  });
+
+  it('should reject a fixture where one team supplies both sides of the title', () => {
+    const event = createEvent({ title: 'Real Sociedad vs. Real Betis' });
+    expect(isMatchEventFor(event, 'Real Madrid', 'Real Sociedad', KICKOFF)).toEqual(false);
+  });
+
+  it('should accept a derby where both teams legitimately share a word', () => {
+    const event = createEvent({ title: 'Maccabi Tel Aviv FC vs. Maccabi Haifa FC', endDate: '2026-08-22T19:00:00Z' });
+    expect(isMatchEventFor(event, 'Maccabi Haifa', 'Maccabi Tel Aviv', KICKOFF)).toEqual(true);
+  });
+
+  it('should accept an accented polymarket spelling of a plain team name', () => {
+    const event = createEvent({ title: 'Real Madrid CF vs. Málaga CF' });
+    expect(isMatchEventFor(event, 'Real Madrid', 'Malaga', KICKOFF)).toEqual(true);
+  });
+
+  it('should accept the fixture when polymarket lists the sides swapped', () => {
+    const event = createEvent({ title: 'Real Madrid CF vs. RCD Espanyol de Barcelona' });
+    expect(isMatchEventFor(event, 'Espanyol', 'Real Madrid', KICKOFF)).toEqual(true);
   });
 });
 
