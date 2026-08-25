@@ -3,6 +3,10 @@ export const TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token';
 
 export const PS5_PLATFORM_ID = 167;
 
+// IGDB external_games.category — 36 is the PlayStation Store listing, whose uid is the store
+// product id. Concept ids are global, so the US listing still resolves other storefronts.
+export const PLAYSTATION_STORE_CATEGORY_ID = 36;
+
 // IGDB release_dates.region — worldwide is the most representative when a game has several regional entries.
 export const WORLDWIDE_REGION_ID = 8;
 
@@ -26,4 +30,7 @@ export const GAME_FIELDS = [
   'release_dates.region',
   'release_dates.y',
   'release_dates.m',
+  'external_games.category',
+  'external_games.uid',
+  'external_games.url',
 ].join(',');

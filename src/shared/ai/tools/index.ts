@@ -57,3 +57,5 @@ export { telegramChannelsTool } from './telegram-channels/telegram-channels.tool
 export { hotelWatcherTool } from './hotel-watcher';
 
 export { gameReleasesTool } from './game-releases';
+
+export { gamePriceWatcherTool } from './game-price-watcher';
