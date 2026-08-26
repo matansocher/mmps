@@ -28,19 +28,13 @@ Telegram document importer and mini-app for browsing and editing expenses.
 - **Database**: `Expenses`
 - **[Learn more →](/bots/expenses)**
 
-### 5. **Learner** - Courses Mini-App
-Telegram launcher and progress API for AI engineering courses.
-- **Features**: `/learner/` SPA, progress tracking, mini-app analytics
-- **Database**: `Learner`
-- **[Learn more →](/bots/learner)**
-
-### 6. **Wolt** - Restaurant Notifications
+### 5. **Wolt** - Restaurant Notifications
 Watches Wolt restaurants and notifies when tracked restaurants open.
 - **Features**: Restaurant search, subscriptions, availability alerts, expiry cleanup
 - **Database**: `Wolt`
 - **[Learn more →](/bots/wolt)**
 
-### 7. **Worldly** - Geography Education
+### 6. **Worldly** - Geography Education
 Interactive geography quiz bot.
 - **Features**: Map, US map, flag, capital, random games, fire mode, daily quizzes
 - **Database**: `Worldly`
@@ -60,7 +54,7 @@ Password-protected React application served at `/savings/*` for managing one sha
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
-Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `WOLT`, `WORLDLY`.
+Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `WOLT`, `WORLDLY`.
 
 ### Production Mode (All Bots)
 
@@ -111,7 +105,6 @@ Current bot databases:
 - `Chilli` - Chilli prompt versions
 - `Coach` - Coach users and subscriptions
 - `Expenses` - Expense and ingest records
-- `Learner` - Course progress
 - `Savings` - Shared portfolio settings and holdings
 - `Wolt` - Wolt users and subscriptions
 - `Worldly` - Geography content, subscriptions, and game logs
@@ -129,7 +122,6 @@ CHATBOT_TELEGRAM_BOT_TOKEN=...
 CHILLI_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
 EXPENSES_TELEGRAM_BOT_TOKEN=...
-LEARNER_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 
@@ -146,7 +138,6 @@ Select a bot to explore:
 - **[Chilli](/bots/chilli)** - Hebrew cat persona
 - **[Coach](/bots/coach)** - Sports analytics
 - **[Expenses](/bots/expenses)** - Expense tracker
-- **[Learner](/bots/learner)** - Courses mini-app
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
