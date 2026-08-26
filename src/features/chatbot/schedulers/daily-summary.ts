@@ -1,11 +1,15 @@
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
-import { MY_USER_ID } from '@core/config';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { sendRichMessage } from '@services/telegram';
 import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather } from '@services/weather';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
+import { getRemindersByUser } from '@shared/reminders';
+import type { Reminder } from '@shared/reminders';
 import { CHATBOT_CONFIG } from '../chatbot.config';
 import { formatEventTime } from './utils/events';
 
@@ -49,18 +53,39 @@ function buildBirthdaysSection(events: CalendarEvent[]): string | null {
   return ['**🎉 Birthdays**', '', ...birthdays.map((event) => `- 🎂 ${cell(event.summary)}`)].join('\n');
 }
 
+function formatReminderDueDate(dueDate: Date): string {
+  return format(toZonedTime(dueDate, DEFAULT_TIMEZONE), 'yyyy-MM-dd HH:mm');
+}
+
+function buildRemindersSection(reminders: Reminder[]): string | null {
+  if (!reminders.length) {
+    return null;
+  }
+  const rows = reminders.map((reminder) => `| ${formatReminderDueDate(reminder.dueDate)} | ${cell(reminder.message)} |`);
+  return ['**⏰ Unfinished reminders**', '', '| Due | Reminder |', '|:----|:---------|', ...rows].join('\n');
+}
+
 export async function dailySummary(bot: Bot): Promise<void> {
   try {
-    const [forecast, events] = await Promise.all([
+    const [forecast, events, reminders] = await Promise.all([
       getTomorrowHourlyForecast(CHATBOT_CONFIG.summaryLocation).catch((err) => {
         logger.error(`Failed to fetch tomorrow's forecast: ${getErrorMessage(err)}`);
         return null;
       }),
       getTomorrowEvents(),
+      getRemindersByUser(MY_USER_ID).catch((err) => {
+        logger.error(`Failed to fetch unfinished reminders: ${getErrorMessage(err)}`);
+        return [] as Reminder[];
+      }),
     ]);
 
     // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
-    const sections = [buildWeatherTable(forecast?.hourly ?? []), buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events)];
+    const sections = [
+      buildWeatherTable(forecast?.hourly ?? []),
+      buildCalendarTable(events.filter((event) => !isBirthday(event))),
+      buildBirthdaysSection(events),
+      buildRemindersSection(reminders),
+    ];
 
     await sendRichMessage(bot, MY_USER_ID, sections.filter(Boolean).join('\n\n'));
   } catch (err) {
