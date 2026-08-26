@@ -51,7 +51,6 @@ Each bot/domain gets its own PascalCase database (defined in each module's `mong
 - `Chatbot`
 - `Chilli`
 - `Coach`
-- `Learner`
 - `Savings`
 - `Wolt`
 - `Worldly`

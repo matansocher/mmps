@@ -10,12 +10,12 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 - **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **6 bots:** `chatbot`, `chilli`, `coach`, `learner`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
+- **5 bots:** `chatbot`, `chilli`, `coach`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/learner-web`, `apps/savings-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/savings-web` is a Vite mini-app (npm workspace).
 
 ---
 
@@ -125,7 +125,6 @@ mmps/
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
-│   ├── learner-web/
 │   └── savings-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
@@ -177,7 +176,6 @@ src/services/{name}/
 | `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability. |
 | `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules. |
-| `LEARNER`   | Learner 🎓      | `src/features/learner/`       | `LEARNER_TELEGRAM_BOT_TOKEN`     | Courses mini-app (`apps/learner-web`) served at `/learner/`. |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
 | `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education. |
 
@@ -198,12 +196,11 @@ const initBot = async (config: { id: string }, init: () => Promise<void>): Promi
 await initBot(chatbotConfig, () => initChatbot(app));
 await initBot(chilliConfig, () => initChilli());
 await initBot(coachConfig, () => initCoach());
-await initBot(learnerConfig, () => initLearner(app));
 await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all six run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
 
 ---
 
@@ -749,7 +746,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 
 **Required for any local dev:**
 - `MONGO_DB_URL` — Mongo connection string (the main code path uses this).
-- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | LEARNER | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
+- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
 - One of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (depending on which agents you exercise).
 - The `*_TELEGRAM_BOT_TOKEN` for whichever bot you set as `LOCAL_ACTIVE_BOT_ID`.
 
@@ -796,7 +793,6 @@ npm run docs:dev          # VitePress local dev
 npm run docs:build
 
 # Mini-app workspaces (also: savings-web)
-npm run dev:learner-web
 npm run dev:savings-web
 ```
 

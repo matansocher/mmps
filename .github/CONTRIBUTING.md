@@ -24,7 +24,7 @@ cp .env.example .env
 Fill in `.env` with at least:
 
 - `MONGO_DB_URL`
-- `LOCAL_ACTIVE_BOT_ID` — UPPERCASE bot id (`CHATBOT`, `CHILLI`, `COACH`, `LEARNER`, `WOLT`, `WORLDLY`)
+- `LOCAL_ACTIVE_BOT_ID` — UPPERCASE bot id (`CHATBOT`, `CHILLI`, `COACH`, `WOLT`, `WORLDLY`)
 - the matching `*_TELEGRAM_BOT_TOKEN`
 - one of `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`
 
@@ -40,7 +40,6 @@ In production all bots boot (`IS_PROD=true`); locally `LOCAL_ACTIVE_BOT_ID` sele
 Mini-apps are npm workspaces under `apps/` and run separately:
 
 ```bash
-npm run dev:learner-web
 npm run dev:savings-web
 ```
 
