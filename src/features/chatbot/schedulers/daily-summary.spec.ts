@@ -4,11 +4,14 @@ import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather, TomorrowForecast } from '@services/weather';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
+import { getRemindersByUser } from '@shared/reminders';
+import type { Reminder } from '@shared/reminders';
 import { dailySummary } from './daily-summary';
 
 vi.mock('@services/telegram', () => ({ sendRichMessage: vi.fn() }));
 vi.mock('@services/weather', () => ({ getTomorrowHourlyForecast: vi.fn() }));
 vi.mock('@shared/calendar-events', () => ({ getTomorrowEvents: vi.fn() }));
+vi.mock('@shared/reminders', () => ({ getRemindersByUser: vi.fn() }));
 
 const bot = { api: { sendMessage: vi.fn() } } as unknown as Bot;
 
@@ -49,12 +52,26 @@ function createEvent(summary: string, location?: string): CalendarEvent {
   };
 }
 
+function createReminder(message: string, dueDate: string): Reminder {
+  return {
+    _id: undefined as never,
+    chatId: 1,
+    message,
+    dueDate: new Date(dueDate),
+    status: 'pending',
+    createdAt: new Date(),
+  };
+}
+
 function lastSentMessage(): string {
   return vi.mocked(sendRichMessage).mock.calls.at(-1)![2];
 }
 
 describe('dailySummary()', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getRemindersByUser).mockResolvedValue([]);
+  });
 
   it('should fetch weather and calendar in parallel', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
@@ -172,5 +189,49 @@ describe('dailySummary()', () => {
     const message = lastSentMessage();
     expect(message).toContain('Not available');
     expect(message).toContain('Standup');
+  });
+
+  it('should render unfinished reminders as a table', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
+    vi.mocked(getRemindersByUser).mockResolvedValue([createReminder('Call plumber', '2026-08-16T09:00:00+03:00')]);
+
+    await dailySummary(bot);
+
+    const message = lastSentMessage();
+    expect(message).toContain('**⏰ Unfinished reminders**\n\n| Due | Reminder |');
+    expect(message).toContain('| 2026-08-16 09:00 | Call plumber |');
+  });
+
+  it('should omit the reminders section when there are none', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
+    vi.mocked(getRemindersByUser).mockResolvedValue([]);
+
+    await dailySummary(bot);
+
+    expect(lastSentMessage()).not.toContain('Unfinished reminders');
+  });
+
+  it('should escape pipes coming from reminder text', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
+    vi.mocked(getRemindersByUser).mockResolvedValue([createReminder('Buy milk | eggs', '2026-08-16T09:00:00+03:00')]);
+
+    await dailySummary(bot);
+
+    expect(lastSentMessage()).toContain('| 2026-08-16 09:00 | Buy milk \\| eggs |');
+  });
+
+  it('should still send a summary when fetching reminders fails', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
+    vi.mocked(getRemindersByUser).mockRejectedValue(new Error('mongo down'));
+
+    await dailySummary(bot);
+
+    const message = lastSentMessage();
+    expect(message).toContain('Standup');
+    expect(message).not.toContain('Unfinished reminders');
   });
 });
