@@ -1,9 +1,10 @@
 import type { Bot, Context } from 'grammy';
+import type { InputRichBlock } from 'grammy/types';
 import { MY_USER_NAME } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { sleep } from '@core/utils';
 import { notify } from '@services/notifier';
-import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
+import { buildRichButtonRows, getCallbackQueryData, getMessageData, sendRichMessageWithButtons, UserDetails } from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
 import { generateStatisticsMessage } from './utils';
@@ -42,14 +43,15 @@ export class WorldlyController {
   private async actionsHandler(ctx: Context): Promise<void> {
     const { chatId } = getMessageData(ctx);
     const subscription = await getSubscription(chatId);
-    const keyboard = buildInlineKeyboard([
+    const buttonRows = buildRichButtonRows([
       { text: '📊 סטטיסטיקות 📊', data: `${BOT_ACTIONS.STATISTICS}` },
       !subscription?.isActive
         ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', data: `${BOT_ACTIONS.START}`, style: 'success' as const }
         : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
-    await ctx.reply('איך אני יכול לעזור? 👨‍🏫', { reply_markup: keyboard });
+    const blocks: InputRichBlock[] = [{ type: 'paragraph', text: 'איך אני יכול לעזור? 👨‍🏫' }, ...buttonRows];
+    await sendRichMessageWithButtons(this.bot, chatId, blocks, { is_rtl: true });
     await ctx.deleteMessage().catch(() => {});
   }
 
@@ -233,34 +235,30 @@ export class WorldlyController {
   }
 
   private async mapAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
-    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await ctx.editMessageCaption({ caption: replyText }).catch(() => {});
+    await ctx.editMessageText({ blocks: [{ type: 'paragraph', text: replyText }], is_rtl: true }).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
   private async USMapAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
-    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctState = await getStateByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctState.hebrewName}`;
-    await ctx.editMessageCaption({ caption: replyText }).catch(() => {});
+    await ctx.editMessageText({ blocks: [{ type: 'paragraph', text: replyText }], is_rtl: true }).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
   private async flagAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
-    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByName(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
-    await ctx.editMessageText(replyText).catch(() => {});
+    await ctx.editMessageText({ blocks: [{ type: 'paragraph', text: replyText }], is_rtl: true }).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
   private async capitalAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
-    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByCapital(correctName);
     const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
-    await ctx.editMessageText(replyText).catch(() => {});
+    await ctx.editMessageText({ blocks: [{ type: 'paragraph', text: replyText }], is_rtl: true }).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 }
