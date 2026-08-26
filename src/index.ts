@@ -56,7 +56,7 @@ async function main() {
 
   await initBot(chatbotConfig, () => initChatbot(app));
   await initBot(chilliConfig, () => initChilli());
-  await initBot(coachConfig, () => initCoach(app));
+  await initBot(coachConfig, () => initCoach());
   await initBot(expensesConfig, () => initExpenses(app));
   await initBot(learnerConfig, () => initLearner(app));
   await initBot(woltConfig, () => initWolt());
