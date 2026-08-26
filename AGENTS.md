@@ -15,7 +15,7 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/chatbot-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web`, `apps/savings-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/chatbot-web`, `apps/expenses-web`, `apps/learner-web`, `apps/savings-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -126,7 +126,6 @@ mmps/
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
 │   ├── chatbot-web/
-│   ├── coach-web/
 │   ├── expenses-web/
 │   ├── learner-web/
 │   └── savings-web/
@@ -179,7 +178,7 @@ src/services/{name}/
 |-------------|-----------------|-------------------------------|----------------------------------|---------|
 | `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
 | `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
-| `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
+| `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules. |
 | `EXPENSES`  | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`    | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
 | `LEARNER`   | Learner 🎓      | `src/features/learner/`       | `LEARNER_TELEGRAM_BOT_TOKEN`     | Courses mini-app (`apps/learner-web`) served at `/learner/`. |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
@@ -201,7 +200,7 @@ const initBot = async (config: { id: string }, init: () => Promise<void>): Promi
 
 await initBot(chatbotConfig, () => initChatbot(app));
 await initBot(chilliConfig, () => initChilli());
-await initBot(coachConfig, () => initCoach(app));
+await initBot(coachConfig, () => initCoach());
 await initBot(expensesConfig, () => initExpenses(app));
 await initBot(learnerConfig, () => initLearner(app));
 await initBot(woltConfig, () => initWolt());
@@ -800,8 +799,8 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, savings-web)
-npm run dev:coach-web
+# Mini-app workspaces (also: expenses-web, learner-web, savings-web)
+npm run dev:chatbot-web
 npm run dev:savings-web
 ```
 

@@ -41,7 +41,6 @@ Mini-apps are npm workspaces under `apps/` and run separately:
 
 ```bash
 npm run dev:chatbot-web
-npm run dev:coach-web
 npm run dev:expenses-web
 npm run dev:learner-web
 npm run dev:savings-web
