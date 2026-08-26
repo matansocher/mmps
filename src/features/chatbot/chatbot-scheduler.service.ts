@@ -72,7 +72,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`*/${LOOKBACK_MINUTES} * * * *`, async () => earthquakeMonitor(this.bot));
 
-    createSchedule(`5 16 * * *`, async () => polymarketUpdate(this.bot));
+    createSchedule(`5 16 * * 1`, async () => polymarketUpdate(this.bot));
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
 
