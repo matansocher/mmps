@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 7 specialized Telegram bots plus a bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings is initialized independently of bot selection.
+MMPS includes 6 specialized Telegram bots plus a bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings is initialized independently of bot selection.
 
 ## The Bots
 
@@ -22,25 +22,19 @@ Real-time sports data with match summaries, standings, and daily updates.
 - **Database**: `Coach`
 - **[Learn more →](/bots/coach)**
 
-### 4. **Expenses** - Expense Tracker
-Telegram document importer and mini-app for browsing and editing expenses.
-- **Features**: XLSX imports, monthly dashboard API, search, manual entries, vendor/category overrides
-- **Database**: `Expenses`
-- **[Learn more →](/bots/expenses)**
-
-### 5. **Learner** - Courses Mini-App
+### 4. **Learner** - Courses Mini-App
 Telegram launcher and progress API for AI engineering courses.
 - **Features**: `/learner/` SPA, progress tracking, mini-app analytics
 - **Database**: `Learner`
 - **[Learn more →](/bots/learner)**
 
-### 6. **Wolt** - Restaurant Notifications
+### 5. **Wolt** - Restaurant Notifications
 Watches Wolt restaurants and notifies when tracked restaurants open.
 - **Features**: Restaurant search, subscriptions, availability alerts, expiry cleanup
 - **Database**: `Wolt`
 - **[Learn more →](/bots/wolt)**
 
-### 7. **Worldly** - Geography Education
+### 6. **Worldly** - Geography Education
 Interactive geography quiz bot.
 - **Features**: Map, US map, flag, capital, random games, fire mode, daily quizzes
 - **Database**: `Worldly`
@@ -60,7 +54,7 @@ Password-protected React application served at `/savings/*` for managing one sha
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
-Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `WOLT`, `WORLDLY`.
+Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `LEARNER`, `WOLT`, `WORLDLY`.
 
 ### Production Mode (All Bots)
 
@@ -68,7 +62,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `EXPENSES`, `LEARNER`, `WOLT`,
 IS_PROD=true npm start
 ```
 
-Production initializes all 7 Telegram bots. Savings initialize in development and production.
+Production initializes all 6 Telegram bots. Savings initialize in development and production.
 
 ## Bot Architecture
 
@@ -110,7 +104,6 @@ Current bot databases:
 - `Chatbot` - Chatbot LangGraph checkpoints and token/cost usage records
 - `Chilli` - Chilli prompt versions
 - `Coach` - Coach users and subscriptions
-- `Expenses` - Expense and ingest records
 - `Learner` - Course progress
 - `Savings` - Shared portfolio settings and holdings
 - `Wolt` - Wolt users and subscriptions
@@ -128,7 +121,6 @@ MONGO_DB_URL=mongodb://...
 CHATBOT_TELEGRAM_BOT_TOKEN=...
 CHILLI_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
-EXPENSES_TELEGRAM_BOT_TOKEN=...
 LEARNER_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
@@ -145,7 +137,6 @@ Select a bot to explore:
 - **[Chatbot](/bots/chatbot)** - AI assistant with tools
 - **[Chilli](/bots/chilli)** - Hebrew cat persona
 - **[Coach](/bots/coach)** - Sports analytics
-- **[Expenses](/bots/expenses)** - Expense tracker
 - **[Learner](/bots/learner)** - Courses mini-app
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education

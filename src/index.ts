@@ -10,7 +10,6 @@ import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
-import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initSavings } from '@features/savings';
@@ -57,7 +56,6 @@ async function main() {
   await initBot(chatbotConfig, () => initChatbot(app));
   await initBot(chilliConfig, () => initChilli());
   await initBot(coachConfig, () => initCoach(app));
-  await initBot(expensesConfig, () => initExpenses(app));
   await initBot(learnerConfig, () => initLearner(app));
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));

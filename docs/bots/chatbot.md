@@ -166,7 +166,7 @@ CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summ
 
 Token/cost metering is **cross-bot**. The shared module lives in `shared/ai/usage/` and is used by every live AI call site in the repo. A `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to each `invoke` as a runtime callback; it sums token usage across the whole call (ReAct loop, structured output, or summarization) and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` then logs a `💰 usage` line and persists an aggregated record tagged with the originating bot.
 
-Instrumented sources: `chatbot`, `chilli`, and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
+Instrumented sources: `chatbot` and `chilli`. Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
 
 - **Cost** is computed from a price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens, with a separate cheaper `cachedInput` rate). Cached input tokens are a subset of the input count and are billed at the cache-hit rate. `resolveModelPrice` resolves dated snapshots (e.g. `gpt-4.1-mini-2025-04-14`) to their base model, but **not** sibling models — `gpt-5-mini` has its own entry rather than inheriting `gpt-5` pricing. Unknown models report cost `0` and log a warning.
 - **Pricing drift check** — a monthly scheduler (`schedulers/model-pricing-check.ts`, 1st of the month at 10:00) diffs `MODEL_PRICING` against OpenAI's published prices and DMs the owner **only when something drifted**, so silence means the table is still accurate.

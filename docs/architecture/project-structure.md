@@ -7,7 +7,7 @@ Detailed breakdown of the MMPS directory structure.
 ```
 mmps/
 ├── src/                    # Source code
-├── apps/                   # npm workspaces — Vite mini-apps (chatbot-web, coach-web, expenses-web, learner-web, savings-web)
+├── apps/                   # npm workspaces — Vite mini-apps (chatbot-web, coach-web, learner-web, savings-web)
 ├── docs/                   # VitePress documentation
 ├── dist/                   # Compiled JavaScript (generated)
 ├── coverage/               # Test coverage reports (generated)
@@ -40,7 +40,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (7 bots + savings web app)
+├── features/              # Bot implementations (6 bots + savings web app)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── schedulers/    # Scheduler implementations
@@ -54,7 +54,6 @@ src/
 │   │
 │   ├── chilli/            # Cat persona bot (Hebrew)
 │   ├── coach/             # Sports bot
-│   ├── expenses/          # Expense tracker mini-app bot
 │   ├── learner/           # Courses mini-app bot
 │   ├── savings/           # Shared MongoDB-backed portfolio SPA
 │   ├── wolt/              # Restaurant bot
@@ -76,7 +75,7 @@ src/
 │   │       ├── reminders/
 │   │       └── ...
 │   ├── sports/            # Sports utilities
-│   └── ...                # reminders, friends, expenses, etc.
+│   └── ...                # reminders, friends, etc.
 │
 └── index.ts               # Application entry point
 ```

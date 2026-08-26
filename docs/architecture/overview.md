@@ -73,10 +73,9 @@ features/{bot-name}/
 1. **Chatbot** - AI assistant with 27 tools
 2. **Chilli** - Cat persona bot (Hebrew)
 3. **Coach** - Sports analytics and predictions
-4. **Expenses** - Expense tracker mini-app
-5. **Learner** - Courses mini-app
-6. **Wolt** - Restaurant notifications
-7. **Worldly** - Geography education
+4. **Learner** - Courses mini-app
+5. **Wolt** - Restaurant notifications
+6. **Worldly** - Geography education
 
 ## Conditional Bot Loading
 

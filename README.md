@@ -16,7 +16,7 @@ cp .env.example .env          # then fill in values you need
 # At minimum: MONGO_DB_URL, LOCAL_ACTIVE_BOT_ID, the bot's *_TELEGRAM_BOT_TOKEN,
 # and one of OPENAI_API_KEY / ANTHROPIC_API_KEY.
 
-# Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, EXPENSES, LEARNER, SECRETARY, WOLT, WORLDLY)
+# Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, LEARNER, SECRETARY, WOLT, WORLDLY)
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
@@ -27,7 +27,6 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 | `CHATBOT`   | AI assistant with 27 tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.). Dashboard mini-app (`apps/chatbot-web`) |
 | `CHILLI`    | Persona bot — replies as the user's cat in Hebrew                           |
 | `COACH`     | Sports analytics, predictions, schedules. Bundled mini-app (`apps/coach-web`) |
-| `EXPENSES`  | Expense tracker mini-app (`apps/expenses-web`)                              |
 | `LEARNER`   | Courses mini-app (`apps/learner-web`)                                       |
 | `SECRETARY` | Personal secretary over a Telegram business connection — transcription, AI draft replies, daily summaries |
 | `WOLT`      | Wolt restaurant availability watcher + notifications                        |
