@@ -24,7 +24,7 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 
 | ID          | Description                                                                 |
 |-------------|-----------------------------------------------------------------------------|
-| `CHATBOT`   | AI assistant with 27 tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.). Dashboard mini-app (`apps/chatbot-web`) |
+| `CHATBOT`   | AI assistant with 27 tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.) |
 | `CHILLI`    | Persona bot — replies as the user's cat in Hebrew                           |
 | `COACH`     | Sports analytics, predictions, schedules                                    |
 | `EXPENSES`  | Expense tracker mini-app (`apps/expenses-web`)                              |

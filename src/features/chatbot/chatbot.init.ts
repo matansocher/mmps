@@ -1,8 +1,5 @@
 import type { Express } from 'express';
-import express from 'express';
-import path from 'node:path';
 import { createMongoConnection } from '@core/mongo';
-import { Logger } from '@core/utils';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
@@ -23,14 +20,11 @@ import { ensureTransferTrackerIndexes, DB_NAME as TRANSFER_TRACKER_DB_NAME } fro
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
 import { createChatbotCheckpointer } from './agent';
-import { registerChatbotApiRoutes } from './api';
 import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 import { ensureSecretaryMessageIndexes, DB_NAME as SECRETARY_DB_NAME, SecretaryActionService, SecretaryMessageService } from './secretary';
-
-const logger = new Logger('chatbot:init');
 
 export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [
@@ -77,14 +71,6 @@ export async function initChatbot(app: Express): Promise<void> {
   chatbotController.init();
   chatbotScheduler.init();
   registerCalendarEventsRoutes(app);
-  registerChatbotApiRoutes(app);
 
   initOctokit();
-
-  const spaDist = path.resolve('apps/chatbot-web/dist');
-  app.use('/chatbot', express.static(spaDist));
-  app.get('/chatbot/*splat', (_req, res) => {
-    res.sendFile(path.join(spaDist, 'index.html'));
-  });
-  logger.log(`Chatbot SPA served from ${spaDist} at /chatbot/*`);
 }

@@ -288,7 +288,7 @@ No framework/IoC container — `initChatbot(app)` wires everything by hand:
 2. Build the **checkpointer** (await it here, before the bot starts — race-condition fix).
 3. `provideTelegramBot()` (memoized grammY bot; starts polling).
 4. Construct `ChatbotService(checkpointer)` → `ChatbotController` → `ChatbotSchedulerService`.
-5. `controller.init()` registers handlers; `scheduler.init()` registers cron; register HTTP/API routes; init Octokit; serve the `/chatbot` SPA (mini-app).
+5. `controller.init()` registers handlers; `scheduler.init()` registers cron; register HTTP/API routes; init Octokit.
 
 Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 
