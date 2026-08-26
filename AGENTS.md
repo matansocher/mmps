@@ -8,14 +8,14 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **7 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **7 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
+- **6 bots:** `chatbot`, `chilli`, `coach`, `learner`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/expenses-web`, `apps/learner-web`, `apps/savings-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/learner-web`, `apps/savings-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -125,7 +125,6 @@ mmps/
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
-│   ├── expenses-web/
 │   ├── learner-web/
 │   └── savings-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
@@ -178,7 +177,6 @@ src/services/{name}/
 | `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability. |
 | `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules. |
-| `EXPENSES`  | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`    | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
 | `LEARNER`   | Learner 🎓      | `src/features/learner/`       | `LEARNER_TELEGRAM_BOT_TOKEN`     | Courses mini-app (`apps/learner-web`) served at `/learner/`. |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
 | `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education. |
@@ -200,13 +198,12 @@ const initBot = async (config: { id: string }, init: () => Promise<void>): Promi
 await initBot(chatbotConfig, () => initChatbot(app));
 await initBot(chilliConfig, () => initChilli());
 await initBot(coachConfig, () => initCoach());
-await initBot(expensesConfig, () => initExpenses(app));
 await initBot(learnerConfig, () => initLearner(app));
 await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all seven run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all six run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
 
 ---
 
@@ -567,7 +564,7 @@ There is no manual history truncation any more — the old `truncateThread` was 
 
 Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.
 
-- **Instrumented sources.** `chatbot`, `chilli`, `expenses` (`manual-entry` categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
+- **Instrumented sources.** `chatbot`, `chilli`. Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
 - **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens: `input`, `output`, `cachedInput`) + `computeModelCost()`. Cached input tokens are a **subset** of `input_tokens` and are billed at the cheaper cache-hit rate (deducted from the full-price portion, never added on top). `resolveModelPrice()` resolves **dated snapshots only** (`gpt-4.1-mini-2025-04-14` → `gpt-4.1-mini`); sibling models like `gpt-5-mini` must be listed explicitly, since prefix-matching them onto `gpt-5` would misprice them 5x. Unknown models → cost `0` + `logger.warn`.
 - **Pricing drift check.** `schedulers/model-pricing-check.ts` (cron `0 10 1 * *`, 1st of each month at 10:00) fetches OpenAI's docs markdown twin (`https://developers.openai.com/api/docs/pricing.md`), parses the "Standard pricing data" table, and diffs it against `MODEL_PRICING`. **Silent when everything matches** — it only DMs `MY_USER_ID` on drift or when a priced model disappears from the docs. No AI and no HTML scraping; prices stay a checked-in constant so historical cost records remain reproducible.
 - **Sink.** db `Chatbot`, collection `usage` (`shared/ai/usage/`), 90-day TTL. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `tokensCached`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ source?, chatId?, from?, to? })` groups per source + user per day (`Asia/Jerusalem`). The `Chatbot` Mongo connection is registered by `chatbot.init`; non-chatbot bots only persist when chatbot is also booted (prod always; locally needs `LOCAL_ACTIVE_BOT_ID=CHATBOT`), otherwise writes fail silently.
@@ -742,7 +739,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 
 Located in `src/shared/`. Reusable across bots:
 
-`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `expenses`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
+`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
 
 ---
 
@@ -752,7 +749,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 
 **Required for any local dev:**
 - `MONGO_DB_URL` — Mongo connection string (the main code path uses this).
-- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | EXPENSES | LEARNER | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
+- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | LEARNER | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
 - One of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (depending on which agents you exercise).
 - The `*_TELEGRAM_BOT_TOKEN` for whichever bot you set as `LOCAL_ACTIVE_BOT_ID`.
 
@@ -798,8 +795,8 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (also: expenses-web, learner-web, savings-web)
-npm run dev:expenses-web
+# Mini-app workspaces (also: savings-web)
+npm run dev:learner-web
 npm run dev:savings-web
 ```
 

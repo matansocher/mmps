@@ -6,7 +6,7 @@ This page goes deeper than the [Chatbot overview](/bots/chatbot) — it explains
 
 ## 1. What it is (30-second version)
 
-The **chatbot** is one of seven Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
+The **chatbot** is one of six Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
 
 Key engineering properties:
 
