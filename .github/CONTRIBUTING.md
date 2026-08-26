@@ -40,8 +40,6 @@ In production all bots boot (`IS_PROD=true`); locally `LOCAL_ACTIVE_BOT_ID` sele
 Mini-apps are npm workspaces under `apps/` and run separately:
 
 ```bash
-npm run dev:chatbot-web
-npm run dev:coach-web
 npm run dev:learner-web
 npm run dev:savings-web
 ```

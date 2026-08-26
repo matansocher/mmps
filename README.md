@@ -24,9 +24,9 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 
 | ID          | Description                                                                 |
 |-------------|-----------------------------------------------------------------------------|
-| `CHATBOT`   | AI assistant with 27 tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.). Dashboard mini-app (`apps/chatbot-web`) |
+| `CHATBOT`   | AI assistant with 27 tools (weather, calendar, gmail, reminders, sports, github, polymarket, spotify, etc.) |
 | `CHILLI`    | Persona bot — replies as the user's cat in Hebrew                           |
-| `COACH`     | Sports analytics, predictions, schedules. Bundled mini-app (`apps/coach-web`) |
+| `COACH`     | Sports analytics, predictions, schedules                                    |
 | `LEARNER`   | Courses mini-app (`apps/learner-web`)                                       |
 | `SECRETARY` | Personal secretary over a Telegram business connection — transcription, AI draft replies, daily summaries |
 | `WOLT`      | Wolt restaurant availability watcher + notifications                        |
@@ -62,7 +62,7 @@ npm run build              # tsc + tsc-alias + mini-app builds
 npm run docs:dev           # VitePress docs locally
 
 # Mini-app workspaces
-npm run dev:coach-web
+npm run dev:chatbot-web
 npm run dev:savings-web
 ```
 
