@@ -13,6 +13,8 @@ export type { MessageData } from './utils/get-message-data';
 export { getCallbackQueryData } from './utils/get-callback-query-data';
 export type { CallbackQueryData } from './utils/get-callback-query-data';
 export { removeItemFromInlineKeyboardMarkup } from './utils/remove-item-from-inline-keyboard-markup';
+export { buildRichButtonRows, sendRichMessageWithButtons } from './utils/rich-message';
+export type { RichButtonData } from './utils/rich-message';
 export { sendRichMessage, sendShortenedMessage, sendStyledMessage } from './utils/send-message';
 export * from './constants';
 export * from './types';
