@@ -5,15 +5,6 @@ import { buildCallbackQueryUpdate, buildTextMessageUpdate, createTestBot, resetU
 
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
 
-function collectRichButtonData(richMessage: any): string[] {
-  const blocks = richMessage?.blocks ?? [];
-  return blocks
-    .filter((block: any) => block.type === 'buttons')
-    .flatMap((block: any) => block.buttons)
-    .map((button: any) => button.callback_data)
-    .filter(Boolean);
-}
-
 const mocks = vi.hoisted(() => ({
   saveUserDetails: vi.fn(),
   getSubscription: vi.fn(),
@@ -108,9 +99,10 @@ describe('WorldlyController E2E', () => {
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/actions' }));
 
-      const sent = testBot.transport.callsByMethod('sendRichMessage');
+      const sent = testBot.transport.callsByMethod('sendMessage');
       expect(sent).toHaveLength(1);
-      const datas = collectRichButtonData(sent[0].payload.rich_message);
+      const buttons = sent[0].payload.reply_markup?.inline_keyboard?.flat();
+      const datas = buttons.map((b: any) => b.callback_data).filter(Boolean);
       expect(datas).toEqual(expect.arrayContaining([BOT_ACTIONS.STATISTICS, BOT_ACTIONS.START, BOT_ACTIONS.CONTACT]));
     });
 
@@ -119,8 +111,8 @@ describe('WorldlyController E2E', () => {
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/actions' }));
 
-      const sent = testBot.transport.callsByMethod('sendRichMessage');
-      const datas = collectRichButtonData(sent[0].payload.rich_message);
+      const sent = testBot.transport.callsByMethod('sendMessage');
+      const datas = sent[0].payload.reply_markup?.inline_keyboard?.flat().map((b: any) => b.callback_data);
       expect(datas).toContain(BOT_ACTIONS.STOP);
     });
   });

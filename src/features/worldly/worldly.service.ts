@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import { type Bot, InputFile } from 'grammy';
-import type { InputRichBlock } from 'grammy/types';
 import { notify } from '@services/notifier';
-import { BLOCKED_ERROR, buildRichButtonRows, sendRichMessageWithButtons } from '@services/telegram';
+import { BLOCKED_ERROR, buildInlineKeyboard } from '@services/telegram';
 import { getAllCountries, getAllStates, getUserDetails, updateSubscription } from '@shared/worldly';
 import { buildQuestion, QuestionDescriptor } from './question-builder';
 import { getAreaMap } from './utils';
@@ -53,7 +52,7 @@ export class WorldlyService {
 
   private async sendQuestion(chatId: number, descriptor: QuestionDescriptor): Promise<void> {
     const action = MODE_TO_BOT_ACTION[descriptor.mode];
-    const buttonRows = buildRichButtonRows(
+    const keyboard = buildInlineKeyboard(
       descriptor.options.map((opt) => ({
         text: opt.label,
         data: [action, opt.id, descriptor.correct.id, descriptor.gameId].join(INLINE_KEYBOARD_SEPARATOR),
@@ -64,23 +63,16 @@ export class WorldlyService {
     if (descriptor.mode === 'map' || descriptor.mode === 'us_map') {
       const allAreas = descriptor.isState ? await getAllStates() : await getAllCountries();
       const imagePath = getAreaMap(allAreas, descriptor.imageAreaName!, descriptor.isState);
-      const blocks: InputRichBlock[] = [
-        { type: 'photo', photo: { type: 'photo', media: new InputFile(fs.createReadStream(imagePath)) } },
-        { type: 'paragraph', text: descriptor.captionText! },
-        ...buttonRows,
-      ];
-      await sendRichMessageWithButtons(this.bot, chatId, blocks, { is_rtl: true });
+      await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: descriptor.captionText });
       return;
     }
 
     if (descriptor.mode === 'flag') {
-      const blocks: InputRichBlock[] = [{ type: 'heading', text: descriptor.flagEmoji!, size: 1 }, ...buttonRows];
-      await sendRichMessageWithButtons(this.bot, chatId, blocks);
+      await this.bot.api.sendMessage(chatId, descriptor.flagEmoji!, { reply_markup: keyboard });
       return;
     }
 
     // capital
-    const blocks: InputRichBlock[] = [{ type: 'paragraph', text: descriptor.captionText! }, ...buttonRows];
-    await sendRichMessageWithButtons(this.bot, chatId, blocks, { is_rtl: true });
+    await this.bot.api.sendMessage(chatId, descriptor.captionText!, { reply_markup: keyboard });
   }
 }
