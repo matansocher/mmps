@@ -32,11 +32,76 @@
     <div class="card"><strong>156</strong>not production-reachable</div>
     <div class="card"><strong>69</strong>declared env vars</div>
     <div class="card"><strong>18</strong>unused/dead env vars</div>
+    <div class="card"><strong>9</strong>unused module folders</div>
   </div>
 
   <h2>Methodology</h2>
   <p>The analyzer resolves TypeScript path aliases and relative imports, starts at <code>src/index.ts</code>, every <code>apps/*/src/main.tsx</code>, and code entry points named in <code>package.json</code>, then traverses the module graph. It builds a symbol-level graph for named functions, arrow functions, methods, getters, and setters. A function passed as a callback counts as reachable. Test files and files under a <code>scripts</code> directory are analyzed independently.</p>
   <p><strong>Function categories:</strong> No references: 55 · Unreachable module: 60 · Dead call chain: 14 · Test only: 16 · Manual/script only: 11. <strong>Environment categories:</strong> Dead code only: 17 · No code references: 1.</p>
+
+
+  <h2>Unused module folders</h2>
+  <p>Whole directories under <code>src/services/*</code> whose public barrel (<code>index.ts</code>) is never imported from anywhere outside the folder itself — no production code, scheduler, tool, script, or app entry references them. Each is a self-contained integration that can be removed as a unit. As with the rest of this report, confirm there is no dynamic/string-based or out-of-repo consumer before deleting.</p>
+  <div class="controls">
+    <input id="folder-search" type="search" placeholder="Filter by folder or purpose" aria-label="Filter folders">
+    <span id="folder-count">9 shown</span>
+  </div>
+  <div class="table-wrap"><table id="folders"><thead><tr><th>Folder</th><th>Files</th><th>Purpose</th><th>Why it is listed</th></tr></thead><tbody>
+<tr data-search="@services/anthropic claude api client + chat-completion / execute-tool helpers. no production import; all live ai goes through @langchain/@services/openai.">
+      <td><code>@services/anthropic</code><span class="kind">module folder</span></td>
+      <td>5</td>
+      <td>Claude API client + chat-completion / execute-tool helpers.</td>
+      <td><span class="badge high">High</span> No production import; all live AI goes through @langchain/@services/openai.</td>
+    </tr>
+<tr data-search="@services/google-translate google translate wrapper. no production import.">
+      <td><code>@services/google-translate</code><span class="kind">module folder</span></td>
+      <td>2</td>
+      <td>Google Translate wrapper.</td>
+      <td><span class="badge high">High</span> No production import.</td>
+    </tr>
+<tr data-search="@services/open-weather-map openweathermap provider. no production import; weather is served by other providers.">
+      <td><code>@services/open-weather-map</code><span class="kind">module folder</span></td>
+      <td>3</td>
+      <td>OpenWeatherMap provider.</td>
+      <td><span class="badge high">High</span> No production import; weather is served by other providers.</td>
+    </tr>
+<tr data-search="@services/pinecone pinecone vector db client (query/upsert/delete). no production import; no vector-search feature is wired.">
+      <td><code>@services/pinecone</code><span class="kind">module folder</span></td>
+      <td>7</td>
+      <td>Pinecone vector DB client (query/upsert/delete).</td>
+      <td><span class="badge high">High</span> No production import; no vector-search feature is wired.</td>
+    </tr>
+<tr data-search="@services/telegram-client mtproto user-mode client (message history). no production import; includes a manual session script only.">
+      <td><code>@services/telegram-client</code><span class="kind">module folder</span></td>
+      <td>9</td>
+      <td>MTProto user-mode client (message history).</td>
+      <td><span class="badge high">High</span> No production import; includes a manual session script only.</td>
+    </tr>
+<tr data-search="@services/twilio twilio sms / voice-call client. no production import.">
+      <td><code>@services/twilio</code><span class="kind">module folder</span></td>
+      <td>4</td>
+      <td>Twilio SMS / voice-call client.</td>
+      <td><span class="badge high">High</span> No production import.</td>
+    </tr>
+<tr data-search="@services/twitter twitter api v2 client (getuserbyusername / getusertweets). no production import; the twitter tool uses @services/twitter-scraper instead.">
+      <td><code>@services/twitter</code><span class="kind">module folder</span></td>
+      <td>5</td>
+      <td>Twitter API v2 client (getUserByUsername / getUserTweets).</td>
+      <td><span class="badge high">High</span> No production import; the twitter tool uses @services/twitter-scraper instead.</td>
+    </tr>
+<tr data-search="@services/yahoo-finance yahoo finance equity quotes + parsers. no production import; only its own unit tests reference it.">
+      <td><code>@services/yahoo-finance</code><span class="kind">module folder</span></td>
+      <td>8</td>
+      <td>Yahoo Finance equity quotes + parsers.</td>
+      <td><span class="badge high">High</span> No production import; only its own unit tests reference it.</td>
+    </tr>
+<tr data-search="@services/youtube-v3 youtube data api v3 wrapper. no production import; youtube features use @services/youtube.">
+      <td><code>@services/youtube-v3</code><span class="kind">module folder</span></td>
+      <td>4</td>
+      <td>YouTube Data API v3 wrapper.</td>
+      <td><span class="badge high">High</span> No production import; YouTube features use @services/youtube.</td>
+    </tr>
+</tbody></table></div>
 
   <h2>Functions not reachable in production</h2>
   <div class="controls">
@@ -1283,8 +1348,25 @@
     search.addEventListener('input', apply);
     category.addEventListener('change', apply);
   }
+  function bindSearch(tableId, searchId, countId) {
+    const rows = [...document.querySelectorAll('#' + tableId + ' tbody tr')];
+    const search = document.getElementById(searchId);
+    const count = document.getElementById(countId);
+    function apply() {
+      const query = search.value.trim().toLowerCase();
+      let shown = 0;
+      for (const row of rows) {
+        const visible = !query || row.dataset.search.includes(query);
+        row.hidden = !visible;
+        if (visible) shown++;
+      }
+      count.textContent = shown + ' shown';
+    }
+    search.addEventListener('input', apply);
+  }
   bindFilter('functions', 'function-search', 'function-category', 'function-count');
   bindFilter('env', 'env-search', 'env-category', 'env-count');
+  bindSearch('folders', 'folder-search', 'folder-count');
 </script>
 </body>
 </html>
