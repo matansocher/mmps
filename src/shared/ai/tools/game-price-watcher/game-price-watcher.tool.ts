@@ -36,12 +36,28 @@ async function resolveConceptId(gameName?: string, url?: string): Promise<{ conc
   if (!match) {
     return { error: `No PS5 game found matching "${gameName}".` };
   }
-  if (!match.psStoreProductId) {
-    return { error: `Found ${match.name}, but there is no PlayStation Store listing linked to it. Paste the store page URL instead.` };
+
+  if (match.psStoreProductId) {
+    const conceptId = await resolveConceptIdFromProduct(match.psStoreProductId);
+    if (conceptId) {
+      return { conceptId };
+    }
   }
 
-  const conceptId = await resolveConceptIdFromProduct(match.psStoreProductId);
-  return conceptId ? { conceptId } : { error: `Found ${match.name}, but its PlayStation Store page could not be opened. Paste the store page URL instead.` };
+  // IGDB has no product id mapping for every title, but often still lists the store page url.
+  // Parsing it recovers the concept id without asking the user to paste the link themselves.
+  const parsed = match.psStoreUrl ? parsePsStoreUrl(match.psStoreUrl) : null;
+  if (parsed?.kind === 'concept') {
+    return { conceptId: parsed.id };
+  }
+  if (parsed?.kind === 'product') {
+    const conceptId = await resolveConceptIdFromProduct(parsed.id);
+    if (conceptId) {
+      return { conceptId };
+    }
+  }
+
+  return { error: `Found ${match.name}, but there is no PlayStation Store listing linked to it. Paste the store page URL instead.` };
 }
 
 async function handleAdd(gameName?: string, url?: string): Promise<string> {

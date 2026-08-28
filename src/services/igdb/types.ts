@@ -12,6 +12,7 @@ export type IgdbGame = {
   readonly slug: string | null;
   readonly coverUrl: string | null;
   readonly psStoreProductId: string | null; // PlayStation Store product id, when IGDB has the mapping
+  readonly psStoreUrl: string | null; // PlayStation Store page url, a fallback when the product id mapping is missing
   readonly release: GameReleaseInfo;
 };
 
