@@ -8,7 +8,7 @@ import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather } from '@services/weather';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
-import { getRemindersByUser } from '@shared/reminders';
+import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
 import { CHATBOT_CONFIG } from '../chatbot.config';
 import { formatEventTime } from './utils/events';
@@ -73,7 +73,7 @@ export async function dailySummary(bot: Bot): Promise<void> {
         return null;
       }),
       getTomorrowEvents(),
-      getRemindersByUser(MY_USER_ID).catch((err) => {
+      getPendingRemindersDueOnOrBefore(MY_USER_ID, new Date()).catch((err) => {
         logger.error(`Failed to fetch unfinished reminders: ${getErrorMessage(err)}`);
         return [] as Reminder[];
       }),
