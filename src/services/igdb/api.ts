@@ -18,6 +18,13 @@ function resolvePsStoreProductId(externalGames: readonly IgdbExternalGameRespons
   return match ? match.uid : null;
 }
 
+// IGDB sometimes lists the PlayStation Store entry with a page url but no uid mapping. The url still
+// carries the concept/product id, so it is kept as a fallback resolved at add time.
+function resolvePsStoreUrl(externalGames: readonly IgdbExternalGameResponse[] | undefined): string | null {
+  const match = (externalGames ?? []).find((entry) => entry.category === PLAYSTATION_STORE_CATEGORY_ID && entry.url);
+  return match ? match.url : null;
+}
+
 function toIgdbGame(game: IgdbGameResponse): IgdbGame {
   return {
     id: game.id,
@@ -25,6 +32,7 @@ function toIgdbGame(game: IgdbGameResponse): IgdbGame {
     slug: game.slug ?? null,
     coverUrl: game.cover?.image_id ? `${IGDB_IMAGE_BASE_URL}/${game.cover.image_id}.jpg` : null,
     psStoreProductId: resolvePsStoreProductId(game.external_games),
+    psStoreUrl: resolvePsStoreUrl(game.external_games),
     release: resolveReleaseInfo(game.release_dates),
   };
 }
