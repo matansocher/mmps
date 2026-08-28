@@ -17,9 +17,10 @@ export type IgdbGame = {
 };
 
 export type IgdbReleaseDateResponse = {
-  readonly date?: number; // unix seconds
+  readonly date?: number; // unix seconds — only an exact day when `category` is the full-date format
   readonly human?: string;
   readonly status?: number;
+  readonly category?: number; // date format precision (0 = full date, 1 = month, 2 = year, 3-6 = quarter, 7 = TBD)
   readonly platform?: number;
   readonly region?: number;
   readonly y?: number;
