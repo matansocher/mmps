@@ -24,117 +24,27 @@
 <body>
 <main>
   <h1>Unused code and environment audit</h1>
-  <p class="muted">Generated 2026-08-11T12:00:05.287Z from commit <code>8d8366c5</code>. This is a static reachability report, not proof that deletion is safe.</p>
+  <p class="muted">Generated 2026-08-28 from commit <code>cd58e750</code> (refreshed against current main). This is a static reachability report, not proof that deletion is safe.</p>
   <div class="warning"><strong>How to read this:</strong> “Unused” means no static path was found from the server entry point, a web-app entry point, or a non-test package entry point. Dynamic lookup by string, reflection, external imports, framework conventions, and operational commands not recorded in <code>package.json</code> can create false positives. Review “Medium” findings manually before deletion.</div>
   <div class="cards">
     <div class="card"><strong>955</strong>tracked code files</div>
     <div class="card"><strong>1545</strong>named functions analyzed</div>
-    <div class="card"><strong>191</strong>not production-reachable</div>
+    <div class="card"><strong>156</strong>not production-reachable</div>
     <div class="card"><strong>69</strong>declared env vars</div>
-    <div class="card"><strong>19</strong>unused/dead env vars</div>
+    <div class="card"><strong>18</strong>unused/dead env vars</div>
   </div>
 
   <h2>Methodology</h2>
   <p>The analyzer resolves TypeScript path aliases and relative imports, starts at <code>src/index.ts</code>, every <code>apps/*/src/main.tsx</code>, and code entry points named in <code>package.json</code>, then traverses the module graph. It builds a symbol-level graph for named functions, arrow functions, methods, getters, and setters. A function passed as a callback counts as reachable. Test files and files under a <code>scripts</code> directory are analyzed independently.</p>
-  <p><strong>Function categories:</strong> No references: 71 · Unreachable module: 62 · Dead call chain: 29 · Test only: 16 · Manual/script only: 13. <strong>Environment categories:</strong> Dead code only: 17 · No code references: 2.</p>
+  <p><strong>Function categories:</strong> No references: 55 · Unreachable module: 60 · Dead call chain: 14 · Test only: 16 · Manual/script only: 11. <strong>Environment categories:</strong> Dead code only: 17 · No code references: 1.</p>
 
   <h2>Functions not reachable in production</h2>
   <div class="controls">
     <input id="function-search" type="search" placeholder="Filter by function, file, or category" aria-label="Filter functions">
     <select id="function-category" aria-label="Function category"><option value="">All categories</option><option>Dead call chain</option><option>Manual/script only</option><option>No references</option><option>Test only</option><option>Unreachable module</option></select>
-    <span id="function-count">191 shown</span>
+    <span id="function-count">156 shown</span>
   </div>
-  <div class="table-wrap"><table id="functions"><thead><tr><th>Function</th><th>Source</th><th>Classification</th><th>Why it is listed</th><th>Declaration</th></tr></thead><tbody><tr data-category="No references" data-search="currentym apps/chatbot-web/src/lib/date.ts no references">
-      <td><code>currentYm</code><span class="kind">function</span></td>
-      <td><code>apps/chatbot-web/src/lib/date.ts:70</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function currentYm(): string</code></td>
-    </tr>
-<tr data-category="No references" data-search="shiftmonth apps/chatbot-web/src/lib/date.ts no references">
-      <td><code>shiftMonth</code><span class="kind">function</span></td>
-      <td><code>apps/chatbot-web/src/lib/date.ts:74</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function shiftMonth(ym: string, delta: number): string</code></td>
-    </tr>
-<tr data-category="No references" data-search="formatmonthlabel apps/chatbot-web/src/lib/date.ts no references">
-      <td><code>formatMonthLabel</code><span class="kind">function</span></td>
-      <td><code>apps/chatbot-web/src/lib/date.ts:79</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function formatMonthLabel(ym: string): string</code></td>
-    </tr>
-<tr data-category="No references" data-search="showbackbutton apps/chatbot-web/src/lib/telegram.ts no references">
-      <td><code>showBackButton</code><span class="kind">function</span></td>
-      <td><code>apps/chatbot-web/src/lib/telegram.ts:33</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function showBackButton(onClick: () =&gt; void): () =&gt; void</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="confirmsheet apps/expenses-web/src/components/confirmsheet.tsx unreachable module">
-      <td><code>ConfirmSheet</code><span class="kind">function</span></td>
-      <td><code>apps/expenses-web/src/components/ConfirmSheet.tsx:13</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export function ConfirmSheet(</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="onkey apps/expenses-web/src/components/confirmsheet.tsx unreachable module">
-      <td><code>onKey</code><span class="kind">arrow function</span></td>
-      <td><code>apps/expenses-web/src/components/ConfirmSheet.tsx:15</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.<details><summary>Static references (2)</summary><small>ConfirmSheet() at apps/expenses-web/src/components/ConfirmSheet.tsx:16; ConfirmSheet() at apps/expenses-web/src/components/ConfirmSheet.tsx:17</small></details></td>
-      <td><code class="signature">(e: KeyboardEvent) =&gt; e.key === &#039;Escape&#039; &amp;&amp; onCancel()</code></td>
-    </tr>
-<tr data-category="No references" data-search="shiftdays apps/expenses-web/src/lib/date.ts no references">
-      <td><code>shiftDays</code><span class="kind">function</span></td>
-      <td><code>apps/expenses-web/src/lib/date.ts:15</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function shiftDays(value: string, delta: number): string</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="istomorrow apps/expenses-web/src/lib/date.ts dead call chain">
-      <td><code>isTomorrow</code><span class="kind">function</span></td>
-      <td><code>apps/expenses-web/src/lib/date.ts:23</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>formatReminderDueDate() at apps/expenses-web/src/lib/date.ts:60</small></details></td>
-      <td><code class="signature">export function isTomorrow(value: string): boolean</code></td>
-    </tr>
-<tr data-category="No references" data-search="formattime apps/expenses-web/src/lib/date.ts no references">
-      <td><code>formatTime</code><span class="kind">function</span></td>
-      <td><code>apps/expenses-web/src/lib/date.ts:31</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function formatTime(iso: string): string</code></td>
-    </tr>
-<tr data-category="No references" data-search="formatlongdate apps/expenses-web/src/lib/date.ts no references">
-      <td><code>formatLongDate</code><span class="kind">function</span></td>
-      <td><code>apps/expenses-web/src/lib/date.ts:43</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function formatLongDate(value: string): string</code></td>
-    </tr>
-<tr data-category="No references" data-search="formatreminderduedate apps/expenses-web/src/lib/date.ts no references">
-      <td><code>formatReminderDueDate</code><span class="kind">function</span></td>
-      <td><code>apps/expenses-web/src/lib/date.ts:49</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function formatReminderDueDate(dueIso: string, selectedYmd: string): ReminderDueLabel</code></td>
-    </tr>
-<tr data-category="No references" data-search="showbackbutton apps/expenses-web/src/lib/telegram.ts no references">
-      <td><code>showBackButton</code><span class="kind">function</span></td>
-      <td><code>apps/expenses-web/src/lib/telegram.ts:33</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function showBackButton(onClick: () =&gt; void): () =&gt; void</code></td>
-    </tr>
-<tr data-category="No references" data-search="arrowleft apps/learner-web/src/lib/icons.tsx no references">
-      <td><code>ArrowLeft</code><span class="kind">function</span></td>
-      <td><code>apps/learner-web/src/lib/icons.tsx:17</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function ArrowLeft(</code></td>
-    </tr>
+  <div class="table-wrap"><table id="functions"><thead><tr><th>Function</th><th>Source</th><th>Classification</th><th>Why it is listed</th><th>Declaration</th></tr></thead><tbody>
 <tr data-category="Unreachable module" data-search="clamppercent apps/savings-web/src/components/allocationsliders.tsx unreachable module">
       <td><code>clampPercent</code><span class="kind">function</span></td>
       <td><code>apps/savings-web/src/components/AllocationSliders.tsx:14</code></td>
@@ -366,13 +276,6 @@
       <td>The declaration has no static references anywhere in the repository.</td>
       <td><code class="signature">export async function rainRadarAlert(bot: Bot): Promise&lt;void&gt;</code></td>
     </tr>
-<tr data-category="No references" data-search="totablerows src/features/coach/api/transformers.ts no references">
-      <td><code>toTableRows</code><span class="kind">function</span></td>
-      <td><code>src/features/coach/api/transformers.ts:33</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function toTableRows(rows: ReadonlyArray&lt;CompetitionTableRow&gt;, zoning?:</code></td>
-    </tr>
 <tr data-category="Unreachable module" data-search="getcoachmatchesqueue src/features/coach/queue/coach-matches.queue.ts unreachable module">
       <td><code>getCoachMatchesQueue</code><span class="kind">function</span></td>
       <td><code>src/features/coach/queue/coach-matches.queue.ts:13</code></td>
@@ -386,48 +289,6 @@
       <td><span class="badge high">High</span> Unreachable module</td>
       <td>Its module is not imported by any production runtime entry point.</td>
       <td><code class="signature">export function createCoachMatchesWorker(coachService: CoachService, bot: Bot): Worker&lt;CoachMatchesJobData&gt;</code></td>
-    </tr>
-<tr data-category="Manual/script only" data-search="resolveinputfiles src/features/expenses/scripts/import-credit-card-expenses.ts manual/script only">
-      <td><code>resolveInputFiles</code><span class="kind">function</span></td>
-      <td><code>src/features/expenses/scripts/import-credit-card-expenses.ts:40</code></td>
-      <td><span class="badge high">High</span> Manual/script only</td>
-      <td>Reachable from a standalone script, but not from a production runtime entry point.<details><summary>Static references (1)</summary><small>main() at src/features/expenses/scripts/import-credit-card-expenses.ts:61</small></details></td>
-      <td><code class="signature">function resolveInputFiles(opts:</code></td>
-    </tr>
-<tr data-category="Manual/script only" data-search="main src/features/expenses/scripts/import-credit-card-expenses.ts manual/script only">
-      <td><code>main</code><span class="kind">function</span></td>
-      <td><code>src/features/expenses/scripts/import-credit-card-expenses.ts:59</code></td>
-      <td><span class="badge high">High</span> Manual/script only</td>
-      <td>Reachable from a standalone script, but not from a production runtime entry point.<details><summary>Static references (1)</summary><small>module top level at src/features/expenses/scripts/import-credit-card-expenses.ts:108</small></details></td>
-      <td><code class="signature">async function main()</code></td>
-    </tr>
-<tr data-category="No references" data-search="formatamount src/features/expenses/utils/format-amount.ts no references">
-      <td><code>formatAmount</code><span class="kind">function</span></td>
-      <td><code>src/features/expenses/utils/format-amount.ts:3</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function formatAmount(amount: number, currency: string): string</code></td>
-    </tr>
-<tr data-category="No references" data-search="totalsbycategory src/features/expenses/utils/totals-by-category.ts no references">
-      <td><code>totalsByCategory</code><span class="kind">function</span></td>
-      <td><code>src/features/expenses/utils/totals-by-category.ts:5</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function totalsByCategory(expenses: ReadonlyArray&lt;Expense&gt;, n: number): CategoryTotal[]</code></td>
-    </tr>
-<tr data-category="No references" data-search="totalsbycurrency src/features/expenses/utils/totals-by-currency.ts no references">
-      <td><code>totalsByCurrency</code><span class="kind">function</span></td>
-      <td><code>src/features/expenses/utils/totals-by-currency.ts:5</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function totalsByCurrency(expenses: ReadonlyArray&lt;Expense&gt;): CurrencyTotal[]</code></td>
-    </tr>
-<tr data-category="No references" data-search="totalsbyvendor src/features/expenses/utils/totals-by-vendor.ts no references">
-      <td><code>totalsByVendor</code><span class="kind">function</span></td>
-      <td><code>src/features/expenses/utils/totals-by-vendor.ts:5</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function totalsByVendor(expenses: ReadonlyArray&lt;Expense&gt;, n: number): VendorTotal[]</code></td>
     </tr>
 <tr data-category="Manual/script only" data-search="sleep src/features/wolt/scripts/broadcast.ts manual/script only">
       <td><code>sleep</code><span class="kind">function</span></td>
@@ -1066,216 +927,6 @@
       <td>Reachable from a standalone script, but not from a production runtime entry point.<details><summary>Static references (1)</summary><small>module top level at src/shared/cooker/scripts/insert-data.mjs:52</small></details></td>
       <td><code class="signature">async function main()</code></td>
     </tr>
-<tr data-category="No references" data-search="getrecentexpenses src/shared/expenses/mongo/expenses.repository.ts no references">
-      <td><code>getRecentExpenses</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/mongo/expenses.repository.ts:31</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function getRecentExpenses(limit = 20): Promise&lt;Expense[]&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="getexpensesbycategory src/shared/expenses/mongo/expenses.repository.ts no references">
-      <td><code>getExpensesByCategory</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/mongo/expenses.repository.ts:58</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function getExpensesByCategory(category: ExpenseCategory, from: Date, to: Date): Promise&lt;Expense[]&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="getexpensesbyvendor src/shared/expenses/mongo/expenses.repository.ts no references">
-      <td><code>getExpensesByVendor</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/mongo/expenses.repository.ts:138</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function getExpensesByVendor(vendor: string, limit = 20): Promise&lt;Expense[]&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="getexpensebyid src/shared/expenses/mongo/expenses.repository.ts no references">
-      <td><code>getExpenseById</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/mongo/expenses.repository.ts:147</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function getExpenseById(id: string): Promise&lt;Expense | null&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="updateusercategory src/shared/expenses/mongo/expenses.repository.ts no references">
-      <td><code>updateUserCategory</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/mongo/expenses.repository.ts:153</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function updateUserCategory(id: string, userCategory: ExpenseCategory | null): Promise&lt;Expense | null&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="createingestexpense src/shared/expenses/mongo/ingest-expense.repository.ts no references">
-      <td><code>createIngestExpense</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/mongo/ingest-expense.repository.ts:21</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function createIngestExpense(data: CreateIngestExpenseData): Promise&lt;InsertOneResult&lt;IngestExpense&gt;&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="getingestexpensesbetween src/shared/expenses/mongo/ingest-expense.repository.ts no references">
-      <td><code>getIngestExpensesBetween</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/mongo/ingest-expense.repository.ts:25</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function getIngestExpensesBetween(from: Date, to: Date): Promise&lt;IngestExpense[]&gt;</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="totalsbycurrency src/shared/expenses/utils/analytics.ts dead call chain">
-      <td><code>totalsByCurrency</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:24</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (3)</summary><small>buildMonthlyAnalytics() at src/shared/expenses/utils/analytics.ts:110; buildMonthlyAnalytics() at src/shared/expenses/utils/analytics.ts:111; buildLastNDaysAnalytics() at src/shared/expenses/utils/analytics.ts:158</small></details></td>
-      <td><code class="signature">function totalsByCurrency(expenses: ReadonlyArray&lt;Expense&gt;): CurrencyTotal[]</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="totalsbycategory src/shared/expenses/utils/analytics.ts dead call chain">
-      <td><code>totalsByCategory</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:32</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (2)</summary><small>buildMonthlyAnalytics() at src/shared/expenses/utils/analytics.ts:116; buildLastNDaysAnalytics() at src/shared/expenses/utils/analytics.ts:159</small></details></td>
-      <td><code class="signature">function totalsByCategory(expenses: ReadonlyArray&lt;Expense&gt;, limit?: number): CategoryTotal[]</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="totalsbyvendor src/shared/expenses/utils/analytics.ts dead call chain">
-      <td><code>totalsByVendor</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:50</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (3)</summary><small>buildMonthlyAnalytics() at src/shared/expenses/utils/analytics.ts:117; buildVendorTrends() at src/shared/expenses/utils/analytics.ts:131; buildLastNDaysAnalytics() at src/shared/expenses/utils/analytics.ts:160</small></details></td>
-      <td><code class="signature">function totalsByVendor(expenses: ReadonlyArray&lt;Expense&gt;, limit?: number): VendorTotal[]</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="monthrange src/shared/expenses/utils/analytics.ts dead call chain">
-      <td><code>monthRange</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:68</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (3)</summary><small>buildMonthlyAnalytics() at src/shared/expenses/utils/analytics.ts:105; buildMonthlyAnalytics() at src/shared/expenses/utils/analytics.ts:106; buildVendorTrends() at src/shared/expenses/utils/analytics.ts:127</small></details></td>
-      <td><code class="signature">function monthRange(anchor: Date, offsetMonths = 0):</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="computemom src/shared/expenses/utils/analytics.ts dead call chain">
-      <td><code>computeMoM</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:76</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>buildMonthlyAnalytics() at src/shared/expenses/utils/analytics.ts:118</small></details></td>
-      <td><code class="signature">function computeMoM(current: CurrencyTotal[], previous: CurrencyTotal[]): MoMDelta[]</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="buildmonthlyanalytics src/shared/expenses/utils/analytics.ts dead call chain">
-      <td><code>buildMonthlyAnalytics</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:103</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>buildMonthlyAnalyticsSummary() at src/shared/expenses/utils/summary.ts:154</small></details></td>
-      <td><code class="signature">export async function buildMonthlyAnalytics(anchor: Date = new Date(), opts:</code></td>
-    </tr>
-<tr data-category="No references" data-search="buildvendortrends src/shared/expenses/utils/analytics.ts no references">
-      <td><code>buildVendorTrends</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:126</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function buildVendorTrends(anchor: Date = new Date(), monthsBack = 6, topVendors = 5): Promise&lt;VendorTrend[]&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="buildlastndaysanalytics src/shared/expenses/utils/analytics.ts no references">
-      <td><code>buildLastNDaysAnalytics</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/analytics.ts:146</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function buildLastNDaysAnalytics( days: number, ): Promise&lt;</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="formatamount src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>formatAmount</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:15</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (12)</summary><small>formatDailySummary() at src/shared/expenses/utils/summary.ts:82; formatDailySummary() at src/shared/expenses/utils/summary.ts:91; formatDailySummary() at src/shared/expenses/utils/summary.ts:94; formatDailySummary() at src/shared/expenses/utils/summary.ts:96; formatMoMLine() at src/shared/expenses/utils/summary.ts:103</small></details></td>
-      <td><code class="signature">function formatAmount(amount: number, currency: string): string</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="zonedday src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>zonedDay</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:20</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>getDailyExpenses() at src/shared/expenses/utils/summary.ts:62</small></details></td>
-      <td><code class="signature">function zonedDay(date: Date):</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="totalsbycurrency src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>totalsByCurrency</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:25</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (2)</summary><small>formatDailySummary() at src/shared/expenses/utils/summary.ts:81; formatPeriodSummary() at src/shared/expenses/utils/summary.ts:108</small></details></td>
-      <td><code class="signature">function totalsByCurrency(expenses: ReadonlyArray&lt;Expense&gt;): Array&lt;</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="totalsbycategory src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>totalsByCategory</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:33</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (2)</summary><small>formatDailySummary() at src/shared/expenses/utils/summary.ts:83; formatPeriodSummary() at src/shared/expenses/utils/summary.ts:110</small></details></td>
-      <td><code class="signature">function totalsByCategory(expenses: ReadonlyArray&lt;Expense&gt;): Array&lt;</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="topvendors src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>topVendors</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:48</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (2)</summary><small>formatDailySummary() at src/shared/expenses/utils/summary.ts:84; formatPeriodSummary() at src/shared/expenses/utils/summary.ts:111</small></details></td>
-      <td><code class="signature">function topVendors(expenses: ReadonlyArray&lt;Expense&gt;, n = 3): Array&lt;</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="getdailyexpenses src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>getDailyExpenses</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:61</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>buildDailySummary() at src/shared/expenses/utils/summary.ts:145</small></details></td>
-      <td><code class="signature">export async function getDailyExpenses(date: Date = new Date()): Promise&lt;Expense[]&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="getweeklyexpenses src/shared/expenses/utils/summary.ts no references">
-      <td><code>getWeeklyExpenses</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:66</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function getWeeklyExpenses(date: Date = new Date()): Promise&lt;Expense[]&gt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="getmonthlyexpenses src/shared/expenses/utils/summary.ts no references">
-      <td><code>getMonthlyExpenses</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:72</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function getMonthlyExpenses(date: Date = new Date()): Promise&lt;Expense[]&gt;</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="formatdailysummary src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>formatDailySummary</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:77</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>buildDailySummary() at src/shared/expenses/utils/summary.ts:146</small></details></td>
-      <td><code class="signature">export function formatDailySummary(date: Date, expenses: ReadonlyArray&lt;Expense&gt;): string</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="formatmomline src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>formatMoMLine</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:100</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>formatMonthlyAnalytics() at src/shared/expenses/utils/summary.ts:133</small></details></td>
-      <td><code class="signature">function formatMoMLine(currency: string, current: number, previous: number, deltaPct: number | null): string</code></td>
-    </tr>
-<tr data-category="No references" data-search="formatperiodsummary src/shared/expenses/utils/summary.ts no references">
-      <td><code>formatPeriodSummary</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:106</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export function formatPeriodSummary(label: string, expenses: ReadonlyArray&lt;Expense&gt;): string</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="formatmonthlyanalytics src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>formatMonthlyAnalytics</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:125</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>buildMonthlyAnalyticsSummary() at src/shared/expenses/utils/summary.ts:155</small></details></td>
-      <td><code class="signature">export function formatMonthlyAnalytics(a: MonthlyAnalytics): string</code></td>
-    </tr>
-<tr data-category="Dead call chain" data-search="builddailysummary src/shared/expenses/utils/summary.ts dead call chain">
-      <td><code>buildDailySummary</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:144</code></td>
-      <td><span class="badge medium">Medium</span> Dead call chain</td>
-      <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>buildYesterdaySummary() at src/shared/expenses/utils/summary.ts:150</small></details></td>
-      <td><code class="signature">export async function buildDailySummary(date: Date = new Date()): Promise&lt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="buildyesterdaysummary src/shared/expenses/utils/summary.ts no references">
-      <td><code>buildYesterdaySummary</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:149</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function buildYesterdaySummary(): Promise&lt;</code></td>
-    </tr>
-<tr data-category="No references" data-search="buildmonthlyanalyticssummary src/shared/expenses/utils/summary.ts no references">
-      <td><code>buildMonthlyAnalyticsSummary</code><span class="kind">function</span></td>
-      <td><code>src/shared/expenses/utils/summary.ts:153</code></td>
-      <td><span class="badge high">High</span> No references</td>
-      <td>The declaration has no static references anywhere in the repository.</td>
-      <td><code class="signature">export async function buildMonthlyAnalyticsSummary(date: Date = new Date()): Promise&lt;</code></td>
-    </tr>
 <tr data-category="Unreachable module" data-search="getcollection src/shared/flights-tracker/mongo/subscription.repository.ts unreachable module">
       <td><code>getCollection</code><span class="kind">function</span></td>
       <td><code>src/shared/flights-tracker/mongo/subscription.repository.ts:6</code></td>
@@ -1380,7 +1031,113 @@
       <td><span class="badge high">High</span> Test only</td>
       <td>Reachable from tests, but not from a production runtime entry point.<details><summary>Static references (2)</summary><small>module top level at test/integration/wolt-subscription.repository.integration.spec.ts:27; module top level at test/integration/wolt-subscription.repository.integration.spec.ts:70</small></details></td>
       <td><code class="signature">export async function getSubscription(chatId: number, restaurant: string): Promise&lt;Subscription&gt;</code></td>
-    </tr></tbody></table></div>
+    </tr>
+<tr data-category="No references" data-search="buildchangemessage src/features/chatbot/schedulers/game-release-check.ts no references">
+      <td><code>buildChangeMessage</code><span class="kind">function</span></td>
+      <td><code>src/features/chatbot/schedulers/game-release-check.ts:32</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export function buildChangeMessage(follow: GameFollow, current: GameReleaseInfo, change: ReleaseChangeType): string | null</code></td>
+    </tr>
+<tr data-category="No references" data-search="fetchemailfull src/services/gmail/api.ts no references">
+      <td><code>fetchEmailFull</code><span class="kind">function</span></td>
+      <td><code>src/services/gmail/api.ts:89</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function fetchEmailFull(messageId: string): Promise&lt;FullEmail | null&gt;</code></td>
+    </tr>
+<tr data-category="No references" data-search="markemailasread src/services/gmail/api.ts no references">
+      <td><code>markEmailAsRead</code><span class="kind">function</span></td>
+      <td><code>src/services/gmail/api.ts:78</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function markEmailAsRead(messageId: string): Promise&lt;void&gt;</code></td>
+    </tr>
+<tr data-category="No references" data-search="validateigdbcredentials src/services/igdb/auth.ts no references">
+      <td><code>validateIgdbCredentials</code><span class="kind">function</span></td>
+      <td><code>src/services/igdb/auth.ts:7</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export function validateIgdbCredentials(): void</code></td>
+    </tr>
+<tr data-category="No references" data-search="applyallowlist src/services/telegram/utils/apply-allowlist.ts no references">
+      <td><code>applyAllowlist</code><span class="kind">function</span></td>
+      <td><code>src/services/telegram/utils/apply-allowlist.ts:14</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export function applyAllowlist(bot: Bot, allowedUserIds: ReadonlyArray&lt;number&gt;, options: AllowlistOptions = {}): void</code></td>
+    </tr>
+<tr data-category="No references" data-search="buildrichbuttonrows src/services/telegram/utils/rich-message.ts no references">
+      <td><code>buildRichButtonRows</code><span class="kind">function</span></td>
+      <td><code>src/services/telegram/utils/rich-message.ts:11</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export function buildRichButtonRows(buttons: RichButtonData[], columnsPerRow: number = 1): InputRichBlockButtons[]</code></td>
+    </tr>
+<tr data-category="No references" data-search="sendrichmessagewithbuttons src/services/telegram/utils/rich-message.ts no references">
+      <td><code>sendRichMessageWithButtons</code><span class="kind">function</span></td>
+      <td><code>src/services/telegram/utils/rich-message.ts:23</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function sendRichMessageWithButtons(bot: Bot, chatId: number, blocks: InputRichBlock[], form = {}): Promise&lt;Message.RichMessageMessage&gt;</code></td>
+    </tr>
+<tr data-category="No references" data-search="messagestreamer src/services/telegram/utils/message-streamer.ts no references">
+      <td><code>MessageStreamer</code><span class="kind">class</span></td>
+      <td><code>src/services/telegram/utils/message-streamer.ts:15</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export class MessageStreamer</code></td>
+    </tr>
+<tr data-category="No references" data-search="geteventsfordate src/shared/calendar-events/mongo/calendar-event.repository.ts no references">
+      <td><code>getEventsForDate</code><span class="kind">function</span></td>
+      <td><code>src/shared/calendar-events/mongo/calendar-event.repository.ts:47</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function getEventsForDate(date: Date = new Date()): Promise&lt;CalendarEvent[]&gt;</code></td>
+    </tr>
+<tr data-category="No references" data-search="getreminderscompletedbetween src/shared/reminders/mongo/reminder.repository.ts no references">
+      <td><code>getRemindersCompletedBetween</code><span class="kind">function</span></td>
+      <td><code>src/shared/reminders/mongo/reminder.repository.ts:51</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function getRemindersCompletedBetween(chatId: number, from: Date, to: Date): Promise&lt;Reminder[]&gt;</code></td>
+    </tr>
+<tr data-category="No references" data-search="getactivesubscriptions src/shared/polymarket-follower/mongo/subscription.repository.ts no references">
+      <td><code>getActiveSubscriptions</code><span class="kind">function</span></td>
+      <td><code>src/shared/polymarket-follower/mongo/subscription.repository.ts:10</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function getActiveSubscriptions(): Promise&lt;Subscription[]&gt;</code></td>
+    </tr>
+<tr data-category="No references" data-search="getactivesubscriptions src/shared/social-follower/mongo/subscription.repository.ts no references">
+      <td><code>getActiveSubscriptions</code><span class="kind">function</span></td>
+      <td><code>src/shared/social-follower/mongo/subscription.repository.ts:10</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function getActiveSubscriptions(platform?: SocialPlatform): Promise&lt;SocialSubscription[]&gt;</code></td>
+    </tr>
+<tr data-category="No references" data-search="getactivesubscriptions src/shared/spotify-follower/mongo/subscription.repository.ts no references">
+      <td><code>getActiveSubscriptions</code><span class="kind">function</span></td>
+      <td><code>src/shared/spotify-follower/mongo/subscription.repository.ts:10</code></td>
+      <td><span class="badge high">High</span> No references</td>
+      <td>The declaration has no static references anywhere in the repository.</td>
+      <td><code class="signature">export async function getActiveSubscriptions(): Promise&lt;Subscription[]&gt;</code></td>
+    </tr>
+<tr data-category="Dead call chain" data-search="lattoy src/services/rain-radar/map-utils.ts dead call chain">
+      <td><code>latToY</code><span class="kind">function</span></td>
+      <td><code>src/services/rain-radar/map-utils.ts:12</code></td>
+      <td><span class="badge medium">Medium</span> Dead call chain</td>
+      <td>Reachable only through the rain-radar image chain, which is entered by an unregistered AI tool and a commented-out scheduler.</td>
+      <td><code class="signature">export function latToY(lat: number, zoom: number): number</code></td>
+    </tr>
+<tr data-category="Dead call chain" data-search="lontox src/services/rain-radar/map-utils.ts dead call chain">
+      <td><code>lonToX</code><span class="kind">function</span></td>
+      <td><code>src/services/rain-radar/map-utils.ts:18</code></td>
+      <td><span class="badge medium">Medium</span> Dead call chain</td>
+      <td>Reachable only through the rain-radar image chain, which is entered by an unregistered AI tool and a commented-out scheduler.</td>
+      <td><code class="signature">export function lonToX(lon: number, zoom: number): number</code></td>
+    </tr>
+</tbody></table></div>
 
   <h2>Environment variables not production-reachable</h2>
   <div class="controls">
@@ -1489,12 +1246,6 @@
       <td><span class="badge medium">Medium</span> Dead code only</td>
       <td>Every read occurs in a module or function unreachable from production entry points.</td>
       <td><small>src/services/youtube-v3/api.ts:11 in getChannelIdFromHandle(); src/services/youtube-v3/api.ts:34 in getRecentVideos()</small></td>
-    </tr>
-<tr data-category="No code references" data-search="chatbot_mini_app_url no code references ">
-      <td><code>CHATBOT_MINI_APP_URL</code></td>
-      <td><span class="badge high">High</span> No code references</td>
-      <td>Declared in .env.example but never read by tracked code.</td>
-      <td><span class="muted">None</span></td>
     </tr>
 <tr data-category="No code references" data-search="otel_exporter_otlp_protocol no code references ">
       <td><code>OTEL_EXPORTER_OTLP_PROTOCOL</code></td>
