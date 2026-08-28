@@ -29,15 +29,15 @@
   <div class="cards">
     <div class="card"><strong>955</strong>tracked code files</div>
     <div class="card"><strong>1545</strong>named functions analyzed</div>
-    <div class="card"><strong>156</strong>not production-reachable</div>
+    <div class="card"><strong>133</strong>not production-reachable</div>
     <div class="card"><strong>69</strong>declared env vars</div>
-    <div class="card"><strong>18</strong>unused/dead env vars</div>
+    <div class="card"><strong>17</strong>unused/dead env vars</div>
     <div class="card"><strong>1</strong>unused module folders</div>
   </div>
 
   <h2>Methodology</h2>
   <p>The analyzer resolves TypeScript path aliases and relative imports, starts at <code>src/index.ts</code>, every <code>apps/*/src/main.tsx</code>, and code entry points named in <code>package.json</code>, then traverses the module graph. It builds a symbol-level graph for named functions, arrow functions, methods, getters, and setters. A function passed as a callback counts as reachable. Test files and files under a <code>scripts</code> directory are analyzed independently.</p>
-  <p><strong>Function categories:</strong> No references: 55 · Unreachable module: 60 · Dead call chain: 14 · Test only: 16 · Manual/script only: 11. <strong>Environment categories:</strong> Dead code only: 17 · No code references: 1.</p>
+  <p><strong>Function categories:</strong> No references: 55 · Unreachable module: 39 · Dead call chain: 14 · Test only: 14 · Manual/script only: 11. <strong>Environment categories:</strong> No code references: 11 · Dead code only: 6.</p>
 
 
   <h2>Unused module folders</h2>
@@ -60,7 +60,7 @@
   <div class="controls">
     <input id="function-search" type="search" placeholder="Filter by function, file, or category" aria-label="Filter functions">
     <select id="function-category" aria-label="Function category"><option value="">All categories</option><option>Dead call chain</option><option>Manual/script only</option><option>No references</option><option>Test only</option><option>Unreachable module</option></select>
-    <span id="function-count">156 shown</span>
+    <span id="function-count">133 shown</span>
   </div>
   <div class="table-wrap"><table id="functions"><thead><tr><th>Function</th><th>Source</th><th>Classification</th><th>Why it is listed</th><th>Declaration</th></tr></thead><tbody>
 <tr data-category="Unreachable module" data-search="clamppercent apps/savings-web/src/components/allocationsliders.tsx unreachable module">
@@ -385,27 +385,6 @@
       <td>Reachable from a standalone script, but not from a production runtime entry point.<details><summary>Static references (1)</summary><small>module top level at src/features/worldly/scripts/update-main-file.mjs:47</small></details></td>
       <td><code class="signature">async function main()</code></td>
     </tr>
-<tr data-category="Unreachable module" data-search="provideanthropicclient src/services/anthropic/provide-anthropic-client.ts unreachable module">
-      <td><code>provideAnthropicClient</code><span class="kind">function</span></td>
-      <td><code>src/services/anthropic/provide-anthropic-client.ts:6</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.<details><summary>Static references (2)</summary><small>executeTool() at src/services/anthropic/utils/execute-tool.ts:11; getChatCompletion() at src/services/anthropic/utils/get-chat-completion.ts:11</small></details></td>
-      <td><code class="signature">export function provideAnthropicClient(): Anthropic</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="executetool src/services/anthropic/utils/execute-tool.ts unreachable module">
-      <td><code>executeTool</code><span class="kind">function</span></td>
-      <td><code>src/services/anthropic/utils/execute-tool.ts:10</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function executeTool&lt;T&gt;(tool: Tool, content: string): Promise&lt;T&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getchatcompletion src/services/anthropic/utils/get-chat-completion.ts unreachable module">
-      <td><code>getChatCompletion</code><span class="kind">function</span></td>
-      <td><code>src/services/anthropic/utils/get-chat-completion.ts:10</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getChatCompletion(system: string, content: string): Promise&lt;ChatCompletionResult&gt;</code></td>
-    </tr>
 <tr data-category="No references" data-search="listmessageids src/services/gmail/api.ts no references">
       <td><code>listMessageIds</code><span class="kind">function</span></td>
       <td><code>src/services/gmail/api.ts:83</code></td>
@@ -448,13 +427,6 @@
       <td>Referenced only by functions that are themselves unreachable from production entry points.<details><summary>Static references (1)</summary><small>createConsoleOverride() at src/core/utils/console-sheets-override.ts:15</small></details></td>
       <td><code class="signature">export async function sendLogToSheets(severity: LogSeverity, message: string): Promise&lt;void&gt;</code></td>
     </tr>
-<tr data-category="Unreachable module" data-search="gettranslationtoenglish src/services/google-translate/google-translate.ts unreachable module">
-      <td><code>getTranslationToEnglish</code><span class="kind">function</span></td>
-      <td><code>src/services/google-translate/google-translate.ts:3</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getTranslationToEnglish(text: string): Promise&lt;string&gt;</code></td>
-    </tr>
 <tr data-category="Dead call chain" data-search="gettomorrowhourlyforecast src/services/ims/api.ts dead call chain">
       <td><code>getTomorrowHourlyForecast</code><span class="kind">function</span></td>
       <td><code>src/services/ims/api.ts:69</code></td>
@@ -482,20 +454,6 @@
       <td><span class="badge high">High</span> Test only</td>
       <td>Reachable from tests, but not from a production runtime entry point.<details><summary>Static references (15)</summary><small>module top level at src/services/ims/location-mapping.spec.ts:112; module top level at src/services/ims/location-mapping.spec.ts:113; module top level at src/services/ims/location-mapping.spec.ts:114; module top level at src/services/ims/location-mapping.spec.ts:115; module top level at src/services/ims/location-mapping.spec.ts:116</small></details></td>
       <td><code class="signature">export function isIsraeliCity(cityName: string): boolean</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getcurrentweather src/services/open-weather-map/api.ts unreachable module">
-      <td><code>getCurrentWeather</code><span class="kind">function</span></td>
-      <td><code>src/services/open-weather-map/api.ts:7</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getCurrentWeather(location: string): Promise&lt;WeatherDetails&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getforecastweather src/services/open-weather-map/api.ts unreachable module">
-      <td><code>getForecastWeather</code><span class="kind">function</span></td>
-      <td><code>src/services/open-weather-map/api.ts:36</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getForecastWeather(location: string, date: string): Promise&lt;WeatherForecast&gt;</code></td>
     </tr>
 <tr data-category="No references" data-search="generateembedding src/services/openai/utils/generate-embedding.ts no references">
       <td><code>generateEmbedding</code><span class="kind">function</span></td>
@@ -538,41 +496,6 @@
       <td><span class="badge high">High</span> Unreachable module</td>
       <td>Its module is not imported by any production runtime entry point.<details><summary>Static references (1)</summary><small>getFlightsAboveCountry() at src/shared/ai/tools/flights/utils/get-flights-above-country.ts:73</small></details></td>
       <td><code class="signature">export async function getFlightsInBoundingBox(bounds: BoundingBox): Promise&lt;FlightState[]&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="deletevectorsbyid src/services/pinecone/utils/delete-vectors.ts unreachable module">
-      <td><code>deleteVectorsById</code><span class="kind">function</span></td>
-      <td><code>src/services/pinecone/utils/delete-vectors.ts:6</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function deleteVectorsById(indexName: string, ids: string[]): Promise&lt;void&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="deletevectorsbyfilter src/services/pinecone/utils/delete-vectors.ts unreachable module">
-      <td><code>deleteVectorsByFilter</code><span class="kind">function</span></td>
-      <td><code>src/services/pinecone/utils/delete-vectors.ts:13</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function deleteVectorsByFilter(indexName: string, filter: Record&lt;string, any&gt;): Promise&lt;void&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="providepineconeclient src/services/pinecone/utils/provide-pinecone-client.ts unreachable module">
-      <td><code>providePineconeClient</code><span class="kind">function</span></td>
-      <td><code>src/services/pinecone/utils/provide-pinecone-client.ts:6</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.<details><summary>Static references (4)</summary><small>upsertVector() at src/services/pinecone/utils/upsert-vector.ts:8; queryVectors() at src/services/pinecone/utils/query-vectors.ts:11; deleteVectorsById() at src/services/pinecone/utils/delete-vectors.ts:7; deleteVectorsByFilter() at src/services/pinecone/utils/delete-vectors.ts:14</small></details></td>
-      <td><code class="signature">export function providePineconeClient(): Pinecone</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="queryvectors src/services/pinecone/utils/query-vectors.ts unreachable module">
-      <td><code>queryVectors</code><span class="kind">function</span></td>
-      <td><code>src/services/pinecone/utils/query-vectors.ts:10</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function queryVectors(indexName: string, vector: number[], topK: number = 5, filter?: Record&lt;string, any&gt;): Promise&lt;VectorMatch[]&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="upsertvector src/services/pinecone/utils/upsert-vector.ts unreachable module">
-      <td><code>upsertVector</code><span class="kind">function</span></td>
-      <td><code>src/services/pinecone/utils/upsert-vector.ts:7</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function upsertVector(indexName: string, id: string, embedding: number[], metadata: VectorMetadata): Promise&lt;void&gt;</code></td>
     </tr>
 <tr data-category="Test only" data-search="formatmarketsummary src/services/polymarket/utils/format-market-summary.ts test only">
       <td><code>formatMarketSummary</code><span class="kind">function</span></td>
@@ -742,41 +665,6 @@
       <td>The declaration has no static references anywhere in the repository.</td>
       <td><code class="signature">export function getTikTokApiBaseUrl(): string</code></td>
     </tr>
-<tr data-category="Unreachable module" data-search="phonecall src/services/twilio/phone-call.ts unreachable module">
-      <td><code>phoneCall</code><span class="kind">function</span></td>
-      <td><code>src/services/twilio/phone-call.ts:4</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function phoneCall(from: string = env.TWILIO_PHONE_NUMBER, to: string = env.MY_PHONE_NUMBER, endpoint: string = &#039;caller/voice&#039;): Promise&lt;any&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="provideclient src/services/twilio/provide-client.ts unreachable module">
-      <td><code>provideClient</code><span class="kind">function</span></td>
-      <td><code>src/services/twilio/provide-client.ts:4</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.<details><summary>Static references (2)</summary><small>phoneCall() at src/services/twilio/phone-call.ts:5; sendSMS() at src/services/twilio/send-sms.ts:6</small></details></td>
-      <td><code class="signature">export function provideClient(): Twilio</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="sendsms src/services/twilio/send-sms.ts unreachable module">
-      <td><code>sendSMS</code><span class="kind">function</span></td>
-      <td><code>src/services/twilio/send-sms.ts:5</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export function sendSMS(body: string, from: string = env.TWILIO_PHONE_NUMBER, to: string = env.MY_PHONE_NUMBER): Promise&lt;MessageInstance&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getuserbyusername src/services/twitter/utils/getuserbyusername.ts unreachable module">
-      <td><code>getUserByUsername</code><span class="kind">function</span></td>
-      <td><code>src/services/twitter/utils/getUserByUsername.ts:5</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getUserByUsername(username: string): Promise&lt;TwitterUser | null&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getusertweets src/services/twitter/utils/getusertweets.ts unreachable module">
-      <td><code>getUserTweets</code><span class="kind">function</span></td>
-      <td><code>src/services/twitter/utils/getUserTweets.ts:5</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getUserTweets(userId: string, daysBack = 1): Promise&lt;TwitterTweet[]&gt;</code></td>
-    </tr>
 <tr data-category="Dead call chain" data-search="gettomorrowhourlyforecast src/services/weather-api/api.ts dead call chain">
       <td><code>getTomorrowHourlyForecast</code><span class="kind">function</span></td>
       <td><code>src/services/weather-api/api.ts:64</code></td>
@@ -811,55 +699,6 @@
       <td><span class="badge high">High</span> No references</td>
       <td>The declaration has no static references anywhere in the repository.</td>
       <td><code class="signature">export async function getSpecificHourWeather(location: string, hour: number): Promise&lt;HourlyWeather | null&gt;</code></td>
-    </tr>
-<tr data-category="Test only" data-search="parsestockdetails src/services/yahoo-finance/utils/parse-stock-details.ts test only">
-      <td><code>parseStockDetails</code><span class="kind">function</span></td>
-      <td><code>src/services/yahoo-finance/utils/parse-stock-details.ts:3</code></td>
-      <td><span class="badge high">High</span> Test only</td>
-      <td>Reachable from tests, but not from a production runtime entry point.<details><summary>Static references (20)</summary><small>getStockDetailsBySymbol() at src/services/yahoo-finance/yahoo-finance.ts:10; module top level at src/services/yahoo-finance/utils/parse-stock-details.spec.ts:36; module top level at src/services/yahoo-finance/utils/parse-stock-details.spec.ts:48; module top level at src/services/yahoo-finance/utils/parse-stock-details.spec.ts:60; module top level at src/services/yahoo-finance/utils/parse-stock-details.spec.ts:69</small></details></td>
-      <td><code class="signature">export function parseStockDetails(quote: DataInterface): StockDataSummary</code></td>
-    </tr>
-<tr data-category="Test only" data-search="parsestocksearchresults src/services/yahoo-finance/utils/parse-stock-search-results.ts test only">
-      <td><code>parseStockSearchResults</code><span class="kind">function</span></td>
-      <td><code>src/services/yahoo-finance/utils/parse-stock-search-results.ts:3</code></td>
-      <td><span class="badge high">High</span> Test only</td>
-      <td>Reachable from tests, but not from a production runtime entry point.<details><summary>Static references (21)</summary><small>module top level at src/services/yahoo-finance/utils/parse-stock-search-results.spec.ts:21; module top level at src/services/yahoo-finance/utils/parse-stock-search-results.spec.ts:35; module top level at src/services/yahoo-finance/utils/parse-stock-search-results.spec.ts:42; module top level at src/services/yahoo-finance/utils/parse-stock-search-results.spec.ts:49; module top level at src/services/yahoo-finance/utils/parse-stock-search-results.spec.ts:56</small></details></td>
-      <td><code class="signature">export function parseStockSearchResults(quote: Quote): StockSearchResult</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getstockdetailsbysymbol src/services/yahoo-finance/yahoo-finance.ts unreachable module">
-      <td><code>getStockDetailsBySymbol</code><span class="kind">function</span></td>
-      <td><code>src/services/yahoo-finance/yahoo-finance.ts:5</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getStockDetailsBySymbol(symbol: string): Promise&lt;StockDataSummary&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getchannelidfromhandle src/services/youtube-v3/api.ts unreachable module">
-      <td><code>getChannelIdFromHandle</code><span class="kind">function</span></td>
-      <td><code>src/services/youtube-v3/api.ts:10</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getChannelIdFromHandle(handle: string): Promise&lt;string&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="getrecentvideos src/services/youtube-v3/api.ts unreachable module">
-      <td><code>getRecentVideos</code><span class="kind">function</span></td>
-      <td><code>src/services/youtube-v3/api.ts:33</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function getRecentVideos(channelId: string, limit = 2): Promise&lt;Video[]&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="fetchtranscript src/services/youtube-v3/api.ts unreachable module">
-      <td><code>fetchTranscript</code><span class="kind">function</span></td>
-      <td><code>src/services/youtube-v3/api.ts:55</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export async function fetchTranscript(videoId: string): Promise&lt;string&gt;</code></td>
-    </tr>
-<tr data-category="Unreachable module" data-search="parsetranscriptxml src/services/youtube-v3/utils.ts unreachable module">
-      <td><code>parseTranscriptXml</code><span class="kind">function</span></td>
-      <td><code>src/services/youtube-v3/utils.ts:1</code></td>
-      <td><span class="badge high">High</span> Unreachable module</td>
-      <td>Its module is not imported by any production runtime entry point.</td>
-      <td><code class="signature">export function parseTranscriptXml(xml: string): string</code></td>
     </tr>
 <tr data-category="No references" data-search="getnewvideossince src/services/youtube/api.ts no references">
       <td><code>getNewVideosSince</code><span class="kind">function</span></td>
@@ -1161,37 +1000,32 @@
   <div class="controls">
     <input id="env-search" type="search" placeholder="Filter by variable, file, or category" aria-label="Filter environment variables">
     <select id="env-category" aria-label="Environment category"><option value="">All categories</option><option>Dead code only</option><option>No code references</option></select>
-    <span id="env-count">19 shown</span>
+    <span id="env-count">17 shown</span>
   </div>
-  <div class="table-wrap"><table id="env"><thead><tr><th>Variable</th><th>Classification</th><th>Why it is listed</th><th>Read locations</th></tr></thead><tbody><tr data-category="Dead code only" data-search="anthropic_api_key dead code only src/services/anthropic/provide-anthropic-client.ts:8 in provideanthropicclient()">
+  <div class="table-wrap"><table id="env"><thead><tr><th>Variable</th><th>Classification</th><th>Why it is listed</th><th>Read locations</th></tr></thead><tbody>
+<tr data-category="No code references" data-search="anthropic_api_key no code references ">
       <td><code>ANTHROPIC_API_KEY</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/anthropic/provide-anthropic-client.ts:8 in provideAnthropicClient()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="my_phone_number dead code only src/services/twilio/phone-call.ts:4 in phonecall(); src/services/twilio/send-sms.ts:5 in sendsms()">
+<tr data-category="No code references" data-search="my_phone_number no code references ">
       <td><code>MY_PHONE_NUMBER</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/twilio/phone-call.ts:4 in phoneCall(); src/services/twilio/send-sms.ts:5 in sendSMS()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="openweather_api_key dead code only src/services/open-weather-map/api.ts:8 in getcurrentweather(); src/services/open-weather-map/api.ts:37 in getforecastweather()">
-      <td><code>OPENWEATHER_API_KEY</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/open-weather-map/api.ts:8 in getCurrentWeather(); src/services/open-weather-map/api.ts:37 in getForecastWeather()</small></td>
-    </tr>
-<tr data-category="Dead code only" data-search="pinecone_api_key dead code only src/services/pinecone/utils/provide-pinecone-client.ts:10 in providepineconeclient()">
+<tr data-category="No code references" data-search="pinecone_api_key no code references ">
       <td><code>PINECONE_API_KEY</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/pinecone/utils/provide-pinecone-client.ts:10 in providePineconeClient()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="rapidapi_key dead code only src/services/youtube-v3/api.ts:56 in fetchtranscript()">
+<tr data-category="No code references" data-search="rapidapi_key no code references ">
       <td><code>RAPIDAPI_KEY</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/youtube-v3/api.ts:56 in fetchTranscript()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
 <tr data-category="Dead code only" data-search="sheets_client_email dead code only src/services/google-sheets/api.ts:11 in initgooglesheetsclient()">
       <td><code>SHEETS_CLIENT_EMAIL</code></td>
@@ -1229,48 +1063,49 @@
       <td>Every read occurs in a module or function unreachable from production entry points.</td>
       <td><small>src/services/telegram-client/provide-telegram-client.ts:17 in provideTelegramClient()</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="twilio_account_sid dead code only src/services/twilio/provide-client.ts:5 in provideclient()">
+<tr data-category="No code references" data-search="twilio_account_sid no code references ">
       <td><code>TWILIO_ACCOUNT_SID</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/twilio/provide-client.ts:5 in provideClient()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="twilio_auth_token dead code only src/services/twilio/provide-client.ts:5 in provideclient()">
+<tr data-category="No code references" data-search="twilio_auth_token no code references ">
       <td><code>TWILIO_AUTH_TOKEN</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/twilio/provide-client.ts:5 in provideClient()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="twilio_phone_number dead code only src/services/twilio/phone-call.ts:4 in phonecall(); src/services/twilio/send-sms.ts:5 in sendsms()">
+<tr data-category="No code references" data-search="twilio_phone_number no code references ">
       <td><code>TWILIO_PHONE_NUMBER</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/twilio/phone-call.ts:4 in phoneCall(); src/services/twilio/send-sms.ts:5 in sendSMS()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="twitter_bearer_token dead code only src/services/twitter/utils/getuserbyusername.ts:11 in getuserbyusername(); src/services/twitter/utils/getusertweets.ts:14 in getusertweets()">
+<tr data-category="No code references" data-search="twitter_bearer_token no code references ">
       <td><code>TWITTER_BEARER_TOKEN</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/twitter/utils/getUserByUsername.ts:11 in getUserByUsername(); src/services/twitter/utils/getUserTweets.ts:14 in getUserTweets()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="webhook_proxy_url dead code only src/services/twilio/phone-call.ts:6 in phonecall()">
+<tr data-category="No code references" data-search="webhook_proxy_url no code references ">
       <td><code>WEBHOOK_PROXY_URL</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/twilio/phone-call.ts:6 in phoneCall()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
-<tr data-category="Dead code only" data-search="youtube_api_key dead code only src/services/youtube-v3/api.ts:11 in getchannelidfromhandle(); src/services/youtube-v3/api.ts:34 in getrecentvideos()">
+<tr data-category="No code references" data-search="youtube_api_key no code references ">
       <td><code>YOUTUBE_API_KEY</code></td>
-      <td><span class="badge medium">Medium</span> Dead code only</td>
-      <td>Every read occurs in a module or function unreachable from production entry points.</td>
-      <td><small>src/services/youtube-v3/api.ts:11 in getChannelIdFromHandle(); src/services/youtube-v3/api.ts:34 in getRecentVideos()</small></td>
+      <td><span class="badge high">High</span> No code references</td>
+      <td>Declared in .env.example but never read by tracked code.</td>
+      <td><small>&mdash;</small></td>
     </tr>
 <tr data-category="No code references" data-search="otel_exporter_otlp_protocol no code references ">
       <td><code>OTEL_EXPORTER_OTLP_PROTOCOL</code></td>
       <td><span class="badge high">High</span> No code references</td>
       <td>Declared in .env.example but never read by tracked code.</td>
       <td><span class="muted">None</span></td>
-    </tr></tbody></table></div>
+    </tr>
+</tbody></table></div>
 
   <h2>Read in code but missing from .env.example</h2>
   <ul><li><code>EVAL_CONCURRENCY</code> — test/eval/chatbot/chatbot-routing.eval.ts:11</li>
