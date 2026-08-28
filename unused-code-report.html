@@ -32,7 +32,7 @@
     <div class="card"><strong>156</strong>not production-reachable</div>
     <div class="card"><strong>69</strong>declared env vars</div>
     <div class="card"><strong>18</strong>unused/dead env vars</div>
-    <div class="card"><strong>2</strong>unused module folders</div>
+    <div class="card"><strong>1</strong>unused module folders</div>
   </div>
 
   <h2>Methodology</h2>
@@ -42,18 +42,12 @@
 
   <h2>Unused module folders</h2>
   <p>Whole directories under <code>src/services/*</code> whose public barrel (<code>index.ts</code>) is never imported from anywhere outside the folder itself — no production code, scheduler, tool, script, or app entry references them. Each is a self-contained integration that can be removed as a unit. As with the rest of this report, confirm there is no dynamic/string-based or out-of-repo consumer before deleting.</p>
-  <p class="muted">Seven of the originally-flagged folders — <code>anthropic</code>, <code>google-translate</code>, <code>pinecone</code>, <code>twilio</code>, <code>twitter</code>, <code>yahoo-finance</code>, and <code>youtube-v3</code> — were deleted in a follow-up change; the two below remain in the tree.</p>
+  <p class="muted">Eight of the originally-flagged folders — <code>anthropic</code>, <code>google-translate</code>, <code>open-weather-map</code>, <code>pinecone</code>, <code>twilio</code>, <code>twitter</code>, <code>yahoo-finance</code>, and <code>youtube-v3</code> — have since been deleted in follow-up changes; the one below remains in the tree.</p>
   <div class="controls">
     <input id="folder-search" type="search" placeholder="Filter by folder or purpose" aria-label="Filter folders">
-    <span id="folder-count">2 shown</span>
+    <span id="folder-count">1 shown</span>
   </div>
   <div class="table-wrap"><table id="folders"><thead><tr><th>Folder</th><th>Files</th><th>Purpose</th><th>Why it is listed</th></tr></thead><tbody>
-<tr data-search="@services/open-weather-map openweathermap provider. no production import; weather is served by other providers.">
-      <td><code>@services/open-weather-map</code><span class="kind">module folder</span></td>
-      <td>3</td>
-      <td>OpenWeatherMap provider.</td>
-      <td><span class="badge high">High</span> No production import; weather is served by other providers.</td>
-    </tr>
 <tr data-search="@services/telegram-client mtproto user-mode client (message history). no production import; includes a manual session script only.">
       <td><code>@services/telegram-client</code><span class="kind">module folder</span></td>
       <td>9</td>
