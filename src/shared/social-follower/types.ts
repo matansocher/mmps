@@ -10,6 +10,7 @@ export type SocialSubscription = {
   readonly chatId: number;
   readonly lastSeenId: string | null; // newest post id seen (twitter/tiktok ids are chronological)
   readonly lastSeenAt: Date | null; // newest post timestamp seen (youtube - video ids are not chronological)
+  readonly secUid?: string | null; // tiktok only: persistent user id, cached so we don't re-resolve it every run
   readonly isActive: boolean;
   readonly createdAt: Date;
   readonly updatedAt: Date;

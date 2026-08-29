@@ -1,9 +1,9 @@
 import { getErrorMessage, Logger, sleep } from '@core/utils';
 import { fetchChannelPosts as fetchTelegramChannelPosts } from '@services/telegram-scraper';
-import { getUserVideos } from '@services/tiktok';
+import { getUserSecUid, getUserVideosBySecUid } from '@services/tiktok';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
 import { getVideosFromRSS } from '@services/youtube';
-import { createPendingPosts, getSubscriptionsGroupedByChatId, updateLastSeen } from '@shared/social-follower';
+import { createPendingPosts, getSubscriptionsGroupedByChatId, updateLastSeen, updateSecUid } from '@shared/social-follower';
 import type { SocialPlatform, SocialSubscription, UpdateLastSeenData } from '@shared/social-follower';
 
 const logger = new Logger('chatbot:scheduler:social-media-collect');
@@ -80,8 +80,16 @@ async function getNewTwitterPosts({ username, lastSeenId }: SocialSubscription):
   };
 }
 
-async function getNewTikTokPosts({ username, lastSeenId }: SocialSubscription): Promise<CollectResult> {
-  const { videos } = await getUserVideos(username, 5);
+async function getNewTikTokPosts({ username, chatId, lastSeenId, secUid }: SocialSubscription): Promise<CollectResult> {
+  // secUid is a stable per-user id; resolve it once, then cache it on the subscription so a
+  // flaky /api/user/info response can't break collection for a user we've already resolved.
+  let resolvedSecUid = secUid;
+  if (!resolvedSecUid) {
+    resolvedSecUid = await getUserSecUid(username);
+    await updateSecUid(username, chatId, resolvedSecUid);
+  }
+
+  const { videos } = await getUserVideosBySecUid(resolvedSecUid, 5);
   if (!videos.length) {
     return { newPosts: [], lastSeen: null };
   }
