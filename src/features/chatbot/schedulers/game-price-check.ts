@@ -36,7 +36,7 @@ export function buildPriceDropDigest(drops: readonly PriceDrop[]): string {
 
 async function findDrop(watch: GamePriceWatch): Promise<PriceDrop | null> {
   try {
-    const game = await getGamePrice(watch.conceptId);
+    const game = await getGamePrice(watch.conceptId, { productId: watch.productId });
     if (!game) {
       return null;
     }

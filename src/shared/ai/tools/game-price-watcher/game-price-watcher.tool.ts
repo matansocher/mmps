@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage } from '@core/utils';
 import { searchPs5Games } from '@services/igdb';
-import { getGamePrice, parsePsStoreUrl, resolveConceptIdFromProduct } from '@services/playstation-store';
+import { getGamePrice, getGamePriceFromProduct, parsePsStoreUrl } from '@services/playstation-store';
+import type { PsStoreGame } from '@services/playstation-store';
 import { calculateDiscountPercent, createWatch, formatPrice, getActiveWatchesByChatId, getWatch, removeWatch } from '@shared/game-price-watcher';
 
 const chatId = MY_USER_ID;
@@ -14,18 +15,17 @@ const schema = z.object({
   url: z.string().optional().describe('Full PlayStation Store game page URL (a /concept/ or /product/ link). Preferred for add, since it identifies the game exactly.'),
 });
 
-// Resolves whatever the user gave us into a PlayStation Store concept id, which is the stable key.
-async function resolveConceptId(gameName?: string, url?: string): Promise<{ conceptId: string } | { error: string }> {
+// Resolves whatever the user gave us into the game plus its current standalone price. A product link
+// identifies one exact edition, so its price is read directly — this is what lets a pre-order or a
+// non-default edition be watched, and avoids franchise umbrella concepts resolving to the wrong title.
+async function resolveGame(gameName?: string, url?: string): Promise<{ game: PsStoreGame } | { error: string }> {
   if (url) {
     const parsed = parsePsStoreUrl(url);
     if (!parsed) {
       return { error: 'That does not look like a PlayStation Store game link. Open the game page on store.playstation.com and copy the URL.' };
     }
-    if (parsed.kind === 'concept') {
-      return { conceptId: parsed.id };
-    }
-    const conceptId = await resolveConceptIdFromProduct(parsed.id);
-    return conceptId ? { conceptId } : { error: 'Could not resolve that PlayStation Store product link to a game page.' };
+    const game = parsed.kind === 'product' ? await getGamePriceFromProduct(parsed.id) : await getGamePrice(parsed.id);
+    return game ? { game } : { error: 'That game has no standalone purchase price right now, so there is no baseline to watch. It may be subscription only.' };
   }
 
   if (!gameName) {
@@ -38,48 +38,48 @@ async function resolveConceptId(gameName?: string, url?: string): Promise<{ conc
   }
 
   if (match.psStoreProductId) {
-    const conceptId = await resolveConceptIdFromProduct(match.psStoreProductId);
-    if (conceptId) {
-      return { conceptId };
+    const game = await getGamePriceFromProduct(match.psStoreProductId);
+    if (game) {
+      return { game };
     }
   }
 
   // IGDB has no product id mapping for every title, but often still lists the store page url.
-  // Parsing it recovers the concept id without asking the user to paste the link themselves.
+  // Parsing it recovers the game without asking the user to paste the link themselves.
   const parsed = match.psStoreUrl ? parsePsStoreUrl(match.psStoreUrl) : null;
-  if (parsed?.kind === 'concept') {
-    return { conceptId: parsed.id };
-  }
   if (parsed?.kind === 'product') {
-    const conceptId = await resolveConceptIdFromProduct(parsed.id);
-    if (conceptId) {
-      return { conceptId };
+    const game = await getGamePriceFromProduct(parsed.id);
+    if (game) {
+      return { game };
+    }
+  }
+  if (parsed?.kind === 'concept') {
+    const game = await getGamePrice(parsed.id);
+    if (game) {
+      return { game };
     }
   }
 
-  return { error: `Found ${match.name}, but there is no PlayStation Store listing linked to it. Paste the store page URL instead.` };
+  return { error: `Found ${match.name}, but there is no PlayStation Store price listed for it right now. Paste the store page URL instead.` };
 }
 
 async function handleAdd(gameName?: string, url?: string): Promise<string> {
-  const resolved = await resolveConceptId(gameName, url);
+  const resolved = await resolveGame(gameName, url);
   if ('error' in resolved) {
     return JSON.stringify({ success: false, error: resolved.error });
   }
 
-  const existing = await getWatch(chatId, resolved.conceptId);
+  const { game } = resolved;
+  const existing = await getWatch(chatId, game.conceptId);
   if (existing) {
     return JSON.stringify({ success: false, error: `Already watching ${existing.name}, currently at ${formatPrice(existing.lowestPrice, existing.currency)}.` });
-  }
-
-  const game = await getGamePrice(resolved.conceptId);
-  if (!game) {
-    return JSON.stringify({ success: false, error: 'That game has no standalone purchase price right now, so there is no baseline to watch. It may be subscription only or not yet released.' });
   }
 
   const { price } = game;
   await createWatch({
     chatId,
     conceptId: game.conceptId,
+    productId: game.productId,
     name: game.name,
     url: game.url,
     coverUrl: game.coverUrl,
