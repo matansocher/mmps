@@ -13,8 +13,12 @@ import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@sh
 import { agent } from './agent';
 import { AiService, createAgentService } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
-import { ChatbotResponse, StructuredChatbotResponse } from './types';
+import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
+
+function isProcessMessageOptions(value: unknown): value is ProcessMessageOptions {
+  return typeof value === 'object' && value !== null && !('_def' in value);
+}
 
 export class ChatbotService {
   private readonly logger = new Logger('chatbot:service');
@@ -50,9 +54,16 @@ export class ChatbotService {
     this.aiService = createAgentService(agent(), { model: this.model, checkpointer, middleware: [summarization], toolCallbackOptions });
   }
 
-  async processMessage(message: string, chatId: number): Promise<ChatbotResponse>;
-  async processMessage<T extends z.ZodTypeAny>(message: string, chatId: number, responseSchema: T): Promise<StructuredChatbotResponse<T>>;
-  async processMessage<T extends z.ZodTypeAny>(message: string, chatId: number, responseSchema?: T): Promise<ChatbotResponse | StructuredChatbotResponse<T>> {
+  async processMessage(message: string, chatId: number, options?: ProcessMessageOptions): Promise<ChatbotResponse>;
+  async processMessage<T extends z.ZodTypeAny>(message: string, chatId: number, responseSchema: T, options?: ProcessMessageOptions): Promise<StructuredChatbotResponse<T>>;
+  async processMessage<T extends z.ZodTypeAny>(
+    message: string,
+    chatId: number,
+    responseSchemaOrOptions?: T | ProcessMessageOptions,
+    maybeOptions?: ProcessMessageOptions,
+  ): Promise<ChatbotResponse | StructuredChatbotResponse<T>> {
+    const responseSchema = isProcessMessageOptions(responseSchemaOrOptions) ? undefined : responseSchemaOrOptions;
+    const options = isProcessMessageOptions(responseSchemaOrOptions) ? responseSchemaOrOptions : maybeOptions;
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
@@ -63,7 +74,7 @@ export class ChatbotService {
       // Recorded in `finally` so the turn's usage is captured even if a later step throws, and so
       // the follow-up structured-output call below is billed as part of the same turn.
       try {
-        const result = await this.aiService.invoke(contextualMessage, { threadId, callbacks: usageHandler ? [usageHandler] : undefined });
+        const result = await this.aiService.invoke(contextualMessage, { threadId, images: options?.images, callbacks: usageHandler ? [usageHandler] : undefined });
 
         const agentResponse = formatAgentResponse(result);
 

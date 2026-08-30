@@ -8,7 +8,15 @@ function createMessage(message: string, opts: Partial<InvokeOptions> = {}): Mess
   if (opts.system) {
     messages.push(new SystemMessage(opts.system));
   }
-  messages.push(new HumanMessage(message));
+  if (opts.images?.length) {
+    messages.push(
+      new HumanMessage({
+        content: [{ type: 'text', text: message }, ...opts.images.map((url) => ({ type: 'image_url', image_url: { url } }))],
+      }),
+    );
+  } else {
+    messages.push(new HumanMessage(message));
+  }
   return { messages };
 }
 

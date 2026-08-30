@@ -42,5 +42,3 @@ Rules:
 <messages>
 {messages}
 </messages>`;
-
-export const IMAGE_ANALYSIS_PROMPT = `You are an image analysis assistant. Analyze the image and provide a detailed description of its content, including objects, people, activities, and any relevant context. Be as descriptive and specific as possible in your analysis.`;
