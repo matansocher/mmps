@@ -1,5 +1,21 @@
 import { BaseMessage } from '@langchain/core/messages';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { ChatbotResponse, ToolResult } from './types';
+
+const MIME_BY_EXTENSION: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+};
+
+export async function fileToDataUrl(filePath: string): Promise<string> {
+  const buffer = await fs.readFile(filePath);
+  const mimeType = MIME_BY_EXTENSION[path.extname(filePath).toLowerCase()] ?? 'image/jpeg';
+  return `data:${mimeType};base64,${buffer.toString('base64')}`;
+}
 
 export function formatAgentResponse(result: any): ChatbotResponse {
   const messages = result.messages as BaseMessage[];

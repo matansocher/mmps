@@ -37,6 +37,7 @@ export type InvokeOptions = {
   system?: string;
   callbacks?: any[];
   recursionLimit?: number;
+  images?: readonly string[]; // Base64 data URLs or public URLs sent as multimodal image blocks
 };
 
 export type ChatbotResponse = {
@@ -48,6 +49,10 @@ export type ChatbotResponse = {
 export type StructuredChatbotResponse<T extends z.ZodTypeAny> = {
   readonly response: ChatbotResponse;
   readonly structured: z.infer<T>;
+};
+
+export type ProcessMessageOptions = {
+  readonly images?: readonly string[]; // Base64 data URLs or public URLs passed to the model as image blocks
 };
 
 export type ToolResult = {
