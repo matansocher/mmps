@@ -11,6 +11,7 @@ export type PsStorePrice = {
 
 export type PsStoreGame = {
   readonly conceptId: string;
+  readonly productId?: string; // the exact edition the price was read from, when known
   readonly name: string;
   readonly url: string;
   readonly coverUrl: string | null;

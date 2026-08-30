@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PsStoreCache, PsStorePriceResponse } from '../types';
-import { collectPriceObjects, extractConceptId, extractCoverUrl, extractDefaultProductId, extractEmbeddedCaches, extractGameName, selectStandalonePrice } from './extract-price';
+import { collectPriceObjects, extractConceptId, extractCoverUrl, extractDefaultProductId, extractEmbeddedCaches, extractGameName, extractProductName, selectStandalonePrice } from './extract-price';
 
 function buildEnvScript(cache: PsStoreCache): string {
   return `<script id="env:abc123" type="application/json">${JSON.stringify({ args: {}, overrides: {}, cache })}</script>`;
@@ -143,6 +143,20 @@ describe('extractGameName()', () => {
 
   it('should return null when neither is present', () => {
     expect(extractGameName([{} as PsStoreCache])).toBeNull();
+  });
+});
+
+describe('extractProductName()', () => {
+  it('should read the name of the exact edition rather than the franchise concept', () => {
+    const cache = {
+      'Concept:10001130': { __typename: 'Concept', id: '10001130', name: 'Call of Duty®' },
+      'Product:EP0002-PPSA07950_00-CODMW4STANDARD01': { __typename: 'Product', name: 'Call of Duty®: Modern Warfare® 4' },
+    } as unknown as PsStoreCache;
+    expect(extractProductName([cache], 'EP0002-PPSA07950_00-CODMW4STANDARD01')).toEqual('Call of Duty®: Modern Warfare® 4');
+  });
+
+  it('should return null when the product is not on the page', () => {
+    expect(extractProductName([buildCache({})], 'EP0002-PPSA07950_00-UNKNOWN0000000001')).toBeNull();
   });
 });
 

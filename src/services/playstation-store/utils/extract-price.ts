@@ -145,6 +145,13 @@ export function extractGameName(caches: readonly PsStoreCache[]): string | null 
   return product ? product.entry.name : null;
 }
 
+// Reads the name of one exact edition. A concept page names the franchise ("Call of Duty®"), which is
+// wrong for a watch on a single edition, so the specific product's own name is preferred when known.
+export function extractProductName(caches: readonly PsStoreCache[], productId: string): string | null {
+  const product = findEntry(caches, (entry, key) => key === `${PRODUCT_REF_PREFIX}${productId}` && entry.__typename === 'Product' && typeof entry.name === 'string');
+  return product ? (product.entry.name as string) : null;
+}
+
 // Product pages still reference their concept through the cache key, which lets a pasted
 // product URL be normalised to the stable concept id.
 export function extractConceptId(caches: readonly PsStoreCache[]): string | null {

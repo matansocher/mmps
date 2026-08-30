@@ -5,6 +5,7 @@ export type GamePriceWatch = {
   readonly _id?: ObjectId;
   readonly chatId: number;
   readonly conceptId: string; // PlayStation Store concept id — stable across storefronts
+  readonly productId?: string; // the exact edition to re-check, when the watch was added from a product link
   readonly name: string;
   readonly url: string;
   readonly coverUrl: string | null;
