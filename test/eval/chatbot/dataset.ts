@@ -2,7 +2,9 @@ import type { EvalCase, ToolFixture } from './types';
 
 // English golden cases mined from real chatbot conversations. Cases cover every registered
 // tool, key actions, ID-dependent workflows, critical arguments, multi-turn follow-ups,
-// confirmation behavior, and no-tool guards.
+// confirmation behavior, and no-tool guards. Three explicit categories are represented:
+// single-domain (one tool), cross-domain (a message that must span two or more tools), and
+// ambiguous/underspecified (the agent should clarify instead of guessing a wrong tool).
 
 function reminderFixture(id: string, message: string): ToolFixture {
   return (args) => {
@@ -223,5 +225,136 @@ export const dataset: readonly EvalCase[] = [
       ],
     },
     fixtures: { gmail: gmailFixture },
+  },
+
+  // ---------- cross-domain (a single request that must span two or more tools) ----------
+  {
+    id: 'cross-sports-calendar-01',
+    category: 'cross-domain',
+    input: 'add the next Real Madrid match to my calendar',
+    expect: {
+      tool: 'calendar',
+      sequence: [
+        { tool: ['competition_matches', 'match_summary', 'top_matches_for_prediction'] },
+        { tool: 'calendar', action: 'create' },
+      ],
+    },
+    fixtures: {
+      competition_matches: '**Upcoming matches**\nReal Madrid vs Barcelona — 2026-07-20 22:00',
+      match_summary: '**Real Madrid vs Barcelona**\n2026-07-20 22:00',
+      top_matches_for_prediction: '**Top matches**\nReal Madrid vs Barcelona — 2026-07-20 22:00',
+    },
+    note: 'sports lookup -> calendar create',
+  },
+  {
+    id: 'cross-weather-calendar-01',
+    category: 'cross-domain',
+    input: 'if it will be sunny in Tel Aviv on December 25, add a beach day event to my calendar that morning',
+    expect: {
+      tool: 'calendar',
+      sequence: [
+        { tool: 'weather', action: 'forecast', args: { date: /-12-25/ } },
+        { tool: 'calendar', action: 'create' },
+      ],
+    },
+    fixtures: { weather: 'Tel Aviv on 2026-12-25: Sunny, 24°C, clear skies.', calendar: calendarFixture },
+    note: 'weather forecast -> conditional calendar create',
+  },
+  {
+    id: 'cross-gmail-reminder-01',
+    category: 'cross-domain',
+    input: "check my unread email from Shani and set a reminder to reply tomorrow at 9am",
+    expect: {
+      tool: ['gmail', 'smart_reminders'],
+      sequence: [
+        { tool: 'gmail', action: 'list' },
+        { tool: 'smart_reminders', action: 'create', args: { dueDate: /T09:00/ } },
+      ],
+    },
+    fixtures: { gmail: gmailFixture },
+    note: 'email lookup -> reminder create',
+  },
+  {
+    id: 'cross-weather-reminder-01',
+    category: 'cross-domain',
+    input: "what's the weather in Kfar Saba tomorrow, and remind me to take an umbrella at 8am if it rains",
+    expect: {
+      tool: ['weather', 'smart_reminders'],
+      sequence: [
+        { tool: 'weather' },
+        { tool: 'smart_reminders', action: 'create', args: { dueDate: /T08:00/ } },
+      ],
+    },
+    fixtures: { weather: 'Kfar Saba tomorrow: Rain likely, 60% chance, 18°C.' },
+    note: 'weather lookup -> conditional reminder create',
+  },
+  {
+    id: 'cross-calendar-contacts-01',
+    category: 'cross-domain',
+    input: 'am i free tomorrow evening, and if so who should i call?',
+    expect: {
+      tool: ['calendar', 'contacts', 'meetups'],
+      sequence: [{ tool: 'calendar', action: ['list', 'upcoming'] }, { tool: ['contacts', 'meetups'], action: 'suggest' }],
+    },
+    fixtures: { calendar: calendarFixture },
+    note: 'availability check -> contact suggestion',
+  },
+  {
+    id: 'cross-sports-predict-02',
+    category: 'cross-domain',
+    input: "give me a prediction for this weekend's biggest football match",
+    expect: {
+      tool: 'match_prediction_data',
+      sequence: [{ tool: 'top_matches_for_prediction' }, { tool: 'match_prediction_data' }],
+    },
+    fixtures: {
+      top_matches_for_prediction: '**Top matches**\nArsenal vs Chelsea (matchId: 555) — 2026-07-19 19:00',
+      match_prediction_data: '**Arsenal vs Chelsea**\nOdds: Arsenal 45%, Draw 28%, Chelsea 27%.',
+    },
+    note: 'find top match -> fetch its prediction data',
+  },
+
+  // ---------- ambiguous / underspecified (should clarify, not guess a wrong tool) ----------
+  {
+    id: 'ambiguous-remind-notime',
+    category: 'ambiguous',
+    input: 'can you remind me?',
+    expect: { tool: null, response: /(remind you (of|about) what|what.*remind|when|what would you like)/i },
+    note: 'no subject or time -> ask for clarification, do not create a reminder',
+  },
+  {
+    id: 'ambiguous-book-it',
+    category: 'ambiguous',
+    input: 'book it for me',
+    expect: { tool: null, response: /(book what|what.*book|which|more (detail|info)|clarif|not sure)/i },
+    note: 'no referent -> clarify what to book',
+  },
+  {
+    id: 'ambiguous-whats-happening',
+    category: 'ambiguous',
+    input: "what's happening?",
+    expect: { tool: null, response: /(with what|which|what.*mean|be more specific|regarding|not sure|clarif)/i },
+    note: 'vague small talk -> should not fire a tool blindly',
+  },
+  {
+    id: 'ambiguous-send-it',
+    category: 'ambiguous',
+    input: 'send it',
+    expect: { tool: null, response: /(send what|what.*send|to whom|which|more (detail|info)|clarif)/i },
+    note: 'no referent and sending needs confirmation anyway',
+  },
+  {
+    id: 'ambiguous-the-game',
+    category: 'ambiguous',
+    input: 'what about the game?',
+    expect: { tool: null, response: /(which game|what game|which (team|match)|be more specific|clarif)/i },
+    note: 'no team/competition specified -> clarify before calling a sports tool',
+  },
+  {
+    id: 'ambiguous-schedule-something',
+    category: 'ambiguous',
+    input: 'schedule something for later',
+    expect: { tool: null, response: /(schedule what|what.*schedule|when|what time|which|more (detail|info)|clarif)/i },
+    note: 'no event details -> clarify before creating a calendar event',
   },
 ];

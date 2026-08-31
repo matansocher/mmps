@@ -34,22 +34,32 @@ export function formatAgentResponse(result: any): ChatbotResponse {
 function extractToolResults(messages: BaseMessage[]): ToolResult[] {
   const toolResults: ToolResult[] = [];
 
-  for (let i = 0; i < messages.length; i++) {
-    const message = messages[i] as any;
-    if (message.tool_calls || message.additional_kwargs?.tool_calls || message.kwargs?.tool_calls) {
-      const toolCalls = message.tool_calls || message.additional_kwargs.tool_calls || message.kwargs.tool_calls;
-      for (const toolCall of toolCalls) {
-        const toolName = toolCall.name;
+  // Index ToolMessage results by their tool_call_id. The model emits parallel tool calls,
+  // so a single AIMessage can carry several tool_calls followed by several ToolMessages;
+  // positional pairing would attach the wrong result to every call after the first.
+  const resultsByToolCallId = new Map<string, unknown>();
+  for (const message of messages) {
+    const toolCallId = (message as any).tool_call_id;
+    if (toolCallId && message.content != null) {
+      resultsByToolCallId.set(toolCallId, message.content);
+    }
+  }
 
-        const nextMessage = messages[i + 1];
-        if (nextMessage && nextMessage.content) {
-          try {
-            const toolData = JSON.parse(nextMessage.content as string);
-            toolResults.push({ toolName, data: toolData, error: undefined });
-          } catch {
-            toolResults.push({ toolName, data: nextMessage.content, error: undefined });
-          }
-        }
+  for (const message of messages) {
+    const toolCalls = (message as any).tool_calls || (message as any).additional_kwargs?.tool_calls || (message as any).kwargs?.tool_calls;
+    if (!toolCalls) continue;
+
+    for (const toolCall of toolCalls) {
+      const toolName = toolCall.name || toolCall.function?.name;
+      const toolCallId = toolCall.id ?? toolCall.tool_call_id;
+      if (toolCallId == null || !resultsByToolCallId.has(toolCallId)) continue;
+
+      const content = resultsByToolCallId.get(toolCallId);
+      try {
+        const toolData = JSON.parse(content as string);
+        toolResults.push({ toolName, data: toolData, error: undefined });
+      } catch {
+        toolResults.push({ toolName, data: content, error: undefined });
       }
     }
   }
