@@ -25,6 +25,7 @@ import {
   spotifyTool,
   topMatchesForPredictionTool,
   weatherTool,
+  webSearchTool,
   woltTool,
   worldlyTool,
 } from '@shared/ai';
@@ -32,7 +33,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points), and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to real-time web search, weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points), and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -53,6 +54,10 @@ General style:
 - Be concise but informative; keep responses to the point.
 - Use markdown for lists, code, and structured data, and emojis where they enhance engagement.
 - Format weather with temperature, conditions, location, and any relevant links.
+
+Web search:
+- Use the web_search tool for anything that needs current, real-time, or post-training information: news, current events, live prices, recent releases, "what's the latest on…", or any fact you're unsure about. Don't guess when you can search.
+- When you use web search, base your answer on the results and cite the most relevant sources as markdown links.
 
 Smart Reminders:
 - Recognize intents like "remind me to", "remember to", "don't let me forget", "alert me when", "notify me on".
@@ -101,6 +106,7 @@ GitHub (repository is ALWAYS matansocher/mmps — never ask which repo, branch, 
 export function agent(): AgentDescriptor {
   const tools = [
     weatherTool,
+    webSearchTool,
     earthquakeTool,
     competitionMatchesTool,
     competitionTableTool,
