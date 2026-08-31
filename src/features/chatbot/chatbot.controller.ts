@@ -40,7 +40,6 @@ export class ChatbotController {
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));
-    this.bot.command('exercise', (ctx) => this.exerciseHandler(ctx));
     this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
     this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
@@ -258,10 +257,6 @@ export class ChatbotController {
       this.logger.error(`Error handling birthday callback: ${getErrorMessage(err)}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
     }
-  }
-
-  private async exerciseHandler(ctx: Context): Promise<void> {
-    await this.runAgentReply(ctx, 'I exercised', '🔥');
   }
 
   private async messageHandler(ctx: Context): Promise<void> {
