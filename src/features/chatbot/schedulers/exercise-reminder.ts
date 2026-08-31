@@ -19,7 +19,7 @@ export async function sendExerciseReminder(bot: Bot, chatbotService: ChatbotServ
     Do NOT mention my current streak or the total number of exercises I've done all time.
     If a meme URL is available, send it along with a short motivational message.`;
 
-  const response = await chatbotService.processMessage(prompt, MY_USER_ID);
+  const response = await chatbotService.processMessage(prompt, MY_USER_ID, { ephemeral: { marker: '[scheduled: exercise reminder]' } });
 
   if (response?.message) {
     await bot.api.sendMessage(MY_USER_ID, response.message, { parse_mode: 'Markdown', reply_markup: buildExerciseKeyboard() });

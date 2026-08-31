@@ -15,7 +15,7 @@ function createMessage(message: string, opts: Partial<InvokeOptions> = {}): Mess
       }),
     );
   } else {
-    messages.push(new HumanMessage(message));
+    messages.push(new HumanMessage({ id: opts.humanMessageId, content: message }));
   }
   return { messages };
 }
@@ -64,5 +64,14 @@ export class AiService {
 
   async getState(opts: Partial<InvokeOptions> = {}) {
     return this.agent.getState(this.createOptions(opts));
+  }
+
+  // Swaps a previously-persisted human turn for a short marker in the durable thread, so a verbose
+  // scheduler prompt does not consume the summarization budget or get baked into the Mongo summary.
+  // The turn's result (the AI message) stays in the thread and remains replyable ("try again").
+  // Re-using the same message id upserts in place, preserving chronological order.
+  async replaceHumanMessage(humanMessageId: string, marker: string, opts: Partial<InvokeOptions> = {}): Promise<void> {
+    const config = this.createOptions(opts);
+    await this.agent.updateState(config, { messages: [new HumanMessage({ id: humanMessageId, content: marker })] });
   }
 }

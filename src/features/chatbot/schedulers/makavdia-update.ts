@@ -26,7 +26,9 @@ export async function makavdiaUpdate(bot: Bot, chatbotService: ChatbotService): 
         - Mention the opponent team, final score, and game outcome (win/loss)
         - Include key statistics: points, rebounds, assists, shooting percentages`;
 
-    const { response, structured } = await chatbotService.processMessage(prompt, MY_USER_ID, makavdiaResponseSchema);
+    const { response, structured } = await chatbotService.processMessage(prompt, MY_USER_ID, makavdiaResponseSchema, {
+      ephemeral: { marker: '[scheduled: makavdia daily update]' },
+    });
 
     if (structured.hasGame && response.message) {
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });

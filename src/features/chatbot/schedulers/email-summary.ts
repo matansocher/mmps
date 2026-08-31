@@ -34,7 +34,7 @@ Use the gmail tool with action "list" to fetch my 10 most recent unread emails (
 - End with an encouraging message
 - Use Markdown formatting for readability`;
 
-    const response = await chatbotService.processMessage(prompt, MY_USER_ID);
+    const response = await chatbotService.processMessage(prompt, MY_USER_ID, { ephemeral: { marker: '[scheduled: nightly email summary]' } });
 
     if (response?.message) {
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });
