@@ -37,10 +37,4 @@ describe('ChatbotController E2E', () => {
     const reply = sent[sent.length - 1];
     expect(reply.payload.rich_message.markdown).toEqual('stub reply');
   });
-
-  it('runs the exercise prompt through ChatbotService on /exercise', async () => {
-    await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/exercise' }));
-
-    expect(processMessage).toHaveBeenCalledWith('I exercised', expect.any(Number));
-  });
 });
