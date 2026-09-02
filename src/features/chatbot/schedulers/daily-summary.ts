@@ -11,6 +11,7 @@ import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
 import { CHATBOT_CONFIG } from '../chatbot.config';
+import { buildSummaryRemindersKeyboard } from './summary-reminder-actions';
 import { formatEventTime } from './utils/events';
 
 const logger = new Logger('chatbot:scheduler:daily-summary');
@@ -80,14 +81,9 @@ export async function dailySummary(bot: Bot): Promise<void> {
     ]);
 
     // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
-    const sections = [
-      buildWeatherTable(forecast?.hourly ?? []),
-      buildCalendarTable(events.filter((event) => !isBirthday(event))),
-      buildBirthdaysSection(events),
-      buildRemindersSection(reminders),
-    ];
+    const sections = [buildWeatherTable(forecast?.hourly ?? []), buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events), buildRemindersSection(reminders)];
 
-    await sendRichMessage(bot, MY_USER_ID, sections.filter(Boolean).join('\n\n'));
+    await sendRichMessage(bot, MY_USER_ID, sections.filter(Boolean).join('\n\n'), { reply_markup: buildSummaryRemindersKeyboard(reminders) });
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
     logger.error(`Failed to generate/send daily summary: ${getErrorMessage(err)}`);
