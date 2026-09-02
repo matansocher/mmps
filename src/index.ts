@@ -11,6 +11,7 @@ import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
+import { initMindloop } from '@features/mindloop';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
@@ -36,6 +37,12 @@ async function main() {
     await initSavings(app);
   } catch (err) {
     logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
+  }
+
+  try {
+    await initMindloop(app);
+  } catch (err) {
+    logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
   }
 
   registerPortfolioApiRoutes(app);

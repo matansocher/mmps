@@ -17,8 +17,10 @@
   "scripts": {
     "build": "tsc && tsc-alias --resolve-full-paths && npm run build:web-apps",
     "build:savings-web": "npm run build --workspace=@mmps/savings-web",
-    "build:web-apps": "npm run build:savings-web",
+    "build:mindloop-web": "npm run build --workspace=@mmps/mindloop-web",
+    "build:web-apps": "npm run build:savings-web && npm run build:mindloop-web",
     "dev:savings-web": "npm run dev --workspace=@mmps/savings-web",
+    "dev:mindloop-web": "npm run dev --workspace=@mmps/mindloop-web",
     "start": "node --import ./dist/core/telemetry/register.js dist/index.js",
     "dev": "tsx watch src/index.ts",
     "dev:build": "tsc --watch",

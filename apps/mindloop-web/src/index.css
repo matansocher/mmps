@@ -1,0 +1,114 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Poppins', 'Nunito', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --color-brand: #0d9488;
+  --color-cream: #f5f8f7;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-cream);
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, #e2f7f2 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #e0f5fb 0%, transparent 55%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    color: #2d2a45;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  html.dark body {
+    background-color: #0b1418;
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, #0c2f2c 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #0a2833 0%, transparent 55%);
+    color: #e7e5f2;
+  }
+
+  /* Matches the page background exactly so full-cover overlays (e.g. the
+     pre-game countdown) never show as a mismatched block. */
+  .ml-app-bg {
+    background-color: var(--color-cream);
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, #e2f7f2 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #e0f5fb 0%, transparent 55%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+  html.dark .ml-app-bg {
+    background-color: #0b1418;
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, #0c2f2c 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #0a2833 0%, transparent 55%);
+  }
+
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer utilities {
+  .ml-tap {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+  }
+
+  .ml-hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .ml-hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes ml-pop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop {
+  animation: ml-pop 0.25s ease-out both;
+}
+
+/* Reduced-motion: honor either the user's OS setting or the in-app toggle. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
