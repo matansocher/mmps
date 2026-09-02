@@ -10,12 +10,12 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 - **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **5 bots:** `chatbot`, `chilli`, `coach`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
+- **5 bots:** `chatbot`, `chilli`, `coach`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` and `mindloop` are bot-less web features initialized independently of bot selection.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/savings-web` is a Vite mini-app (npm workspace).
+- **Apps workspace:** `apps/savings-web` and `apps/mindloop-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -120,12 +120,13 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 mmps/
 ├── src/
 │   ├── core/           # Config, mongo, openapi/swagger, telemetry, services, utils
-│   ├── features/       # Bots plus savings web feature
+│   ├── features/       # Bots plus savings & mindloop web features
 │   ├── services/       # 30+ external service integrations
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
-│   └── savings-web/
+│   ├── savings-web/
+│   └── mindloop-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
 ├── assets/             # Static assets (downloads dir, images)
@@ -181,6 +182,8 @@ src/services/{name}/
 
 **Also not a bot:** `SAVINGS` (`src/features/savings/`) is a password-protected React SPA (`apps/savings-web`) served at `/savings/*`. It stores one shared family portfolio in the `Savings` MongoDB database, uses real ILS values with reactive rebalancing, and protects explicit saves with revision conflict detection. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
+**Also not a bot:** `MINDLOOP` (`src/features/mindloop/`) is a React brain-training mini-app (`apps/mindloop-web`) served at `/mindloop/*`. It ships 13 original games across 5 skill categories and persists player progress (best scores, favorites, play history) to the `Mindloop` MongoDB database keyed by Telegram user id. The client is offline-first (localStorage) and reconciles with the server via a non-destructive merge; server writes are best-effort. Identity comes from verified Telegram `initData` (`MINDLOOP_TELEGRAM_BOT_TOKEN`) or an `X-Mindloop-Dev-User` header in local dev. Device-only preferences (theme, sound, reduced motion) never leave the device. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+
 **Boot logic** (`src/index.ts`):
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
@@ -200,7 +203,7 @@ await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one. The `savings` and `mindloop` web features are initialized separately (`initSavings(app)` / `initMindloop(app)`), wrapped in their own try/catch, and boot regardless of `LOCAL_ACTIVE_BOT_ID`.
 
 ---
 
@@ -686,6 +689,7 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 - `GET /` — health (`{ success: true }`)
 - `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
 - Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
+- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes.
 
 ---
 
@@ -754,6 +758,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 - `IS_PROD=true` runs all bots regardless of `LOCAL_ACTIVE_BOT_ID`.
 - `PORT` — Express port (default 3000).
 - `SAVINGS_APP_PASSWORD` — shared password for the standalone `/savings` portfolio app.
+- `MINDLOOP_TELEGRAM_BOT_TOKEN` — used only to verify Telegram `initData` for the `/mindloop` mini-app (no bot runs).
 
 **Observability (Grafana Cloud via OpenTelemetry) — production only:**
 - `OTEL_EXPORTER_OTLP_ENDPOINT` — Grafana OTLP gateway (e.g. `https://otlp-gateway-prod-<region>.grafana.net/otlp`). Empty = telemetry disabled (local dev).
@@ -792,8 +797,9 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (also: savings-web)
+# Mini-app workspaces (savings-web, mindloop-web)
 npm run dev:savings-web
+npm run dev:mindloop-web
 ```
 
 ---

@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 6 specialized Telegram bots plus a bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings is initialized independently of bot selection.
+MMPS includes 6 specialized Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings and Mindloop are initialized independently of bot selection.
 
 ## The Bots
 
@@ -40,6 +40,12 @@ Password-protected React application served at `/savings/*` for managing one sha
 - **Database**: `Savings`
 - **[Learn more →](/bots/savings)**
 
+### **Mindloop** - Brain-Training Mini-App
+Original React game collection served at `/mindloop/*` with 13 games across 5 skill categories and Mongo-backed player progress.
+- **Features**: 13 games, shared game shell, onboarding, streaks, offline-first sync of best scores/favorites/history
+- **Database**: `Mindloop`
+- **[Learn more →](/bots/mindloop)**
+
 ## Running Bots
 
 ### Development Mode (One Bot)
@@ -56,7 +62,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `WOLT`, `WORLDLY`.
 IS_PROD=true npm start
 ```
 
-Production initializes all 6 Telegram bots. Savings initialize in development and production.
+Production initializes all 6 Telegram bots. Savings and Mindloop initialize in development and production.
 
 ## Bot Architecture
 
@@ -98,6 +104,7 @@ Current bot databases:
 - `Chatbot` - Chatbot LangGraph checkpoints and token/cost usage records
 - `Chilli` - Chilli prompt versions
 - `Coach` - Coach users and subscriptions
+- `Mindloop` - Mindloop player best scores, favorites, and play history
 - `Savings` - Shared portfolio settings and holdings
 - `Wolt` - Wolt users and subscriptions
 - `Worldly` - Geography content, subscriptions, and game logs
@@ -121,6 +128,9 @@ NOTIFIER_TELEGRAM_BOT_TOKEN=...
 
 # Bot-less Savings app
 SAVINGS_APP_PASSWORD=...
+
+# Bot-less Mindloop mini-app (token used only to verify Telegram initData)
+MINDLOOP_TELEGRAM_BOT_TOKEN=...
 ```
 
 ## Next Steps
@@ -132,6 +142,7 @@ Select a bot to explore:
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
+- **[Mindloop](/bots/mindloop)** - Brain-training mini-app
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

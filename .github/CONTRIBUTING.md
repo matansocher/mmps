@@ -35,12 +35,13 @@ npm run dev          # tsx watch — boots only LOCAL_ACTIVE_BOT_ID
 npm run dev:debug    # same, with --inspect
 ```
 
-In production all bots boot (`IS_PROD=true`); locally `LOCAL_ACTIVE_BOT_ID` selects exactly one. The `savings` web feature initializes regardless of bot selection.
+In production all bots boot (`IS_PROD=true`); locally `LOCAL_ACTIVE_BOT_ID` selects exactly one. The `savings` and `mindloop` web features initialize regardless of bot selection.
 
 Mini-apps are npm workspaces under `apps/` and run separately:
 
 ```bash
 npm run dev:savings-web
+npm run dev:mindloop-web
 ```
 
 ## Checks to run before opening a PR
