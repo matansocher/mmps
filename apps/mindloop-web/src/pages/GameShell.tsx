@@ -1,7 +1,8 @@
-import { Suspense, useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CATEGORIES } from '../lib/categories';
 import { getGame } from '../lib/games';
+import { pickNextGame } from '../lib/picker';
 import { commitScore, getBestScore } from '../lib/storage';
 import { recordPlay } from '../lib/history';
 import { syncResult } from '../lib/player-sync';
@@ -23,10 +24,23 @@ export function GameShell() {
   const [result, setResult] = useState<GameResult | null>(null);
   const [best, setBest] = useState(() => (gameId ? getBestScore(gameId) : 0));
   const [isNewBest, setIsNewBest] = useState(false);
+  // The coach's next pick, computed when a run finishes so the session chains.
+  const [nextGame, setNextGame] = useState<ReturnType<typeof getGame>>(undefined);
   // Remount the game component on replay so all internal state resets.
   const [runKey, setRunKey] = useState(0);
 
   const category = game ? CATEGORIES[game.category] : CATEGORIES.memory;
+
+  // Chained navigation (Up next) only changes the route param, so reset the
+  // whole flow back to the intro when the game id changes.
+  useEffect(() => {
+    setPhase('intro');
+    setResult(null);
+    setBest(gameId ? getBestScore(gameId) : 0);
+    setIsNewBest(false);
+    setNextGame(undefined);
+    setRunKey((k) => k + 1);
+  }, [gameId]);
 
   const handleFinish = useCallback(
     (r: GameResult) => {
@@ -39,6 +53,8 @@ export function GameShell() {
       setResult(r);
       setBest(newBest);
       setIsNewBest(r.score > prev && r.score > 0);
+      // Pick after recording so the just-played game is weighted correctly.
+      setNextGame(pickNextGame({ exclude: game.id }));
       setPhase('results');
     },
     [game],
@@ -51,6 +67,12 @@ export function GameShell() {
   }, []);
 
   const goHome = useCallback(() => navigate('/'), [navigate]);
+
+  const goNext = useCallback(() => {
+    if (!nextGame) return;
+    playSound('start');
+    navigate(`/game/${nextGame.id}`);
+  }, [navigate, nextGame]);
 
   const GameComponent = useMemo(() => game?.component, [game]);
 
@@ -102,6 +124,8 @@ export function GameShell() {
             isNewBest={isNewBest}
             onReplay={startPlay}
             onHome={goHome}
+            nextGame={nextGame}
+            onNext={goNext}
           />
         )}
       </main>
