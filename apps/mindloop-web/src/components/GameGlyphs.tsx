@@ -93,29 +93,6 @@ export function Burst({ className, color = '#fff' }: GlyphProps) {
   );
 }
 
-/* --- Koi Pond ---------------------------------------------------------- */
-
-export function Koi({ className, color = '#fb923c' }: GlyphProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <path d="M4 12c0-3 3-5 6-5s6 1.5 6 4.5c-2 .5-3.5 1.5-4.5 3-1.5-.5-3-.5-4.5 0C6 14 4 13 4 12z" fill={color} />
-      <path d="M15 11l5-3v8l-5-3z" fill={color} />
-      <circle cx="8" cy="10.5" r="1" fill="#fff" />
-    </svg>
-  );
-}
-
-/** A fed/sleeping koi: faded body with "z" marks. */
-export function KoiFed({ className, color = '#94a3b8' }: GlyphProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <path d="M4 13c0-3 3-5 6-5s6 1.5 6 4.5c-2 .5-3.5 1.5-4.5 3-1.5-.5-3-.5-4.5 0C6 15 4 14 4 13z" fill={color} opacity="0.6" />
-      <path d="M15 12l5-3v8l-5-3z" fill={color} opacity="0.6" />
-      <path d="M15 4h4l-4 4h4" stroke={color} strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 /* --- Eagle Eye --------------------------------------------------------- */
 
 export function Bird({ className, color = '#334155' }: GlyphProps) {
@@ -144,17 +121,6 @@ export function Train({ className, color = '#fff' }: GlyphProps) {
       <rect x="7.5" y="7.5" width="9" height="4" rx="1.2" fill="#000" opacity="0.25" />
       <circle cx="9" cy="19" r="1.8" fill={color} />
       <circle cx="15" cy="19" r="1.8" fill={color} />
-    </svg>
-  );
-}
-
-/* --- Pinball Recall ---------------------------------------------------- */
-
-export function Ball({ className, color = '#ef4444' }: GlyphProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <circle cx="12" cy="12" r="8" fill={color} />
-      <circle cx="9.5" cy="9.5" r="2.4" fill="#fff" opacity="0.7" />
     </svg>
   );
 }

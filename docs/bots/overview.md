@@ -41,8 +41,8 @@ Password-protected React application served at `/savings/*` for managing one sha
 - **[Learn more →](/bots/savings)**
 
 ### **Mindloop** - Brain-Training Mini-App
-Original React game collection served at `/mindloop/*` with 13 games across 5 skill categories and Mongo-backed player progress.
-- **Features**: 13 games, shared game shell, onboarding, streaks, offline-first sync of best scores/favorites/history
+Original React game collection served at `/mindloop/*` with 11 games across 5 skill categories and Mongo-backed player progress.
+- **Features**: 11 games, shared game shell, onboarding, streaks, offline-first sync of best scores/favorites/history
 - **Database**: `Mindloop`
 - **[Learn more →](/bots/mindloop)**
 
