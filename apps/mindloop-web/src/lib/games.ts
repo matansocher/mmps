@@ -50,20 +50,6 @@ export const GAMES: GameEntry[] = [
     component: lazy(() => import('../games/SequenceEcho')),
   },
   {
-    id: 'koi-pond',
-    title: 'Koi Pond',
-    tagline: 'Feed each fish exactly once',
-    category: 'memory',
-    icon: '🐟',
-    howTo: [
-      'Hungry koi swim around the pond.',
-      'Tap each fish once to feed it.',
-      'Remember which ones you already fed — they keep moving.',
-      'Feed a fish twice and the round resets.',
-    ],
-    component: lazy(() => import('../games/KoiPond')),
-  },
-  {
     id: 'sequence-track',
     title: 'Sequence Track',
     tagline: 'Keep your eyes on the movers',
@@ -132,20 +118,6 @@ export const GAMES: GameEntry[] = [
       'Let three drops fall and the run ends.',
     ],
     component: lazy(() => import('../games/Raindrops')),
-  },
-  {
-    id: 'pinball-recall',
-    title: 'Pinball Recall',
-    tagline: 'Predict where the ball lands',
-    category: 'problem-solving',
-    icon: '🔴',
-    howTo: [
-      'A ball drops from the arrow at the top.',
-      'Bumpers (╱ and ╲) nudge it left or right.',
-      'Trace the path and tap the exit slot you predict.',
-      'Guess right before the ball rolls to score.',
-    ],
-    component: lazy(() => import('../games/PinballRecall')),
   },
   {
     id: 'color-clash',

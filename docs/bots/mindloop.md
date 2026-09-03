@@ -4,7 +4,7 @@
 
 ## Overview
 
-Mindloop is not a Telegram bot. It is a standalone React application from `apps/mindloop-web` served at `/mindloop/*`. It ships 13 original brain-training games across 5 skill categories behind a shared game shell, and persists player progress (best scores, favorites, play history) to MongoDB keyed by Telegram user id.
+Mindloop is not a Telegram bot. It is a standalone React application from `apps/mindloop-web` served at `/mindloop/*`. It ships 11 original brain-training games across 5 skill categories behind a shared game shell, and persists player progress (best scores, favorites, play history) to MongoDB keyed by Telegram user id.
 
 The app runs inside Telegram as a mini-app (identity comes from verified Telegram `initData`) and can also run in a plain browser during local dev. Device-only preferences (theme, sound, reduced motion) and onboarding "seen" flags intentionally never leave the device.
 

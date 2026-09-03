@@ -52,15 +52,6 @@ const sequenceEcho: Art = ({ tint, accent }) => (
   </>
 );
 
-const koiPond: Art = ({ tint, accent }) => (
-  <>
-    <circle cx="32" cy="34" r="24" fill={tint} />
-    <path d="M22 34c0-6 6-10 12-10s12 3 12 9c-4 1-7 3-9 6-3-1-6-1-9 0-3-2-6-4-6-5z" fill={accent} />
-    <path d="M45 33l7-4v12l-7-4z" fill={accent} />
-    <circle cx="27" cy="31" r="2" fill="#fff" />
-  </>
-);
-
 const sequenceTrack: Art = ({ tint, accent }) => (
   <>
     <circle cx="16" cy="20" r="8" fill={tint} />
@@ -118,17 +109,6 @@ const raindrops: Art = ({ tint, accent }) => (
   </>
 );
 
-const pinballRecall: Art = ({ tint, accent }) => (
-  <>
-    <rect x="14" y="8" width="36" height="48" rx="12" fill={tint} />
-    <circle cx="26" cy="22" r="4" fill={accent} />
-    <circle cx="42" cy="30" r="4" fill={accent} />
-    <circle cx="28" cy="42" r="4" fill={accent} />
-    <circle cx="38" cy="46" r="6" fill={accent} />
-    <circle cx="38" cy="46" r="2.2" fill="#fff" />
-  </>
-);
-
 const colorClash: Art = ({ tint, accent }) => (
   <>
     <rect x="10" y="20" width="44" height="24" rx="8" fill={tint} />
@@ -158,13 +138,11 @@ const ART: Record<string, Art> = {
   'grid-recall': gridRecall,
   'pair-match': pairMatch,
   'sequence-echo': sequenceEcho,
-  'koi-pond': koiPond,
   'sequence-track': sequenceTrack,
   'odd-one-out': oddOneOut,
   'flash-match': flashMatch,
   'quick-math': quickMath,
   raindrops: raindrops,
-  'pinball-recall': pinballRecall,
   'color-clash': colorClash,
   'rail-router': railRouter,
   'ebb-flow': ebbFlow,
