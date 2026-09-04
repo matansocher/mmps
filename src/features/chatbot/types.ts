@@ -14,7 +14,7 @@ export type AgentDescriptor = {
   tools: (DynamicTool | DynamicStructuredTool<any>)[];
 };
 
-export type OrchestratorDescriptor = Omit<AgentDescriptor, 'description' | 'tools'> & {
+export type OrchestratorDescriptor = Omit<AgentDescriptor, 'tools'> & {
   agents: AgentDescriptor[];
   tools?: AgentDescriptor['tools'];
 };
