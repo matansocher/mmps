@@ -4,6 +4,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { summarizationMiddleware } from 'langchain';
+import { randomUUID } from 'node:crypto';
 import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
@@ -14,7 +15,7 @@ import { agent } from './agent';
 import { AiService, createAgentService } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
-import { formatAgentResponse } from './utils';
+import { buildStructuredInstruction, formatAgentResponse, parseStructuredResponse } from './utils';
 
 function isProcessMessageOptions(value: unknown): value is ProcessMessageOptions {
   return typeof value === 'object' && value !== null && !('_def' in value);
@@ -66,15 +67,26 @@ export class ChatbotService {
     const options = isProcessMessageOptions(responseSchemaOrOptions) ? responseSchemaOrOptions : maybeOptions;
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
-      const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
+      // When a schema is requested, ask the agent to carry the structured value on a sentinel line of
+      // its final turn, so we parse it in code instead of paying for a second LLM call (item #4).
+      const structuredInstruction = responseSchema ? buildStructuredInstruction(responseSchema) : '';
+      const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}${structuredInstruction}`;
       const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+      const humanMessageId = randomUUID();
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();
-      // Recorded in `finally` so the turn's usage is captured even if a later step throws, and so
-      // the follow-up structured-output call below is billed as part of the same turn.
+      // Recorded in `finally` so the turn's usage is captured even if a later step throws.
       try {
-        const result = await this.aiService.invoke(contextualMessage, { threadId, images: options?.images, callbacks: usageHandler ? [usageHandler] : undefined });
+        const result = await this.aiService.invoke(contextualMessage, { threadId, humanMessageId, images: options?.images, callbacks: usageHandler ? [usageHandler] : undefined });
+
+        // Swap the verbose scheduler prompt in the durable thread for a short marker (item #1). The
+        // result stays on the user's thread so the "try again" recovery flow keeps working.
+        if (options?.ephemeral) {
+          await this.aiService.replaceHumanMessage(humanMessageId, options.ephemeral.marker, { threadId }).catch((err) => {
+            this.logger.error(`Failed to replace scheduler prompt with marker for user ${chatId}: ${getErrorMessage(err)}`);
+          });
+        }
 
         const agentResponse = formatAgentResponse(result);
 
@@ -82,9 +94,17 @@ export class ChatbotService {
           return agentResponse;
         }
 
+        const { message: cleanMessage, structured } = parseStructuredResponse(agentResponse.message, responseSchema);
+        if (structured !== null) {
+          return { response: { ...agentResponse, message: cleanMessage }, structured };
+        }
+
+        // Fallback only if the agent omitted or malformed the sentinel line: a cheap extraction call
+        // over just the final text (not the whole thread) so callers still get a valid value.
+        this.logger.warn(`Structured sentinel missing for user ${chatId}; falling back to extraction call`);
         const structuredModel = this.model.withStructuredOutput(responseSchema);
-        const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)], { callbacks: usageHandler ? [usageHandler] : undefined });
-        return { response: agentResponse, structured: structured as z.infer<T> };
+        const extracted = await structuredModel.invoke([new HumanMessage(cleanMessage)], { callbacks: usageHandler ? [usageHandler] : undefined });
+        return { response: { ...agentResponse, message: cleanMessage }, structured: extracted as z.infer<T> };
       } finally {
         if (usageHandler) {
           recordModelUsage({ source: 'chatbot', chatId, handler: usageHandler, durationMs: Date.now() - startedAt });

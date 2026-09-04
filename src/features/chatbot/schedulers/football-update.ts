@@ -24,7 +24,9 @@ export async function footballUpdate(bot: Bot, chatbotService: ChatbotService): 
         - Keep it concise and informative
         - In the end of the message, point out the most exciting matches of the day`;
 
-    const { response, structured } = await chatbotService.processMessage(prompt, MY_USER_ID, footballUpdateResponseSchema);
+    const { response, structured } = await chatbotService.processMessage(prompt, MY_USER_ID, footballUpdateResponseSchema, {
+      ephemeral: { marker: '[scheduled: midday football update]' },
+    });
 
     if (structured.hasMatches && response?.message) {
       const footer = '\n\n👉 [Coach Bot](https://t.me/mmps_football_coach_bot)';

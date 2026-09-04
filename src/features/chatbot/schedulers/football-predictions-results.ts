@@ -51,7 +51,7 @@ IMPORTANT: Look back in our conversation history from earlier today to find the 
 
 Keep it engaging, honest about mistakes, and celebrate successes!`;
 
-    const response = await chatbotService.processMessage(prompt, MY_USER_ID);
+    const response = await chatbotService.processMessage(prompt, MY_USER_ID, { ephemeral: { marker: '[scheduled: evening football results & prediction check]' } });
 
     if (response?.message) {
       await sendShortenedMessage(bot, MY_USER_ID, response.message, { parse_mode: 'Markdown' });

@@ -38,6 +38,7 @@ export type InvokeOptions = {
   callbacks?: any[];
   recursionLimit?: number;
   images?: readonly string[]; // Base64 data URLs or public URLs sent as multimodal image blocks
+  humanMessageId?: string; // Stable id assigned to the persisted human turn so it can be replaced post-run
 };
 
 export type ChatbotResponse = {
@@ -53,6 +54,14 @@ export type StructuredChatbotResponse<T extends z.ZodTypeAny> = {
 
 export type ProcessMessageOptions = {
   readonly images?: readonly string[]; // Base64 data URLs or public URLs passed to the model as image blocks
+  // Scheduler-only: run the verbose instructions this turn, but persist only a short marker in the
+  // durable thread so the giant prompt never enters the summarization budget or the Mongo summary.
+  // The result still lands on the user's thread and stays replyable ("try again").
+  readonly ephemeral?: EphemeralSchedulerPrompt;
+};
+
+export type EphemeralSchedulerPrompt = {
+  readonly marker: string; // Short text persisted in place of the verbose prompt, e.g. '[scheduled: football predictions]'
 };
 
 export type ToolResult = {
