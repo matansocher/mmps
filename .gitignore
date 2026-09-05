@@ -44,6 +44,9 @@ lerna-debug.log*
 .env.local
 **/.env*
 
+# Doppler CLI local state
+.doppler/
+
 # temp directory
 .temp
 .tmp
