@@ -1,13 +1,13 @@
-import { useCallback, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CATEGORIES } from '../lib/categories';
-import type { GameProps } from '../lib/types';
-import { randInt } from '../lib/utils';
-import { playSound } from '../lib/sound';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
-import { CountdownOverlay } from '../components/CountdownOverlay';
 import { useCountdown } from '../hooks/useCountdown';
+import { CATEGORIES } from '../lib/categories';
+import { playSound } from '../lib/sound';
+import type { GameProps } from '../lib/types';
+import { randInt } from '../lib/utils';
 
 const accent = CATEGORIES.attention.accent;
 const TOTAL_TIME = 45;
@@ -41,49 +41,64 @@ export default function OddOneOut({ onFinish }: GameProps) {
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(() => makeRound(0));
   const [flash, setFlash] = useState<'ok' | 'bad' | null>(null);
+  const [chosen, setChosen] = useState<number | null>(null);
   const finished = useRef(false);
+  const locked = useRef(false);
+  useLayoutEffect(() => {
+    locked.current = flash !== null;
+  }, [flash]);
+  const scoreRef = useRef(0);
+  const levelRef = useRef(0);
+  const nextRound = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(nextRound.current), []);
 
-  const finish = useCallback(
-    (finalScore: number, reached: number) => {
-      if (finished.current) return;
-      finished.current = true;
-      onFinish({
-        score: finalScore,
-        stats: [{ label: 'Rounds cleared', value: String(reached) }],
-      });
-    },
-    [onFinish],
-  );
+  const finish = useCallback(() => {
+    if (finished.current) return;
+    finished.current = true;
+    onFinish({
+      score: scoreRef.current,
+      stats: [{ label: 'Rounds cleared', value: String(levelRef.current) }],
+    });
+  }, [onFinish]);
 
-  const timer = useCountdown({
+  const { remaining, running, reset, addTime, isExpired } = useCountdown({
     seconds: TOTAL_TIME,
     autoStart: false,
-    onExpire: () => finish(score, level),
+    onExpire: finish,
   });
 
   const start = useCallback(() => {
     setCounting(false);
-    timer.reset(TOTAL_TIME);
-  }, [timer]);
+    reset(TOTAL_TIME);
+  }, [reset]);
 
   const tap = (idx: number) => {
-    if (counting || finished.current) return;
+    if (counting || finished.current || locked.current || !running || isExpired()) return;
+    locked.current = true;
+    setChosen(idx);
     if (idx === round.odd) {
       const gained = round.size * 10;
-      setScore((s) => s + gained);
+      scoreRef.current += gained;
+      setScore(scoreRef.current);
       setFlash('ok');
       playSound('correct');
-      const nl = level + 1;
-      setLevel(nl);
-      setRound(makeRound(nl));
-      window.setTimeout(() => setFlash(null), 200);
+      levelRef.current += 1;
     } else {
       setFlash('bad');
-      setScore((s) => Math.max(0, s - 5));
-      timer.addTime(-2);
+      scoreRef.current = Math.max(0, scoreRef.current - 5);
+      setScore(scoreRef.current);
+      addTime(-2);
       playSound('wrong');
-      window.setTimeout(() => setFlash(null), 200);
     }
+    nextRound.current = window.setTimeout(() => {
+      if (finished.current) return;
+      if (idx === round.odd) {
+        setLevel(levelRef.current);
+        setRound(makeRound(levelRef.current));
+      }
+      setFlash(null);
+      setChosen(null);
+    }, idx === round.odd ? 250 : 650);
   };
 
   const { size, cells, odd, base, diff } = round;
@@ -91,36 +106,45 @@ export default function OddOneOut({ onFinish }: GameProps) {
   return (
     <div className="relative flex flex-1 flex-col">
       {counting && <CountdownOverlay accent={accent} onDone={start} />}
-      <GameStage
-        hud={
-          <HUD
-            accent={accent}
-            score={score}
-            time={timer.remaining}
-            timeFraction={timer.remaining / TOTAL_TIME}
-            status={String(level + 1)}
-          />
-        }
-      >
+      <GameStage hud={<HUD accent={accent} score={score} time={remaining} timeFraction={remaining / TOTAL_TIME} status={String(level + 1)} />}>
+        <p className="mb-3 text-center text-sm font-bold text-slate-600 dark:text-slate-300">Find the tile with a different shade</p>
+        <p role="status" className="mb-4 min-h-6 text-center text-sm font-bold text-slate-600 dark:text-slate-300">
+          {flash === 'ok' ? `Found it! +${size * 10} points` : flash === 'bad' ? 'Not that tile. Try again · −5 points, −2s' : `${size} × ${size} grid · one odd tile`}
+        </p>
         <motion.div
           animate={flash === 'bad' ? { x: [0, -6, 6, -4, 0] } : {}}
           transition={{ duration: 0.25 }}
-          className="grid gap-1.5 sm:gap-2"
+          className={`grid ${size === 6 ? 'gap-1 sm:gap-2' : 'gap-2'}`}
           style={{
             gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
-            width: `min(88vw, ${size * 72}px)`,
+            width: `min(100%, ${size * 72}px)`,
           }}
         >
           {Array.from({ length: cells }).map((_, i) => (
             <motion.button
-              key={`${level}-${i}`}
+              key={i}
               whileTap={{ scale: 0.9 }}
               onClick={() => tap(i)}
-              className="ml-tap aspect-square rounded-2xl shadow-sm"
+              disabled={counting || flash !== null || !running}
+              aria-label={`Tile ${i + 1}, row ${Math.floor(i / size) + 1}, column ${(i % size) + 1}`}
+              onKeyDown={(event) => {
+                if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
+                if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+                const offsets: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -size, ArrowDown: size };
+                const offset = offsets[event.key];
+                if (offset === undefined) return;
+                event.preventDefault();
+                const buttons = event.currentTarget.parentElement?.querySelectorAll('button');
+                buttons?.[Math.max(0, Math.min(cells - 1, i + offset))]?.focus();
+              }}
+              className="ml-tap flex min-h-11 aspect-square items-center justify-center rounded-xl shadow-sm"
               style={{ background: i === odd ? diff : base }}
-            />
+            >
+              {chosen === i && <span className="rounded-full bg-white px-2 py-1 text-sm font-black text-slate-900">{flash === 'ok' ? '✓' : '✕'}</span>}
+            </motion.button>
           ))}
         </motion.div>
+        <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">Keyboard: Tab to a tile, arrow keys to move, Enter to choose</p>
       </GameStage>
     </div>
   );

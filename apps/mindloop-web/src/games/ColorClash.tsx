@@ -1,50 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CATEGORIES } from '../lib/categories';
-import type { GameProps } from '../lib/types';
-import { pick, shuffle } from '../lib/utils';
-import { playSound } from '../lib/sound';
+import { motion } from 'framer-motion';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
-import { CountdownOverlay } from '../components/CountdownOverlay';
 import { useCountdown } from '../hooks/useCountdown';
 import { useTheme } from '../hooks/useTheme';
+import { CATEGORIES } from '../lib/categories';
+import { playSound } from '../lib/sound';
+import type { GameProps } from '../lib/types';
+import { getColorClashDifficulty, getReactionLevel, getReactionProgress, makeColorClashRound } from './reaction-progression';
 
 const accent = CATEGORIES.flexibility.accent;
 const TOTAL_TIME = 40;
 
-const COLORS = [
-  { name: 'Red', hex: '#ef4444' },
-  { name: 'Blue', hex: '#3b82f6' },
-  { name: 'Green', hex: '#22c55e' },
-  { name: 'Yellow', hex: '#eab308' },
-  { name: 'Purple', hex: '#a855f7' },
-];
-
-function makeRound() {
-  const word = pick(COLORS);
-  // Ink color is usually different from the word for interference.
-  const ink = Math.random() < 0.25 ? word : pick(COLORS.filter((c) => c.name !== word.name));
-  const options = shuffle(COLORS);
-  return { word, ink, options };
-}
-
 export default function ColorClash({ onFinish }: GameProps) {
   const { theme } = useTheme();
   const [counting, setCounting] = useState(true);
-  const [round, setRound] = useState(makeRound);
+  const [round, setRound] = useState(() => makeColorClashRound(0));
+  const [completed, setCompleted] = useState(0);
+  const difficulty = getColorClashDifficulty(completed);
   const [score, setScore] = useState(0);
-  const [correct, setCorrect] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [best, setBest] = useState(0);
   const [chosen, setChosen] = useState<string | null>(null);
   const finished = useRef(false);
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
   const bestRef = useRef(0);
-  useEffect(() => { scoreRef.current = score; }, [score]);
-  useEffect(() => { correctRef.current = correct; }, [correct]);
-  useEffect(() => { bestRef.current = best; }, [best]);
+  const locked = useRef(false);
+  useLayoutEffect(() => {
+    locked.current = chosen !== null;
+  }, [chosen]);
+  const nextRound = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(nextRound.current), []);
 
   const finish = useCallback(() => {
     if (finished.current) return;
@@ -54,89 +41,101 @@ export default function ColorClash({ onFinish }: GameProps) {
       stats: [
         { label: 'Correct', value: String(correctRef.current) },
         { label: 'Best combo', value: String(bestRef.current) },
+        { label: 'Level reached', value: String(getReactionLevel(correctRef.current)) },
       ],
     });
   }, [onFinish]);
 
-  const timer = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
+  const { remaining, running, reset, addTime, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
 
   const start = useCallback(() => {
     setCounting(false);
-    timer.reset(TOTAL_TIME);
-  }, [timer]);
+    reset(TOTAL_TIME);
+  }, [reset]);
 
-  const choose = (name: string) => {
-    if (counting || chosen !== null || finished.current) return;
-    setChosen(name);
-    const isCorrect = name === round.ink.name;
-    if (isCorrect) {
-      const nc = combo + 1;
-      setCorrect((c) => c + 1);
-      setCombo(nc);
-      setBest((b) => Math.max(b, nc));
-      setScore((s) => s + 10 + Math.min(40, nc * 2));
-      playSound('correct');
-    } else {
-      setCombo(0);
-      setScore((s) => Math.max(0, s - 5));
-      timer.addTime(-2);
-      playSound('wrong');
-    }
-    window.setTimeout(() => {
-      if (finished.current) return;
-      setRound(makeRound());
-      setChosen(null);
-    }, 300);
-  };
+  const choose = useCallback(
+    (name: string) => {
+      if (counting || locked.current || finished.current || !running || isExpired()) return;
+      locked.current = true;
+      setChosen(name);
+      const isCorrect = name === round.ink.name;
+      if (isCorrect) {
+        const nc = combo + 1;
+        correctRef.current += 1;
+        setCombo(nc);
+        bestRef.current = Math.max(bestRef.current, nc);
+        scoreRef.current += difficulty.reward + Math.min(40, nc * 2);
+        setScore(scoreRef.current);
+        playSound('correct');
+      } else {
+        setCombo(0);
+        scoreRef.current = Math.max(0, scoreRef.current - 5);
+        setScore(scoreRef.current);
+        addTime(-2);
+        playSound('wrong');
+      }
+      nextRound.current = window.setTimeout(() => {
+        if (finished.current) return;
+        setRound(makeColorClashRound(correctRef.current));
+        setCompleted(correctRef.current);
+        setChosen(null);
+      }, isCorrect ? 250 : 800);
+    },
+    [counting, running, isExpired, addTime, round, combo, difficulty.reward],
+  );
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      const index = ['1', '2', '3', '4', '5'].indexOf(event.key);
+      if (index < 0 || !round.options[index]) return;
+      event.preventDefault();
+      choose(round.options[index].name);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [choose, round]);
 
   return (
     <div className="relative flex flex-1 flex-col">
       {counting && <CountdownOverlay accent={accent} onDone={start} />}
-      <GameStage
-        hud={
-          <HUD
-            accent={accent}
-            score={score}
-            time={timer.remaining}
-            timeFraction={timer.remaining / TOTAL_TIME}
-            status={combo > 1 ? `x${combo}` : undefined}
-          />
-        }
-      >
+      <GameStage hud={<HUD accent={accent} score={score} time={remaining} timeFraction={remaining / TOTAL_TIME} statusLabel="Streak" status={String(combo)} />}>
         <div className="w-full" style={{ maxWidth: 400 }}>
-          <p className="mb-4 text-center text-sm font-bold text-slate-400 dark:text-slate-500">
-            Tap the INK color, not the word
+          <p className="mb-2 text-center text-sm font-bold text-slate-600 dark:text-slate-300">{getReactionProgress(completed)}</p>
+          <p className="mb-4 text-center text-sm font-bold text-slate-600 dark:text-slate-300">Tap the INK color, not the word</p>
+          <motion.div
+            initial={false}
+            className="mb-8 rounded-3xl bg-white/70 py-12 text-center text-6xl font-extrabold shadow-sm ring-1 ring-slate-200 sm:text-7xl dark:bg-white/10 dark:ring-white/10"
+            style={{ color: theme === 'dark' ? round.ink.hex : round.ink.light }}
+          >
+            {round.word.name}
+          </motion.div>
+          <p role="status" className="mb-3 min-h-6 text-center text-sm font-bold text-slate-600 dark:text-slate-300">
+            {chosen === null ? `Tap a color or press 1–${round.options.length}` : chosen === round.ink.name ? 'Correct ink color!' : `Ink: ${round.ink.name} · −5 points, −2s`}
           </p>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${round.word.name}-${round.ink.name}-${score}`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              transition={{ duration: 0.18 }}
-              className="mb-8 rounded-3xl bg-white/70 py-12 text-center text-6xl font-extrabold shadow-sm ring-1 ring-slate-200 sm:text-7xl dark:bg-white/10 dark:ring-white/10"
-              style={{ color: round.ink.hex }}
-            >
-              {round.word.name}
-            </motion.div>
-          </AnimatePresence>
 
-          <div className="grid grid-cols-3 gap-3">
-            {round.options.map((c) => {
+          <div className="grid grid-cols-3 grid-rows-2 gap-3">
+            {round.options.map((c, index) => {
               const isChosen = chosen === c.name;
               const isCorrect = c.name === round.ink.name;
               const dim = chosen !== null && !isChosen && !isCorrect;
               const showState = chosen !== null && (isChosen || isCorrect);
               return (
                 <motion.button
-                  key={c.name}
+                  key={index}
                   whileTap={{ scale: 0.92 }}
                   onClick={() => choose(c.name)}
+                  onKeyDown={(event) => {
+                    if (event.repeat) event.preventDefault();
+                  }}
+                  disabled={counting || chosen !== null || !running}
                   className="ml-tap flex flex-col items-center gap-1 rounded-2xl py-4 font-bold shadow-sm ring-1 ring-slate-200 dark:ring-white/10"
                   style={{
                     background: showState
                       ? isCorrect
-                        ? c.hex
+                        ? theme === 'dark'
+                          ? 'rgba(34,197,94,0.2)'
+                          : '#dcfce7'
                         : theme === 'dark'
                           ? 'rgba(239,68,68,0.25)'
                           : '#fee2e2'
@@ -148,7 +147,10 @@ export default function ColorClash({ onFinish }: GameProps) {
                   }}
                 >
                   <span className="h-6 w-6 rounded-full" style={{ background: c.hex }} />
-                  <span className="text-xs text-slate-500 dark:text-slate-300">{c.name}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-200">
+                    {index + 1}. {c.name}
+                    {showState ? (isCorrect ? ' ✓' : ' ✕') : ''}
+                  </span>
                 </motion.button>
               );
             })}

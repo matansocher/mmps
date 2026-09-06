@@ -37,7 +37,7 @@ export default function App() {
       {onboarding && <Onboarding onClose={() => setOnboarding(false)} />}
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/game/:gameId" element={<GameShell />} />
+        <Route path="/game/:gameId" element={<GameShell key={location.pathname} />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Home />} />

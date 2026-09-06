@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CATEGORIES } from '../lib/categories';
 import { getGame } from '../lib/games';
@@ -28,23 +28,19 @@ export function GameShell() {
   const [nextGame, setNextGame] = useState<ReturnType<typeof getGame>>(undefined);
   // Remount the game component on replay so all internal state resets.
   const [runKey, setRunKey] = useState(0);
+  const resultRecorded = useRef(false);
+  const mainRef = useRef<HTMLElement>(null);
 
   const category = game ? CATEGORIES[game.category] : CATEGORIES.memory;
 
-  // Chained navigation (Up next) only changes the route param, so reset the
-  // whole flow back to the intro when the game id changes.
   useEffect(() => {
-    setPhase('intro');
-    setResult(null);
-    setBest(gameId ? getBestScore(gameId) : 0);
-    setIsNewBest(false);
-    setNextGame(undefined);
-    setRunKey((k) => k + 1);
-  }, [gameId]);
+    mainRef.current?.focus();
+  }, [phase]);
 
   const handleFinish = useCallback(
     (r: GameResult) => {
-      if (!game) return;
+      if (!game || resultRecorded.current) return;
+      resultRecorded.current = true;
       const prev = getBestScore(game.id);
       const newBest = commitScore(game.id, r.score);
       recordPlay(game.id, r.score);
@@ -61,6 +57,7 @@ export function GameShell() {
   );
 
   const startPlay = useCallback(() => {
+    resultRecorded.current = false;
     playSound('start');
     setRunKey((k) => k + 1);
     setPhase('play');
@@ -87,11 +84,11 @@ export function GameShell() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-6 pt-4 sm:px-6">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
       <header className="flex flex-none items-center justify-between">
         <button
           onClick={goHome}
-          className="ml-tap flex items-center gap-1 rounded-xl px-2 py-1 text-sm font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          className="ml-tap flex min-h-11 items-center gap-1 rounded-xl px-2 py-1 text-sm font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         >
           <span aria-hidden>←</span> Exit
         </button>
@@ -101,7 +98,7 @@ export function GameShell() {
         <ThemeToggle />
       </header>
 
-      <main className="flex flex-1 flex-col">
+      <main ref={mainRef} tabIndex={-1} aria-label={`${game.title}: ${phase}`} className="flex flex-1 flex-col outline-none">
         {phase === 'intro' && (
           <IntroScreen game={game} category={category} best={best} onStart={startPlay} />
         )}

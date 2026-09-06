@@ -1,364 +1,226 @@
+import { motion, useReducedMotion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { CATEGORIES } from '../lib/categories';
-import type { GameProps } from '../lib/types';
-import { shuffle } from '../lib/utils';
-import { playSound } from '../lib/sound';
+import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
-import { CountdownOverlay } from '../components/CountdownOverlay';
 import { useCountdown } from '../hooks/useCountdown';
+import { useTheme } from '../hooks/useTheme';
+import { CATEGORIES } from '../lib/categories';
+import { playSound } from '../lib/sound';
+import type { GameProps } from '../lib/types';
+import { E, makeLevel, N, rotateCW, S, solveFlow, W } from './rail-router-logic';
+import type { Puzzle } from './rail-router-logic';
 
 const accent = CATEGORIES.flexibility.accent;
 const TOTAL_TIME = 90;
-
-/** Train / station colors. */
 const COLORS = [
-  { id: 'red', hex: '#ef4444' },
-  { id: 'blue', hex: '#3b82f6' },
-  { id: 'green', hex: '#22c55e' },
-  { id: 'amber', hex: '#f59e0b' },
-  { id: 'violet', hex: '#a855f7' },
-];
+  { name: 'red', light: '#b91c1c', dark: '#f87171' },
+  { name: 'blue', light: '#1d4ed8', dark: '#60a5fa' },
+  { name: 'green', light: '#15803d', dark: '#4ade80' },
+  { name: 'amber', light: '#a16207', dark: '#fbbf24' },
+  { name: 'violet', light: '#7e22ce', dark: '#c084fc' },
+] as const;
+const DIRECTIONS = [
+  { bit: N, name: 'north' },
+  { bit: E, name: 'east' },
+  { bit: S, name: 'south' },
+  { bit: W, name: 'west' },
+] as const;
+type Phase = 'counting' | 'playing' | 'advancing' | 'finished';
 
-/* Directions as bit flags: N=1, E=2, S=4, W=8. A tile's `ports` is the OR of
- * the sides it connects. Rotating 90° CW maps N→E→S→W→N. */
-const N = 1;
-const E = 2;
-const S = 4;
-const W = 8;
-const DIRS = [
-  { bit: N, dx: 0, dy: -1, opp: S },
-  { bit: E, dx: 1, dy: 0, opp: W },
-  { bit: S, dx: 0, dy: 1, opp: N },
-  { bit: W, dx: -1, dy: 0, opp: E },
-];
-
-type Kind = 'straight' | 'curve' | 'tee' | 'source' | 'station';
-
-interface Cell {
-  kind: Kind;
-  ports: number; // current open sides
-  colorIdx: number; // for source/station, else -1
-  fixed: boolean; // sources/stations can't rotate
-  lit: number | null; // colorIdx currently flowing through, else null
-}
-
-interface Puzzle {
-  cols: number;
-  rows: number;
-  cells: Cell[];
-  colors: number[]; // color indices used this level
-}
-
-/** Rotate a port mask 90° clockwise. */
-function rotateCW(ports: number): number {
-  let out = 0;
-  if (ports & N) out |= E;
-  if (ports & E) out |= S;
-  if (ports & S) out |= W;
-  if (ports & W) out |= N;
-  return out;
-}
-
-/** Base port mask for a movable tile kind before rotation. */
-function basePorts(kind: Kind): number {
-  switch (kind) {
-    case 'straight':
-      return N | S;
-    case 'curve':
-      return N | E;
-    case 'tee':
-      return N | E | S;
-    default:
-      return 0;
-  }
-}
-
-/**
- * Build a level: place matching source/station pairs on the left/right borders
- * and fill the interior with rotatable track tiles scrambled to random angles.
- */
-function makeLevel(level: number): Puzzle {
-  const size = Math.min(6, 4 + Math.floor(level / 2)); // 4x4 → 6x6
-  const cols = size;
-  const rows = size;
-  const nColors = Math.min(COLORS.length, Math.min(rows, 2 + Math.floor(level / 2))); // 2 → 5
-
-  const at = (c: number, r: number) => r * cols + c;
-  const cells: Cell[] = Array.from({ length: cols * rows }, () => ({
-    kind: 'straight' as Kind,
-    ports: N | S,
-    colorIdx: -1,
-    fixed: false,
-    lit: null,
-  }));
-
-  // Endpoints on the left (sources) and right (stations) columns.
-  const leftShuf = shuffle(Array.from({ length: rows }, (_, r) => at(0, r)));
-  const rightShuf = shuffle(Array.from({ length: rows }, (_, r) => at(cols - 1, r)));
-  const colorPick = shuffle(COLORS.map((_, i) => i)).slice(0, nColors);
-
-  colorPick.forEach((colorIdx, k) => {
-    cells[leftShuf[k]] = { kind: 'source', ports: E, colorIdx, fixed: true, lit: null };
-    cells[rightShuf[k]] = { kind: 'station', ports: W, colorIdx, fixed: true, lit: null };
-  });
-
-  // Fill the rest with scrambled track tiles.
-  for (let i = 0; i < cells.length; i++) {
-    if (cells[i].kind === 'source' || cells[i].kind === 'station') continue;
-    const roll = Math.random();
-    const kind: Kind = roll < 0.4 ? 'straight' : roll < 0.85 ? 'curve' : 'tee';
-    let ports = basePorts(kind);
-    const turns = Math.floor(Math.random() * 4);
-    for (let t = 0; t < turns; t++) ports = rotateCW(ports);
-    cells[i] = { kind, ports, colorIdx: -1, fixed: false, lit: null };
-  }
-
-  return { cols, rows, cells, colors: colorPick };
-}
-
-/**
- * Flood connectivity from each source. A→B is valid only if A opens toward B and
- * B opens back. Returns cells with `lit` set on reachable cells, plus the set of
- * solved colors (source reaches its matching station).
- */
-function solveFlow(p: Puzzle): { cells: Cell[]; solved: Set<number> } {
-  const { cols, rows } = p;
-  const cells = p.cells.map((c) => ({ ...c, lit: null as number | null }));
-  const solved = new Set<number>();
-  const at = (c: number, r: number) => r * cols + c;
-
-  for (let i = 0; i < cells.length; i++) {
-    if (cells[i].kind !== 'source') continue;
-    const colorIdx = cells[i].colorIdx;
-    const seen = new Set<number>([i]);
-    const queue: number[] = [i];
-    cells[i].lit = colorIdx;
-    let reachedStation = false;
-
-    while (queue.length) {
-      const cur = queue.shift() as number;
-      const cc = cur % cols;
-      const cr = Math.floor(cur / cols);
-      const curPorts = cells[cur].ports;
-      for (const d of DIRS) {
-        if (!(curPorts & d.bit)) continue;
-        const nc = cc + d.dx;
-        const nr = cr + d.dy;
-        if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
-        const ni = at(nc, nr);
-        if (seen.has(ni)) continue;
-        const nb = cells[ni];
-        if (!(nb.ports & d.opp)) continue;
-        if ((nb.kind === 'station' || nb.kind === 'source') && nb.colorIdx !== colorIdx) continue;
-        seen.add(ni);
-        if (nb.lit == null) nb.lit = colorIdx;
-        if (nb.kind === 'station' && nb.colorIdx === colorIdx) reachedStation = true;
-        queue.push(ni);
-      }
-    }
-    if (reachedStation) solved.add(colorIdx);
-  }
-
-  return { cells, solved };
-}
-
-/** SVG track drawing: a segment from center to each open side. */
-function TrackGlyph({ ports, color }: { ports: number; color: string }) {
-  const sw = 8;
-  const mid = 24;
+function TrackGlyph({ ports, color }: { readonly ports: number; readonly color: string }) {
   const paths: string[] = [];
-  if (ports & N) paths.push(`M${mid} ${mid} L${mid} 2`);
-  if (ports & S) paths.push(`M${mid} ${mid} L${mid} 46`);
-  if (ports & W) paths.push(`M${mid} ${mid} L2 ${mid}`);
-  if (ports & E) paths.push(`M${mid} ${mid} L46 ${mid}`);
+  if (ports & N) paths.push('M24 24 L24 2');
+  if (ports & S) paths.push('M24 24 L24 46');
+  if (ports & W) paths.push('M24 24 L2 24');
+  if (ports & E) paths.push('M24 24 L46 24');
   return (
-    <svg viewBox="0 0 48 48" className="h-full w-full">
-      {paths.map((d, i) => (
-        <path
-          key={i}
-          d={d}
-          stroke={color}
-          strokeWidth={sw}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+    <svg viewBox="0 0 48 48" className="h-full w-full" aria-hidden="true">
+      {paths.map((d) => (
+        <path key={d} d={d} stroke={color} strokeWidth={8} fill="none" strokeLinecap="round" strokeLinejoin="round" />
       ))}
-      <circle cx={mid} cy={mid} r={sw / 2} fill={color} />
+      <circle cx={24} cy={24} r={4} fill={color} />
+    </svg>
+  );
+}
+
+function EndpointGlyph({ station }: { readonly station: boolean }) {
+  return (
+    <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      {station ? (
+        <path d="M4 18V2h12l-3 4 3 4H4" />
+      ) : (
+        <>
+          <rect x="4" y="2" width="12" height="13" rx="3" />
+          <path d="M4 9h12M7 15l-2 3m8-3 2 3" />
+          <path d="M7 12h1m4 0h1" strokeWidth={2.5} />
+        </>
+      )}
     </svg>
   );
 }
 
 export default function RailRouter({ onFinish }: GameProps) {
-  const [counting, setCounting] = useState(true);
+  const [phase, setPhase] = useState<Phase>('counting');
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
   const [puzzle, setPuzzle] = useState<Puzzle>(() => makeLevel(1));
-  const [isDark, setIsDark] = useState(
-    () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
-  );
+  const [feedback, setFeedback] = useState('Rotate a tile to connect each numbered train to its matching flag.');
+  const { theme, reducedMotion } = useTheme();
+  const systemReducedMotion = useReducedMotion();
+  const reduceMotion = reducedMotion || systemReducedMotion;
+  const phaseRef = useRef<Phase>('counting');
+  const puzzleRef = useRef(puzzle);
   const scoreRef = useRef(0);
-  const levelRef = useRef(1);
-  const advancing = useRef(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-  }, []);
+  const completedRef = useRef(0);
 
   const finish = useCallback(() => {
+    if (phaseRef.current === 'finished') return;
+    phaseRef.current = 'finished';
+    setPhase('finished');
     onFinish({
       score: scoreRef.current,
-      stats: [{ label: 'Levels solved', value: String(levelRef.current - 1) }],
+      stats: [{ label: 'Levels solved', value: String(completedRef.current) }],
     });
   }, [onFinish]);
 
-  const timer = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
-
+  const { remaining, reset, addTime, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
   const start = useCallback(() => {
-    setCounting(false);
-    timer.reset(TOTAL_TIME);
-  }, [timer]);
+    if (phaseRef.current !== 'counting') return;
+    phaseRef.current = 'playing';
+    setPhase('playing');
+    reset(TOTAL_TIME);
+  }, [reset]);
 
-  const { litCells, solved } = useMemo(() => {
-    const res = solveFlow(puzzle);
-    return { litCells: res.cells, solved: res.solved };
-  }, [puzzle]);
+  const flow = useMemo(() => solveFlow(puzzle), [puzzle]);
 
-  const allSolved = puzzle.colors.length > 0 && puzzle.colors.every((c) => solved.has(c));
-
+  // The transition owns its timeout; effect replay simply reschedules it.
   useEffect(() => {
-    if (counting || advancing.current || !allSolved) return;
-    advancing.current = true;
-    playSound('correct');
-    const gained = 100 + puzzle.colors.length * 50 + Math.round(timer.remaining) * 2;
-    setScore((s) => {
-      const ns = s + gained;
-      scoreRef.current = ns;
-      return ns;
-    });
-    timer.addTime(8);
-    const t = window.setTimeout(() => {
-      setLevel((lv) => {
-        const nl = lv + 1;
-        levelRef.current = nl;
-        setPuzzle(makeLevel(nl));
-        advancing.current = false;
-        return nl;
-      });
-    }, 650);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allSolved, counting]);
+    if (phase !== 'advancing') return;
+    const timeout = window.setTimeout(() => {
+      if (phaseRef.current !== 'advancing') return;
+      const nextLevel = level + 1;
+      const nextPuzzle = makeLevel(nextLevel);
+      puzzleRef.current = nextPuzzle;
+      setPuzzle(nextPuzzle);
+      setLevel(nextLevel);
+      setFeedback(`Level ${nextLevel}: connect all ${nextPuzzle.colors.length} numbered routes.`);
+      phaseRef.current = 'playing';
+      setPhase('playing');
+    }, 900);
+    return () => window.clearTimeout(timeout);
+  }, [level, phase]);
 
-  const rotate = useCallback((i: number) => {
-    if (advancing.current) return;
-    setPuzzle((p) => {
-      const cell = p.cells[i];
-      if (cell.fixed) return p;
-      const cells = p.cells.slice();
-      cells[i] = { ...cell, ports: rotateCW(cell.ports) };
-      return { ...p, cells };
-    });
-    playSound('click');
-  }, []);
+  const rotate = useCallback(
+    (i: number) => {
+      if (phaseRef.current !== 'playing' || isExpired()) return;
+      const current = puzzleRef.current;
+      const cell = current.cells[i];
+      if (!cell || cell.fixed) return;
+      const cells = current.cells.map((item, index) => (index === i ? { ...item, ports: rotateCW(item.ports) } : item));
+      const next = { ...current, cells };
+      const previousFlow = solveFlow(current);
+      const nextFlow = solveFlow(next);
+      puzzleRef.current = next;
+      setPuzzle(next);
+
+      if (current.colors.every((color) => nextFlow.solved.has(color))) {
+        phaseRef.current = 'advancing';
+        setPhase('advancing');
+        const gained = 100 + current.colors.length * 50 + (level - 1) * 25 + Math.round(remaining) * 2;
+        scoreRef.current += gained;
+        completedRef.current++;
+        setScore(scoreRef.current);
+        addTime(8);
+        setFeedback(`Level ${level} complete! +${gained} points · +8 seconds`);
+        playSound('correct');
+        return;
+      }
+
+      const connected = current.colors.filter((color) => nextFlow.solved.has(color) && !previousFlow.solved.has(color));
+      const disconnected = current.colors.filter((color) => previousFlow.solved.has(color) && !nextFlow.solved.has(color));
+      if (connected.length) {
+        setFeedback(`Route ${connected.map((color) => color + 1).join(', ')} connected · ${nextFlow.solved.size}/${current.colors.length} ready`);
+        playSound('correct');
+      } else {
+        if (disconnected.length) setFeedback(`Route ${disconnected.map((color) => color + 1).join(', ')} disconnected. Rotate to reconnect it.`);
+        playSound('click');
+      }
+    },
+    [addTime, isExpired, level, remaining],
+  );
 
   const { cols } = puzzle;
-  const idleColor = isDark ? '#64748b' : '#94a3b8';
+  const colorFor = (color: number) => COLORS[color][theme];
+  const idleColor = theme === 'dark' ? '#94a3b8' : '#64748b';
+  const inputBlocked = phase !== 'playing' || remaining <= 0;
 
   return (
-    <div className="relative flex flex-1 flex-col">
-      {counting && <CountdownOverlay accent={accent} onDone={start} />}
-      <GameStage
-        hud={
-          <HUD
-            accent={accent}
-            score={score}
-            time={Math.ceil(timer.remaining)}
-            timeFraction={timer.remaining / TOTAL_TIME}
-            status={String(level)}
-            statusLabel="Level"
-          />
-        }
-      >
-        <div className="mb-3 h-6 text-center text-sm font-bold" style={{ color: accent }}>
-          Rotate the tracks — connect each train to its matching station.
+    <div className="relative flex min-w-0 flex-1 flex-col">
+      {phase === 'counting' && <CountdownOverlay accent={accent} onDone={start} />}
+      <GameStage hud={<HUD accent={accent} score={score} time={Math.ceil(remaining)} timeFraction={Math.min(1, remaining / TOTAL_TIME)} status={String(level)} statusLabel="Level" />}>
+        <div className="mb-3 min-h-12 text-center text-sm font-bold text-slate-700 dark:text-slate-200" role="status" aria-live="polite" aria-atomic="true">
+          {feedback}
         </div>
-
         <div
-          className="grid gap-1.5 rounded-3xl bg-white/60 p-2.5 shadow-sm ring-1 ring-slate-100 dark:bg-white/5 dark:ring-white/10"
-          style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-            width: `min(92vw, ${cols * 72}px)`,
-          }}
+          className="grid w-full gap-0.5 rounded-2xl bg-white/60 p-1 shadow-sm ring-1 ring-slate-200 sm:gap-1.5 sm:p-2.5 dark:bg-white/5 dark:ring-white/10"
+          role="group"
+          aria-label={`Level ${level} rail board, ${cols} rows and columns`}
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, maxWidth: cols * 72 }}
         >
           {puzzle.cells.map((cell, i) => {
-            const flow = litCells[i].lit;
-            const flowColor = flow != null ? COLORS[flow].hex : null;
-            const isEndpoint = cell.kind === 'source' || cell.kind === 'station';
-
-            if (isEndpoint) {
-              const endpointColor = COLORS[cell.colorIdx].hex;
-              const done = solved.has(cell.colorIdx);
+            const lit = flow.cells[i].lit;
+            const flowColor = lit !== null ? colorFor(lit) : idleColor;
+            const directions = DIRECTIONS.filter((dir) => cell.ports & dir.bit)
+              .map((dir) => dir.name)
+              .join(', ');
+            const position = `Row ${Math.floor(i / cols) + 1}, column ${(i % cols) + 1}`;
+            if (cell.fixed) {
+              const endpointColor = colorFor(cell.colorIdx);
+              const done = flow.solved.has(cell.colorIdx);
+              const endpointName = `${cell.kind === 'source' ? 'Train' : 'Station'} ${cell.colorIdx + 1}`;
               return (
                 <div
                   key={i}
-                  className="relative flex aspect-square items-center justify-center rounded-xl"
-                  style={{
-                    background: `${endpointColor}22`,
-                    boxShadow: done ? `0 0 0 2px ${endpointColor}` : undefined,
-                  }}
+                  role="img"
+                  aria-label={`${position}: ${endpointName}, ${COLORS[cell.colorIdx].name}, opens ${directions}${done ? ', connected' : ''}`}
+                  className="relative flex aspect-square min-w-0 items-center justify-center rounded-lg sm:rounded-xl"
+                  style={{ background: `${endpointColor}18`, boxShadow: done ? `inset 0 0 0 2px ${endpointColor}` : undefined }}
                 >
                   <div className="absolute inset-0">
-                    <TrackGlyph ports={cell.ports} color={flowColor ?? `${endpointColor}88`} />
+                    <TrackGlyph ports={cell.ports} color={endpointColor} />
                   </div>
-                  <div
-                    className="relative z-10 flex h-6 w-6 items-center justify-center rounded-md text-[11px] sm:h-7 sm:w-7"
-                    style={{ background: endpointColor }}
-                  >
-                    {cell.kind === 'source' ? '🚂' : '🏁'}
-                  </div>
+                  <span className="relative z-10 flex items-center gap-0.5 rounded-md bg-white px-1 py-0.5 text-xs font-black dark:bg-slate-900" style={{ color: endpointColor }}>
+                    <EndpointGlyph station={cell.kind === 'station'} />
+                    {cell.colorIdx + 1}
+                  </span>
                 </div>
               );
             }
-
             return (
               <motion.button
                 key={i}
+                type="button"
                 onClick={() => rotate(i)}
-                whileTap={{ scale: 0.88 }}
-                className="ml-tap flex aspect-square items-center justify-center rounded-xl bg-slate-100/70 ring-1 ring-slate-200/60 transition-colors hover:bg-slate-100 dark:bg-white/10 dark:ring-white/10"
+                disabled={inputBlocked}
+                aria-label={`${position}: ${cell.kind} track, opens ${directions}${lit !== null ? `, train ${lit + 1}` : ''}. Rotate clockwise`}
+                whileTap={reduceMotion || inputBlocked ? undefined : { scale: 0.96 }}
+                className="ml-tap flex aspect-square min-w-0 cursor-pointer items-center justify-center rounded-lg bg-slate-100 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:cursor-default disabled:opacity-70 sm:rounded-xl dark:bg-white/10 dark:ring-white/10 dark:hover:bg-white/20"
               >
-                <motion.div
-                  className="h-full w-full"
-                  key={cell.ports}
-                  initial={{ rotate: -90 }}
-                  animate={{ rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                >
-                  <TrackGlyph ports={cell.ports} color={flowColor ?? idleColor} />
-                </motion.div>
+                <TrackGlyph ports={cell.ports} color={flowColor} />
               </motion.button>
             );
           })}
         </div>
-
-        <div className="mt-3 flex items-center gap-2 text-sm font-bold">
-          {puzzle.colors.map((c) => (
-            <span
-              key={c}
-              className="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors"
-              style={{
-                background: solved.has(c) ? `${COLORS[c].hex}22` : 'transparent',
-                color: COLORS[c].hex,
-              }}
-            >
-              <span className="inline-block h-3 w-3 rounded-full" style={{ background: COLORS[c].hex }} />
-              {solved.has(c) ? '✓' : '•'}
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs font-bold" aria-label="Route status">
+          {puzzle.colors.map((color) => (
+            <span key={color} className="flex items-center gap-1 rounded-full px-2 py-1.5" style={{ background: `${colorFor(color)}18`, color: colorFor(color) }}>
+              <span>Route {color + 1}</span>
+              <span aria-label={flow.solved.has(color) ? 'connected' : 'not connected'}>{flow.solved.has(color) ? '✓' : '○'}</span>
             </span>
           ))}
         </div>
+        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">Train → matching flag · Tap a track to turn it clockwise</p>
       </GameStage>
     </div>
   );

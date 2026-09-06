@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { CATEGORIES } from '../lib/categories';
 import type { GameProps } from '../lib/types';
 import { cx, shuffle } from '../lib/utils';
@@ -7,18 +6,18 @@ import { playSound } from '../lib/sound';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { CountdownOverlay } from '../components/CountdownOverlay';
+import { getGridRecallRoundConfig } from './grid-recall-logic';
 
 const accent = CATEGORIES.memory.accent;
 
-type Status = 'ready' | 'showing' | 'input' | 'over';
+type Status = 'ready' | 'showing' | 'input' | 'complete' | 'over';
 
 function makeRound(round: number) {
-  // Grid grows every two rounds: 3x3 -> 4x4 -> 5x5 (cap).
-  const size = Math.min(5, 3 + Math.floor(round / 2));
+  const config = getGridRecallRoundConfig(round);
+  const { size, lit } = config;
   const cells = size * size;
-  const lit = Math.min(cells - 1, 3 + round);
   const pattern = shuffle([...Array(cells).keys()]).slice(0, lit);
-  return { size, pattern: new Set(pattern) };
+  return { ...config, pattern: new Set(pattern) };
 }
 
 export default function GridRecall({ onFinish }: GameProps) {
@@ -26,11 +25,14 @@ export default function GridRecall({ onFinish }: GameProps) {
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [status, setStatus] = useState<Status>('ready');
-  const [{ size, pattern }, setBoard] = useState(() => makeRound(0));
+  const [{ size, pattern, revealMs, reward }, setBoard] = useState(() => makeRound(0));
   const [revealed, setRevealed] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [wrong, setWrong] = useState<number | null>(null);
   const timers = useRef<number[]>([]);
+  const statusRef = useRef<Status>('ready');
+  const selectedRef = useRef(new Set<number>());
+  const started = useRef(false);
 
   const clearTimers = () => {
     timers.current.forEach((t) => window.clearTimeout(t));
@@ -38,70 +40,76 @@ export default function GridRecall({ onFinish }: GameProps) {
   };
 
   const beginRound = useCallback((r: number) => {
+    clearTimers();
     const b = makeRound(r);
     setBoard(b);
-    setSelected(new Set());
+    selectedRef.current = new Set();
+    setSelected(selectedRef.current);
     setWrong(null);
+    statusRef.current = 'showing';
     setStatus('showing');
     setRevealed(true);
-    const showMs = 900 + b.pattern.size * 220;
     timers.current.push(
       window.setTimeout(() => {
         setRevealed(false);
+        statusRef.current = 'input';
         setStatus('input');
-      }, showMs),
+      }, b.revealMs),
     );
   }, []);
 
   useEffect(() => () => clearTimers(), []);
 
   const start = useCallback(() => {
+    if (started.current) return;
+    started.current = true;
     setCounting(false);
     beginRound(0);
   }, [beginRound]);
 
   const handleTap = (idx: number) => {
-    if (status !== 'input') return;
-    if (selected.has(idx)) return;
+    if (statusRef.current !== 'input' || selectedRef.current.has(idx)) return;
 
     if (!pattern.has(idx)) {
+      statusRef.current = 'over';
       setWrong(idx);
       setStatus('over');
+      setRevealed(true);
       clearTimers();
       playSound('wrong');
       timers.current.push(
         window.setTimeout(() => onFinish({
           score,
           stats: [{ label: 'Round reached', value: String(round + 1) }],
-        }), 800),
+        }), 1200),
       );
       return;
     }
 
     playSound('correct');
-    setSelected((prev) => {
-      if (prev.has(idx)) return prev;
-      const next = new Set(prev);
-      next.add(idx);
+    const next = new Set(selectedRef.current).add(idx);
+    selectedRef.current = next;
+    setSelected(next);
 
-      if (next.size === pattern.size) {
-        const gained = pattern.size * 10;
-        setScore((s) => s + gained);
-        setStatus('showing');
-        timers.current.push(
-          window.setTimeout(() => {
-            const nr = round + 1;
-            setRound(nr);
-            beginRound(nr);
-          }, 550),
-        );
-      }
-      return next;
-    });
+    if (next.size === pattern.size) {
+      statusRef.current = 'complete';
+      setScore((s) => s + reward);
+      setStatus('complete');
+      timers.current.push(
+        window.setTimeout(() => {
+          const nr = round + 1;
+          setRound(nr);
+          beginRound(nr);
+        }, 700),
+      );
+    }
   };
 
   const statusText =
-    status === 'showing' && revealed ? 'Memorize!' : status === 'input' ? 'Your turn' : '\u00A0';
+    status === 'showing' ? `Memorize ${pattern.size} tiles` :
+    status === 'input' ? `Find the pattern · ${selected.size}/${pattern.size}` :
+    status === 'complete' ? `Pattern complete! +${reward}` :
+    status === 'over' ? 'Here was the pattern' : 'Get ready';
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -109,14 +117,17 @@ export default function GridRecall({ onFinish }: GameProps) {
       <GameStage
         hud={<HUD accent={accent} score={score} status={String(round + 1)} />}
       >
-        <div className="mb-3 h-6 text-sm font-bold" style={{ color: accent }}>
+        <div className="mb-3 min-h-6 text-center text-sm font-bold text-slate-700 dark:text-slate-100" role="status">
           {statusText}
         </div>
+        <p className="mb-3 text-center text-xs text-slate-500 dark:text-slate-400">
+          {size} × {size} grid · {(revealMs / 1000).toFixed(2)}s to memorize · No rush to answer
+        </p>
         <div
           className="grid gap-2 sm:gap-3"
           style={{
             gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
-            width: `min(88vw, ${size * 84}px)`,
+            width: `min(100%, ${size * 84}px)`,
           }}
         >
           {Array.from({ length: size * size }).map((_, i) => {
@@ -125,16 +136,24 @@ export default function GridRecall({ onFinish }: GameProps) {
             const isWrong = wrong === i;
             const lit = revealed && isPattern;
             return (
-              <motion.button
+              <button
                 key={i}
-                whileTap={{ scale: 0.9 }}
                 onClick={() => handleTap(i)}
+                onKeyDown={(event) => {
+                  if (event.repeat) event.preventDefault();
+                }}
+                aria-label={`Row ${Math.floor(i / size) + 1}, column ${i % size + 1}${isWrong ? ', missed' : isSel ? ', found' : lit ? ', highlighted' : ''}`}
+                aria-pressed={isSel}
+                aria-disabled={status !== 'input' || isSel}
                 className={cx(
-                  'ml-tap aspect-square rounded-2xl transition-colors duration-150',
+                  'ml-tap aspect-square min-h-11 min-w-11 rounded-2xl text-xl font-bold text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-700 dark:focus-visible:outline-white',
+                  status === 'input' && !isSel ? 'cursor-pointer' : 'cursor-default',
                   isWrong ? 'bg-red-500' : isSel || lit ? '' : 'bg-white/70 ring-1 ring-slate-200 dark:bg-white/10 dark:ring-white/10',
                 )}
                 style={isWrong ? undefined : isSel || lit ? { background: accent } : undefined}
-              />
+              >
+                <span aria-hidden="true">{isWrong ? '×' : isSel ? '✓' : lit ? '•' : ''}</span>
+              </button>
             );
           })}
         </div>

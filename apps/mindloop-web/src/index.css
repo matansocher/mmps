@@ -65,6 +65,20 @@
   button {
     font-family: inherit;
   }
+
+  button:enabled {
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  a:focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 4px;
+  }
+}
+
+.ml-game-stage button {
+  min-height: 44px;
 }
 
 @layer utilities {

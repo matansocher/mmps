@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
   accent: string;
@@ -9,20 +9,28 @@ interface Props {
 /** A 3 · 2 · 1 · GO! overlay shown before a game starts. */
 export function CountdownOverlay({ accent, onDone }: Props) {
   const [n, setN] = useState(3);
+  const doneRef = useRef(onDone);
+  const completed = useRef(false);
+  useEffect(() => {
+    doneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     if (n < 0) {
-      onDone();
+      if (!completed.current) {
+        completed.current = true;
+        doneRef.current();
+      }
       return;
     }
     const id = window.setTimeout(() => setN((v) => v - 1), n === 0 ? 500 : 750);
     return () => window.clearTimeout(id);
-  }, [n, onDone]);
+  }, [n]);
 
-  const label = n === 0 ? 'GO!' : String(n);
+  const label = n <= 0 ? 'GO!' : String(n);
 
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center ml-app-bg">
+    <div role="status" aria-label={`Get ready: ${label}`} className="absolute inset-0 z-30 flex items-center justify-center ml-app-bg">
       <AnimatePresence mode="wait">
         <motion.div
           key={n}
