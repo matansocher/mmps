@@ -24,6 +24,8 @@ export type MindloopPlayer = {
 export type MindloopPlayerDocument = Omit<MindloopPlayer, 'updatedAt'> & {
   /** Telegram user id, used as the document primary key. */
   readonly _id: number;
+  /** Monotonic counter guarding read-modify-write merges against concurrent updates. */
+  readonly revision: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };
