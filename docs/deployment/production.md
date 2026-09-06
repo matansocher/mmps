@@ -84,16 +84,6 @@ pm2 monit
 pm2 logs mmps
 ```
 
-### Using Docker
-
-```bash
-# Build image
-docker build -t mmps .
-
-# Run container
-docker run -e MONGO_DB_URL=... -e OPENAI_API_KEY=... mmps
-```
-
 ## Monitoring & Logging
 
 Production telemetry (traces, metrics, logs) is exported to **Grafana Cloud** via OpenTelemetry. Set the `OTEL_*` / `GRAFANA_OTLP_*` config vars on Heroku and view APM, logs, and alerts in Grafana. Full details: [Monitoring & Observability](/deployment/monitoring).
