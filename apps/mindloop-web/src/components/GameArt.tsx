@@ -134,7 +134,41 @@ const ebbFlow: Art = ({ tint, accent }) => (
   </>
 );
 
+const blockEscape: Art = ({ tint, accent }) => (
+  <>
+    <rect x="6" y="8" width="14" height="30" rx="4" fill={tint} />
+    <rect x="25" y="8" width="30" height="12" rx="4" fill={tint} />
+    <rect x="6" y="44" width="32" height="12" rx="4" fill={tint} />
+    <rect x="26" y="26" width="26" height="13" rx="5" fill={accent} />
+    <circle cx="43" cy="31" r="1.5" fill="#fff" />
+    <path d="M54 29l5 4-5 4" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+  </>
+);
+
+const orderUp: Art = ({ tint, accent }) => (
+  <>
+    <rect x="10" y="6" width="28" height="36" rx="5" fill={tint} />
+    <path d="M17 16h14M17 23h10" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+    <path d="M24 41c0-9 7-15 15-15s15 6 15 15z" fill={accent} />
+    <rect x="23" y="45" width="32" height="6" rx="3" fill={tint} />
+    <path d="M26 55h26" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+    <circle cx="35" cy="34" r="1.5" fill="#fff" />
+    <circle cx="44" cy="34" r="1.5" fill="#fff" />
+  </>
+);
+
+const shapeShift: Art = ({ tint, accent }) => (
+  <>
+    <path d="M8 8h12v22h12v12H8z" fill={tint} />
+    <path d="M38 24h18v32H44V36h-6z" fill={accent} />
+    <path d="M29 10c10-2 17 1 21 7m-1-8 2 9-9-1" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+  </>
+);
+
 const ART: Record<string, Art> = {
+  'block-escape': blockEscape,
+  'order-up': orderUp,
+  'shape-shift': shapeShift,
   'grid-recall': gridRecall,
   'pair-match': pairMatch,
   'sequence-echo': sequenceEcho,

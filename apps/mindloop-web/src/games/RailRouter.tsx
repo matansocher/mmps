@@ -1,227 +1,203 @@
-import { motion, useReducedMotion } from 'framer-motion';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CountdownOverlay } from '../components/CountdownOverlay';
-import { GameStage } from '../components/GameStage';
-import { HUD } from '../components/HUD';
-import { useCountdown } from '../hooks/useCountdown';
-import { useTheme } from '../hooks/useTheme';
-import { CATEGORIES } from '../lib/categories';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
-import { E, makeLevel, N, rotateCW, S, solveFlow, W } from './rail-router-logic';
-import type { Puzzle } from './rail-router-logic';
+import { advanceRun, createRun, initialSwitches, type Switches, TOTAL_TIME } from './railrouter/engine';
+import { LEVELS } from './railrouter/levels';
+import { COLORS, type Level } from './railrouter/model';
+import './railrouter/rail-router.css';
+import { RailBoard, TrainArt } from './railrouter/RailBoard';
 
-const accent = CATEGORIES.flexibility.accent;
-const TOTAL_TIME = 90;
-const COLORS = [
-  { name: 'red', light: '#b91c1c', dark: '#f87171' },
-  { name: 'blue', light: '#1d4ed8', dark: '#60a5fa' },
-  { name: 'green', light: '#15803d', dark: '#4ade80' },
-  { name: 'amber', light: '#a16207', dark: '#fbbf24' },
-  { name: 'violet', light: '#7e22ce', dark: '#c084fc' },
-] as const;
-const DIRECTIONS = [
-  { bit: N, name: 'north' },
-  { bit: E, name: 'east' },
-  { bit: S, name: 'south' },
-  { bit: W, name: 'west' },
-] as const;
-type Phase = 'counting' | 'playing' | 'advancing' | 'finished';
-
-function TrackGlyph({ ports, color }: { readonly ports: number; readonly color: string }) {
-  const paths: string[] = [];
-  if (ports & N) paths.push('M24 24 L24 2');
-  if (ports & S) paths.push('M24 24 L24 46');
-  if (ports & W) paths.push('M24 24 L2 24');
-  if (ports & E) paths.push('M24 24 L46 24');
-  return (
-    <svg viewBox="0 0 48 48" className="h-full w-full" aria-hidden="true">
-      {paths.map((d) => (
-        <path key={d} d={d} stroke={color} strokeWidth={8} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      ))}
-      <circle cx={24} cy={24} r={4} fill={color} />
-    </svg>
-  );
-}
-
-function EndpointGlyph({ station }: { readonly station: boolean }) {
-  return (
-    <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
-      {station ? (
-        <path d="M4 18V2h12l-3 4 3 4H4" />
-      ) : (
-        <>
-          <rect x="4" y="2" width="12" height="13" rx="3" />
-          <path d="M4 9h12M7 15l-2 3m8-3 2 3" />
-          <path d="M7 12h1m4 0h1" strokeWidth={2.5} />
-        </>
-      )}
-    </svg>
-  );
-}
+type Phase = 'choose' | 'countdown' | 'running' | 'paused';
 
 export default function RailRouter({ onFinish }: GameProps) {
-  const [phase, setPhase] = useState<Phase>('counting');
-  const [level, setLevel] = useState(1);
-  const [score, setScore] = useState(0);
-  const [puzzle, setPuzzle] = useState<Puzzle>(() => makeLevel(1));
-  const [feedback, setFeedback] = useState('Rotate a tile to connect each numbered train to its matching flag.');
-  const { theme, reducedMotion } = useTheme();
-  const systemReducedMotion = useReducedMotion();
-  const reduceMotion = reducedMotion || systemReducedMotion;
-  const phaseRef = useRef<Phase>('counting');
-  const puzzleRef = useRef(puzzle);
-  const scoreRef = useRef(0);
-  const completedRef = useRef(0);
+  const [phase, setPhase] = useState<Phase>('choose');
+  const [level, setLevel] = useState(LEVELS[0]);
+  const [run, setRun] = useState(() => createRun(LEVELS[0]));
+  const [switches, setSwitches] = useState<Switches>(() => initialSwitches(LEVELS[0]));
+  const runRef = useRef(run);
+  const switchesRef = useRef(switches);
+  const finished = useRef(false);
 
-  const finish = useCallback(() => {
-    if (phaseRef.current === 'finished') return;
-    phaseRef.current = 'finished';
-    setPhase('finished');
-    onFinish({
-      score: scoreRef.current,
-      stats: [{ label: 'Levels solved', value: String(completedRef.current) }],
-    });
-  }, [onFinish]);
+  const chooseBoard = (board: Level) => {
+    const nextRun = createRun(board);
+    const nextSwitches = initialSwitches(board);
+    setLevel(board);
+    setRun(nextRun);
+    setSwitches(nextSwitches);
+    runRef.current = nextRun;
+    switchesRef.current = nextSwitches;
+    finished.current = false;
+    setPhase('countdown');
+  };
 
-  const { remaining, reset, addTime, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
-  const start = useCallback(() => {
-    if (phaseRef.current !== 'counting') return;
-    phaseRef.current = 'playing';
-    setPhase('playing');
-    reset(TOTAL_TIME);
-  }, [reset]);
+  const start = useCallback(() => setPhase('running'), []);
 
-  const flow = useMemo(() => solveFlow(puzzle), [puzzle]);
-
-  // The transition owns its timeout; effect replay simply reschedules it.
   useEffect(() => {
-    if (phase !== 'advancing') return;
-    const timeout = window.setTimeout(() => {
-      if (phaseRef.current !== 'advancing') return;
-      const nextLevel = level + 1;
-      const nextPuzzle = makeLevel(nextLevel);
-      puzzleRef.current = nextPuzzle;
-      setPuzzle(nextPuzzle);
-      setLevel(nextLevel);
-      setFeedback(`Level ${nextLevel}: connect all ${nextPuzzle.colors.length} numbered routes.`);
-      phaseRef.current = 'playing';
-      setPhase('playing');
-    }, 900);
-    return () => window.clearTimeout(timeout);
-  }, [level, phase]);
+    if (phase !== 'running') return;
+    let frame = 0;
+    let previous: number | undefined;
 
-  const rotate = useCallback(
-    (i: number) => {
-      if (phaseRef.current !== 'playing' || isExpired()) return;
-      const current = puzzleRef.current;
-      const cell = current.cells[i];
-      if (!cell || cell.fixed) return;
-      const cells = current.cells.map((item, index) => (index === i ? { ...item, ports: rotateCW(item.ports) } : item));
-      const next = { ...current, cells };
-      const previousFlow = solveFlow(current);
-      const nextFlow = solveFlow(next);
-      puzzleRef.current = next;
-      setPuzzle(next);
-
-      if (current.colors.every((color) => nextFlow.solved.has(color))) {
-        phaseRef.current = 'advancing';
-        setPhase('advancing');
-        const gained = 100 + current.colors.length * 50 + (level - 1) * 25 + Math.round(remaining) * 2;
-        scoreRef.current += gained;
-        completedRef.current++;
-        setScore(scoreRef.current);
-        addTime(8);
-        setFeedback(`Level ${level} complete! +${gained} points · +8 seconds`);
-        playSound('correct');
+    const tick = (timestamp: number) => {
+      // A hidden tab pauses explicitly, rather than spawning a backlog of trains.
+      if (document.hidden) {
+        setPhase('paused');
         return;
       }
+      const dt = previous === undefined ? 0 : (timestamp - previous) / 1000;
+      previous = timestamp;
+      const before = runRef.current;
+      const next = advanceRun(level, before, switchesRef.current, dt);
+      runRef.current = next;
+      setRun(next);
+      if (next.correct > before.correct) playSound('correct');
+      else if (next.wrong > before.wrong) playSound('wrong');
 
-      const connected = current.colors.filter((color) => nextFlow.solved.has(color) && !previousFlow.solved.has(color));
-      const disconnected = current.colors.filter((color) => previousFlow.solved.has(color) && !nextFlow.solved.has(color));
-      if (connected.length) {
-        setFeedback(`Route ${connected.map((color) => color + 1).join(', ')} connected · ${nextFlow.solved.size}/${current.colors.length} ready`);
-        playSound('correct');
-      } else {
-        if (disconnected.length) setFeedback(`Route ${disconnected.map((color) => color + 1).join(', ')} disconnected. Rotate to reconnect it.`);
-        playSound('click');
+      if (next.finished) {
+        if (!finished.current) {
+          finished.current = true;
+          onFinish({
+            score: next.correct,
+            stats: [
+              { label: 'Correct deliveries', value: String(next.correct) },
+              { label: 'Wrong stations', value: String(next.wrong) },
+              { label: 'Board', value: level.name },
+            ],
+          });
+        }
+        return;
       }
-    },
-    [addTime, isExpired, level, remaining],
-  );
+      frame = requestAnimationFrame(tick);
+    };
 
-  const { cols } = puzzle;
-  const colorFor = (color: number) => COLORS[color][theme];
-  const idleColor = theme === 'dark' ? '#94a3b8' : '#64748b';
-  const inputBlocked = phase !== 'playing' || remaining <= 0;
+    const pauseWhenHidden = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(frame);
+        setPhase('paused');
+      }
+    };
+    frame = requestAnimationFrame(tick);
+    document.addEventListener('visibilitychange', pauseWhenHidden);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('visibilitychange', pauseWhenHidden);
+    };
+  }, [phase, level, onFinish]);
 
-  return (
-    <div className="relative flex min-w-0 flex-1 flex-col">
-      {phase === 'counting' && <CountdownOverlay accent={accent} onDone={start} />}
-      <GameStage hud={<HUD accent={accent} score={score} time={Math.ceil(remaining)} timeFraction={Math.min(1, remaining / TOTAL_TIME)} status={String(level)} statusLabel="Level" />}>
-        <div className="mb-3 min-h-12 text-center text-sm font-bold text-slate-700 dark:text-slate-200" role="status" aria-live="polite" aria-atomic="true">
-          {feedback}
+  const toggleSwitch = (id: string) => {
+    if (phase !== 'running' || finished.current) return;
+    const node = level.nodes.find((item) => item.id === id);
+    if (!node || node.kind !== 'switch') throw new Error(`Unknown railway switch: ${id}`);
+    const next = { ...switchesRef.current, [id]: (switchesRef.current[id] + 1) % node.outputs.length };
+    switchesRef.current = next;
+    setSwitches(next);
+    playSound('click');
+  };
+
+  if (phase === 'choose') {
+    return (
+      <section className="rail-select">
+        <div className="rail-select-heading">
+          <span className="rail-eyebrow">YOUR SHIFT, YOUR ROUTE</span>
+          <h1>Choose a railway</h1>
+          <p>One board. 90 seconds. Keep every train on the right track.</p>
         </div>
-        <div
-          className="grid w-full gap-0.5 rounded-2xl bg-white/60 p-1 shadow-sm ring-1 ring-slate-200 sm:gap-1.5 sm:p-2.5 dark:bg-white/5 dark:ring-white/10"
-          role="group"
-          aria-label={`Level ${level} rail board, ${cols} rows and columns`}
-          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, maxWidth: cols * 72 }}
-        >
-          {puzzle.cells.map((cell, i) => {
-            const lit = flow.cells[i].lit;
-            const flowColor = lit !== null ? colorFor(lit) : idleColor;
-            const directions = DIRECTIONS.filter((dir) => cell.ports & dir.bit)
-              .map((dir) => dir.name)
-              .join(', ');
-            const position = `Row ${Math.floor(i / cols) + 1}, column ${(i % cols) + 1}`;
-            if (cell.fixed) {
-              const endpointColor = colorFor(cell.colorIdx);
-              const done = flow.solved.has(cell.colorIdx);
-              const endpointName = `${cell.kind === 'source' ? 'Train' : 'Station'} ${cell.colorIdx + 1}`;
-              return (
-                <div
-                  key={i}
-                  role="img"
-                  aria-label={`${position}: ${endpointName}, ${COLORS[cell.colorIdx].name}, opens ${directions}${done ? ', connected' : ''}`}
-                  className="relative flex aspect-square min-w-0 items-center justify-center rounded-lg sm:rounded-xl"
-                  style={{ background: `${endpointColor}18`, boxShadow: done ? `inset 0 0 0 2px ${endpointColor}` : undefined }}
-                >
-                  <div className="absolute inset-0">
-                    <TrackGlyph ports={cell.ports} color={endpointColor} />
-                  </div>
-                  <span className="relative z-10 flex items-center gap-0.5 rounded-md bg-white px-1 py-0.5 text-xs font-black dark:bg-slate-900" style={{ color: endpointColor }}>
-                    <EndpointGlyph station={cell.kind === 'station'} />
-                    {cell.colorIdx + 1}
-                  </span>
-                </div>
-              );
-            }
-            return (
-              <motion.button
-                key={i}
-                type="button"
-                onClick={() => rotate(i)}
-                disabled={inputBlocked}
-                aria-label={`${position}: ${cell.kind} track, opens ${directions}${lit !== null ? `, train ${lit + 1}` : ''}. Rotate clockwise`}
-                whileTap={reduceMotion || inputBlocked ? undefined : { scale: 0.96 }}
-                className="ml-tap flex aspect-square min-w-0 cursor-pointer items-center justify-center rounded-lg bg-slate-100 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:cursor-default disabled:opacity-70 sm:rounded-xl dark:bg-white/10 dark:ring-white/10 dark:hover:bg-white/20"
-              >
-                <TrackGlyph ports={cell.ports} color={flowColor} />
-              </motion.button>
-            );
-          })}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs font-bold" aria-label="Route status">
-          {puzzle.colors.map((color) => (
-            <span key={color} className="flex items-center gap-1 rounded-full px-2 py-1.5" style={{ background: `${colorFor(color)}18`, color: colorFor(color) }}>
-              <span>Route {color + 1}</span>
-              <span aria-label={flow.solved.has(color) ? 'connected' : 'not connected'}>{flow.solved.has(color) ? '✓' : '○'}</span>
-            </span>
+        <div className="rail-levels">
+          {LEVELS.map((board, index) => (
+            <button key={board.id} className="rail-level" onClick={() => chooseBoard(board)} aria-label={`Play ${board.name}, ${board.difficulty}, ${board.family}`}>
+              <div className="rail-level-preview">
+                <RailBoard level={board} switches={initialSwitches(board)} preview />
+                <span className="rail-level-number">{index + 1}</span>
+              </div>
+              <div className="rail-level-caption">
+                <strong>{board.name}</strong>
+                <span>
+                  {board.family} · {board.difficulty}
+                </span>
+              </div>
+            </button>
           ))}
         </div>
-        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">Train → matching flag · Tap a track to turn it clockwise</p>
-      </GameStage>
-    </div>
+        <p className="rail-select-note">Tap the light-green junctions to change direction. Match each train to its station's color and number.</p>
+      </section>
+    );
+  }
+
+  const remaining = Math.max(0, Math.ceil(TOTAL_TIME - run.elapsed));
+  const timeLabel = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+  const arrivals = run.correct + run.wrong;
+  const latest = run.deliveries[run.deliveries.length - 1];
+
+  return (
+    <section className="rail-game" aria-label={`${level.name} railway game`}>
+      <div className="rail-toolbar">
+        <div>
+          <span className="rail-eyebrow">
+            {level.family} / {level.difficulty}
+          </span>
+          <h1>{level.name}</h1>
+        </div>
+        <button className="rail-pause" disabled={phase === 'countdown'} onClick={() => setPhase(phase === 'paused' ? 'running' : 'paused')}>
+          {phase === 'paused' ? 'Resume' : 'Pause'}
+        </button>
+      </div>
+
+      <div className="rail-playfield">
+        <div className="rail-scoreboard">
+          <div>
+            <span>TIME</span>
+            <strong className={remaining <= 10 ? 'rail-time-low' : ''} data-testid="rail-time">
+              {timeLabel}
+            </strong>
+          </div>
+          <div>
+            <span>CORRECT</span>
+            <strong data-testid="rail-score">
+              {run.correct}
+              <small> of {arrivals}</small>
+            </strong>
+          </div>
+        </div>
+        <div className="rail-time-track">
+          <div style={{ transform: `scaleX(${remaining / TOTAL_TIME})` }} />
+        </div>
+        <RailBoard level={level} switches={switches} trains={run.trains} deliveries={run.deliveries} onSwitch={toggleSwitch} disabled={phase !== 'running'} />
+        {phase === 'countdown' && <CountdownOverlay accent="#4ba762" onDone={start} />}
+        {phase === 'paused' && (
+          <div className="rail-paused">
+            <h2>Shift paused</h2>
+            <p>Your trains will wait here.</p>
+            <button className="rail-resume" onClick={() => setPhase('running')}>
+              Resume railway
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="rail-bottom">
+        <div className="rail-next">
+          <span>NEXT TRAIN</span>
+          <svg viewBox="-30 -18 60 36" width="56" height="34" role="img" aria-label={`Next train: ${COLORS[run.nextColor].id}, ${run.nextColor + 1}`}>
+            <TrainArt color={run.nextColor} />
+          </svg>
+        </div>
+        <p className="rail-feedback" role="status">
+          {latest ? (latest.correct ? 'Right on track! +1' : 'Wrong station. Keep going!') : 'Tap a green junction to switch its route.'}
+        </p>
+      </div>
+      <div className="rail-station-key" aria-label="Station colors">
+        {level.nodes
+          .filter((node) => node.kind === 'station')
+          .map((station) => {
+            const color = station.color!;
+            return (
+              <span key={station.id}>
+                <i style={{ background: COLORS[color].hex, color: COLORS[color].ink }}>{color + 1}</i>
+                {COLORS[color].id}
+              </span>
+            );
+          })}
+      </div>
+    </section>
   );
 }

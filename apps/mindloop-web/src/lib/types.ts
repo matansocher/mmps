@@ -17,16 +17,15 @@ export interface Category {
   soft: string;
 }
 
-export interface GameMeta {
-  id: string;
-  title: string;
-  tagline: string;
-  category: CategoryId;
-  /** Emoji used as the card glyph. */
-  icon: string;
-  /** Short "how to play" lines shown on the intro screen. */
-  howTo: string[];
-}
+export type GameMeta = {
+  readonly id: string;
+  readonly title: string;
+  readonly tagline: string;
+  readonly category: CategoryId;
+  readonly icon: string;
+  readonly howTo: string[];
+  readonly brainPractice?: string;
+};
 
 /** Result reported by a game when a run finishes. */
 export interface GameResult {
