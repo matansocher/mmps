@@ -45,7 +45,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Aider
-        run: python -m pip install --upgrade aider-chat
+        run: python -m pip install 'aider-chat==0.86.2'
 
       - name: Configure git
         run: |
