@@ -1,6 +1,7 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import type { Express, Request, Response } from 'express';
 import { z } from 'zod';
+import { createRateLimiter } from '@core/express';
 import { registry } from '@core/openapi';
 import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
@@ -51,6 +52,9 @@ registry.registerPath({
 
 type ContactRequest = z.infer<typeof ContactRequestSchema>;
 
+// Bound Telegram forwarding: 5 submissions per hour per IP.
+const contactRateLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5, prefix: 'portfolio-contact' });
+
 export function registerPortfolioApiRoutes(app: Express): void {
   // CORS — the contact form is served from external websites
   app.use('/portfolio/contact', (req: Request, res: Response, next) => {
@@ -64,7 +68,7 @@ export function registerPortfolioApiRoutes(app: Express): void {
     next();
   });
 
-  app.post('/portfolio/contact', (req: Request<object, object, ContactRequest>, res: Response) => {
+  app.post('/portfolio/contact', contactRateLimiter, (req: Request<object, object, ContactRequest>, res: Response) => {
     try {
       const parseResult = ContactRequestSchema.safeParse(req.body);
       if (!parseResult.success) {

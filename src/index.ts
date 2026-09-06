@@ -27,6 +27,11 @@ async function main() {
   const port = env.PORT || 3000;
   const logger = new Logger('bootstrap');
 
+  // Behind the platform's single reverse proxy (Procfile web dyno): trust one
+  // hop so req.ip reflects the real client for rate limiting, without trusting
+  // arbitrary client-supplied X-Forwarded-For headers.
+  app.set('trust proxy', 1);
+
   app.use(express.json());
 
   app.get('/', (_req: Request, res: Response) => {
