@@ -15,15 +15,11 @@ import { initMindloop } from '@features/mindloop';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
-import { notify } from '@services/notifier';
 import { stopAllTelegramBots } from '@services/telegram';
 
 dotenv.config();
 
 axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
-
-// Identifies bootstrap-level notifications; only the name is surfaced in the alert text.
-const BOOTSTRAP_NOTIFIER_CONFIG = { id: 'BOOTSTRAP', name: 'Bootstrap 🚀', token: '' };
 
 async function main() {
   // await initConsoleOverride();
@@ -38,8 +34,8 @@ async function main() {
   });
 
   // Collects components that were expected to serve but failed to initialize,
-  // so a degraded process (live but not fully functioning) triggers an alert
-  // instead of silently passing as healthy.
+  // so a degraded process (live but not fully functioning) is logged as an
+  // error for Grafana alerting instead of silently passing as healthy.
   const failedComponents: string[] = [];
 
   try {
@@ -78,9 +74,7 @@ async function main() {
   await initBot(worldlyConfig, () => initWorldly(app));
 
   if (failedComponents.length) {
-    const failed = failedComponents.join(', ');
-    logger.error(`Startup completed with unavailable components: ${failed}`);
-    notify(BOOTSTRAP_NOTIFIER_CONFIG, { action: 'STARTUP_DEGRADED', failedComponents });
+    logger.error(`Startup completed with unavailable components: ${failedComponents.join(', ')}`);
   }
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
