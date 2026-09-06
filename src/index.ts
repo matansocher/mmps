@@ -15,11 +15,15 @@ import { initMindloop } from '@features/mindloop';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
+import { notify } from '@services/notifier';
 import { stopAllTelegramBots } from '@services/telegram';
 
 dotenv.config();
 
 axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
+
+// Identifies bootstrap-level notifications; only the name is surfaced in the alert text.
+const BOOTSTRAP_NOTIFIER_CONFIG = { id: 'BOOTSTRAP', name: 'Bootstrap 🚀', token: '' };
 
 async function main() {
   // await initConsoleOverride();
@@ -29,50 +33,26 @@ async function main() {
 
   app.use(express.json());
 
-  // Tracks the components that are expected to be serving. A component is only
-  // marked ready once its initialization completes without throwing, so the
-  // readiness endpoint can distinguish a live process from a functioning one.
-  const components = new Map<string, boolean>();
-  const markReady = (name: string) => components.set(name, true);
-  const markFailed = (name: string) => components.set(name, false);
-  const requireComponent = (name: string) => {
-    components.set(name, false);
-    return {
-      ready: () => markReady(name),
-      failed: () => markFailed(name),
-    };
-  };
-  const isReady = () => [...components.values()].every(Boolean);
-
-  // Liveness: the process is up and the event loop is responsive.
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
   });
 
-  // Readiness: every required component initialized successfully. Returns 503
-  // when any intended bot or app failed to start so monitoring and rollout
-  // acceptance don't treat a degraded process as healthy.
-  app.get('/ready', (_req: Request, res: Response) => {
-    const componentStatus = Object.fromEntries(components);
-    const ready = isReady();
-    res.status(ready ? 200 : 503).json({ ready, components: componentStatus });
-  });
+  // Collects components that were expected to serve but failed to initialize,
+  // so a degraded process (live but not fully functioning) triggers an alert
+  // instead of silently passing as healthy.
+  const failedComponents: string[] = [];
 
-  const savingsComponent = requireComponent('savings');
   try {
     await initSavings(app);
-    savingsComponent.ready();
   } catch (err) {
-    savingsComponent.failed();
+    failedComponents.push('savings');
     logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
   }
 
-  const mindloopComponent = requireComponent('mindloop');
   try {
     await initMindloop(app);
-    mindloopComponent.ready();
   } catch (err) {
-    mindloopComponent.failed();
+    failedComponents.push('mindloop');
     logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
   }
 
@@ -83,12 +63,10 @@ async function main() {
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
   const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {
     if (!shouldInitBot(config)) return;
-    const component = requireComponent(config.id);
     try {
       await init();
-      component.ready();
     } catch (err) {
-      component.failed();
+      failedComponents.push(config.id);
       logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
     }
   };
@@ -99,9 +77,10 @@ async function main() {
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
 
-  if (!isReady()) {
-    const failed = [...components.entries()].filter(([, ready]) => !ready).map(([name]) => name);
-    logger.error(`Startup completed with unavailable components: ${failed.join(', ')}`);
+  if (failedComponents.length) {
+    const failed = failedComponents.join(', ');
+    logger.error(`Startup completed with unavailable components: ${failed}`);
+    notify(BOOTSTRAP_NOTIFIER_CONFIG, { action: 'STARTUP_DEGRADED', failedComponents });
   }
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
