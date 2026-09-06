@@ -19,18 +19,17 @@ function mergeBestScores(a: MindloopBestScores, b: MindloopBestScores): Record<s
   return out;
 }
 
-/** Newest-first, de-duplicated by (gameId, at), capped to the max size. */
+/** Newest-first, de-duplicated by runId, capped to the max size. */
 function mergeHistory(a: ReadonlyArray<MindloopPlayEntry>, b: ReadonlyArray<MindloopPlayEntry>): MindloopPlayEntry[] {
   const seen = new Set<string>();
   const merged = [...a, ...b]
-    .filter((e) => typeof e?.gameId === 'string' && typeof e?.score === 'number' && typeof e?.at === 'string')
+    .filter((e) => typeof e?.runId === 'string' && typeof e?.gameId === 'string' && typeof e?.score === 'number' && typeof e?.at === 'string')
     .sort((x, y) => (x.at < y.at ? 1 : x.at > y.at ? -1 : 0));
   const out: MindloopPlayEntry[] = [];
   for (const entry of merged) {
-    const key = `${entry.gameId}@${entry.at}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ gameId: entry.gameId, score: entry.score, at: entry.at });
+    if (seen.has(entry.runId)) continue;
+    seen.add(entry.runId);
+    out.push({ runId: entry.runId, gameId: entry.gameId, score: entry.score, at: entry.at, ...(entry.receivedAt ? { receivedAt: entry.receivedAt } : {}) });
     if (out.length >= MINDLOOP_MAX_HISTORY_ENTRIES) break;
   }
   return out;
@@ -58,26 +57,37 @@ async function ensurePlayer(telegramUserId: number): Promise<MindloopPlayerDocum
 }
 
 /**
- * Records a finished run atomically: bumps the game's best score with $max and
- * prepends history with $push, so concurrent results never lose each other's
- * writes. No read-modify-write, so no revision guard is needed.
+ * Records a finished run: updates best score if beaten and prepends history,
+ * de-duplicating by runId. The runId dedup needs JS-side merge logic, so the
+ * write runs as a revision-guarded compare-and-swap with bounded retries: if
+ * another write lands between the read and the write, the guarded update matches
+ * nothing and we recompute against fresh data.
  */
-export async function recordResult(telegramUserId: number, gameId: string, score: number): Promise<MindloopPlayerDocument> {
-  await ensurePlayer(telegramUserId);
-  const now = new Date();
-  const entry: MindloopPlayEntry = { gameId, score, at: now.toISOString() };
+export async function recordResult(telegramUserId: number, entry: MindloopPlayEntry): Promise<MindloopPlayerDocument> {
+  const collection = getCollection();
 
-  const updated = await getCollection().findOneAndUpdate(
-    { _id: telegramUserId },
-    {
-      $max: { [`bestScores.${gameId}`]: score },
-      $push: { history: { $each: [entry], $position: 0, $slice: MINDLOOP_MAX_HISTORY_ENTRIES } },
-      $set: { updatedAt: now },
-      $inc: { revision: 1 },
-    },
-    { returnDocument: 'after' },
-  );
-  return updated as MindloopPlayerDocument;
+  for (let attempt = 0; attempt < MINDLOOP_MAX_MERGE_RETRIES; attempt++) {
+    const player = await ensurePlayer(telegramUserId);
+    const now = new Date();
+    const bestScores = mergeBestScores(player.bestScores, { [entry.gameId]: entry.score });
+    const incoming: MindloopPlayEntry = {
+      runId: entry.runId,
+      gameId: entry.gameId,
+      score: entry.score,
+      at: entry.at,
+      receivedAt: now.toISOString(),
+    };
+    const history = mergeHistory([incoming], player.history);
+
+    const updated = await collection.findOneAndUpdate(
+      { _id: telegramUserId, revision: player.revision },
+      { $set: { bestScores, history, updatedAt: now }, $inc: { revision: 1 } },
+      { returnDocument: 'after' },
+    );
+    if (updated) return updated;
+  }
+
+  throw new Error(`recordResult failed after ${MINDLOOP_MAX_MERGE_RETRIES} attempts due to concurrent updates`);
 }
 
 export async function setFavorites(telegramUserId: number, favorites: ReadonlyArray<string>): Promise<MindloopPlayerDocument> {

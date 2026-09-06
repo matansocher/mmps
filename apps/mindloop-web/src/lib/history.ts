@@ -2,6 +2,8 @@ const HISTORY_KEY = 'mindloop:history';
 const MAX_ENTRIES = 200;
 
 export interface PlayEntry {
+  /** Stable client-generated id for the run; used to deduplicate across sync. */
+  runId: string;
   gameId: string;
   score: number;
   /** ISO timestamp of when the run finished. */
@@ -28,9 +30,9 @@ function write(entries: PlayEntry[]) {
 }
 
 /** Records a finished run. Newest entries are stored first. */
-export function recordPlay(gameId: string, score: number): void {
-  const entries = read();
-  entries.unshift({ gameId, score, at: new Date().toISOString() });
+export function recordPlay(entry: { runId: string; gameId: string; score: number; at: string }): void {
+  const entries = read().filter((e) => e.runId !== entry.runId);
+  entries.unshift({ runId: entry.runId, gameId: entry.gameId, score: entry.score, at: entry.at });
   write(entries);
   window.dispatchEvent(new Event('mindloop:data'));
 }

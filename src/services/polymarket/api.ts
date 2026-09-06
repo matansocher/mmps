@@ -16,6 +16,11 @@ import { buildPolymarketUrl, parseOutcomePrices } from './utils';
 const BASE_URL = 'https://gamma-api.polymarket.com/markets';
 const EVENTS_URL = 'https://gamma-api.polymarket.com/events';
 const SEARCH_URL = 'https://gamma-api.polymarket.com/public-search';
+const FETCH_TIMEOUT_MS = 15_000; // native fetch does not inherit the global Axios timeout, so bound it explicitly
+
+function timedFetch(url: string): Promise<Response> {
+  return fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+}
 
 export async function getTrendingMarkets(limit: number = 10): Promise<TrendingMarketsResponse> {
   const params = new URLSearchParams({
@@ -28,7 +33,7 @@ export async function getTrendingMarkets(limit: number = 10): Promise<TrendingMa
 
   const url = `${BASE_URL}?${params.toString()}`;
 
-  const response = await fetch(url);
+  const response = await timedFetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch trending markets: ${response.status}`);
   }
@@ -44,7 +49,7 @@ export async function getTrendingMarkets(limit: number = 10): Promise<TrendingMa
 export async function getMarketBySlug(slug: string): Promise<MarketSummary> {
   const url = `${BASE_URL}/slug/${slug}`;
 
-  const response = await fetch(url);
+  const response = await timedFetch(url);
   if (!response.ok) {
     throw new Error(`Market not found: ${response.status}`);
   }
@@ -56,7 +61,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketSummary> {
 export async function getMarketById(id: string): Promise<MarketSummary> {
   const url = `${BASE_URL}/${id}`;
 
-  const response = await fetch(url);
+  const response = await timedFetch(url);
   if (!response.ok) {
     throw new Error(`Market not found: ${response.status}`);
   }
@@ -68,7 +73,7 @@ export async function getMarketById(id: string): Promise<MarketSummary> {
 export async function getEventBySlug(slug: string): Promise<EventWithMarketsResponse> {
   const url = `${EVENTS_URL}/slug/${slug}`;
 
-  const response = await fetch(url);
+  const response = await timedFetch(url);
   if (!response.ok) {
     throw new Error(`Event not found: ${response.status}`);
   }
@@ -94,7 +99,7 @@ export async function searchEventsByTag(keyword: string, limit: number = 10): Pr
 
   const url = `${EVENTS_URL}?${params.toString()}`;
 
-  const response = await fetch(url);
+  const response = await timedFetch(url);
   if (!response.ok) {
     throw new Error(`Failed to search events: ${response.status}`);
   }
@@ -117,7 +122,7 @@ export async function searchEvents(query: string, limit: number = 10): Promise<S
 
   const url = `${SEARCH_URL}?${params.toString()}`;
 
-  const response = await fetch(url);
+  const response = await timedFetch(url);
   if (!response.ok) {
     throw new Error(`Failed to search events: ${response.status}`);
   }
@@ -134,7 +139,7 @@ export async function searchEvents(query: string, limit: number = 10): Promise<S
 export async function getEventOutcomes(slug: string): Promise<MultiOutcomeEventSummary> {
   const url = `${EVENTS_URL}/slug/${slug}`;
 
-  const response = await fetch(url);
+  const response = await timedFetch(url);
   if (!response.ok) {
     throw new Error(`Event not found: ${response.status}`);
   }

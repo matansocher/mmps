@@ -7,6 +7,7 @@ import { commitScore, getBestScore } from '../lib/storage';
 import { recordPlay } from '../lib/history';
 import { syncResult } from '../lib/player-sync';
 import { playSound } from '../lib/sound';
+import { newId } from '../lib/utils';
 import type { GameResult } from '../lib/types';
 import { IntroScreen } from '../components/IntroScreen';
 import { ResultsScreen } from '../components/ResultsScreen';
@@ -41,10 +42,14 @@ export function GameShell() {
     (r: GameResult) => {
       if (!game || resultRecorded.current) return;
       resultRecorded.current = true;
+      // Generate a stable run id + completion time once, so the local record
+      // and the server-synced record describe the same event and dedupe cleanly.
+      const runId = newId();
+      const at = new Date().toISOString();
       const prev = getBestScore(game.id);
       const newBest = commitScore(game.id, r.score);
-      recordPlay(game.id, r.score);
-      syncResult(game.id, r.score);
+      recordPlay({ runId, gameId: game.id, score: r.score, at });
+      syncResult({ runId, gameId: game.id, score: r.score, at });
       playSound('gameover');
       setResult(r);
       setBest(newBest);

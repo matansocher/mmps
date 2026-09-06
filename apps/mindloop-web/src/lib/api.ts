@@ -9,6 +9,7 @@
  */
 
 export interface PlayEntry {
+  runId: string;
   gameId: string;
   score: number;
   at: string;
@@ -95,10 +96,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const mindloopApi = {
   getPlayer: () => request<PlayerResponse>('/api/mindloop/player'),
 
-  recordResult: (gameId: string, score: number) =>
+  recordResult: (entry: { runId: string; gameId: string; score: number; at: string }) =>
     request<PlayerResponse>('/api/mindloop/player/result', {
       method: 'POST',
-      body: JSON.stringify({ gameId, score }),
+      body: JSON.stringify(entry),
     }),
 
   setFavorites: (favorites: string[]) =>
