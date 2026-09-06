@@ -59,14 +59,25 @@ describe('mongo connection', () => {
     expect(mongoMocks.connect).toHaveBeenCalledTimes(1);
   });
 
-  it('creates separate connections for different databases', async () => {
+  it('reuses a single client across different databases', async () => {
     const { createMongoConnection } = await import('./mongo-connection');
 
     await Promise.all([createMongoConnection('Chatbot'), createMongoConnection('Coach')]);
 
-    expect(mongoMocks.MongoClient).toHaveBeenCalledTimes(2);
+    expect(mongoMocks.MongoClient).toHaveBeenCalledTimes(1);
+    expect(mongoMocks.connect).toHaveBeenCalledTimes(1);
     expect(mongoMocks.db).toHaveBeenCalledWith('Chatbot');
     expect(mongoMocks.db).toHaveBeenCalledWith('Coach');
+  });
+
+  it('shares the same client returned by getMongoClient', async () => {
+    const { createMongoConnection, getMongoClient } = await import('./mongo-connection');
+
+    await createMongoConnection('Chatbot');
+    await getMongoClient();
+
+    expect(mongoMocks.MongoClient).toHaveBeenCalledTimes(1);
+    expect(mongoMocks.connect).toHaveBeenCalledTimes(1);
   });
 
   it('allows retrying after a failed connection', async () => {
