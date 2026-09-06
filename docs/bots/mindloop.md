@@ -4,19 +4,29 @@
 
 ## Overview
 
-Mindloop is not a Telegram bot. It is a standalone React application from `apps/mindloop-web` served at `/mindloop/*`. It ships 11 original brain-training games across 5 skill categories behind a shared game shell, and persists player progress (best scores, favorites, play history) to MongoDB keyed by Telegram user id.
+Mindloop is not a Telegram bot. It is a standalone React application from `apps/mindloop-web` served at `/mindloop/*`. It ships 14 original brain-training games across 5 skill categories behind a shared game shell, and persists player progress (best scores, favorites, play history) to MongoDB keyed by Telegram user id.
 
 The app runs inside Telegram as a mini-app (identity comes from verified Telegram `initData`) and can also run in a plain browser during local dev. Device-only preferences (theme, sound, reduced motion) and onboarding "seen" flags intentionally never leave the device.
 
 ## Features
 
-- **13 Original Games** - Across 5 skill categories: Memory, Attention, Speed, Problem Solving, and Flexibility
+- **14 Original Games** - Across 5 skill categories: Memory, Attention, Speed, Problem Solving, and Flexibility
 - **Shared Game Shell** - Intro / how-to, countdown, live score HUD, and a results screen
 - **First-Run Onboarding** - A short, swipeable story flow ending in a real ~20s taste round; shows once per device, is skippable, and can be replayed from Settings
 - **Meta Screens** - Home (category grid), Stats, Settings (theme / sound / reduced motion / replay intro / reset), a once-per-day progress modal, and streaks
 - **Server-Backed Progress** - Best scores, favorites, and play history sync to Mongo; the client reconciles local and server state once on startup with a non-destructive merge, then pushes each finished run and favorites change
 - **Offline-First** - localStorage stays the working store and offline fallback; server writes are best-effort / fire-and-forget
 - **Dark Mode** - Full theme support
+
+## New Games
+
+| Game | Category | How it plays | What it practices |
+| --- | --- | --- | --- |
+| Block Escape | Problem Solving | Drag blocks with touch or mouse (or use arrow controls) to free the escape block. Solve unlimited, automatically advancing boards during a 60-second run. Verified puzzles progress from 3 to 7-9 planning slides with denser layouts; fewer squares moved earn more points, and undo keeps spent moves. | Planning moves and anticipating their consequences |
+| Order Up | Memory | Remember customers' ingredient sequences, then assemble and serve their hidden orders. Later waves add customers and order changes; a missed order breaks the streak rather than ending the run. | Holding and updating information in working memory |
+| Shape Shift | Speed | Match rotated outlines in a 60-second round. Correct answers unlock more intricate shapes and mirror-image decoys; streaks earn bonuses. | Mental rotation and visual comparison |
+
+These games use the existing favorites, game picker, scores, results, and player sync. Their instructions include a short "What you practice" explanation. Scores describe performance in the game, not intelligence or proven improvements in everyday cognition.
 
 ## Configuration
 

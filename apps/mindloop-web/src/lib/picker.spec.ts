@@ -14,6 +14,18 @@ function idsByCategory(category: string): string[] {
 }
 
 describe('chooseFrom()', () => {
+  it.each([
+    { id: 'block-escape', category: 'problem-solving' },
+    { id: 'order-up', category: 'memory' },
+    { id: 'shape-shift', category: 'speed' },
+  ])('includes $id in the existing picker with a practice explanation', ({ id, category }) => {
+    const game = GAMES.find((entry) => entry.id === id);
+    expect(game?.category).toEqual(category);
+    expect(game?.brainPractice).toMatch(/^Practice /);
+    const history = GAMES.filter((entry) => entry.id !== id).flatMap((entry) => [play(entry.id), play(entry.id)]);
+    expect(chooseFrom(history).id).toEqual(id);
+  });
+
   it('returns a real game from the catalog', () => {
     const g = chooseFrom([]);
     expect(GAMES.some((x) => x.id === g.id)).toBe(true);
