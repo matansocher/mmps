@@ -47,15 +47,6 @@ npm test        # Run tests
 
 If all commands succeed, your installation is complete!
 
-## Docker Installation (Optional)
-
-You can also run MMPS in Docker:
-
-```bash
-docker build -t mmps .
-docker run -e MONGO_DB_URL=mongodb://host.docker.internal:27017 mmps
-```
-
 ## Next Steps
 
 - [Configuration Guide](/guide/environment-setup)
