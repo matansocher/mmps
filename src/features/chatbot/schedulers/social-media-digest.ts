@@ -4,11 +4,21 @@ import { z } from 'zod';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { GPT_SMALL_MODEL } from '@services/openai/constants';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendShortenedMessage, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 import { deletePendingPosts, getPendingPosts } from '@shared/social-follower';
 import type { PendingPost, SocialPlatform } from '@shared/social-follower';
 
 const logger = new Logger('chatbot:scheduler:social-media-digest');
+
+const DIGEST_TITLE = '*Daily social media digest* 🔔';
+const SECTION_SEPARATOR = '\n\n';
+
+// One user's rendered digest text plus the posts it represents, so we only
+// acknowledge (delete) posts that actually made it into a delivered message.
+export type DigestSection = {
+  readonly text: string;
+  readonly posts: PendingPost[];
+};
 
 const PLATFORM_LABELS = { tiktok: 'TikTok 🎵', twitter: 'X (Twitter) 🐦', youtube: 'YouTube 📺', telegram: 'Telegram 📣' } as const;
 const DIGEST_PLATFORM_ORDER: readonly SocialPlatform[] = ['telegram', 'twitter', 'youtube', 'tiktok'];
@@ -40,24 +50,67 @@ export async function socialMediaDigest(bot: Bot): Promise<void> {
 }
 
 async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost[]): Promise<void> {
-  const sections: string[] = [];
+  const sections: DigestSection[] = [];
 
   for (const userPosts of groupPostsByUser(posts)) {
     try {
-      sections.push(await buildUserSection(userPosts));
+      sections.push({ text: await buildUserSection(userPosts), posts: userPosts });
     } catch (err) {
       logger.error(`Failed to build digest section for ${userPosts[0].platform}/@${userPosts[0].username}: ${getErrorMessage(err)}`);
-      sections.push(buildListingSection(userPosts, MAX_FALLBACK_POSTS));
+      sections.push({ text: buildListingSection(userPosts, MAX_FALLBACK_POSTS), posts: userPosts });
     }
   }
 
-  const message = `*Daily social media digest* 🔔\n\n${sections.join('\n\n')}`;
-  try {
-    await sendShortenedMessage(bot, chatId, message, { parse_mode: 'Markdown' }).catch(() => sendShortenedMessage(bot, chatId, message.replace(/[*_`[\]]/g, '')));
-    await deletePendingPosts(posts.map((post) => post._id).filter(Boolean) as ObjectId[]);
-  } catch (err) {
-    logger.error(`Failed to send digest to chat ${chatId}, keeping posts for next digest: ${getErrorMessage(err)}`);
+  // Pack sections into messages that fit Telegram's length cap, then send each
+  // message and only acknowledge (delete) the posts whose message was delivered.
+  // This preserves undelivered posts across truncation, partial failures, and restarts.
+  for (const chunk of chunkSections(sections)) {
+    const delivered = await sendDigestMessage(bot, chatId, chunk.text);
+    if (!delivered) {
+      logger.error(`Failed to send digest chunk to chat ${chatId}, keeping ${chunk.posts.length} posts for next digest`);
+      continue;
+    }
+    const ids = chunk.posts.map((post) => post._id).filter(Boolean) as ObjectId[];
+    if (ids.length) {
+      await deletePendingPosts(ids);
+    }
   }
+}
+
+// Sends one digest message with a Markdown-stripped plain-text fallback.
+// Returns whether the message was delivered so the caller can decide what to acknowledge.
+async function sendDigestMessage(bot: Bot, chatId: number, text: string): Promise<boolean> {
+  try {
+    await sendShortenedMessage(bot, chatId, text, { parse_mode: 'Markdown' }).catch(() => sendShortenedMessage(bot, chatId, text.replace(/[*_`[\]]/g, '')));
+    return true;
+  } catch (err) {
+    logger.error(`Failed to send digest message to chat ${chatId}: ${getErrorMessage(err)}`);
+    return false;
+  }
+}
+
+// Groups sections into as few messages as possible, each fitting within Telegram's
+// length cap, splitting only at section (per-user) boundaries. The first message
+// carries the digest title. A single section that is itself too long is sent on its
+// own; the sender's slice still bounds it, but no other section's posts are lost with it.
+export function chunkSections(sections: DigestSection[]): DigestSection[] {
+  const chunks: DigestSection[] = [];
+
+  for (const section of sections) {
+    const current = chunks[chunks.length - 1];
+    const isFirstOverall = chunks.length === 0;
+    if (current) {
+      const candidate = `${current.text}${SECTION_SEPARATOR}${section.text}`;
+      if (candidate.length <= TELEGRAM_MAX_MESSAGE_LENGTH) {
+        chunks[chunks.length - 1] = { text: candidate, posts: [...current.posts, ...section.posts] };
+        continue;
+      }
+    }
+    const prefix = isFirstOverall ? `${DIGEST_TITLE}${SECTION_SEPARATOR}` : '';
+    chunks.push({ text: `${prefix}${section.text}`, posts: [...section.posts] });
+  }
+
+  return chunks;
 }
 
 async function buildUserSection(userPosts: PendingPost[]): Promise<string> {
