@@ -3,10 +3,12 @@ import type { ReactionTypeEmoji } from 'grammy/types';
 import { LOCAL_FILES_PATH, MY_USER_ID, WIFE_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
+import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
 import { getPendingRemindersDueOnOrBefore, getReminderById, updateReminderStatus } from '@shared/reminders';
 import { addExercise } from '@shared/trainer';
+import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import {
   buildSummaryRemindersKeyboard,
@@ -60,7 +62,17 @@ export class ChatbotController {
   }
 
   private async startHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
     await ctx.reply('Hi, I am your chatbot! How can I assist you today?');
+  }
+
+  // Silently ignore anyone who is not the owner and ping the notifier bot.
+  private denyIfNotOwner(ctx: Context): boolean {
+    if (isOwner(ctx)) return false;
+    const { userDetails } = getMessageData(ctx);
+    this.logger.warn(`Blocked non-owner message from userId=${ctx.from?.id ?? 'unknown'} username=${ctx.from?.username ?? '-'}`);
+    notify(BOT_CONFIG, { action: 'BLOCKED_MESSAGE' }, userDetails);
+    return true;
   }
 
   private businessConnectionHandler(ctx: Context): void {
@@ -312,6 +324,7 @@ export class ChatbotController {
   }
 
   private async messageHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
     const { text } = getMessageData(ctx);
     await this.runAgentReply(ctx, text, '🤔');
   }
@@ -332,6 +345,7 @@ export class ChatbotController {
   }
 
   private async photoHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
     const { chatId, messageId, photo, text } = getMessageData(ctx);
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
@@ -349,6 +363,7 @@ export class ChatbotController {
   }
 
   private async audioHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
     const { chatId, messageId, audio } = getMessageData(ctx);
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔' });
