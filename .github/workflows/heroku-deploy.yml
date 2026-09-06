@@ -2,11 +2,6 @@ name: '🚀 Deploy to Heroku'
 
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        description: 'Branch or tag to deploy (must have passing CI). Defaults to main.'
-        required: false
-        default: 'main'
 
 permissions:
   contents: read
@@ -14,7 +9,6 @@ permissions:
 
 env:
   HEROKU_APP_NAME: mmps
-  DEPLOY_REF: ${{ inputs.ref || 'main' }}
   CI_WORKFLOW_FILE: ci.yml
 
 concurrency:
@@ -30,22 +24,10 @@ jobs:
     environment:
       name: production
     steps:
-      - name: Restrict deployable refs
-        run: |
-          case "$DEPLOY_REF" in
-            main | refs/heads/main | v*)
-              echo "Deploying ref '$DEPLOY_REF'."
-              ;;
-            *)
-              echo "::error::Ref '$DEPLOY_REF' is not deployable. Only 'main' or a release tag (v*) may be deployed."
-              exit 1
-              ;;
-          esac
-
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: ${{ env.DEPLOY_REF }}
+          ref: main
           fetch-depth: 0
 
       - name: Resolve immutable deployment SHA
@@ -53,7 +35,7 @@ jobs:
         run: |
           DEPLOY_SHA="$(git rev-parse HEAD)"
           echo "sha=${DEPLOY_SHA}" >> "$GITHUB_OUTPUT"
-          echo "Resolved '$DEPLOY_REF' to immutable SHA ${DEPLOY_SHA}."
+          echo "Resolved 'main' to immutable SHA ${DEPLOY_SHA}."
 
       - name: Require successful CI for the deployment SHA
         env:
@@ -124,7 +106,7 @@ jobs:
             echo "### Heroku deployment"
             echo ""
             echo "- App: \`${HEROKU_APP_NAME}\`"
-            echo "- Ref: \`${DEPLOY_REF}\`"
+            echo "- Ref: \`main\`"
             echo "- Deployed SHA: \`${DEPLOY_SHA:-unresolved}\`"
             echo "- Status: \`${{ job.status }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
