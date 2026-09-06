@@ -23,3 +23,10 @@ export function shuffle<T>(arr: T[]): T[] {
 export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
 }
+
+/** Stable, unique id for a single event (e.g. a finished game run). */
+export function newId(): string {
+  const c = globalThis.crypto;
+  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}

@@ -38,8 +38,8 @@ function readFavorites(): string[] {
   return Array.isArray(parsed) ? parsed : [];
 }
 
-function readHistory(): { gameId: string; score: number; at: string }[] {
-  const parsed = readJson<{ gameId: string; score: number; at: string }[]>(HISTORY_KEY, []);
+function readHistory(): { runId: string; gameId: string; score: number; at: string }[] {
+  const parsed = readJson<{ runId: string; gameId: string; score: number; at: string }[]>(HISTORY_KEY, []);
   return Array.isArray(parsed) ? parsed : [];
 }
 
@@ -78,9 +78,9 @@ export async function initPlayerSync(): Promise<void> {
 }
 
 /** Fire-and-forget: persist a finished run server-side. */
-export function syncResult(gameId: string, score: number): void {
+export function syncResult(entry: { runId: string; gameId: string; score: number; at: string }): void {
   if (!hasRemoteIdentity()) return;
-  mindloopApi.recordResult(gameId, score).catch(() => {
+  mindloopApi.recordResult(entry).catch(() => {
     /* best-effort; localStorage already holds the value */
   });
 }

@@ -5,7 +5,7 @@ import { chooseFrom } from './picker';
 import type { PlayEntry } from './history';
 
 function play(gameId: string, at = '2026-01-01T00:00:00.000Z'): PlayEntry {
-  return { gameId, score: 1, at };
+  return { runId: `${gameId}-${at}`, gameId, score: 1, at };
 }
 
 /** All game ids grouped by their category. */

@@ -19,18 +19,17 @@ function mergeBestScores(a: MindloopBestScores, b: MindloopBestScores): Record<s
   return out;
 }
 
-/** Newest-first, de-duplicated by (gameId, at), capped to the max size. */
+/** Newest-first, de-duplicated by runId, capped to the max size. */
 function mergeHistory(a: ReadonlyArray<MindloopPlayEntry>, b: ReadonlyArray<MindloopPlayEntry>): MindloopPlayEntry[] {
   const seen = new Set<string>();
   const merged = [...a, ...b]
-    .filter((e) => typeof e?.gameId === 'string' && typeof e?.score === 'number' && typeof e?.at === 'string')
+    .filter((e) => typeof e?.runId === 'string' && typeof e?.gameId === 'string' && typeof e?.score === 'number' && typeof e?.at === 'string')
     .sort((x, y) => (x.at < y.at ? 1 : x.at > y.at ? -1 : 0));
   const out: MindloopPlayEntry[] = [];
   for (const entry of merged) {
-    const key = `${entry.gameId}@${entry.at}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ gameId: entry.gameId, score: entry.score, at: entry.at });
+    if (seen.has(entry.runId)) continue;
+    seen.add(entry.runId);
+    out.push({ runId: entry.runId, gameId: entry.gameId, score: entry.score, at: entry.at, ...(entry.receivedAt ? { receivedAt: entry.receivedAt } : {}) });
     if (out.length >= MINDLOOP_MAX_HISTORY_ENTRIES) break;
   }
   return out;
@@ -57,11 +56,18 @@ async function ensurePlayer(telegramUserId: number): Promise<MindloopPlayerDocum
 }
 
 /** Records a finished run: updates best score if beaten and prepends history. */
-export async function recordResult(telegramUserId: number, gameId: string, score: number): Promise<MindloopPlayerDocument> {
+export async function recordResult(telegramUserId: number, entry: MindloopPlayEntry): Promise<MindloopPlayerDocument> {
   const player = await ensurePlayer(telegramUserId);
   const now = new Date();
-  const bestScores = mergeBestScores(player.bestScores, { [gameId]: score });
-  const history = mergeHistory([{ gameId, score, at: now.toISOString() }], player.history);
+  const bestScores = mergeBestScores(player.bestScores, { [entry.gameId]: entry.score });
+  const incoming: MindloopPlayEntry = {
+    runId: entry.runId,
+    gameId: entry.gameId,
+    score: entry.score,
+    at: entry.at,
+    receivedAt: now.toISOString(),
+  };
+  const history = mergeHistory([incoming], player.history);
 
   const updated = await getCollection().findOneAndUpdate(
     { _id: telegramUserId },
