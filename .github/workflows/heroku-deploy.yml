@@ -5,9 +5,11 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 env:
   HEROKU_APP_NAME: mmps
+  CI_WORKFLOW_FILE: ci.yml
 
 concurrency:
   group: heroku-deployment-mmps
@@ -25,11 +27,46 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          ref: main
           fetch-depth: 0
+
+      - name: Resolve immutable deployment SHA
+        id: sha
+        run: |
+          DEPLOY_SHA="$(git rev-parse HEAD)"
+          echo "sha=${DEPLOY_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Resolved 'main' to immutable SHA ${DEPLOY_SHA}."
+
+      - name: Require successful CI for the deployment SHA
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          conclusion="$(gh run list \
+            --workflow "$CI_WORKFLOW_FILE" \
+            --branch main \
+            --commit "$DEPLOY_SHA" \
+            --status completed \
+            --limit 1 \
+            --json conclusion \
+            --jq '.[0].conclusion // ""')"
+
+          if [ -z "$conclusion" ]; then
+            echo "::error::No completed '$CI_WORKFLOW_FILE' run found for SHA ${DEPLOY_SHA}. Deploy only commits with passing CI."
+            exit 1
+          fi
+
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::CI for SHA ${DEPLOY_SHA} concluded '${conclusion}', not 'success'. Refusing to deploy unchecked code."
+            exit 1
+          fi
+
+          echo "CI succeeded for SHA ${DEPLOY_SHA}."
 
       - name: Deploy source to Heroku
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          DEPLOY_SHA: ${{ steps.sha.outputs.sha }}
         run: |
           if [ -z "$HEROKU_API_KEY" ]; then
             echo "::error::The HEROKU_API_KEY repository secret is required."
@@ -58,4 +95,18 @@ jobs:
               ;;
           esac
 
-          git push "https://:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git" HEAD:main
+          git push --force "https://:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git" "${DEPLOY_SHA}:refs/heads/main"
+
+      - name: Record deployment
+        if: always()
+        env:
+          DEPLOY_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          {
+            echo "### Heroku deployment"
+            echo ""
+            echo "- App: \`${HEROKU_APP_NAME}\`"
+            echo "- Ref: \`main\`"
+            echo "- Deployed SHA: \`${DEPLOY_SHA:-unresolved}\`"
+            echo "- Status: \`${{ job.status }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
