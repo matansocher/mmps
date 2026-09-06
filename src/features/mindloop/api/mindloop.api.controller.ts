@@ -52,7 +52,7 @@ export function registerMindloopApiRoutes(app: Express): void {
       return;
     }
     try {
-      const player = await recordResult(user.telegramUserId, body.gameId, body.score);
+      const player = await recordResult(user.telegramUserId, body);
       res.json({ player: toPlayerDto(player) });
     } catch (err) {
       logger.error(`Failed to record result for ${user.telegramUserId}: ${getErrorMessage(err)}`);

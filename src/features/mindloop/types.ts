@@ -1,9 +1,13 @@
 /** A single finished game run. Mirrors the web app's PlayEntry shape. */
 export type MindloopPlayEntry = {
+  /** Stable client-generated run id; used to deduplicate a run across submissions. */
+  readonly runId: string;
   readonly gameId: string;
   readonly score: number;
-  /** ISO timestamp of when the run finished. */
+  /** ISO timestamp of when the run finished (client clock). */
   readonly at: string;
+  /** ISO timestamp of when the server first received this run. Server-only. */
+  readonly receivedAt?: string;
 };
 
 /** Best single-run score per game id. */

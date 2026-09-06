@@ -24,7 +24,7 @@ export function toPlayerDto(doc: MindloopPlayerDocument | null): MindloopPlayerD
   return {
     bestScores: { ...doc.bestScores },
     favorites: [...doc.favorites],
-    history: doc.history.map((e) => ({ gameId: e.gameId, score: e.score, at: e.at })),
+    history: doc.history.map((e) => ({ runId: e.runId, gameId: e.gameId, score: e.score, at: e.at })),
     updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : null,
   };
 }
@@ -33,14 +33,20 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-export type RecordResultBody = { readonly gameId: string; readonly score: number };
+function isRunId(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= 128;
+}
+
+export type RecordResultBody = { readonly runId: string; readonly gameId: string; readonly score: number; readonly at: string };
 
 export function parseRecordResultBody(body: unknown): RecordResultBody | null {
   if (!body || typeof body !== 'object') return null;
-  const { gameId, score } = body as Record<string, unknown>;
+  const { runId, gameId, score, at } = body as Record<string, unknown>;
+  if (!isRunId(runId)) return null;
   if (typeof gameId !== 'string' || gameId.length === 0 || gameId.length > 64) return null;
   if (!isFiniteNumber(score) || score < 0 || score > 10_000_000) return null;
-  return { gameId, score: Math.round(score) };
+  if (typeof at !== 'string' || Number.isNaN(Date.parse(at))) return null;
+  return { runId, gameId, score: Math.round(score), at };
 }
 
 export function parseFavoritesBody(body: unknown): string[] | null {
@@ -54,11 +60,13 @@ export function parseFavoritesBody(body: unknown): string[] | null {
 
 function parseHistoryEntry(value: unknown): MindloopPlayEntry | null {
   if (!value || typeof value !== 'object') return null;
-  const { gameId, score, at } = value as Record<string, unknown>;
+  const { runId, gameId, score, at } = value as Record<string, unknown>;
   if (typeof gameId !== 'string' || gameId.length === 0 || gameId.length > 64) return null;
   if (!isFiniteNumber(score) || score < 0 || score > 10_000_000) return null;
   if (typeof at !== 'string' || Number.isNaN(Date.parse(at))) return null;
-  return { gameId, score: Math.round(score), at };
+  // Legacy entries lack a runId; derive a stable one so they still dedupe.
+  const id = isRunId(runId) ? runId : `legacy:${gameId}@${at}`;
+  return { runId: id, gameId, score: Math.round(score), at };
 }
 
 export function parseSyncBody(body: unknown): MindloopSyncData | null {
