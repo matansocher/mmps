@@ -14,10 +14,21 @@ const JOB_NAME = 'wolt-scheduler-job-interval';
 export class WoltSchedulerService {
   private readonly logger = new Logger('wolt:scheduler');
   private timeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private stopped = false;
 
   constructor(private readonly bot: Bot) {}
 
+  stop(): void {
+    this.stopped = true;
+    for (const timeout of this.timeouts.values()) {
+      clearTimeout(timeout);
+    }
+    this.timeouts.clear();
+  }
+
   async scheduleInterval(): Promise<void> {
+    if (this.stopped) return;
+
     const secondsToNextRefresh = HOUR_OF_DAY_TO_REFRESH_MAP[toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours()];
 
     // Clear existing timeout if it exists
@@ -26,13 +37,20 @@ export class WoltSchedulerService {
       clearTimeout(existingTimeout);
     }
 
-    await this.handleIntervalFlow();
+    try {
+      await this.handleIntervalFlow();
+    } catch (err) {
+      // A transient flow failure must never stop the loop - log and re-arm in finally
+      this.logger.error(`Error in interval flow: ${getErrorMessage(err)}`);
+    } finally {
+      if (!this.stopped) {
+        const timeout = setTimeout(() => {
+          this.scheduleInterval().catch((err) => this.logger.error(`Error in scheduled interval: ${getErrorMessage(err)}`));
+        }, secondsToNextRefresh * 1000);
 
-    const timeout = setTimeout(() => {
-      this.scheduleInterval().catch((err) => this.logger.error(`Error in scheduled interval: ${getErrorMessage(err)}`));
-    }, secondsToNextRefresh * 1000);
-
-    this.timeouts.set(JOB_NAME, timeout);
+        this.timeouts.set(JOB_NAME, timeout);
+      }
+    }
   }
 
   async handleIntervalFlow(): Promise<void> {

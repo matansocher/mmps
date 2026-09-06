@@ -1,7 +1,7 @@
 import { hydrate } from '@grammyjs/hydrate';
 import { Bot } from 'grammy';
 import { env } from 'node:process';
-import { Logger } from '@core/utils';
+import { getErrorMessage, Logger } from '@core/utils';
 import type { TelegramBotConfig } from '../types';
 import { getBotToken } from './get-bot-token';
 
@@ -32,12 +32,15 @@ export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
     .filter((command) => !command.hide)
     .map((command) => ({ ...command, command: command.command.replace('/', '') }));
   if (commands?.length) {
-    bot.api.setMyCommands(commands);
+    // Finite setup call - contain its rejection so it never reaches the process-wide fatal handler
+    bot.api.setMyCommands(commands).catch((err) => logger.error(`Failed to set commands for bot ${botConfig.id}: ${getErrorMessage(err)}`));
   }
 
   botInstances.set(botConfig.id, bot);
 
-  bot.start();
+  // Long-running poller - its promise resolves only when the bot stops. A startup/polling rejection
+  // must stay contained to this bot instead of escaping to the process-wide unhandledRejection handler.
+  bot.start().catch((err) => logger.error(`Polling failed for bot ${botConfig.id}: ${getErrorMessage(err)}`));
 
   logger.log(`Bot ${botConfig.id} (${botConfig.name}) initialized successfully`);
 
