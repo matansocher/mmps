@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { getSettings, saveSettings } from '../lib/settings';
 import type { ThemeMode } from '../lib/settings';
 
@@ -127,7 +128,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [resolved, themeMode, setThemeMode, toggle, setTheme, sound, setSound, reducedMotion, setReducedMotion],
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>
+      <MotionConfig reducedMotion={reducedMotion ? 'always' : 'user'}>
+        <>{children}</>
+      </MotionConfig>
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme(): ThemeContextValue {

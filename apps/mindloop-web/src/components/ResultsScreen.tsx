@@ -37,7 +37,7 @@ export function ResultsScreen({ category, result, best, isNewBest, onReplay, onH
 
       <div>
         <h2 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">
-          {isNewBest ? 'New Best Score!' : 'Nice work!'}
+          {isNewBest ? 'New Best Score!' : result.score === 0 ? 'Ready for another try?' : 'Nice work!'}
         </h2>
         <div className="mt-4 text-6xl font-extrabold tabular-nums" style={{ color: category.accent }}>
           {result.score}
@@ -58,6 +58,9 @@ export function ResultsScreen({ category, result, best, isNewBest, onReplay, onH
 
       <div className="w-full rounded-2xl px-4 py-3 font-bold" style={{ background: category.soft, color: category.accent }}>
         Best score: {best}
+        {best > result.score && (
+          <div className="mt-1 text-sm font-semibold">{best - result.score} points to match your best</div>
+        )}
       </div>
 
       {/* Up next: chain the coach's next pick so the session keeps flowing. */}

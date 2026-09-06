@@ -18,6 +18,33 @@ The app runs inside Telegram as a mini-app (identity comes from verified Telegra
 - **Offline-First** - localStorage stays the working store and offline fallback; server writes are best-effort / fire-and-forget
 - **Dark Mode** - Full theme support
 
+### Gameplay
+
+- Shared countdowns use elapsed time, so delayed browser updates do not extend a run. Each finished run is recorded once, and replay starts with fresh game state.
+- Rail Router uses fixed railways with switchable junctions and continuously arriving trains. Match each train to the station of the same color and number during a 90-second shift; correct deliveries score one point. The game can be paused and also pauses when the tab is hidden.
+- Raindrops spaces problems into three lanes and clears the lowest drop matching an answer. Use the on-screen keypad or number keys, Enter to solve, Backspace to erase, and Delete to clear.
+- Game controls have visible keyboard focus, touch-friendly targets, and reduced-motion support. Results show the gap to your personal best.
+
+### Difficulty and replayability
+
+Most games increase difficulty with successful play, without turning timed games into survival runs. Rail Router instead offers fixed railways with preset difficulty. Visual density, speed, and preview durations have safety limits; reaching a limit does not end the run. Timed scores still depend on how many challenges you solve before time expires.
+
+| Game | Run format | Progression |
+| --- | --- | --- |
+| Grid Recall | Until a mistake | Grids grow to 5×5, with no more than 12 highlighted tiles so late patterns do not become trivial. Previews shorten from 2s to 1.2s; round rewards keep growing. |
+| Pair Match | 60 seconds | Successive shuffled boards grow from 4 to 6 to 8 pairs. Later mismatches are visible for less time. Scores accumulate across boards, including partial boards, with increasing board-clear bonuses and no time refill. |
+| Sequence Echo | Until a mistake | Each round adds another sequence step; longer sequences earn more points. |
+| Sequence Track | Until a mistake | More dots and targets move faster, then tracking grows from 3.2s to 6s with shorter previews. Selection remains untimed and round rewards keep growing. |
+| Odd One Out | 45 seconds | Larger grids and subtler color differences; incorrect taps cost time. |
+| Flash Match | 45 seconds, after memorizing the first symbol | Five levels introduce more nonmatching symbols that share either shape or color with the previous symbol. Both must match for YES. |
+| Quick Math | 45 seconds | Correct streaks unlock larger operands, more operators, then multi-step and parenthesized expressions. Levels and rewards continue beyond the previous level-12 cap. |
+| Raindrops | 60 seconds or three misses | Solving drops increases fall speed, spawn frequency, and arithmetic difficulty. Higher-level drops earn more points; rewards use each drop's difficulty when spawned. |
+| Color Clash | 40 seconds | Five levels expand the palette from three to five colors and make word/ink conflicts more frequent. |
+| Rail Router | 90 seconds of active play | Choose a railway with preset difficulty, then route arriving trains by switching junctions. The selected board stays fixed throughout the shift, with no time bonuses. |
+| Ebb & Flow | 45 seconds | Five levels introduce more rule switches and more conflicts between pointing and movement. |
+
+Color Clash, Flash Match, and Ebb & Flow advance every four correct answers, show progress toward the next level, and award more points at higher levels. Existing best scores and history are retained; scoring changes do not reset progress.
+
 ## New Games
 
 | Game | Category | How it plays | What it practices |

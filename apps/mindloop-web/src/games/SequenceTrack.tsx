@@ -1,73 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { CATEGORIES } from '../lib/categories';
 import type { GameProps } from '../lib/types';
-import { cx } from '../lib/utils';
 import { playSound } from '../lib/sound';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { CountdownOverlay } from '../components/CountdownOverlay';
+import { getTrackingRoundConfig, makeTrackingDots, stepTrackingDots, TRACK_AREA, TRACK_RADIUS } from './sequence-track-logic';
 
 const accent = CATEGORIES.attention.accent;
-const AREA = 320;
-const R = 22;
+const STEP_MS = 1000 / 60;
 
 type Status = 'reveal' | 'move' | 'select' | 'result' | 'over';
-
-interface Dot {
-  id: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  target: boolean;
-}
-
-function spread(count: number): { x: number; y: number }[] {
-  const pts: { x: number; y: number }[] = [];
-  let tries = 0;
-  while (pts.length < count && tries < 500) {
-    tries++;
-    const x = Math.random() * (AREA - 2 * R) + R;
-    const y = Math.random() * (AREA - 2 * R) + R;
-    if (pts.every((p) => Math.hypot(p.x - x, p.y - y) > R * 2.4)) pts.push({ x, y });
-  }
-  return pts;
-}
-
-function makeDots(round: number): Dot[] {
-  const total = Math.min(9, 5 + round);
-  const targets = Math.min(total - 2, 2 + Math.floor(round / 2));
-  const pts = spread(total);
-  const speed = 1.2 + round * 0.25;
-  return pts.map((p, i) => {
-    const ang = Math.random() * Math.PI * 2;
-    return {
-      id: i,
-      x: p.x,
-      y: p.y,
-      vx: Math.cos(ang) * speed,
-      vy: Math.sin(ang) * speed,
-      target: i < targets,
-    };
-  });
-}
 
 export default function SequenceTrack({ onFinish }: GameProps) {
   const [counting, setCounting] = useState(true);
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [status, setStatus] = useState<Status>('reveal');
-  const [dots, setDots] = useState<Dot[]>(() => makeDots(0));
+  const [dots, setDots] = useState(() => makeTrackingDots(0));
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const raf = useRef<number>(0);
   const timers = useRef<number[]>([]);
   const dotsRef = useRef(dots);
-  useEffect(() => {
-    dotsRef.current = dots;
-  }, [dots]);
+  const statusRef = useRef<Status>('reveal');
+  const pickedRef = useRef(new Set<number>());
+  const lastFrame = useRef<number | null>(null);
+  const accumulatedMs = useRef(0);
   const targetCount = dots.filter((d) => d.target).length;
   const finished = useRef(false);
+  const started = useRef(false);
+  const config = getTrackingRoundConfig(round);
 
   const clearAll = () => {
     cancelAnimationFrame(raf.current);
@@ -76,30 +38,36 @@ export default function SequenceTrack({ onFinish }: GameProps) {
   };
   useEffect(() => () => clearAll(), []);
 
-  const animate = useCallback(() => {
-    setDots((prev) =>
-      prev.map((d) => {
-        let { x, y, vx, vy } = d;
-        x += vx;
-        y += vy;
-        if (x < R || x > AREA - R) { vx = -vx; x = Math.max(R, Math.min(AREA - R, x)); }
-        if (y < R || y > AREA - R) { vy = -vy; y = Math.max(R, Math.min(AREA - R, y)); }
-        return { ...d, x, y, vx, vy };
-      }),
-    );
-    raf.current = requestAnimationFrame(animate);
+  const animate = useCallback(function animateDots(timestamp: number) {
+    if (statusRef.current !== 'move') return;
+    if (lastFrame.current !== null) {
+      accumulatedMs.current += Math.min(100, timestamp - lastFrame.current);
+      while (accumulatedMs.current >= STEP_MS) {
+        dotsRef.current = stepTrackingDots(dotsRef.current, STEP_MS / 1000);
+        accumulatedMs.current -= STEP_MS;
+      }
+      setDots(dotsRef.current);
+    }
+    lastFrame.current = timestamp;
+    raf.current = requestAnimationFrame(animateDots);
   }, []);
 
   const beginRound = useCallback(
     (r: number) => {
-      const nd = makeDots(r);
+      clearAll();
+      const nd = makeTrackingDots(r);
+      dotsRef.current = nd;
       setDots(nd);
-      setPicked(new Set());
+      pickedRef.current = new Set();
+      setPicked(pickedRef.current);
+      statusRef.current = 'reveal';
       setStatus('reveal');
-      const revealMs = 1400;
-      const moveMs = 3200;
+      lastFrame.current = null;
+      accumulatedMs.current = 0;
+      const { revealMs, moveMs } = getTrackingRoundConfig(r);
       timers.current.push(
         window.setTimeout(() => {
+          statusRef.current = 'move';
           setStatus('move');
           raf.current = requestAnimationFrame(animate);
         }, revealMs),
@@ -107,6 +75,7 @@ export default function SequenceTrack({ onFinish }: GameProps) {
       timers.current.push(
         window.setTimeout(() => {
           cancelAnimationFrame(raf.current);
+          statusRef.current = 'select';
           setStatus('select');
         }, revealMs + moveMs),
       );
@@ -115,6 +84,8 @@ export default function SequenceTrack({ onFinish }: GameProps) {
   );
 
   const start = useCallback(() => {
+    if (started.current) return;
+    started.current = true;
     setCounting(false);
     beginRound(0);
   }, [beginRound]);
@@ -130,7 +101,7 @@ export default function SequenceTrack({ onFinish }: GameProps) {
             score: finalScore,
             stats: [{ label: 'Round reached', value: String(reachedRound) }],
           }),
-          700,
+          1200,
         ),
       );
     },
@@ -138,12 +109,15 @@ export default function SequenceTrack({ onFinish }: GameProps) {
   );
 
   const pick = (id: number) => {
-    if (status !== 'select') return;
+    if (statusRef.current !== 'select' || finished.current) return;
     const dot = dotsRef.current.find((d) => d.id === id)!;
-    if (picked.has(id)) return;
+    if (pickedRef.current.has(id)) return;
+    const next = new Set(pickedRef.current).add(id);
+    pickedRef.current = next;
+    setPicked(next);
 
     if (!dot.target) {
-      setPicked((p) => new Set(p).add(id));
+      statusRef.current = 'over';
       setStatus('over');
       playSound('wrong');
       endGame(score, round + 1);
@@ -151,57 +125,63 @@ export default function SequenceTrack({ onFinish }: GameProps) {
     }
 
     playSound('correct');
-    setPicked((prev) => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev).add(id);
-      const correct = [...next].every((i) => dotsRef.current.find((d) => d.id === i)!.target);
-      if (correct && next.size === targetCount) {
-        const gained = targetCount * 20;
-        setScore((s) => s + gained);
-        setStatus('result');
-        timers.current.push(
-          window.setTimeout(() => {
-            const nr = round + 1;
-            setRound(nr);
-            beginRound(nr);
-          }, 650),
-        );
-      }
-      return next;
-    });
+    if (next.size === targetCount) {
+      statusRef.current = 'result';
+      setScore((s) => s + config.reward);
+      setStatus('result');
+      timers.current.push(
+        window.setTimeout(() => {
+          const nr = round + 1;
+          setRound(nr);
+          beginRound(nr);
+        }, 700),
+      );
+    }
   };
 
   const statusText =
-    status === 'reveal' ? 'Remember the glowing dots' :
+    status === 'reveal' ? `Remember ${targetCount} marked dots` :
     status === 'move' ? 'Track them…' :
-    status === 'select' ? 'Tap the ones you tracked' : '\u00A0';
+    status === 'select' ? `Find your dots · ${picked.size}/${targetCount}` :
+    status === 'result' ? `All tracked! +${config.reward}` : 'Here were your dots';
+  const selectionOrder = [...dots].sort((a, b) => a.y - b.y || a.x - b.x).map((dot) => dot.id);
 
   return (
     <div className="relative flex flex-1 flex-col">
       {counting && <CountdownOverlay accent={accent} onDone={start} />}
       <GameStage hud={<HUD accent={accent} score={score} status={String(round + 1)} />}>
-        <div className="mb-3 h-6 text-center text-sm font-bold" style={{ color: accent }}>
+        <div className="mb-3 min-h-6 text-center text-sm font-bold text-slate-700 dark:text-slate-100" role="status">
           {statusText}
         </div>
+        <p className="mb-3 text-center text-xs text-slate-500 dark:text-slate-400">
+          Track for {(config.moveMs / 1000).toFixed(1)}s · Then choose the marked dots at your own pace
+        </p>
         <div
           className="relative rounded-3xl bg-white/60 ring-1 ring-slate-200 dark:bg-white/10 dark:ring-white/10"
-          style={{ width: 'min(88vw, 320px)', aspectRatio: '1 / 1' }}
+          style={{ width: 'min(100%, 320px)', aspectRatio: '1 / 1' }}
         >
           <div className="absolute inset-0" style={{ containerType: 'size' }}>
             {dots.map((d) => {
-              const glow = status === 'reveal' && d.target;
+              const glow = (status === 'reveal' || status === 'over') && d.target;
               const pickedTarget = picked.has(d.id) && d.target;
               const pickedWrong = picked.has(d.id) && !d.target;
               return (
-                <motion.button
+                <button
                   key={d.id}
                   onClick={() => pick(d.id)}
-                  className={cx('ml-tap absolute rounded-full')}
+                  onKeyDown={(event) => {
+                    if (event.repeat) event.preventDefault();
+                  }}
+                  aria-disabled={status !== 'select' || picked.has(d.id)}
+                  aria-label={`Dot ${selectionOrder.indexOf(d.id) + 1}${pickedWrong ? ', missed' : pickedTarget ? ', found' : glow ? ', marked' : ''}`}
+                  aria-pressed={picked.has(d.id)}
+                  className="ml-tap absolute flex min-h-11 min-w-11 items-center justify-center rounded-full text-lg font-bold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white"
                   style={{
-                    width: `${(R * 2 / AREA) * 100}%`,
-                    height: `${(R * 2 / AREA) * 100}%`,
-                    left: `${((d.x - R) / AREA) * 100}%`,
-                    top: `${((d.y - R) / AREA) * 100}%`,
+                    width: `${(TRACK_RADIUS * 2 / TRACK_AREA) * 100}%`,
+                    height: `${(TRACK_RADIUS * 2 / TRACK_AREA) * 100}%`,
+                    left: `${(d.x / TRACK_AREA) * 100}%`,
+                    top: `${(d.y / TRACK_AREA) * 100}%`,
+                    transform: 'translate(-50%, -50%)',
                     background: pickedWrong
                       ? '#ef4444'
                       : glow || pickedTarget
@@ -209,7 +189,9 @@ export default function SequenceTrack({ onFinish }: GameProps) {
                         : '#94a3b8',
                     boxShadow: glow ? `0 0 18px ${accent}` : undefined,
                   }}
-                />
+                >
+                  <span aria-hidden="true">{pickedWrong ? '×' : pickedTarget ? '✓' : glow ? '•' : status === 'select' ? selectionOrder.indexOf(d.id) + 1 : ''}</span>
+                </button>
               );
             })}
           </div>
