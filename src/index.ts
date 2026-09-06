@@ -29,19 +29,50 @@ async function main() {
 
   app.use(express.json());
 
+  // Tracks the components that are expected to be serving. A component is only
+  // marked ready once its initialization completes without throwing, so the
+  // readiness endpoint can distinguish a live process from a functioning one.
+  const components = new Map<string, boolean>();
+  const markReady = (name: string) => components.set(name, true);
+  const markFailed = (name: string) => components.set(name, false);
+  const requireComponent = (name: string) => {
+    components.set(name, false);
+    return {
+      ready: () => markReady(name),
+      failed: () => markFailed(name),
+    };
+  };
+  const isReady = () => [...components.values()].every(Boolean);
+
+  // Liveness: the process is up and the event loop is responsive.
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
   });
 
+  // Readiness: every required component initialized successfully. Returns 503
+  // when any intended bot or app failed to start so monitoring and rollout
+  // acceptance don't treat a degraded process as healthy.
+  app.get('/ready', (_req: Request, res: Response) => {
+    const componentStatus = Object.fromEntries(components);
+    const ready = isReady();
+    res.status(ready ? 200 : 503).json({ ready, components: componentStatus });
+  });
+
+  const savingsComponent = requireComponent('savings');
   try {
     await initSavings(app);
+    savingsComponent.ready();
   } catch (err) {
+    savingsComponent.failed();
     logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
   }
 
+  const mindloopComponent = requireComponent('mindloop');
   try {
     await initMindloop(app);
+    mindloopComponent.ready();
   } catch (err) {
+    mindloopComponent.failed();
     logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
   }
 
@@ -52,9 +83,12 @@ async function main() {
   const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
   const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {
     if (!shouldInitBot(config)) return;
+    const component = requireComponent(config.id);
     try {
       await init();
+      component.ready();
     } catch (err) {
+      component.failed();
       logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
     }
   };
@@ -64,6 +98,11 @@ async function main() {
   await initBot(coachConfig, () => initCoach());
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
+
+  if (!isReady()) {
+    const failed = [...components.entries()].filter(([, ready]) => !ready).map(([name]) => name);
+    logger.error(`Startup completed with unavailable components: ${failed.join(', ')}`);
+  }
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
   const server = app.listen(port, () => {
