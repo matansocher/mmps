@@ -46,6 +46,14 @@ export function IntroScreen({ game, category, best, onStart }: Props) {
         ))}
       </ol>
 
+      {game.brainPractice && (
+        <div className="w-full rounded-2xl bg-white/70 p-4 text-left ring-1 ring-slate-200 dark:bg-white/10 dark:ring-white/10">
+          <h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">What you practice</h2>
+          <p className="mt-1 text-base text-slate-600 dark:text-slate-300">{game.brainPractice}</p>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Practice for this skill, not a measure of intelligence or a promise of everyday improvement.</p>
+        </div>
+      )}
+
       <div className="text-sm font-semibold text-slate-400 dark:text-slate-500">
         Best score: <span style={{ color: category.accent }}>{best}</span>
       </div>
