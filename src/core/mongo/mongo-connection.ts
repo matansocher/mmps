@@ -2,36 +2,50 @@ import { Collection, Db, MongoClient } from 'mongodb';
 import { env } from 'node:process';
 
 const connections: Map<string, Db> = new Map();
-const clients: MongoClient[] = [];
-const pendingConnections: Map<string, Promise<void>> = new Map();
+const clients: Map<string, MongoClient> = new Map();
+const pendingClients: Map<string, Promise<MongoClient>> = new Map();
 
-export async function createMongoConnection(dbName: string): Promise<void> {
-  if (connections.has(dbName)) return;
+async function getSharedClient(mongoUri: string): Promise<MongoClient> {
+  const existingClient = clients.get(mongoUri);
+  if (existingClient) return existingClient;
 
-  const pendingConnection = pendingConnections.get(dbName);
-  if (pendingConnection) return pendingConnection;
-
-  const mongoUri = env.MONGO_DB_URL;
-  if (!mongoUri) throw new Error('MONGO_DB_URL environment variable is not set');
+  const pendingClient = pendingClients.get(mongoUri);
+  if (pendingClient) return pendingClient;
 
   const connection = (async () => {
     const client = new MongoClient(mongoUri);
     try {
       await client.connect();
-      clients.push(client);
-      connections.set(dbName, client.db(dbName));
+      clients.set(mongoUri, client);
+      return client;
     } catch (err) {
       await Promise.allSettled([client.close()]);
       throw err;
     }
   })();
 
-  pendingConnections.set(dbName, connection);
+  pendingClients.set(mongoUri, connection);
   try {
-    await connection;
+    return await connection;
   } finally {
-    pendingConnections.delete(dbName);
+    pendingClients.delete(mongoUri);
   }
+}
+
+export async function createMongoConnection(dbName: string): Promise<void> {
+  if (connections.has(dbName)) return;
+
+  const mongoUri = env.MONGO_DB_URL;
+  if (!mongoUri) throw new Error('MONGO_DB_URL environment variable is not set');
+
+  const client = await getSharedClient(mongoUri);
+  connections.set(dbName, client.db(dbName));
+}
+
+export async function getMongoClient(): Promise<MongoClient> {
+  const mongoUri = env.MONGO_DB_URL;
+  if (!mongoUri) throw new Error('MONGO_DB_URL environment variable is not set');
+  return getSharedClient(mongoUri);
 }
 
 export function getMongoCollection<T = any>(dbName: string, collectionName: string): Collection<T> {
@@ -45,9 +59,9 @@ export function hasMongoConnection(dbName: string): boolean {
 }
 
 export async function closeMongoConnections(): Promise<void> {
-  await Promise.allSettled(pendingConnections.values());
-  await Promise.allSettled(clients.map((client) => client.close()));
-  clients.length = 0;
+  await Promise.allSettled(pendingClients.values());
+  await Promise.allSettled([...clients.values()].map((client) => client.close()));
+  clients.clear();
   connections.clear();
-  pendingConnections.clear();
+  pendingClients.clear();
 }
