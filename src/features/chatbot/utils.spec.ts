@@ -79,4 +79,30 @@ describe('formatAgentResponse()', () => {
     expect(result.message).toEqual('Hello!');
     expect(result.toolResults).toEqual([]);
   });
+
+  it('should scope toolResults to the current turn and ignore previous turns retained in history', () => {
+    const messages = [
+      // Previous turn — should be ignored.
+      new HumanMessage('Weather yesterday?'),
+      new AIMessage({ content: '', tool_calls: [{ name: 'weather', args: {}, id: 'old-call' }] }),
+      new ToolMessage({ content: '{"temp":10}', tool_call_id: 'old-call' }),
+      new AIMessage('It was 10 degrees.'),
+      // Current turn.
+      new HumanMessage('Weather now?'),
+      new AIMessage({ content: '', tool_calls: [{ name: 'weather', args: {}, id: 'new-call' }] }),
+      new ToolMessage({ content: '{"temp":25}', tool_call_id: 'new-call' }),
+      new AIMessage('It is 25 degrees.'),
+    ];
+
+    const result = formatAgentResponse({ messages });
+
+    expect(result.message).toEqual('It is 25 degrees.');
+    expect(result.toolResults).toEqual([{ toolName: 'weather', data: { temp: 25 }, error: undefined }]);
+  });
+
+  it('should throw when the final message is not an assistant response', () => {
+    const messages = [new HumanMessage('Hi'), new AIMessage({ content: '', tool_calls: [{ name: 'weather', args: {}, id: 'call-1' }] })];
+
+    expect(() => formatAgentResponse({ messages })).toThrow('Agent did not produce a final assistant response');
+  });
 });
