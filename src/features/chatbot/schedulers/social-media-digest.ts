@@ -73,10 +73,10 @@ async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost
 
   for (const userPosts of groupPostsByUser(posts)) {
     try {
-      sections.push({ text: await buildUserSection(userPosts), posts: userPosts });
+      sections.push(...(await buildUserSection(userPosts)));
     } catch (err) {
       logger.error(`Failed to build digest section for ${userPosts[0].platform}/@${userPosts[0].username}: ${getErrorMessage(err)}`);
-      sections.push({ text: buildListingSection(userPosts, MAX_FALLBACK_POSTS), posts: userPosts });
+      sections.push(...buildListingSection(userPosts, MAX_FALLBACK_POSTS));
     }
   }
 
@@ -132,7 +132,7 @@ export function chunkSections(sections: DigestSection[]): DigestSection[] {
   return chunks;
 }
 
-async function buildUserSection(userPosts: PendingPost[]): Promise<string> {
+async function buildUserSection(userPosts: PendingPost[]): Promise<DigestSection[]> {
   if (userPosts[0].platform === 'telegram') {
     return buildTelegramListingSection(userPosts);
   }
@@ -148,15 +148,70 @@ function sectionHeader(userPosts: PendingPost[]): string {
   return `*${PLATFORM_LABELS[platform]} - ${name}* (${userPosts.length} new)`;
 }
 
-function buildListingSection(userPosts: PendingPost[], maxPosts?: number): string {
+// The largest a single section's text may be. We reserve room for the digest title so the
+// first chunk (which chunkSections prefixes with the title) can never overflow the send cap
+// and silently truncate acknowledged posts. Each per-post line is itself bounded below.
+export const SECTION_BUDGET = TELEGRAM_MAX_MESSAGE_LENGTH - DIGEST_TITLE.length - SECTION_SEPARATOR.length;
+
+// Packs a header plus one line per post into as few sections as possible, each within the
+// per-section budget, splitting only at post boundaries. Every returned section carries
+// exactly the posts whose lines it contains, so acknowledgement (deletion) never claims a
+// post that was not actually rendered. A single line longer than the whole budget is hard
+// capped so it still fits and its one post is represented rather than dropped.
+function packListing(header: string, entries: { line: string; post: PendingPost }[]): DigestSection[] {
+  if (!entries.length) {
+    return [];
+  }
+  const sections: DigestSection[] = [];
+  let lines = [header];
+  let posts: PendingPost[] = [];
+
+  const flush = () => {
+    if (posts.length) {
+      sections.push({ text: lines.join('\n'), posts });
+    }
+    lines = [header];
+    posts = [];
+  };
+
+  for (const { line, post } of entries) {
+    const capped = line.length > SECTION_BUDGET - header.length - 1 ? `${line.slice(0, SECTION_BUDGET - header.length - 2)}…` : line;
+    const candidateLength = [...lines, capped].join('\n').length;
+    if (posts.length && candidateLength > SECTION_BUDGET) {
+      flush();
+    }
+    lines.push(capped);
+    posts.push(post);
+  }
+  flush();
+
+  return sections;
+}
+
+function trimForListing(text: string | null): string {
+  if (!text) {
+    return '(no caption)';
+  }
+  return text.length > 200 ? `${text.slice(0, 200)}...` : text;
+}
+
+function listingLine(post: PendingPost): string {
+  const text = trimForListing(post.text);
+  return post.url ? `- ${text}\n  ${post.url}` : `- ${text}`;
+}
+
+// Lists posts one line each (newest last), packed into budget-fitting sections. When maxPosts
+// is set the older overflow is neither rendered nor acknowledged; it is retained so it rolls
+// into the next digest rather than being deleted behind a count-only note.
+export function buildListingSection(userPosts: PendingPost[], maxPosts?: number): DigestSection[] {
   const shown = maxPosts ? userPosts.slice(-maxPosts) : userPosts;
-  const lines = shown.map((post) => {
-    const text = post.text ? (post.text.length > 200 ? `${post.text.slice(0, 200)}...` : post.text) : '(no caption)';
-    return post.url ? `- ${text}\n  ${post.url}` : `- ${text}`;
-  });
-  const omitted = userPosts.length - shown.length;
-  const omittedNote = omitted > 0 ? `\n- ...and ${omitted} more` : '';
-  return `${sectionHeader(userPosts)}\n${lines.join('\n')}${omittedNote}`;
+  if (!shown.length) {
+    return [];
+  }
+  return packListing(
+    sectionHeader(userPosts),
+    shown.map((post) => ({ line: listingLine(post), post })),
+  );
 }
 
 export function isLongPost(text: string | null): boolean {
@@ -178,18 +233,17 @@ export function splitForAiBudget(userPosts: PendingPost[], maxAiPosts: number = 
   return { aiPosts: userPosts.slice(-maxAiPosts), overflowPosts: userPosts.slice(0, userPosts.length - maxAiPosts) };
 }
 
-function overflowNote(overflowCount: number): string {
-  return overflowCount > 0 ? `\n- ...and ${overflowCount} older post(s) not summarized` : '';
-}
-
 // Renders one line per Telegram post (newest first) with a direct message link.
 // The newest posts are AI-shortened to a 1-2 sentence description so the digest stays
-// scannable; older overflow beyond the AI budget is listed without AI.
-async function buildTelegramListingSection(userPosts: PendingPost[]): Promise<string> {
+// scannable; older overflow beyond the AI budget is listed deterministically without AI.
+// Every rendered post is represented in a returned section so it can be acknowledged; nothing
+// is deleted behind a count-only note.
+async function buildTelegramListingSection(userPosts: PendingPost[]): Promise<DigestSection[]> {
   const { aiPosts, overflowPosts } = splitForAiBudget(userPosts);
   const displayTexts = await shortenPosts(aiPosts.map((post) => post.text));
-  const lines = aiPosts.map((post, i) => telegramPostLine(displayTexts[i], post.url));
-  return `${sectionHeader(userPosts)}\n${lines.join('\n')}${overflowNote(overflowPosts.length)}`;
+  const aiEntries = aiPosts.map((post, i) => ({ line: telegramPostLine(displayTexts[i], post.url), post }));
+  const overflowEntries = overflowPosts.map((post) => ({ line: telegramPostLine(trimForListing(post.text), post.url), post }));
+  return packListing(sectionHeader(userPosts), [...aiEntries, ...overflowEntries]);
 }
 
 // Returns display text per post, shortening every post with text into a 1-2 sentence
@@ -222,7 +276,10 @@ async function shortenPosts(texts: (string | null)[]): Promise<string[]> {
   }
 }
 
-async function buildSummarySection(userPosts: PendingPost[]): Promise<string> {
+// Summarizes the newest slice of an account's posts into key points (one section carrying
+// exactly those posts), and lists the older overflow as its own budget-fitting sections so
+// they are rendered and acknowledged rather than deleted behind a count-only note.
+async function buildSummarySection(userPosts: PendingPost[]): Promise<DigestSection[]> {
   const { aiPosts, overflowPosts } = splitForAiBudget(userPosts);
   const texts = aiPosts.map((post) => post.text).filter(Boolean);
   if (!texts.length) {
@@ -238,7 +295,9 @@ async function buildSummarySection(userPosts: PendingPost[]): Promise<string> {
   const input = texts.map((text, i) => `Post ${i + 1}:\n${text}`).join('\n\n');
   const { result } = await getResponse({ instructions, input, schema: summarySchema, model: GPT_SMALL_MODEL, store: false });
   const bullets = result.keyPoints.map((point) => `- ${point}`).join('\n');
-  return `${sectionHeader(userPosts)}\n${bullets}${overflowNote(overflowPosts.length)}`;
+  const summaryText = `${sectionHeader(userPosts)}\n${bullets}`.slice(0, SECTION_BUDGET);
+  const summarySection: DigestSection = { text: summaryText, posts: aiPosts };
+  return [summarySection, ...buildListingSection(overflowPosts)];
 }
 
 // Summary length scales with volume: 4 posts -> 2 points, 100 posts -> 10 points
