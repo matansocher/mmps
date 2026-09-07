@@ -28,7 +28,19 @@ const LONG_POST_THRESHOLD = 280; // posts longer than this hard-truncate when AI
 // Upper bound on how many of one account's posts are fed into a single AI request, so a
 // delivery outage that inflates the backlog can't grow the request past the model's budget.
 // Newest posts are preferred; the rest are listed deterministically without AI.
-const MAX_AI_POSTS_PER_ACCOUNT = 40;
+export const MAX_AI_POSTS_PER_ACCOUNT = 40;
+// Model-aware text budget (in characters, a deterministic token proxy) for the post text fed
+// into a single AI request, on top of the post-count cap. Long-form posts (e.g. long-form
+// tweets) can be arbitrarily large, so the count cap alone does not bound request size or
+// cost. Character count keeps this tokenizer-free and consistent with the char-based
+// thresholds elsewhere in this file. The budget reserves headroom for the instructions
+// prompt and the model's output; ~1 char ≈ ¼ token, so 24k chars ≈ 6k input tokens.
+export const MAX_AI_INPUT_CHARS = 24_000;
+// A single post is never allowed to consume more than this share of the input budget, so one
+// oversized post can't crowd out every other post in the same request. Oversized post text is
+// truncated to fit (handled explicitly) rather than rejected by the model or dropped.
+export const MAX_AI_CHARS_PER_POST = 4_000;
+const TRUNCATION_MARKER = '…';
 
 const summarySchema = z.object({
   keyPoints: z.array(z.string()).describe('The key points of what the author posted about, one bullet per distinct topic'),
@@ -171,11 +183,61 @@ function telegramPostLine(text: string, url: string | null): string {
 // Splits an account's posts into the newest slice that goes through AI and the older
 // overflow that is listed deterministically, so a big backlog can't grow an AI request
 // past the model's budget. Posts arrive oldest-first, so the newest are at the end.
-export function splitForAiBudget(userPosts: PendingPost[], maxAiPosts: number = MAX_AI_POSTS_PER_ACCOUNT): { readonly aiPosts: PendingPost[]; readonly overflowPosts: PendingPost[] } {
-  if (userPosts.length <= maxAiPosts) {
-    return { aiPosts: userPosts, overflowPosts: [] };
+//
+// Budgeting happens in two stages so both concerns are explicit:
+//   1. A post-COUNT cap (maxAiPosts) keeps a runaway backlog bounded.
+//   2. A model-aware text-SIZE budget (maxInputChars) then bounds the total characters fed
+//      to the model, since a handful of long-form posts can dwarf the count cap. Posts are
+//      taken newest-first until the budget is exhausted; the remainder overflows.
+// An individually oversized post is TRUNCATED to its per-post cap (handled explicitly) rather
+// than rejected by the model or dropped — its returned text is the truncated text, and it
+// still counts as one AI post so the post-to-output acknowledgement mapping is preserved.
+export function splitForAiBudget(
+  userPosts: PendingPost[],
+  maxAiPosts: number = MAX_AI_POSTS_PER_ACCOUNT,
+  maxInputChars: number = MAX_AI_INPUT_CHARS,
+  maxCharsPerPost: number = MAX_AI_CHARS_PER_POST,
+): { readonly aiPosts: PendingPost[]; readonly overflowPosts: PendingPost[] } {
+  // Stage 1: cap by count, keeping the newest posts (they sit at the end, oldest-first).
+  const countOverflow = userPosts.length > maxAiPosts ? userPosts.slice(0, userPosts.length - maxAiPosts) : [];
+  const countCapped = userPosts.length > maxAiPosts ? userPosts.slice(-maxAiPosts) : userPosts;
+
+  // Stage 2: cap by text size, walking newest-first, truncating any single oversized post.
+  // A post enters the request only if its per-post-capped text fits the remaining budget in
+  // full; we never shrink an older post below its per-post cap just to squeeze it in, since a
+  // tiny fragment isn't useful in a digest. The single newest post is the exception: it is
+  // always kept, truncated to fit, so an account with one huge post still gets summarized.
+  // budgetStart is the index in countCapped of the oldest post that still fits the budget.
+  const budgeted: PendingPost[] = [];
+  let remaining = maxInputChars;
+  let budgetStart = countCapped.length;
+  for (let i = countCapped.length - 1; i >= 0; i -= 1) {
+    const isNewest = budgeted.length === 0;
+    const perPostCap = isNewest ? Math.min(maxCharsPerPost, remaining) : maxCharsPerPost;
+    const budgetedPost = clampPostText(countCapped[i], perPostCap);
+    const usedChars = budgetedPost.text?.length ?? 0;
+    if (usedChars > remaining && !isNewest) {
+      break;
+    }
+    budgeted.unshift(budgetedPost);
+    remaining -= usedChars;
+    budgetStart = i;
   }
-  return { aiPosts: userPosts.slice(-maxAiPosts), overflowPosts: userPosts.slice(0, userPosts.length - maxAiPosts) };
+
+  // Overflow keeps oldest-first order: count-cap overflow, then any budget overflow after it.
+  const overflowPosts = [...countOverflow, ...countCapped.slice(0, budgetStart)];
+  return { aiPosts: budgeted, overflowPosts };
+}
+
+// Returns the post unchanged when its text fits maxChars, otherwise a copy whose text is
+// hard-truncated to maxChars (with a marker) so one oversized post can't blow the AI budget.
+function clampPostText(post: PendingPost, maxChars: number): PendingPost {
+  const text = post.text;
+  if (!text || text.length <= maxChars) {
+    return post;
+  }
+  const sliceLength = Math.max(0, maxChars - TRUNCATION_MARKER.length);
+  return { ...post, text: `${text.slice(0, sliceLength)}${TRUNCATION_MARKER}` };
 }
 
 function overflowNote(overflowCount: number): string {
