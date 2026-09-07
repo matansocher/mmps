@@ -5,7 +5,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { GPT_SMALL_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
-import { deletePendingPosts, getPendingPosts } from '@shared/social-follower';
+import { deletePendingPosts, getPendingPostBacklog, getPendingPostChatIds, getPendingPostsForChat } from '@shared/social-follower';
 import type { PendingPost, SocialPlatform } from '@shared/social-follower';
 
 const logger = new Logger('chatbot:scheduler:social-media-digest');
@@ -25,6 +25,10 @@ const DIGEST_PLATFORM_ORDER: readonly SocialPlatform[] = ['telegram', 'twitter',
 const SUMMARIZED_PLATFORMS: SocialPlatform[] = ['twitter']; // chatty platforms get AI topic summaries; the rest list each post
 const MAX_FALLBACK_POSTS = 15; // raw listing cap when summarization fails
 const LONG_POST_THRESHOLD = 280; // posts longer than this hard-truncate when AI shortening fails
+// Upper bound on how many of one account's posts are fed into a single AI request, so a
+// delivery outage that inflates the backlog can't grow the request past the model's budget.
+// Newest posts are preferred; the rest are listed deterministically without AI.
+const MAX_AI_POSTS_PER_ACCOUNT = 40;
 
 const summarySchema = z.object({
   keyPoints: z.array(z.string()).describe('The key points of what the author posted about, one bullet per distinct topic'),
@@ -36,16 +40,31 @@ const shortenSchema = z.object({
 
 // Sends the daily digest of everything the collectors stored since the last digest,
 // then deletes exactly the posts that were sent (later arrivals roll into the next day).
+// Iterates one chat at a time with a bounded query so a runaway backlog can't pull the
+// whole collection into memory.
 export async function socialMediaDigest(bot: Bot): Promise<void> {
-  const pendingPosts = await getPendingPosts();
-  if (!pendingPosts.length) {
-    return;
+  const chatIds = await getPendingPostChatIds();
+
+  for (const chatId of chatIds) {
+    const posts = await getPendingPostsForChat(chatId);
+    if (!posts.length) {
+      continue;
+    }
+    await logBacklog(chatId, posts.length);
+    await processDigestForChat(bot, chatId, posts);
   }
+}
 
-  const postsByChatId = groupBy(pendingPosts, (post) => String(post.chatId));
-
-  for (const posts of postsByChatId.values()) {
-    await processDigestForChat(bot, posts[0].chatId, posts);
+// Surfaces how far behind delivery has fallen: total pending count and how old the oldest
+// still-pending post is. A digest run only carries a bounded slice, so this is the signal
+// that a chat's backlog is growing beyond one run.
+async function logBacklog(chatId: number, loadedCount: number): Promise<void> {
+  try {
+    const { count, oldestPostedAt } = await getPendingPostBacklog(chatId);
+    const oldestAgeHours = oldestPostedAt ? Math.round((Date.now() - oldestPostedAt.getTime()) / 3_600_000) : 0;
+    logger.log(`Chat ${chatId} backlog: ${count} pending (processing ${loadedCount}), oldest ${oldestAgeHours}h old`);
+  } catch (err) {
+    logger.error(`Failed to read backlog stats for chat ${chatId}: ${getErrorMessage(err)}`);
   }
 }
 
@@ -149,12 +168,28 @@ function telegramPostLine(text: string, url: string | null): string {
   return url ? `- ${clean} — [link](${url})` : `- ${clean}`;
 }
 
+// Splits an account's posts into the newest slice that goes through AI and the older
+// overflow that is listed deterministically, so a big backlog can't grow an AI request
+// past the model's budget. Posts arrive oldest-first, so the newest are at the end.
+export function splitForAiBudget(userPosts: PendingPost[], maxAiPosts: number = MAX_AI_POSTS_PER_ACCOUNT): { readonly aiPosts: PendingPost[]; readonly overflowPosts: PendingPost[] } {
+  if (userPosts.length <= maxAiPosts) {
+    return { aiPosts: userPosts, overflowPosts: [] };
+  }
+  return { aiPosts: userPosts.slice(-maxAiPosts), overflowPosts: userPosts.slice(0, userPosts.length - maxAiPosts) };
+}
+
+function overflowNote(overflowCount: number): string {
+  return overflowCount > 0 ? `\n- ...and ${overflowCount} older post(s) not summarized` : '';
+}
+
 // Renders one line per Telegram post (newest first) with a direct message link.
-// Every post is AI-shortened to a 1-2 sentence description so the digest stays scannable.
+// The newest posts are AI-shortened to a 1-2 sentence description so the digest stays
+// scannable; older overflow beyond the AI budget is listed without AI.
 async function buildTelegramListingSection(userPosts: PendingPost[]): Promise<string> {
-  const displayTexts = await shortenPosts(userPosts.map((post) => post.text));
-  const lines = userPosts.map((post, i) => telegramPostLine(displayTexts[i], post.url));
-  return `${sectionHeader(userPosts)}\n${lines.join('\n')}`;
+  const { aiPosts, overflowPosts } = splitForAiBudget(userPosts);
+  const displayTexts = await shortenPosts(aiPosts.map((post) => post.text));
+  const lines = aiPosts.map((post, i) => telegramPostLine(displayTexts[i], post.url));
+  return `${sectionHeader(userPosts)}\n${lines.join('\n')}${overflowNote(overflowPosts.length)}`;
 }
 
 // Returns display text per post, shortening every post with text into a 1-2 sentence
@@ -188,7 +223,8 @@ async function shortenPosts(texts: (string | null)[]): Promise<string[]> {
 }
 
 async function buildSummarySection(userPosts: PendingPost[]): Promise<string> {
-  const texts = userPosts.map((post) => post.text).filter(Boolean);
+  const { aiPosts, overflowPosts } = splitForAiBudget(userPosts);
+  const texts = aiPosts.map((post) => post.text).filter(Boolean);
   if (!texts.length) {
     return buildListingSection(userPosts, MAX_FALLBACK_POSTS);
   }
@@ -202,7 +238,7 @@ async function buildSummarySection(userPosts: PendingPost[]): Promise<string> {
   const input = texts.map((text, i) => `Post ${i + 1}:\n${text}`).join('\n\n');
   const { result } = await getResponse({ instructions, input, schema: summarySchema, model: GPT_SMALL_MODEL, store: false });
   const bullets = result.keyPoints.map((point) => `- ${point}`).join('\n');
-  return `${sectionHeader(userPosts)}\n${bullets}`;
+  return `${sectionHeader(userPosts)}\n${bullets}${overflowNote(overflowPosts.length)}`;
 }
 
 // Summary length scales with volume: 4 posts -> 2 points, 100 posts -> 10 points

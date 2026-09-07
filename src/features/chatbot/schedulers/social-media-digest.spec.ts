@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { PendingPost, SocialPlatform } from '@shared/social-follower';
-import { chunkSections, groupPostsByUser, isLongPost, targetKeyPointsCount } from './social-media-digest';
+import { chunkSections, groupPostsByUser, isLongPost, splitForAiBudget, targetKeyPointsCount } from './social-media-digest';
 import type { DigestSection } from './social-media-digest';
 
 function pendingPost(platform: SocialPlatform, username: string, postId: string): PendingPost {
@@ -20,6 +20,29 @@ function section(text: string, postCount: number): DigestSection {
   const posts = Array.from({ length: postCount }, (_, i) => pendingPost('twitter', 'user', `${text}-${i}`));
   return { text, posts };
 }
+
+describe('splitForAiBudget()', () => {
+  test('should send all posts to AI when under the budget', () => {
+    const posts = Array.from({ length: 3 }, (_, i) => pendingPost('twitter', 'user', `p-${i}`));
+    const { aiPosts, overflowPosts } = splitForAiBudget(posts, 5);
+    expect(aiPosts.map((post) => post.postId)).toEqual(['p-0', 'p-1', 'p-2']);
+    expect(overflowPosts).toHaveLength(0);
+  });
+
+  test('should send exactly the budget to AI when at the boundary', () => {
+    const posts = Array.from({ length: 5 }, (_, i) => pendingPost('twitter', 'user', `p-${i}`));
+    const { aiPosts, overflowPosts } = splitForAiBudget(posts, 5);
+    expect(aiPosts).toHaveLength(5);
+    expect(overflowPosts).toHaveLength(0);
+  });
+
+  test('should keep the newest posts for AI and overflow the older ones', () => {
+    const posts = Array.from({ length: 7 }, (_, i) => pendingPost('twitter', 'user', `p-${i}`));
+    const { aiPosts, overflowPosts } = splitForAiBudget(posts, 3);
+    expect(aiPosts.map((post) => post.postId)).toEqual(['p-4', 'p-5', 'p-6']);
+    expect(overflowPosts.map((post) => post.postId)).toEqual(['p-0', 'p-1', 'p-2', 'p-3']);
+  });
+});
 
 describe('targetKeyPointsCount()', () => {
   test.each([
@@ -47,7 +70,8 @@ describe('isLongPost()', () => {
   });
 });
 
-describe('groupPostsByUser()', () => {  test('should group accounts by platform while preserving account and post order', () => {
+describe('groupPostsByUser()', () => {
+  test('should group accounts by platform while preserving account and post order', () => {
     const posts = [
       pendingPost('youtube', 'youtube-one', 'youtube-1'),
       pendingPost('telegram', 'telegram-one', 'telegram-1'),
