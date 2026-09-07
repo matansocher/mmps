@@ -33,15 +33,22 @@ async function main() {
     res.json({ success: true });
   });
 
+  // Collects components that were expected to serve but failed to initialize,
+  // so a degraded process (live but not fully functioning) is logged as an
+  // error for Grafana alerting instead of silently passing as healthy.
+  const failedComponents: string[] = [];
+
   try {
     await initSavings(app);
   } catch (err) {
+    failedComponents.push('savings');
     logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
   }
 
   try {
     await initMindloop(app);
   } catch (err) {
+    failedComponents.push('mindloop');
     logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
   }
 
@@ -55,6 +62,7 @@ async function main() {
     try {
       await init();
     } catch (err) {
+      failedComponents.push(config.id);
       logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
     }
   };
@@ -64,6 +72,10 @@ async function main() {
   await initBot(coachConfig, () => initCoach());
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
+
+  if (failedComponents.length) {
+    logger.error(`Startup completed with unavailable components: ${failedComponents.join(', ')}`);
+  }
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
   const server = app.listen(port, () => {
