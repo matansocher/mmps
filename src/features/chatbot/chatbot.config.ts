@@ -16,10 +16,15 @@ export const CHATBOT_CONFIG = {
   // Location used by the nightly summary's weather section.
   summaryLocation: env.CHATBOT_SUMMARY_LOCATION || 'Kfar Saba',
   summarization: {
-    // Summarize once a thread grows past this many messages.
+    // Summarize once the retained history grows past this many tokens. Token-based bounding is
+    // the primary guard: message counts don't bound context or checkpoint size, since a single
+    // retained turn can carry a base64 image or a full transcript. See CHATBOT_SUMMARY_PROMPT.
+    triggerTokens: parseInt(env.CHATBOT_SUMMARY_TRIGGER_TOKENS || '24000', 10),
+    // Secondary message-count trigger (OR with the token trigger) so very chatty short threads
+    // still get compressed even when they stay under the token budget.
     triggerMessages: parseInt(env.CHATBOT_SUMMARY_TRIGGER_MESSAGES || '40', 10),
-    // Keep this many of the most recent messages verbatim after summarizing the rest.
-    keepMessages: parseInt(env.CHATBOT_SUMMARY_KEEP_MESSAGES || '20', 10),
+    // Keep roughly this many tokens of the most recent turns verbatim after summarizing the rest.
+    keepTokens: parseInt(env.CHATBOT_SUMMARY_KEEP_TOKENS || '8000', 10),
   },
 };
 
