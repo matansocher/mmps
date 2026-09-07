@@ -3,7 +3,7 @@ import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { summarizationMiddleware } from 'langchain';
+import { summarizationMiddleware, modelCallLimitMiddleware, toolCallLimitMiddleware } from 'langchain';
 import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
@@ -51,7 +51,19 @@ export class ChatbotService {
       summaryPrompt: CHATBOT_SUMMARY_PROMPT,
     });
 
-    this.aiService = createAgentService(agent(), { model: this.model, checkpointer, middleware: [summarization], toolCallbackOptions });
+    // Bounded turn: cap model requests and tool calls per run so a request timeout (which only
+    // covers one model call) and recursionLimit (which only bounds graph steps) are not the sole
+    // ceilings. Model limit ends the run gracefully; tool limit blocks further tool calls but lets
+    // the model still produce an answer.
+    const modelCallLimit = modelCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.modelCallLimitPerRun, exitBehavior: 'end' });
+    const toolCallLimit = toolCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.toolCallLimitPerRun, exitBehavior: 'continue' });
+
+    this.aiService = createAgentService(agent(), {
+      model: this.model,
+      checkpointer,
+      middleware: [summarization, modelCallLimit, toolCallLimit],
+      toolCallbackOptions,
+    });
   }
 
   async processMessage(message: string, chatId: number, options?: ProcessMessageOptions): Promise<ChatbotResponse>;
@@ -71,10 +83,13 @@ export class ChatbotService {
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();
+      // Single wall-clock deadline shared by the agent run and the follow-up structured-output call,
+      // so the whole turn is bounded regardless of how many model/tool calls it makes.
+      const signal = AbortSignal.timeout(CHATBOT_CONFIG.execution.turnTimeoutMs);
       // Recorded in `finally` so the turn's usage is captured even if a later step throws, and so
       // the follow-up structured-output call below is billed as part of the same turn.
       try {
-        const result = await this.aiService.invoke(contextualMessage, { threadId, images: options?.images, callbacks: usageHandler ? [usageHandler] : undefined });
+        const result = await this.aiService.invoke(contextualMessage, { threadId, images: options?.images, signal, callbacks: usageHandler ? [usageHandler] : undefined });
 
         const agentResponse = formatAgentResponse(result);
 
@@ -83,7 +98,7 @@ export class ChatbotService {
         }
 
         const structuredModel = this.model.withStructuredOutput(responseSchema);
-        const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)], { callbacks: usageHandler ? [usageHandler] : undefined });
+        const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)], { signal, callbacks: usageHandler ? [usageHandler] : undefined });
         return { response: agentResponse, structured: structured as z.infer<T> };
       } finally {
         if (usageHandler) {

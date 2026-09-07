@@ -21,6 +21,17 @@ export const CHATBOT_CONFIG = {
     // Keep this many of the most recent messages verbatim after summarizing the rest.
     keepMessages: parseInt(env.CHATBOT_SUMMARY_KEEP_MESSAGES || '20', 10),
   },
+  // Bounded execution budget for a single turn. A request timeout only covers one model call,
+  // and recursionLimit only bounds graph steps — these are the real per-turn ceilings.
+  execution: {
+    // Max model requests allowed in a single agent run (turn). "end" lets the agent finish gracefully.
+    modelCallLimitPerRun: parseInt(env.CHATBOT_MODEL_CALL_LIMIT || '8', 10),
+    // Max tool calls allowed in a single agent run. "continue" blocks further tool calls with an
+    // error message but lets the model wrap up its answer.
+    toolCallLimitPerRun: parseInt(env.CHATBOT_TOOL_CALL_LIMIT || '12', 10),
+    // Wall-clock deadline for the whole turn (ms). Aborts the run regardless of where it is.
+    turnTimeoutMs: parseInt(env.CHATBOT_TURN_TIMEOUT_MS || '180000', 10),
+  },
 };
 
 // {messages} is required — the middleware substitutes the messages being summarized there.
