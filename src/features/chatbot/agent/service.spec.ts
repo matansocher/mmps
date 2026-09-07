@@ -1,11 +1,11 @@
-import { CompiledStateGraph } from '@langchain/langgraph';
 import { describe, expect, it, vi } from 'vitest';
+import { ChatbotAgent } from './factory';
 import { AiService } from './service';
 
 function createService() {
   const invoke = vi.fn().mockResolvedValue({ messages: [] });
   const stream = vi.fn();
-  const graph = { invoke, stream } as unknown as CompiledStateGraph<any, any>;
+  const graph = { invoke, stream, graph: { getState: vi.fn() } } as unknown as ChatbotAgent;
   const service = new AiService(graph, { name: 'CHATBOT' });
   return { service, invoke };
 }

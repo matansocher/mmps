@@ -1,5 +1,4 @@
 import { ChatAnthropic } from '@langchain/anthropic';
-import { BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
@@ -37,6 +36,7 @@ export type InvokeOptions = {
   system?: string;
   callbacks?: any[];
   recursionLimit?: number;
+  signal?: AbortSignal; // Wall-clock deadline for the whole turn; aborts the run when it fires
   images?: readonly string[]; // Base64 data URLs or public URLs sent as multimodal image blocks
   // Invocation metadata for tracing/correlation. Only safe correlation identifiers belong here —
   // never raw prompts, emails, image payloads, or credentials.
@@ -67,9 +67,4 @@ export type ToolResult = {
   toolName: string;
   data: any;
   error?: string;
-};
-
-export type MessageState = {
-  messages: BaseMessage[];
-  [key: string]: any; // index signature for LangGraph compatibility
 };

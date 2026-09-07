@@ -4,10 +4,18 @@ import { ToolCallbackHandler } from '@shared/ai';
 import { AgentDescriptor, CreateAgentOptions, OrchestratorDescriptor } from '../types';
 import { AiService } from './service';
 
+function createChatbotAgent(descriptor: AgentDescriptor | OrchestratorDescriptor, opts: CreateAgentOptions) {
+  const { tools = [] } = descriptor;
+  const { model, checkpointer = new MemorySaver(), middleware } = opts;
+  return createAgent({ model, tools, systemPrompt: descriptor.prompt, checkpointer, middleware });
+}
+
+export type ChatbotAgent = ReturnType<typeof createChatbotAgent>;
+
 export function createAgentService(descriptor: AgentDescriptor | OrchestratorDescriptor, opts: CreateAgentOptions): AiService {
-  const { name, tools = [] } = descriptor;
-  const { model, checkpointer = new MemorySaver(), middleware, toolCallbackOptions } = opts;
+  const { name } = descriptor;
+  const { toolCallbackOptions } = opts;
   const callbacks = toolCallbackOptions ? [new ToolCallbackHandler(toolCallbackOptions)] : undefined;
-  const reactAgent = createAgent({ model, tools, systemPrompt: descriptor.prompt, checkpointer, middleware });
-  return new AiService(reactAgent.graph as any, { name, callbacks });
+  const agent = createChatbotAgent(descriptor, opts);
+  return new AiService(agent, { name, callbacks });
 }

@@ -158,8 +158,10 @@ Tune via environment variables:
 
 ```bash
 # Optional: conversation summarization (defaults in code)
-CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # summarize once a thread passes this many messages
-CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summarizing
+# Optional: conversation summarization (defaults in code)
+CHATBOT_SUMMARY_TRIGGER_TOKENS=24000  # summarize once retained history passes this many tokens (primary bound)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # also summarize once a thread passes this many messages (OR)
+CHATBOT_SUMMARY_KEEP_TOKENS=8000      # recent tokens kept verbatim after summarizing
 ```
 
 ### Token & Cost Observability
@@ -239,7 +241,7 @@ If you get rate limit errors:
 ### Memory Issues
 
 If the bot uses too much memory:
-- Lower `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES` so threads are summarized sooner and kept shorter
+- Lower `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_KEEP_TOKENS` so threads are summarized sooner and kept shorter
 - Old conversations expire automatically via the checkpointer's 30-day TTL
 - Monitor with `npm run start:debug`
 

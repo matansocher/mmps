@@ -1,4 +1,4 @@
-import { BaseMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { ChatbotResponse, ToolResult } from './types';
@@ -17,18 +17,34 @@ export async function fileToDataUrl(filePath: string): Promise<string> {
   return `data:${mimeType};base64,${buffer.toString('base64')}`;
 }
 
-export function formatAgentResponse(result: any): ChatbotResponse {
-  const messages = result.messages as BaseMessage[];
+export function formatAgentResponse(result: { messages: BaseMessage[] }): ChatbotResponse {
+  const messages = result.messages;
   const lastMessage = messages[messages.length - 1];
-  const responseContent = lastMessage.content as string;
 
-  const toolResults = extractToolResults(messages);
+  if (!AIMessage.isInstance(lastMessage) || lastMessage.tool_calls?.length) {
+    throw new Error('Agent did not produce a final assistant response');
+  }
+
+  // The checkpointer retains full conversation history, so only inspect the current turn —
+  // the slice from the last user message onward — otherwise previous turns' tool executions
+  // would be re-reported on every response.
+  const turnMessages = messagesForCurrentTurn(messages);
+  const toolResults = extractToolResults(turnMessages);
 
   return {
-    message: responseContent,
+    message: lastMessage.text,
     toolResults,
     timestamp: new Date().toISOString(),
   };
+}
+
+function messagesForCurrentTurn(messages: BaseMessage[]): BaseMessage[] {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (HumanMessage.isInstance(messages[i])) {
+      return messages.slice(i);
+    }
+  }
+  return messages;
 }
 
 function extractToolResults(messages: BaseMessage[]): ToolResult[] {
