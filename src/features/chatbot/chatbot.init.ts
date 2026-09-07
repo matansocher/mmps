@@ -13,7 +13,7 @@ import { DB_NAME as HOTEL_WATCHER_DB_NAME } from '@shared/hotel-watcher';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { ensureReminderIndexes, DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
-import { ensurePendingPostIndexes, DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
+import { ensurePendingPostIndexes, ensureSubscriptionIndexes, DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
 import { DB_NAME as SPOTIFY_FOLLOWER_DB_NAME } from '@shared/spotify-follower';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
 import { ensureTransferTrackerIndexes, DB_NAME as TRANSFER_TRACKER_DB_NAME } from '@shared/transfer-tracker';
@@ -54,6 +54,7 @@ export async function initChatbot(app: Express): Promise<void> {
   await ensureSecretaryMessageIndexes();
   await ensureTransferTrackerIndexes();
   await ensurePendingPostIndexes();
+  await ensureSubscriptionIndexes();
 
   // Build the checkpointer BEFORE provideTelegramBot(), which calls bot.start().
   // grammY locks the bot against new listeners once polling begins, so any `await`
