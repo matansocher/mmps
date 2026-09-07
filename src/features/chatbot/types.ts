@@ -1,5 +1,4 @@
 import { ChatAnthropic } from '@langchain/anthropic';
-import { BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
@@ -59,9 +58,4 @@ export type ToolResult = {
   toolName: string;
   data: any;
   error?: string;
-};
-
-export type MessageState = {
-  messages: BaseMessage[];
-  [key: string]: any; // index signature for LangGraph compatibility
 };

@@ -1,9 +1,11 @@
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { CompiledStateGraph } from '@langchain/langgraph';
-import { AiServiceOptions, InvokeOptions, MessageState } from '../types';
+import { AiServiceOptions, InvokeOptions } from '../types';
+import { ChatbotAgent } from './factory';
 
-function createMessage(message: string, opts: Partial<InvokeOptions> = {}): MessageState {
+type AgentInput = Parameters<ChatbotAgent['invoke']>[0];
+
+function createMessage(message: string, opts: Partial<InvokeOptions> = {}): AgentInput {
   const messages: BaseMessage[] = [];
   if (opts.system) {
     messages.push(new SystemMessage(opts.system));
@@ -26,7 +28,7 @@ export class AiService {
   readonly defaultCallbacks?: any[];
 
   constructor(
-    readonly agent: CompiledStateGraph<any, any>,
+    readonly agent: ChatbotAgent,
     options: AiServiceOptions,
   ) {
     this.name = options.name;
@@ -63,6 +65,6 @@ export class AiService {
   }
 
   async getState(opts: Partial<InvokeOptions> = {}) {
-    return this.agent.getState(this.createOptions(opts));
+    return this.agent.graph.getState(this.createOptions(opts));
   }
 }

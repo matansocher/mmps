@@ -1,3 +1,4 @@
+import { AIMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
@@ -40,9 +41,12 @@ export class ChilliService {
       const result = await this.aiService.invoke(message, { threadId, system, callbacks: [usageHandler] });
       recordModelUsage({ source: 'chilli', chatId, handler: usageHandler, durationMs: Date.now() - startedAt });
 
-      const messages = (result as any).messages;
+      const messages = result.messages;
       const lastMessage = messages[messages.length - 1];
-      return lastMessage.content as string;
+      if (!AIMessage.isInstance(lastMessage) || lastMessage.tool_calls?.length) {
+        throw new Error('Agent did not produce a final assistant response');
+      }
+      return lastMessage.text;
     } catch (err) {
       this.logger.error(`Error processing message for user ${chatId}: ${getErrorMessage(err)}`);
       return 'מיאו... משהו השתבש. נסו שוב.';
