@@ -65,13 +65,17 @@ export async function fetchUserEmails(q: string, maxResults: number): Promise<Em
   }
 }
 
-export async function trashEmail(messageId: string) {
+export async function trashEmail(messageId: string): Promise<string> {
   try {
     const gmail = await getGmailClient();
-    await gmail.users.messages.trash({ userId: 'me', id: messageId });
+    const res = await gmail.users.messages.trash({ userId: 'me', id: messageId });
+    if (!res.data.id) {
+      throw new Error('Gmail returned no message ID; trash outcome is unknown');
+    }
+    return res.data.id;
   } catch (err) {
     logger.error(`Failed to trash email: ${getErrorMessage(err)}`);
-    return null;
+    throw err;
   }
 }
 
@@ -130,8 +134,12 @@ export async function sendEmail({ recipient, subject, body }: SendEmailOpts): Pr
     const utf8Message = [`To: ${recipient}`, 'Content-Type: text/html; charset=utf-8', 'MIME-Version: 1.0', `Subject: ${subject}`, '', body].join('\r\n');
     const base64EncodedEmail = Buffer.from(utf8Message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw: base64EncodedEmail } });
+    if (!res.data.id) {
+      throw new Error('Gmail returned no message ID; send outcome is unknown');
+    }
     return res.data.id;
   } catch (err) {
     logger.error(`Failed to send email: ${getErrorMessage(err)}`);
+    throw err;
   }
 }
