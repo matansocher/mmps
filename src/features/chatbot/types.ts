@@ -38,6 +38,14 @@ export type InvokeOptions = {
   recursionLimit?: number;
   signal?: AbortSignal; // Wall-clock deadline for the whole turn; aborts the run when it fires
   images?: readonly string[]; // Base64 data URLs or public URLs sent as multimodal image blocks
+  // Invocation metadata for tracing/correlation. Only safe correlation identifiers belong here —
+  // never raw prompts, emails, image payloads, or credentials.
+  runId?: string; // Correlation ID for the tracer run; a UUID is generated when omitted
+  runName?: string; // Human-readable run name for the trace (e.g. 'chatbot.turn')
+  invocationSource?: string; // Where the turn originated (e.g. 'chatbot', 'chatbot-secretary')
+  requestId?: string; // Upstream request identifier to correlate across systems
+  tags?: readonly string[]; // Tags applied to the run and its sub-calls for filtering
+  metadata?: Record<string, unknown>; // Extra JSON-serializable correlation metadata (no sensitive content)
 };
 
 export type ChatbotResponse = {

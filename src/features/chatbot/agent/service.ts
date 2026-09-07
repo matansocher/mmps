@@ -1,7 +1,11 @@
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { RunnableConfig } from '@langchain/core/runnables';
+import { randomUUID } from 'node:crypto';
+import { env } from 'node:process';
 import { AiServiceOptions, InvokeOptions } from '../types';
 import { ChatbotAgent } from './factory';
+
+const AGENT_VERSION = env.npm_package_version || '1.0.0';
 
 type AgentInput = Parameters<ChatbotAgent['invoke']>[0];
 
@@ -48,6 +52,25 @@ export class AiService {
     if (opts.threadId) {
       config.configurable = { thread_id: opts.threadId };
     }
+
+    // Invocation metadata so the full agent lifecycle is traceable and correlatable, not just
+    // aggregate usage totals. Only safe correlation identifiers are attached here — never raw
+    // prompts, emails, image payloads, or credentials.
+    const runId = opts.runId ?? randomUUID();
+    config.runId = runId;
+    config.runName = opts.runName ?? `${this.name.toLowerCase()}.turn`;
+
+    const invocationSource = opts.invocationSource ?? this.name.toLowerCase();
+    config.tags = [...new Set([this.name.toLowerCase(), invocationSource, ...(opts.tags ?? [])])];
+    config.metadata = {
+      runId,
+      invocationSource,
+      agentName: this.name,
+      agentVersion: AGENT_VERSION,
+      ...(opts.threadId ? { threadId: opts.threadId } : {}),
+      ...(opts.requestId ? { requestId: opts.requestId } : {}),
+      ...(opts.metadata ?? {}),
+    };
 
     // Merge default callbacks with runtime callbacks
     const callbacks = [...(this.defaultCallbacks || []), ...(opts.callbacks || [])];
