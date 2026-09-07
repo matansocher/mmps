@@ -44,10 +44,16 @@ export class ChatbotService {
     // Compresses older turns into a running summary once the thread grows past the trigger,
     // keeping recent messages verbatim. Replaces the old drop-oldest truncation, and the
     // summarized state is persisted by the checkpointer (item #1) instead of being deleted.
+    //
+    // Bounded by tokens, not message counts: a single retained message can carry a base64 image
+    // or a full transcript, so a message-only limit doesn't bound the context window or the size
+    // of the MongoDB checkpoint document (16 MiB limit). The trigger array is OR'd — summarize
+    // when the history exceeds the token budget OR the message-count fallback — and `keep` is
+    // token-based so the retained tail fits a real budget.
     const summarization = summarizationMiddleware({
       model: this.model,
-      trigger: { messages: CHATBOT_CONFIG.summarization.triggerMessages },
-      keep: { messages: CHATBOT_CONFIG.summarization.keepMessages },
+      trigger: [{ tokens: CHATBOT_CONFIG.summarization.triggerTokens }, { messages: CHATBOT_CONFIG.summarization.triggerMessages }],
+      keep: { tokens: CHATBOT_CONFIG.summarization.keepTokens },
       summaryPrompt: CHATBOT_SUMMARY_PROMPT,
     });
 

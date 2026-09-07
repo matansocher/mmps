@@ -179,17 +179,20 @@ Persisting everything forever would blow the context window and cost. So the ser
 ```ts
 const summarization = summarizationMiddleware({
   model: this.model,
-  trigger: { messages: CHATBOT_CONFIG.summarization.triggerMessages },  // ~40
-  keep:    { messages: CHATBOT_CONFIG.summarization.keepMessages },     // ~20
+  trigger: [
+    { tokens: CHATBOT_CONFIG.summarization.triggerTokens },      // ~24k (primary bound)
+    { messages: CHATBOT_CONFIG.summarization.triggerMessages },  // ~40  (OR fallback)
+  ],
+  keep: { tokens: CHATBOT_CONFIG.summarization.keepTokens },     // ~8k
   summaryPrompt: CHATBOT_SUMMARY_PROMPT,
 });
 ```
 
-- Once a thread grows past **~40 messages**, it compresses the oldest turns into a **running summary** and keeps the last **~20** verbatim.
+- Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
 - The summary is written back into state and **persisted by the checkpointer** — old turns are compressed in Mongo, not deleted.
 - This **replaced** an older manual "drop-oldest" truncation (`truncateThread`) — the middleware does it *inside* the graph loop.
 - The summary prompt is tuned to preserve durable facts (name, location, health, diet, open tasks, decisions) and to **keep the original language** (Hebrew stays Hebrew).
-- Tunable via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
+- Tunable via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
 ::: tip Checkpointer vs. summarization
 Two complementary things: the **checkpointer = persistence** (state survives restarts); **summarization = context bounding** (state stays small enough to fit + stay cheap). Together: lossless-on-important-facts, bounded-size, durable memory.

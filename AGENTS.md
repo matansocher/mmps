@@ -556,9 +556,9 @@ export function createAgentService(descriptor: AgentDescriptor, opts: CreateAgen
 The chatbot's conversation memory is two complementary pieces wired up in `features/chatbot`:
 
 - **Persistence (checkpointer).** `agent/checkpointer.ts` provides `createChatbotCheckpointer()`, a Mongo-backed `BaseCheckpointSaver` (via `@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL). It's built in `chatbot.init.ts` and injected into `ChatbotService`, replacing the in-RAM `MemorySaver` so history survives restarts/deploys. State is keyed by `thread_id` (derived from `chatId`).
-- **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). Once a thread passes `CHATBOT_CONFIG.summarization.triggerMessages` (~40), it compresses the oldest turns into a summary and keeps the last `keepMessages` (~20) verbatim. The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped.
+- **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). It is bounded by **tokens, not message counts** — a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the MongoDB checkpoint document (16 MiB limit). The `trigger` is an **OR** array: summarize once retained history exceeds `CHATBOT_CONFIG.summarization.triggerTokens` (~24k) OR passes `triggerMessages` (~40); `keep` is token-based (`keepTokens`, ~8k). The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped.
 
-There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
+There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
 ### Token & cost observability (cross-bot)
 
