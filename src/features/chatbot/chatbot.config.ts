@@ -16,10 +16,26 @@ export const CHATBOT_CONFIG = {
   // Location used by the nightly summary's weather section.
   summaryLocation: env.CHATBOT_SUMMARY_LOCATION || 'Kfar Saba',
   summarization: {
-    // Summarize once a thread grows past this many messages.
+    // Summarize once the retained history grows past this many tokens. Token-based bounding is
+    // the primary guard: message counts don't bound context or checkpoint size, since a single
+    // retained turn can carry a base64 image or a full transcript. See CHATBOT_SUMMARY_PROMPT.
+    triggerTokens: parseInt(env.CHATBOT_SUMMARY_TRIGGER_TOKENS || '24000', 10),
+    // Secondary message-count trigger (OR with the token trigger) so very chatty short threads
+    // still get compressed even when they stay under the token budget.
     triggerMessages: parseInt(env.CHATBOT_SUMMARY_TRIGGER_MESSAGES || '40', 10),
-    // Keep this many of the most recent messages verbatim after summarizing the rest.
-    keepMessages: parseInt(env.CHATBOT_SUMMARY_KEEP_MESSAGES || '20', 10),
+    // Keep roughly this many tokens of the most recent turns verbatim after summarizing the rest.
+    keepTokens: parseInt(env.CHATBOT_SUMMARY_KEEP_TOKENS || '8000', 10),
+  },
+  // Bounded execution budget for a single turn. A request timeout only covers one model call,
+  // and recursionLimit only bounds graph steps — these are the real per-turn ceilings.
+  execution: {
+    // Max model requests allowed in a single agent run (turn). "end" lets the agent finish gracefully.
+    modelCallLimitPerRun: parseInt(env.CHATBOT_MODEL_CALL_LIMIT || '8', 10),
+    // Max tool calls allowed in a single agent run. "continue" blocks further tool calls with an
+    // error message but lets the model wrap up its answer.
+    toolCallLimitPerRun: parseInt(env.CHATBOT_TOOL_CALL_LIMIT || '12', 10),
+    // Wall-clock deadline for the whole turn (ms). Aborts the run regardless of where it is.
+    turnTimeoutMs: parseInt(env.CHATBOT_TURN_TIMEOUT_MS || '180000', 10),
   },
 };
 

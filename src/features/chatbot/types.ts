@@ -37,6 +37,7 @@ export type InvokeOptions = {
   system?: string;
   callbacks?: any[];
   recursionLimit?: number;
+  signal?: AbortSignal; // Wall-clock deadline for the whole turn; aborts the run when it fires
   images?: readonly string[]; // Base64 data URLs or public URLs sent as multimodal image blocks
 };
 

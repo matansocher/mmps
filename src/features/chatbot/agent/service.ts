@@ -39,6 +39,10 @@ export class AiService {
       recursionLimit: opts.recursionLimit ?? this.recursionLimit,
     };
 
+    if (opts.signal) {
+      config.signal = opts.signal;
+    }
+
     if (opts.threadId) {
       config.configurable = { thread_id: opts.threadId };
     }
