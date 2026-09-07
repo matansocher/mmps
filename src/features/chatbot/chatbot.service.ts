@@ -74,7 +74,12 @@ export class ChatbotService {
       // Recorded in `finally` so the turn's usage is captured even if a later step throws, and so
       // the follow-up structured-output call below is billed as part of the same turn.
       try {
-        const result = await this.aiService.invoke(contextualMessage, { threadId, images: options?.images, callbacks: usageHandler ? [usageHandler] : undefined });
+        const result = await this.aiService.invoke(contextualMessage, {
+          threadId,
+          images: options?.images,
+          invocationSource: 'chatbot',
+          callbacks: usageHandler ? [usageHandler] : undefined,
+        });
 
         const agentResponse = formatAgentResponse(result);
 
