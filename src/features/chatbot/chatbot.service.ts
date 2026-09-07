@@ -3,7 +3,6 @@ import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { summarizationMiddleware } from 'langchain';
 import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
@@ -11,7 +10,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgentService } from './agent';
+import { AiService, createAgentService, createSafeSummarizationMiddleware } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
@@ -44,7 +43,9 @@ export class ChatbotService {
     // Compresses older turns into a running summary once the thread grows past the trigger,
     // keeping recent messages verbatim. Replaces the old drop-oldest truncation, and the
     // summarized state is persisted by the checkpointer (item #1) instead of being deleted.
-    const summarization = summarizationMiddleware({
+    // Wrapped in a safe guard: if the underlying summarizer fails, the original history is
+    // preserved rather than replaced with an error-shaped summary.
+    const summarization = createSafeSummarizationMiddleware({
       model: this.model,
       trigger: { messages: CHATBOT_CONFIG.summarization.triggerMessages },
       keep: { messages: CHATBOT_CONFIG.summarization.keepMessages },
