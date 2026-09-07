@@ -20,6 +20,16 @@ const schema = z.object({
 
 type SchemaType = z.infer<typeof schema>;
 
+const sendInputSchema = z.object({
+  recipient: z.string().email().describe('Recipient email address'),
+  subject: z.string().min(1).describe('Email subject'),
+  body: z.string().min(1).describe('HTML email body'),
+});
+
+const deleteInputSchema = z.object({
+  emailId: z.string().min(1).describe('The Gmail message ID to delete/trash'),
+});
+
 async function listEmailsInternal(query?: string, maxResults?: number): Promise<any> {
   const finalQuery = query || 'is:unread';
   const finalMaxResults = Math.min(maxResults || 10, 50);
@@ -44,22 +54,24 @@ async function listEmailsInternal(query?: string, maxResults?: number): Promise<
   };
 }
 
-async function sendEmailInternal(recipient: string, subject: string, body: string): Promise<any> {
-  const messageId = await sendEmail({ recipient, subject, body });
+async function sendEmailInternal(recipient?: string, subject?: string, body?: string): Promise<any> {
+  const { recipient: to, subject: emailSubject, body: emailBody } = sendInputSchema.parse({ recipient, subject, body });
+  const messageId = await sendEmail({ recipient: to, subject: emailSubject, body: emailBody });
 
   return {
-    message: `Email sent successfully to ${recipient}`,
+    message: `Email sent successfully to ${to}`,
     messageId: messageId,
-    subject: subject,
+    subject: emailSubject,
   };
 }
 
-async function deleteEmailInternal(emailId: string): Promise<any> {
-  await trashEmail(emailId);
+async function deleteEmailInternal(emailId?: string): Promise<any> {
+  const { emailId: id } = deleteInputSchema.parse({ emailId });
+  await trashEmail(id);
 
   return {
-    message: `Email with ID ${emailId} has been moved to trash`,
-    emailId: emailId,
+    message: `Email with ID ${id} has been moved to trash`,
+    emailId: id,
   };
 }
 
