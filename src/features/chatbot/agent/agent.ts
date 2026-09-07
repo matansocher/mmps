@@ -1,9 +1,6 @@
 import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import {
   calendarTool,
-  competitionMatchesTool,
-  competitionsListTool,
-  competitionTableTool,
   contactsTool,
   earthquakeTool,
   exerciseAnalyticsTool,
@@ -14,8 +11,6 @@ import {
   gmailTool,
   hotelWatcherTool,
   makavdiaTool,
-  matchPredictionTool,
-  matchSummaryTool,
   meetupsTool,
   polymarketTool,
   recipesTool,
@@ -23,13 +18,13 @@ import {
   socialTool,
   spotifyPodcastTool,
   spotifyTool,
-  topMatchesForPredictionTool,
   weatherTool,
   webSearchTool,
   woltTool,
   worldlyTool,
 } from '@shared/ai';
-import { AgentDescriptor } from '../types';
+import { OrchestratorDescriptor } from '../types';
+import { sportsAgent } from './sports';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
@@ -70,8 +65,8 @@ Exercise tracking:
 - Reply with a short, encouraging confirmation. Do NOT mention the current streak or all-time exercise count. Use motivational emojis (💪🔥🏋️‍♂️🚀💯).
 
 Football / sports predictions:
-- To predict outcomes, first use top_matches_for_prediction to find important upcoming matches, then match_prediction_data for comprehensive data. Weigh betting odds (very valuable!), recent form, and goals statistics.
-- Provide probabilities summing to 100% and brief reasoning (2-3 sentences max per match).
+- For anything about football — match results, summaries, league tables, upcoming fixtures, competition info, or match outcome predictions — delegate the user's request to the sports sub-agent tool. Pass the full request in the user's own language; the sub-agent runs the sports tools itself and returns a complete answer (predictions include probabilities summing to 100%, positive-EV value bets, and risk ratings). Relay its answer back to the user.
+- makavdia (NBA / Deni Avdija) is separate — use that tool directly, not the sports sub-agent.
 
 Gmail:
 - The user's email is matansocher@gmail.com; "send to me/myself/my email" refers to this address.
@@ -103,17 +98,11 @@ GitHub (repository is ALWAYS matansocher/mmps — never ask which repo, branch, 
 - If a GitHub action returns success: false, relay the error briefly.
 `;
 
-export function agent(): AgentDescriptor {
+export function agent(): OrchestratorDescriptor {
   const tools = [
     weatherTool,
     webSearchTool,
     earthquakeTool,
-    competitionMatchesTool,
-    competitionTableTool,
-    competitionsListTool,
-    matchSummaryTool,
-    topMatchesForPredictionTool,
-    matchPredictionTool,
     makavdiaTool,
     calendarTool,
     gmailTool,
@@ -140,5 +129,6 @@ export function agent(): AgentDescriptor {
     prompt: AGENT_PROMPT,
     description: AGENT_DESCRIPTION,
     tools,
+    agents: [sportsAgent()],
   };
 }

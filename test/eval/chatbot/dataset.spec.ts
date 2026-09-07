@@ -8,7 +8,11 @@ import type { CapturedCall, EvalCase, RunResult, ToolCallExpectation, ToolExpect
 // They guard the eval set against typos (unknown tool names), missing category coverage, and
 // scoring regressions by proving the evaluator PASSES an ideal simulated run for every case.
 
-const registeredToolNames = new Set(agent().tools.map((tool) => tool.name));
+const orchestrator = agent();
+// Sub-agents are exposed to the parent as single callable tools ("agents-as-tools"), so their
+// derived tool names are valid routing targets alongside the direct tools.
+const subAgentToolNames = (orchestrator.agents ?? []).map((sub) => sub.name.toLowerCase().replace(/^chatbot[_-]?/, '') || sub.name.toLowerCase());
+const registeredToolNames = new Set([...orchestrator.tools.map((tool) => tool.name), ...subAgentToolNames]);
 
 function toArray<T>(value: T | readonly T[]): readonly T[] {
   return Array.isArray(value) ? value : [value as T];

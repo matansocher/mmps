@@ -35,11 +35,6 @@ function calendarFixture(args: Record<string, unknown>): unknown {
   return { success: true, eventId: args.eventId, action: args.action };
 }
 
-const sportsFixtures: Readonly<Record<string, ToolFixture>> = {
-  competitions_list: '**Available Football Competitions**\nPremier League (ID: 7) 📊',
-  competition_table: '**Premier League - League Table**\n1. Arsenal - 82 points',
-};
-
 export const dataset: readonly EvalCase[] = [
   // ---------- exercise logging ----------
   { id: 'exercise-01', category: 'exercise', input: 'I exercised', expect: { tool: 'exercise_tracker', action: 'log' } },
@@ -152,21 +147,17 @@ export const dataset: readonly EvalCase[] = [
   { id: 'weather-forecast-01', category: 'weather', input: "what's the forecast for December 25 in London?", expect: { tool: 'weather', action: 'forecast', args: { date: /-12-25/ } } },
   { id: 'weather-hourly-01', category: 'weather', input: "give me tomorrow's hourly forecast for Kfar Saba", expect: { tool: 'weather', action: 'tomorrow_hourly' } },
 
-  // ---------- sports ----------
+  // ---------- sports (routed through the single `sports` sub-agent tool) ----------
   {
     id: 'sports-table-01',
     category: 'sports',
     input: 'show me the table of the premier league',
-    expect: {
-      tool: 'competition_table',
-      sequence: [{ tool: 'competitions_list' }, { tool: 'competition_table', args: { competitionId: 7 } }],
-    },
-    fixtures: sportsFixtures,
+    expect: { tool: 'sports' },
   },
-  { id: 'sports-matches-02', category: 'sports', input: 'what football matches are on today?', expect: { tool: 'competition_matches' } },
-  { id: 'sports-comps-01', category: 'sports', input: 'which competitions can you show me?', expect: { tool: 'competitions_list' } },
-  { id: 'sports-predict-01', category: 'sports', input: 'predict the top upcoming football matches', expect: { tool: ['top_matches_for_prediction', 'match_prediction_data'] } },
-  { id: 'sports-result-01', category: 'sports', input: "what's the result of the Real Madrid match?", expect: { tool: ['match_summary', 'competition_matches'] } },
+  { id: 'sports-matches-02', category: 'sports', input: 'what football matches are on today?', expect: { tool: 'sports' } },
+  { id: 'sports-comps-01', category: 'sports', input: 'which competitions can you show me?', expect: { tool: 'sports' } },
+  { id: 'sports-predict-01', category: 'sports', input: 'predict the top upcoming football matches', expect: { tool: 'sports' } },
+  { id: 'sports-result-01', category: 'sports', input: "what's the result of the Real Madrid match?", expect: { tool: 'sports' } },
 
   // ---------- spotify ----------
   { id: 'spotify-playlists-01', category: 'spotify', input: 'what are my playlists in spotify?', expect: { tool: 'spotify', action: 'get_user_playlists' } },
@@ -234,15 +225,10 @@ export const dataset: readonly EvalCase[] = [
     input: 'add the next Real Madrid match to my calendar',
     expect: {
       tool: 'calendar',
-      sequence: [
-        { tool: ['competition_matches', 'match_summary', 'top_matches_for_prediction'] },
-        { tool: 'calendar', action: 'create' },
-      ],
+      sequence: [{ tool: 'sports' }, { tool: 'calendar', action: 'create' }],
     },
     fixtures: {
-      competition_matches: '**Upcoming matches**\nReal Madrid vs Barcelona — 2026-07-20 22:00',
-      match_summary: '**Real Madrid vs Barcelona**\n2026-07-20 22:00',
-      top_matches_for_prediction: '**Top matches**\nReal Madrid vs Barcelona — 2026-07-20 22:00',
+      sports: '**Upcoming matches**\nReal Madrid vs Barcelona — 2026-07-20 22:00',
     },
     note: 'sports lookup -> calendar create',
   },
@@ -303,15 +289,11 @@ export const dataset: readonly EvalCase[] = [
     id: 'cross-sports-predict-02',
     category: 'cross-domain',
     input: "give me a prediction for this weekend's biggest football match",
-    expect: {
-      tool: 'match_prediction_data',
-      sequence: [{ tool: 'top_matches_for_prediction' }, { tool: 'match_prediction_data' }],
-    },
+    expect: { tool: 'sports' },
     fixtures: {
-      top_matches_for_prediction: '**Top matches**\nArsenal vs Chelsea (matchId: 555) — 2026-07-19 19:00',
-      match_prediction_data: '**Arsenal vs Chelsea**\nOdds: Arsenal 45%, Draw 28%, Chelsea 27%.',
+      sports: '**Arsenal vs Chelsea**\nOdds: Arsenal 45%, Draw 28%, Chelsea 27%.',
     },
-    note: 'find top match -> fetch its prediction data',
+    note: 'find top match -> fetch its prediction data (handled inside the sports sub-agent)',
   },
 
   // ---------- ambiguous / underspecified (should clarify, not guess a wrong tool) ----------
