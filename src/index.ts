@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
+import { getReadinessReport, markComponentFailed, markComponentReady } from '@core/health';
 import { closeMongoConnections } from '@core/mongo';
 import { registerSwaggerRoutes } from '@core/openapi';
 import { closeRedisConnection } from '@core/services';
@@ -34,26 +35,35 @@ async function main() {
 
   app.use(express.json());
 
+  // Liveness: the process is up and the event loop is responsive. This must not
+  // depend on downstream components, so orchestrators don't kill a live process
+  // just because an optional dependency is degraded.
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
   });
 
-  // Collects components that were expected to serve but failed to initialize,
-  // so a degraded process (live but not fully functioning) is logged as an
-  // error for Grafana alerting instead of silently passing as healthy.
-  const failedComponents: string[] = [];
+  // Readiness: the process can actually serve. Returns 503 when any required
+  // component (bot, savings, mindloop, ...) failed to initialize or stopped
+  // serving, so monitoring and rollout acceptance can distinguish a live process
+  // from a functioning application.
+  app.get('/health/ready', (_req: Request, res: Response) => {
+    const report = getReadinessReport();
+    res.status(report.ready ? 200 : 503).json(report);
+  });
 
   try {
     await initSavings(app);
+    markComponentReady('savings');
   } catch (err) {
-    failedComponents.push('savings');
+    markComponentFailed('savings', getErrorMessage(err));
     logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
   }
 
   try {
     await initMindloop(app);
+    markComponentReady('mindloop');
   } catch (err) {
-    failedComponents.push('mindloop');
+    markComponentFailed('mindloop', getErrorMessage(err));
     logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
   }
 
@@ -66,8 +76,9 @@ async function main() {
     if (!shouldInitBot(config)) return;
     try {
       await init();
+      markComponentReady(config.id);
     } catch (err) {
-      failedComponents.push(config.id);
+      markComponentFailed(config.id, getErrorMessage(err));
       logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
     }
   };
@@ -78,8 +89,10 @@ async function main() {
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
 
-  if (failedComponents.length) {
-    logger.error(`Startup completed with unavailable components: ${failedComponents.join(', ')}`);
+  const { ready, components } = getReadinessReport();
+  if (!ready) {
+    const failed = components.filter((component) => component.status === 'failed').map((component) => component.name);
+    logger.error(`Startup completed with unavailable components: ${failed.join(', ')}`);
   }
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
