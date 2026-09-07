@@ -1,8 +1,20 @@
 import { getMongoCollection } from '@core/mongo';
 import { MINDLOOP_DB_NAME, MINDLOOP_MAX_HISTORY_ENTRIES, MINDLOOP_MAX_MERGE_RETRIES, MINDLOOP_PLAYERS_COLLECTION } from '../constants';
+import { legacyRunId } from '../legacy';
 import type { MindloopBestScores, MindloopPlayEntry, MindloopPlayerDocument, MindloopSyncData } from '../types';
 
 const getCollection = () => getMongoCollection<MindloopPlayerDocument>(MINDLOOP_DB_NAME, MINDLOOP_PLAYERS_COLLECTION);
+
+/**
+ * Normalizes a stored history entry so pre-upgrade rows (which predate runId)
+ * survive the runId-based merge. Applies the same deterministic legacy-ID rule
+ * as incoming sync data, keeping old and new entries dedupe-compatible.
+ */
+function normalizeStoredEntry(entry: MindloopPlayEntry): MindloopPlayEntry | null {
+  if (typeof entry?.gameId !== 'string' || typeof entry?.score !== 'number' || typeof entry?.at !== 'string') return null;
+  const runId = typeof entry.runId === 'string' && entry.runId.length > 0 ? entry.runId : legacyRunId(entry.gameId, entry.at);
+  return { runId, gameId: entry.gameId, score: entry.score, at: entry.at, ...(entry.receivedAt ? { receivedAt: entry.receivedAt } : {}) };
+}
 
 export async function getPlayer(telegramUserId: number): Promise<MindloopPlayerDocument | null> {
   return getCollection().findOne({ _id: telegramUserId });
@@ -19,11 +31,12 @@ function mergeBestScores(a: MindloopBestScores, b: MindloopBestScores): Record<s
   return out;
 }
 
-/** Newest-first, de-duplicated by runId, capped to the max size. */
-function mergeHistory(a: ReadonlyArray<MindloopPlayEntry>, b: ReadonlyArray<MindloopPlayEntry>): MindloopPlayEntry[] {
+/** Newest-first, de-duplicated by runId, capped to the max size. Exported for tests. */
+export function mergeHistory(a: ReadonlyArray<MindloopPlayEntry>, b: ReadonlyArray<MindloopPlayEntry>): MindloopPlayEntry[] {
   const seen = new Set<string>();
   const merged = [...a, ...b]
-    .filter((e) => typeof e?.runId === 'string' && typeof e?.gameId === 'string' && typeof e?.score === 'number' && typeof e?.at === 'string')
+    .map((e) => normalizeStoredEntry(e))
+    .filter((e): e is MindloopPlayEntry => e !== null)
     .sort((x, y) => (x.at < y.at ? 1 : x.at > y.at ? -1 : 0));
   const out: MindloopPlayEntry[] = [];
   for (const entry of merged) {

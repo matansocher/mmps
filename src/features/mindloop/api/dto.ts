@@ -1,4 +1,5 @@
 import type { MindloopPlayEntry, MindloopPlayerDocument, MindloopSyncData } from '../types';
+import { legacyRunId } from '../legacy';
 
 export type MindloopApiError = { readonly error: string };
 
@@ -65,7 +66,7 @@ function parseHistoryEntry(value: unknown): MindloopPlayEntry | null {
   if (!isFiniteNumber(score) || score < 0 || score > 10_000_000) return null;
   if (typeof at !== 'string' || Number.isNaN(Date.parse(at))) return null;
   // Legacy entries lack a runId; derive a stable one so they still dedupe.
-  const id = isRunId(runId) ? runId : `legacy:${gameId}@${at}`;
+  const id = isRunId(runId) ? runId : legacyRunId(gameId, at);
   return { runId: id, gameId, score: Math.round(score), at };
 }
 
