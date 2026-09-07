@@ -54,6 +54,14 @@ export class ChatbotService {
     this.aiService = createAgentService(agent(), { model: this.model, checkpointer, middleware: [summarization], toolCallbackOptions });
   }
 
+  // Interactive turns share the per-user thread so conversation history is preserved. Background
+  // tasks pass a stable `conversationKey` to get their own isolated thread, so overlapping
+  // scheduled runs can't fork or clobber the interactive conversation's checkpoint.
+  private resolveThreadId(chatId: number, conversationKey?: string): string {
+    const base = conversationKey ? `${chatId}:${conversationKey}` : chatId.toString();
+    return isProd ? base : `dev-${base}`;
+  }
+
   async processMessage(message: string, chatId: number, options?: ProcessMessageOptions): Promise<ChatbotResponse>;
   async processMessage<T extends z.ZodTypeAny>(message: string, chatId: number, responseSchema: T, options?: ProcessMessageOptions): Promise<StructuredChatbotResponse<T>>;
   async processMessage<T extends z.ZodTypeAny>(
@@ -67,7 +75,7 @@ export class ChatbotService {
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
-      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+      const threadId = this.resolveThreadId(chatId, options?.conversationKey);
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();

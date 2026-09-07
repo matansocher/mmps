@@ -53,6 +53,10 @@ export type StructuredChatbotResponse<T extends z.ZodTypeAny> = {
 
 export type ProcessMessageOptions = {
   readonly images?: readonly string[]; // Base64 data URLs or public URLs passed to the model as image blocks
+  // Isolates a background/scheduled task onto its own checkpoint thread so it can't fork or
+  // clobber the shared interactive conversation. Omit for interactive turns (they share the
+  // per-user thread); pass a stable, task-specific key from schedulers.
+  readonly conversationKey?: string;
 };
 
 export type ToolResult = {
