@@ -7,6 +7,9 @@ on:
   pull_request:
     branches: [main]
 
+# Elevated for the Release step (semantic-release): contents:write to push
+# tags/commits and create GitHub releases, issues/pull-requests:write to comment
+# on released issues and PRs. Read-only steps ignore the token.
 permissions:
   contents: write
   issues: write
