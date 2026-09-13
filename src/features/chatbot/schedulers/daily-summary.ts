@@ -1,11 +1,13 @@
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
+import { InputFile } from 'grammy';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { getErrorMessage, Logger } from '@core/utils';
+import { deleteFile, getErrorMessage, Logger } from '@core/utils';
 import { sendRichMessage } from '@services/telegram';
 import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather } from '@services/weather';
+import { generateWeatherChartImage } from '@services/weather-chart';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
@@ -65,6 +67,34 @@ function buildRemindersSection(reminders: Reminder[]): string | null {
   return ['**⏰ Unfinished reminders**', '', '| Due | Reminder |', '|:----|:---------|', ...rows].join('\n');
 }
 
+const WEATHER_TITLE = 'Weather for tomorrow';
+
+// Sends the weather as a chart image (Chart D style). On any failure it falls back to the text table so the
+// nightly summary always includes tomorrow's weather.
+async function sendWeather(bot: Bot, hourly: ReadonlyArray<HourlyWeather>): Promise<void> {
+  if (!hourly.length) {
+    await sendRichMessage(bot, MY_USER_ID, buildWeatherTable(hourly));
+    return;
+  }
+
+  let chartPath: string | null = null;
+  try {
+    chartPath = await generateWeatherChartImage({
+      title: WEATHER_TITLE,
+      highlightHours: SUMMARY_HOURS,
+      points: hourly.map((entry) => ({ hour: entry.hour, temperature: entry.temperature })),
+    });
+    await bot.api.sendPhoto(MY_USER_ID, new InputFile(chartPath));
+  } catch (err) {
+    logger.error(`Failed to send weather chart, falling back to text: ${getErrorMessage(err)}`);
+    await sendRichMessage(bot, MY_USER_ID, buildWeatherTable(hourly));
+  } finally {
+    if (chartPath) {
+      await deleteFile(chartPath).catch(() => {});
+    }
+  }
+}
+
 export async function dailySummary(bot: Bot): Promise<void> {
   try {
     const [forecast, events, reminders] = await Promise.all([
@@ -79,10 +109,15 @@ export async function dailySummary(bot: Bot): Promise<void> {
       }),
     ]);
 
-    // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
-    const sections = [buildWeatherTable(forecast?.hourly ?? []), buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events), buildRemindersSection(reminders)];
+    // The weather ships first as its own chart image; the rest of the summary follows as one text message.
+    await sendWeather(bot, forecast?.hourly ?? []);
 
-    await sendRichMessage(bot, MY_USER_ID, sections.filter(Boolean).join('\n\n'));
+    // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
+    const sections = [buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events), buildRemindersSection(reminders)];
+    const message = sections.filter(Boolean).join('\n\n');
+    if (message) {
+      await sendRichMessage(bot, MY_USER_ID, message);
+    }
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
     logger.error(`Failed to generate/send daily summary: ${getErrorMessage(err)}`);
