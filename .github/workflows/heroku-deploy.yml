@@ -85,26 +85,12 @@ jobs:
 
       - name: Notify Telegram
         if: always()
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.NOTIFIER_TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.MY_USER_ID }}
-          DEPLOY_SHA: ${{ steps.sha.outputs.sha }}
-          JOB_STATUS: ${{ job.status }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "::warning::NOTIFIER_TELEGRAM_BOT_TOKEN or MY_USER_ID secret is not set. Skipping Telegram notification."
-            exit 0
-          fi
-
-          if [ "$JOB_STATUS" = "success" ]; then
-            emoji="✅"
-          else
-            emoji="❌"
-          fi
-
-          message="${emoji} Heroku deploy ${JOB_STATUS}"$'\n'"App: ${HEROKU_APP_NAME}"$'\n'"SHA: ${DEPLOY_SHA:-unresolved}"
-
-          curl --silent --show-error --output /dev/null \
-            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${message}" \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+        uses: ./.github/actions/telegram-notify
+        with:
+          bot-token: ${{ secrets.NOTIFIER_TELEGRAM_BOT_TOKEN }}
+          chat-id: ${{ secrets.MY_USER_ID }}
+          status: ${{ job.status }}
+          message: |
+            Heroku deploy ${{ job.status }}
+            App: ${{ env.HEROKU_APP_NAME }}
+            SHA: ${{ steps.sha.outputs.sha }}
