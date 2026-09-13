@@ -208,18 +208,14 @@ describe('dailySummary()', () => {
     expect(message).toContain('| 2026-08-16 09:00 | Call plumber |');
   });
 
-  it('should attach an inline keyboard with complete and snooze buttons per reminder', async () => {
+  it('should not attach an inline keyboard even when there are reminders', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([createReminder('Call plumber', '2026-08-16T09:00:00+03:00')]);
 
     await dailySummary(bot);
 
-    const keyboard = (lastSentForm().reply_markup as { inline_keyboard?: unknown[][] } | undefined)?.inline_keyboard ?? [];
-    const flat = keyboard.flat() as Array<Record<string, unknown>>;
-    expect(flat.some((button) => button.text === '✅ Complete')).toBe(true);
-    expect(flat.some((button) => button.text === '🌅 Snooze tomorrow')).toBe(true);
-    expect(flat.some((button) => typeof button.text === 'string' && (button.text as string).includes('Call plumber'))).toBe(true);
+    expect(lastSentForm().reply_markup).toBeUndefined();
   });
 
   it('should not attach an inline keyboard when there are no reminders', async () => {

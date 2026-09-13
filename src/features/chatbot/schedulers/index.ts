@@ -15,8 +15,6 @@ export { makavdiaUpdate } from './makavdia-update';
 export { reminderCheck } from './reminder-check';
 export { buildReminderKeyboard, parseReminderCallbackData, resolveSnoozeUntil, describeSnoozeOption } from './reminder-actions';
 export type { ReminderAction, ReminderSnoozeOption, ParsedReminderCallback } from './reminder-actions';
-export { buildSummaryRemindersKeyboard, parseSummaryReminderCallbackData } from './summary-reminder-actions';
-export type { SummaryReminderAction, ParsedSummaryReminderCallback } from './summary-reminder-actions';
 export { sportsCalendar } from './sports-calendar';
 export { weeklyExerciseSummary } from './weekly-exercise-summary';
 export { polymarketUpdate } from './polymarket-update';
