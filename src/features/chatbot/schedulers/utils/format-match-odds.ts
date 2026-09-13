@@ -1,4 +1,3 @@
-import { buildPolymarketUrl } from '@services/polymarket';
 import type { MultiOutcomeEventSummary } from '@services/polymarket';
 
 const DRAW_LABEL_PATTERN = /^draw\b/i;
@@ -17,5 +16,5 @@ export function formatMatchOdds(event: MultiOutcomeEventSummary): string {
     return `${index === 0 ? '🟢' : '⚪'} ${cleanOutcomeLabel(outcome.outcome)}: ${pct}%`;
   });
 
-  return [`📊 *Polymarket odds*`, ...lines, `[View market](${buildPolymarketUrl(event.slug)})`].join('\n');
+  return [`📊 *Polymarket odds*`, ...lines].join('\n');
 }
