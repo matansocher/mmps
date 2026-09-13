@@ -11,6 +11,105 @@ cp .env.example .env
 # Edit .env with your API keys and bot tokens
 ```
 
+## Doppler (recommended)
+
+Instead of hand-managing a `.env` file across multiple machines, this repo is
+wired up for [Doppler](https://www.doppler.com/). Doppler stores your secrets
+centrally and the CLI downloads them into a local `.env` on demand, so every
+machine you develop on stays in sync without copying secrets around.
+
+### One-time install
+
+```bash
+# macOS (gnupg is required for signature verification)
+brew install gnupg
+brew install dopplerhq/cli/doppler
+
+# verify
+doppler --version
+```
+
+Other operating systems: see the [Doppler CLI install guide](https://docs.doppler.com/docs/install-cli).
+
+### One-time per machine
+
+```bash
+# Authenticate the CLI with your Doppler workplace (opens a browser)
+doppler login
+
+# Select the mmps project + dev config for this repo.
+# doppler.yaml pins the project/config, so this is non-interactive.
+npm run doppler:setup
+
+# Machine-specific values that must NOT be shared across machines
+echo 'LOCAL_ACTIVE_BOT_ID=CHATBOT' > .env.local
+```
+
+### Two files, two owners
+
+| File | Owner | Contents |
+| --- | --- | --- |
+| `.env` | Doppler | Shared secrets — bot tokens, API keys, `MONGO_DB_URL`. Rewritten from scratch on every `npm run dev`. |
+| `.env.local` | You, per machine/worktree | `LOCAL_ACTIVE_BOT_ID`, `PORT`, any local override. Never touched by Doppler. |
+
+`src/index.ts` loads them as `dotenv.config({ path: ['.env.local', '.env'] })`.
+`dotenv` uses first-wins precedence, so `.env.local` overrides `.env` key by key
+while `.env` supplies everything else.
+
+That split is what makes the refresh safe: `.env` is a disposable cache of the
+shared vault, and anything you need to differ per machine or per worktree lives
+in `.env.local`, where a Doppler refresh can never clobber it. **Don't hand-edit
+`.env`** — it is regenerated on every run.
+
+Keep `LOCAL_ACTIVE_BOT_ID` out of the Doppler config entirely; every machine and
+worktree wants a different bot. The download script warns if it sees that key
+arrive from Doppler, and also warns when no `.env.local` exists.
+
+### Day-to-day
+
+```bash
+# Just run the app as usual — the `predev` hook refreshes .env from Doppler first
+npm run dev
+npm run dev:debug   # same auto-refresh before the debugger boots
+
+# Or refresh .env on demand without starting the app
+npm run doppler:download
+```
+
+`npm run dev` and `npm run dev:debug` each trigger an npm `pre` hook that runs
+`doppler:download` first, so `.env` is always current — there's no separate
+command to remember.
+
+The refresh is safe by design (`doppler-download.mjs`):
+
+- it downloads to a temp file and only swaps it into `.env` on success, cleaning
+  the temp file up either way;
+- it refuses to overwrite `.env` when Doppler returns an empty payload;
+- if the Doppler CLI isn't installed or you aren't set up, it prints a warning
+  and continues with your existing `.env` — so a hand-managed `.env` still works;
+- it never reads or writes `.env.local`.
+
+Production (`npm start` / `npm run build`) is untouched and never calls Doppler;
+deploys get secrets from the environment as usual.
+
+### Replacing a machine
+
+```bash
+git clone … && npm install
+doppler login
+npm run doppler:setup
+echo 'LOCAL_ACTIVE_BOT_ID=CHATBOT' > .env.local
+npm run dev
+```
+
+Everything else arrives from Doppler on the first `npm run dev`.
+
+::: tip
+`.env`, `.env.local` and `.doppler/` are git-ignored. The `doppler.yaml` at the
+repo root is committed and only records which project/config to use — never any
+secret values.
+:::
+
 ## Required Variables
 
 These variables must be set for the application to run:
