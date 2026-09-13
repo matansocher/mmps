@@ -1,12 +1,17 @@
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
-import type { ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { z } from 'zod';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getResponse } from '@services/openai';
 import { GPT_SMALL_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
-import { deletePendingPosts, getPendingPostBacklog, getPendingPostChatIds, getPendingPostsForChat } from '@shared/social-follower';
-import type { PendingPost, SocialPlatform } from '@shared/social-follower';
+import { claimDigestDelivery, deletePendingPosts, getPendingPostBacklog, getPendingPostChatIds, getPendingPostsForChat, markDigestTextDelivered } from '@shared/social-follower';
+import type { DigestVideoEntry, PendingPost, SocialPlatform } from '@shared/social-follower';
+import { CHATBOT_CONFIG } from '../chatbot.config';
+import { deliverDigestVideos } from './social-media-video-delivery';
 
 const logger = new Logger('chatbot:scheduler:social-media-digest');
 
@@ -55,6 +60,7 @@ const shortenSchema = z.object({
 // Iterates one chat at a time with a bounded query so a runaway backlog can't pull the
 // whole collection into memory.
 export async function socialMediaDigest(bot: Bot): Promise<void> {
+  const digestDate = digestDateFor();
   const chatIds = await getPendingPostChatIds();
 
   for (const chatId of chatIds) {
@@ -63,7 +69,7 @@ export async function socialMediaDigest(bot: Bot): Promise<void> {
       continue;
     }
     await logBacklog(chatId, posts.length);
-    await processDigestForChat(bot, chatId, posts);
+    await processDigestForChat(bot, chatId, posts, digestDate);
   }
 }
 
@@ -80,7 +86,73 @@ async function logBacklog(chatId: number, loadedCount: number): Promise<void> {
   }
 }
 
-async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost[]): Promise<void> {
+// Runs one chat's digest keyed to a single `digestDate` supplied by the caller (computed once per
+// run) so a long run that crosses local midnight buckets every chat under the same day.
+export async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost[], digestDate: string): Promise<void> {
+  // Fix the video selection once per (chat, local date) so restarts/concurrent runs converge on
+  // the same set, and snapshot each video's fields so deleting the pending posts is still safe.
+  const videos = selectTikTokPendingPosts(posts, CHATBOT_CONFIG.videoDigest.maxVideosPerChat).map(toVideoEntry);
+  const record = await claimDigestDelivery({ chatId, digestDate, videos });
+
+  let deliveredAny = !!record.textDeliveredAt;
+  if (!record.textDeliveredAt) {
+    const outcome = await sendTextDigest(bot, chatId, posts);
+    deliveredAny = outcome.deliveredAny;
+    if (outcome.deliveredAll) {
+      await markDigestTextDelivered(chatId, digestDate);
+    }
+  }
+
+  // Videos ride along only once the text digest was actually delivered (never on a total send
+  // failure), and only when the feature is enabled. The record drives delivery from here.
+  if (CHATBOT_CONFIG.videoDigest.enabled && deliveredAny) {
+    await deliverDigestVideos(bot, chatId, digestDate);
+  }
+}
+
+// Local (Asia/Jerusalem) calendar date used to key one chat's digest, so "today" matches how the
+// 22:45 cron reads to the user regardless of the server's timezone.
+export function digestDateFor(date: Date = new Date()): string {
+  return format(toZonedTime(date, DEFAULT_TIMEZONE), 'yyyy-MM-dd');
+}
+
+// Picks up to `max` of the newest collected TikTok posts across all followed TikTok accounts.
+// Posts arrive oldest-first, so this sorts newest-first before slicing. Posts without an `_id`
+// are skipped: their entry could never be claimed/finalized (no stable id) and they can't be
+// acknowledged/deleted safely anyway, so there is nothing to snapshot.
+export function selectTikTokPendingPosts(posts: PendingPost[], max: number): PendingPost[] {
+  if (max <= 0) {
+    return [];
+  }
+  return posts
+    .filter((post) => post.platform === 'tiktok' && !!post._id)
+    .sort((a, b) => {
+      const byTime = b.postedAt.getTime() - a.postedAt.getTime();
+      return byTime !== 0 ? byTime : String(b._id ?? '').localeCompare(String(a._id ?? ''));
+    })
+    .slice(0, max);
+}
+
+// Snapshots a pending post into a delivery-record entry so video delivery is decoupled from the
+// pending post being deleted after the text digest is acknowledged. Only called with posts that
+// have an `_id` (selection filters the rest out), so the entryId is always the real post id.
+function toVideoEntry(post: PendingPost): DigestVideoEntry {
+  return {
+    entryId: post._id!.toHexString(),
+    pendingPostId: post._id,
+    username: post.username,
+    displayName: post.displayName ?? null,
+    postId: post.postId,
+    url: post.url,
+    text: post.text,
+    state: 'pending',
+  };
+}
+
+// Builds and sends the text digest exactly as before: pack sections into length-capped messages,
+// send each, and delete only the posts whose message was delivered. Returns whether any/all
+// chunks were delivered so the caller can gate video delivery and the idempotency flag.
+async function sendTextDigest(bot: Bot, chatId: number, posts: PendingPost[]): Promise<{ readonly deliveredAny: boolean; readonly deliveredAll: boolean }> {
   const sections: DigestSection[] = [];
 
   for (const userPosts of groupPostsByUser(posts)) {
@@ -95,17 +167,22 @@ async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost
   // Pack sections into messages that fit Telegram's length cap, then send each
   // message and only acknowledge (delete) the posts whose message was delivered.
   // This preserves undelivered posts across truncation, partial failures, and restarts.
+  let deliveredAny = false;
+  let deliveredAll = true;
   for (const chunk of chunkSections(sections)) {
     const delivered = await sendDigestMessage(bot, chatId, chunk.text);
     if (!delivered) {
       logger.error(`Failed to send digest chunk to chat ${chatId}, keeping ${chunk.posts.length} posts for next digest`);
+      deliveredAll = false;
       continue;
     }
+    deliveredAny = true;
     const ids = chunk.posts.map((post) => post._id).filter(Boolean) as ObjectId[];
     if (ids.length) {
       await deletePendingPosts(ids);
     }
   }
+  return { deliveredAny, deliveredAll };
 }
 
 // Sends one digest message with a Markdown-stripped plain-text fallback.

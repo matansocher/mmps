@@ -37,6 +37,24 @@ export const CHATBOT_CONFIG = {
     // Wall-clock deadline for the whole turn (ms). Aborts the run regardless of where it is.
     turnTimeoutMs: parseInt(env.CHATBOT_TURN_TIMEOUT_MS || '180000', 10),
   },
+  // Attaches up to `maxVideosPerChat` of the newest collected TikTok videos to the daily social
+  // media digest as playable Telegram videos. All bounds are enforced against the actual stream,
+  // not the (missing/lying) Content-Length. Set CHATBOT_VIDEO_DIGEST=false to disable entirely.
+  videoDigest: {
+    enabled: env.CHATBOT_VIDEO_DIGEST !== 'false',
+    maxVideosPerChat: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_VIDEOS || '5', 10),
+    maxBytes: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_BYTES || '49000000', 10),
+    // Per-attempt wall-clock budget for resolving + streaming a single video.
+    downloadTimeoutMs: parseInt(env.CHATBOT_VIDEO_DIGEST_TIMEOUT_MS || '60000', 10),
+    // Overall wall-clock budget for one video across ALL its retries (download + send + any 429
+    // wait), so worst-case time per video can't grow to maxAttempts * (timeout + 429 sleep). Once
+    // exhausted the video falls back to link-only. Bounds each attempt's download timeout too.
+    totalBudgetMs: parseInt(env.CHATBOT_VIDEO_DIGEST_TOTAL_BUDGET_MS || '120000', 10),
+    // Redirect hops validated against the SSRF guard before the byte stream is accepted.
+    maxRedirects: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_REDIRECTS || '5', 10),
+    // Bounded short retries per video (download + send). No next-day retry.
+    maxAttempts: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_ATTEMPTS || '2', 10),
+  },
 };
 
 // {messages} is required — the middleware substitutes the messages being summarized there.

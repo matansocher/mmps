@@ -22,6 +22,7 @@ export { weeklyExerciseSummary } from './weekly-exercise-summary';
 export { polymarketUpdate } from './polymarket-update';
 export { socialMediaCollect } from './social-media-collect';
 export { socialMediaDigest } from './social-media-digest';
+export { deliverDigestVideos } from './social-media-video-delivery';
 export { spotifyPodcastUpdate } from './spotify-podcast-update';
 export { transferCollect } from './transfer-collect';
 export { transferDigest } from './transfer-digest';

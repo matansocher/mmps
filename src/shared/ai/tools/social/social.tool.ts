@@ -87,7 +87,7 @@ async function tiktokSubscribe(username: string): Promise<string> {
   }
   const { videos } = await getUserVideos(username, 1);
   await createSubscription({ platform: 'tiktok', username, chatId, lastSeenId: videos[0]?.id ?? null });
-  return `Subscribed to @${username} on TikTok - their new posts will be included in the daily digest at 22:45`;
+  return `Subscribed to @${username} on TikTok - their new posts will be listed in the daily digest at 22:45, and up to 5 of the newest new videos are attached as playable videos`;
 }
 
 async function tiktokUnsubscribe(username: string): Promise<string> {
@@ -296,6 +296,6 @@ async function runner(input: SocialInput) {
 export const socialTool = tool(runner, {
   name: 'social',
   description:
-    'Interact with social accounts across four platforms (twitter, tiktok, youtube, telegram) via a "platform" discriminator. Fetch latest posts/videos ("latest_posts"), profile/channel info ("user_info" for tiktok/youtube), a YouTube video transcript ("video_transcript", youtube only), or manage subscriptions for the daily 22:45 social media digest ("subscribe"/"unsubscribe"/"list"). Twitter/Telegram new posts are summarized into key points in the digest; TikTok/YouTube are listed. Accepts handles, usernames, channel URLs/IDs, or t.me links as appropriate per platform.',
+    'Interact with social accounts across four platforms (twitter, tiktok, youtube, telegram) via a "platform" discriminator. Fetch latest posts/videos ("latest_posts"), profile/channel info ("user_info" for tiktok/youtube), a YouTube video transcript ("video_transcript", youtube only), or manage subscriptions for the daily 22:45 social media digest ("subscribe"/"unsubscribe"/"list"). Twitter/Telegram new posts are summarized into key points in the digest; TikTok/YouTube are listed. Additionally, up to 5 of the newest new TikTok videos per chat are attached to the digest as individual playable Telegram videos (with a caption + source link). Accepts handles, usernames, channel URLs/IDs, or t.me links as appropriate per platform.',
   schema,
 });
