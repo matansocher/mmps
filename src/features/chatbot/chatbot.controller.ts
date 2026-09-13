@@ -6,17 +6,15 @@ import { deleteFile } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
-import { getPendingRemindersDueOnOrBefore, getReminderById, updateReminderStatus } from '@shared/reminders';
+import { getReminderById, updateReminderStatus } from '@shared/reminders';
 import { addExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import {
-  buildSummaryRemindersKeyboard,
   describeSnoozeOption,
   parseBirthdayCallbackData,
   parseExerciseCallbackData,
   parseReminderCallbackData,
-  parseSummaryReminderCallbackData,
   resolveSnoozeUntil,
   sendExerciseReminder,
 } from './schedulers';
@@ -185,10 +183,6 @@ export class ChatbotController {
       await this.handleReminderCallback(ctx);
       return;
     }
-    if (parseSummaryReminderCallbackData(data)) {
-      await this.handleSummaryReminderCallback(ctx);
-      return;
-    }
     if (parseExerciseCallbackData(data)) {
       await this.handleExerciseCallback(ctx);
       return;
@@ -232,45 +226,6 @@ export class ChatbotController {
       await ctx.answerCallbackQuery({ text: `Snoozed for ${label}` }).catch(() => {});
     } catch (err) {
       this.logger.error(`Error handling reminder callback: ${getErrorMessage(err)}`);
-      await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
-    }
-  }
-
-  private async handleSummaryReminderCallback(ctx: Context): Promise<void> {
-    const { chatId, data } = getCallbackQueryData(ctx);
-
-    const parsed = parseSummaryReminderCallbackData(data);
-    if (!parsed) {
-      await ctx.answerCallbackQuery().catch(() => {});
-      return;
-    }
-
-    try {
-      const reminder = await getReminderById(parsed.reminderId, chatId);
-      if (!reminder) {
-        await ctx.answerCallbackQuery({ text: 'Reminder not found.', show_alert: true }).catch(() => {});
-        return;
-      }
-
-      let toast: string;
-      if (parsed.action === 'complete') {
-        await updateReminderStatus(parsed.reminderId, chatId, 'completed');
-        toast = 'Marked as done';
-      } else {
-        const snoozeUntil = resolveSnoozeUntil('morning');
-        await updateReminderStatus(parsed.reminderId, chatId, 'snoozed', snoozeUntil);
-        toast = 'Snoozed for tomorrow morning';
-      }
-
-      // Keep the summary text intact and only refresh the buttons to drop the reminder that was just handled.
-      // A reminder snoozed into the future keeps its (past) dueDate, so exclude anything snoozed for later.
-      const now = new Date();
-      const pending = await getPendingRemindersDueOnOrBefore(chatId, now);
-      const remaining = pending.filter((item) => !(item.status === 'snoozed' && item.snoozedUntil && item.snoozedUntil > now));
-      await ctx.editMessageReplyMarkup({ reply_markup: buildSummaryRemindersKeyboard(remaining) }).catch(() => {});
-      await ctx.answerCallbackQuery({ text: toast }).catch(() => {});
-    } catch (err) {
-      this.logger.error(`Error handling summary reminder callback: ${getErrorMessage(err)}`);
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
     }
   }
