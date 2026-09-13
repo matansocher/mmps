@@ -1,6 +1,17 @@
+import { ObjectId } from 'mongodb';
 import { describe, expect, test } from 'vitest';
 import type { PendingPost, SocialPlatform } from '@shared/social-follower';
-import { chunkSections, groupPostsByUser, isLongPost, MAX_AI_CHARS_PER_POST, MAX_AI_INPUT_CHARS, splitForAiBudget, targetKeyPointsCount } from './social-media-digest';
+import {
+  chunkSections,
+  digestDateFor,
+  groupPostsByUser,
+  isLongPost,
+  MAX_AI_CHARS_PER_POST,
+  MAX_AI_INPUT_CHARS,
+  selectTikTokPendingPosts,
+  splitForAiBudget,
+  targetKeyPointsCount,
+} from './social-media-digest';
 import type { DigestSection } from './social-media-digest';
 
 function pendingPost(platform: SocialPlatform, username: string, postId: string, text: string | null = null): PendingPost {
@@ -70,10 +81,7 @@ describe('splitForAiBudget()', () => {
   });
 
   test('should always keep the newest post even when it alone exceeds the input budget', () => {
-    const posts = [
-      pendingPost('twitter', 'user', 'old', 'x'.repeat(40)),
-      pendingPost('twitter', 'user', 'newest', 'x'.repeat(500)),
-    ];
+    const posts = [pendingPost('twitter', 'user', 'old', 'x'.repeat(40)), pendingPost('twitter', 'user', 'newest', 'x'.repeat(500))];
     // Input budget 50 is smaller than the newest post; it is truncated to the per-post cap and kept.
     const { aiPosts, overflowPosts } = splitForAiBudget(posts, 40, 50, 30);
     expect(aiPosts.map((post) => post.postId)).toEqual(['newest']);
@@ -210,5 +218,59 @@ describe('chunkSections()', () => {
     const titledChunks = chunks.filter((chunk) => chunk.text.includes('*Daily social media digest* 🔔'));
     expect(titledChunks).toHaveLength(1);
     expect(chunks[0]).toBe(titledChunks[0]);
+  });
+});
+
+function tiktokPost(id: string, postedAtIso: string): PendingPost {
+  return {
+    _id: new ObjectId(),
+    platform: 'tiktok',
+    username: 'creator',
+    chatId: 1,
+    postId: id,
+    text: null,
+    url: `https://tiktok.com/${id}`,
+    postedAt: new Date(postedAtIso),
+    collectedAt: new Date(),
+  };
+}
+
+describe('selectTikTokPendingPosts()', () => {
+  test('should return only tiktok posts, newest first, capped at max', () => {
+    const posts: PendingPost[] = [
+      tiktokPost('t-old', '2026-09-10T10:00:00Z'),
+      pendingPost('twitter', 'user', 'tw-1'),
+      tiktokPost('t-new', '2026-09-12T10:00:00Z'),
+      tiktokPost('t-mid', '2026-09-11T10:00:00Z'),
+      pendingPost('youtube', 'yt', 'yt-1'),
+    ];
+
+    const selected = selectTikTokPendingPosts(posts, 2);
+
+    expect(selected.map((post) => post.postId)).toEqual(['t-new', 't-mid']);
+  });
+
+  test('should return an empty array when max is zero', () => {
+    expect(selectTikTokPendingPosts([tiktokPost('t', '2026-09-12T10:00:00Z')], 0)).toEqual([]);
+  });
+
+  test('should return an empty array when there are no tiktok posts', () => {
+    expect(selectTikTokPendingPosts([pendingPost('twitter', 'user', 'tw-1')], 5)).toEqual([]);
+  });
+
+  test('should skip a tiktok post that has no _id', () => {
+    const withId = tiktokPost('t-has-id', '2026-09-12T10:00:00Z');
+    const withoutId = { ...tiktokPost('t-no-id', '2026-09-13T10:00:00Z'), _id: undefined };
+
+    const selected = selectTikTokPendingPosts([withId, withoutId], 5);
+
+    expect(selected.map((post) => post.postId)).toEqual(['t-has-id']);
+  });
+});
+
+describe('digestDateFor()', () => {
+  test('should format a date as the Asia/Jerusalem calendar day', () => {
+    // 2026-09-12T22:30:00Z is 2026-09-13 01:30 in Asia/Jerusalem (UTC+3).
+    expect(digestDateFor(new Date('2026-09-12T22:30:00Z'))).toEqual('2026-09-13');
   });
 });

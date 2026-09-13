@@ -33,7 +33,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to real-time web search, weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points), and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to real-time web search, weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points, plus up to 5 of the newest new TikTok videos attached as playable Telegram videos), and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -84,7 +84,7 @@ Spotify:
 
 Social (twitter / tiktok / youtube / telegram):
 - Use the social tool with the matching platform for latest posts/videos, profile or channel info, YouTube video transcripts, and subscription management.
-- Subscribing adds an account to the daily social media digest (sent at 22:45). New posts are collected throughout the day and delivered as one combined digest — twitter/telegram are summarized into key points, tiktok/youtube are listed.
+- Subscribing adds an account to the daily social media digest (sent at 22:45). New posts are collected throughout the day and delivered as one combined digest — twitter/telegram are summarized into key points, tiktok/youtube are listed. Additionally, up to 5 of the newest new TikTok videos per chat are attached to the digest as individual playable Telegram videos (creator + caption + source link); overflow TikToks stay link-only in the text.
 - For "summarize this video" / "what does [channel] say", get the YouTube video transcript (find the video via latest_posts first if needed) and answer from it. TikTok posts include transcripts too — use them to answer questions about a video.
 
 Polymarket:
