@@ -26,16 +26,14 @@ describe('cleanOutcomeLabel()', () => {
 });
 
 describe('formatMatchOdds()', () => {
-  it('should render outcomes with the leader highlighted and a market link', () => {
+  it('should render outcomes with the leader highlighted', () => {
     const event = createEvent([
       { outcome: 'Bayern Munich', probability: 0.595, oneDayPriceChange: 0.01, marketSlug: 'a' },
       { outcome: 'Draw (Borussia Dortmund vs. Bayern Munich)', probability: 0.215, oneDayPriceChange: null, marketSlug: 'b' },
       { outcome: 'Borussia Dortmund', probability: 0.195, oneDayPriceChange: null, marketSlug: 'c' },
     ]);
 
-    expect(formatMatchOdds(event)).toEqual(
-      ['📊 *Polymarket odds*', '🟢 Bayern Munich: 59.5%', '⚪ Draw: 21.5%', '⚪ Borussia Dortmund: 19.5%', '[View market](https://polymarket.com/event/gsc-bvb-bmu-2026-08-22)'].join('\n'),
-    );
+    expect(formatMatchOdds(event)).toEqual(['📊 *Polymarket odds*', '🟢 Bayern Munich: 59.5%', '⚪ Draw: 21.5%', '⚪ Borussia Dortmund: 19.5%'].join('\n'));
   });
 
   it('should return an empty string when there are no outcomes', () => {
