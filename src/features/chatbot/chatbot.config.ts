@@ -7,7 +7,6 @@ export const BOT_CONFIG: TelegramBotConfig = {
   token: 'CHATBOT_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: 'Start over', hide: true },
-    EXERCISE: { command: '/exercise', description: '💪 Log a workout' },
   },
 };
 
@@ -17,10 +16,44 @@ export const CHATBOT_CONFIG = {
   // Location used by the nightly summary's weather section.
   summaryLocation: env.CHATBOT_SUMMARY_LOCATION || 'Kfar Saba',
   summarization: {
-    // Summarize once a thread grows past this many messages.
+    // Summarize once the retained history grows past this many tokens. Token-based bounding is
+    // the primary guard: message counts don't bound context or checkpoint size, since a single
+    // retained turn can carry a base64 image or a full transcript. See CHATBOT_SUMMARY_PROMPT.
+    triggerTokens: parseInt(env.CHATBOT_SUMMARY_TRIGGER_TOKENS || '24000', 10),
+    // Secondary message-count trigger (OR with the token trigger) so very chatty short threads
+    // still get compressed even when they stay under the token budget.
     triggerMessages: parseInt(env.CHATBOT_SUMMARY_TRIGGER_MESSAGES || '40', 10),
-    // Keep this many of the most recent messages verbatim after summarizing the rest.
-    keepMessages: parseInt(env.CHATBOT_SUMMARY_KEEP_MESSAGES || '20', 10),
+    // Keep roughly this many tokens of the most recent turns verbatim after summarizing the rest.
+    keepTokens: parseInt(env.CHATBOT_SUMMARY_KEEP_TOKENS || '8000', 10),
+  },
+  // Bounded execution budget for a single turn. A request timeout only covers one model call,
+  // and recursionLimit only bounds graph steps — these are the real per-turn ceilings.
+  execution: {
+    // Max model requests allowed in a single agent run (turn). "end" lets the agent finish gracefully.
+    modelCallLimitPerRun: parseInt(env.CHATBOT_MODEL_CALL_LIMIT || '8', 10),
+    // Max tool calls allowed in a single agent run. "continue" blocks further tool calls with an
+    // error message but lets the model wrap up its answer.
+    toolCallLimitPerRun: parseInt(env.CHATBOT_TOOL_CALL_LIMIT || '12', 10),
+    // Wall-clock deadline for the whole turn (ms). Aborts the run regardless of where it is.
+    turnTimeoutMs: parseInt(env.CHATBOT_TURN_TIMEOUT_MS || '180000', 10),
+  },
+  // Attaches up to `maxVideosPerChat` of the newest collected TikTok videos to the daily social
+  // media digest as playable Telegram videos. All bounds are enforced against the actual stream,
+  // not the (missing/lying) Content-Length. Set CHATBOT_VIDEO_DIGEST=false to disable entirely.
+  videoDigest: {
+    enabled: env.CHATBOT_VIDEO_DIGEST !== 'false',
+    maxVideosPerChat: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_VIDEOS || '5', 10),
+    maxBytes: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_BYTES || '49000000', 10),
+    // Per-attempt wall-clock budget for resolving + streaming a single video.
+    downloadTimeoutMs: parseInt(env.CHATBOT_VIDEO_DIGEST_TIMEOUT_MS || '60000', 10),
+    // Overall wall-clock budget for one video across ALL its retries (download + send + any 429
+    // wait), so worst-case time per video can't grow to maxAttempts * (timeout + 429 sleep). Once
+    // exhausted the video falls back to link-only. Bounds each attempt's download timeout too.
+    totalBudgetMs: parseInt(env.CHATBOT_VIDEO_DIGEST_TOTAL_BUDGET_MS || '120000', 10),
+    // Redirect hops validated against the SSRF guard before the byte stream is accepted.
+    maxRedirects: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_REDIRECTS || '5', 10),
+    // Bounded short retries per video (download + send). No next-day retry.
+    maxAttempts: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_ATTEMPTS || '2', 10),
   },
 };
 
@@ -42,5 +75,3 @@ Rules:
 <messages>
 {messages}
 </messages>`;
-
-export const IMAGE_ANALYSIS_PROMPT = `You are an image analysis assistant. Analyze the image and provide a detailed description of its content, including objects, people, activities, and any relevant context. Be as descriptive and specific as possible in your analysis.`;

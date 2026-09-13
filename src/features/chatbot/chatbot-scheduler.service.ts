@@ -9,10 +9,12 @@ import {
   earthquakeMonitor,
   exerciseReminder,
   footballUpdate,
+  gamePriceCheck,
   gameReleaseCheck,
   gameReleaseDigest,
   hotelPriceCheck,
   makavdiaUpdate,
+  modelPricingCheck,
   polymarketUpdate,
   // rainRadarAlert,
   reminderCheck,
@@ -22,8 +24,6 @@ import {
   socialMediaDigest,
   sportsCalendar,
   spotifyPodcastUpdate,
-  transferCollect,
-  transferDigest,
   upcomingEventAlert,
   usageSummary,
   weeklyExerciseSummary,
@@ -62,13 +62,15 @@ export class ChatbotSchedulerService {
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
 
+    createSchedule(`0 10 1 * *`, async () => modelPricingCheck(this.bot));
+
     createSchedule(`*/15 * * * *`, async () => reminderCheck(this.bot));
 
     createSchedule(`*/15 * * * *`, async () => upcomingEventAlert(this.bot));
 
     createSchedule(`*/${LOOKBACK_MINUTES} * * * *`, async () => earthquakeMonitor(this.bot));
 
-    createSchedule(`5 16 * * *`, async () => polymarketUpdate(this.bot));
+    createSchedule(`5 16 * * 1`, async () => polymarketUpdate(this.bot));
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
 
@@ -80,15 +82,13 @@ export class ChatbotSchedulerService {
 
     createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
 
-    createSchedule(`15 * * * *`, async () => transferCollect());
-
-    createSchedule(`0 21 * * *`, async () => transferDigest(this.bot));
-
     createSchedule(`0 17 * * *`, async () => hotelPriceCheck(this.bot));
 
     createSchedule(`15 11 * * *`, async () => gameReleaseCheck(this.bot));
 
     createSchedule(`20 11 * * 0`, async () => gameReleaseDigest(this.bot));
+
+    createSchedule(`30 11 * * *`, async () => gamePriceCheck(this.bot));
 
     createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
 

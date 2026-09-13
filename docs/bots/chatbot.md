@@ -158,18 +158,21 @@ Tune via environment variables:
 
 ```bash
 # Optional: conversation summarization (defaults in code)
-CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # summarize once a thread passes this many messages
-CHATBOT_SUMMARY_KEEP_MESSAGES=20      # recent messages kept verbatim after summarizing
+# Optional: conversation summarization (defaults in code)
+CHATBOT_SUMMARY_TRIGGER_TOKENS=24000  # summarize once retained history passes this many tokens (primary bound)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # also summarize once a thread passes this many messages (OR)
+CHATBOT_SUMMARY_KEEP_TOKENS=8000      # recent tokens kept verbatim after summarizing
 ```
 
 ### Token & Cost Observability
 
 Token/cost metering is **cross-bot**. The shared module lives in `shared/ai/usage/` and is used by every live AI call site in the repo. A `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) is attached to each `invoke` as a runtime callback; it sums token usage across the whole call (ReAct loop, structured output, or summarization) and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` then logs a `💰 usage` line and persists an aggregated record tagged with the originating bot.
 
-Instrumented sources: `chatbot`, `chilli`, and `expenses` (manual-entry categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
+Instrumented sources: `chatbot` and `chilli`. Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are **not** metered — they bill in different units.
 
-- **Cost** is computed from a price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens). `resolveModelPrice` does a longest-prefix match so dated snapshots (e.g. `gpt-4.1-mini-2025-04-14`) resolve correctly. Unknown models report cost `0` and log a warning.
-- **Storage** — one record per call in db `Chatbot`, collection `usage` (`shared/ai/usage/`), with a **90-day TTL**. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.
+- **Cost** is computed from a price map in `shared/ai/utils/model-pricing.ts` (USD per 1M tokens, with a separate cheaper `cachedInput` rate). Cached input tokens are a subset of the input count and are billed at the cache-hit rate. `resolveModelPrice` resolves dated snapshots (e.g. `gpt-4.1-mini-2025-04-14`) to their base model, but **not** sibling models — `gpt-5-mini` has its own entry rather than inheriting `gpt-5` pricing. Unknown models report cost `0` and log a warning.
+- **Pricing drift check** — a monthly scheduler (`schedulers/model-pricing-check.ts`, 1st of the month at 10:00) diffs `MODEL_PRICING` against OpenAI's published prices and DMs the owner **only when something drifted**, so silence means the table is still accurate.
+- **Storage** — one record per call in db `Chatbot`, collection `usage` (`shared/ai/usage/`), with a **90-day TTL**. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `tokensCached`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. Writes are fire-and-forget so metering never blocks a reply.
 - **Aggregation** — `aggregateUsage({ source?, chatId?, from?, to? })` rolls usage up per source + user per day (`Asia/Jerusalem`).
 - **Weekly report** — a scheduler (`schedulers/usage-summary.ts`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs the owner a cost/usage breakdown, including a per-bot ("By bot") split.
 - **Kill-switch** — set `CHATBOT_USAGE_TRACKING=false` to disable entirely.
@@ -238,7 +241,7 @@ If you get rate limit errors:
 ### Memory Issues
 
 If the bot uses too much memory:
-- Lower `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES` so threads are summarized sooner and kept shorter
+- Lower `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_KEEP_TOKENS` so threads are summarized sooner and kept shorter
 - Old conversations expire automatically via the checkpointer's 30-day TTL
 - Monitor with `npm run start:debug`
 

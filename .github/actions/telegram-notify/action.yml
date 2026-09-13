@@ -1,0 +1,47 @@
+name: 'Telegram Notify'
+description: 'Send a message to a Telegram chat via the Bot API, with an optional status emoji prefix.'
+
+inputs:
+  bot-token:
+    description: 'Telegram bot token used to authenticate with the Bot API.'
+    required: true
+  chat-id:
+    description: 'Telegram chat id to send the message to.'
+    required: true
+  message:
+    description: 'Message text to send.'
+    required: true
+  status:
+    description: "Optional job status. When set, prepends '✅ ' for 'success', otherwise '❌ '."
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Send Telegram message
+      shell: bash
+      env:
+        INPUT_BOT_TOKEN: ${{ inputs.bot-token }}
+        INPUT_CHAT_ID: ${{ inputs.chat-id }}
+        INPUT_MESSAGE: ${{ inputs.message }}
+        INPUT_STATUS: ${{ inputs.status }}
+      run: |
+        if [ -z "$INPUT_BOT_TOKEN" ] || [ -z "$INPUT_CHAT_ID" ]; then
+          echo "::warning::Telegram bot token or chat id is not set. Skipping Telegram notification."
+          exit 0
+        fi
+
+        text="$INPUT_MESSAGE"
+        if [ -n "$INPUT_STATUS" ]; then
+          if [ "$INPUT_STATUS" = "success" ]; then
+            text="✅ ${text}"
+          else
+            text="❌ ${text}"
+          fi
+        fi
+
+        curl --silent --show-error --output /dev/null \
+          --data-urlencode "chat_id=${INPUT_CHAT_ID}" \
+          --data-urlencode "text=${text}" \
+          "https://api.telegram.org/bot${INPUT_BOT_TOKEN}/sendMessage"

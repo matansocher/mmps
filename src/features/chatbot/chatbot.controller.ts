@@ -1,18 +1,23 @@
 import type { Bot, Context } from 'grammy';
 import type { ReactionTypeEmoji } from 'grammy/types';
-import { env } from 'node:process';
 import { LOCAL_FILES_PATH, MY_USER_ID, WIFE_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
-import { imgurUploadImage } from '@services/imgur';
-import { analyzeImage } from '@services/openai/utils/analyze-image';
+import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
 import { getReminderById, updateReminderStatus } from '@shared/reminders';
 import { addExercise } from '@shared/trainer';
-import { IMAGE_ANALYSIS_PROMPT } from './chatbot.config';
+import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
-import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
+import {
+  describeSnoozeOption,
+  parseBirthdayCallbackData,
+  parseExerciseCallbackData,
+  parseReminderCallbackData,
+  resolveSnoozeUntil,
+  sendExerciseReminder,
+} from './schedulers';
 import {
   ACTION_CALLBACK_PREFIX,
   buildActionsKeyboard,
@@ -26,6 +31,7 @@ import {
   TRANSCRIPTION_HEADER,
   updateActionStatus,
 } from './secretary';
+import { fileToDataUrl } from './utils';
 
 const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
 
@@ -43,7 +49,6 @@ export class ChatbotController {
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));
-    this.bot.command('exercise', (ctx) => this.exerciseHandler(ctx));
     this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
     this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
@@ -55,7 +60,17 @@ export class ChatbotController {
   }
 
   private async startHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
     await ctx.reply('Hi, I am your chatbot! How can I assist you today?');
+  }
+
+  // Silently ignore anyone who is not the owner and ping the notifier bot.
+  private denyIfNotOwner(ctx: Context): boolean {
+    if (isOwner(ctx)) return false;
+    const { userDetails } = getMessageData(ctx);
+    this.logger.warn(`Blocked non-owner message from userId=${ctx.from?.id ?? 'unknown'} username=${ctx.from?.username ?? '-'}`);
+    notify(BOT_CONFIG, { action: 'BLOCKED_MESSAGE' }, userDetails);
+    return true;
   }
 
   private businessConnectionHandler(ctx: Context): void {
@@ -263,11 +278,8 @@ export class ChatbotController {
     }
   }
 
-  private async exerciseHandler(ctx: Context): Promise<void> {
-    await this.runAgentReply(ctx, 'I exercised', '🔥');
-  }
-
   private async messageHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
     const { text } = getMessageData(ctx);
     await this.runAgentReply(ctx, text, '🤔');
   }
@@ -288,23 +300,25 @@ export class ChatbotController {
   }
 
   private async photoHandler(ctx: Context): Promise<void> {
-    const { chatId, messageId, photo } = getMessageData(ctx);
+    if (this.denyIfNotOwner(ctx)) return;
+    const { chatId, messageId, photo, text } = getMessageData(ctx);
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
     await messageLoaderService.handleMessageWithLoader(async () => {
       const imageLocalPath = await downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
-      const imageUrl = await imgurUploadImage(env.IMGUR_CLIENT_ID, imageLocalPath);
+      const imageDataUrl = await fileToDataUrl(imageLocalPath);
 
-      deleteFile(imageLocalPath);
+      await deleteFile(imageLocalPath);
 
-      const analysis = await analyzeImage(IMAGE_ANALYSIS_PROMPT, imageUrl);
-      const { message } = await this.chatbotService.processMessage(`Here is an analysis of an image I sent: ${analysis}\n\nPlease provide a helpful response based on this analysis.`, chatId);
+      const prompt = text?.trim() ? text : 'Please take a look at this image and respond helpfully.';
+      const { message } = await this.chatbotService.processMessage(prompt, chatId, { images: [imageDataUrl] });
 
       await sendRichMessage(this.bot, chatId, message);
     });
   }
 
   private async audioHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
     const { chatId, messageId, audio } = getMessageData(ctx);
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔' });

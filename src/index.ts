@@ -10,9 +10,8 @@ import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
-import { BOT_CONFIG as expensesConfig, initExpenses } from '@features/expenses';
-import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
+import { initMindloop } from '@features/mindloop';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
@@ -29,16 +28,34 @@ async function main() {
   const port = env.PORT || 3000;
   const logger = new Logger('bootstrap');
 
+  // Behind the platform's single reverse proxy (Procfile web dyno): trust one
+  // hop so req.ip reflects the real client for rate limiting, without trusting
+  // arbitrary client-supplied X-Forwarded-For headers.
+  app.set('trust proxy', 1);
+
   app.use(express.json());
 
   app.get('/', (_req: Request, res: Response) => {
     res.json({ success: true });
   });
 
+  // Collects components that were expected to serve but failed to initialize,
+  // so a degraded process (live but not fully functioning) is logged as an
+  // error for Grafana alerting instead of silently passing as healthy.
+  const failedComponents: string[] = [];
+
   try {
     await initSavings(app);
   } catch (err) {
+    failedComponents.push('savings');
     logger.error(`Failed to init savings app: ${getErrorMessage(err)}`);
+  }
+
+  try {
+    await initMindloop(app);
+  } catch (err) {
+    failedComponents.push('mindloop');
+    logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
   }
 
   registerPortfolioApiRoutes(app);
@@ -51,17 +68,20 @@ async function main() {
     try {
       await init();
     } catch (err) {
+      failedComponents.push(config.id);
       logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
     }
   };
 
   await initBot(chatbotConfig, () => initChatbot(app));
   await initBot(chilliConfig, () => initChilli());
-  await initBot(coachConfig, () => initCoach(app));
-  await initBot(expensesConfig, () => initExpenses(app));
-  await initBot(learnerConfig, () => initLearner(app));
+  await initBot(coachConfig, () => initCoach());
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
+
+  if (failedComponents.length) {
+    logger.error(`Startup completed with unavailable components: ${failedComponents.join(', ')}`);
+  }
 
   logger.log(`NODE_VERSION: ${process.versions.node}`);
   const server = app.listen(port, () => {

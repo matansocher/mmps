@@ -1,14 +1,28 @@
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { CompiledStateGraph } from '@langchain/langgraph';
-import { AiServiceOptions, InvokeOptions, MessageState } from '../types';
+import { randomUUID } from 'node:crypto';
+import { env } from 'node:process';
+import { AiServiceOptions, InvokeOptions } from '../types';
+import { ChatbotAgent } from './factory';
 
-function createMessage(message: string, opts: Partial<InvokeOptions> = {}): MessageState {
+const AGENT_VERSION = env.npm_package_version || '1.0.0';
+
+type AgentInput = Parameters<ChatbotAgent['invoke']>[0];
+
+function createMessage(message: string, opts: Partial<InvokeOptions> = {}): AgentInput {
   const messages: BaseMessage[] = [];
   if (opts.system) {
     messages.push(new SystemMessage(opts.system));
   }
-  messages.push(new HumanMessage(message));
+  if (opts.images?.length) {
+    messages.push(
+      new HumanMessage({
+        content: [{ type: 'text', text: message }, ...opts.images.map((url) => ({ type: 'image_url', image_url: { url } }))],
+      }),
+    );
+  } else {
+    messages.push(new HumanMessage(message));
+  }
   return { messages };
 }
 
@@ -18,7 +32,7 @@ export class AiService {
   readonly defaultCallbacks?: any[];
 
   constructor(
-    readonly agent: CompiledStateGraph<any, any>,
+    readonly agent: ChatbotAgent,
     options: AiServiceOptions,
   ) {
     this.name = options.name;
@@ -31,9 +45,32 @@ export class AiService {
       recursionLimit: opts.recursionLimit ?? this.recursionLimit,
     };
 
+    if (opts.signal) {
+      config.signal = opts.signal;
+    }
+
     if (opts.threadId) {
       config.configurable = { thread_id: opts.threadId };
     }
+
+    // Invocation metadata so the full agent lifecycle is traceable and correlatable, not just
+    // aggregate usage totals. Only safe correlation identifiers are attached here — never raw
+    // prompts, emails, image payloads, or credentials.
+    const runId = opts.runId ?? randomUUID();
+    config.runId = runId;
+    config.runName = opts.runName ?? `${this.name.toLowerCase()}.turn`;
+
+    const invocationSource = opts.invocationSource ?? this.name.toLowerCase();
+    config.tags = [...new Set([this.name.toLowerCase(), invocationSource, ...(opts.tags ?? [])])];
+    config.metadata = {
+      runId,
+      invocationSource,
+      agentName: this.name,
+      agentVersion: AGENT_VERSION,
+      ...(opts.threadId ? { threadId: opts.threadId } : {}),
+      ...(opts.requestId ? { requestId: opts.requestId } : {}),
+      ...(opts.metadata ?? {}),
+    };
 
     // Merge default callbacks with runtime callbacks
     const callbacks = [...(this.defaultCallbacks || []), ...(opts.callbacks || [])];
@@ -55,6 +92,6 @@ export class AiService {
   }
 
   async getState(opts: Partial<InvokeOptions> = {}) {
-    return this.agent.getState(this.createOptions(opts));
+    return this.agent.graph.getState(this.createOptions(opts));
   }
 }

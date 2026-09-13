@@ -43,6 +43,11 @@ export async function updateLastSeen(platform: SocialPlatform, username: string,
   return collection.updateOne({ platform, username, chatId, isActive: true }, { $set: { ...data, updatedAt: new Date() } });
 }
 
+export async function updateSecUid(username: string, chatId: number, secUid: string): Promise<UpdateResult> {
+  const collection = getCollection();
+  return collection.updateOne({ platform: 'tiktok', username, chatId, isActive: true }, { $set: { secUid, updatedAt: new Date() } });
+}
+
 export async function removeSubscription(platform: SocialPlatform, username: string, chatId: number): Promise<UpdateResult> {
   const collection = getCollection();
   return collection.updateOne({ platform, username, chatId, isActive: true }, { $set: { isActive: false, updatedAt: new Date() } });

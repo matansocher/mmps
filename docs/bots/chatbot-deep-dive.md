@@ -6,7 +6,7 @@ This page goes deeper than the [Chatbot overview](/bots/chatbot) — it explains
 
 ## 1. What it is (30-second version)
 
-The **chatbot** is one of seven Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
+The **chatbot** is one of six Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
 
 Key engineering properties:
 
@@ -179,17 +179,20 @@ Persisting everything forever would blow the context window and cost. So the ser
 ```ts
 const summarization = summarizationMiddleware({
   model: this.model,
-  trigger: { messages: CHATBOT_CONFIG.summarization.triggerMessages },  // ~40
-  keep:    { messages: CHATBOT_CONFIG.summarization.keepMessages },     // ~20
+  trigger: [
+    { tokens: CHATBOT_CONFIG.summarization.triggerTokens },      // ~24k (primary bound)
+    { messages: CHATBOT_CONFIG.summarization.triggerMessages },  // ~40  (OR fallback)
+  ],
+  keep: { tokens: CHATBOT_CONFIG.summarization.keepTokens },     // ~8k
   summaryPrompt: CHATBOT_SUMMARY_PROMPT,
 });
 ```
 
-- Once a thread grows past **~40 messages**, it compresses the oldest turns into a **running summary** and keeps the last **~20** verbatim.
+- Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
 - The summary is written back into state and **persisted by the checkpointer** — old turns are compressed in Mongo, not deleted.
 - This **replaced** an older manual "drop-oldest" truncation (`truncateThread`) — the middleware does it *inside* the graph loop.
 - The summary prompt is tuned to preserve durable facts (name, location, health, diet, open tasks, decisions) and to **keep the original language** (Hebrew stays Hebrew).
-- Tunable via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
+- Tunable via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
 ::: tip Checkpointer vs. summarization
 Two complementary things: the **checkpointer = persistence** (state survives restarts); **summarization = context bounding** (state stays small enough to fit + stay cheap). Together: lossless-on-important-facts, bounded-size, durable memory.
@@ -230,8 +233,9 @@ handler sums tokens per model across the whole ReAct loop (incl. summarization L
         → collection usage (db Chatbot), 90-day TTL
 ```
 
-- **Pricing** — `model-pricing.ts` holds USD-per-1M-token rates; `computeModelCost()` multiplies tokens by rate. `resolveModelPrice()` does **longest-prefix matching** so dated snapshots like `gpt-4.1-mini-2025-04-14` resolve to the base price. Unknown model → cost 0 + a warn (never crashes).
-- **Record fields** — `source, chatId, model, tokensIn/Out/Total, cost, durationMs, llmCalls, toolCalls, createdAt`.
+- **Pricing** — `model-pricing.ts` holds USD-per-1M-token rates (`input`, `output`, `cachedInput`); `computeModelCost()` splits input into cached vs uncached and bills each at its own rate. `resolveModelPrice()` matches **dated snapshots only** (`gpt-4.1-mini-2025-04-14` → `gpt-4.1-mini`) — siblings such as `gpt-5-mini` need their own entry, because inheriting `gpt-5` rates would overstate their cost 5x. Unknown model → cost 0 + a warn (never crashes).
+- **Pricing drift check** — a monthly cron (`modelPricingCheck`, 1st at 10:00) parses OpenAI's docs markdown (`pricing.md`) and diffs the published rates against `MODEL_PRICING`, DMing the owner only on a mismatch. Deterministic parse, no AI in the loop.
+- **Record fields** — `source, chatId, model, tokensIn/Out/Total, tokensCached, cost, durationMs, llmCalls, toolCalls, createdAt`.
 - **Aggregation** — `aggregateUsage()` groups by source + user + day (Asia/Jerusalem) via a Mongo aggregation pipeline.
 - **Weekly report** — a Saturday 22:30 cron (`usageSummary`) DMs the owner a 7-day cost/usage breakdown.
 - **Kill-switch** — `CHATBOT_USAGE_TRACKING=false` disables it. Fire-and-forget writes mean metering never blocks or breaks a reply.
@@ -273,6 +277,7 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 | Reminders / events | every 15m | Fires due reminders & upcoming-event alerts. |
 | Earthquake monitor | every N min | USGS polling with lookback window. |
 | Polymarket | 16:05 | Daily price updates for subscribed markets. |
+| Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Kill switch: `CHATBOT_VIDEO_DIGEST=false`. |
 | Usage report | Sat 22:30 | Weekly cost/token breakdown DM. |
 
 ::: tip Pattern to remember
@@ -287,7 +292,7 @@ No framework/IoC container — `initChatbot(app)` wires everything by hand:
 2. Build the **checkpointer** (await it here, before the bot starts — race-condition fix).
 3. `provideTelegramBot()` (memoized grammY bot; starts polling).
 4. Construct `ChatbotService(checkpointer)` → `ChatbotController` → `ChatbotSchedulerService`.
-5. `controller.init()` registers handlers; `scheduler.init()` registers cron; register HTTP/API routes; init Octokit; serve the `/chatbot` SPA (mini-app).
+5. `controller.init()` registers handlers; `scheduler.init()` registers cron; register HTTP/API routes; init Octokit.
 
 Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 

@@ -20,7 +20,7 @@ export function recordModelUsage({ source, chatId, handler, durationMs }: Record
   }
 
   logger.log(
-    `💰 usage source=${source}${chatId !== undefined ? ` chatId=${chatId}` : ''} model=${usage.model} in=${usage.tokensIn} out=${usage.tokensOut} total=${usage.tokensTotal} cost=$${usage.cost.toFixed(6)} llmCalls=${usage.llmCalls} toolCalls=${usage.toolCalls} duration=${durationMs}ms`,
+    `💰 usage source=${source}${chatId !== undefined ? ` chatId=${chatId}` : ''} model=${usage.model} in=${usage.tokensIn} (cached=${usage.tokensCached}) out=${usage.tokensOut} total=${usage.tokensTotal} cost=$${usage.cost.toFixed(6)} llmCalls=${usage.llmCalls} toolCalls=${usage.toolCalls} duration=${durationMs}ms`,
   );
 
   saveUsageRecord({
@@ -30,6 +30,7 @@ export function recordModelUsage({ source, chatId, handler, durationMs }: Record
     tokensIn: usage.tokensIn,
     tokensOut: usage.tokensOut,
     tokensTotal: usage.tokensTotal,
+    tokensCached: usage.tokensCached,
     cost: usage.cost,
     durationMs,
     llmCalls: usage.llmCalls,

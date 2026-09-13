@@ -1,8 +1,15 @@
 import { format } from 'date-fns';
-import { PS5_PLATFORM_ID, TBA_STATUS_ID, WORLDWIDE_REGION_ID } from '../constants';
+import { FULL_DATE_CATEGORY_ID, PS5_PLATFORM_ID, TBA_STATUS_ID, WORLDWIDE_REGION_ID } from '../constants';
 import type { GameReleaseInfo, IgdbReleaseDateResponse } from '../types';
 
 const TBA_RELEASE: GameReleaseInfo = { date: null, human: 'TBA', status: 'tba' };
+
+// A release_dates entry has a real, comparable day only when its `category` is the full-date format.
+// Fuzzy windows (month / year / quarter) still carry a `date` timestamp pointing at the start of the
+// period, which would wrongly read as "released" once that start day passes.
+function hasExactDay(entry: IgdbReleaseDateResponse): boolean {
+  return typeof entry.date === 'number' && (entry.category === undefined || entry.category === FULL_DATE_CATEGORY_ID);
+}
 
 // IGDB returns one release_dates entry per platform+region. Collapse them into the single
 // PS5 date we care about, preferring the worldwide entry over the earliest regional one.
@@ -12,7 +19,7 @@ export function resolveReleaseInfo(releaseDates: readonly IgdbReleaseDateRespons
     return TBA_RELEASE;
   }
 
-  const dated = ps5Dates.filter((entry) => typeof entry.date === 'number').sort((a, b) => a.date - b.date);
+  const dated = ps5Dates.filter(hasExactDay).sort((a, b) => a.date - b.date);
   if (dated.length) {
     const entry = dated.find((candidate) => candidate.region === WORLDWIDE_REGION_ID) ?? dated[0];
     const date = new Date(entry.date * 1000);

@@ -13,6 +13,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,6 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pages: write
+      id-token: write
     timeout-minutes: 10
     steps:
       - name: Deploy to GitHub Pages

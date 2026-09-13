@@ -3,12 +3,15 @@ import type { Express, Request, Response } from 'express';
 import { z } from 'zod';
 import { registry } from '@core/openapi';
 import { getErrorMessage, Logger } from '@core/utils';
+import { calendarEventsAuthMiddleware } from './calendar-events.auth.middleware';
 import { upsertCalendarEvents } from './mongo';
 import type { CreateCalendarEventData } from './types';
 
 extendZodWithOpenApi(z);
 
 const logger = new Logger('calendar-events:api');
+
+const MAX_EVENTS_PER_SYNC = 500;
 
 // Zod schemas for OpenAPI documentation
 const CalendarEventDateTimeSchema = z.object({
@@ -27,7 +30,7 @@ const CreateCalendarEventSchema = z.object({
 });
 
 const SyncCalendarEventsRequestSchema = z.object({
-  events: z.array(CreateCalendarEventSchema).openapi({ description: 'Array of calendar events to sync' }).min(1),
+  events: z.array(CreateCalendarEventSchema).openapi({ description: 'Array of calendar events to sync' }).min(1).max(MAX_EVENTS_PER_SYNC),
 });
 
 const SyncCalendarEventsResponseSchema = z.object({
@@ -48,7 +51,8 @@ registry.registerPath({
   path: '/api/calendar-events/sync',
   tags: ['Calendar Events'],
   summary: 'Sync Google Calendar events',
-  description: 'Upserts calendar events - updates existing events by googleEventId or inserts new ones',
+  description: 'Upserts calendar events - updates existing events by googleEventId or inserts new ones. Requires a Bearer token (CALENDAR_SYNC_SECRET).',
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -75,6 +79,14 @@ registry.registerPath({
         },
       },
     },
+    401: {
+      description: 'Missing or invalid authentication',
+      content: {
+        'application/json': {
+          schema: SyncCalendarEventsResponseSchema,
+        },
+      },
+    },
     500: {
       description: 'Internal server error',
       content: {
@@ -89,7 +101,7 @@ registry.registerPath({
 type SyncCalendarEventsRequest = z.infer<typeof SyncCalendarEventsRequestSchema>;
 
 export function registerCalendarEventsRoutes(app: Express): void {
-  app.post('/api/calendar-events/sync', async (req: Request<object, object, SyncCalendarEventsRequest>, res: Response) => {
+  app.post('/api/calendar-events/sync', calendarEventsAuthMiddleware, async (req: Request<object, object, SyncCalendarEventsRequest>, res: Response) => {
     try {
       const parseResult = SyncCalendarEventsRequestSchema.safeParse(req.body);
 

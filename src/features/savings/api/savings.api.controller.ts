@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
+import { createRateLimiter } from '@core/express';
 import { getErrorMessage, Logger } from '@core/utils';
 import { SAVINGS_SESSION_COOKIE, SAVINGS_SESSION_TTL_SECONDS } from '../constants';
 import { getSavingsPortfolio, saveSavingsPortfolio } from '../mongo';
@@ -9,6 +10,9 @@ import { savingsAuthMiddleware } from './auth.middleware';
 import { EMPTY_SAVINGS_PORTFOLIO, parseSaveSavingsPortfolioBody, type SaveSavingsPortfolioBody, type SavingsApiError, type SavingsPortfolioResponse, toSavingsPortfolioDto } from './dto';
 
 const logger = new Logger('savings:api');
+
+// Cap online password guessing: 10 attempts per 15 minutes per IP.
+const loginRateLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10, prefix: 'savings-login' });
 
 type LoginBody = {
   readonly password?: unknown;
@@ -25,7 +29,7 @@ export function registerSavingsApiRoutes(app: Express): void {
     next();
   });
 
-  app.post('/api/savings/auth/login', (req: Request<object, object, LoginBody>, res: Response<{ success: true } | SavingsApiError>) => {
+  app.post('/api/savings/auth/login', loginRateLimiter, (req: Request<object, object, LoginBody>, res: Response<{ success: true } | SavingsApiError>) => {
     const configuredPassword = env.SAVINGS_APP_PASSWORD;
     if (!configuredPassword) {
       logger.error('SAVINGS_APP_PASSWORD not configured');

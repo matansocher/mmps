@@ -7,7 +7,11 @@ Token-costing evaluation suites that treat prompts like tested code. Kept **out 
 
 Measures how well the chatbot's real system prompt (`src/features/chatbot/agent/agent.ts`)
 routes user messages through the correct **tools, arguments, and multi-step workflows** across
-46 golden cases. It reuses the exact production prompt and real tool schemas, but swaps every
+60 golden cases spanning three explicit categories — **single-domain** requests (one tool),
+**cross-domain** requests (one message that must span two or more tools, e.g. "add the next
+Real Madrid match to my calendar"), and **ambiguous / underspecified** requests (the agent
+should clarify rather than guess a wrong tool). It reuses the exact production prompt and real
+tool schemas, but swaps every
 tool body for a spy. Cases can provide realistic fixture responses so ID-dependent workflows
 such as `list → delete` can complete without touching Gmail, Calendar, MongoDB, or other services.
 

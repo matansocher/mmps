@@ -39,10 +39,11 @@ async function getCompetitionFixtures(sourceCompetitionId: number): Promise<Comp
     userCountryId: `${COUNTRY_ID}`,
   };
   const response = await axios.get(`${SCORES_365_API_URL}/games/fixtures?${new URLSearchParams(queryParams)}`);
-  if (!Array.isArray(response.data?.games)) {
+  // Competitions between seasons answer 200 with the `games` key omitted entirely, so only a missing envelope is a real failure
+  if (!Array.isArray(response.data?.competitions)) {
     throw new Error(`Invalid fixtures response for competition ${sourceCompetitionId}`);
   }
-  return { sourceCompetitionId, fixtures: response.data.games };
+  return { sourceCompetitionId, fixtures: Array.isArray(response.data.games) ? response.data.games : [] };
 }
 
 function countRemainingLeagueMatches(fixtures: CompetitionFixtures[]): Map<number, number> {

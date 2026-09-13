@@ -1,8 +1,5 @@
 import type { Express } from 'express';
-import express from 'express';
-import path from 'node:path';
 import { createMongoConnection } from '@core/mongo';
-import { Logger } from '@core/utils';
 import { initOctokit } from '@services/github/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
@@ -10,26 +7,24 @@ import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
+import { DB_NAME as GAME_PRICE_WATCHER_DB_NAME } from '@shared/game-price-watcher';
 import { DB_NAME as GAME_RELEASES_DB_NAME } from '@shared/game-releases';
 import { DB_NAME as HOTEL_WATCHER_DB_NAME } from '@shared/hotel-watcher';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { ensureReminderIndexes, DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
-import { DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
+import { ensureDigestDeliveryIndexes, ensurePendingPostIndexes, DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
 import { DB_NAME as SPOTIFY_FOLLOWER_DB_NAME } from '@shared/spotify-follower';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
 import { ensureTransferTrackerIndexes, DB_NAME as TRANSFER_TRACKER_DB_NAME } from '@shared/transfer-tracker';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
 import { createChatbotCheckpointer } from './agent';
-import { registerChatbotApiRoutes } from './api';
 import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 import { ensureSecretaryMessageIndexes, DB_NAME as SECRETARY_DB_NAME, SecretaryActionService, SecretaryMessageService } from './secretary';
-
-const logger = new Logger('chatbot:init');
 
 export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [
@@ -46,6 +41,7 @@ export async function initChatbot(app: Express): Promise<void> {
     CALENDAR_EVENTS_DB_NAME,
     FRIENDS_DB_NAME,
     GAME_RELEASES_DB_NAME,
+    GAME_PRICE_WATCHER_DB_NAME,
     HOTEL_WATCHER_DB_NAME,
     MEET_FRIENDS_DB_NAME,
     USAGE_DB_NAME,
@@ -57,6 +53,8 @@ export async function initChatbot(app: Express): Promise<void> {
   await ensureReminderIndexes();
   await ensureSecretaryMessageIndexes();
   await ensureTransferTrackerIndexes();
+  await ensurePendingPostIndexes();
+  await ensureDigestDeliveryIndexes();
 
   // Build the checkpointer BEFORE provideTelegramBot(), which calls bot.start().
   // grammY locks the bot against new listeners once polling begins, so any `await`
@@ -75,14 +73,6 @@ export async function initChatbot(app: Express): Promise<void> {
   chatbotController.init();
   chatbotScheduler.init();
   registerCalendarEventsRoutes(app);
-  registerChatbotApiRoutes(app);
 
   initOctokit();
-
-  const spaDist = path.resolve('apps/chatbot-web/dist');
-  app.use('/chatbot', express.static(spaDist));
-  app.get('/chatbot/*splat', (_req, res) => {
-    res.sendFile(path.join(spaDist, 'index.html'));
-  });
-  logger.log(`Chatbot SPA served from ${spaDist} at /chatbot/*`);
 }

@@ -8,14 +8,14 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **7 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **7 bots:** `chatbot`, `chilli`, `coach`, `expenses`, `learner`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` is bot-less web feature initialized independently of bot selection.
+- **5 bots:** `chatbot`, `chilli`, `coach`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` and `mindloop` are bot-less web features initialized independently of bot selection.
 - **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/chatbot-web`, `apps/coach-web`, `apps/expenses-web`, `apps/learner-web`, `apps/savings-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/savings-web` and `apps/mindloop-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -120,16 +120,13 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 mmps/
 ├── src/
 │   ├── core/           # Config, mongo, openapi/swagger, telemetry, services, utils
-│   ├── features/       # Bots plus savings web feature
+│   ├── features/       # Bots plus savings & mindloop web features
 │   ├── services/       # 30+ external service integrations
 │   ├── shared/         # Cross-bot business logic (AI tools live here)
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
-│   ├── chatbot-web/
-│   ├── coach-web/
-│   ├── expenses-web/
-│   ├── learner-web/
-│   └── savings-web/
+│   ├── savings-web/
+│   └── mindloop-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
 ├── assets/             # Static assets (downloads dir, images)
@@ -177,15 +174,15 @@ src/services/{name}/
 
 | ID          | Display Name    | Path                          | Env token                        | Purpose |
 |-------------|-----------------|-------------------------------|----------------------------------|---------|
-| `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability; dashboard mini-app (`apps/chatbot-web`). |
+| `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability. |
 | `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
-| `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules; has a Vite mini-app (`apps/coach-web`). |
-| `EXPENSES`  | Expenses 💸     | `src/features/expenses/`      | `EXPENSES_TELEGRAM_BOT_TOKEN`    | Expense tracker mini-app (`apps/expenses-web`) backed by the shared `Expenses` Mongo DB. |
-| `LEARNER`   | Learner 🎓      | `src/features/learner/`       | `LEARNER_TELEGRAM_BOT_TOKEN`     | Courses mini-app (`apps/learner-web`) served at `/learner/`. |
+| `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules. |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
 | `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education. |
 
 **Also not a bot:** `SAVINGS` (`src/features/savings/`) is a password-protected React SPA (`apps/savings-web`) served at `/savings/*`. It stores one shared family portfolio in the `Savings` MongoDB database, uses real ILS values with reactive rebalancing, and protects explicit saves with revision conflict detection. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+
+**Also not a bot:** `MINDLOOP` (`src/features/mindloop/`) is a React brain-training mini-app (`apps/mindloop-web`) served at `/mindloop/*`. It ships 14 original games across 5 skill categories and persists player progress (best scores, favorites, play history) to the `Mindloop` MongoDB database keyed by Telegram user id. The client is offline-first (localStorage) and reconciles with the server via a non-destructive merge; server writes are best-effort. Identity comes from verified Telegram `initData` (`MINDLOOP_TELEGRAM_BOT_TOKEN`) or an `X-Mindloop-Dev-User` header in local dev. Device-only preferences (theme, sound, reduced motion) never leave the device. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
 **Boot logic** (`src/index.ts`):
 ```typescript
@@ -201,14 +198,12 @@ const initBot = async (config: { id: string }, init: () => Promise<void>): Promi
 
 await initBot(chatbotConfig, () => initChatbot(app));
 await initBot(chilliConfig, () => initChilli());
-await initBot(coachConfig, () => initCoach(app));
-await initBot(expensesConfig, () => initExpenses(app));
-await initBot(learnerConfig, () => initLearner(app));
+await initBot(coachConfig, () => initCoach());
 await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all seven run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one.
+In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one. The `savings` and `mindloop` web features are initialized separately (`initSavings(app)` / `initMindloop(app)`), wrapped in their own try/catch, and boot regardless of `LOCAL_ACTIVE_BOT_ID`.
 
 ---
 
@@ -561,17 +556,18 @@ export function createAgentService(descriptor: AgentDescriptor, opts: CreateAgen
 The chatbot's conversation memory is two complementary pieces wired up in `features/chatbot`:
 
 - **Persistence (checkpointer).** `agent/checkpointer.ts` provides `createChatbotCheckpointer()`, a Mongo-backed `BaseCheckpointSaver` (via `@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL). It's built in `chatbot.init.ts` and injected into `ChatbotService`, replacing the in-RAM `MemorySaver` so history survives restarts/deploys. State is keyed by `thread_id` (derived from `chatId`).
-- **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). Once a thread passes `CHATBOT_CONFIG.summarization.triggerMessages` (~40), it compresses the oldest turns into a summary and keeps the last `keepMessages` (~20) verbatim. The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped.
+- **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). It is bounded by **tokens, not message counts** — a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the MongoDB checkpoint document (16 MiB limit). The `trigger` is an **OR** array: summarize once retained history exceeds `CHATBOT_CONFIG.summarization.triggerTokens` (~24k) OR passes `triggerMessages` (~40); `keep` is token-based (`keepTokens`, ~8k). The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped.
 
-There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_MESSAGES`.
+There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
 ### Token & cost observability (cross-bot)
 
 Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.
 
-- **Instrumented sources.** `chatbot`, `chilli`, `expenses` (`manual-entry` categorization). Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
-- **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens) + `computeModelCost()`. `resolveModelPrice()` does longest-prefix matching so dated snapshots (`gpt-4.1-mini-2025-04-14`) resolve. Unknown models → cost `0` + `logger.warn`.
-- **Sink.** db `Chatbot`, collection `usage` (`shared/ai/usage/`), 90-day TTL. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ source?, chatId?, from?, to? })` groups per source + user per day (`Asia/Jerusalem`). The `Chatbot` Mongo connection is registered by `chatbot.init`; non-chatbot bots only persist when chatbot is also booted (prod always; locally needs `LOCAL_ACTIVE_BOT_ID=CHATBOT`), otherwise writes fail silently.
+- **Instrumented sources.** `chatbot`, `chilli`. Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
+- **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens: `input`, `output`, `cachedInput`) + `computeModelCost()`. Cached input tokens are a **subset** of `input_tokens` and are billed at the cheaper cache-hit rate (deducted from the full-price portion, never added on top). `resolveModelPrice()` resolves **dated snapshots only** (`gpt-4.1-mini-2025-04-14` → `gpt-4.1-mini`); sibling models like `gpt-5-mini` must be listed explicitly, since prefix-matching them onto `gpt-5` would misprice them 5x. Unknown models → cost `0` + `logger.warn`.
+- **Pricing drift check.** `schedulers/model-pricing-check.ts` (cron `0 10 1 * *`, 1st of each month at 10:00) fetches OpenAI's docs markdown twin (`https://developers.openai.com/api/docs/pricing.md`), parses the "Standard pricing data" table, and diffs it against `MODEL_PRICING`. **Silent when everything matches** — it only DMs `MY_USER_ID` on drift or when a priced model disappears from the docs. No AI and no HTML scraping; prices stay a checked-in constant so historical cost records remain reproducible.
+- **Sink.** db `Chatbot`, collection `usage` (`shared/ai/usage/`), 90-day TTL. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `tokensCached`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ source?, chatId?, from?, to? })` groups per source + user per day (`Asia/Jerusalem`). The `Chatbot` Mongo connection is registered by `chatbot.init`; non-chatbot bots only persist when chatbot is also booted (prod always; locally needs `LOCAL_ACTIVE_BOT_ID=CHATBOT`), otherwise writes fail silently.
 - **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
 - There's no official LangChain package for this — the callback handler is the implementation (no hand-roll reference file).
 - **Weekly report.** `schedulers/usage-summary.ts` (cron `30 22 * * 6`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs `MY_USER_ID` a deterministic cost/usage breakdown (total cost, calls, tokens, per-day, per-bot, and per-user if >1).
@@ -583,6 +579,7 @@ Follows accounts on 4 platforms and DMs a single daily digest instead of real-ti
 - **Collect (silent).** `features/chatbot/schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter+youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`), diffs new posts against the subscription's `lastSeenId`/`lastSeenAt`, and stores them in Mongo (db `SocialFollower`, collection `PendingPost`) — nothing is sent. Pending rows are inserted **before** `lastSeen` advances; `createPendingPosts` dedupes by `platform+username+chatId+postId`, so a crash re-collects rather than loses posts.
 - **Digest.** `features/chatbot/schedulers/social-media-digest.ts` — cron `45 22 * * *`. Groups all pending posts per chat and per followed account: **telegram/twitter** get an AI key-points summary (`getResponse` with `GPT_SMALL_MODEL`, bullet count scales with volume via `targetKeyPointsCount` — ~1 per 10 posts, min 2, max 10 — written in the posts' own language, falls back to a raw listing on AI failure); **youtube/tiktok** are listed one line per post with link. Sends one combined Markdown message, then deletes exactly the rows it sent — posts collected after 22:45 roll into the next day's digest; empty day → no message; send failure keeps everything for retry tomorrow.
 - **Diffing rules.** Twitter/TikTok ids are chronological snowflakes → `BigInt(id) > BigInt(lastSeenId)` (neutralizes pinned posts). Telegram post ids are sequential per channel → numeric compare. YouTube video ids are *not* chronological → timestamp diff via `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
+- **TikTok video attachments.** After the text digest is delivered, up to 5 (`CHATBOT_VIDEO_DIGEST_MAX_VIDEOS`) of the newest collected TikTok videos per chat are attached as individual playable Telegram videos (`social-media-video-delivery.ts`), each captioned with creator + short caption + source link and sent with `disable_notification`. A per-chat/per-local-date **delivery record** (db `SocialFollower`, collection `DigestDelivery`, 14-day TTL, `digest-delivery.repository.ts`) fixes the selection once and snapshots each video's fields, so restarts/concurrent runs converge on the same set (`$setOnInsert` upsert) and deleting the source pending posts stays safe. Each video is atomically claimed `pending→sending` (concurrent runs can't double-send) then finalized `sent`/`link_only`. Download is SSRF-guarded (per-hop redirect + private-IP checks) and hard byte-capped on the actual stream via `@services/tiktok`'s `downloadTikTokVideo` (temp file under `LOCAL_FILES_PATH`, always cleaned up); any oversized/unavailable/ambiguous-timeout failure falls back to a link-only message so the source link is always delivered (no re-upload on ambiguous send timeouts). Videos ride along only when text delivery didn't fail entirely; bounded short retries, no next-day retry. Kill switch: `CHATBOT_VIDEO_DIGEST=false`.
 - **Subscriptions.** `shared/social-follower/` — `Subscription` + `PendingPost` collections, repository functions, `SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`. Managed through the chatbot tools (`tiktok`, `twitter`, `youtube`, `telegram_channels`), each with subscribe/unsubscribe/list actions keyed to `MY_USER_ID`.
 - **Data sources.** telegram → `@services/telegram-scraper` (t.me/s web preview, no auth); twitter → `@services/twitter-scraper` (anonymous GraphQL + Nitter fallback, no key); youtube → RSS (collect) + Supadata-backed `@services/youtube` (tool actions); tiktok → RapidAPI `@services/tiktok` (metered free tier — mind the quota).
 - Digest summarization goes through the raw `@services/openai` helper, so it is **not** usage-metered (consistent with the other raw helpers).
@@ -693,6 +690,7 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 - `GET /` — health (`{ success: true }`)
 - `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
 - Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
+- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes.
 
 ---
 
@@ -743,7 +741,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 
 Located in `src/shared/`. Reusable across bots:
 
-`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `expenses`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
+`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
 
 ---
 
@@ -753,7 +751,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 
 **Required for any local dev:**
 - `MONGO_DB_URL` — Mongo connection string (the main code path uses this).
-- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | EXPENSES | LEARNER | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
+- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
 - One of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (depending on which agents you exercise).
 - The `*_TELEGRAM_BOT_TOKEN` for whichever bot you set as `LOCAL_ACTIVE_BOT_ID`.
 
@@ -761,6 +759,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 - `IS_PROD=true` runs all bots regardless of `LOCAL_ACTIVE_BOT_ID`.
 - `PORT` — Express port (default 3000).
 - `SAVINGS_APP_PASSWORD` — shared password for the standalone `/savings` portfolio app.
+- `MINDLOOP_TELEGRAM_BOT_TOKEN` — used only to verify Telegram `initData` for the `/mindloop` mini-app (no bot runs).
 
 **Observability (Grafana Cloud via OpenTelemetry) — production only:**
 - `OTEL_EXPORTER_OTLP_ENDPOINT` — Grafana OTLP gateway (e.g. `https://otlp-gateway-prod-<region>.grafana.net/otlp`). Empty = telemetry disabled (local dev).
@@ -799,9 +798,9 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (also: chatbot-web, expenses-web, learner-web, savings-web)
-npm run dev:coach-web
+# Mini-app workspaces (savings-web, mindloop-web)
 npm run dev:savings-web
+npm run dev:mindloop-web
 ```
 
 ---

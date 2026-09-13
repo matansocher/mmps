@@ -1,5 +1,4 @@
 import type { Bot, Context } from 'grammy';
-import { env } from 'node:process';
 import { MY_USER_NAME } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
@@ -74,15 +73,6 @@ export class CoachController {
     await ctx.reply('לאיזה ליגה?', { reply_markup: keyboard });
   }
 
-  buildKeyboard(): { inline_keyboard: { text: string; web_app: { url: string } }[][] } | null {
-    const url = env.COACH_MINI_APP_URL;
-    if (!url) {
-      this.logger.warn('COACH_MINI_APP_URL not configured');
-      return null;
-    }
-    return { inline_keyboard: [[{ text: '📱 פתח אפליקציה', web_app: { url } }]] };
-  }
-
   private async actionsHandler(ctx: Context): Promise<void> {
     const { chatId } = getMessageData(ctx);
     const subscription = await getSubscription(chatId);
@@ -94,10 +84,6 @@ export class CoachController {
       { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
     ]);
     await ctx.reply('👨‍🏫 איך אני יכול לעזור?', { reply_markup: keyboard });
-    const launcherKeyboard = this.buildKeyboard();
-    if (launcherKeyboard) {
-      await this.bot.api.sendMessage(chatId, '📱 או פתח את האפליקציה', { reply_markup: launcherKeyboard });
-    }
     await ctx.deleteMessage().catch(() => {});
   }
 
@@ -205,10 +191,6 @@ export class CoachController {
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אתריע לך ⚽️🏀`;
     await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText, { ...getKeyboardOptions() });
-    const launcherKeyboard = this.buildKeyboard();
-    if (launcherKeyboard) {
-      await this.bot.api.sendMessage(chatId, '📱 גם יש לי אפליקציה — לתצוגה ויזואלית:', { reply_markup: launcherKeyboard });
-    }
   }
 
   private async stopHandler(ctx: Context, chatId: number): Promise<void> {

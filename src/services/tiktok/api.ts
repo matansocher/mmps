@@ -1,3 +1,4 @@
+import { getErrorMessage, Logger } from '@core/utils';
 import type { RapidAPIDownloadResponse, RapidAPIUserPostsResponse, TikTokPost, TikTokTranscript, TikTokUserInfo, TikTokVideo, TikwmResponse, TranscriptResponse, UserVideosResponse } from './types';
 import {
   extractSecUid,
@@ -11,6 +12,12 @@ import {
   validateRapidApiKey,
   validateSupadataApiKey,
 } from './utils';
+
+const logger = new Logger('tiktok:api');
+
+// Single-shot timeout for resolving a fresh download URL. tikwm is a best-effort free
+// endpoint; if it hangs we want to fall back to RapidAPI promptly rather than block a run.
+const DOWNLOAD_URL_TIMEOUT_MS = 10_000;
 
 function parseVideosResponse(data: RapidAPIUserPostsResponse): UserVideosResponse {
   const itemList = data.data?.itemList || data.itemList || [];
@@ -142,15 +149,35 @@ export async function getTranscriptText(videoUrl: string): Promise<string> {
 
 // The playAddr returned by /api/user/posts is session-bound (403s outside the proxy),
 // so resolve a fresh downloadable URL: tikwm (free) first, RapidAPI download as fallback.
-export async function getVideoDownloadUrl(videoUrl: string): Promise<string> {
+// Each provider is attempted at most once here (RapidAPI adds its own bounded internal
+// retries), so the fallback can't multiply into an unbounded retry storm.
+async function fetchTikwmDownloadUrl(videoUrl: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), DOWNLOAD_URL_TIMEOUT_MS);
   try {
-    const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}`);
+    const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}`, { signal: controller.signal });
+    if (!response.ok) {
+      logger.warn(`tikwm returned HTTP ${response.status} for ${videoUrl}`);
+      return null;
+    }
     const data = (await response.json()) as TikwmResponse;
     if (data.code === 0 && data.data?.play) {
       return data.data.play;
     }
-  } catch {
-    // fall through to RapidAPI
+    logger.warn(`tikwm returned no playable url for ${videoUrl} (code ${data.code})`);
+    return null;
+  } catch (err) {
+    logger.warn(`tikwm download url lookup failed for ${videoUrl}: ${getErrorMessage(err)}`);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function getVideoDownloadUrl(videoUrl: string): Promise<string> {
+  const tikwmUrl = await fetchTikwmDownloadUrl(videoUrl);
+  if (tikwmUrl) {
+    return tikwmUrl;
   }
 
   validateRapidApiKey();

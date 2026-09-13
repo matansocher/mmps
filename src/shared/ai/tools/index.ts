@@ -2,6 +2,7 @@ export { stocksTool } from './stocks/stocks.tool';
 export { cryptoTool } from './crypto/crypto.tool';
 
 export { weatherTool } from './weather/weather.tool';
+export { webSearchTool } from './web-search/web-search.tool';
 export { rainRadarTool } from './rain-radar';
 
 export { earthquakeTool } from './earthquake';
@@ -46,14 +47,10 @@ export { contactsTool } from './contacts/contacts.tool';
 
 export { meetupsTool } from './meetups/meetups.tool';
 
-export { twitterTool } from './twitter/twitter.tool';
-
-export { tiktokTool } from './tiktok/tiktok.tool';
-
-export { youtubeTool } from './youtube/youtube.tool';
-
-export { telegramChannelsTool } from './telegram-channels/telegram-channels.tool';
+export { socialTool } from './social';
 
 export { hotelWatcherTool } from './hotel-watcher';
 
 export { gameReleasesTool } from './game-releases';
+
+export { gamePriceWatcherTool } from './game-price-watcher';

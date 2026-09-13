@@ -63,6 +63,8 @@ export function App() {
     return comparablePortfolio(portfolio) !== comparablePortfolio(serverPortfolio);
   }, [portfolio, serverPortfolio]);
 
+  const isSaveLocked = status === 'saving';
+
   useEffect(() => {
     if (!hasChanges) return;
     const warnBeforeLeaving = (event: BeforeUnloadEvent): void => {
@@ -103,6 +105,7 @@ export function App() {
   }
 
   function updateHolding(id: string, changes: Partial<Holding>): void {
+    if (isSaveLocked) return;
     setPortfolio((current) =>
       current
         ? {
@@ -115,14 +118,14 @@ export function App() {
   }
 
   function applyTargets(settings: Pick<PortfolioSettings, 'fxLimitPercent' | 'solidTargetPercent' | 'geographyTargets'>): void {
-    if (!portfolio) return;
+    if (!portfolio || isSaveLocked) return;
     const nextPortfolio = { ...portfolio, settings: { ...portfolio.settings, ...settings } };
     setPortfolio(nextPortfolio);
     void savePortfolioDirectly(nextPortfolio);
   }
 
   function addHolding(draft: HoldingDraft): void {
-    if (!portfolio) return;
+    if (!portfolio || isSaveLocked) return;
     const holding: Holding = {
       id: newHoldingId(),
       ...draft,
@@ -133,7 +136,7 @@ export function App() {
   }
 
   function updateHoldingFromModal(id: string, changes: Partial<Holding>): void {
-    if (!portfolio) return;
+    if (!portfolio || isSaveLocked) return;
     const nextPortfolio = {
       ...portfolio,
       holdings: portfolio.holdings.map((holding) => (holding.id === id ? { ...holding, ...changes } : holding)),
@@ -143,7 +146,7 @@ export function App() {
   }
 
   function deleteHolding(id: string): void {
-    if (!portfolio) return;
+    if (!portfolio || isSaveLocked) return;
     const holding = portfolio.holdings.find((item) => item.id === id);
     if (!window.confirm(`למחוק את "${holding?.name || 'השורה'}"?`)) return;
     const nextPortfolio = { ...portfolio, holdings: portfolio.holdings.filter((item) => item.id !== id) };
@@ -196,6 +199,7 @@ export function App() {
       result={result}
       status={status}
       hasChanges={hasChanges}
+      isSaveLocked={isSaveLocked}
       onHoldingChange={updateHolding}
       onModalHoldingChange={updateHoldingFromModal}
       onAddHolding={addHolding}

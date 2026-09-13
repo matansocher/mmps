@@ -18,19 +18,32 @@ export class BaseCache<T> {
   protected async getFromCache(key: string): Promise<T | null> {
     const redis = getRedisConnection();
     const cacheKey = this.buildKey(key);
-    const raw = await redis.get(cacheKey);
+    let raw: string | null;
+    try {
+      raw = await redis.get(cacheKey);
+    } catch (err) {
+      // A cache outage must not block the request path — fall through to the origin instead of failing.
+      this.logger.warn(`Failed to read cache entry '${cacheKey}': ${getErrorMessage(err)}. Falling back to origin.`);
+      return null;
+    }
     if (!raw) return null;
     try {
       return JSON.parse(raw) as T;
     } catch (err) {
       this.logger.warn(`Failed to parse cache entry '${cacheKey}': ${getErrorMessage(err)}. Removing invalid entry.`);
-      await redis.del(cacheKey);
+      await redis.del(cacheKey).catch(() => undefined);
       return null;
     }
   }
 
   protected async saveToCache(key: string, data: T): Promise<void> {
     const redis = getRedisConnection();
-    await redis.set(this.buildKey(key), JSON.stringify(data), 'EX', this.ttlSeconds);
+    const cacheKey = this.buildKey(key);
+    try {
+      await redis.set(cacheKey, JSON.stringify(data), 'EX', this.ttlSeconds);
+    } catch (err) {
+      // Writes are best-effort — a cache outage should degrade to a no-op, not break the caller.
+      this.logger.warn(`Failed to write cache entry '${cacheKey}': ${getErrorMessage(err)}.`);
+    }
   }
 }

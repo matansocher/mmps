@@ -34,7 +34,7 @@ export type CallbackQueryOptions = {
 };
 
 const DEFAULT_CHAT_ID = 123_456;
-const DEFAULT_USER_ID = 654_321;
+export const DEFAULT_USER_ID = 654_321;
 
 let updateIdCounter = 1;
 let messageIdCounter = 1;

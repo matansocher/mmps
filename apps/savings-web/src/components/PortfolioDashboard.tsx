@@ -16,6 +16,7 @@ type PortfolioDashboardProps = {
   readonly result: RebalanceResult;
   readonly status: SaveStatus;
   readonly hasChanges: boolean;
+  readonly isSaveLocked: boolean;
   readonly onHoldingChange: (id: string, changes: Partial<Holding>) => void;
   readonly onModalHoldingChange: (id: string, changes: Partial<Holding>) => void;
   readonly onAddHolding: (holding: HoldingDraft) => void;
@@ -110,6 +111,7 @@ export function PortfolioDashboard({
   result,
   status,
   hasChanges,
+  isSaveLocked,
   onHoldingChange,
   onModalHoldingChange,
   onAddHolding,
@@ -136,6 +138,15 @@ export function PortfolioDashboard({
   useEffect(() => {
     if (status === 'saved') setIsTableEditable(false);
   }, [status]);
+
+  useEffect(() => {
+    if (isSaveLocked) {
+      setIsTableEditable(false);
+      setEditingHoldingId(null);
+      setShowTargets(false);
+      setShowDepositAdvisor(false);
+    }
+  }, [isSaveLocked]);
 
   const editingHolding = editingHoldingId ? (portfolio.holdings.find((holding) => holding.id === editingHoldingId) ?? null) : null;
 
@@ -171,11 +182,11 @@ export function PortfolioDashboard({
       </section>
 
       <div className="overview-actions">
-        <button className="button-with-icon" type="button" onClick={() => setShowTargets(true)}>
+        <button className="button-with-icon" type="button" onClick={() => setShowTargets(true)} disabled={isSaveLocked}>
           <SettingsIcon />
           יעדי השקעה
         </button>
-        <button className="button-with-icon" type="button" onClick={() => setShowDepositAdvisor(true)}>
+        <button className="button-with-icon" type="button" onClick={() => setShowDepositAdvisor(true)} disabled={isSaveLocked}>
           <LightbulbIcon />
           יעוץ הפקדה
         </button>
@@ -189,11 +200,16 @@ export function PortfolioDashboard({
             <p>לחצו על עריכת הטבלה כדי לעדכן שווי נוכחי, או על שורה לעריכה מלאה של פרטי ההשקעה.</p>
           </div>
           <div className="portfolio-actions">
-            <button className={isTableEditable ? 'secondary button-with-icon' : 'button-with-icon'} type="button" onClick={() => setIsTableEditable((current) => !current)}>
+            <button
+              className={isTableEditable ? 'secondary button-with-icon' : 'button-with-icon'}
+              type="button"
+              onClick={() => setIsTableEditable((current) => !current)}
+              disabled={isSaveLocked}
+            >
               <EditIcon />
               {isTableEditable ? 'סיום עריכה' : 'עריכת הטבלה'}
             </button>
-            <button className="primary button-with-icon" type="button" onClick={() => setShowSimulation(true)}>
+            <button className="primary button-with-icon" type="button" onClick={() => setShowSimulation(true)} disabled={isSaveLocked}>
               <PlusIcon />
               הוספת השקעה
             </button>
@@ -215,9 +231,12 @@ export function PortfolioDashboard({
         </div>
         <HoldingsTable
           holdings={portfolio.holdings}
-          editable={isTableEditable}
+          editable={isTableEditable && !isSaveLocked}
           onAmountChange={(id, nextAmountIls) => onHoldingChange(id, { currentAmountIls: nextAmountIls })}
-          onRowClick={(holding) => setEditingHoldingId(holding.id)}
+          onRowClick={(holding) => {
+            if (isSaveLocked) return;
+            setEditingHoldingId(holding.id);
+          }}
         />
       </section>
 

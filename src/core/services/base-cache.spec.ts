@@ -70,29 +70,37 @@ describe('BaseCache', () => {
     expect(redis.set).toHaveBeenCalledWith('test:saved', '{"id":2,"name":"value"}', 'EX', 300);
   });
 
-  it('should preserve Redis read errors', async () => {
+  it('should return null and fall back to origin when the Redis read fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const error = new Error('Redis unavailable');
     redis.get.mockRejectedValue(error);
 
-    await expect(cache.get('failed')).rejects.toBe(error);
+    await expect(cache.get('failed')).resolves.toEqual(null);
     expect(redis.del).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("Failed to read cache entry 'test:failed'"));
+
+    warn.mockRestore();
   });
 
-  it('should preserve Redis delete errors for malformed entries', async () => {
+  it('should still return null when deleting a malformed entry fails', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const error = new Error('Redis delete failed');
     redis.get.mockResolvedValue('{invalid');
     redis.del.mockRejectedValue(error);
 
-    await expect(cache.get('malformed')).rejects.toBe(error);
+    await expect(cache.get('malformed')).resolves.toEqual(null);
 
     warn.mockRestore();
   });
 
-  it('should preserve Redis write errors', async () => {
+  it('should swallow Redis write errors', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const error = new Error('Redis unavailable');
     redis.set.mockRejectedValue(error);
 
-    await expect(cache.save('failed', { id: 3, name: 'value' })).rejects.toBe(error);
+    await expect(cache.save('failed', { id: 3, name: 'value' })).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("Failed to write cache entry 'test:failed'"));
+
+    warn.mockRestore();
   });
 });

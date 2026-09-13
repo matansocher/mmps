@@ -1,6 +1,6 @@
 import { getAccessToken, getIgdbHeaders } from './auth';
-import { GAME_FIELDS, IGDB_BASE_URL, IGDB_IMAGE_BASE_URL, PS5_PLATFORM_ID } from './constants';
-import type { IgdbGame, IgdbGameResponse } from './types';
+import { GAME_FIELDS, IGDB_BASE_URL, IGDB_IMAGE_BASE_URL, PLAYSTATION_STORE_CATEGORY_ID, PS5_PLATFORM_ID } from './constants';
+import type { IgdbExternalGameResponse, IgdbGame, IgdbGameResponse } from './types';
 import { resolveReleaseInfo } from './utils';
 
 async function igdbRequest<T>(endpoint: string, body: string): Promise<T> {
@@ -13,12 +13,26 @@ async function igdbRequest<T>(endpoint: string, body: string): Promise<T> {
   return JSON.parse(text) as T;
 }
 
+function resolvePsStoreProductId(externalGames: readonly IgdbExternalGameResponse[] | undefined): string | null {
+  const match = (externalGames ?? []).find((entry) => entry.category === PLAYSTATION_STORE_CATEGORY_ID && entry.uid);
+  return match ? match.uid : null;
+}
+
+// IGDB sometimes lists the PlayStation Store entry with a page url but no uid mapping. The url still
+// carries the concept/product id, so it is kept as a fallback resolved at add time.
+function resolvePsStoreUrl(externalGames: readonly IgdbExternalGameResponse[] | undefined): string | null {
+  const match = (externalGames ?? []).find((entry) => entry.category === PLAYSTATION_STORE_CATEGORY_ID && entry.url);
+  return match ? match.url : null;
+}
+
 function toIgdbGame(game: IgdbGameResponse): IgdbGame {
   return {
     id: game.id,
     name: game.name,
     slug: game.slug ?? null,
     coverUrl: game.cover?.image_id ? `${IGDB_IMAGE_BASE_URL}/${game.cover.image_id}.jpg` : null,
+    psStoreProductId: resolvePsStoreProductId(game.external_games),
+    psStoreUrl: resolvePsStoreUrl(game.external_games),
     release: resolveReleaseInfo(game.release_dates),
   };
 }
