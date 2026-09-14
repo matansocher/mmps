@@ -11,6 +11,7 @@ import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
+import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initMindloop } from '@features/mindloop';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
@@ -77,6 +78,7 @@ async function main() {
   await initBot(coachConfig, () => initCoach());
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
+  await initBot(learnerConfig, () => initLearner(app));
 
   if (failedComponents.length) {
     logger.error(`Startup completed with unavailable components: ${failedComponents.join(', ')}`);
