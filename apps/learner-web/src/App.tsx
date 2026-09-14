@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { AppIcon, type AppIconName } from './components/AppIcon';
 import { ProgressProvider, useProgress } from './hooks/useProgress';
 import { readTelegramTheme } from './lib/api';
 import { CURRICULUM } from './lib/bites';
@@ -34,21 +35,25 @@ function TopBar({ theme, onToggleTheme }: { readonly theme: Theme; readonly onTo
   const { progress } = useProgress();
   const summary = useMemo(() => summarize(progress, CURRICULUM), [progress]);
   return (
-    <div className="topbar">
-      <span className="logo" aria-hidden>
-        📚
-      </span>
-      <span className="title">Learner</span>
-      <span className="spacer" />
-      {summary.mastered > 0 || progress.streak > 0 ? (
-        <span className="streak" title="Day streak">
-          🔥 {progress.streak}
-        </span>
-      ) : null}
-      <button type="button" className="icon-btn" onClick={onToggleTheme} title="Toggle theme" aria-label="Toggle theme">
-        {theme === 'dark' ? '☀️' : '🌙'}
-      </button>
-    </div>
+    <header className="topbar">
+      <div className="topbar-inner">
+        <Link to="/" className="brand" aria-label="Go to Today">
+          <span className="logo" aria-hidden>
+            <img src="/learner/owl-logo.webp" alt="" />
+          </span>
+          <span className="title">Learner</span>
+        </Link>
+        <span className="spacer" />
+        {summary.mastered > 0 || progress.streak > 0 ? (
+          <span className="streak" title="Day streak">
+            <AppIcon name="fire" size={17} /> {progress.streak}
+          </span>
+        ) : null}
+        <button type="button" className="icon-btn" onClick={onToggleTheme} title="Toggle theme" aria-label="Toggle theme">
+          <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} size={19} />
+        </button>
+      </div>
+    </header>
   );
 }
 
@@ -57,10 +62,10 @@ function TabBar() {
   const location = useLocation();
   const dueCount = useMemo(() => selectReviewQueue(progress).length, [progress]);
 
-  const tabs: ReadonlyArray<{ to: string; icon: string; label: string; badge?: number; end?: boolean }> = [
-    { to: '/', icon: '🍰', label: 'Today', end: true },
-    { to: '/browse', icon: '📖', label: 'Browse' },
-    { to: '/review', icon: '🔁', label: 'Review', badge: dueCount },
+  const tabs: ReadonlyArray<{ to: string; icon: AppIconName; label: string; badge?: number; end?: boolean }> = [
+    { to: '/', icon: 'today', label: 'Today', end: true },
+    { to: '/browse', icon: 'browse', label: 'Browse' },
+    { to: '/review', icon: 'review', label: 'Review', badge: dueCount },
   ];
 
   // Hide the tabbar on immersive reader/quiz screens.
@@ -72,7 +77,7 @@ function TabBar() {
       {tabs.map((tab) => (
         <NavLink key={tab.to} to={tab.to} end={tab.end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
           <span className="tab-icon" aria-hidden>
-            {tab.icon}
+            <AppIcon name={tab.icon} />
           </span>
           {tab.label}
           {tab.badge ? <span className="badge">{tab.badge}</span> : null}
@@ -96,8 +101,8 @@ function Shell() {
 
   return (
     <>
+      <TopBar theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} />
       <div className="app">
-        <TopBar theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} />
         <Routes>
           <Route path="/" element={<TodayPage />} />
           <Route path="/browse" element={<BrowsePage />} />

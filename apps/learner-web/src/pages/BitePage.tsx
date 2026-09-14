@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AppIcon } from '../components/AppIcon';
 import { RatingBar } from '../components/RatingBar';
 import { useProgress } from '../hooks/useProgress';
-import { GUIDES, getBite } from '../lib/bites';
+import { GUIDES, getBite, nextBiteInGuide } from '../lib/bites';
 import { hasQuiz } from '../lib/quizzes';
 
 export function BitePage() {
@@ -19,7 +20,9 @@ export function BitePage() {
   if (!bite) {
     return (
       <div className="empty">
-        <div className="big">🤷</div>
+        <div className="big">
+          <AppIcon name="unknown" />
+        </div>
         <p>That section could not be found.</p>
         <Link className="btn" to="/browse">
           Back to browse
@@ -30,6 +33,7 @@ export function BitePage() {
 
   const state = progress.states[bite.id];
   const guide = GUIDES[bite.guide];
+  const nextBite = nextBiteInGuide(bite.id);
 
   return (
     <div>
@@ -40,7 +44,7 @@ export function BitePage() {
       </div>
       <div className="bite-meta" style={{ marginBottom: 6 }}>
         <span className={`chip ${bite.guide === 'system-design' ? 'guide-sd' : 'guide-ai'}`}>
-          {guide.icon} {guide.label}
+          <AppIcon name={bite.guide} size={15} /> {guide.label}
         </span>
         <span className="chip">{bite.minutes} min read</span>
       </div>
@@ -52,12 +56,20 @@ export function BitePage() {
       {hasQuiz(bite.id) ? (
         <div className="quiz-cta">
           <Link className="btn block" to={`/quiz/${encodeURIComponent(bite.id)}`}>
-            🧠 Test yourself on this section
+            <AppIcon name="brain" size={19} /> Test yourself on this section
           </Link>
         </div>
       ) : null}
 
       {!bite.isReference ? <RatingBar current={state?.rating ?? null} onRate={(rating) => rateBite(bite.id, rating)} /> : null}
+
+      {nextBite ? (
+        <div className="next-lesson">
+          <Link className="btn block" to={`/bite/${encodeURIComponent(nextBite.id)}`}>
+            Next lesson: {nextBite.title} →
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

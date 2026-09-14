@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { AppIcon } from '../components/AppIcon';
 import { BiteCard } from '../components/BiteCard';
 import { useProgress } from '../hooks/useProgress';
-import { GUIDES, getBite } from '../lib/bites';
+import { getBite } from '../lib/bites';
 import { biteStatus } from '../lib/scheduler';
 import { selectReviewQueue } from '../lib/selection';
 
@@ -14,13 +15,17 @@ export function ReviewPage() {
   return (
     <div>
       <div className="page-head">
-        <h1>Review 🔁</h1>
+        <h1>
+          <AppIcon name="review" /> Review
+        </h1>
         <p className="lead">Sections resurfacing for spaced repetition — the best time to lock them in.</p>
       </div>
 
       {reviewIds.length === 0 ? (
         <div className="empty">
-          <div className="big">✅</div>
+          <div className="big">
+            <AppIcon name="check" />
+          </div>
           <p>Nothing due right now. Rated sections come back on a spaced schedule.</p>
           <Link className="btn" to="/">
             Back to today
@@ -30,7 +35,7 @@ export function ReviewPage() {
         reviewIds.map((id) => {
           const bite = getBite(id);
           if (!bite) return null;
-          return <BiteCard key={id} bite={bite} status={biteStatus(progress.states[id], now)} guideIcon={GUIDES[bite.guide].icon} />;
+          return <BiteCard key={id} bite={bite} status={biteStatus(progress.states[id], now)} />;
         })
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AppIcon } from '../components/AppIcon';
 import { BiteCard } from '../components/BiteCard';
 import { useProgress } from '../hooks/useProgress';
 import { GUIDES, bitesByGuide } from '../lib/bites';
@@ -17,7 +18,9 @@ export function BrowsePage() {
   return (
     <div>
       <div className="page-head">
-        <h1>Browse 📖</h1>
+        <h1>
+          <AppIcon name="browse" /> Browse
+        </h1>
         <p className="lead">Every section from both guides. Tap any card to read it.</p>
       </div>
 
@@ -29,13 +32,13 @@ export function BrowsePage() {
             className={`btn ${active === guide ? 'primary' : ''}`}
             onClick={() => setActive(guide)}
           >
-            {GUIDES[guide].icon} {GUIDES[guide].label}
+            <AppIcon name={guide} size={19} /> {GUIDES[guide].label}
           </button>
         ))}
       </div>
 
       {bites.map((bite) => (
-        <BiteCard key={bite.id} bite={bite} status={biteStatus(progress.states[bite.id], now)} guideIcon={GUIDES[bite.guide].icon} />
+        <BiteCard key={bite.id} bite={bite} status={biteStatus(progress.states[bite.id], now)} />
       ))}
     </div>
   );

@@ -3,7 +3,7 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, getHourInTimezone, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { provideTelegramBot } from '@services/telegram';
-import { REMINDER_HOURS } from './constants';
+import { REMINDER_HOURS, REMINDER_MINUTE } from './constants';
 import { buildBiteMessage } from './learner.controller';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './learner.config';
 import { localDateKey, selectNextBite } from './learner-scheduler';
@@ -16,7 +16,7 @@ export class LearnerSchedulerService {
 
   init(): void {
     cron.schedule(
-      `0 ${REMINDER_HOURS.join(',')} * * *`,
+      `${REMINDER_MINUTE} ${REMINDER_HOURS.join(',')} * * *`,
       () => this.handleReminderTick(),
       { timezone: DEFAULT_TIMEZONE },
     );

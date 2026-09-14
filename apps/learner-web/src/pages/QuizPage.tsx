@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AppIcon } from '../components/AppIcon';
 import { useProgress } from '../hooks/useProgress';
 import { getBite } from '../lib/bites';
 import { quizzesForBite } from '../lib/quizzes';
@@ -20,7 +21,9 @@ export function QuizPage() {
   if (!bite || questions.length === 0) {
     return (
       <div className="empty">
-        <div className="big">🤷</div>
+        <div className="big">
+          <AppIcon name="unknown" />
+        </div>
         <p>No quiz available for this section yet.</p>
         <Link className="btn" to="/browse">
           Back to browse
@@ -54,8 +57,8 @@ export function QuizPage() {
     const passed = pct >= 70;
     return (
       <div className="quiz-result">
-        <div className="big" style={{ fontSize: 48 }}>
-          {passed ? '🎯' : '📚'}
+        <div className={`big quiz-result-icon ${passed ? 'passed' : ''}`}>
+          <AppIcon name={passed ? 'target' : 'book'} />
         </div>
         <div className="score">
           {correctCount}/{questions.length}

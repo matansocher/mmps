@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Bite } from '../lib/types';
 import type { BiteStatus } from '../lib/scheduler';
+import { AppIcon } from './AppIcon';
 
 const STATUS_LABEL: Record<BiteStatus, string> = {
   new: 'New',
@@ -12,15 +13,14 @@ const STATUS_LABEL: Record<BiteStatus, string> = {
 type BiteCardProps = {
   readonly bite: Bite;
   readonly status: BiteStatus;
-  readonly guideIcon: string;
 };
 
-export function BiteCard({ bite, status, guideIcon }: BiteCardProps) {
+export function BiteCard({ bite, status }: BiteCardProps) {
   const guideChipClass = bite.guide === 'system-design' ? 'guide-sd' : 'guide-ai';
   return (
     <Link className="bite-card" to={`/bite/${encodeURIComponent(bite.id)}`}>
       <span className="guide-icon" aria-hidden>
-        {guideIcon}
+        <AppIcon name={bite.guide} />
       </span>
       <span className="bite-main">
         <span className="bite-title">{bite.title}</span>
