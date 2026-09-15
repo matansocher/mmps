@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { startMongoContainer, clearCollection, stopMongoContainer } from './helpers/mongo-container';
+import { DB_NAME } from '@shared/reminders/mongo/constants';
 import { createReminder, getDueReminders, getRemindersByUser, getReminderById, updateReminderStatus, updateReminder, deleteReminder, getPendingReminderCount, reactivateSnoozedReminders } from '@shared/reminders/mongo/reminder.repository';
 
-const DB_NAME = 'Reminders';
 const COLLECTION_NAME = 'Reminders';
 const CHAT_ID = 12345;
 
