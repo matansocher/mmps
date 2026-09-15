@@ -4,10 +4,6 @@ import { ChilliController } from '@src/features/chilli/chilli.controller';
 import { buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
 
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
-vi.mock('@src/features/chilli/mongo', () => ({
-  getPrompt: vi.fn(),
-  insertPromptVersion: vi.fn(),
-}));
 
 describe('ChilliController E2E', () => {
   let testBot: TestBot;
@@ -21,16 +17,6 @@ describe('ChilliController E2E', () => {
     const chilliService = { processMessage } as any;
     const controller = new ChilliController(chilliService, testBot.bot);
     controller.init();
-  });
-
-  describe('/update', () => {
-    it('rejects update attempts from non-owner users', async () => {
-      await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/update something new' }));
-
-      const sent = testBot.transport.callsByMethod('sendMessage');
-      expect(sent).toHaveLength(1);
-      expect(sent[0].payload.text).toContain('רק גוז');
-    });
   });
 
   describe('text message', () => {

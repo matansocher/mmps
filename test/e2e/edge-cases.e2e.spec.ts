@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate } from './harness';
 
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
-vi.mock('@src/features/chilli/mongo', () => ({ getPrompt: vi.fn(), insertPromptVersion: vi.fn() }));
 
 const woltMocks = vi.hoisted(() => ({
   saveUserDetails: vi.fn(),

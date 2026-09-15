@@ -12,8 +12,8 @@ The main conversational assistant with LangGraph, Mongo-backed memory, and many 
 
 ### 2. **Chilli** - Hebrew Cat Persona
 A playful Hebrew persona bot that replies as the user's cat.
-- **Features**: Mongo-backed persona prompt, owner-only prompt updates, OpenAI mini model
-- **Database**: `Chilli`
+- **Features**: Hardcoded persona prompt, OpenAI mini model
+- **Database**: None
 - **[Learn more →](/bots/chilli)**
 
 ### 3. **Coach** - Sports Analytics & Predictions
@@ -102,7 +102,6 @@ MONGO_DB_URL=mongodb://...
 
 Current bot databases:
 - `Chatbot` - Chatbot LangGraph checkpoints and token/cost usage records
-- `Chilli` - Chilli prompt versions
 - `Coach` - Coach users and subscriptions
 - `Mindloop` - Mindloop player best scores, favorites, and play history
 - `Savings` - Shared portfolio settings and holdings
