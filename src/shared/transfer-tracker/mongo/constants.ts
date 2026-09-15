@@ -1,4 +1,4 @@
-export const DB_NAME = 'TransferTracker';
+export const DB_NAME = 'Chatbot';
 
 // Each rumour stage appears in this many consecutive digests before it is retired,
 // so a deal is not missed if one evening's message goes unread.
