@@ -24,7 +24,7 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
-import { ensureSecretaryMessageIndexes, DB_NAME as SECRETARY_DB_NAME, SecretaryActionService, SecretaryMessageService } from './secretary';
+import { ensureSecretaryMessageIndexes, SecretaryActionService, SecretaryMessageService } from './secretary';
 
 export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [
@@ -45,7 +45,6 @@ export async function initChatbot(app: Express): Promise<void> {
     HOTEL_WATCHER_DB_NAME,
     MEET_FRIENDS_DB_NAME,
     USAGE_DB_NAME,
-    SECRETARY_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);
 

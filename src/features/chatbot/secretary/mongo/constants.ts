@@ -1,4 +1,4 @@
-export const DB_NAME = 'Secretary';
+export const DB_NAME = 'Chatbot';
 
 export const MESSAGES_COLLECTION = 'Messages';
 
