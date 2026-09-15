@@ -5,7 +5,7 @@ import { getMongoCollection } from '@core/mongo';
 import type { CalendarEvent, CreateCalendarEventData, UpsertCalendarEventsResult } from '../types';
 import { DB_NAME } from './constants';
 
-const getCollection = () => getMongoCollection<CalendarEvent>(DB_NAME, 'events');
+const getCollection = () => getMongoCollection<CalendarEvent>(DB_NAME, 'Events');
 
 export async function upsertCalendarEvents(events: CreateCalendarEventData[]): Promise<UpsertCalendarEventsResult> {
   const collection = getCollection();
