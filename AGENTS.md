@@ -94,10 +94,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **Schema Validation:** `zod`
 - **Testing:** Vitest 4.x (unit specs in `src/**/*.spec.ts`, integration specs under `test/integration/`, E2E bot specs under `test/e2e/`)
 - **Code Quality:** ESLint 9 (flat config), Prettier 3
-- **Vector DB:** `@pinecone-database/pinecone`
 - **Telegram MTProto:** `telegram` (for client-mode features, separate from bot)
 - **Observability:** `@opentelemetry/*` (OTLP traces/metrics/logs to Grafana Cloud; bootstrapped via a `node --import` preload)
-- **Other notable:** `canvas`, `sharp`, `cheerio`, `youtube-transcript-plus`, `googleapis`, `twilio`, `yahoo-finance2`, `octokit`, `vitepress` (docs)
+- **Other notable:** `canvas`, `sharp`, `cheerio`, `youtube-transcript-plus`, `googleapis`, `octokit`, `vitepress` (docs)
 
 ### Code Formatting
 - **Prettier:** 200 char line width, single quotes, trailing commas, **semicolons required**
@@ -715,7 +714,6 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 | `open-weather-map`     | Weather (one provider)                     |
 | `openai`               | OpenAI API helpers                         |
 | `opensky`              | Flight tracking                            |
-| `pinecone`             | Vector DB                                  |
 | `polymarket`           | Prediction markets                         |
 | `rain-radar`           | Rain radar imagery                         |
 | `scores-365`           | Football live scores                       |
@@ -725,13 +723,11 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 | `telegram-scraper`     | Scrapes public channel posts via t.me/s web preview (no API key) |
 | `tenor`                | GIF search                                 |
 | `tiktok`               | TikTok scraping (RapidAPI)                 |
-| `twilio`               | SMS/voice                                  |
 | `twitter`              | Twitter API v2                             |
 | `twitter-scraper`      | Key-less X/Twitter scraper (anonymous GraphQL + fallback) |
 | `weather`              | Weather aggregator                         |
 | `weather-api`          | weatherapi.com                             |
 | `xai`                  | xAI (Grok) API                             |
-| `yahoo-finance`        | Equity quotes                              |
 | `youtube`              | YouTube transcript + scraping              |
 | `youtube-v3`           | YouTube Data API v3                        |
 
@@ -767,7 +763,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 - `GRAFANA_OTLP_INSTANCE_ID` + `GRAFANA_OTLP_TOKEN` — used to build the OTLP Basic auth header **in code** (avoids the fragile `OTEL_EXPORTER_OTLP_HEADERS` parsing).
 - `OTEL_DEBUG=true` — logs OTLP export attempts/errors while troubleshooting.
 
-Everything else is feature-specific (Spotify, GitHub App, Google services, Twilio, Pinecone, RapidAPI, etc.) and only needed if you exercise the corresponding tools.
+Everything else is feature-specific (Spotify, GitHub App, Google services, RapidAPI, etc.) and only needed if you exercise the corresponding tools.
 
 ### Date Handling
 
