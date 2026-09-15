@@ -5,7 +5,6 @@ import { provideTelegramBot } from '@services/telegram';
 import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
-import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
 import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as GAME_PRICE_WATCHER_DB_NAME } from '@shared/game-price-watcher';
 import { DB_NAME as GAME_RELEASES_DB_NAME } from '@shared/game-releases';
@@ -30,7 +29,6 @@ export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [
     TRAINER_DB_NAME,
     COACH_DB_NAME,
-    COOKER_DB_NAME,
     WOLT_DB_NAME,
     WORLDLY_DB_NAME,
     REMINDERS_DB_NAME,
