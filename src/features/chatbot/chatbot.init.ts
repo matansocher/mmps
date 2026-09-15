@@ -12,7 +12,7 @@ import { DB_NAME as GAME_RELEASES_DB_NAME } from '@shared/game-releases';
 import { DB_NAME as HOTEL_WATCHER_DB_NAME } from '@shared/hotel-watcher';
 import { DB_NAME as MEET_FRIENDS_DB_NAME } from '@shared/meet-friends';
 import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
-import { ensureReminderIndexes, DB_NAME as REMINDERS_DB_NAME } from '@shared/reminders';
+import { ensureReminderIndexes } from '@shared/reminders';
 import { ensureDigestDeliveryIndexes, ensurePendingPostIndexes, DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
 import { DB_NAME as SPOTIFY_FOLLOWER_DB_NAME } from '@shared/spotify-follower';
 import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
@@ -33,7 +33,6 @@ export async function initChatbot(app: Express): Promise<void> {
     COOKER_DB_NAME,
     WOLT_DB_NAME,
     WORLDLY_DB_NAME,
-    REMINDERS_DB_NAME,
     POLYMARKET_DB_NAME,
     SOCIAL_FOLLOWER_DB_NAME,
     SPOTIFY_FOLLOWER_DB_NAME,
