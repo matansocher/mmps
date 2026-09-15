@@ -15,7 +15,7 @@ import { cwd, env } from 'node:process';
 // [sourceDb, sourceCollection, targetCollectionInChatbot]
 const MOVES = [
   ['Reminders', 'Reminders', 'Reminders'],
-  ['CalendarEvents', 'events', 'events'],
+  ['CalendarEvents', 'events', 'Events'],
   ['Cooker', 'Recipe', 'Recipe'],
   ['Friends', 'Friends', 'Friends'],
   ['MeetFriends', 'MeetFriends', 'MeetFriends'],
