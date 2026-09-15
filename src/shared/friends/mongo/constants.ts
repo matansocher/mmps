@@ -1,1 +1,1 @@
-export const DB_NAME = 'Friends';
+export const DB_NAME = 'Chatbot';
