@@ -4,7 +4,7 @@ import type { CreateSubscriptionData, Subscription, UpdateSubscriptionData } fro
 import { DB_NAME } from './constants';
 
 function getCollection() {
-  return getMongoCollection<Subscription>(DB_NAME, 'Subscription');
+  return getMongoCollection<Subscription>(DB_NAME, 'PolymarketSubscription');
 }
 
 export async function getActiveSubscriptions(): Promise<Subscription[]> {

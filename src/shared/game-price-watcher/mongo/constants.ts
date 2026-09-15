@@ -1,1 +1,1 @@
-export const DB_NAME = 'GamePriceWatcher';
+export const DB_NAME = 'Chatbot';

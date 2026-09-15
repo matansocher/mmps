@@ -5,13 +5,8 @@ import { provideTelegramBot } from '@services/telegram';
 import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
 import { registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
-import { DB_NAME as GAME_PRICE_WATCHER_DB_NAME } from '@shared/game-price-watcher';
-import { DB_NAME as HOTEL_WATCHER_DB_NAME } from '@shared/hotel-watcher';
-import { DB_NAME as POLYMARKET_DB_NAME } from '@shared/polymarket-follower';
 import { ensureReminderIndexes } from '@shared/reminders';
-import { ensureDigestDeliveryIndexes, ensurePendingPostIndexes, DB_NAME as SOCIAL_FOLLOWER_DB_NAME } from '@shared/social-follower';
-import { DB_NAME as SPOTIFY_FOLLOWER_DB_NAME } from '@shared/spotify-follower';
-import { DB_NAME as TRAINER_DB_NAME } from '@shared/trainer';
+import { ensureDigestDeliveryIndexes, ensurePendingPostIndexes } from '@shared/social-follower';
 import { ensureTransferTrackerIndexes } from '@shared/transfer-tracker';
 import { DB_NAME as WOLT_DB_NAME } from '@shared/wolt';
 import { DB_NAME as WORLDLY_DB_NAME } from '@shared/worldly';
@@ -24,15 +19,9 @@ import { ensureSecretaryMessageIndexes, SecretaryActionService, SecretaryMessage
 
 export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [
-    TRAINER_DB_NAME,
     COACH_DB_NAME,
     WOLT_DB_NAME,
     WORLDLY_DB_NAME,
-    POLYMARKET_DB_NAME,
-    SOCIAL_FOLLOWER_DB_NAME,
-    SPOTIFY_FOLLOWER_DB_NAME,
-    GAME_PRICE_WATCHER_DB_NAME,
-    HOTEL_WATCHER_DB_NAME,
     USAGE_DB_NAME,
   ];
   await Promise.all([...mongoDbNames.map(async (mongoDbName) => createMongoConnection(mongoDbName))]);

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { startMongoContainer, clearCollection, stopMongoContainer } from './helpers/mongo-container';
 import { addExercise, getTodayExercise, getExercises } from '@shared/trainer/mongo/exercise.repository';
+import { DB_NAME } from '@shared/trainer/mongo/constants';
 
-const DB_NAME = 'Trainer';
 const COLLECTION_NAME = 'Exercise';
 
 describe('trainer exercise repository', () => {

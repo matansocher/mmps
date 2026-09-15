@@ -9,22 +9,20 @@ import { cwd, env } from 'node:process';
 //   MONGO_DB_URL="<production-uri>" node src/core/mongo/scripts/consolidate-into-chatbot.mjs
 //
 // Idempotent: documents are copied with replaceOne upserts keyed on _id, so re-running is safe.
-// Only the collision-free "Easy" databases are handled here; the generic-collection-name
-// databases (Subscription/Watch/User) are migrated separately.
+// These databases share generic collection names (Subscription/Watch), so each source
+// collection is copied into a uniquely named target collection in `Chatbot`.
 
 // [sourceDb, sourceCollection, targetCollectionInChatbot]
 const MOVES = [
-  ['Reminders', 'Reminders', 'Reminders'],
-  ['CalendarEvents', 'events', 'Events'],
-  ['Cooker', 'Recipe', 'Recipe'],
-  ['Friends', 'Friends', 'Friends'],
-  ['MeetFriends', 'MeetFriends', 'MeetFriends'],
-  ['Secretary', 'Messages', 'Messages'],
-  ['Secretary', 'Actions', 'Actions'],
-  ['TransferTracker', 'PendingRumour', 'PendingRumour'],
-  ['TransferTracker', 'SentRumour', 'SentRumour'],
-  ['TransferTracker', 'Cursor', 'Cursor'],
-  ['GameReleases', 'Follow', 'Follow'],
+  ['SocialFollower', 'Subscription', 'SocialSubscription'],
+  ['SocialFollower', 'PendingPost', 'PendingPost'],
+  ['SocialFollower', 'DigestDelivery', 'DigestDelivery'],
+  ['SpotifyFollower', 'Subscription', 'SpotifySubscription'],
+  ['PolymarketFollower', 'Subscription', 'PolymarketSubscription'],
+  ['GamePriceWatcher', 'Watch', 'GamePriceWatch'],
+  ['HotelWatcher', 'Watch', 'HotelWatch'],
+  ['Trainer', 'UserPreferences', 'UserPreferences'],
+  ['Trainer', 'Exercise', 'Exercise'],
 ];
 
 const TARGET_DB = 'Chatbot';

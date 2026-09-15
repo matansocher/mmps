@@ -4,7 +4,7 @@ import type { CreateSocialSubscriptionData, SocialPlatform, SocialSubscription, 
 import { DB_NAME } from './constants';
 
 function getCollection() {
-  return getMongoCollection<SocialSubscription>(DB_NAME, 'Subscription');
+  return getMongoCollection<SocialSubscription>(DB_NAME, 'SocialSubscription');
 }
 
 export async function getActiveSubscriptions(platform?: SocialPlatform): Promise<SocialSubscription[]> {

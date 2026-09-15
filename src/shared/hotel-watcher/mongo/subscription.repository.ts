@@ -4,7 +4,7 @@ import type { CreateHotelWatchData, HotelWatch } from '../types';
 import { DB_NAME } from './constants';
 
 function getCollection() {
-  return getMongoCollection<HotelWatch>(DB_NAME, 'Watch');
+  return getMongoCollection<HotelWatch>(DB_NAME, 'HotelWatch');
 }
 
 export async function getActiveWatches(): Promise<HotelWatch[]> {

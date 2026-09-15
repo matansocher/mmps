@@ -1,1 +1,1 @@
-export const DB_NAME = 'HotelWatcher';
+export const DB_NAME = 'Chatbot';
