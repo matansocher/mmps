@@ -6,7 +6,6 @@ import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
 import { DB_NAME as CALENDAR_EVENTS_DB_NAME, registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { DB_NAME as COOKER_DB_NAME } from '@shared/cooker';
-import { DB_NAME as FRIENDS_DB_NAME } from '@shared/friends';
 import { DB_NAME as GAME_PRICE_WATCHER_DB_NAME } from '@shared/game-price-watcher';
 import { DB_NAME as GAME_RELEASES_DB_NAME } from '@shared/game-releases';
 import { DB_NAME as HOTEL_WATCHER_DB_NAME } from '@shared/hotel-watcher';
@@ -39,7 +38,6 @@ export async function initChatbot(app: Express): Promise<void> {
     SPOTIFY_FOLLOWER_DB_NAME,
     TRANSFER_TRACKER_DB_NAME,
     CALENDAR_EVENTS_DB_NAME,
-    FRIENDS_DB_NAME,
     GAME_RELEASES_DB_NAME,
     GAME_PRICE_WATCHER_DB_NAME,
     HOTEL_WATCHER_DB_NAME,
