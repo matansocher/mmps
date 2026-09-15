@@ -8,7 +8,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
-import { getPrompt } from './mongo';
+import { CHILLI_PROMPT } from './chilli.config';
 
 function buildUserContext(chatId: number): string {
   if (chatId === MY_USER_ID) {
@@ -29,11 +29,9 @@ export class ChilliService {
 
   async processMessage(message: string, chatId: number): Promise<string> {
     try {
-      const prompt = await getPrompt();
-
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const userContext = buildUserContext(chatId);
-      const system = `${prompt}\n\n---\n${userContext}\n\nהזמן הנוכחי: ${formattedTime} (${DEFAULT_TIMEZONE})`;
+      const system = `${CHILLI_PROMPT}\n\n---\n${userContext}\n\nהזמן הנוכחי: ${formattedTime} (${DEFAULT_TIMEZONE})`;
 
       const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
       const usageHandler = new UsageCallbackHandler();
