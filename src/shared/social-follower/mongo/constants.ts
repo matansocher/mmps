@@ -1,4 +1,4 @@
-export const DB_NAME = 'SocialFollower';
+export const DB_NAME = 'Chatbot';
 
 // Explicit retention for collected-but-undelivered posts. A backlog that outlives this
 // window (persistent delivery outage) is expired by Mongo instead of growing without bound.

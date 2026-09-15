@@ -4,7 +4,7 @@ import type { CreateGamePriceWatchData, GamePriceWatch } from '../types';
 import { DB_NAME } from './constants';
 
 function getCollection() {
-  return getMongoCollection<GamePriceWatch>(DB_NAME, 'Watch');
+  return getMongoCollection<GamePriceWatch>(DB_NAME, 'GamePriceWatch');
 }
 
 export async function getActiveWatches(): Promise<GamePriceWatch[]> {

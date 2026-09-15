@@ -1,1 +1,1 @@
-export const DB_NAME = 'SpotifyFollower';
+export const DB_NAME = 'Chatbot';
