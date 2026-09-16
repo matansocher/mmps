@@ -1,8 +1,10 @@
-import { format, subDays } from 'date-fns';
+import { format, startOfWeek, subDays } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
+import { InputFile } from 'grammy';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
-import { formatNumber, getErrorMessage, Logger } from '@core/utils';
+import { deleteFile, formatNumber, getErrorMessage, Logger } from '@core/utils';
+import { generateLineChartImage } from '@services/chart';
 import { sendShortenedMessage } from '@services/telegram';
 import { aggregateUsage } from '@shared/ai';
 import type { UsageAggregateRow } from '@shared/ai';
@@ -11,13 +13,15 @@ const logger = new Logger('chatbot:scheduler:usage-summary');
 
 const LOOKBACK_DAYS = 7;
 const PREVIOUS_WEEKS = 3;
+// How far back the weekly-spend trend chart looks. Bounded by the usage records' 90-day TTL.
+const TREND_LOOKBACK_DAYS = 84; // 12 weeks
 
 export async function usageSummary(bot: Bot): Promise<void> {
   try {
     const to = new Date();
     const from = subDays(to, LOOKBACK_DAYS);
-    const comparisonFrom = subDays(to, LOOKBACK_DAYS * (PREVIOUS_WEEKS + 1));
-    const rows = await aggregateUsage({ from: comparisonFrom, to });
+    const trendFrom = subDays(to, TREND_LOOKBACK_DAYS);
+    const rows = await aggregateUsage({ from: trendFrom, to });
 
     const weekStartDay = dayKey(from);
     const thisWeekRows = rows.filter((row) => row.day >= weekStartDay);
@@ -27,11 +31,63 @@ export async function usageSummary(bot: Bot): Promise<void> {
       return;
     }
 
-    const message = buildUsageSummaryMessage(rows, thisWeekRows, weekStartDay, from, to);
+    // The weekly-spend trend ships first as its own chart image; the detailed breakdown follows as text.
+    await sendWeeklySpendChart(bot, rows);
+
+    // The text breakdown covers this week vs the previous PREVIOUS_WEEKS, so only those rows matter here.
+    const comparisonFrom = subDays(to, LOOKBACK_DAYS * (PREVIOUS_WEEKS + 1));
+    const comparisonFromDay = dayKey(comparisonFrom);
+    const comparisonRows = rows.filter((row) => row.day >= comparisonFromDay);
+    const message = buildUsageSummaryMessage(comparisonRows, thisWeekRows, weekStartDay, from, to);
     await sendShortenedMessage(bot, MY_USER_ID, message, { parse_mode: 'Markdown' });
   } catch (err) {
     logger.error(`Failed to send weekly usage summary: ${getErrorMessage(err)}`);
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create the weekly usage summary.').catch(() => {});
+  }
+}
+
+type WeeklySpend = { readonly weekStart: Date; readonly cost: number };
+
+// Buckets per-day usage rows into weeks keyed by the week's first day (in DEFAULT_TIMEZONE), summing cost.
+function buildWeeklySpend(rows: UsageAggregateRow[]): WeeklySpend[] {
+  const byWeek = new Map<string, number>();
+  for (const row of rows) {
+    const day = toZonedTime(`${row.day}T00:00:00`, DEFAULT_TIMEZONE);
+    const weekStartKey = format(startOfWeek(day), 'yyyy-MM-dd');
+    byWeek.set(weekStartKey, (byWeek.get(weekStartKey) ?? 0) + row.cost);
+  }
+  return [...byWeek.entries()].map(([key, cost]) => ({ weekStart: new Date(`${key}T00:00:00`), cost })).sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime());
+}
+
+// Sends the weekly spend as a line chart image (x = first day of each week, y = USD spent that week).
+// On any failure it silently skips the chart — the text breakdown still follows.
+async function sendWeeklySpendChart(bot: Bot, rows: UsageAggregateRow[]): Promise<void> {
+  const weekly = buildWeeklySpend(rows);
+  if (weekly.length < 2) {
+    return; // A single point is not a meaningful trend line.
+  }
+
+  let chartPath: string | null = null;
+  try {
+    const total = weekly.reduce((sum, entry) => sum + entry.cost, 0);
+    chartPath = await generateLineChartImage({
+      title: 'AI weekly spend',
+      headline: `$${total.toFixed(2)} total`,
+      fileNamePrefix: 'usage',
+      yAxisFormatter: (value) => `$${value.toFixed(2)}`,
+      points: weekly.map((entry, index) => ({
+        x: index,
+        y: entry.cost,
+        label: format(entry.weekStart, 'MMM d'),
+      })),
+    });
+    await bot.api.sendPhoto(MY_USER_ID, new InputFile(chartPath));
+  } catch (err) {
+    logger.error(`Failed to send weekly spend chart: ${getErrorMessage(err)}`);
+  } finally {
+    if (chartPath) {
+      await deleteFile(chartPath).catch(() => {});
+    }
   }
 }
 
