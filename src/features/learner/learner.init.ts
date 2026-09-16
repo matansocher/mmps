@@ -17,8 +17,8 @@ export async function initLearner(app: Express): Promise<void> {
   await ensureLearnerDeliveryIndexes().catch((err) => logger.error(`Failed to ensure indexes: ${err}`));
 
   const bot = provideTelegramBot(BOT_CONFIG);
-  const controller = new LearnerController(bot);
   const scheduler = new LearnerSchedulerService();
+  const controller = new LearnerController(bot, scheduler);
   controller.init();
   scheduler.init();
 
