@@ -1,8 +1,10 @@
 import type { Express, Request, Response } from 'express';
 import express from 'express';
 import { getErrorMessage, Logger } from '@core/utils';
+import { notify } from '@services/notifier';
+import type { TelegramBotConfig, UserDetails } from '@services/telegram';
 import { getPlayer, mergeSync, recordResult, setFavorites } from '../mongo';
-import { getRequestPlayer, mindloopAuthMiddleware } from './auth.middleware';
+import { getRequestPlayer, type MindloopAuthUser, mindloopAuthMiddleware } from './auth.middleware';
 import {
   type MindloopApiError,
   type MindloopPlayerResponse,
@@ -13,6 +15,22 @@ import {
 } from './dto';
 
 const logger = new Logger('mindloop:api');
+
+const NOTIFY_SOURCE: TelegramBotConfig = {
+  id: 'MINDLOOP',
+  name: 'Mindloop 🧠',
+  token: 'NOTIFIER_TELEGRAM_BOT_TOKEN',
+};
+
+function toUserDetails(user: MindloopAuthUser): UserDetails {
+  return {
+    chatId: user.telegramUserId,
+    telegramUserId: user.telegramUserId,
+    firstName: user.firstName ?? '',
+    lastName: user.lastName ?? '',
+    username: user.username ?? '',
+  };
+}
 
 export function registerMindloopApiRoutes(app: Express): void {
   app.use('/api/mindloop', express.json({ limit: '256kb' }));
@@ -32,6 +50,7 @@ export function registerMindloopApiRoutes(app: Express): void {
     }
     try {
       const player = await getPlayer(user.telegramUserId);
+      notify(NOTIFY_SOURCE, { action: 'app_opened' }, toUserDetails(user));
       res.json({ player: toPlayerDto(player) });
     } catch (err) {
       logger.error(`Failed to load player ${user.telegramUserId}: ${getErrorMessage(err)}`);
@@ -53,6 +72,7 @@ export function registerMindloopApiRoutes(app: Express): void {
     }
     try {
       const player = await recordResult(user.telegramUserId, body);
+      notify(NOTIFY_SOURCE, { action: 'game_played', game: body.gameId, score: body.score }, toUserDetails(user));
       res.json({ player: toPlayerDto(player) });
     } catch (err) {
       logger.error(`Failed to record result for ${user.telegramUserId}: ${getErrorMessage(err)}`);
