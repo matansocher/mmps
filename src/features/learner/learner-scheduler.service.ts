@@ -46,19 +46,38 @@ export class LearnerSchedulerService {
     if (deliveries.some((delivery) => delivery.slot === slot)) return; // already handled this slot today
     if (slot > 0 && !deliveries.some((delivery) => delivery.slot === slot - 1 && delivery.answered)) return; // previous slot unanswered → skip
 
+    await this.deliverBite(chatId, slot);
+  }
+
+  // Send the next bite for a given daily slot. Idempotent: claiming the slot is a
+  // compare-and-swap, so concurrent ticks (or an instant /start delivery racing the
+  // 11:15 tick) converge on a single message. Returns whether a bite was sent.
+  async deliverBite(chatId: number, slot: number): Promise<boolean> {
+    const dateKey = localDateKey();
+
     const doc = await getProgress(chatId);
     const progress = doc ?? { states: {}, streak: 0, lastStudyDate: null, updatedAt: null };
     const biteId = selectNextBite(progress);
-    if (!biteId) return; // nothing due / nothing new
+    if (!biteId) return false; // nothing due / nothing new
 
     const claimed = await claimSlot(chatId, dateKey, slot, biteId);
-    if (!claimed) return; // another run beat us to this slot
+    if (!claimed) return false; // another run beat us to this slot
 
     const message = buildBiteMessage(biteId);
-    if (!message) return;
+    if (!message) return false;
 
     const sent = await this.bot.api.sendMessage(chatId, message.text, { reply_markup: message.keyboard, parse_mode: 'Markdown' });
     await setDeliveryMessageId(chatId, dateKey, slot, sent.message_id);
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.REMINDER, slot: `${slot + 1}` });
+    return true;
+  }
+
+  // On subscribe, deliver the first bite right away so a new user does not wait
+  // until the next daily tick. Claims slot 0, so the 11:15 tick will skip it.
+  async sendFirstBiteNow(chatId: number): Promise<void> {
+    const dateKey = localDateKey();
+    const deliveries = await getDeliveriesForDay(chatId, dateKey);
+    if (deliveries.length) return; // already got a bite today (tick or a prior /start)
+    await this.deliverBite(chatId, 0);
   }
 }

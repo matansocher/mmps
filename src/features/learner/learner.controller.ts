@@ -7,6 +7,7 @@ import { getCatalogEntry } from './learner-catalog';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './learner.config';
 import { selectNextBite } from './learner-scheduler';
 import { applyRatingServerSide, getProgress, markAnsweredByMessage, upsertSubscription } from './mongo';
+import type { LearnerSchedulerService } from './learner-scheduler.service';
 import type { LearnerRating } from './types';
 
 const LEARNER_APP_URL = `${MMPS_BASE_URL}/learner`;
@@ -39,7 +40,10 @@ export function buildBiteMessage(biteId: string): { readonly text: string; reado
 export class LearnerController {
   private readonly logger = new Logger('learner:controller');
 
-  constructor(private readonly bot: Bot) {}
+  constructor(
+    private readonly bot: Bot,
+    private readonly scheduler: LearnerSchedulerService,
+  ) {}
 
   init(): void {
     const { START, TODAY, APP, STOP } = BOT_CONFIG.commands;
@@ -63,6 +67,8 @@ export class LearnerController {
     const keyboard = new InlineKeyboard().webApp('🚀 Open the app', LEARNER_APP_URL);
     await ctx.reply(text, { reply_markup: keyboard });
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START }, userDetails);
+    // Deliver the first bite right away so a new subscriber doesn't wait for the next daily tick.
+    await this.scheduler.sendFirstBiteNow(chatId).catch((err) => this.logger.error(getErrorMessage(err)));
   }
 
   private async todayHandler(ctx: Context): Promise<void> {
