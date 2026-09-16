@@ -1,8 +1,9 @@
 import { BOT_CONFIG } from '@src/features/chatbot/chatbot.config';
 import { ChatbotController } from '@src/features/chatbot/chatbot.controller';
+import { FILE_SUMMARY_MAX_BYTES } from '@src/features/chatbot/file-summary';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { notify } from '@services/notifier';
-import { buildTextMessageUpdate, createTestBot, DEFAULT_USER_ID, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
+import { buildDocumentMessageUpdate, buildTextMessageUpdate, createTestBot, DEFAULT_USER_ID, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
 
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
 
@@ -11,6 +12,7 @@ const NON_OWNER_USER_ID = DEFAULT_USER_ID + 1;
 describe('ChatbotController E2E', () => {
   let testBot: TestBot;
   let processMessage: ReturnType<typeof vi.fn>;
+  let prepareSummary: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -20,7 +22,9 @@ describe('ChatbotController E2E', () => {
     const chatbotService = { processMessage } as any;
     const secretaryMessageService = { storeMessage: vi.fn(), hasSpokenWithChatToday: vi.fn(), buildDailySummaries: vi.fn(), clearMessagesBefore: vi.fn() } as any;
     const secretaryActionService = { execute: vi.fn() } as any;
-    const controller = new ChatbotController(chatbotService, testBot.bot, secretaryMessageService, secretaryActionService);
+    prepareSummary = vi.fn();
+    const fileSummaryService = { prepareSummary } as any;
+    const controller = new ChatbotController(chatbotService, testBot.bot, secretaryMessageService, secretaryActionService, fileSummaryService);
     controller.init();
   });
 
@@ -67,5 +71,20 @@ describe('ChatbotController E2E', () => {
 
     expect(processMessage).toHaveBeenCalled();
     expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('rejects oversized documents before summarization', async () => {
+    await simulateUpdate(
+      testBot,
+      buildDocumentMessageUpdate({
+        filename: 'large.pdf',
+        mimeType: 'application/pdf',
+        fileSize: FILE_SUMMARY_MAX_BYTES + 1,
+      }),
+    );
+
+    expect(prepareSummary).not.toHaveBeenCalled();
+    expect(processMessage).not.toHaveBeenCalled();
+    expect(testBot.transport.textsSent()[0]).toContain('too large');
   });
 });
