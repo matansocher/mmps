@@ -2,7 +2,9 @@ import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
 import { RatingBar } from '../components/RatingBar';
+import { ReadingProgressBar } from '../components/ReadingProgressBar';
 import { useProgress } from '../hooks/useProgress';
+import { useReadingProgress } from '../hooks/useReadingProgress';
 import { GUIDES, getBite, nextBiteInGuide } from '../lib/bites';
 import { hasQuiz } from '../lib/quizzes';
 
@@ -11,6 +13,7 @@ export function BitePage() {
   const navigate = useNavigate();
   const { progress, rateBite, markRead } = useProgress();
   const bite = useMemo(() => getBite(biteId), [biteId]);
+  const readingPercent = useReadingProgress([biteId]);
 
   useEffect(() => {
     if (bite) markRead(bite.id);
@@ -70,6 +73,8 @@ export function BitePage() {
           </Link>
         </div>
       ) : null}
+
+      <ReadingProgressBar percent={readingPercent} />
     </div>
   );
 }

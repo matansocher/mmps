@@ -556,6 +556,35 @@ a { color: var(--accent-blue); }
   .today-hero h1 { font-size: 20px; }
 }
 
+/* ===== Reading progress (scroll spy) ===== */
+.reading-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding: 0 0 env(safe-area-inset-bottom);
+  background: linear-gradient(to top, color-mix(in srgb, var(--bg) 92%, transparent), transparent);
+  pointer-events: none;
+}
+.reading-progress-track {
+  height: 4px;
+  width: 100%;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  overflow: hidden;
+}
+.reading-progress-fill {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(90deg, var(--accent-strong), var(--accent), var(--accent-soft));
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--accent) 70%, transparent);
+  transition: transform 0.12s linear;
+  will-change: transform;
+}
+
 /* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -565,4 +594,5 @@ a { color: var(--accent-blue); }
     scroll-behavior: auto !important;
   }
   .stagger > * { animation: none; opacity: 1; transform: none; }
+  .reading-progress-fill { transition: none; }
 }
