@@ -10,6 +10,7 @@ import { getReminderById, updateReminderStatus } from '@shared/reminders';
 import { addExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
+import { FileSummaryService, getFileSummaryRejection } from './file-summary';
 import {
   describeSnoozeOption,
   parseBirthdayCallbackData,
@@ -45,6 +46,7 @@ export class ChatbotController {
     private readonly bot: Bot,
     private readonly secretaryMessageService: SecretaryMessageService,
     private readonly secretaryActionService: SecretaryActionService,
+    private readonly fileSummaryService: FileSummaryService,
   ) {}
 
   init(): void {
@@ -55,6 +57,7 @@ export class ChatbotController {
     this.bot.callbackQuery(new RegExp(`^${ACTION_CALLBACK_PREFIX}`), (ctx) => this.secretaryActionHandler(ctx));
     this.bot.on('message:text', (ctx) => this.messageHandler(ctx));
     this.bot.on('message:photo', (ctx) => this.photoHandler(ctx));
+    this.bot.on('message:document', (ctx) => this.documentHandler(ctx));
     this.bot.on(['message:audio', 'message:voice'], (ctx) => this.audioHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
   }
@@ -289,12 +292,12 @@ export class ChatbotController {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const { message: replyText, toolResults } = await this.chatbotService.processMessage(prompt, chatId);
-      await this.handleBotResponse(chatId, replyText, toolResults);
+      const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId);
+      await this.handleBotResponse(chatId, replyText);
     });
   }
 
-  private async handleBotResponse(chatId: number, replyText: string, toolResults: any[]): Promise<void> {
+  private async handleBotResponse(chatId: number, replyText: string): Promise<void> {
     this.logger.log(`bot response for chatId ${chatId}: ${replyText}`);
     await sendRichMessage(this.bot, chatId, replyText);
   }
@@ -326,11 +329,43 @@ export class ChatbotController {
       const audioFileLocalPath = await downloadFile(this.bot, audio.file_id, LOCAL_FILES_PATH);
 
       const transcribedText = await getTranscriptFromAudio(audioFileLocalPath);
-      const { message: replyText, toolResults } = await this.chatbotService.processMessage(transcribedText, chatId);
+      const { message: replyText } = await this.chatbotService.processMessage(transcribedText, chatId);
 
-      await this.handleBotResponse(chatId, replyText, toolResults);
+      await this.handleBotResponse(chatId, replyText);
 
       deleteFile(audioFileLocalPath);
+    });
+  }
+
+  private async documentHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
+    const { chatId, messageId, file, text } = getMessageData(ctx);
+    if (!file?.file_id) return;
+
+    const metadata = {
+      filename: file.file_name ?? 'telegram-document',
+      mimeType: file.mime_type ?? '',
+      sizeBytes: file.file_size ?? 0,
+    };
+    const rejection = getFileSummaryRejection(metadata);
+    if (rejection) {
+      await ctx.reply(rejection.message);
+      return;
+    }
+
+    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
+    await messageLoaderService.handleMessageWithLoader(async () => {
+      let documentLocalPath = '';
+      try {
+        documentLocalPath = await downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
+        const prepared = await this.fileSummaryService.prepareSummary({ ...metadata, localPath: documentLocalPath, caption: text });
+        const { message } = await this.chatbotService.processMessage(prepared.prompt, chatId, { images: prepared.images });
+        await sendRichMessage(this.bot, chatId, message);
+      } finally {
+        if (documentLocalPath) {
+          await deleteFile(documentLocalPath);
+        }
+      }
     });
   }
 }

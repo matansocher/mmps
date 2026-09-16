@@ -23,6 +23,19 @@ export type TextMessageOptions = {
   readonly chat?: FakeChatOptions;
 };
 
+export type DocumentMessageOptions = {
+  readonly chatId?: number;
+  readonly userId?: number;
+  readonly filename: string;
+  readonly mimeType: string;
+  readonly fileSize: number;
+  readonly fileId?: string;
+  readonly caption?: string;
+  readonly messageId?: number;
+  readonly user?: FakeUserOptions;
+  readonly chat?: FakeChatOptions;
+};
+
 export type CallbackQueryOptions = {
   readonly chatId?: number;
   readonly userId?: number;
@@ -93,6 +106,33 @@ export function buildTextMessageUpdate(opts: TextMessageOptions): Update {
     const commandLength = opts.text.split(' ')[0].length;
     (message as any).entities = [{ type: 'bot_command', offset: 0, length: commandLength }];
   }
+
+  return {
+    update_id: updateIdCounter++,
+    message,
+  } as Update;
+}
+
+export function buildDocumentMessageUpdate(opts: DocumentMessageOptions): Update {
+  const chatId = opts.chatId ?? opts.chat?.chatId ?? DEFAULT_CHAT_ID;
+  const userId = opts.userId ?? opts.user?.userId ?? DEFAULT_USER_ID;
+  const from = buildUser({ ...opts.user, userId });
+  const chat = buildChat({ ...opts.chat, chatId });
+
+  const message: Message = {
+    message_id: opts.messageId ?? messageIdCounter++,
+    date: Math.floor(Date.now() / 1000),
+    chat,
+    from,
+    caption: opts.caption,
+    document: {
+      file_id: opts.fileId ?? 'document-file-id',
+      file_unique_id: 'document-file-unique-id',
+      file_name: opts.filename,
+      mime_type: opts.mimeType,
+      file_size: opts.fileSize,
+    },
+  } as Message;
 
   return {
     update_id: updateIdCounter++,

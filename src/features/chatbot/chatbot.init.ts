@@ -15,6 +15,7 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
+import { FileSummaryService } from './file-summary';
 import { ensureSecretaryMessageIndexes, SecretaryActionService, SecretaryMessageService } from './secretary';
 
 export async function initChatbot(app: Express): Promise<void> {
@@ -44,7 +45,8 @@ export async function initChatbot(app: Express): Promise<void> {
   const chatbotService = new ChatbotService(checkpointer);
   const secretaryMessageService = new SecretaryMessageService();
   const secretaryActionService = new SecretaryActionService();
-  const chatbotController = new ChatbotController(chatbotService, bot, secretaryMessageService, secretaryActionService);
+  const fileSummaryService = new FileSummaryService();
+  const chatbotController = new ChatbotController(chatbotService, bot, secretaryMessageService, secretaryActionService, fileSummaryService);
   const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot, secretaryMessageService);
 
   chatbotController.init();
