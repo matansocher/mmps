@@ -1,10 +1,8 @@
 import type { Bot } from 'grammy';
 import { ObjectId } from 'mongodb';
-import { deleteFile } from '@core/utils';
 import { sendRichMessage } from '@services/telegram';
 import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather, TomorrowForecast } from '@services/weather';
-import { generateWeatherChartImage } from '@services/weather-chart';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
@@ -13,12 +11,10 @@ import { dailySummary } from './daily-summary';
 
 vi.mock('@services/telegram', () => ({ sendRichMessage: vi.fn() }));
 vi.mock('@services/weather', () => ({ getTomorrowHourlyForecast: vi.fn() }));
-vi.mock('@services/weather-chart', () => ({ generateWeatherChartImage: vi.fn() }));
 vi.mock('@shared/calendar-events', () => ({ getTomorrowEvents: vi.fn() }));
 vi.mock('@shared/reminders', () => ({ getPendingRemindersDueOnOrBefore: vi.fn() }));
-vi.mock('@core/utils', async (importOriginal) => ({ ...(await importOriginal<typeof import('@core/utils')>()), deleteFile: vi.fn() }));
 
-const bot = { api: { sendMessage: vi.fn(), sendPhoto: vi.fn() } } as unknown as Bot;
+const bot = { api: { sendMessage: vi.fn() } } as unknown as Bot;
 
 function createHour(hour: number, temperature: number): HourlyWeather {
   return {
@@ -80,8 +76,6 @@ describe('dailySummary()', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([]);
-    vi.mocked(generateWeatherChartImage).mockResolvedValue('/tmp/weather.png');
-    vi.mocked(deleteFile).mockResolvedValue(undefined);
   });
 
   it('should fetch weather and calendar in parallel', async () => {
@@ -94,28 +88,25 @@ describe('dailySummary()', () => {
     expect(getTomorrowEvents).toHaveBeenCalledTimes(1);
   });
 
-  it('should send the weather as a chart image built from all hourly points', async () => {
-    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue({ ...createForecast(), hourly: [createHour(9, 20), ...createForecast().hourly] });
-    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
-
-    await dailySummary(bot);
-
-    expect(generateWeatherChartImage).toHaveBeenCalledTimes(1);
-    const options = vi.mocked(generateWeatherChartImage).mock.calls[0][0];
-    expect(options.points.map((point) => point.hour)).toEqual([9, 10, 14, 18, 22]);
-    expect(options.highlightHours).toEqual([10, 14, 18, 22]);
-    expect(vi.mocked(bot.api.sendPhoto)).toHaveBeenCalledTimes(1);
-  });
-
-  it('should not include the weather section in the text message', async () => {
+  it('should render the weather section as a table in the text message', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
 
     await dailySummary(bot);
 
     const message = lastSentMessage();
-    expect(message).not.toContain('Weather for tomorrow');
-    expect(message).not.toContain('| Temp |');
+    expect(message).toContain('**🌤 Weather for tomorrow**\n\n| Time | Temp | Conditions |');
+    expect(message).toContain('| 10:00 | 28°C | Sunny |');
+    expect(message).toContain('| 22:00 | 24°C | Sunny |');
+  });
+
+  it('should send the weather section first in the text message', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
+
+    await dailySummary(bot);
+
+    expect(lastSentMessage().startsWith('**🌤 Weather for tomorrow**')).toBe(true);
   });
 
   it('should render the calendar section as a table', async () => {
@@ -158,7 +149,7 @@ describe('dailySummary()', () => {
 
     const message = lastSentMessage();
     expect(message).not.toContain('Good night');
-    expect(message.startsWith('**📅 Calendar**')).toBe(true);
+    expect(message.startsWith('**🌤 Weather for tomorrow**')).toBe(true);
   });
 
   it('should separate every section heading from its table with a blank line', async () => {
@@ -172,28 +163,27 @@ describe('dailySummary()', () => {
     expect(message).toContain('**🎉 Birthdays**\n\n- 🎂');
   });
 
-  it('should fall back to the weather table when the chart fails to render', async () => {
+  it('should render the weather table with all four summary hours', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
-    vi.mocked(generateWeatherChartImage).mockRejectedValue(new Error('canvas down'));
 
     await dailySummary(bot);
 
-    expect(vi.mocked(bot.api.sendPhoto)).not.toHaveBeenCalled();
-    const weatherMessage = vi.mocked(sendRichMessage).mock.calls[0][2];
-    expect(weatherMessage).toContain('**🌤 Weather for tomorrow**\n\n| Time |');
-    expect(weatherMessage).toContain('| 10:00 | 28°C | Sunny |');
+    const message = lastSentMessage();
+    expect(message).toContain('**🌤 Weather for tomorrow**\n\n| Time |');
+    expect(message).toContain('| 10:00 | 28°C | Sunny |');
+    expect(message).toContain('| 14:00 | 31°C | Sunny |');
+    expect(message).toContain('| 18:00 | 29°C | Sunny |');
+    expect(message).toContain('| 22:00 | 24°C | Sunny |');
   });
 
-  it('should send the weather as a text table when there is no forecast', async () => {
+  it('should show the weather as not available when there is no forecast', async () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue({ ...createForecast(), hourly: [] });
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
 
     await dailySummary(bot);
 
-    expect(generateWeatherChartImage).not.toHaveBeenCalled();
-    expect(vi.mocked(bot.api.sendPhoto)).not.toHaveBeenCalled();
-    expect(vi.mocked(sendRichMessage).mock.calls[0][2]).toContain('**🌤 Weather for tomorrow**\n\nNot available');
+    expect(lastSentMessage()).toContain('**🌤 Weather for tomorrow**\n\nNot available');
   });
 
   it('should keep a multi-line event location on a single table row', async () => {
@@ -274,15 +264,6 @@ describe('dailySummary()', () => {
     await dailySummary(bot);
 
     expect(lastSentMessage()).toContain('| 2026-08-16 09:00 | Buy milk \\| eggs |');
-  });
-
-  it('should delete the generated chart image after sending it', async () => {
-    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
-    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
-
-    await dailySummary(bot);
-
-    expect(vi.mocked(deleteFile)).toHaveBeenCalledWith('/tmp/weather.png');
   });
 
   it('should still send a summary when fetching reminders fails', async () => {
