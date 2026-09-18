@@ -18,7 +18,8 @@ import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
 
-dotenv.config();
+// `.env.local` first so machine-specific values (LOCAL_ACTIVE_BOT_ID, PORT) win over the Doppler-generated `.env`.
+dotenv.config({ path: ['.env.local', '.env'], quiet: true });
 
 axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
 
