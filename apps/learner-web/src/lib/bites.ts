@@ -1,6 +1,7 @@
-import { BITES, CURRICULUM, GUIDES } from './bites.data';
+import { CURRICULUM, GUIDES, BITES as SOURCE_BITES } from './bites.data';
 import type { Bite, GuideId } from './types';
 
+const BITES = SOURCE_BITES.map((bite) => ({ ...bite, html: bite.html.replace(/<div class="next">[\s\S]*?<\/div>/g, '') }));
 const BY_ID = new Map<string, Bite>(BITES.map((b) => [b.id, b]));
 
 export { BITES, CURRICULUM, GUIDES };

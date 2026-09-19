@@ -1,5 +1,6 @@
 export type AppIconName =
   | 'ai-engineering'
+  | 'arrow-up'
   | 'book'
   | 'brain'
   | 'browse'
@@ -8,8 +9,10 @@ export type AppIconName =
   | 'fire'
   | 'fuzzy'
   | 'moon'
+  | 'map'
   | 'nope'
   | 'review'
+  | 'scenario'
   | 'sun'
   | 'system-design'
   | 'target'
@@ -37,6 +40,25 @@ export function AppIcon({ name, className, size = 24 }: AppIconProps) {
   };
 
   switch (name) {
+    case 'arrow-up':
+      return (
+        <svg {...commonProps}>
+          <path d="m6 10 6-6 6 6M12 4v16" />
+        </svg>
+      );
+    case 'map':
+      return (
+        <svg {...commonProps}>
+          <path d="m3.5 6 5-2.5 7 3 5-2.5v14l-5 2.5-7-3-5 2.5zM8.5 3.5v14M15.5 6.5v14" />
+        </svg>
+      );
+    case 'scenario':
+      return (
+        <svg {...commonProps}>
+          <path d="M6 3.5v17M6 6h8l-2.2 3L14 12H6M6 17h11" />
+          <circle cx="18" cy="17" r="2" />
+        </svg>
+      );
     case 'fire':
       return (
         <svg {...commonProps}>

@@ -35,7 +35,7 @@ export function ReviewPage() {
         reviewIds.map((id) => {
           const bite = getBite(id);
           if (!bite) return null;
-          return <BiteCard key={id} bite={bite} status={biteStatus(progress.states[id], now)} />;
+          return <BiteCard key={id} bite={bite} status={biteStatus(progress.states[id], now)} from="/review" />;
         })
       )}
     </div>

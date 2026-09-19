@@ -24,6 +24,19 @@ export type QuizQuestion = {
   readonly explanation: string;
 };
 
+export type ScenarioChoice = {
+  readonly label: string;
+  readonly feedback: string;
+  readonly recommended: boolean;
+};
+
+export type Scenario = {
+  readonly biteId: string;
+  readonly title: string;
+  readonly prompt: string;
+  readonly choices: ReadonlyArray<ScenarioChoice>;
+};
+
 // How the learner rated their recall of a bite.
 export type Rating = 'got_it' | 'fuzzy' | 'nope';
 

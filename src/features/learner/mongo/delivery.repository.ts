@@ -1,3 +1,4 @@
+import { MongoServerError } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { LEARNER_DB_NAME, LEARNER_DELIVERIES_COLLECTION, LEARNER_DELIVERY_TTL_DAYS } from '../constants';
 import type { LearnerDelivery, LearnerRating } from '../types';
@@ -22,7 +23,7 @@ export async function getDelivery(chatId: number, dateKey: string, slot: number)
   return getCollection().findOne({ _id: deliveryId(chatId, dateKey, slot) });
 }
 
-/** Idempotently claim a slot for the day. Returns the created delivery, or null if it already existed. */
+// Idempotently claim a slot for the day. Returns null only when another run already claimed it.
 export async function claimSlot(chatId: number, dateKey: string, slot: number, biteId: string): Promise<LearnerDelivery | null> {
   const now = new Date();
   const expireAt = new Date(now.getTime() + LEARNER_DELIVERY_TTL_DAYS * 24 * 60 * 60 * 1000);
@@ -42,10 +43,14 @@ export async function claimSlot(chatId: number, dateKey: string, slot: number, b
   try {
     await getCollection().insertOne(doc);
     return doc;
-  } catch {
-    // Duplicate key -> another run already claimed this slot.
-    return null;
+  } catch (err) {
+    if (err instanceof MongoServerError && err.code === 11000) return null;
+    throw err;
   }
+}
+
+export async function releaseClaimedSlot(chatId: number, dateKey: string, slot: number): Promise<void> {
+  await getCollection().deleteOne({ _id: deliveryId(chatId, dateKey, slot), messageId: null });
 }
 
 export async function setDeliveryMessageId(chatId: number, dateKey: string, slot: number, messageId: number): Promise<void> {

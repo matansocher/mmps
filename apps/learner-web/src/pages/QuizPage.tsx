@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
 import { useProgress } from '../hooks/useProgress';
 import { getBite } from '../lib/bites';
@@ -7,8 +7,9 @@ import { quizzesForBite } from '../lib/quizzes';
 
 export function QuizPage() {
   const { biteId = '' } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const { setQuizPassed } = useProgress();
+  const { rateBite, setQuizPassed } = useProgress();
 
   const bite = useMemo(() => getBite(biteId), [biteId]);
   const questions = useMemo(() => quizzesForBite(biteId), [biteId]);
@@ -64,13 +65,23 @@ export function QuizPage() {
           {correctCount}/{questions.length}
         </div>
         <p>{passed ? 'Nice — you know this section well!' : 'Worth another read. You\u2019ll get it next time.'}</p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' }}>
-          <Link className="btn" to={`/bite/${encodeURIComponent(bite.id)}`}>
+        <div className="quiz-result-actions">
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => {
+              rateBite(bite.id, 'got_it');
+              navigate('/');
+            }}
+          >
+            <AppIcon name="check" size={19} /> Mark learned &amp; return to Today
+          </button>
+          <Link className="btn" to={`/bite/${encodeURIComponent(bite.id)}`} state={location.state}>
             Reread section
           </Link>
           <button
             type="button"
-            className="btn primary"
+            className="btn subtle"
             onClick={() => {
               setIndex(0);
               setSelected(null);
@@ -88,9 +99,9 @@ export function QuizPage() {
   return (
     <div>
       <div className="reader-top">
-        <button type="button" className="back-link" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
+        <Link className="back-link" to={`/bite/${encodeURIComponent(bite.id)}`} state={location.state}>
+          ← Back to section
+        </Link>
       </div>
       <div className="page-head">
         <h1 style={{ fontSize: 22 }}>{bite.title}</h1>
