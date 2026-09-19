@@ -13,12 +13,13 @@ const STATUS_LABEL: Record<BiteStatus, string> = {
 type BiteCardProps = {
   readonly bite: Bite;
   readonly status: BiteStatus;
+  readonly from: '/' | '/browse' | '/review';
 };
 
-export function BiteCard({ bite, status }: BiteCardProps) {
+export function BiteCard({ bite, status, from }: BiteCardProps) {
   const guideChipClass = bite.guide === 'system-design' ? 'guide-sd' : 'guide-ai';
   return (
-    <Link className="bite-card" to={`/bite/${encodeURIComponent(bite.id)}`}>
+    <Link className="bite-card" to={`/bite/${encodeURIComponent(bite.id)}`} state={{ from }}>
       <span className="guide-icon" aria-hidden>
         <AppIcon name={bite.guide} />
       </span>
@@ -26,7 +27,7 @@ export function BiteCard({ bite, status }: BiteCardProps) {
         <span className="bite-title">{bite.title}</span>
         {bite.subtitle ? <span className="bite-sub">{bite.subtitle}</span> : null}
         <span className="bite-meta">
-          <span className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
+          <span className={`status-dot ${status}`} aria-hidden="true" />
           <span className="chip">{STATUS_LABEL[status]}</span>
           <span className={`chip ${guideChipClass}`}>{bite.guide === 'system-design' ? 'System Design' : 'AI Eng'}</span>
           {bite.isReference ? <span className="chip ref">Reference</span> : null}

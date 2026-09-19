@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
 import { BiteCard } from '../components/BiteCard';
 import { useProgress } from '../hooks/useProgress';
@@ -24,7 +25,7 @@ export function BrowsePage() {
         <p className="lead">Every section from both guides. Tap any card to read it.</p>
       </div>
 
-      <div className="tabbar" style={{ position: 'static', border: 'none', background: 'none', padding: 0, marginBottom: 16, justifyContent: 'flex-start', gap: 8 }}>
+      <div className="guide-switcher" role="group" aria-label="Choose a guide">
         {GUIDE_ORDER.map((guide) => (
           <button
             key={guide}
@@ -36,9 +37,16 @@ export function BrowsePage() {
           </button>
         ))}
       </div>
+      <Link className="map-entry" to="/map">
+        <span>
+          <strong>See the full knowledge map</strong>
+          <small>View both curricula and your progress</small>
+        </span>
+        <AppIcon name="map" size={22} />
+      </Link>
 
       {bites.map((bite) => (
-        <BiteCard key={bite.id} bite={bite} status={biteStatus(progress.states[bite.id], now)} />
+        <BiteCard key={bite.id} bite={bite} status={biteStatus(progress.states[bite.id], now)} from="/browse" />
       ))}
     </div>
   );

@@ -3,12 +3,17 @@ import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, getHourInTimezone, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { provideTelegramBot } from '@services/telegram';
-import { REMINDER_HOURS, REMINDER_MINUTE } from './constants';
+import { LEARNER_WELCOME_DELIVERY_SLOT, REMINDER_HOURS, REMINDER_MINUTE } from './constants';
 import { buildBiteMessage } from './learner.controller';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './learner.config';
 import { localDateKey, selectNextBite } from './learner-scheduler';
-import { claimSlot, getActiveSubscriptions, getDeliveriesForDay, getProgress, setDeliveryMessageId } from './mongo';
-import type { LearnerSubscription } from './types';
+import { claimSlot, getActiveSubscriptions, getDeliveriesForDay, getProgress, releaseClaimedSlot, setDeliveryMessageId } from './mongo';
+import type { LearnerDelivery, LearnerSubscription } from './types';
+
+export function canSendReminderForSlot(deliveries: ReadonlyArray<Pick<LearnerDelivery, 'slot' | 'answered'>>, slot: number): boolean {
+  if (deliveries.some((delivery) => delivery.slot === slot)) return false;
+  return slot === 0 || deliveries.some((delivery) => delivery.slot === slot - 1 && delivery.answered);
+}
 
 export class LearnerSchedulerService {
   private readonly logger = new Logger('learner:scheduler');
@@ -43,8 +48,7 @@ export class LearnerSchedulerService {
     const dateKey = localDateKey();
 
     const deliveries = await getDeliveriesForDay(chatId, dateKey);
-    if (deliveries.some((delivery) => delivery.slot === slot)) return; // already handled this slot today
-    if (slot > 0 && !deliveries.some((delivery) => delivery.slot === slot - 1 && delivery.answered)) return; // previous slot unanswered → skip
+    if (!canSendReminderForSlot(deliveries, slot)) return;
 
     await this.deliverBite(chatId, slot);
   }
@@ -60,24 +64,33 @@ export class LearnerSchedulerService {
     const biteId = selectNextBite(progress);
     if (!biteId) return false; // nothing due / nothing new
 
-    const claimed = await claimSlot(chatId, dateKey, slot, biteId);
-    if (!claimed) return false; // another run beat us to this slot
-
     const message = buildBiteMessage(biteId);
     if (!message) return false;
 
-    const sent = await this.bot.api.sendMessage(chatId, message.text, { reply_markup: message.keyboard, parse_mode: 'Markdown' });
-    await setDeliveryMessageId(chatId, dateKey, slot, sent.message_id);
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.REMINDER, slot: `${slot + 1}` });
+    const claimed = await claimSlot(chatId, dateKey, slot, biteId);
+    if (!claimed) return false; // another run beat us to this slot
+
+    let messageId: number;
+    try {
+      const sent = await this.bot.api.sendMessage(chatId, message.text, { reply_markup: message.keyboard, parse_mode: 'Markdown' });
+      messageId = sent.message_id;
+    } catch (err) {
+      await releaseClaimedSlot(chatId, dateKey, slot).catch((releaseErr) => this.logger.error(`Failed to release reminder slot: ${getErrorMessage(releaseErr)}`));
+      throw err;
+    }
+
+    // Keep the claimed slot if persistence fails after Telegram accepted the message;
+    // retrying would send a duplicate notification.
+    await setDeliveryMessageId(chatId, dateKey, slot, messageId);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.REMINDER, slot: slot === LEARNER_WELCOME_DELIVERY_SLOT ? 'welcome' : `${slot + 1}` });
     return true;
   }
 
-  // On subscribe, deliver the first bite right away so a new user does not wait
-  // until the next daily tick. Claims slot 0, so the 11:15 tick will skip it.
+  // Track the welcome bite separately so the subscriber still receives the scheduled daily reminder.
   async sendFirstBiteNow(chatId: number): Promise<void> {
     const dateKey = localDateKey();
     const deliveries = await getDeliveriesForDay(chatId, dateKey);
-    if (deliveries.length) return; // already got a bite today (tick or a prior /start)
-    await this.deliverBite(chatId, 0);
+    if (deliveries.some((delivery) => delivery.slot === LEARNER_WELCOME_DELIVERY_SLOT)) return;
+    await this.deliverBite(chatId, LEARNER_WELCOME_DELIVERY_SLOT);
   }
 }

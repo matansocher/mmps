@@ -1,4 +1,5 @@
 import { CURRICULUM } from './bites.data';
+import { QUIZZES } from './quizzes.data';
 import { biteStatus, isDue, localDateKey } from './scheduler';
 import { loadDailyPlan, saveDailyPlan } from './storage';
 import type { BiteState, LearnerProgress } from './types';
@@ -59,4 +60,24 @@ export function selectReviewQueue(progress: LearnerProgress, now: Date = new Dat
 // Whether the learner has anything left to study/review today.
 export function hasWorkToday(progress: LearnerProgress, now: Date = new Date()): boolean {
   return getTodayPlanBites(progress, now).length > 0;
+}
+
+function stableIndex(seed: string, length: number): number {
+  let hash = 0;
+  for (const character of seed) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return hash % length;
+}
+
+export function selectMemorySparkBite(progress: LearnerProgress, now: Date = new Date(), eligibleIds: ReadonlyArray<string> = CURRICULUM): string | undefined {
+  const quizBites = new Set(QUIZZES.map((question) => question.biteId));
+  const previouslyRead = eligibleIds.filter((id) => progress.states[id]?.readAt && quizBites.has(id));
+  if (previouslyRead.length === 0) return undefined;
+  const due = previouslyRead.filter((id) => isDue(progress.states[id], now));
+  const candidates = due.length > 0 ? due : previouslyRead;
+  return candidates[stableIndex(localDateKey(now), candidates.length)];
+}
+
+export function selectMemorySparkQuestionIndex(biteId: string, questionCount: number, now: Date = new Date()): number {
+  if (questionCount <= 0) return -1;
+  return stableIndex(`${localDateKey(now)}:${biteId}`, questionCount);
 }

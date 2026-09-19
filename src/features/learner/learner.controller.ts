@@ -61,7 +61,7 @@ export class LearnerController {
     const text = [
       'היי 👋',
       'I turn two study guides — System Design 📐 and AI Engineering 🧠 — into small daily bites.',
-      "I'll send you up to 3 short bites a day. Rate each one and I'll space out reviews so it actually sticks 🧠",
+      "I'll send you one short reminder a day. Rate each bite and I'll space out reviews so it actually sticks 🧠",
       'Open the full app any time with /app, or grab a bite now with /today.',
     ].join('\n\n');
     const keyboard = new InlineKeyboard().webApp('🚀 Open the app', LEARNER_APP_URL);

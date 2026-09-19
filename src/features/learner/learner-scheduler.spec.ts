@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { LEARNER_WELCOME_DELIVERY_SLOT } from './constants';
 import { LEARNER_CURRICULUM } from './learner-catalog';
 import { applyRating, biteStatus, emptyState, isDue, nextIntervalDays, selectNextBite } from './learner-scheduler';
+import { canSendReminderForSlot } from './learner-scheduler.service';
 import type { LearnerBiteState, LearnerProgress } from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -62,6 +64,21 @@ describe('selectNextBite()', () => {
 
   it('returns the first curriculum bite for a brand-new user', () => {
     expect(selectNextBite(progressWith({}), now)).toBe(LEARNER_CURRICULUM[0]);
+  });
+
+  describe('canSendReminderForSlot()', () => {
+    it('allows the daily reminder after a welcome bite', () => {
+      expect(canSendReminderForSlot([{ slot: LEARNER_WELCOME_DELIVERY_SLOT, answered: false }], 0)).toEqual(true);
+    });
+
+    it('does not send the same scheduled slot twice', () => {
+      expect(canSendReminderForSlot([{ slot: 0, answered: false }], 0)).toEqual(false);
+    });
+
+    it('requires an answered previous reminder for later slots', () => {
+      expect(canSendReminderForSlot([{ slot: 0, answered: false }], 1)).toEqual(false);
+      expect(canSendReminderForSlot([{ slot: 0, answered: true }], 1)).toEqual(true);
+    });
   });
 
   it('prioritises a due bite over new ones', () => {

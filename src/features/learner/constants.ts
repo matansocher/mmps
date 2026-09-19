@@ -12,5 +12,8 @@ export const REMINDER_HOURS = [11];
 /** Minute within the reminder hour(s) at which reminders fire (local, Asia/Jerusalem). */
 export const REMINDER_MINUTE = 15;
 
+// The immediate welcome bite is tracked separately so it never consumes a scheduled reminder slot.
+export const LEARNER_WELCOME_DELIVERY_SLOT = -1;
+
 /** Daily-delivery docs self-expire after this many days. */
 export const LEARNER_DELIVERY_TTL_DAYS = 14;

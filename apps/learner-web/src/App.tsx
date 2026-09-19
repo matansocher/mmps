@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { AppIcon, type AppIconName } from './components/AppIcon';
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { AppIcon } from './components/AppIcon';
 import { ProgressProvider, useProgress } from './hooks/useProgress';
 import { readTelegramTheme } from './lib/api';
 import { CURRICULUM } from './lib/bites';
 import { summarize } from './lib/scheduler';
-import { selectReviewQueue } from './lib/selection';
 import { BitePage } from './pages/BitePage';
 import { BrowsePage } from './pages/BrowsePage';
 import { QuizPage } from './pages/QuizPage';
 import { ReviewPage } from './pages/ReviewPage';
+import { KnowledgeMapPage } from './pages/KnowledgeMapPage';
+import { ScenarioPage } from './pages/ScenarioPage';
 import { TodayPage } from './pages/TodayPage';
 
 type Theme = 'light' | 'dark';
@@ -57,36 +58,6 @@ function TopBar({ theme, onToggleTheme }: { readonly theme: Theme; readonly onTo
   );
 }
 
-function TabBar() {
-  const { progress } = useProgress();
-  const location = useLocation();
-  const dueCount = useMemo(() => selectReviewQueue(progress).length, [progress]);
-
-  const tabs: ReadonlyArray<{ to: string; icon: AppIconName; label: string; badge?: number; end?: boolean }> = [
-    { to: '/', icon: 'today', label: 'Today', end: true },
-    { to: '/browse', icon: 'browse', label: 'Browse' },
-    { to: '/review', icon: 'review', label: 'Review', badge: dueCount },
-  ];
-
-  // Hide the tabbar on immersive reader/quiz screens.
-  const immersive = location.pathname.startsWith('/bite/') || location.pathname.startsWith('/quiz/');
-  if (immersive) return null;
-
-  return (
-    <nav className="tabbar">
-      {tabs.map((tab) => (
-        <NavLink key={tab.to} to={tab.to} end={tab.end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
-          <span className="tab-icon" aria-hidden>
-            <AppIcon name={tab.icon} />
-          </span>
-          {tab.label}
-          {tab.badge ? <span className="badge">{tab.badge}</span> : null}
-        </NavLink>
-      ))}
-    </nav>
-  );
-}
-
 function Shell() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
@@ -107,20 +78,40 @@ function Shell() {
           <Route path="/" element={<TodayPage />} />
           <Route path="/browse" element={<BrowsePage />} />
           <Route path="/review" element={<ReviewPage />} />
+          <Route path="/map" element={<KnowledgeMapPage />} />
           <Route path="/bite/:biteId" element={<BitePage />} />
           <Route path="/quiz/:biteId" element={<QuizPage />} />
+          <Route path="/scenario/:biteId" element={<ScenarioPage />} />
         </Routes>
       </div>
-      <TabBar />
     </>
   );
 }
 
 export function App() {
   useEffect(() => {
-    const wa = (window as unknown as { Telegram?: { WebApp?: { ready?: () => void; expand?: () => void } } }).Telegram?.WebApp;
+    const wa = (
+      window as unknown as {
+        Telegram?: {
+          WebApp?: {
+            ready?: () => void;
+            expand?: () => void;
+            disableVerticalSwipes?: () => void;
+            onEvent?: (event: 'viewportChanged', callback: (event: { readonly isStateStable: boolean }) => void) => void;
+            offEvent?: (event: 'viewportChanged', callback: (event: { readonly isStateStable: boolean }) => void) => void;
+            isExpanded?: boolean;
+          };
+        };
+      }
+    ).Telegram?.WebApp;
+    const keepExpanded = () => {
+      if (wa?.isExpanded === false) wa.expand?.();
+    };
     wa?.ready?.();
     wa?.expand?.();
+    wa?.disableVerticalSwipes?.();
+    wa?.onEvent?.('viewportChanged', keepExpanded);
+    return () => wa?.offEvent?.('viewportChanged', keepExpanded);
   }, []);
 
   return (

@@ -1,17 +1,20 @@
-import { useEffect, useMemo } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
-import { RatingBar } from '../components/RatingBar';
 import { ReadingProgressBar } from '../components/ReadingProgressBar';
+import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { useProgress } from '../hooks/useProgress';
 import { useReadingProgress } from '../hooks/useReadingProgress';
-import { GUIDES, getBite, nextBiteInGuide } from '../lib/bites';
+import { GUIDES, bitesByGuide, getBite } from '../lib/bites';
 import { hasQuiz } from '../lib/quizzes';
+import { hasScenario } from '../lib/scenarios';
+import { summarize } from '../lib/scheduler';
 
 export function BitePage() {
   const { biteId = '' } = useParams();
-  const navigate = useNavigate();
+  const location = useLocation();
   const { progress, rateBite, markRead } = useProgress();
+  const [showMastery, setShowMastery] = useState(false);
   const bite = useMemo(() => getBite(biteId), [biteId]);
   const readingPercent = useReadingProgress([biteId]);
 
@@ -36,14 +39,22 @@ export function BitePage() {
 
   const state = progress.states[bite.id];
   const guide = GUIDES[bite.guide];
-  const nextBite = nextBiteInGuide(bite.id);
+  const from = (location.state as { readonly from?: string } | null)?.from;
+  const backDestination = from === '/browse' || from === '/review' || from === '/map' ? from : '/';
+  const backLabel = backDestination === '/browse' ? 'Back to Browse' : backDestination === '/review' ? 'Back to Review' : backDestination === '/map' ? 'Back to Knowledge Map' : 'Back to Today';
+  const courseBites = bitesByGuide(bite.guide);
+  const courseSummary = summarize(
+    progress,
+    courseBites.map((courseBite) => courseBite.id),
+  );
+  const masteredAfterCompletion = courseSummary.mastered + (state?.rating === 'got_it' ? 0 : 1);
 
   return (
     <div>
       <div className="reader-top">
-        <button type="button" className="back-link" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
+        <Link className="back-link" to={backDestination}>
+          ← {backLabel}
+        </Link>
       </div>
       <div className="bite-meta" style={{ marginBottom: 6 }}>
         <span className={`chip ${bite.guide === 'system-design' ? 'guide-sd' : 'guide-ai'}`}>
@@ -56,24 +67,57 @@ export function BitePage() {
 
       <div className="bite-body" dangerouslySetInnerHTML={{ __html: bite.html }} />
 
+      {hasScenario(bite.id) ? (
+        <div className="scenario-cta">
+          <div>
+            <strong>Put this idea into practice</strong>
+            <p>Make one realistic decision and explore its tradeoffs.</p>
+          </div>
+          <Link className="btn" to={`/scenario/${encodeURIComponent(bite.id)}`} state={{ from: backDestination }}>
+            <AppIcon name="scenario" size={19} /> Try scenario mode
+          </Link>
+        </div>
+      ) : null}
+
       {hasQuiz(bite.id) ? (
         <div className="quiz-cta">
-          <Link className="btn block" to={`/quiz/${encodeURIComponent(bite.id)}`}>
-            <AppIcon name="brain" size={19} /> Test yourself on this section
+          <p className="quiz-cta-copy">Ready to check your understanding?</p>
+          <Link className="btn block" to={`/quiz/${encodeURIComponent(bite.id)}`} state={{ from: backDestination }}>
+            <AppIcon name="brain" size={19} /> Take the section quiz
           </Link>
         </div>
       ) : null}
 
-      {!bite.isReference ? <RatingBar current={state?.rating ?? null} onRate={(rating) => rateBite(bite.id, rating)} /> : null}
-
-      {nextBite ? (
-        <div className="next-lesson">
-          <Link className="btn block" to={`/bite/${encodeURIComponent(nextBite.id)}`}>
-            Next lesson: {nextBite.title} →
-          </Link>
+      {!bite.isReference ? (
+        <div className="completion-cta">
+          <button
+            type="button"
+            className="btn primary block"
+            disabled={state?.rating === 'got_it'}
+            onClick={() => {
+              rateBite(bite.id, 'got_it');
+              setShowMastery(true);
+            }}
+          >
+            <AppIcon name="check" size={19} /> {state?.rating === 'got_it' ? 'Marked as learned' : 'I learned this material'}
+          </button>
+          {showMastery ? (
+            <div className="mastery-moment" role="status">
+              <span className="mastery-icon">
+                <AppIcon name="complete" size={26} />
+              </span>
+              <div>
+                <strong>{masteredAfterCompletion === courseSummary.total ? `${guide.label} complete!` : `${bite.title} is now learned.`}</strong>
+                <p>
+                  You&apos;ve mastered {masteredAfterCompletion} of {courseSummary.total} {guide.label} bites.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
+      <ScrollToTopButton />
       <ReadingProgressBar percent={readingPercent} />
     </div>
   );
