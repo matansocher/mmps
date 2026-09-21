@@ -26,6 +26,13 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, Consolas, monospace;
   --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Top inset that keeps the navbar clear of the device status bar / notch and
+     the Telegram Mini App chrome. Combines the browser safe-area inset with
+     Telegram's reported insets (--tg-* vars, set by the WebApp SDK). */
+  --tg-safe-top: 0px;
+  --tg-content-safe-top: 0px;
+  --safe-top: max(env(safe-area-inset-top, 0px), var(--tg-safe-top), var(--tg-content-safe-top));
 }
 
 :root[data-theme='light'] {
@@ -118,6 +125,7 @@ a { color: var(--accent-blue); }
   z-index: 20;
   width: 100%;
   margin-bottom: 24px;
+  padding-top: var(--safe-top);
   background: color-mix(in srgb, var(--bg) 90%, transparent);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
