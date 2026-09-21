@@ -90,28 +90,44 @@ function Shell() {
 
 export function App() {
   useEffect(() => {
-    const wa = (
-      window as unknown as {
-        Telegram?: {
-          WebApp?: {
-            ready?: () => void;
-            expand?: () => void;
-            disableVerticalSwipes?: () => void;
-            onEvent?: (event: 'viewportChanged', callback: (event: { readonly isStateStable: boolean }) => void) => void;
-            offEvent?: (event: 'viewportChanged', callback: (event: { readonly isStateStable: boolean }) => void) => void;
-            isExpanded?: boolean;
-          };
-        };
-      }
-    ).Telegram?.WebApp;
+    type SafeAreaInset = { readonly top?: number; readonly right?: number; readonly bottom?: number; readonly left?: number };
+    type LearnerWebApp = {
+      ready?: () => void;
+      expand?: () => void;
+      disableVerticalSwipes?: () => void;
+      onEvent?: (event: string, callback: (...args: unknown[]) => void) => void;
+      offEvent?: (event: string, callback: (...args: unknown[]) => void) => void;
+      isExpanded?: boolean;
+      safeAreaInset?: SafeAreaInset;
+      contentSafeAreaInset?: SafeAreaInset;
+    };
+
+    const wa = (window as unknown as { Telegram?: { WebApp?: LearnerWebApp } }).Telegram?.WebApp;
+
+    const applySafeArea = () => {
+      const root = document.documentElement;
+      const top = Math.max(0, wa?.safeAreaInset?.top ?? 0);
+      const contentTop = Math.max(0, wa?.contentSafeAreaInset?.top ?? 0);
+      root.style.setProperty('--tg-safe-top', `${top}px`);
+      root.style.setProperty('--tg-content-safe-top', `${contentTop}px`);
+    };
+
     const keepExpanded = () => {
       if (wa?.isExpanded === false) wa.expand?.();
     };
+
     wa?.ready?.();
     wa?.expand?.();
     wa?.disableVerticalSwipes?.();
+    applySafeArea();
     wa?.onEvent?.('viewportChanged', keepExpanded);
-    return () => wa?.offEvent?.('viewportChanged', keepExpanded);
+    wa?.onEvent?.('safeAreaChanged', applySafeArea);
+    wa?.onEvent?.('contentSafeAreaChanged', applySafeArea);
+    return () => {
+      wa?.offEvent?.('viewportChanged', keepExpanded);
+      wa?.offEvent?.('safeAreaChanged', applySafeArea);
+      wa?.offEvent?.('contentSafeAreaChanged', applySafeArea);
+    };
   }, []);
 
   return (

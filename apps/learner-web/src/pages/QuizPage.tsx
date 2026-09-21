@@ -18,6 +18,22 @@ export function QuizPage() {
   const [selected, setSelected] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [done, setDone] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  const q = questions[index];
+
+  // Shuffle option order per question so the correct answer isn't guessable from
+  // its position or length. Reshuffled on each attempt (retry) and each question.
+  const shuffledOptions = useMemo(() => {
+    if (!q) return [];
+    const items = q.options.map((text, originalIndex) => ({ text, originalIndex }));
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return items;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, index, attempt]);
 
   if (!bite || questions.length === 0) {
     return (
@@ -33,13 +49,12 @@ export function QuizPage() {
     );
   }
 
-  const q = questions[index];
   const answered = selected !== null;
 
-  function choose(optionIndex: number) {
+  function choose(originalIndex: number) {
     if (answered) return;
-    setSelected(optionIndex);
-    if (optionIndex === q.answerIndex) setCorrectCount((c) => c + 1);
+    setSelected(originalIndex);
+    if (originalIndex === q.answerIndex) setCorrectCount((c) => c + 1);
   }
 
   function next() {
@@ -87,6 +102,7 @@ export function QuizPage() {
               setSelected(null);
               setCorrectCount(0);
               setDone(false);
+              setAttempt((a) => a + 1);
             }}
           >
             Retry quiz
@@ -112,13 +128,13 @@ export function QuizPage() {
           Question {index + 1} of {questions.length}
         </div>
         <div className="quiz-question">{q.question}</div>
-        {q.options.map((opt, i) => {
+        {shuffledOptions.map(({ text, originalIndex }) => {
           let cls = 'quiz-opt';
-          if (answered && i === q.answerIndex) cls += ' correct';
-          else if (answered && i === selected) cls += ' wrong';
+          if (answered && originalIndex === q.answerIndex) cls += ' correct';
+          else if (answered && originalIndex === selected) cls += ' wrong';
           return (
-            <button key={i} type="button" className={cls} disabled={answered} onClick={() => choose(i)}>
-              {opt}
+            <button key={originalIndex} type="button" className={cls} disabled={answered} onClick={() => choose(originalIndex)}>
+              {text}
             </button>
           );
         })}
