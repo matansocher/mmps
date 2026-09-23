@@ -1,11 +1,15 @@
 // Free, no-browser, no-API-key Twitter/X scraper — latest posts of any public user.
 //
-// Two independent strategies, tried in order:
+// Strategies, tried in order:
 //   1. "graphql" — X's own anonymous web flow: public bearer token -> guest token
 //      -> GraphQL UserByScreenName + UserTweets. Rich data (metrics, views).
-//   2. "nitter"  — RSS feeds from live Nitter instances. Survives X GraphQL
-//      changes; used automatically when strategy 1 fails.
+//   2. "graphql (session)" — same GraphQL calls with a real account's browser
+//      cookies (X_AUTH_TOKEN + X_CT0). Only when those env vars are set; covers
+//      public accounts X hides from logged-out visitors.
+//   3. "nitter"  — RSS feeds from live Nitter instances. Survives X GraphQL
+//      changes; used automatically when the strategies above fail.
 import https from 'node:https';
+import { env } from 'node:process';
 import { FETCH_TIMEOUT_MS, NITTER_INSTANCES, OP, PUBLIC_BEARER, USER_AGENT, USER_BY_SCREEN_NAME_FEATURES, USER_TWEETS_FEATURES } from './constants';
 import type { FetchLatestPostsOptions, LatestPostsResult, ScrapedTweet, ScrapedUser } from './types';
 
@@ -30,6 +34,38 @@ async function getGuestToken(force = false): Promise<string> {
   if (!json.guest_token) throw new Error('guest/activate returned no token');
   cachedGuestToken = json.guest_token;
   return cachedGuestToken;
+}
+
+function getSessionCookies(): { authToken: string; ct0: string } | null {
+  const authToken = env.X_AUTH_TOKEN?.trim();
+  const ct0 = env.X_CT0?.trim();
+  return authToken && ct0 ? { authToken, ct0 } : null;
+}
+
+// Logged-in request using the browser session cookies of a real X account.
+async function sessionGraphql(opId: string, opName: string, variables: Record<string, any>, features: Record<string, boolean>): Promise<any> {
+  const session = getSessionCookies();
+  if (!session) throw new Error('X_AUTH_TOKEN / X_CT0 not set');
+  const url = new URL(`https://x.com/i/api/graphql/${opId}/${opName}`);
+  url.searchParams.set('variables', JSON.stringify(variables));
+  url.searchParams.set('features', JSON.stringify(features));
+
+  const res = await timedFetch(url, {
+    headers: {
+      Authorization: `Bearer ${PUBLIC_BEARER}`,
+      Cookie: `auth_token=${session.authToken}; ct0=${session.ct0}`,
+      'x-csrf-token': session.ct0,
+      'x-twitter-auth-type': 'OAuth2Session',
+      'x-twitter-active-user': 'yes',
+      'User-Agent': USER_AGENT,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (res.status === 401 || res.status === 403) throw new Error(`${opName} failed: HTTP ${res.status} (session cookies expired or invalid?)`);
+  if (!res.ok) throw new Error(`${opName} failed: HTTP ${res.status}`);
+  const json: any = await res.json();
+  if (json.errors?.length && !json.data) throw new Error(`${opName} error: ${json.errors[0].message}`);
+  return json;
 }
 
 async function graphql(opId: string, opName: string, variables: Record<string, any>, features: Record<string, boolean>): Promise<any> {
@@ -60,8 +96,10 @@ async function graphql(opId: string, opName: string, variables: Record<string, a
   throw new Error(`${opName} failed after retry (rate limited?)`);
 }
 
-async function getUserId(username: string): Promise<{ restId: string; name: string; username: string }> {
-  const json = await graphql(OP.UserByScreenName, 'UserByScreenName', { screen_name: username }, USER_BY_SCREEN_NAME_FEATURES);
+type GraphqlRequester = typeof graphql;
+
+async function getUserId(username: string, request: GraphqlRequester = graphql): Promise<{ restId: string; name: string; username: string }> {
+  const json = await request(OP.UserByScreenName, 'UserByScreenName', { screen_name: username }, USER_BY_SCREEN_NAME_FEATURES);
   const result = json?.data?.user?.result;
   if (!result?.rest_id) throw new Error(`user @${username} not found`);
   return { restId: result.rest_id, name: result.legacy?.name ?? username, username };
@@ -115,8 +153,8 @@ function extractTweets(instructions: any[]): ScrapedTweet[] {
   return tweets;
 }
 
-async function fetchViaGraphql(username: string): Promise<{ user: ScrapedUser; tweets: ScrapedTweet[]; source: string }> {
-  const user = await getUserId(username);
+async function fetchTimeline(username: string, request: GraphqlRequester, source: string): Promise<{ user: ScrapedUser; tweets: ScrapedTweet[]; source: string }> {
+  const user = await getUserId(username, request);
   const variables = {
     userId: user.restId,
     count: 40, // over-fetch so filters + pinned-tweet dedup still leave enough
@@ -125,11 +163,21 @@ async function fetchViaGraphql(username: string): Promise<{ user: ScrapedUser; t
     withVoice: false,
     withV2Timeline: true,
   };
-  const json = await graphql(OP.UserTweets, 'UserTweets', variables, USER_TWEETS_FEATURES);
-  const instructions = json?.data?.user?.result?.timeline_v2?.timeline?.instructions ?? [];
+  const json = await request(OP.UserTweets, 'UserTweets', variables, USER_TWEETS_FEATURES);
+  const result = json?.data?.user?.result;
+  const instructions = result?.timeline_v2?.timeline?.instructions ?? result?.timeline?.timeline?.instructions ?? [];
   const tweets = extractTweets(instructions).filter((t) => !t.author || t.author.toLowerCase() === username.toLowerCase() || t.isRetweet);
-  if (tweets.length === 0) throw new Error('GraphQL returned no tweets (protected account or empty timeline?)');
-  return { user: { name: user.name, username: user.username }, tweets, source: 'graphql' };
+  if (tweets.length === 0) throw new Error('GraphQL returned no tweets (protected account, empty timeline, or hidden from logged-out visitors?)');
+  return { user: { name: user.name, username: user.username }, tweets, source };
+}
+
+async function fetchViaGraphql(username: string): Promise<{ user: ScrapedUser; tweets: ScrapedTweet[]; source: string }> {
+  return fetchTimeline(username, graphql, 'graphql');
+}
+
+// X hides some public timelines from logged-out visitors; a real session sees them.
+async function fetchViaSession(username: string): Promise<{ user: ScrapedUser; tweets: ScrapedTweet[]; source: string }> {
+  return fetchTimeline(username, sessionGraphql, 'graphql (session)');
 }
 
 // ---------------------------------------------------------------------------
@@ -232,7 +280,8 @@ async function fetchViaNitter(username: string): Promise<{ user: ScrapedUser; tw
 export async function fetchLatestPosts(username: string, options: FetchLatestPostsOptions = {}): Promise<LatestPostsResult> {
   const { count = 5, includeRetweets = true, includeReplies = true, source = 'auto' } = options;
   const clean = username.replace(/^@/, '').trim();
-  const strategies = source === 'nitter' ? [fetchViaNitter] : source === 'graphql' ? [fetchViaGraphql] : [fetchViaGraphql, fetchViaNitter];
+  const withSession = getSessionCookies() ? [fetchViaSession] : [];
+  const strategies = source === 'nitter' ? [fetchViaNitter] : source === 'graphql' ? [fetchViaGraphql, ...withSession] : [fetchViaGraphql, ...withSession, fetchViaNitter];
 
   const errors: string[] = [];
   for (const strategy of strategies) {
