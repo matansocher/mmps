@@ -1,5 +1,5 @@
 import { getMongoCollection } from '@core/mongo';
-import type { CreateDigestDeliveryData, DigestDelivery, DigestVideoEntry, DigestVideoState } from '../types';
+import type { CreateDigestDeliveryData, DigestDelivery, DigestImageEntry, DigestVideoEntry, DigestVideoState } from '../types';
 import { DB_NAME, PENDING_POST_TTL_SECONDS } from './constants';
 
 function getCollection() {
@@ -21,7 +21,7 @@ export async function claimDigestDelivery(data: CreateDigestDeliveryData): Promi
   const collection = getCollection();
   const result = await collection.findOneAndUpdate(
     { chatId: data.chatId, digestDate: data.digestDate },
-    { $setOnInsert: { chatId: data.chatId, digestDate: data.digestDate, videos: data.videos, textDeliveredAt: null, createdAt: new Date() } },
+    { $setOnInsert: { chatId: data.chatId, digestDate: data.digestDate, videos: data.videos, images: data.images, textDeliveredAt: null, createdAt: new Date() } },
     { upsert: true, returnDocument: 'after' },
   );
   if (!result) {
@@ -65,4 +65,18 @@ export async function finalizeDigestVideo(chatId: number, digestDate: string, en
     update['videos.$.telegramMessageId'] = telegramMessageId;
   }
   await getCollection().updateOne({ chatId, digestDate, videos: { $elemMatch: { entryId, state: 'sending' } } }, { $set: update });
+}
+
+// Image-album counterparts of claimDigestVideo / finalizeDigestVideo (same pending → sending → terminal lifecycle).
+export async function claimDigestImage(chatId: number, digestDate: string, entryId: string): Promise<DigestImageEntry | null> {
+  const result = await getCollection().findOneAndUpdate(
+    { chatId, digestDate, images: { $elemMatch: { entryId, state: 'pending' } } },
+    { $set: { 'images.$.state': 'sending' } },
+    { returnDocument: 'after' },
+  );
+  return result?.images?.find((image) => image.entryId === entryId) ?? null;
+}
+
+export async function finalizeDigestImage(chatId: number, digestDate: string, entryId: string, state: Extract<DigestVideoState, 'sent' | 'link_only'>): Promise<void> {
+  await getCollection().updateOne({ chatId, digestDate, images: { $elemMatch: { entryId, state: 'sending' } } }, { $set: { 'images.$.state': state } });
 }

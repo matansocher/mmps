@@ -14,6 +14,7 @@ export type ScrapedTweet = {
   readonly isRetweet: boolean;
   readonly isReply: boolean;
   readonly metrics: ScrapedTweetMetrics | null; // null when fetched via nitter RSS (no engagement data)
+  readonly imageUrls: string[]; // attached photos (public pbs.twimg.com urls); always empty via nitter RSS
 };
 
 export type ScrapedUser = {

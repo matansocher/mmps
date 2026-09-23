@@ -14,6 +14,7 @@ type NewPost = {
   readonly postId: string | null;
   readonly text: string | null;
   readonly url: string | null;
+  readonly imageUrls?: string[];
   readonly postedAt: Date;
 };
 
@@ -75,7 +76,7 @@ async function getNewTwitterPosts({ username, lastSeenId }: SocialSubscription):
   const newTweets = lastSeenId ? tweets.filter((tweet) => BigInt(tweet.id) > BigInt(lastSeenId)) : tweets;
   const newestId = tweets.reduce((max, tweet) => (BigInt(tweet.id) > BigInt(max) ? tweet.id : max), tweets[0].id);
   return {
-    newPosts: newTweets.map((tweet) => ({ postId: tweet.id, text: tweet.text, url: tweet.url, postedAt: new Date(tweet.createdAt) })),
+    newPosts: newTweets.map((tweet) => ({ postId: tweet.id, text: tweet.text, url: tweet.url, imageUrls: tweet.imageUrls, postedAt: new Date(tweet.createdAt) })),
     lastSeen: { lastSeenId: newestId },
   };
 }
