@@ -701,7 +701,6 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 |------------------------|--------------------------------------------|
 | `alpha-vantage`        | Stock fundamentals & quotes                |
 | `anthropic`            | Claude API helpers                         |
-| `apple-music`          | Song name from an Apple Music link (free iTunes Lookup API) |
 | `earthquake-api`       | USGS quake feed                            |
 | `earthquake-map`       | Canvas-based earthquake map rendering      |
 | `github`               | Octokit + GitHub App auth                  |
