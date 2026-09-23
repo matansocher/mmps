@@ -55,6 +55,12 @@ export const CHATBOT_CONFIG = {
     // Bounded short retries per video (download + send). No next-day retry.
     maxAttempts: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_ATTEMPTS || '2', 10),
   },
+  // Sends photos of up to `maxPostsPerChat` of the newest collected tweets that have images as
+  // Telegram albums after the text digest. Set CHATBOT_IMAGE_DIGEST=false to disable.
+  imageDigest: {
+    enabled: env.CHATBOT_IMAGE_DIGEST !== 'false',
+    maxPostsPerChat: parseInt(env.CHATBOT_IMAGE_DIGEST_MAX_POSTS || '5', 10),
+  },
 };
 
 // {messages} is required — the middleware substitutes the messages being summarized there.

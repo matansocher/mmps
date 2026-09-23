@@ -3,12 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { sendShortenedMessage } from '@services/telegram';
 import { claimDigestDelivery, deletePendingPosts, markDigestTextDelivered } from '@shared/social-follower';
 import type { DigestDelivery, PendingPost } from '@shared/social-follower';
-import { processDigestForChat } from './social-media-digest';
+import { processDigestForChat, selectTwitterImagePendingPosts } from './social-media-digest';
+import { deliverDigestImages } from './social-media-image-delivery';
 import { deliverDigestVideos } from './social-media-video-delivery';
 
 vi.mock('@services/telegram', () => ({ sendShortenedMessage: vi.fn(), TELEGRAM_MAX_MESSAGE_LENGTH: 4096 }));
+vi.mock('@services/openai', () => ({ getResponse: vi.fn().mockRejectedValue(new Error('offline')) })); // tweets fall back to the raw listing
 vi.mock('@shared/social-follower', () => ({ claimDigestDelivery: vi.fn(), deletePendingPosts: vi.fn(), markDigestTextDelivered: vi.fn() }));
 vi.mock('./social-media-video-delivery', () => ({ deliverDigestVideos: vi.fn() }));
+vi.mock('./social-media-image-delivery', () => ({ deliverDigestImages: vi.fn() }));
 
 const CHAT_ID = 1;
 const DIGEST_DATE = '2026-09-13';
@@ -26,6 +29,10 @@ function tiktokPost(postId: string): PendingPost {
     postedAt: new Date(),
     collectedAt: new Date(),
   };
+}
+
+function tweetPost(postId: string, imageUrls?: string[]): PendingPost {
+  return { ...tiktokPost(postId), platform: 'twitter', text: 'a tweet', url: `https://x.com/creator/status/${postId}`, imageUrls };
 }
 
 function claimedRecord(overrides: Partial<DigestDelivery> = {}): DigestDelivery {
@@ -70,5 +77,35 @@ describe('processDigestForChat()', () => {
     expect(sendShortenedMessage).not.toHaveBeenCalled(); // no text resend
     expect(markDigestTextDelivered).not.toHaveBeenCalled();
     expect(deliverDigestVideos).toHaveBeenCalledTimes(1); // idempotent claim inside skips already-sent videos
+  });
+
+  it('snapshots tweets with photos into the delivery record and delivers images after the text', async () => {
+    await processDigestForChat(bot, CHAT_ID, [tweetPost('t1', ['https://pbs.twimg.com/media/a.jpg']), tweetPost('t2')], DIGEST_DATE);
+
+    const [{ images }] = vi.mocked(claimDigestDelivery).mock.calls[0];
+    expect(images).toHaveLength(1);
+    expect(images[0]).toMatchObject({ postId: 't1', imageUrls: ['https://pbs.twimg.com/media/a.jpg'], state: 'pending' });
+    expect(deliverDigestImages).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not deliver images when the text digest failed entirely', async () => {
+    vi.mocked(sendShortenedMessage).mockRejectedValue(new Error('telegram down'));
+
+    await processDigestForChat(bot, CHAT_ID, [tweetPost('t1', ['https://pbs.twimg.com/media/a.jpg'])], DIGEST_DATE);
+
+    expect(deliverDigestImages).not.toHaveBeenCalled();
+  });
+});
+
+describe('selectTwitterImagePendingPosts()', () => {
+  it('keeps only tweets with photos, newest first, capped', () => {
+    const older = { ...tweetPost('old', ['https://pbs.twimg.com/media/o.jpg']), postedAt: new Date('2026-09-01') };
+    const newer = { ...tweetPost('new', ['https://pbs.twimg.com/media/n.jpg']), postedAt: new Date('2026-09-02') };
+    const selected = selectTwitterImagePendingPosts([older, tweetPost('text-only'), tiktokPost('clip'), newer], 1);
+    expect(selected.map((post) => post.postId)).toEqual(['new']);
+  });
+
+  it('returns nothing when max is 0', () => {
+    expect(selectTwitterImagePendingPosts([tweetPost('t', ['https://pbs.twimg.com/media/a.jpg'])], 0)).toEqual([]);
   });
 });

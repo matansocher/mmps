@@ -277,7 +277,7 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 | Reminders / events | every 15m | Fires due reminders & upcoming-event alerts. |
 | Earthquake monitor | every N min | USGS polling with lookback window. |
 | Polymarket | 16:05 | Daily price updates for subscribed markets. |
-| Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Kill switch: `CHATBOT_VIDEO_DIGEST=false`. |
+| Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Kill switch: `CHATBOT_VIDEO_DIGEST=false`. Tweets with photos (up to 5 newest) follow as Telegram albums sent by url, same record/claim lifecycle with a link-only fallback. Kill switch: `CHATBOT_IMAGE_DIGEST=false`. |
 | Usage report | Sat 22:30 | Weekly cost/token breakdown DM. |
 
 ::: tip Pattern to remember

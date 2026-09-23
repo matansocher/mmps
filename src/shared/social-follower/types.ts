@@ -39,6 +39,7 @@ export type PendingPost = {
   readonly postId: string | null; // platform post id, used for dedupe on collector retries
   readonly text: string | null;
   readonly url: string | null;
+  readonly imageUrls?: string[]; // twitter only: attached photo urls, sent as an album after the text digest
   readonly postedAt: Date;
   readonly collectedAt: Date;
 };
@@ -64,12 +65,26 @@ export type DigestVideoEntry = {
   readonly telegramMessageId?: number;
 };
 
+// Same claim/finalize lifecycle as videos, for tweet photo albums (sent by url — Telegram fetches
+// them from X directly, so there is no local download). `link_only` = album failed, link was sent.
+export type DigestImageEntry = {
+  readonly entryId: string; // source PendingPost _id hex
+  readonly username: string;
+  readonly displayName?: string | null;
+  readonly postId: string | null;
+  readonly url: string | null;
+  readonly text: string | null;
+  readonly imageUrls: string[];
+  readonly state: DigestVideoState;
+};
+
 export type DigestDelivery = {
   readonly _id?: ObjectId;
   readonly chatId: number;
   readonly digestDate: string; // YYYY-MM-DD in Asia/Jerusalem
   readonly textDeliveredAt?: Date | null;
   readonly videos: DigestVideoEntry[];
+  readonly images?: DigestImageEntry[]; // absent on records created before image support
   readonly createdAt: Date;
 };
 
@@ -77,4 +92,5 @@ export type CreateDigestDeliveryData = {
   readonly chatId: number;
   readonly digestDate: string;
   readonly videos: DigestVideoEntry[];
+  readonly images: DigestImageEntry[];
 };

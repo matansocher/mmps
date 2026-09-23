@@ -9,8 +9,9 @@ import { getResponse } from '@services/openai';
 import { GPT_SMALL_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 import { claimDigestDelivery, deletePendingPosts, getPendingPostBacklog, getPendingPostChatIds, getPendingPostsForChat, markDigestTextDelivered } from '@shared/social-follower';
-import type { DigestVideoEntry, PendingPost, SocialPlatform } from '@shared/social-follower';
+import type { DigestImageEntry, DigestVideoEntry, PendingPost, SocialPlatform } from '@shared/social-follower';
 import { CHATBOT_CONFIG } from '../chatbot.config';
+import { deliverDigestImages } from './social-media-image-delivery';
 import { deliverDigestVideos } from './social-media-video-delivery';
 
 const logger = new Logger('chatbot:scheduler:social-media-digest');
@@ -92,7 +93,8 @@ export async function processDigestForChat(bot: Bot, chatId: number, posts: Pend
   // Fix the video selection once per (chat, local date) so restarts/concurrent runs converge on
   // the same set, and snapshot each video's fields so deleting the pending posts is still safe.
   const videos = selectTikTokPendingPosts(posts, CHATBOT_CONFIG.videoDigest.maxVideosPerChat).map(toVideoEntry);
-  const record = await claimDigestDelivery({ chatId, digestDate, videos });
+  const images = CHATBOT_CONFIG.imageDigest.enabled ? selectTwitterImagePendingPosts(posts, CHATBOT_CONFIG.imageDigest.maxPostsPerChat).map(toImageEntry) : [];
+  const record = await claimDigestDelivery({ chatId, digestDate, videos, images });
 
   let deliveredAny = !!record.textDeliveredAt;
   if (!record.textDeliveredAt) {
@@ -107,6 +109,9 @@ export async function processDigestForChat(bot: Bot, chatId: number, posts: Pend
   // failure), and only when the feature is enabled. The record drives delivery from here.
   if (CHATBOT_CONFIG.videoDigest.enabled && deliveredAny) {
     await deliverDigestVideos(bot, chatId, digestDate);
+  }
+  if (CHATBOT_CONFIG.imageDigest.enabled && deliveredAny) {
+    await deliverDigestImages(bot, chatId, digestDate);
   }
 }
 
@@ -131,6 +136,30 @@ export function selectTikTokPendingPosts(posts: PendingPost[], max: number): Pen
       return byTime !== 0 ? byTime : String(b._id ?? '').localeCompare(String(a._id ?? ''));
     })
     .slice(0, max);
+}
+
+// Newest-first tweets that carry photos, same `_id` rule as the TikTok selection.
+export function selectTwitterImagePendingPosts(posts: PendingPost[], max: number): PendingPost[] {
+  if (max <= 0) {
+    return [];
+  }
+  return posts
+    .filter((post) => post.platform === 'twitter' && !!post._id && !!post.imageUrls?.length)
+    .sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime())
+    .slice(0, max);
+}
+
+function toImageEntry(post: PendingPost): DigestImageEntry {
+  return {
+    entryId: post._id!.toHexString(),
+    username: post.username,
+    displayName: post.displayName ?? null,
+    postId: post.postId,
+    url: post.url,
+    text: post.text,
+    imageUrls: post.imageUrls ?? [],
+    state: 'pending',
+  };
 }
 
 // Snapshots a pending post into a delivery-record entry so video delivery is decoupled from the

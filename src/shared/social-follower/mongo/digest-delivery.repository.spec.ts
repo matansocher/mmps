@@ -21,19 +21,19 @@ describe('claimDigestDelivery()', () => {
     const videos = [videoEntry('a'), videoEntry('b')];
     findOneAndUpdate.mockResolvedValue({ chatId: 1, digestDate: '2026-09-13', videos, textDeliveredAt: null });
 
-    const record = await claimDigestDelivery({ chatId: 1, digestDate: '2026-09-13', videos });
+    const record = await claimDigestDelivery({ chatId: 1, digestDate: '2026-09-13', videos, images: [] });
 
     expect(record.videos).toHaveLength(2);
     const [filter, update, options] = findOneAndUpdate.mock.calls[0];
     expect(filter).toEqual({ chatId: 1, digestDate: '2026-09-13' });
-    expect(update.$setOnInsert).toMatchObject({ chatId: 1, digestDate: '2026-09-13', videos, textDeliveredAt: null });
+    expect(update.$setOnInsert).toMatchObject({ chatId: 1, digestDate: '2026-09-13', videos, images: [], textDeliveredAt: null });
     expect(update.$setOnInsert.createdAt).toBeInstanceOf(Date);
     expect(options).toMatchObject({ upsert: true, returnDocument: 'after' });
   });
 
   it('throws when the upsert unexpectedly returns nothing', async () => {
     findOneAndUpdate.mockResolvedValue(null);
-    await expect(claimDigestDelivery({ chatId: 1, digestDate: '2026-09-13', videos: [] })).rejects.toThrow(/failed to claim/);
+    await expect(claimDigestDelivery({ chatId: 1, digestDate: '2026-09-13', videos: [], images: [] })).rejects.toThrow(/failed to claim/);
   });
 });
 

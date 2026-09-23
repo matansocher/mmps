@@ -128,6 +128,7 @@ function readTweetResult(result: any): ScrapedTweet | null {
       replies: legacy.reply_count ?? 0,
       views: Number(tweet.views?.count ?? 0),
     },
+    imageUrls: (legacy.extended_entities?.media ?? []).filter((media: any) => media.type === 'photo' && media.media_url_https).map((media: any) => media.media_url_https),
   };
 }
 
@@ -252,6 +253,7 @@ function parseNitterRss(xml: string, username: string): { name: string; tweets: 
       isRetweet: title.startsWith('RT by '),
       isReply: title.startsWith('R to '),
       metrics: null, // RSS carries no engagement metrics
+      imageUrls: [], // nitter image links point at the (flaky) instance proxy, not X
     };
   });
   return { name, tweets };
