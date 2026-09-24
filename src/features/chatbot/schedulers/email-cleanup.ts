@@ -36,22 +36,36 @@ export function buildEmailState(email: CandidateEmail): string {
   return `From: ${email.from}\nSubject: ${email.subject}\nSnippet: ${email.snippet}`;
 }
 
+export function buildJevUnavailableWarning(skipped: number): string {
+  return `⚠️ Email cleanup: Jev unavailable (${skipped} email${skipped === 1 ? '' : 's'} skipped). Check TYPESAFE_API_KEY and the logs.`;
+}
+
 export function buildCleanupReport(trashed: ReadonlyArray<TrashedEmail>): string {
   const lines = trashed.map((email) => `• ${email.from} — ${email.subject} (${Math.round(email.probability * 100)}%)`);
   return [`🧹 Moved ${trashed.length} spam/ad email${trashed.length === 1 ? '' : 's'} to trash:`, '', ...lines].join('\n');
 }
 
-async function cleanupEmail(email: CandidateEmail, threshold: number): Promise<TrashedEmail | null> {
+type CleanupOutcome = { readonly status: 'trashed'; readonly email: TrashedEmail } | { readonly status: 'kept' | 'jev_failed' | 'trash_failed' };
+
+async function cleanupEmail(email: CandidateEmail, threshold: number): Promise<CleanupOutcome> {
+  let probability: number;
   try {
-    const probability = await askJevNoul(buildEmailState(email), SPAM_QUESTION);
-    if (probability <= threshold) {
-      return null;
-    }
-    await trashEmail(email.id);
-    return { id: email.id, from: email.from, subject: email.subject, probability };
+    probability = await askJevNoul(buildEmailState(email), SPAM_QUESTION);
   } catch (err) {
-    logger.error(`Failed to process email ${email.id}: ${getErrorMessage(err)}`);
-    return null;
+    logger.error(`Jev failed for email ${email.id}: ${getErrorMessage(err)}`);
+    return { status: 'jev_failed' };
+  }
+
+  if (probability <= threshold) {
+    return { status: 'kept' };
+  }
+
+  try {
+    await trashEmail(email.id);
+    return { status: 'trashed', email: { id: email.id, from: email.from, subject: email.subject, probability } };
+  } catch (err) {
+    logger.error(`Failed to trash email ${email.id}: ${getErrorMessage(err)}`);
+    return { status: 'trash_failed' };
   }
 }
 
@@ -63,13 +77,19 @@ export async function emailCleanup(bot: Bot): Promise<void> {
       return;
     }
 
-    const trashed: TrashedEmail[] = [];
+    const outcomes: CleanupOutcome[] = [];
     for (const batch of chunk(emails, JEV_CONCURRENCY)) {
-      const results = await Promise.all(batch.map((email) => cleanupEmail(email, threshold)));
-      trashed.push(...results.filter((result): result is TrashedEmail => result !== null));
+      outcomes.push(...(await Promise.all(batch.map((email) => cleanupEmail(email, threshold)))));
     }
 
-    logger.log(`Checked ${emails.length} emails, trashed ${trashed.length}`);
+    const trashed = outcomes.flatMap((outcome) => (outcome.status === 'trashed' ? [outcome.email] : []));
+    const jevFailures = outcomes.filter((outcome) => outcome.status === 'jev_failed').length;
+    logger.log(`Checked ${emails.length} emails, trashed ${trashed.length}, Jev failures ${jevFailures}`);
+
+    if (jevFailures === emails.length) {
+      await sendShortenedMessage(bot, MY_USER_ID, buildJevUnavailableWarning(jevFailures));
+      return;
+    }
     if (!trashed.length) {
       return;
     }

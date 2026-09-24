@@ -2,7 +2,7 @@ import type { Bot } from 'grammy';
 import { fetchUserEmails, trashEmail } from '@services/gmail';
 import { sendShortenedMessage } from '@services/telegram';
 import { askJevNoul } from '@services/typesafe';
-import { buildCleanupReport, buildEmailState, emailCleanup } from './email-cleanup';
+import { buildCleanupReport, buildEmailState, buildJevUnavailableWarning, emailCleanup } from './email-cleanup';
 
 vi.mock('@services/gmail', () => ({ fetchUserEmails: vi.fn(), trashEmail: vi.fn() }));
 vi.mock('@services/telegram', () => ({ sendShortenedMessage: vi.fn() }));
@@ -48,6 +48,25 @@ describe('emailCleanup()', () => {
     expect(vi.mocked(trashEmail).mock.calls).toEqual([['b']]);
   });
 
+  it('should warn on Telegram when every Jev call in the run failed', async () => {
+    vi.mocked(fetchUserEmails).mockResolvedValue([email('a'), email('b')]);
+    vi.mocked(askJevNoul).mockRejectedValue(new Error('TypeSafe API key not configured'));
+
+    await emailCleanup(bot);
+
+    expect(trashEmail).not.toHaveBeenCalled();
+    expect(vi.mocked(sendShortenedMessage).mock.calls).toEqual([[bot, expect.any(Number), buildJevUnavailableWarning(2)]]);
+  });
+
+  it('should not warn when only some Jev calls failed', async () => {
+    vi.mocked(fetchUserEmails).mockResolvedValue([email('a'), email('b')]);
+    vi.mocked(askJevNoul).mockRejectedValueOnce(new Error('529')).mockResolvedValueOnce(0.1);
+
+    await emailCleanup(bot);
+
+    expect(sendShortenedMessage).not.toHaveBeenCalled();
+  });
+
   it('should not report an email whose trash call failed', async () => {
     vi.mocked(fetchUserEmails).mockResolvedValue([email('a')]);
     vi.mocked(askJevNoul).mockResolvedValue(0.99);
@@ -81,6 +100,15 @@ describe('emailCleanup()', () => {
 describe('buildEmailState()', () => {
   it('should include sender, subject and snippet', () => {
     expect(buildEmailState(email('a'))).toEqual('From: sender-a@example.com\nSubject: Subject a\nSnippet: Snippet a');
+  });
+});
+
+describe('buildJevUnavailableWarning()', () => {
+  test.each([
+    { skipped: 1, expected: '⚠️ Email cleanup: Jev unavailable (1 email skipped). Check TYPESAFE_API_KEY and the logs.' },
+    { skipped: 3, expected: '⚠️ Email cleanup: Jev unavailable (3 emails skipped). Check TYPESAFE_API_KEY and the logs.' },
+  ])('should return "$expected" for $skipped skipped', ({ skipped, expected }) => {
+    expect(buildJevUnavailableWarning(skipped)).toEqual(expected);
   });
 });
 
