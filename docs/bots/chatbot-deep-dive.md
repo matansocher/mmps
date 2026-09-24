@@ -30,7 +30,7 @@ Key engineering properties:
 | **Thread** | An isolated conversation identity. Here `thread_id = chatId` (a Telegram user ⇒ their own memory). |
 | **Context window** | Max tokens the model can attend to. Grows with history — hence summarization to stay under budget. |
 | **Token** | Sub-word unit of text; billing + context are measured in tokens. Tracked as `tokensIn`/`tokensOut`. |
-| **System prompt** | Instructions that define the agent's role/behavior, prepended to every call. Here a very large prompt describing each tool + guidelines. |
+| **System prompt** | Instructions that define the agent's role/behavior, prepended to every call. Here a short prompt with general behavior only; tool-specific rules live in each tool's description. |
 | **Structured output** | Forcing the LLM to return schema-valid JSON. Here the agent's own final step does it via a per-call `responseFormat` (provider JSON-schema mode). |
 | **Callback handler** | Hooks into the LangChain run lifecycle (LLM start/end, tool start/end/error) for logging, metering, streaming. |
 | **Middleware** | Logic injected into the agent graph — here `summarizationMiddleware` compresses history inside the loop. |
@@ -46,7 +46,7 @@ The feature lives in `src/features/chatbot/` and follows the repo's **Controller
 | `chatbot.init.ts` | Manual DI wiring. Opens Mongo connections, builds the checkpointer, creates service/controller/scheduler, registers routes + SPA, boots the bot. |
 | `chatbot.controller.ts` | grammY handlers: `/start /help /app /exercise`, text, photo, audio. Wraps calls in `MessageLoader` (reaction + typing + loader). |
 | `chatbot.service.ts` | The brain. Builds the model, summarization middleware, and agent service; `processMessage()` is the single entry point. |
-| `agent/agent.ts` | The **AgentDescriptor**: name, giant system prompt, and the array of 27 tools. |
+| `agent/agent.ts` | The **AgentDescriptor**: name, general-behavior system prompt, and the array of 27 tools. |
 | `agent/factory.ts` | `createAgentService()` — calls LangChain `createAgent()` and wraps the compiled graph. |
 | `agent/service.ts` | `AiService` — thin wrapper over the compiled graph: `invoke`/`stream`/`getState`, builds `RunnableConfig` (thread_id, callbacks, recursion limit). |
 | `agent/checkpointer.ts` | `createChatbotCheckpointer()` — Mongo-backed persistence, db `Chatbot`, 30-day TTL. |
@@ -113,7 +113,7 @@ export function agent(): AgentDescriptor {
 }
 ```
 
-The **system prompt** is large and deliberately explicit: it names every tool, its actions, natural-language trigger phrases, timezone rules (`Asia/Jerusalem`), reminder defaults (18:00), and the GitHub "implement/review" label workflow. This is **prompt engineering as configuration** — the model's routing accuracy depends heavily on this text.
+The **system prompt** is kept short: role, context injection, timezone (`Asia/Jerusalem`), language and tone. Everything tool-specific — trigger phrases, call sequences, confirmations, defaults (e.g. reminders default to 18:00), reply formatting, and the GitHub "implement/review" label workflow — lives in **each tool's own `description`**, so the model reads a rule right where it picks the tool. This is **prompt engineering as configuration**, co-located with the code it describes.
 
 ## 6. Factory & AiService wrapper
 
@@ -303,7 +303,7 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 
 | Decision | Why / tradeoff |
 |----------|----------------|
-| Single agent, 27 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by very explicit prompt guidance. |
+| Single agent, 27 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by explicit, per-tool rules in each tool's description. |
 | Summarize vs. truncate | Summarizing preserves long-term facts at the cost of an extra LLM call. Chosen because it's a *personal* assistant where remembering user facts matters. |
 | Mongo checkpointer + 30-day TTL | Durable across deploys; TTL bounds storage & respects privacy. Tradeoff: memory of very old conversations is intentionally lost. |
 | Fire-and-forget usage writes | Observability must never slow or break a user reply; accept rare lost records. |
@@ -323,13 +323,13 @@ A LangGraph **MongoDBSaver checkpointer** snapshots graph state after each step,
 `summarizationMiddleware`: past ~40 messages it compresses the oldest turns into a running summary and keeps the last ~20 verbatim. The summary is persisted by the checkpointer, so we bound tokens without dropping important facts.
 
 **Q: How are tools defined and how does the model know when to use them?**
-Each tool is `tool(runner, { name, description, schema })` with a Zod schema where every field is `.describe()`d. Those descriptions + the system prompt (which lists trigger phrases per tool) are converted to JSON schema for OpenAI function-calling; the model emits a tool call, the runtime executes it, and the result re-enters the loop.
+Each tool is `tool(runner, { name, description, schema })` with a Zod schema where every field is `.describe()`d. Those descriptions (which carry each tool's trigger phrases and usage rules) are converted to JSON schema for OpenAI function-calling; the model emits a tool call, the runtime executes it, and the result re-enters the loop.
 
 **Q: How do you track cost?**
 A per-turn `UsageCallbackHandler` sums `usage_metadata` tokens per model across every LLM call in the loop. `recordModelUsage` multiplies by a per-model price table (longest-prefix match for dated snapshots) and fire-and-forget stores a record in Mongo. A weekly cron DMs a breakdown.
 
 **Q: How would you add a new capability?**
-Create `src/shared/ai/tools/{name}/{name}.tool.ts` with a Zod schema + runner, export it from the barrel, add it to the `tools` array in `agent.ts`, and describe it in the system prompt. No graph changes needed — the ReAct loop picks it up automatically.
+Create `src/shared/ai/tools/{name}/{name}.tool.ts` with a Zod schema + runner, export it from the barrel, add it to the `tools` array in `agent.ts`, and put its usage rules in the tool's `description`. No graph changes needed — the ReAct loop picks it up automatically.
 
 **Q: What's the difference between the checkpointer and the summarization middleware?**
 Checkpointer = **persistence** (durable, resumable state per thread). Summarization = **context bounding** (keeps the state small & cheap). Orthogonal concerns that combine into durable-but-bounded memory.

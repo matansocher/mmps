@@ -80,7 +80,7 @@ export function agent(): AgentDescriptor {
 }
 ```
 
-3. Update the agent's system prompt in `agent.ts` so the model knows when to use the tool.
+3. Put usage rules (when to use it, call sequences, confirmations, defaults, reply formatting) in the tool's own `description`. The system prompt in `agent.ts` holds only general behavior.
 
 ::: tip
 Use the `/scaffold-ai-tool` skill to generate all of this automatically.

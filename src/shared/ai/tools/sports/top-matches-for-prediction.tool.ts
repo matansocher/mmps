@@ -168,6 +168,6 @@ You should analyze the matches and determine which ones are important based on f
 - Relegation battles
 - Derby matches
 
-Each match includes the matchId which you can use with the match_prediction_data tool to get detailed prediction data for the matches you deem important.`,
+Each match includes the matchId which you can use with the match_prediction_data tool to get detailed prediction data for the matches you deem important. To predict match outcomes, always start here to find the important upcoming matches, then call match_prediction_data for each.`,
   schema,
 });

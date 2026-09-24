@@ -57,7 +57,7 @@ Confirm the tool is re-exported from `@shared/ai` (the chatbot imports tools fro
 Edit `src/features/chatbot/agent/agent.ts`:
 - Add `{name}Tool` to the import from `@shared/ai` (keep alphabetical order).
 - Add `{name}Tool` to the `tools` array inside `agent()`.
-- Add a capability line/section to `AGENT_PROMPT` describing when to use it and any natural-language variations (match the style of existing tools like Polymarket/Spotify). Update `AGENT_DESCRIPTION` if the new capability is significant.
+- Put tool-specific rules (trigger phrases, call sequences, confirmations, defaults, reply formatting/emojis) in the tool's own `description`, not in `AGENT_PROMPT` — the system prompt holds only general behavior (match existing tools like Polymarket/Contacts). Update `AGENT_DESCRIPTION` if the new capability is significant.
 
 ### 4. Verify
 - `npm run lint:fix` on the changed files.
@@ -69,6 +69,6 @@ Edit `src/features/chatbot/agent/agent.ts`:
 - [ ] Business logic lives in a service/shared module, not the tool
 - [ ] Barrel export added in `tools/index.ts`
 - [ ] Imported + added to `tools` array in `agent.ts`
-- [ ] `AGENT_PROMPT` (and `AGENT_DESCRIPTION` if needed) updated
+- [ ] Tool `description` carries its usage rules (`AGENT_DESCRIPTION` updated if needed)
 - [ ] Lint + typecheck pass
 - [ ] Did not commit

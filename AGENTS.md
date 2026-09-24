@@ -633,7 +633,7 @@ Grouped roughly by domain:
 
 Note: `src/shared/ai/tools/` contains additional tool directories (`audio`, `crypto`, `flights`, `image`, `maps`, `music`, `rain-radar`, `stocks`) that are **not currently registered** in `agent.ts`.
 
-When adding a new tool: create `src/shared/ai/tools/{name}/{name}.tool.ts`, add to `src/shared/ai/tools/index.ts` barrel, register in `src/features/chatbot/agent/agent.ts`.
+When adding a new tool: create `src/shared/ai/tools/{name}/{name}.tool.ts`, add to `src/shared/ai/tools/index.ts` barrel, register in `src/features/chatbot/agent/agent.ts`. Put tool-specific rules (trigger phrases, call sequences, confirmations, defaults, reply formatting) in the tool's `description`; `AGENT_PROMPT` holds only general behavior.
 
 ### ToolCallbackHandler
 
