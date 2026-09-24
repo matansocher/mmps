@@ -39,9 +39,9 @@ export const CHATBOT_CONFIG = {
   },
   // Attaches up to `maxVideosPerChat` of the newest collected TikTok videos to the daily social
   // media digest as playable Telegram videos. All bounds are enforced against the actual stream,
-  // not the (missing/lying) Content-Length. Set CHATBOT_VIDEO_DIGEST=false to disable entirely.
+  // not the (missing/lying) Content-Length. Disabled by default; set CHATBOT_VIDEO_DIGEST=true to enable.
   videoDigest: {
-    enabled: env.CHATBOT_VIDEO_DIGEST !== 'false',
+    enabled: env.CHATBOT_VIDEO_DIGEST === 'true',
     maxVideosPerChat: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_VIDEOS || '5', 10),
     maxBytes: parseInt(env.CHATBOT_VIDEO_DIGEST_MAX_BYTES || '49000000', 10),
     // Per-attempt wall-clock budget for resolving + streaming a single video.
