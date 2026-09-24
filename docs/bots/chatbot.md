@@ -152,7 +152,7 @@ Tools (weather, reminders, etc.)
 Conversation memory is two complementary layers:
 
 - **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
-- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~40 messages), the older turns are compressed into a running summary and the most recent (~20) are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**.
+- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~40 messages), the older turns are compressed into a running summary and the most recent (~20) are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on the small model (`gpt-5-nano`), not the main agent model.
 
 Tune via environment variables:
 

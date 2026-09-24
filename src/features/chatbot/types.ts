@@ -46,6 +46,7 @@ export type InvokeOptions = {
   requestId?: string; // Upstream request identifier to correlate across systems
   tags?: readonly string[]; // Tags applied to the run and its sub-calls for filtering
   metadata?: Record<string, unknown>; // Extra JSON-serializable correlation metadata (no sensitive content)
+  responseSchema?: z.ZodTypeAny; // When set, the agent's final step returns this schema as `structuredResponse`
 };
 
 export type ChatbotResponse = {
