@@ -31,7 +31,7 @@ Key engineering properties:
 | **Context window** | Max tokens the model can attend to. Grows with history — hence summarization to stay under budget. |
 | **Token** | Sub-word unit of text; billing + context are measured in tokens. Tracked as `tokensIn`/`tokensOut`. |
 | **System prompt** | Instructions that define the agent's role/behavior, prepended to every call. Here a short prompt with general behavior only; tool-specific rules live in each tool's description. |
-| **Structured output** | Forcing the LLM to return schema-valid JSON. Here the agent's own final step does it via a per-call `responseFormat` (provider JSON-schema mode). |
+| **Structured output** | Forcing the LLM to return schema-valid JSON. Here the agent's own final step does it via a per-call `responseFormat` (a `final_reply` tool call). |
 | **Callback handler** | Hooks into the LangChain run lifecycle (LLM start/end, tool start/end/error) for logging, metering, streaming. |
 | **Middleware** | Logic injected into the agent graph — here `summarizationMiddleware` compresses history inside the loop. |
 | **Recursion limit** | Cap on agent loop iterations (default 100) to prevent infinite tool-calling loops. |
@@ -247,14 +247,15 @@ There's no official LangChain package for cost tracking — the callback handler
 
 ## 13. Structured output (same run, no 2nd pass)
 
-`processMessage()` is overloaded. Without a schema it returns a normal `ChatbotResponse`. With a Zod schema, the schema travels in the invocation `context` and `createStructuredResponseMiddleware()` (`agent/structured-response.ts`) sets it as the `responseFormat` for that run only. The agent's **final step** then answers in provider JSON-schema mode, with every tool result in view — no extra model call re-parsing the reply text:
+`processMessage()` is overloaded. Without a schema it returns a normal `ChatbotResponse`. With a Zod schema, the schema travels in the invocation `context` and `createStructuredResponseMiddleware()` (`agent/structured-response.ts`) sets it as the `responseFormat` for that run only. The agent's **final step** then answers by calling a `final_reply` tool (LangChain `toolStrategy`), with every tool result in view — no extra model call re-parsing the reply text:
 
 ```ts
 const result = await this.aiService.invoke(contextualMessage, { threadId, responseSchema, ... });
 return { response: formatAgentResponse(result), structured: result.structuredResponse };
 ```
 
-- The caller's schema is wrapped in an envelope `{ message, data }`, since JSON mode replaces the reply text. The middleware swaps the JSON back to plain `message` text before it is checkpointed, so the thread history stays readable, and returns `data` as `structuredResponse`.
+- The caller's schema is wrapped in an envelope `{ message, data }`, since the tool call replaces the reply text. The middleware swaps the tool call back to plain `message` text before it is checkpointed, so the thread history stays readable, and returns `data` as `structuredResponse`.
+- It uses `toolStrategy`, not `providerStrategy`: OpenAI's JSON-schema `response_format` forces every bound tool into strict mode, which rejects tools with optional fields (e.g. weather's `date`).
 - `structuredResponse` is not checkpointed, so it can't leak from a previous run. If the run ends without it (e.g. the model-call limit), `processMessage` throws.
 
 Used by schedulers that need a machine-readable flag next to the message (`football-update` → `hasMatches`, `makavdia-update` → `hasGame`).
