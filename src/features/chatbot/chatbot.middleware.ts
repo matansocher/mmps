@@ -1,7 +1,7 @@
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOpenAI } from '@langchain/openai';
 import { type AnyAgentMiddleware, modelCallLimitMiddleware, toolCallLimitMiddleware } from 'langchain';
-import { createSafeSummarizationMiddleware } from './agent';
+import { createSafeSummarizationMiddleware, createToolRetryMiddleware } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 
 // The production middleware stack. Shared by ChatbotService and the routing eval
@@ -33,5 +33,9 @@ export function createChatbotMiddleware(model: ChatAnthropic | ChatOpenAI): AnyA
   const modelCallLimit = modelCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.modelCallLimitPerRun, exitBehavior: 'end' });
   const toolCallLimit = toolCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.toolCallLimitPerRun, exitBehavior: 'continue' });
 
-  return [summarization, modelCallLimit, toolCallLimit];
+  // Retries read-only tool calls (weather, search, list actions, ...) on timeouts, 429 and 5xx,
+  // and returns clear errors the model can act on. Calls with side effects are never retried.
+  const toolRetry = createToolRetryMiddleware();
+
+  return [summarization, modelCallLimit, toolCallLimit, toolRetry];
 }

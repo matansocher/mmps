@@ -7,6 +7,6 @@ describe('createChatbotMiddleware()', () => {
 
     const names = createChatbotMiddleware(model).map((middleware) => middleware.name);
 
-    expect(names).toEqual(['SummarizationMiddleware', 'ModelCallLimitMiddleware', 'ToolCallLimitMiddleware']);
+    expect(names).toEqual(['SummarizationMiddleware', 'ModelCallLimitMiddleware', 'ToolCallLimitMiddleware', 'ToolRetryMiddleware']);
   });
 });

@@ -46,7 +46,7 @@ The feature lives in `src/features/chatbot/` and follows the repo's **Controller
 | `chatbot.init.ts` | Manual DI wiring. Opens Mongo connections, builds the checkpointer, creates service/controller/scheduler, registers routes + SPA, boots the bot. |
 | `chatbot.controller.ts` | grammY handlers: `/start /help /app /exercise`, text, photo, audio. Wraps calls in `MessageLoader` (reaction + typing + loader). |
 | `chatbot.service.ts` | The brain. Builds the model and agent service; `processMessage()` is the single entry point. |
-| `chatbot.middleware.ts` | `createChatbotMiddleware()` — the production middleware stack (summarization, call limits). Shared with the routing eval in `test/eval/chatbot` so it measures the agent as it runs in prod. |
+| `chatbot.middleware.ts` | `createChatbotMiddleware()` — the production middleware stack (summarization, call limits, tool retries). Shared with the routing eval in `test/eval/chatbot` so it measures the agent as it runs in prod. |
 | `agent/agent.ts` | The **AgentDescriptor**: name, giant system prompt, and the array of 27 tools. |
 | `agent/factory.ts` | `createAgentService()` — calls LangChain `createAgent()` and wraps the compiled graph. |
 | `agent/service.ts` | `AiService` — thin wrapper over the compiled graph: `invoke`/`stream`/`getState`, builds `RunnableConfig` (thread_id, callbacks, recursion limit). |
@@ -143,6 +143,7 @@ Conventions worth calling out:
 
 - **Action-enum pattern** — one tool exposes many operations via an `action` enum (keeps the tool count manageable vs. one tool per operation).
 - **Return strings (usually JSON strings)** — tools return serialized results; errors are caught and returned as `{ success:false, error }` so a failing tool degrades gracefully instead of throwing.
+- **Retries** — tools that do throw go through `createToolRetryMiddleware()` (`agent/tool-retry.ts`). Read-only calls listed in `READ_ONLY_TOOL_ACTIONS` are retried up to twice on timeouts, 429 and 5xx; calls with side effects never are. Every exception becomes an error `ToolMessage` with instructions for the model ("temporarily unavailable" vs. "unknown whether it went through, don't repeat it"). That conversion matters: once a middleware wraps tool calls, LangChain re-raises tool exceptions and the whole turn would fail.
 - **Zod = validation + schema** — the same schema both validates args and is converted to the JSON schema sent to the model for function calling.
 
 Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 27 registered tools group into: personal/productivity (calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics), media/social (spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels), information (weather, earthquake), sports/games (competitions, match summary/prediction, makavdia, wolt, worldly), markets (polymarket), dev (github).

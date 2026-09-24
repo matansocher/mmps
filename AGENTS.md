@@ -559,6 +559,14 @@ The chatbot's conversation memory is two complementary pieces wired up in `featu
 
 There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
+### Tool retries (chatbot)
+
+`agent/tool-retry.ts` provides `createToolRetryMiddleware()`, part of the production stack in `chatbot.middleware.ts`. It wraps every tool call:
+
+- **Retries read-only calls on transient errors** — timeouts, dropped connections (`ECONNRESET`, `ETIMEDOUT`, undici socket errors, `fetch failed` with such a cause), HTTP 408/425/429 and 5xx (not 501). Up to 2 retries with exponential backoff (500ms, 1s; capped at 4s). "Read-only" is an explicit allowlist, `READ_ONLY_TOOL_ACTIONS`, keyed by tool name → `true` or the read-only `action` values (e.g. `gmail: ['list']`). Anything with side effects (send, create, delete, merge, subscribe…) and any unlisted tool is **never** retried, so it can't run twice.
+- **Turns tool exceptions into error `ToolMessage`s** instead of failing the turn. This is required, not optional: once any middleware defines `wrapToolCall`, LangChain's `ToolNode` re-raises tool exceptions rather than feeding them back to the model. Non-transient errors keep LangChain's default text (`Error: …\n Please fix your mistakes.`). Transient ones tell the model what to do: for read-only calls, "temporarily unavailable, don't call it again this turn"; for calls with side effects, "unknown whether it went through, don't repeat it".
+- Only affects tools that **throw**. Many tools catch their own errors and return `{ success: false, error }` strings, which the middleware can't see.
+
 ### Token & cost observability (cross-bot)
 
 Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.
@@ -632,7 +640,7 @@ Grouped roughly by domain:
 
 Note: `src/shared/ai/tools/` contains additional tool directories (`audio`, `crypto`, `flights`, `image`, `maps`, `music`, `rain-radar`, `stocks`) that are **not currently registered** in `agent.ts`.
 
-When adding a new tool: create `src/shared/ai/tools/{name}/{name}.tool.ts`, add to `src/shared/ai/tools/index.ts` barrel, register in `src/features/chatbot/agent/agent.ts`.
+When adding a new tool: create `src/shared/ai/tools/{name}/{name}.tool.ts`, add to `src/shared/ai/tools/index.ts` barrel, register in `src/features/chatbot/agent/agent.ts`, and list its read-only actions in `READ_ONLY_TOOL_ACTIONS` (`src/features/chatbot/agent/tool-retry.ts`) so they get retried.
 
 ### ToolCallbackHandler
 
