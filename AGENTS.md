@@ -724,6 +724,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 | `telegram-scraper`     | Scrapes public channel posts via t.me/s web preview (no API key) |
 | `tenor`                | GIF search                                 |
 | `tiktok`               | TikTok scraping (RapidAPI)                 |
+| `typesafe`             | TypeSafe Jev structured-decision API (yes/no probabilities); powers the chatbot email cleanup |
 | `twitter`              | Twitter API v2                             |
 | `twitter-scraper`      | Key-less X/Twitter scraper (anonymous GraphQL + fallback) |
 | `weather`              | Weather aggregator                         |

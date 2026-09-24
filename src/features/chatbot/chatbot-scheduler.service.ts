@@ -2,11 +2,13 @@ import type { Bot } from 'grammy';
 import cron from 'node-cron';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
+import { CHATBOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import {
   birthdayReminder,
   dailySummary,
   earthquakeMonitor,
+  emailCleanup,
   exerciseReminder,
   footballUpdate,
   gamePriceCheck,
@@ -61,6 +63,10 @@ export class ChatbotSchedulerService {
     createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot));
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
+
+    if (CHATBOT_CONFIG.emailCleanup.enabled) {
+      createSchedule(`00 12,20 * * *`, async () => emailCleanup(this.bot));
+    }
 
     createSchedule(`0 10 1 * *`, async () => modelPricingCheck(this.bot));
 
