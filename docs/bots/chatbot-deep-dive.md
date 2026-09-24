@@ -31,7 +31,7 @@ Key engineering properties:
 | **Context window** | Max tokens the model can attend to. Grows with history — hence summarization to stay under budget. |
 | **Token** | Sub-word unit of text; billing + context are measured in tokens. Tracked as `tokensIn`/`tokensOut`. |
 | **System prompt** | Instructions that define the agent's role/behavior, prepended to every call. Here a very large prompt describing each tool + guidelines. |
-| **Structured output** | Forcing the LLM to return schema-valid JSON via `withStructuredOutput(zodSchema)`. |
+| **Structured output** | Forcing the LLM to return schema-valid JSON. Here the agent's own final step does it via a per-call `responseFormat` (provider JSON-schema mode). |
 | **Callback handler** | Hooks into the LangChain run lifecycle (LLM start/end, tool start/end/error) for logging, metering, streaming. |
 | **Middleware** | Logic injected into the agent graph — here `summarizationMiddleware` compresses history inside the loop. |
 | **Recursion limit** | Cap on agent loop iterations (default 100) to prevent infinite tool-calling loops. |
@@ -178,7 +178,7 @@ Persisting everything forever would blow the context window and cost. So the ser
 
 ```ts
 const summarization = summarizationMiddleware({
-  model: this.model,
+  model: this.summaryModel,                                      // gpt-5-nano, low reasoning effort
   trigger: [
     { tokens: CHATBOT_CONFIG.summarization.triggerTokens },      // ~24k (primary bound)
     { messages: CHATBOT_CONFIG.summarization.triggerMessages },  // ~40  (OR fallback)
@@ -189,6 +189,7 @@ const summarization = summarizationMiddleware({
 ```
 
 - Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
+- Summaries run on the small model (`GPT_SMALL_MODEL`, `gpt-5-nano`, reasoning effort `low`, no custom temperature) — compression doesn't need the main model, and it's ~8x cheaper on input.
 - The summary is written back into state and **persisted by the checkpointer** — old turns are compressed in Mongo, not deleted.
 - This **replaced** an older manual "drop-oldest" truncation (`truncateThread`) — the middleware does it *inside* the graph loop.
 - The summary prompt is tuned to preserve durable facts (name, location, health, diet, open tasks, decisions) and to **keep the original language** (Hebrew stays Hebrew).
@@ -244,17 +245,19 @@ handler sums tokens per model across the whole ReAct loop (incl. summarization L
 There's no official LangChain package for cost tracking — the callback handler *is* the implementation. Also: non-chatbot bots only persist usage when the chatbot is booted (it registers the `Chatbot` Mongo connection); otherwise writes fail silently.
 :::
 
-## 13. Structured output (optional 2nd pass)
+## 13. Structured output (same run, no 2nd pass)
 
-`processMessage()` is overloaded. Without a schema it returns a normal `ChatbotResponse`. With a Zod schema, it runs a **second constrained LLM call** to coerce the answer into typed JSON:
+`processMessage()` is overloaded. Without a schema it returns a normal `ChatbotResponse`. With a Zod schema, the schema travels in the invocation `context` and `createStructuredResponseMiddleware()` (`agent/structured-response.ts`) sets it as the `responseFormat` for that run only. The agent's **final step** then answers in provider JSON-schema mode, with every tool result in view — no extra model call re-parsing the reply text:
 
 ```ts
-const structuredModel = this.model.withStructuredOutput(responseSchema);
-const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)]);
-return { response: agentResponse, structured };
+const result = await this.aiService.invoke(contextualMessage, { threadId, responseSchema, ... });
+return { response: formatAgentResponse(result), structured: result.structuredResponse };
 ```
 
-Used by schedulers/API paths that need machine-readable results (e.g. a predictions payload) rather than free-form prose.
+- The caller's schema is wrapped in an envelope `{ message, data }`, since JSON mode replaces the reply text. The middleware swaps the JSON back to plain `message` text before it is checkpointed, so the thread history stays readable, and returns `data` as `structuredResponse`.
+- `structuredResponse` is not checkpointed, so it can't leak from a previous run. If the run ends without it (e.g. the model-call limit), `processMessage` throws.
+
+Used by schedulers that need a machine-readable flag next to the message (`football-update` → `hasMatches`, `makavdia-update` → `hasGame`).
 
 ## 14. Multimodal input/output
 
