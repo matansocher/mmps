@@ -68,4 +68,9 @@ describe('buildReport()', () => {
       },
     ]);
   });
+
+  it('should record the middleware the run used', () => {
+    expect(buildReport([result], 1, 'gpt-4.1-mini', ['ModelCallLimitMiddleware']).middleware).toEqual(['ModelCallLimitMiddleware']);
+    expect(buildReport([result], 1, 'gpt-4.1-mini').middleware).toEqual([]);
+  });
 });

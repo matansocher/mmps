@@ -32,11 +32,16 @@ with a warning.
 | `EVAL_RUNS`        | `3`     | Times each case is run (majority vote decides pass/fail — robust to non-determinism). |
 | `EVAL_CONCURRENCY` | `4`     | Max cases run in parallel (keeps under rate limits).                                  |
 | `EVAL_LIMIT`       | all     | Run only the first N cases (cheap smoke test).                                        |
+| `EVAL_MIDDLEWARE`  | on      | Set `false` to run the bare prompt + tools, without the production middleware stack.  |
 
 ```bash
 EVAL_LIMIT=5 EVAL_RUNS=1 npm run eval:chatbot   # ~5 calls, cheap smoke test
 EVAL_RUNS=5 EVAL_CONCURRENCY=6 npm run eval:chatbot
 ```
+
+Chatbot feature flags (e.g. `CHATBOT_*` env vars read by `CHATBOT_CONFIG`) apply to the eval too,
+because it builds the same middleware stack as prod. To measure a change, run the eval once
+with the flag off and once with it on, and compare the two reports.
 
 ### What you get
 
@@ -47,7 +52,7 @@ EVAL_RUNS=5 EVAL_CONCURRENCY=6 npm run eval:chatbot
   - `chatbot-routing.latest.json`
   - `chatbot-routing.latest.md`
   - `chatbot-routing.latest.html` — responsive, self-contained dashboard with the run date,
-    summary metrics, measured cost, category results, and expandable failure details.
+    middleware used, summary metrics, measured cost, category results, and expandable failure details.
 
 ### Metrics
 
@@ -113,8 +118,12 @@ Guidelines:
 
 ### Design notes
 
-- Agent is built **isolated**: in-memory saver, no Mongo checkpointer, no summarization —
-  we test the prompt + tools, not persistence.
+- Agent is built **isolated**: in-memory saver, no Mongo checkpointer — we test the prompt,
+  tools and middleware, not persistence.
+- It runs the **production middleware stack** from `createChatbotMiddleware()`
+  (`src/features/chatbot/chatbot.middleware.ts`), the same function `ChatbotService` uses, so
+  middleware added there is measured automatically. The report lists which middleware ran.
+  Summarization never triggers on these short threads.
 - Model is `gpt-4.1-mini` at `temperature: 0.2` (prod parity).
 - Spy tools are cloned from `agent().tools`, so the eval automatically tracks the real
   registered tool set and schemas.

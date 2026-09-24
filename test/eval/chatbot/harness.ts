@@ -2,6 +2,7 @@ import { tool } from '@langchain/core/tools';
 import { ChatOpenAI } from '@langchain/openai';
 import { env } from 'node:process';
 import { agent, createAgentService } from '@features/chatbot/agent';
+import { createChatbotMiddleware } from '@features/chatbot/chatbot.middleware';
 import { formatAgentResponse } from '@features/chatbot/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { UsageCallbackHandler } from '@shared/ai';
@@ -14,6 +15,12 @@ const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 
 // but swap every tool body for a spy that records the call and returns a stub. This tests
 // routing (which tool + args the prompt makes the model choose) without any side effects.
 const descriptor = agent();
+
+// The production middleware stack runs in the eval too, so it measures the agent as it runs
+// in prod. Set EVAL_MIDDLEWARE=false to run the bare prompt + tools and compare the two.
+const USE_MIDDLEWARE = env.EVAL_MIDDLEWARE !== 'false';
+
+export const middlewareNames: readonly string[] = USE_MIDDLEWARE ? createChatbotMiddleware(model).map((middleware) => middleware.name) : [];
 
 async function resolveFixture(fixture: ToolFixture | undefined, args: Record<string, unknown>): Promise<unknown> {
   if (typeof fixture === 'function') {
@@ -35,7 +42,9 @@ function buildSpyAgent(evalCase: EvalCase) {
     );
   });
 
-  const service = createAgentService({ name: 'CHATBOT-EVAL', prompt: descriptor.prompt, tools: spyTools }, { model });
+  // A fresh stack per run, like the agent itself, so no middleware state is shared between cases.
+  const middleware = USE_MIDDLEWARE ? createChatbotMiddleware(model) : undefined;
+  const service = createAgentService({ name: 'CHATBOT-EVAL', prompt: descriptor.prompt, tools: spyTools }, { model, middleware });
   return { service, calls };
 }
 

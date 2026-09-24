@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
 import { dataset } from './dataset';
 import { aggregateCase } from './evaluate';
-import { runOnce, runPool } from './harness';
+import { middlewareNames, runOnce, runPool } from './harness';
 import { buildReport, type EvalReport, printReport, writeReports } from './report';
 import type { CaseResult, RunResult } from './types';
 
@@ -43,7 +43,7 @@ describe.skipIf(!HAS_KEY)('chatbot system-prompt routing eval', () => {
       caseResults.set(evalCase.id, aggregateCase(evalCase, runs));
     }
 
-    report = buildReport([...caseResults.values()], RUNS_PER_CASE, CHAT_COMPLETIONS_MINI_MODEL);
+    report = buildReport([...caseResults.values()], RUNS_PER_CASE, CHAT_COMPLETIONS_MINI_MODEL, middlewareNames);
     printReport(report);
     const { jsonPath, markdownPath, htmlPath } = writeReports(report);
     // eslint-disable-next-line no-console

@@ -4,6 +4,10 @@ function escapeHtml(value: unknown): string {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
+export function formatMiddleware(middleware: readonly string[]): string {
+  return middleware.length ? middleware.join(', ') : 'none (bare prompt + tools)';
+}
+
 function pct(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
@@ -634,6 +638,10 @@ export function toHtml(report: EvalReport): string {
           <div>
             <dt>Model</dt>
             <dd>${escapeHtml(report.model)}</dd>
+          </div>
+          <div>
+            <dt>Middleware</dt>
+            <dd>${escapeHtml(formatMiddleware(report.middleware))}</dd>
           </div>
           <div>
             <dt>Cases</dt>

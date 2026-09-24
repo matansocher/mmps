@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { toHtml } from './html-report';
+import { formatMiddleware, toHtml } from './html-report';
 import type { CaseResult } from './types';
 
 const RESULTS_DIR = join(process.cwd(), 'test', 'eval', 'results');
@@ -22,6 +22,7 @@ export type EvalReport = {
   readonly generatedAt: string;
   readonly runsPerCase: number;
   readonly model: string;
+  readonly middleware: readonly string[]; // names of the agent middleware the run used; empty = bare prompt + tools
   readonly totalCases: number;
   readonly routingAccuracy: number; // overall, 0..1
   readonly argChecked: number;
@@ -63,7 +64,7 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.max(0, index)];
 }
 
-export function buildReport(results: CaseResult[], runsPerCase: number, model: string): EvalReport {
+export function buildReport(results: CaseResult[], runsPerCase: number, model: string, middleware: readonly string[] = []): EvalReport {
   const totalCases = results.length;
   const routingPassCount = results.filter((result) => result.routingPass).length;
 
@@ -131,6 +132,7 @@ export function buildReport(results: CaseResult[], runsPerCase: number, model: s
     generatedAt: new Date().toISOString(),
     runsPerCase,
     model,
+    middleware,
     totalCases,
     routingAccuracy: routingPassCount / totalCases,
     argChecked: argApplicable.length,
@@ -153,6 +155,7 @@ export function printReport(report: EvalReport): void {
   /* eslint-disable no-console */
   console.log('\n===== Chatbot Routing Eval =====');
   console.log(`model=${report.model}  cases=${report.totalCases}  runs/case=${report.runsPerCase}`);
+  console.log(`middleware=${formatMiddleware(report.middleware)}`);
   console.log('--------------------------------');
   console.log(`Routing accuracy   : ${pct(report.routingAccuracy)}`);
   console.log(`Argument correctness: ${pct(report.argCorrectness)} (over ${report.argChecked} arg-checked cases)`);
@@ -190,6 +193,7 @@ function toMarkdown(report: EvalReport): string {
   lines.push('');
   lines.push(`- Generated: ${report.generatedAt}`);
   lines.push(`- Model: \`${report.model}\``);
+  lines.push(`- Middleware: ${formatMiddleware(report.middleware)}`);
   lines.push(`- Cases: ${report.totalCases} · Runs per case: ${report.runsPerCase}`);
   lines.push('');
   lines.push(`## Summary`);

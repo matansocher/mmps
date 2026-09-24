@@ -6,6 +6,7 @@ const report: EvalReport = {
   generatedAt: '2026-07-15T09:59:43.580Z',
   runsPerCase: 3,
   model: 'gpt-4.1-mini',
+  middleware: ['SafeSummarizationMiddleware', 'ModelCallLimitMiddleware'],
   totalCases: 2,
   routingAccuracy: 0.5,
   argChecked: 1,
@@ -57,6 +58,7 @@ describe('toHtml()', () => {
 
     expect(html).toContain('Wednesday, July 15, 2026');
     expect(html).toContain('gpt-4.1-mini');
+    expect(html).toContain('SafeSummarizationMiddleware, ModelCallLimitMiddleware');
     expect(html).toContain('$1.2345');
     expect(html).toContain('123,456');
     expect(html).toContain('50.0%');
@@ -70,6 +72,12 @@ describe('toHtml()', () => {
 
     expect(html).toContain('&lt;script&gt;alert(&quot;unsafe&quot;)&lt;/script&gt;');
     expect(html).not.toContain('<script>alert("unsafe")</script>');
+  });
+
+  it('should label a run without middleware as the bare prompt + tools', () => {
+    const html = toHtml({ ...report, middleware: [] });
+
+    expect(html).toContain('none (bare prompt + tools)');
   });
 
   it('should render the passing empty state when there are no failures', () => {

@@ -45,7 +45,8 @@ The feature lives in `src/features/chatbot/` and follows the repo's **Controller
 |------|----------------|
 | `chatbot.init.ts` | Manual DI wiring. Opens Mongo connections, builds the checkpointer, creates service/controller/scheduler, registers routes + SPA, boots the bot. |
 | `chatbot.controller.ts` | grammY handlers: `/start /help /app /exercise`, text, photo, audio. Wraps calls in `MessageLoader` (reaction + typing + loader). |
-| `chatbot.service.ts` | The brain. Builds the model, summarization middleware, and agent service; `processMessage()` is the single entry point. |
+| `chatbot.service.ts` | The brain. Builds the model and agent service; `processMessage()` is the single entry point. |
+| `chatbot.middleware.ts` | `createChatbotMiddleware()` — the production middleware stack (summarization, call limits). Shared with the routing eval in `test/eval/chatbot` so it measures the agent as it runs in prod. |
 | `agent/agent.ts` | The **AgentDescriptor**: name, giant system prompt, and the array of 27 tools. |
 | `agent/factory.ts` | `createAgentService()` — calls LangChain `createAgent()` and wraps the compiled graph. |
 | `agent/service.ts` | `AiService` — thin wrapper over the compiled graph: `invoke`/`stream`/`getState`, builds `RunnableConfig` (thread_id, callbacks, recursion limit). |
@@ -174,7 +175,7 @@ The official saver pins mongodb v6 types while the repo uses v7; the runtime API
 
 ## 9. Context bounding — summarization middleware
 
-Persisting everything forever would blow the context window and cost. So the service registers LangChain's `summarizationMiddleware` into the agent graph:
+Persisting everything forever would blow the context window and cost. So `createChatbotMiddleware()` (`chatbot.middleware.ts`) registers LangChain's `summarizationMiddleware` into the agent graph:
 
 ```ts
 const summarization = summarizationMiddleware({
