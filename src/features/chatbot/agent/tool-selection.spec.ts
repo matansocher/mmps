@@ -1,7 +1,7 @@
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { MemorySaver } from '@langchain/langgraph';
-import { createAgent, createMiddleware, fakeModel, tool } from 'langchain';
+import { createAgent, createMiddleware, fakeModel, type ReactAgent, tool } from 'langchain';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createToolSelectionMiddleware } from './tool-selection';
@@ -30,7 +30,8 @@ function createTestAgent(mainModel: ReturnType<typeof fakeModel>, selectorModel:
       return handler(request);
     },
   });
-  const agent = createAgent({
+  // Typed loosely: langchain's inferred invoke() input type collapses to `never` for these middleware.
+  const agent: ReactAgent = createAgent({
     model: mainModel,
     tools,
     checkpointer: new MemorySaver(),
