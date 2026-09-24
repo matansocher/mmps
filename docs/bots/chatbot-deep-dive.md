@@ -172,6 +172,16 @@ The checkpointer is built **before** `provideTelegramBot()` in `init`. grammY lo
 The official saver pins mongodb v6 types while the repo uses v7; the runtime API is compatible, so the client is cast `as never` at that one boundary — a pragmatic, well-commented escape hatch.
 :::
 
+## 8b. Tool selection middleware
+
+Sending all ~28 tool schemas on every model call costs ~4k tokens and makes it easier to pick the wrong tool. `createToolSelectionMiddleware()` (`agent/tool-selection.ts`) narrows them per turn:
+
+- A small model (`gpt-5-nano`, reasoning `minimal`) gets a compact catalog (tool name + first paragraph of its description) and the last ~6 user/assistant messages, and returns the tool names the turn may need, including follow-up steps.
+- It runs **once per user message** (cached by the message id), so each step of a multi-step turn sees the same tools.
+- `web_search` is always included (`CHATBOT_CONFIG.toolSelection.alwaysInclude`).
+- Any selector error falls back to **all tools**, so a turn never fails because of it. Kill switch: `CHATBOT_TOOL_SELECTION=false`.
+- Because tool rules live in each tool's description, a tool's rules are only sent when the tool is.
+
 ## 9. Context bounding — summarization middleware
 
 Persisting everything forever would blow the context window and cost. So the service registers LangChain's `summarizationMiddleware` into the agent graph:

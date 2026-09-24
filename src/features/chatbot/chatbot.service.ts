@@ -8,10 +8,10 @@ import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_COMPLETIONS_MINI_MODEL, GPT_SMALL_MODEL } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgentService, createSafeSummarizationMiddleware } from './agent';
+import { AiService, createAgentService, createSafeSummarizationMiddleware, createToolSelectionMiddleware } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
@@ -67,10 +67,21 @@ export class ChatbotService {
     const modelCallLimit = modelCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.modelCallLimitPerRun, exitBehavior: 'end' });
     const toolCallLimit = toolCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.toolCallLimitPerRun, exitBehavior: 'continue' });
 
+    // gpt-5-nano is a reasoning model: it rejects a custom temperature, and minimal effort keeps the
+    // extra per-turn selection call fast.
+    const toolSelection = CHATBOT_CONFIG.toolSelection.enabled
+      ? [
+          createToolSelectionMiddleware({
+            model: new ChatOpenAI({ model: GPT_SMALL_MODEL, reasoning: { effort: 'minimal' }, apiKey: env.OPENAI_API_KEY, timeout: 30_000 }),
+            alwaysInclude: CHATBOT_CONFIG.toolSelection.alwaysInclude,
+          }),
+        ]
+      : [];
+
     this.aiService = createAgentService(agent(), {
       model: this.model,
       checkpointer,
-      middleware: [summarization, modelCallLimit, toolCallLimit],
+      middleware: [summarization, ...toolSelection, modelCallLimit, toolCallLimit],
       toolCallbackOptions,
     });
   }

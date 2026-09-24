@@ -559,6 +559,10 @@ The chatbot's conversation memory is two complementary pieces wired up in `featu
 
 There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
+### Tool selection (chatbot)
+
+`agent/tool-selection.ts` (`createToolSelectionMiddleware`) sends the main model only the tools relevant to the current turn instead of all ~28. A small model (`GPT_SMALL_MODEL`, reasoning effort `minimal`) picks them from a catalog (tool name + first paragraph of its description) and the last few messages, so short follow-ups ("yes, send it") still resolve. It runs **once per user message** (cached by message id), so every step of a multi-step turn sees the same tools. Tools in `CHATBOT_CONFIG.toolSelection.alwaysInclude` (`web_search`) skip selection, and any selector failure falls back to all tools. Kill switch: `CHATBOT_TOOL_SELECTION=false`. This is why tool-specific rules belong in each tool's description: they are only sent when the tool is.
+
 ### Token & cost observability (cross-bot)
 
 Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.

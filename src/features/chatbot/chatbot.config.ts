@@ -26,6 +26,12 @@ export const CHATBOT_CONFIG = {
     // Keep roughly this many tokens of the most recent turns verbatim after summarizing the rest.
     keepTokens: parseInt(env.CHATBOT_SUMMARY_KEEP_TOKENS || '8000', 10),
   },
+  // Sends the main model only the tools relevant to the current turn, picked once per user message by
+  // the small model. `alwaysInclude` tools skip selection. Set CHATBOT_TOOL_SELECTION=false to send all tools.
+  toolSelection: {
+    enabled: env.CHATBOT_TOOL_SELECTION !== 'false',
+    alwaysInclude: ['web_search'],
+  },
   // Bounded execution budget for a single turn. A request timeout only covers one model call,
   // and recursionLimit only bounds graph steps — these are the real per-turn ceilings.
   execution: {
