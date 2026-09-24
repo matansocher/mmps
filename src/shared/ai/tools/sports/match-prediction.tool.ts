@@ -47,10 +47,10 @@ After getting this data, analyze it comprehensively considering:
 - Home advantage (playing at home venue)
 - Recent form and momentum (W/D/L patterns)
 - Goals statistics (attacking/defensive strength)
-- Betting odds (they reflect market expectations and are very valuable)
+- Betting odds (they reflect market expectations and are very valuable — weigh them heavily)
 - Historical meetings between the teams
 - Any other contextual factors
 
-Provide probabilities for Home Win, Draw, and Away Win (must sum to 100%) and explain your reasoning in detail.`,
+Provide probabilities for Home Win, Draw, and Away Win (must sum to 100%) with brief reasoning (2-3 sentences max per match).`,
   schema,
 });

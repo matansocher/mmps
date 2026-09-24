@@ -22,6 +22,6 @@ async function runner({ query }: z.infer<typeof schema>) {
 export const webSearchTool = tool(runner, {
   name: 'web_search',
   description:
-    'Search the internet for real-time, up-to-date information (news, current events, prices, facts, recent developments, or anything not in your training data). Use this whenever the user asks about something recent or that requires live web results, similar to searching on Google or ChatGPT. Returns an answer plus source links.',
+    'Search the internet for real-time, up-to-date information (news, current events, prices, facts, recent developments, or anything not in your training data). Use this whenever the user asks about something recent or that requires live web results, similar to searching on Google or ChatGPT. Returns an answer plus source links. Base your answer on the results and cite the most relevant sources as markdown links.',
   schema,
 });

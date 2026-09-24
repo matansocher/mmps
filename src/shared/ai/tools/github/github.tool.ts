@@ -140,7 +140,14 @@ async function runner(input: z.infer<typeof schema>) {
 
 export const githubTool = tool(runner, {
   name: 'github',
-  description:
-    'Interact with the GitHub repository matansocher/mmps (the ONLY repo — never ask the user which repo, branch, or file). Can create, read, update issues and PRs, add labels, list them, and check PR status checks. To build or change anything in the code (a "new feature", bug fix, or behavior change), use create_issue with a detailed description of the request, then add_labels with the "implement" label to that issue to trigger the automated implementation workflow. To deploy the repo to production (Heroku), use the "deploy" action, which dispatches the Heroku deploy GitHub Actions workflow. To merge an open pull request into the base branch, use the "merge_pr" action with the PR number (defaults to squash merge).',
+  description: `Interact with the GitHub repository matansocher/mmps (the ONLY repo — never ask the user which repo, branch, or file). Can create, read, update issues and PRs, add labels, list them, and check PR status checks. To build or change anything in the code (a "new feature", bug fix, or behavior change), use create_issue with a detailed description of the request, then add_labels with the "implement" label to that issue to trigger the automated implementation workflow. To deploy the repo to production (Heroku), use the "deploy" action, which dispatches the Heroku deploy GitHub Actions workflow. To merge an open pull request into the base branch, use the "merge_pr" action with the PR number (defaults to squash merge).
+
+Flows:
+- Feature / code-change requests ("build", "add", "change", "fix" anything in the code): create_issue with a clear title and a body capturing every specific (times, names, values), then immediately add_labels the "implement" label to that issue. The workflow's AI locates the code itself. Confirm the issue number/link and that a PR will follow.
+- "Review this PR" / "request a code review": add the "review" label to the PR (prNumber).
+- "Implement this issue" (existing issue number): add the "implement" label to the issue (issueNumber).
+- "Deploy mmps" / "ship it to production": use "deploy", then confirm it was dispatched.
+- "Merge PR 42": use "merge_pr" with the prNumber; only pass mergeMethod when explicitly asked. Confirm the result.
+- If an action returns success: false, relay the error briefly.`,
   schema,
 });

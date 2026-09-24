@@ -132,6 +132,9 @@ async function runner({ action, limit }: z.infer<typeof schema>) {
 
 export const exerciseTool = tool(runner, {
   name: 'exercise_tracker',
-  description: "Manage exercise tracking - log exercises, check today's status, get history, and calculate streaks",
+  description: `Manage exercise tracking - log exercises, check today's status, get history, and calculate streaks.
+
+Log an exercise when the user says things like "I exercised", "just worked out", "finished my training", or "completed my workout".
+After logging, reply with a short, encouraging confirmation. Do NOT mention the current streak or all-time exercise count. Use motivational emojis (💪🔥🏋️‍♂️🚀💯).`,
   schema,
 });
