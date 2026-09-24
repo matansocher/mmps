@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { MemorySaver } from '@langchain/langgraph';
-import { createAgent, fakeModel, tool } from 'langchain';
+import { createAgent, fakeModel, type ReactAgent, tool } from 'langchain';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createStructuredResponseMiddleware } from './structured-response';
@@ -8,7 +8,8 @@ import { createStructuredResponseMiddleware } from './structured-response';
 const matchesTool = tool(async () => 'Arsenal 2-1 Chelsea (FT)', { name: 'match_summary', description: 'Get matches', schema: z.object({}) });
 const responseSchema = z.object({ hasMatches: z.boolean() });
 
-function createTestAgent(model: ReturnType<typeof fakeModel>) {
+// Typed loosely: langchain's inferred invoke() input type collapses to `never` for this middleware.
+function createTestAgent(model: ReturnType<typeof fakeModel>): ReactAgent {
   return createAgent({ model, tools: [matchesTool], checkpointer: new MemorySaver(), middleware: [createStructuredResponseMiddleware()] });
 }
 
