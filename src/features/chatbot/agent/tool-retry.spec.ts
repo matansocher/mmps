@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
 import { MemorySaver } from '@langchain/langgraph';
-import { createAgent, fakeModel, tool } from 'langchain';
+import { createAgent, fakeModel, type ReactAgent, tool } from 'langchain';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createToolRetryMiddleware, isReadOnlyToolCall, isTransientToolError } from './tool-retry';
@@ -29,7 +29,8 @@ async function runAgent(toolInstance: ReturnType<typeof failingTool>['instance']
   const model = fakeModel()
     .respondWithTools([{ name: toolInstance.name, args }])
     .respond(new AIMessage('done'));
-  const agent = createAgent({ model, tools: [toolInstance], checkpointer: new MemorySaver(), middleware: [createToolRetryMiddleware({ initialDelayMs: 0 })] });
+  // Typed loosely: langchain's inferred invoke() input type collapses to `never` for this middleware.
+  const agent: ReactAgent = createAgent({ model, tools: [toolInstance], checkpointer: new MemorySaver(), middleware: [createToolRetryMiddleware({ initialDelayMs: 0 })] });
   const result = await agent.invoke({ messages: [new HumanMessage('go')] }, { configurable: { thread_id: `t-${Math.random()}` } });
   return result.messages.find((message) => ToolMessage.isInstance(message)) as ToolMessage;
 }
