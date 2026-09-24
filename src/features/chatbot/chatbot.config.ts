@@ -63,9 +63,7 @@ export const CHATBOT_CONFIG = {
   },
   // Twice-daily Gmail cleanup: trashes unread inbox emails from the last 24h that Jev (TypeSafe)
   // rates as spam/ad with probability above `threshold`. Needs TYPESAFE_API_KEY.
-  // Set CHATBOT_EMAIL_CLEANUP=false to disable.
   emailCleanup: {
-    enabled: env.CHATBOT_EMAIL_CLEANUP !== 'false',
     threshold: 0.75,
     maxEmails: 50,
   },
