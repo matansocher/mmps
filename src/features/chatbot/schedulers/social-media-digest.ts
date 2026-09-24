@@ -92,7 +92,7 @@ async function logBacklog(chatId: number, loadedCount: number): Promise<void> {
 export async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost[], digestDate: string): Promise<void> {
   // Fix the video selection once per (chat, local date) so restarts/concurrent runs converge on
   // the same set, and snapshot each video's fields so deleting the pending posts is still safe.
-  const videos = selectTikTokPendingPosts(posts, CHATBOT_CONFIG.videoDigest.maxVideosPerChat).map(toVideoEntry);
+  const videos = CHATBOT_CONFIG.videoDigest.enabled ? selectTikTokPendingPosts(posts, CHATBOT_CONFIG.videoDigest.maxVideosPerChat).map(toVideoEntry) : [];
   const images = CHATBOT_CONFIG.imageDigest.enabled ? selectTwitterImagePendingPosts(posts, CHATBOT_CONFIG.imageDigest.maxPostsPerChat).map(toImageEntry) : [];
   const record = await claimDigestDelivery({ chatId, digestDate, videos, images });
 

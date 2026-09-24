@@ -1,8 +1,9 @@
 import { ObjectId } from 'mongodb';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { sendShortenedMessage } from '@services/telegram';
 import { claimDigestDelivery, deletePendingPosts, markDigestTextDelivered } from '@shared/social-follower';
 import type { DigestDelivery, PendingPost } from '@shared/social-follower';
+import { CHATBOT_CONFIG } from '../chatbot.config';
 import { processDigestForChat, selectTwitterImagePendingPosts } from './social-media-digest';
 import { deliverDigestImages } from './social-media-image-delivery';
 import { deliverDigestVideos } from './social-media-video-delivery';
@@ -50,8 +51,26 @@ beforeEach(() => {
   vi.mocked(deliverDigestVideos).mockResolvedValue(undefined);
 });
 
+const videoDigestDefault = CHATBOT_CONFIG.videoDigest.enabled;
+afterEach(() => {
+  CHATBOT_CONFIG.videoDigest.enabled = videoDigestDefault;
+});
+
 describe('processDigestForChat()', () => {
+  it('by default sends only the text digest, without selecting or delivering videos', async () => {
+    expect(videoDigestDefault).toEqual(false);
+
+    await processDigestForChat(bot, CHAT_ID, [tiktokPost('a')], DIGEST_DATE);
+
+    expect(sendShortenedMessage).toHaveBeenCalled();
+    expect(markDigestTextDelivered).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(claimDigestDelivery).mock.calls[0][0].videos).toEqual([]);
+    expect(deliverDigestVideos).not.toHaveBeenCalled();
+  });
+
   it('delivers the text digest then the videos, and marks text delivered', async () => {
+    CHATBOT_CONFIG.videoDigest.enabled = true;
+
     await processDigestForChat(bot, CHAT_ID, [tiktokPost('a')], DIGEST_DATE);
 
     expect(sendShortenedMessage).toHaveBeenCalled();
@@ -70,6 +89,7 @@ describe('processDigestForChat()', () => {
   });
 
   it('on restart (text already delivered) does not resend text but still runs video delivery', async () => {
+    CHATBOT_CONFIG.videoDigest.enabled = true;
     vi.mocked(claimDigestDelivery).mockResolvedValue(claimedRecord({ textDeliveredAt: new Date() }));
 
     await processDigestForChat(bot, CHAT_ID, [tiktokPost('a')], DIGEST_DATE);
