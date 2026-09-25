@@ -142,6 +142,7 @@ Conventions worth calling out:
 
 - **Action-enum pattern** — one tool exposes many operations via an `action` enum (keeps the tool count manageable vs. one tool per operation).
 - **Return strings (usually JSON strings)** — tools return serialized results; errors are caught and returned as `{ success:false, error }` so a failing tool degrades gracefully instead of throwing.
+- **Retries** — tools that do throw go through `createToolRetryMiddleware()` (`agent/tool-retry.ts`). Read-only calls listed in `READ_ONLY_TOOL_ACTIONS` are retried up to twice on timeouts, 429 and 5xx; calls with side effects never are. Every exception becomes an error `ToolMessage` with instructions for the model ("temporarily unavailable" vs. "unknown whether it went through, don't repeat it"). That conversion matters: once a middleware wraps tool calls, LangChain re-raises tool exceptions and the whole turn would fail.
 - **Zod = validation + schema** — the same schema both validates args and is converted to the JSON schema sent to the model for function calling.
 
 Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 27 registered tools group into: personal/productivity (calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics), media/social (spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels), information (weather, earthquake), sports/games (competitions, match summary/prediction, makavdia, wolt, worldly), markets (polymarket), dev (github).

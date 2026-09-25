@@ -10,7 +10,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_COMPLETIONS_MINI_MODEL, GPT_SMALL_MODEL } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgentService, createSafeSummarizationMiddleware, createStructuredResponseMiddleware } from './agent';
+import { AiService, createAgentService, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
@@ -70,10 +70,14 @@ export class ChatbotService {
     const modelCallLimit = modelCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.modelCallLimitPerRun, exitBehavior: 'end' });
     const toolCallLimit = toolCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.toolCallLimitPerRun, exitBehavior: 'continue' });
 
+    // Retries read-only tool calls (weather, search, list actions, ...) on timeouts, 429 and 5xx,
+    // and returns clear errors the model can act on. Calls with side effects are never retried.
+    const toolRetry = createToolRetryMiddleware();
+
     this.aiService = createAgentService(agent(), {
       model: this.model,
       checkpointer,
-      middleware: [summarization, modelCallLimit, toolCallLimit, createStructuredResponseMiddleware()],
+      middleware: [summarization, modelCallLimit, toolCallLimit, toolRetry, createStructuredResponseMiddleware()],
       toolCallbackOptions,
     });
   }

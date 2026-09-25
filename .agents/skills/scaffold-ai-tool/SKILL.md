@@ -57,6 +57,7 @@ Confirm the tool is re-exported from `@shared/ai` (the chatbot imports tools fro
 Edit `src/features/chatbot/agent/agent.ts`:
 - Add `{name}Tool` to the import from `@shared/ai` (keep alphabetical order).
 - Add `{name}Tool` to the `tools` array inside `agent()`.
+- If the tool (or some of its actions) only reads data, add it to `READ_ONLY_TOOL_ACTIONS` in `src/features/chatbot/agent/tool-retry.ts` so timeouts, 429 and 5xx are retried. Leave out anything with side effects (send, create, delete, subscribe…); unlisted tools are never retried.
 - Put tool-specific rules (trigger phrases, call sequences, confirmations, defaults, reply formatting/emojis) in the tool's own `description`, not in `AGENT_PROMPT` — the system prompt holds only general behavior (match existing tools like Polymarket/Contacts). Update `AGENT_DESCRIPTION` if the new capability is significant.
 
 ### 4. Verify
@@ -69,6 +70,7 @@ Edit `src/features/chatbot/agent/agent.ts`:
 - [ ] Business logic lives in a service/shared module, not the tool
 - [ ] Barrel export added in `tools/index.ts`
 - [ ] Imported + added to `tools` array in `agent.ts`
+- [ ] Read-only actions added to `READ_ONLY_TOOL_ACTIONS` in `tool-retry.ts` (if any)
 - [ ] Tool `description` carries its usage rules (`AGENT_DESCRIPTION` updated if needed)
 - [ ] Lint + typecheck pass
 - [ ] Did not commit
