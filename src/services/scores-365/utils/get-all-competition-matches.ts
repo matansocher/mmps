@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import type { Competition, CompetitionDetails, MatchDetails } from '../interface';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 import { getMatchDetails } from '../utils';
+import { scores365Get } from './scores-365-get';
 
 /**
  * Fetches ALL matches for a competition (scheduled, live, and finished)
@@ -17,7 +17,7 @@ export async function getAllCompetitionMatches(competitionId: number): Promise<C
     timezoneName: DEFAULT_TIMEZONE,
     userCountryId: `${COUNTRY_ID}`,
   };
-  const result = await axios.get(`${SCORES_365_API_URL}/games/fixtures?${new URLSearchParams(queryParams)}`);
+  const result = await scores365Get(`${SCORES_365_API_URL}/games/fixtures?${new URLSearchParams(queryParams)}`);
   const matchesRes = result?.data?.games || [];
   if (!matchesRes?.length) {
     return { competition: null, matches: [] };
