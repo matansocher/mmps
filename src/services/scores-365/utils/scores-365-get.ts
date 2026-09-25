@@ -4,7 +4,7 @@ import { Logger, sleep } from '@core/utils';
 const logger = new Logger('Scores365');
 
 const MAX_RETRIES = 2;
-const BASE_DELAY_MS = 500;
+const BASE_DELAY_MS = 2000;
 // 365Scores normally answers in well under a second; a short per-attempt timeout leaves room to retry.
 const REQUEST_TIMEOUT_MS = 10_000;
 const TRANSIENT_ERROR_CODES = new Set(['ECONNABORTED', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'EAI_AGAIN', 'EPIPE', 'ENOTFOUND', 'ERR_NETWORK']);
