@@ -272,6 +272,106 @@ p {
 .briefing p {
   margin: 12px auto;
 }
+.briefing-screen {
+  justify-content: safe center;
+}
+.briefing-screen .briefing {
+  padding: 16px 22px;
+}
+.briefing-screen .stats {
+  margin: 12px 0;
+}
+.menu {
+  margin: 10px 0 6px;
+}
+.menu-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.menu-item {
+  background: #f1e7cf;
+  color: #2b1c10;
+  border-top: 4px solid #2a5f7c;
+  padding: 7px 10px 6px;
+  min-width: 150px;
+  text-align: left;
+}
+.menu-item.new {
+  box-shadow: 0 0 0 2px #e8c481;
+}
+.menu-item strong {
+  display: block;
+  font-weight: 400;
+  font-size: 14px;
+}
+.menu-item small {
+  font:
+    10px Arial,
+    sans-serif;
+  color: #6b5537;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 5px 0;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font:
+    11px Arial,
+    sans-serif;
+  background: #2a2118;
+  color: #f6e7c9;
+  border-radius: 12px;
+  padding: 2px 8px 2px 2px;
+}
+.chip i {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: url('/hells-kitchen/game-assets/ingredients.webp') 0 0 / 400% 200%;
+}
+.recipe-detail .chips {
+  justify-content: center;
+}
+.how-to {
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0;
+  margin: 12px 0 4px;
+  text-align: left;
+}
+.how-to li {
+  counter-increment: step;
+  border: 1px solid #5e4f36;
+  background: #120e0bcc;
+  padding: 7px 9px;
+  font:
+    11px/1.4 Arial,
+    sans-serif;
+  color: #d9c9ab;
+}
+.how-to strong {
+  display: block;
+  color: #e8c481;
+  font:
+    14px Georgia,
+    serif;
+}
+.how-to strong::before {
+  content: counter(step) '. ';
+}
 .stats {
   display: flex;
   gap: 30px;
@@ -346,6 +446,18 @@ p {
   gap: 18px;
   align-items: center;
   margin: 14px 0;
+}
+.setting.toggle {
+  grid-template-columns: 100px 24px 1fr;
+}
+.setting.toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: #c9a45c;
+}
+.setting.toggle span:last-child {
+  color: #b9a888;
+  font-size: 14px;
 }
 input[type='range'] {
   width: 100%;

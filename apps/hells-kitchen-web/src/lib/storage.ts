@@ -26,14 +26,14 @@ export function exportLocal(): string {
   return localStorage.getItem(KEY) ?? '';
 }
 
-export type Settings = { readonly music: number; readonly effects: number; readonly voice: number };
+export type Settings = { readonly music: number; readonly effects: number; readonly voice: number; readonly guidance: boolean };
 export function readSettings(): Settings {
   try {
     const value = JSON.parse(localStorage.getItem('hells-kitchen:settings') ?? '{}');
     const volume = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : fallback);
-    return { music: volume(value.music, 0.25), effects: volume(value.effects, 0.6), voice: volume(value.voice, 0.7) };
+    return { music: volume(value.music, 0.25), effects: volume(value.effects, 0.6), voice: volume(value.voice, 0.7), guidance: value.guidance !== false };
   } catch {
-    return { music: 0.25, effects: 0.6, voice: 0.7 };
+    return { music: 0.25, effects: 0.6, voice: 0.7, guidance: true };
   }
 }
 export function writeSettings(settings: Settings): void {

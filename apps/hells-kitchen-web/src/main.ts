@@ -1,7 +1,8 @@
-import { dayFor, DAYS, INGREDIENT_LABELS, rankFor, RECIPES } from '../../../src/features/hells-kitchen/game/content';
-import { advanceRun, applyCommand, createRun, recordResult, starsFor, STEP_SECONDS } from '../../../src/features/hells-kitchen/game/engine';
+import { dayFor, DAYS, INGREDIENT_LABELS, INGREDIENTS, rankFor, RECIPES } from '../../../src/features/hells-kitchen/game/content';
+import { advanceRun, applyCommand, cookingSeconds, createRun, menuFor, recordResult, starsFor, STEP_SECONDS } from '../../../src/features/hells-kitchen/game/engine';
 import { parseSave } from '../../../src/features/hells-kitchen/game/schema';
-import type { Command, Run, Save } from '../../../src/features/hells-kitchen/game/types';
+import type { Command, Ingredient, Run, Save } from '../../../src/features/hells-kitchen/game/types';
+import { nextStep } from './game/guide';
 import { ApiError, getSave, putSave, request } from './lib/api';
 import { GameAudio } from './lib/audio';
 import { exportLocal, initialSave, readLocal, readSettings, writeLocal, writeSettings } from './lib/storage';
@@ -30,6 +31,7 @@ let generation = 0;
 let screen = 'login';
 let resultRecorded = '';
 let previousScreen = 'home';
+let guidanceOn = readSettings().guidance;
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
@@ -299,7 +301,9 @@ function briefing(day: number, mode: Run['mode']): void {
           [String(d.groupSize), 'Dishes per order'],
         ],
   );
-  card.append(element('p', 'note', 'Start the slowest dishes first. Click ready pans immediately. Prepare the next ingredients while the stove is working.'));
+  if (mode === 'career') card.append(menu(day));
+  if (mode === 'career' && day <= 3) card.append(howTo());
+  card.append(element('p', 'note', 'Start the slowest dishes first so an order finishes together. Plate a dish the moment it is READY — it burns if you wait.'));
   const row = element('div', 'row');
   row.append(
     button(
@@ -314,6 +318,48 @@ function briefing(day: number, mode: Run['mode']): void {
   );
   card.append(row);
   root.append(card);
+}
+function chip(ingredient: Ingredient): HTMLSpanElement {
+  const el = element('span', 'chip');
+  const icon = element('i');
+  const index = INGREDIENTS.indexOf(ingredient);
+  icon.style.backgroundPosition = `${(index % 4) * 33.333}% ${Math.floor(index / 4) * 100}%`;
+  el.append(icon, INGREDIENT_LABELS[ingredient]);
+  return el;
+}
+function menu(day: number): HTMLElement {
+  const section = element('section', 'menu');
+  const recipes = menuFor(day, 'career');
+  const known = day > 1 ? new Set(menuFor(day - 1, 'career').map((r) => r.id)) : new Set<number>();
+  const fresh = recipes.filter((r) => !known.has(r.id));
+  const shown = recipes.length <= 6 ? recipes : fresh;
+  section.append(element('div', 'eyebrow', recipes.length <= 6 ? 'TONIGHT’S MENU' : 'NEW ON TONIGHT’S MENU'));
+  const grid = element('div', 'menu-grid');
+  for (const recipe of shown) {
+    const item = element('div', `menu-item${fresh.includes(recipe) && day > 1 ? ' new' : ''}`);
+    const chips = element('div', 'chips');
+    for (const ingredient of recipe.ingredients) chips.append(chip(ingredient));
+    const dessert = recipe.ingredients.includes('fruit') || recipe.id === 3;
+    item.append(element('strong', '', recipe.name), chips, element('small', '', `${recipe.oven ? 'Oven' : 'Stove'} · ${cookingSeconds(recipe.id, day)}s${dessert ? ' · dessert' : ''}`));
+    grid.append(item);
+  }
+  section.append(grid);
+  if (shown.length < recipes.length) section.append(element('p', 'note', `Plus ${recipes.length - shown.length} dishes you already know. See them all in the recipe collection.`));
+  return section;
+}
+function howTo(): HTMLElement {
+  const strip = element('ol', 'how-to');
+  for (const [title, text] of [
+    ['Prep', 'Click an ingredient bowl. It is ready when it glows.'],
+    ['Cook', 'Click the ready bowl, then the glowing pan. Add every ingredient.'],
+    ['Plate', 'Click the pan when it says READY, before it burns.'],
+    ['Serve', 'Back in the dining room, click the table showing a blue !.'],
+  ] as const) {
+    const step = element('li');
+    step.append(element('strong', '', title), element('span', '', text));
+    strip.append(step);
+  }
+  return strip;
 }
 function confirmReplace(day: number, mode: Run['mode']): void {
   const root = layout('replace', 'Start a new service?');
@@ -381,8 +427,8 @@ function recipeDetail(id: number): void {
   const root = layout('recipe');
   const card = element('article', 'recipe-detail');
   card.append(element('div', 'eyebrow', `THE CHEF’S COLLECTION · ${id + 1}`), element('h2', '', recipe.name), element('p', '', recipe.description));
-  const list = element('ul');
-  for (const i of recipe.ingredients) list.append(element('li', '', INGREDIENT_LABELS[i]));
+  const list = element('div', 'chips');
+  for (const i of recipe.ingredients) list.append(chip(i));
   card.append(list);
   card.append(
     element(
@@ -426,6 +472,21 @@ function settings(from: string): void {
     row.append(input, number);
     root.append(row);
   }
+  const guidance = element('label', 'setting toggle');
+  const toggle = element('input');
+  toggle.type = 'checkbox';
+  toggle.checked = settings.guidance;
+  toggle.addEventListener('change', () => {
+    settings = { ...settings, guidance: toggle.checked };
+    guidanceOn = toggle.checked;
+    try {
+      writeSettings(settings);
+    } catch {
+      message('Settings could not be saved on this device.');
+    }
+  });
+  guidance.append(element('span', '', 'Chef’s hints'), toggle, element('span', '', 'Arrows show your next step'));
+  root.append(guidance);
   const row = element('div', 'row');
   row.append(
     button('FULLSCREEN', () => {
@@ -545,6 +606,7 @@ async function loadServer(local: ReturnType<typeof readLocal>): Promise<void> {
         if (screen === 'play') pause();
       },
       getRun: () => run,
+      guidance: () => guidanceOn,
       ready: () => {
         if (conflict) showConflict();
         else home();
@@ -587,6 +649,7 @@ if (import.meta.env.DEV) {
     get: () => structuredClone({ run, profile: save.profile, screen, pending, revision: save.revision, recipes: RECIPES.map((r) => r.ingredients) }),
     configurable: true,
   });
+  Object.defineProperty(window, '__hellsKitchenGuide', { value: (selected: Ingredient | null) => (run ? nextStep(run, selected) : null), configurable: true });
 }
 async function initialize(): Promise<void> {
   try {

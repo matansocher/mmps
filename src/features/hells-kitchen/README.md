@@ -26,7 +26,21 @@ HELLS_KITCHEN_WEB_PORT=5391 HELLS_KITCHEN_API_PORT=3391 npm run dev:hells-kitche
 
 The Vite dev server serves `public/` without auth. Check private media against Express after a build: the preview backend also serves `dist/`.
 
-In development builds, a read-only inspector `window.__hellsKitchen` exposes the run, profile, screen and recipes for browser tests.
+In development builds, a read-only inspector `window.__hellsKitchen` exposes the run, profile, screen and recipes for browser tests. `window.__hellsKitchenGuide(heldIngredient)` returns the current chef's hint.
+
+## Guidance
+
+`apps/hells-kitchen-web/src/game/guide.ts` is a pure function, `nextStep(run, held)`. It returns the single most useful next action (title, text and target rect) and is drawn as a pulsing arrow plus the NEXT STEP panel. Players can turn it off in Options → "Chef's hints"; the panel then falls back to CHEF'S NOTES. The hit rects are shared with the scene through `game/layout.ts`.
+
+Other clarity cues follow the original game:
+
+- Recipe cards show coloured ingredient slots with ticks, and the pans that take the held bowl glow.
+- Bowls show "needed ×n" badges, ready or prepping states, and floating queued-prep icons.
+- Tickets show per-dish state dots.
+- Tables that need you get a blue "!".
+- Guests have patience bars.
+- Ramsay speaks in a bubble.
+- The briefing lists tonight's menu with ingredient chips and a how-to strip on days 1–3.
 
 ## Assets
 

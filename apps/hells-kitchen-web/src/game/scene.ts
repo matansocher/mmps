@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
-import { dayFor, INGREDIENT_LABELS, INGREDIENTS, RECIPES, TUTORIAL } from '../../../../src/features/hells-kitchen/game/content';
-import { ARCADE_SECONDS, cookingSeconds, PREP_SECONDS, STEP_SECONDS } from '../../../../src/features/hells-kitchen/game/engine';
-import type { Command, Ingredient, Run } from '../../../../src/features/hells-kitchen/game/types';
+import { dayFor, INGREDIENT_COLORS, INGREDIENT_LABELS, INGREDIENTS, RECIPES } from '../../../../src/features/hells-kitchen/game/content';
+import { ARCADE_SECONDS, cookingSeconds, PREP_SECONDS, STEP_SECONDS, WAITER_SECONDS } from '../../../../src/features/hells-kitchen/game/engine';
+import type { Command, Dish, Ingredient, Order, Run, Table } from '../../../../src/features/hells-kitchen/game/types';
+import { type Guide, neededIngredients, nextStep, stationFull, ticketsFor } from './guide';
+import { bowlRect, bowlX, BURNERS, GREET_RECT, NAV_RECTS, PAN_Y, TABLES, ticketRect } from './layout';
 
 export type Runtime = {
   readonly command: (command: Command) => void;
@@ -10,17 +12,11 @@ export type Runtime = {
   readonly ready: () => void;
   readonly failed: (message: string) => void;
   readonly getRun: () => Run | null;
+  readonly guidance: () => boolean;
 };
 type Hit = { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly action: () => void; readonly kind?: string; readonly dishId?: number };
 const GOLD = '#e4c587';
-const TABLES = [
-  [342, 258],
-  [582, 270],
-  [337, 392],
-  [614, 400],
-  [484, 525],
-] as const;
-const BURNERS = [354, 500, 646] as const;
+const SHORT_LABELS: Record<Ingredient, string> = { vegetables: 'VEG', grain: 'GRAIN', chicken: 'POULTRY', fish: 'SEAFOOD', beef: 'MEAT', dairy: 'DAIRY', fruit: 'FRUIT' };
 
 export class ServiceScene extends Phaser.Scene {
   private runtime: Runtime;
@@ -32,8 +28,12 @@ export class ServiceScene extends Phaser.Scene {
   private dragIngredient: Ingredient | null = null;
   private dragStart: { x: number; y: number } | null = null;
   private tooltip!: Phaser.GameObjects.Text;
+  private held!: Phaser.GameObjects.Image;
   private lastView = '';
   private loadFailed = false;
+  private now = 0;
+  private feedbackId = -1;
+  private feedbackAt = -10000;
 
   constructor(runtime: Runtime) {
     super('service');
@@ -101,6 +101,7 @@ export class ServiceScene extends Phaser.Scene {
       .text(0, 0, '', { fontFamily: 'Georgia', fontSize: '15px', color: '#fff1cb', backgroundColor: '#18130eef', padding: { x: 9, y: 6 } })
       .setDepth(20)
       .setVisible(false);
+    this.held = this.add.image(0, 0, 'food-vegetables').setDisplaySize(30, 30).setDepth(19).setVisible(false);
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       const run = this.runtime.getRun();
       if (run?.status !== 'running') return;
@@ -122,6 +123,7 @@ export class ServiceScene extends Phaser.Scene {
       this.tooltip.setVisible(false);
     });
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      this.held.setPosition(pointer.x + 18, pointer.y + 18);
       const hit = this.hit(pointer.x, pointer.y);
       this.game.canvas.style.cursor = hit ? 'pointer' : 'default';
       if (this.dragIngredient && this.runtime.getRun()?.bowls[this.dragIngredient]) {
@@ -140,6 +142,7 @@ export class ServiceScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    this.now = time;
     this.runtime.update(delta);
     const run = this.runtime.getRun();
     if (!run || !this.layer) return;
@@ -175,9 +178,10 @@ export class ServiceScene extends Phaser.Scene {
     g.lineStyle(1, 0xeee0bd, 0.13).strokeRoundedRect(x + 3, y + 3, w - 6, h - 6, 2);
     this.layer.add(g);
   }
-  private button(x: number, y: number, w: number, label: string, action: () => void, active = false, h = 30): void {
-    this.panel(x, y, w, h, active ? 0x725026 : 0x24201b, 0.97, active ? 0xf0d396 : 0x9b8664);
-    this.text(x + w / 2, y + 7, label, 12, active ? '#fff0c7' : '#ded1b6', undefined, true);
+  private button(x: number, y: number, w: number, label: string, action: () => void, active = false, h = 30, alert = false): void {
+    const flash = alert && Math.floor(this.now / 300) % 2 === 0;
+    this.panel(x, y, w, h, flash ? 0x8a2a16 : active ? 0x725026 : 0x24201b, 0.97, flash ? 0xff8a5c : active ? 0xf0d396 : 0x9b8664);
+    this.text(x + w / 2, y + 7, label, 12, active || flash ? '#fff0c7' : '#ded1b6', undefined, true);
     this.hits.push({ x, y, w, h, action });
   }
   private bar(x: number, y: number, w: number, progress: number, color: number): void {
@@ -203,13 +207,23 @@ export class ServiceScene extends Phaser.Scene {
     this.hits = [];
     const texture = run.view === 'dining' ? 'dining' : run.view === 'red' && this.textures.exists('kitchen-red') ? 'kitchen-red' : 'kitchen';
     if (this.background.texture.key !== texture) this.background.setTexture(texture).setDisplaySize(800, 600);
-    if (this.selected && !run.bowls[this.selected]) this.selected = null;
+    if (this.selected && (!run.bowls[this.selected] || run.view === 'dining')) this.selected = null;
+    if (run.feedback.id !== this.feedbackId) {
+      this.feedbackId = run.feedback.id;
+      this.feedbackAt = this.now;
+    }
+    const guide = nextStep(run, this.selected);
+    const hints = this.runtime.guidance() || run.tutorial >= 0;
     if (run.view === 'dining') this.dining(run);
     else this.kitchen(run);
-    this.hud(run);
+    this.hud(run, guide, hints);
+    if (hints && run.status === 'running') this.pointer(run, guide);
+    const held = this.selected ?? this.dragIngredient;
+    this.held.setVisible(Boolean(held && run.bowls[held]));
+    if (held) this.held.setTexture(`food-${held}`);
   }
 
-  private hud(run: Run): void {
+  private hud(run: Run, guide: Guide, hints: boolean): void {
     const def = dayFor(run.day);
     this.panel(0, 0, 800, 48, 0x100e0b, 0.97);
     this.text(20, 8, 'H K', 27, GOLD);
@@ -221,35 +235,84 @@ export class ServiceScene extends Phaser.Scene {
 
     this.panel(4, 53, 164, 502, 0x0c0a08, 0.9, 0x5e4f36);
     this.panel(12, 61, 147, 231, 0x211a14, 0.94);
-    const pose = run.anger > 60 ? 2 : run.feedback.kind === 'good' ? 1 : 0;
+    const talking = this.now - this.feedbackAt < 3500;
+    const pose = run.anger > 60 || (talking && run.feedback.kind === 'bad') ? 2 : talking && run.feedback.kind === 'good' ? 1 : 0;
     const portrait = this.add.image(85.5, 154, 'chef', pose).setDisplaySize(139, 186);
     this.layer.add(portrait);
+    if (talking) {
+      const bad = run.feedback.kind === 'bad' || run.feedback.kind === 'warning';
+      this.panel(15, 190, 141, 60, bad ? 0x3a130c : 0xf1e7cf, 0.96, bad ? 0xff7a52 : 0xc9a45c);
+      const tail = this.add.graphics();
+      tail.fillStyle(bad ? 0x3a130c : 0xf1e7cf, 0.96).fillTriangle(70, 190, 86, 190, 80, 180);
+      this.layer.add(tail);
+      this.text(85.5, 196, run.feedback.text, 9.5, bad ? '#ffd2c2' : '#2b1c10', 130, true).setStroke('#000000', bad ? 2 : 0);
+    }
     this.text(85, 254, 'CHEF RAMSAY', 12, GOLD, undefined, true);
     this.text(85, 273, run.anger > 65 ? 'LOSING PATIENCE' : run.anger > 25 ? 'STAY FOCUSED' : 'EXPECTING PERFECTION', 8, '#cabca5', undefined, true);
-    this.panel(16, 303, 139, 45, 0x17110e, 0.96);
-    this.text(26, 310, 'KITCHEN HEAT', 10, '#d5bd96');
-    this.bar(26, 332, 117, run.anger / 100, run.anger > 60 ? 0xe54829 : 0xeab053);
-    this.text(85, 360, run.served ? '★'.repeat(Math.max(1, Math.round(run.qualityTotal / run.served))).padEnd(5, '☆') : '☆☆☆☆☆', 20, GOLD, undefined, true);
-    this.text(85, 386, `${run.served} orders served`, 11, '#d9c6a5', undefined, true);
+    this.panel(16, 300, 139, 50, 0x17110e, 0.96);
+    this.text(26, 305, 'RAMSAY’S TEMPER', 10, run.anger > 60 ? '#ff9a7a' : '#d5bd96');
+    this.bar(26, 323, 117, run.anger / 100, run.anger > 60 ? 0xe54829 : 0xeab053);
+    this.text(26, 332, 'Mistakes raise it. Full = fired.', 7.5, '#9d8e75');
+    this.text(85, 358, run.served ? '★'.repeat(Math.max(1, Math.round(run.qualityTotal / run.served))).padEnd(5, '☆') : '☆☆☆☆☆', 20, GOLD, undefined, true);
+    this.text(85, 384, `${run.served} orders served`, 11, '#d9c6a5', undefined, true);
 
-    if (run.tutorial >= 0) {
-      this.panel(14, 409, 146, 143, 0x181613, 0.97);
-      this.text(25, 419, `CHEF’S NOTES  ${run.tutorial + 1}/6`, 9, GOLD);
-      this.text(25, 438, TUTORIAL[run.tutorial], 10, '#f1e6d1', 122);
-      this.button(25, 521, 63, 'NEXT', () => this.runtime.command({ type: 'tutorial-next' }), false, 23);
-      this.button(94, 521, 54, 'SKIP', () => this.runtime.command({ type: 'tutorial-skip' }), false, 23);
+    this.panel(14, 405, 146, 147, hints ? 0x1d1a10 : 0x181613, 0.97, hints ? 0xe4c587 : 0xa99165);
+    if (hints) {
+      this.text(25, 413, 'NEXT STEP', 9, '#9d8e75');
+      const title = this.text(25, 427, guide.title, 12, GOLD, 126);
+      this.text(25, 433 + title.height, guide.text, 9.5, '#f1e6d1', 126);
     } else {
-      this.panel(14, 417, 146, 128, 0x181613, 0.94);
-      this.text(25, 428, 'CHEF’S NOTES', 10, GOLD);
-      this.text(25, 450, run.feedback.text, 12, run.feedback.kind === 'bad' ? '#ffb395' : '#e8dfcd', 122);
+      this.text(25, 416, 'CHEF’S NOTES', 10, GOLD);
+      this.text(25, 438, run.feedback.text, 12, run.feedback.kind === 'bad' ? '#ffb395' : '#e8dfcd', 122);
     }
     this.panel(0, 559, 800, 41, 0x14120f, 0.98);
     const pendingIn = (kitchen: 'blue' | 'red') => run.orders.filter((o) => o.kitchen === kitchen && o.dishes.some((d) => d.state !== 'plated')).length;
-    const count = (kitchen: 'blue' | 'red') => (def.challenge && pendingIn(kitchen) ? `  (${pendingIn(kitchen)})` : '');
-    this.button(15, 566, 146, 'DINING ROOM  [D]', () => this.runtime.command({ type: 'view', view: 'dining' }), run.view === 'dining');
-    this.button(172, 566, 146, def.challenge ? `BLUE KITCHEN${count('blue')}` : 'BLUE KITCHEN  [K]', () => this.runtime.command({ type: 'view', view: 'blue' }), run.view === 'blue');
-    if (def.challenge) this.button(329, 566, 146, `RED KITCHEN${count('red')}`, () => this.runtime.command({ type: 'view', view: 'red' }), run.view === 'red');
+    const alert = (kitchen: 'blue' | 'red') => run.view !== kitchen && run.orders.some((o) => o.kitchen === kitchen && o.dishes.some((d) => d.state === 'ready' || d.state === 'burnt'));
+    const kitchenLabel = (kitchen: 'blue' | 'red', key: string) => `${alert(kitchen) ? '! ' : ''}${kitchen.toUpperCase()} KITCHEN${pendingIn(kitchen) ? `  (${pendingIn(kitchen)})` : key}`;
+    this.button(NAV_RECTS.dining.x, NAV_RECTS.dining.y, NAV_RECTS.dining.w, 'DINING ROOM  [D]', () => this.runtime.command({ type: 'view', view: 'dining' }), run.view === 'dining');
+    this.button(
+      NAV_RECTS.blue.x,
+      NAV_RECTS.blue.y,
+      NAV_RECTS.blue.w,
+      kitchenLabel('blue', '  [K]'),
+      () => this.runtime.command({ type: 'view', view: 'blue' }),
+      run.view === 'blue',
+      30,
+      alert('blue'),
+    );
+    if (def.challenge)
+      this.button(NAV_RECTS.red.x, NAV_RECTS.red.y, NAV_RECTS.red.w, kitchenLabel('red', ''), () => this.runtime.command({ type: 'view', view: 'red' }), run.view === 'red', 30, alert('red'));
     this.text(785, 577, run.orders.length ? `${run.orders.length} open orders` : 'Ready for service', 11, '#a99575', undefined).setOrigin(1, 0);
+  }
+
+  private pointer(run: Run, guide: Guide): void {
+    const target = guide.target;
+    if (!target) return;
+    const pulse = 0.5 + Math.sin(this.now / 160) * 0.5;
+    const bob = Math.sin(this.now / 170) * 5;
+    const g = this.add.graphics();
+    g.lineStyle(3, 0xffd66b, 0.45 + pulse * 0.5).strokeRoundedRect(target.x - 4 - pulse * 3, target.y - 4 - pulse * 3, target.w + 8 + pulse * 6, target.h + 8 + pulse * 6, 8);
+    const cx = target.x + target.w / 2;
+    const above = target.y > 110;
+    const tip = above ? target.y - 6 + bob : target.y + target.h + 6 - bob;
+    const dir = above ? -1 : 1;
+    g.fillStyle(0x1a1208, 0.9).fillTriangle(cx - 16, tip + dir * 26, cx + 16, tip + dir * 26, cx, tip + dir * -2);
+    g.fillStyle(0xffd66b).fillTriangle(cx - 12, tip + dir * 23, cx + 12, tip + dir * 23, cx, tip);
+    g.fillStyle(0xffd66b).fillRect(cx - 4, above ? tip - 36 : tip + 22, 8, 14);
+    this.layer.add(g);
+    const pan = run.view !== 'dining' && target.y > 200 && target.y < 300;
+    if (pan) return;
+    const caption = this.add
+      .text(0, 0, guide.title.toUpperCase(), { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#1c1206', backgroundColor: '#ffd66bf2', padding: { x: 8, y: 4 } })
+      .setOrigin(0.5, above ? 1 : 0);
+    const half = caption.width / 2;
+    if (target.y > 550)
+      caption
+        .setText(`◀  ${guide.title.toUpperCase()}`)
+        .setOrigin(0, 0.5)
+        .setPosition(NAV_RECTS.red.x + NAV_RECTS.red.w + 12, 581);
+    else caption.setPosition(Math.max(174 + half, Math.min(796 - half, cx)), above ? tip - 38 : tip + 38);
+    this.layer.add(caption);
   }
 
   private dining(run: Run): void {
@@ -262,81 +325,108 @@ export class ServiceScene extends Phaser.Scene {
         if (table.guests > 1) this.person(x + 39, y + 12, table.appearance === 3 ? 1 : table.appearance + 1, i < 2 ? 104 : 123, true);
         if (table.guests > 2) this.person(x + 5, y - 2, 2, 116, true);
       }
-      const order = run.orders.find((o) => o.tableId === i);
-      const ready = order?.dishes.every((d) => d.state === 'plated');
-      const queued = run.waiterQueue.findIndex((t) => t.target === i);
-      const labels: Record<string, string> = {
-        empty: 'AVAILABLE',
-        reading: 'CHOOSING',
-        order: 'TAKE ORDER',
-        waiting: ready ? 'SERVE NOW' : 'IN THE KITCHEN',
-        eating: 'ENJOYING',
-        clear: 'CLEAR TABLE',
-      };
-      const actionable = ['order', 'clear'].includes(table.stage) || ready;
-      this.panel(x - 53, y - 9, 106, 33, actionable ? 0x264654 : 0x16140f, table.stage === 'empty' ? 0.6 : 0.94, actionable ? 0x82c5d5 : 0xa9956f);
-      this.text(x, y - 3, `TABLE ${i + 1}${queued >= 0 ? `  • ${queued + 1}` : ''}`, 9, GOLD, undefined, true);
-      this.text(x, y + 10, labels[table.stage], 8, actionable ? '#d5f8ff' : '#d6c7aa', undefined, true);
-      if (table.stage !== 'empty' && table.stage !== 'eating') this.bar(x - 45, y + 27, 90, table.patience / def.patience, table.patience < 20 ? 0xe45d39 : 0x76b8c4);
-      this.hits.push({ x: x - 65, y: y - 35, w: 130, h: 75, action: () => this.runtime.command({ type: 'table', id: i }) });
     }
     if (run.waiting) {
       for (let i = 0; i < Math.min(3, run.waiting); i++) this.person(690 - i * 22, 252, 1 + (i % 3), 85);
     }
-    this.button(653, 129, 130, run.waiting ? `GREET GUESTS  (${run.waiting})` : 'RECEPTION', () => this.runtime.command({ type: 'seat' }), run.waiting > 0, 34);
-    if (run.waiting) this.bar(663, 169, 110, run.waitingPatience / def.patience, 0xd8b775);
     const task = run.waiterQueue[0];
     const from = run.waiterTable >= 0 ? TABLES[run.waiterTable] : [674, 231];
     const target = task ? TABLES[task.target] : from;
-    const p = Math.min(1, run.waiterElapsed / 1.2);
+    const p = Math.min(1, run.waiterElapsed / WAITER_SECONDS);
     const wx = from[0] + (target[0] - from[0]) * p;
     const wy = from[1] + (target[1] - from[1]) * p;
     this.person(wx + 67, wy + 45, task && Math.floor(run.tick / 3) % 2 ? 4 : 0, 105 + wy * 0.05);
-    this.panel(190, 66, 400, 42, 0x18130e, 0.86);
-    this.text(
-      390,
-      77,
-      run.waiting ? 'Guests are waiting at the reception desk.' : run.orders.length ? 'The kitchen is working. Keep an eye on your tables.' : 'A good service begins with a warm welcome.',
-      12,
-      '#efdec0',
-      undefined,
-      true,
-    );
+
+    const pulse = 0.5 + Math.sin(this.now / 200) * 0.5;
+    for (let i = 0; i < def.tables; i++) {
+      const table = run.tables[i];
+      const [x, y] = TABLES[i];
+      const order = run.orders.find((o) => o.tableId === i);
+      const ready = Boolean(order?.dishes.every((d) => d.state === 'plated'));
+      const queued = run.waiterQueue.findIndex((t) => t.target === i);
+      const labels: Record<Table['stage'], string> = {
+        empty: 'EMPTY',
+        reading: 'READING THE MENU',
+        order: 'READY TO ORDER',
+        waiting: ready ? 'FOOD READY — SERVE' : 'WAITING FOR FOOD',
+        eating: 'EATING',
+        clear: 'FINISHED — CLEAR',
+      };
+      const actionable = queued < 0 && (['order', 'clear'].includes(table.stage) || (table.stage === 'waiting' && ready));
+      if (actionable) {
+        const bx = x - 70;
+        const by = y + 7;
+        const r = 11 + pulse * 2;
+        const bell = this.add.graphics();
+        bell.fillStyle(0x4fc3ff, 0.25).fillCircle(bx, by, r + 7);
+        bell.fillStyle(0x1f8fd6).fillCircle(bx, by, r);
+        bell.lineStyle(2, 0xe6f7ff).strokeCircle(bx, by, r);
+        this.layer.add(bell);
+        this.text(bx, by - 9, '!', 14, '#ffffff', undefined, true);
+      }
+      this.panel(x - 55, y - 11, 110, 37, actionable ? 0x1f4f63 : 0x16140f, table.stage === 'empty' ? 0.6 : 0.94, actionable ? 0x8fdcf0 : 0xa9956f);
+      this.text(x, y - 6, `TABLE ${i + 1}`, 9, GOLD, undefined, true);
+      this.text(x, y + 7, queued >= 0 ? `WAITER COMING  #${queued + 1}` : labels[table.stage], 8, actionable ? '#d5f8ff' : queued >= 0 ? '#f3dd9f' : '#d6c7aa', undefined, true);
+      if (table.stage !== 'empty' && table.stage !== 'eating' && table.stage !== 'reading') this.bar(x - 45, y + 20, 90, table.patience / def.patience, table.patience < 20 ? 0xe45d39 : 0x76b8c4);
+      if (table.stage === 'reading' || table.stage === 'eating') this.bar(x - 45, y + 20, 90, table.elapsed / (table.stage === 'reading' ? 3 : 6), 0x6f6552);
+      this.hits.push({ x: x - 65, y: y - 35, w: 130, h: 75, action: () => this.runtime.command({ type: 'table', id: i }) });
+    }
+    this.button(GREET_RECT.x, GREET_RECT.y, GREET_RECT.w, run.waiting ? `GREET GUESTS  (${run.waiting})` : 'RECEPTION', () => this.runtime.command({ type: 'seat' }), run.waiting > 0, GREET_RECT.h);
+    if (run.waiting) this.bar(663, 169, 110, run.waitingPatience / def.patience, 0xd8b775);
+    this.panel(196, 62, 420, 28, 0x18130e, 0.8);
+    this.text(406, 68, 'Blue ! = table needs you · Bars = guest patience · Click a table to act', 10, '#cbbd9f', undefined, true);
   }
 
   private kitchen(run: Run): void {
     const def = dayFor(run.day);
-    const orders = run.orders.filter((o) => o.kitchen === run.view);
-    orders.slice(0, 5).forEach((o, i) => {
-      const x = 184 + i * 122;
+    const view = run.view as 'blue' | 'red';
+    const orders = ticketsFor(run, view);
+    const flash = Math.floor(this.now / 300) % 2 === 0;
+    orders.forEach((o, i) => {
+      const { x, y, w, h } = ticketRect(i);
       const allReady = o.dishes.every((d) => d.state === 'plated');
       const warning = o.dishes.some((d) => d.state === 'ready' || d.state === 'burnt');
       const active = run.selectedOrder === o.id;
       const g = this.add.graphics();
-      g.fillStyle(0x000000, 0.35).fillRect(x + 3, 60, 112, 46);
-      g.fillStyle(active ? 0xfff6dc : 0xe9dfc4, active ? 1 : 0.92).fillRect(x, 57, 112, 46);
-      g.fillStyle(allReady ? 0x3f8a4e : warning ? 0xc0492c : 0x2a5f7c).fillRect(x, 57, 112, 5);
-      if (active) g.lineStyle(2, 0xf0c46a).strokeRect(x - 1, 56, 114, 48);
+      g.fillStyle(0x000000, 0.35).fillRect(x + 3, y + 3, w, h);
+      g.fillStyle(active ? 0xfff6dc : 0xe9dfc4, active ? 1 : 0.92).fillRect(x, y, w, h);
+      g.fillStyle(allReady ? 0x3f8a4e : warning ? 0xc0492c : 0x2a5f7c).fillRect(x, y, w, 5);
+      if (active) g.lineStyle(2, 0xf0c46a).strokeRect(x - 1, y - 1, w + 2, h + 2);
+      if (warning && flash) g.lineStyle(3, 0xff5a36).strokeRect(x - 2, y - 2, w + 4, h + 4);
+      o.dishes.forEach((dish, j) => {
+        const dx = x + 13 + j * 17;
+        const dy = y + 30;
+        const cooking = dish.state === 'cooking' ? Math.min(1, dish.elapsed / cookingSeconds(dish.recipeId, run.day)) : 0;
+        if (dish.state === 'raw') g.fillStyle(0xffffff).fillCircle(dx, dy, 6).lineStyle(1.5, 0x7a6448).strokeCircle(dx, dy, 6);
+        else if (dish.state === 'cooking') {
+          g.fillStyle(0xcfe3ef).fillCircle(dx, dy, 6);
+          g.fillStyle(0x2f78b7)
+            .slice(dx, dy, 6, -Math.PI / 2, -Math.PI / 2 + cooking * Math.PI * 2)
+            .fillPath();
+        } else if (dish.state === 'ready') g.fillStyle(flash ? 0x5bd36b : 0x2f9a45).fillCircle(dx, dy, 6.5);
+        else if (dish.state === 'burnt') g.fillStyle(0x1b1411).fillCircle(dx, dy, 6).lineStyle(2, 0xe04b2a).strokeCircle(dx, dy, 6);
+        else g.fillStyle(0xd6a93c).fillCircle(dx, dy, 6);
+      });
       this.layer.add(g);
-      this.text(x + 8, 66, `TABLE ${o.tableId + 1}`, 11, '#2a1d12').setStroke('#000000', 0);
-      this.text(x + 104, 66, allReady ? '✓' : warning ? '!' : `${o.dishes.length}×`, 11, allReady ? '#2d6b39' : warning ? '#a3301a' : '#4f3b27')
+      this.text(x + 8, y + 8, `TABLE ${o.tableId + 1}`, 11, '#2a1d12').setStroke('#000000', 0);
+      this.text(x + 104, y + 9, allReady ? '✓ DONE' : warning ? 'HURRY!' : active ? 'OPEN' : '', 9, allReady ? '#2d6b39' : warning ? '#b3301a' : '#7a5a2a')
         .setStroke('#000000', 0)
         .setOrigin(1, 0);
-      this.bar(x + 8, 90, 96, run.tables[o.tableId].patience / def.patience, run.tables[o.tableId].patience < 20 ? 0xd9542f : 0x3f86a6);
-      this.hits.push({ x, y: 57, w: 112, h: 46, action: () => this.runtime.command({ type: 'select', id: o.id }) });
+      this.bar(x + 8, y + 39, 96, run.tables[o.tableId].patience / def.patience, run.tables[o.tableId].patience < 20 ? 0xd9542f : 0x3f86a6);
+      this.hits.push({ x, y, w, h, action: () => this.runtime.command({ type: 'select', id: o.id }) });
     });
     const order = orders.find((o) => o.id === run.selectedOrder);
     if (!order) {
-      this.panel(250, 150, 460, 78, 0x101418, 0.9);
-      this.text(480, 164, 'YOUR STATION IS READY', 19, GOLD, undefined, true);
+      this.panel(230, 140, 500, 86, 0x101418, 0.9);
+      this.text(480, 154, 'YOUR STATION IS READY', 19, GOLD, undefined, true);
       const hint = orders.length
-        ? 'Select an order ticket above.'
-        : def.challenge
-          ? 'Orders arrive on their own today. Prep ingredients while you wait.'
-          : 'Prepare ingredients now, then take an order in the dining room.';
-      this.text(480, 195, hint, 12, '#d9d9d0', undefined, true);
+        ? 'Click an order ticket above to see its recipes.'
+        : def.challenge || run.mode === 'arcade'
+          ? 'Orders arrive on their own today. Click the bowls below to prep ingredients while you wait.'
+          : 'Take an order in the dining room. You can prep ingredients now by clicking the bowls below.';
+      this.text(480, 186, hint, 12, '#d9d9d0', 460, true);
     } else {
-      order.dishes.forEach((dish, i) => this.station(run, dish, BURNERS[i]));
+      order.dishes.forEach((dish, i) => this.station(run, order, dish, BURNERS[i]));
       if (order.dishes.every((d) => d.state === 'plated'))
         this.button(
           290,
@@ -348,24 +438,56 @@ export class ServiceScene extends Phaser.Scene {
           28,
         );
     }
-    INGREDIENTS.forEach((ingredient, index) => this.bowl(run, ingredient, index));
+    const needed = neededIngredients(run, view);
+    INGREDIENTS.forEach((ingredient, index) => this.bowl(run, ingredient, index, needed[ingredient]));
   }
 
-  private station(run: Run, dish: Run['orders'][number]['dishes'][number], x: number): void {
+  private station(run: Run, order: Order, dish: Dish, x: number): void {
     const recipe = RECIPES[dish.recipeId];
     const cookingTime = cookingSeconds(dish.recipeId, run.day);
     const heat = dish.state === 'cooking' || dish.state === 'ready';
-    // Paper recipe ticket above the burner.
+    const held = this.selected ?? this.dragIngredient;
+    const heldReady = held !== null && run.bowls[held];
+    const fits = heldReady && dish.state === 'raw' && recipe.ingredients.includes(held) && !dish.loaded.includes(held);
+    const pulse = 0.5 + Math.sin(this.now / 150) * 0.5;
+    // Paper recipe ticket above the burner, with one icon slot per ingredient.
     const card = this.add.graphics();
-    card.fillStyle(0x000000, 0.35).fillRect(x - 60, 124, 124, 86);
-    card.fillStyle(0xf1e7cf, 0.96).fillRect(x - 63, 121, 124, 86);
-    card.fillStyle(recipe.oven ? 0xb5532a : 0x2a5f7c).fillRect(x - 63, 121, 124, 16);
+    card.fillStyle(0x000000, 0.35).fillRect(x - 60, 122, 124, 96);
+    card.fillStyle(0xf1e7cf, 0.97).fillRect(x - 63, 119, 124, 96);
+    card.fillStyle(recipe.oven ? 0xb5532a : 0x2a5f7c).fillRect(x - 63, 119, 124, 16);
     this.layer.add(card);
-    this.text(x - 1, 122, recipe.oven ? 'OVEN' : 'STOVE', 9, '#fff4dc', undefined, true).setStroke('#000000', 0);
-    this.text(x - 1, 140, recipe.name, 11, '#2b1c10', 116, true).setStroke('#000000', 0);
-    this.text(x - 1, 170, recipe.ingredients.map((a) => `${dish.loaded.includes(a) ? '✓' : '○'} ${INGREDIENT_LABELS[a]}`).join('\n'), 9, '#4d3a27', 116, true).setStroke('#000000', 0);
+    this.text(x - 1, 120, `${recipe.oven ? 'OVEN' : 'STOVE'}  ·  ${cookingTime}s`, 9, '#fff4dc', undefined, true).setStroke('#000000', 0);
+    this.text(x - 1, 138, recipe.name, 10.5, '#2b1c10', 116, true).setStroke('#000000', 0);
+    const n = recipe.ingredients.length;
+    recipe.ingredients.forEach((ingredient, k) => {
+      const sx = x - 1 + (k - (n - 1) / 2) * 38;
+      const sy = 184;
+      const loaded = dish.loaded.includes(ingredient);
+      const ready = run.bowls[ingredient];
+      const prepping = run.prepQueue.includes(ingredient);
+      const slot = this.add.graphics();
+      slot.fillStyle(0x2a2118, loaded || ready ? 0.9 : 0.35).fillCircle(sx, sy, 15);
+      slot.lineStyle(3, INGREDIENT_COLORS[ingredient], loaded || ready ? 1 : 0.55).strokeCircle(sx, sy, 15);
+      if (!loaded && dish.state === 'raw' && ready) slot.lineStyle(2, 0xffc43d, 0.4 + pulse * 0.6).strokeCircle(sx, sy, 18);
+      this.layer.add(slot);
+      const icon = this.add.image(sx, sy, `food-${ingredient}`).setDisplaySize(25, 25);
+      if (!loaded && !ready) icon.setAlpha(prepping ? 0.65 : 0.35).setTint(0xa09a90);
+      this.layer.add(icon);
+      if (loaded) {
+        const tick = this.add.graphics();
+        tick.fillStyle(0x2f9a45).fillCircle(sx + 11, sy - 11, 7);
+        this.layer.add(tick);
+        this.text(sx + 11, sy - 19, '✓', 10, '#ffffff', undefined, true).setStroke('#000000', 0);
+      }
+      this.text(sx, 201, SHORT_LABELS[ingredient], 7.5, loaded ? '#2d6b39' : '#5a4630', undefined, true).setStroke('#000000', 0);
+    });
+    if (heldReady && !fits && dish.state === 'raw') {
+      const dim = this.add.graphics();
+      dim.fillStyle(0x000000, 0.4).fillRect(x - 63, 119, 124, 96);
+      this.layer.add(dim);
+    }
     const g = this.add.graphics();
-    const y = 272;
+    const y = PAN_Y;
     if (heat && !recipe.oven) {
       for (let f = 0; f < 10; f++) {
         const a = (f / 10) * Math.PI * 2 + run.tick * 0.05;
@@ -376,8 +498,8 @@ export class ServiceScene extends Phaser.Scene {
         g.fillStyle(0x9fd0ff, 0.7).fillTriangle(fx - 1.5, fy, fx, fy - h * 0.55, fx + 1.5, fy);
       }
     }
+    if (fits) g.fillStyle(0x7dff8a, 0.18 + pulse * 0.22).fillEllipse(x, y + 2, 132, 50);
     if (recipe.oven) {
-      // Roasting tray with oven glow.
       if (heat) g.fillStyle(0xff8a2a, 0.22 + Math.sin(run.tick * 0.2) * 0.05).fillEllipse(x, y + 4, 128, 44);
       g.fillStyle(0x000000, 0.45).fillEllipse(x + 3, y + 16, 108, 22);
       g.fillStyle(0x3b3f43).fillRoundedRect(x - 50, y - 12, 100, 30, 6);
@@ -393,11 +515,12 @@ export class ServiceScene extends Phaser.Scene {
       g.fillStyle(0x8c9399).fillEllipse(x, y, 92, 30);
       g.fillStyle(0x1e2123).fillEllipse(x, y + 1, 80, 23);
     }
+    if (fits) g.lineStyle(3, 0x7dff8a, 0.6 + pulse * 0.4).strokeEllipse(x, y + 2, 112 + pulse * 6, 40 + pulse * 3);
     this.layer.add(g);
     dish.loaded.forEach((ingredient, index) => {
-      const n = dish.loaded.length;
-      const offset = n === 1 ? 0 : (index - (n - 1) / 2) * 20;
-      const food = this.add.image(x + offset, y + 1 + (index % 2) * 2, `food-${ingredient}`).setDisplaySize(n === 1 ? 68 : 46, n === 1 ? 19 : 15);
+      const count = dish.loaded.length;
+      const offset = count === 1 ? 0 : (index - (count - 1) / 2) * 20;
+      const food = this.add.image(x + offset, y + 1 + (index % 2) * 2, `food-${ingredient}`).setDisplaySize(count === 1 ? 68 : 46, count === 1 ? 19 : 15);
       const progress = dish.state === 'cooking' ? dish.elapsed / cookingTime : 0;
       if (dish.state === 'burnt') food.setTint(0x2a1d14);
       else if (dish.state === 'ready' || dish.state === 'plated') food.setTint(0xd8a878);
@@ -414,30 +537,40 @@ export class ServiceScene extends Phaser.Scene {
     }
     if (dish.state === 'cooking') {
       const p = Math.min(1, dish.elapsed / cookingTime);
-      smoke.fillStyle(0x0d1114, 0.85).fillCircle(x + 50, y - 20, 13);
+      smoke.fillStyle(0x0d1114, 0.9).fillCircle(x + 52, y - 12, 15);
       smoke
         .lineStyle(4, 0x78c0dd)
         .beginPath()
-        .arc(x + 50, y - 20, 10, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2)
+        .arc(x + 52, y - 12, 12, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2)
         .strokePath();
     }
     if (dish.state === 'ready') {
-      const pulse = 0.5 + Math.sin(run.tick * 0.8) * 0.5;
       smoke.lineStyle(3, 0x9dff8a, 0.5 + pulse * 0.5).strokeEllipse(x, y, 104 + pulse * 6, 38 + pulse * 3);
+      const burn = Math.min(1, dish.elapsed / 8);
+      smoke.fillStyle(0x0d1114, 0.85).fillRoundedRect(x - 40, y + 22, 80, 6, 3);
+      smoke.fillStyle(burn > 0.6 ? 0xe5482a : 0xf0b43c).fillRoundedRect(x - 40, y + 22, 80 * (1 - burn), 6, 3);
     }
     this.layer.add(smoke);
+    if (dish.state === 'cooking') this.text(x + 52, y - 19, String(Math.max(1, Math.ceil(cookingTime - dish.elapsed))), 11, '#e6f6ff', undefined, true);
+    const remaining = recipe.ingredients.length - dish.loaded.length;
+    const full = dish.state === 'raw' && remaining === 1 && stationFull(run, order.kitchen, recipe.oven);
     const stateText =
       dish.state === 'cooking'
         ? `COOKING  ${Math.max(1, Math.ceil(cookingTime - dish.elapsed))}s`
         : dish.state === 'ready'
-          ? 'READY — CLICK TO PLATE'
+          ? 'READY — CLICK TO PLATE!'
           : dish.state === 'burnt'
-            ? 'BURNT — CLICK TO CLEAR'
+            ? 'BURNT — CLICK TO BIN IT'
             : dish.state === 'plated'
-              ? 'ON THE PASS'
-              : `ADD ${recipe.ingredients.length - dish.loaded.length} MORE · ${cookingTime}s`;
-    this.panel(x - 66, 306, 132, 22, dish.state === 'ready' ? 0x1f5a36 : dish.state === 'burnt' ? 0x74261a : 0x111519, 0.95, dish.state === 'ready' ? 0x9dff8a : 0x8a98a0);
-    this.text(x, 310, stateText, 9, dish.state === 'ready' ? '#e2ffd8' : '#ecdcbd', undefined, true);
+              ? 'ON THE PASS ✓'
+              : fits
+                ? '▼  CLICK TO ADD HERE'
+                : full
+                  ? `${recipe.oven ? 'OVEN' : 'BURNERS'} FULL — WAIT`
+                  : `ADD ${remaining} INGREDIENT${remaining === 1 ? '' : 'S'}`;
+    const tone = dish.state === 'ready' || fits ? 0x1f5a36 : dish.state === 'burnt' ? 0x74261a : 0x111519;
+    this.panel(x - 68, 306, 136, 22, tone, 0.95, dish.state === 'ready' || fits ? 0x9dff8a : 0x8a98a0);
+    this.text(x, 310, stateText, 9, dish.state === 'ready' || fits ? '#e2ffd8' : '#ecdcbd', undefined, true);
     if (dish.state === 'ready' || dish.state === 'plated') {
       this.panel(x - 42, 334, 84, 17, 0x0e0c0a, 0.8, 0x6a5a3e);
       this.text(x, 334, '★'.repeat(Math.round(dish.quality)) + '☆'.repeat(5 - Math.round(dish.quality)), 11, GOLD, undefined, true);
@@ -455,9 +588,9 @@ export class ServiceScene extends Phaser.Scene {
     }
     this.hits.push({
       x: x - 66,
-      y: 124,
+      y: 119,
       w: 132,
-      h: 204,
+      h: 209,
       dishId: dish.id,
       action: () => {
         if (dish.state === 'ready') this.runtime.command({ type: 'plate', dishId: dish.id });
@@ -468,41 +601,66 @@ export class ServiceScene extends Phaser.Scene {
         }
       },
     });
+    // Shortcut: clicking a missing ingredient icon preps it, or adds it once its bowl is ready.
+    if (dish.state === 'raw' && !this.selected)
+      recipe.ingredients.forEach((ingredient, k) => {
+        if (dish.loaded.includes(ingredient)) return;
+        const sx = x - 1 + (k - (n - 1) / 2) * 38;
+        this.hits.push({
+          x: sx - 17,
+          y: 167,
+          w: 34,
+          h: 44,
+          action: () => this.runtime.command(run.bowls[ingredient] ? { type: 'add', dishId: dish.id, ingredient } : { type: 'prep', ingredient }),
+        });
+      });
   }
 
-  private bowl(run: Run, ingredient: Ingredient, index: number): void {
-    const x = 216 + index * 81;
+  private bowl(run: Run, ingredient: Ingredient, index: number, needed: number): void {
+    const x = bowlX(index);
     const ready = run.bowls[ingredient];
     const queue = run.prepQueue.indexOf(ingredient);
     const selected = this.selected === ingredient;
+    const color = INGREDIENT_COLORS[ingredient];
     const g = this.add.graphics();
     g.fillStyle(0x0a0806, 0.5).fillEllipse(x + 3, 503, 70, 16);
-    if (ready) g.fillStyle(0xffe6a0, selected ? 0.55 : 0.2 + Math.sin(run.tick * 0.3 + index) * 0.06).fillEllipse(x, 484, 84, 56);
-    if (selected) g.lineStyle(3, 0xffd77a).strokeEllipse(x, 484, 84, 56);
+    if (ready) g.fillStyle(0xffe6a0, selected ? 0.55 : 0.25 + Math.sin(run.tick * 0.3 + index) * 0.08).fillEllipse(x, 484, 86, 58);
+    g.lineStyle(4, color, ready ? 0.95 : 0.5).strokeEllipse(x, 492, 72, 26);
+    if (selected) g.lineStyle(3, 0xffd77a).strokeEllipse(x, 480, 88, 60);
     this.layer.add(g);
     const bowl = this.add
-      .image(x, 484 + (selected ? -4 : 0), 'ingredients', index)
+      .image(x, 484 + (selected ? -8 : 0), 'ingredients', index)
       .setDisplaySize(70, 48)
-      .setAlpha(ready ? 1 : 0.55);
-    if (!ready) bowl.setTint(0x9a8f80);
+      .setAlpha(ready ? 1 : queue >= 0 ? 0.7 : 0.42);
+    if (!ready) bowl.setTint(0x8f877c);
     this.layer.add(bowl);
-    this.panel(x - 36, 513, 72, 36, 0x120e0b, 0.82, ready ? 0xc7b27c : 0x6d5c43);
-    this.text(x, 516, INGREDIENT_LABELS[ingredient], 10, '#fff0d0', undefined, true);
-    this.text(
-      x,
-      532,
-      ready ? (selected ? 'SELECTED' : '✓ READY') : queue === 0 ? 'PREPARING…' : queue > 0 ? `QUEUED ${queue + 1}` : 'CLICK TO PREP',
-      8,
-      ready ? '#c7f6b7' : '#eed7b0',
-      undefined,
-      true,
-    );
+    if (queue > 0) {
+      const bob = Math.sin(this.now / 220 + index) * 4;
+      const icon = this.add.image(x, 438 + bob, `food-${ingredient}`).setDisplaySize(26, 26);
+      const ring = this.add.graphics();
+      ring.fillStyle(0x16110c, 0.9).fillCircle(x, 438 + bob, 16);
+      ring.lineStyle(2, color).strokeCircle(x, 438 + bob, 16);
+      this.layer.add([ring, icon]);
+      this.text(x + 15, 424 + bob, String(queue + 1), 10, '#fff0c7', undefined, true);
+    }
+    if (needed > 0 && !ready) {
+      const badge = this.add.graphics();
+      badge.fillStyle(0xc2412a).fillCircle(x + 29, 462, 10);
+      badge.lineStyle(1.5, 0xffe2c8).strokeCircle(x + 29, 462, 10);
+      this.layer.add(badge);
+      this.text(x + 29, 455, `×${needed}`, 9, '#ffffff', undefined, true).setStroke('#000000', 0);
+    }
+    const g2 = this.add.graphics();
+    g2.fillStyle(0x120e0b, 0.88).fillRoundedRect(x - 37, 513, 74, 38, 3);
+    g2.fillStyle(color, ready ? 1 : 0.6).fillRect(x - 37, 513, 74, 4);
+    g2.lineStyle(1, ready ? 0xc7b27c : 0x6d5c43, 0.8).strokeRoundedRect(x - 37, 513, 74, 38, 3);
+    this.layer.add(g2);
+    this.text(x, 519, INGREDIENT_LABELS[ingredient], 10, '#fff0d0', undefined, true);
+    const state = ready ? (selected ? 'IN YOUR HAND' : '✓ READY') : queue === 0 ? 'PREPPING…' : queue > 0 ? `QUEUED #${queue + 1}` : needed > 0 ? 'NEEDED — PREP' : 'CLICK TO PREP';
+    this.text(x, 535, state, 8, ready ? '#c7f6b7' : needed > 0 && queue < 0 ? '#ffb89c' : '#cdb994', undefined, true);
     if (queue === 0) this.bar(x - 28, 507, 56, run.prepElapsed / PREP_SECONDS, 0xe8cc83);
     this.hits.push({
-      x: x - 38,
-      y: 456,
-      w: 76,
-      h: 95,
+      ...bowlRect(index),
       kind: `bowl:${ingredient}`,
       action: () => {
         if (ready) this.selected = selected ? null : ingredient;

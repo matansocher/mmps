@@ -1,5 +1,5 @@
 import { dayFor, INGREDIENTS, RECIPES } from './content';
-import type { Command, Feedback, Ingredient, Order, Profile, Run, Table, WaiterTask } from './types';
+import type { Command, Feedback, Ingredient, Order, Profile, Recipe, Run, Table, WaiterTask } from './types';
 
 type Draft<T> = T extends readonly (infer U)[] ? Draft<U>[] : T extends object ? { -readonly [K in keyof T]: Draft<T[K]> } : T;
 type State = Draft<Run>;
@@ -65,10 +65,14 @@ function queue(s: State, task: WaiterTask): void {
   say(s, `${task.action === 'seat' ? 'Greet guests' : task.action === 'order' ? 'Take order' : task.action === 'serve' ? 'Serve dishes' : 'Clear table'} queued.`);
 }
 
+export function menuFor(day: number, mode: Run['mode']): readonly Recipe[] {
+  const max = mode === 'arcade' ? 35 : dayFor(day).recipeLimit;
+  return RECIPES.slice(0, max).filter((r) => mode === 'arcade' || day >= 15 || !r.oven);
+}
+
 function orderFor(s: State, table: Draft<Table>): Draft<Order> {
   const def = dayFor(s.day);
-  const max = s.mode === 'arcade' ? 35 : def.recipeLimit;
-  let choices = RECIPES.slice(0, max).filter((r) => s.mode === 'arcade' || s.day >= 15 || !r.oven);
+  let choices = menuFor(s.day, s.mode);
   const dessert = table.course === def.courses - 1 && def.courses > 1;
   if (dessert) {
     const sweets = choices.filter((r) => r.ingredients.includes('fruit') || r.id === 3);
