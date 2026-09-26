@@ -125,7 +125,8 @@ mmps/
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
 │   ├── savings-web/
-│   └── mindloop-web/
+│   ├── mindloop-web/
+│   └── hells-kitchen-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
 ├── assets/             # Static assets (downloads dir, images)
@@ -183,6 +184,8 @@ src/services/{name}/
 
 **Also not a bot:** `MINDLOOP` (`src/features/mindloop/`) is a React brain-training mini-app (`apps/mindloop-web`) served at `/mindloop/*`. It ships 14 original games across 5 skill categories and persists player progress (best scores, favorites, play history) to the `Mindloop` MongoDB database keyed by Telegram user id. The client is offline-first (localStorage) and reconciles with the server via a non-destructive merge; server writes are best-effort. Identity comes from verified Telegram `initData` (`MINDLOOP_TELEGRAM_BOT_TOKEN`) or an `X-Mindloop-Dev-User` header in local dev. Device-only preferences (theme, sound, reduced motion) never leave the device. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
+**Also not a bot:** `HELLS_KITCHEN` (`src/features/hells-kitchen/`) is a private, password-protected browser recreation of *Hell's Kitchen: The Game* (Phaser 3 canvas in `apps/hells-kitchen-web`) served at `/hells-kitchen/*` with `/api/hells-kitchen/*` routes. The deterministic simulation, content (36 career days, Arcade, 35 recipes), types and zod save schema live in `src/features/hells-kitchen/game/` and are shared by server and client. Auth is an HMAC session cookie keyed by `HELLS_KITCHEN_APP_PASSWORD`; `/hells-kitchen/game-assets/*` is auth-guarded. One profile is stored in the `HellsKitchen` database (`profiles`, `_id: 'personal'`) with revision-guarded saves (409 on conflict); the client is offline-first and checkpoints the active run. The canvas scene (`game/scene.ts`) recreates the original's layout — Ramsay HUD with flame meter, Switch Rooms button, drag-and-drop bowls → pots → plates, meal-counter platters — with procedural textures in `game/art.ts`. Original-style tip boxes (toggle "Chef's hints" in Options) come from the pure `nextStep()` in `apps/hells-kitchen-web/src/game/guide.ts`, sharing hit rects with the scene via `game/layout.ts`. Art masters live in `apps/hells-kitchen-web/art/source/`; `npx tsx apps/hells-kitchen-web/scripts/build-assets.ts` cuts them out and writes the runtime WebP files to `public/game-assets/`. For a Mongo-free preview run `HELLS_KITCHEN_APP_PASSWORD=… npx tsx apps/hells-kitchen-web/dev-server.ts` (file-backed save in `.tmp/`, ports via `HELLS_KITCHEN_API_PORT` / `HELLS_KITCHEN_WEB_PORT`) next to `npm run dev:hells-kitchen-web`. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+
 **Boot logic** (`src/index.ts`):
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
@@ -202,7 +205,7 @@ await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one. The `savings` and `mindloop` web features are initialized separately (`initSavings(app)` / `initMindloop(app)`), wrapped in their own try/catch, and boot regardless of `LOCAL_ACTIVE_BOT_ID`.
+In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one. The `savings`, `mindloop` and `hells-kitchen` web features are initialized separately (`initSavings(app)` / `initMindloop(app)` / `initHellsKitchen(app)`), wrapped in their own try/catch, and boot regardless of `LOCAL_ACTIVE_BOT_ID`.
 
 ---
 
@@ -699,7 +702,7 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 - `GET /` — health (`{ success: true }`)
 - `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
 - Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
-- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes.
+- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes; `initHellsKitchen(app)` serves the Hell's Kitchen game at `/hells-kitchen/*` with `/api/hells-kitchen/*` routes.
 
 ---
 
@@ -765,6 +768,7 @@ The full list is in `.env.example`. Everything that the code references via `env
 - `IS_PROD=true` runs all bots regardless of `LOCAL_ACTIVE_BOT_ID`.
 - `PORT` — Express port (default 3000).
 - `SAVINGS_APP_PASSWORD` — shared password for the standalone `/savings` portfolio app.
+- `HELLS_KITCHEN_APP_PASSWORD` — password for the private `/hells-kitchen` game.
 - `MINDLOOP_TELEGRAM_BOT_TOKEN` — used only to verify Telegram `initData` for the `/mindloop` mini-app (no bot runs).
 
 **Observability (Grafana Cloud via OpenTelemetry) — production only:**
@@ -804,9 +808,10 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (savings-web, mindloop-web)
+# Mini-app workspaces (savings-web, mindloop-web, hells-kitchen-web)
 npm run dev:savings-web
 npm run dev:mindloop-web
+npm run dev:hells-kitchen-web
 ```
 
 ---
