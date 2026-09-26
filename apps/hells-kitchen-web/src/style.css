@@ -1,0 +1,459 @@
+:root {
+  color-scheme: dark;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #eadfc9;
+  background: #0b0908;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 35%, #312016, #080706 75%);
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #eac680;
+  outline-offset: 3px;
+}
+#app {
+  position: relative;
+  width: min(100vw, calc(100vh * 4 / 3));
+  height: min(100vh, calc(100vw * 3 / 4));
+  margin: auto;
+  top: 50vh;
+  transform: translateY(-50%);
+  box-shadow: 0 0 80px #000;
+  overflow: hidden;
+}
+#game {
+  position: absolute;
+  inset: 0;
+}
+#overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#overlay:empty {
+  display: none;
+}
+.screen {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5%;
+  pointer-events: auto;
+  overflow: auto;
+  background: linear-gradient(90deg, #0b0909ed, #0e0c0bdd);
+}
+.screen.home {
+  align-items: flex-start;
+  overflow: hidden;
+  background: linear-gradient(90deg, #0b0909f5 0%, #110b09c9 55%, #130b0550);
+}
+.home .hero-chef {
+  position: absolute;
+  right: -7%;
+  bottom: 0;
+  height: 88%;
+  width: 52%;
+  background: url('/hells-kitchen/game-assets/chef.webp') 0 50% / 300% 100%;
+  opacity: 0.9;
+  mask-image: linear-gradient(to right, transparent, #000 18%), linear-gradient(to bottom, transparent, #000 24%, #000 86%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  pointer-events: none;
+}
+.brand {
+  margin: 0 0 3%;
+  color: #e9c684;
+  text-shadow:
+    0 2px 3px #000,
+    0 0 22px #bd5d263b;
+  font-weight: 400;
+  text-align: center;
+  letter-spacing: 0.055em;
+  font-size: clamp(28px, 5.1vw, 68px);
+  line-height: 0.95;
+}
+.brand span {
+  display: block;
+  font-size: 0.3em;
+  letter-spacing: 0.48em;
+  margin: 13px 0 18px;
+  color: #b9a48a;
+}
+.brand:before {
+  content: '♆';
+  display: block;
+  font-size: 0.8em;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.home .brand {
+  width: 51%;
+  z-index: 1;
+}
+.eyebrow {
+  color: #b29c78;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  margin-bottom: 9px;
+}
+h2 {
+  font-size: clamp(23px, 3.3vw, 42px);
+  color: #e6c58c;
+  font-weight: 400;
+  margin: 0 0 14px;
+}
+p {
+  line-height: 1.6;
+  color: #cfbea7;
+  max-width: 470px;
+  text-align: center;
+  margin: 8px 0 20px;
+}
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  width: 44%;
+  gap: 10px;
+  z-index: 1;
+  margin-left: 3%;
+}
+.metal,
+.day {
+  border: 1px solid #8f7852;
+  color: #f1dfb9;
+  background: linear-gradient(#3a332b, #191612 55%, #29221b);
+  box-shadow:
+    inset 0 0 0 3px #181510,
+    inset 0 4px 0 #ffffff0c,
+    0 4px 10px #0005;
+  text-shadow: 0 2px #000;
+  border-radius: 2px;
+  padding: 12px 22px;
+  letter-spacing: 0.065em;
+  font-size: 13px;
+  transition:
+    filter 0.15s,
+    border-color 0.15s;
+}
+.metal:hover:not(:disabled),
+.day:hover:not(:disabled) {
+  filter: brightness(1.3);
+  border-color: #edcc8e;
+}
+.metal.primary {
+  background: linear-gradient(#775c33, #3f2a18 65%, #614423);
+  border-color: #c6a66d;
+}
+.metal.small {
+  padding: 8px 15px;
+  font-size: 11px;
+}
+.footer {
+  position: absolute;
+  bottom: 17px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  color: #a58e70;
+  font:
+    10px Arial,
+    sans-serif;
+  letter-spacing: 0.08em;
+}
+.status {
+  position: absolute;
+  left: 16px;
+  bottom: 3px;
+  z-index: 10;
+  color: #c9bca4;
+  font:
+    10px Arial,
+    sans-serif;
+  background: #100c09d9;
+  padding: 3px 6px;
+  pointer-events: none;
+}
+.calendar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 7px;
+  margin: 10px 0 16px;
+}
+.day {
+  min-width: 0;
+  padding: 8px 3px;
+  height: 56px;
+  font-size: 17px;
+}
+.day span {
+  display: block;
+  margin-top: 6px;
+  font-size: 8px;
+  letter-spacing: 0;
+  color: #e5c37d;
+}
+.day.test {
+  border-color: #9b5051;
+}
+.day.current {
+  box-shadow:
+    inset 0 0 0 2px #b99b60,
+    0 0 15px #e0b16b38;
+}
+.calendar-head {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+.calendar-head h2 {
+  margin-bottom: 0;
+}
+.rank {
+  color: #e8c886;
+  text-align: right;
+  font-size: 15px;
+}
+.rank small {
+  display: block;
+  margin-top: 5px;
+  color: #b9a890;
+  font:
+    11px Arial,
+    sans-serif;
+}
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.briefing {
+  width: 80%;
+  border: 1px solid #8c744d;
+  padding: 25px;
+  background: #1e1711df;
+  text-align: center;
+}
+.briefing h3 {
+  font-size: 21px;
+  font-weight: 400;
+  color: #ddc6a0;
+  margin: 10px 0;
+}
+.briefing p {
+  margin: 12px auto;
+}
+.stats {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  margin: 25px 0;
+}
+.stats strong {
+  display: block;
+  color: #e8c481;
+  font-size: 30px;
+  font-weight: 400;
+}
+.stats span {
+  font:
+    10px Arial,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #b4a18a;
+}
+.stars {
+  color: #ebc77c;
+  font-size: 38px;
+  letter-spacing: 6px;
+  margin: 10px 0 22px;
+}
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-height: 65%;
+  overflow: auto;
+  margin: 10px 0 20px;
+  padding: 3px;
+}
+.recipe-card {
+  min-height: 69px;
+  padding: 8px;
+  border: 1px solid #796544;
+  color: #ddceb3;
+  background: #241d15;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.recipe-card small {
+  display: block;
+  color: #a89370;
+  margin-bottom: 4px;
+}
+.recipe-card:disabled {
+  opacity: 0.4;
+}
+.recipe-detail {
+  border: 1px solid #ac8a54;
+  padding: 25px;
+  text-align: center;
+  max-width: 520px;
+}
+.recipe-detail p {
+  margin: 14px auto;
+}
+.recipe-detail ul {
+  text-align: left;
+  color: #dec6a1;
+  line-height: 1.7;
+}
+.setting {
+  width: 75%;
+  display: grid;
+  grid-template-columns: 100px 1fr 45px;
+  gap: 18px;
+  align-items: center;
+  margin: 14px 0;
+}
+input[type='range'] {
+  width: 100%;
+  accent-color: #bd9859;
+}
+.login {
+  border: 1px solid #715c40;
+  background: #19120dea;
+  padding: 27px;
+  width: min(360px, 85%);
+  text-align: center;
+}
+.login label {
+  display: block;
+  text-align: left;
+  font-size: 12px;
+  color: #cbb68f;
+  margin-bottom: 8px;
+}
+.login input {
+  width: 100%;
+  padding: 12px;
+  color: #efdfc0;
+  background: #0b0908;
+  border: 1px solid #806d4c;
+  margin-bottom: 16px;
+}
+.login button {
+  width: 100%;
+}
+.error {
+  color: #f0af93;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+.note {
+  color: #a9977c;
+  font:
+    11px/1.6 Arial,
+    sans-serif;
+  max-width: 480px;
+  text-align: center;
+  margin: 14px 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (max-height: 650px) {
+  .screen {
+    padding: 3%;
+  }
+  .metal {
+    padding: 8px 16px;
+  }
+  .menu-list {
+    gap: 7px;
+  }
+  .brand {
+    font-size: 42px;
+  }
+  .day {
+    height: 45px;
+    padding: 4px;
+  }
+  .day span {
+    margin-top: 3px;
+  }
+  .calendar {
+    gap: 5px;
+  }
+  .stats {
+    margin: 12px 0;
+  }
+}
+@media print {
+  body {
+    overflow: visible;
+    background: white;
+    color: black;
+  }
+  #game,
+  .status,
+  .footer,
+  .recipe-detail button {
+    display: none !important;
+  }
+  #app {
+    transform: none;
+    top: 0;
+    width: 100%;
+    height: auto;
+  }
+  #overlay,
+  .screen {
+    position: static;
+    background: white;
+    color: black;
+  }
+  .recipe-detail {
+    border: 0;
+    color: black;
+  }
+  .recipe-detail * {
+    color: black !important;
+  }
+}
