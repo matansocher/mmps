@@ -212,7 +212,10 @@ function pause(show = true): void {
       home();
     }),
   );
-  root.append(row, element('p', 'note', 'D — Dining room · K — Kitchen · P / Esc — Pause\nClick to prepare, select a ready ingredient, then click a pan. You can also drag ready ingredients.'));
+  root.append(
+    row,
+    element('p', 'note', 'D — Dining room · K — Kitchen · P / Esc — Pause\nSelect raw food to prep it, drag the ready bowl into the pot, then drag the pot up to its plate when the timer reaches 00.'),
+  );
 }
 function home(): void {
   if (conflict) {
@@ -250,81 +253,171 @@ function home(): void {
   footer.append(element('span', '', 'A PERSONAL RECREATION'), element('span', '', `${rankFor(Object.values(save.profile.stars).reduce((a, b) => a + b, 0))} · Day ${save.profile.unlockedDay}`));
   root.append(footer);
 }
+const RANK_STEPS = [
+  [20, 'Apprentice'],
+  [36, 'Junior Cook'],
+  [71, 'Cook'],
+  [106, 'Senior Chef'],
+] as const;
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const TIPS = [
+  'Seat guests as soon as they arrive. A crowd at the reception desk loses patience quickly.',
+  'Start the slowest dish first so every plate of an order finishes together.',
+  'Prep ingredients ahead while nothing is cooking. Ready bowls wait on the counter.',
+  'Plate a dish the moment its timer reaches 00. Every second after that costs quality.',
+  'Spread out your visits so the tables are not all waiting for their meals at once.',
+  'Watch Ramsay’s flame. When it climbs, a table is close to walking out.',
+  'Clear finished tables quickly so the next guests can be seated.',
+  'The waiter handles your jobs in order. Queue them in the order that matters most.',
+];
+function totalStars(): number {
+  return Object.values(save.profile.stars).reduce((a, b) => a + b, 0);
+}
+function hkBar(center: HTMLElement): HTMLElement {
+  const bar = element('header', 'hk-bar');
+  const logo = element('div', 'hk-logo', 'H♆K');
+  logo.setAttribute('aria-hidden', 'true');
+  bar.append(logo, center);
+  return bar;
+}
+function starBar(filled: number): HTMLElement {
+  const bar = element('div', 'star-bar');
+  bar.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < 5; i++) bar.append(element('i', i < filled ? 'on' : '', '★'));
+  return bar;
+}
 function calendar(): void {
-  const root = layout('calendar-screen', undefined, 'YOUR JOURNEY THROUGH HELL’S KITCHEN');
-  const head = element('div', 'calendar-head');
-  head.append(element('h2', '', 'Career'));
-  const total = Object.values(save.profile.stars).reduce((a, b) => a + b, 0);
-  const rank = element('div', 'rank', rankFor(total));
-  rank.append(element('small', '', `${total} stars earned`));
-  head.append(rank);
-  root.append(head);
-  const grid = element('div', 'calendar');
-  for (const day of DAYS) {
-    const stars = save.profile.stars[String(day.id)] ?? 0;
-    const b = element('button', `day${day.challenge ? ' test' : ''}${day.id === save.profile.unlockedDay ? ' current' : ''}`, String(day.id));
-    b.disabled = day.id > save.profile.unlockedDay;
-    b.title = day.name;
-    b.setAttribute('aria-label', `Day ${day.id}: ${day.name}${stars ? `, ${stars} stars` : ''}`);
-    b.append(element('span', '', b.disabled ? 'LOCKED' : stars ? '★'.repeat(stars) : day.challenge ? 'KITCHEN TEST' : 'SERVICE'));
-    b.addEventListener('click', () => briefing(day.id, 'career'));
-    grid.append(b);
+  const root = layout('calendar-screen');
+  const total = totalStars();
+  const reached = RANK_STEPS.filter(([stars]) => total >= stars).length;
+  root.append(hkBar(starBar(reached + 1)));
+  const board = element('div', 'career-board');
+  const who = element('div', 'career-who');
+  const rank = element('span', '', rankFor(total));
+  rank.append(element('b', '', ` ${total} ★`));
+  who.append(element('span', '', 'Chef'), rank);
+  board.append(who);
+  const weeks = Math.ceil(DAYS.length / 7);
+  const shownWeeks = Math.max(1, Math.min(weeks, Math.ceil(save.profile.unlockedDay / 7)));
+  for (let week = 0; week < shownWeeks; week++) {
+    const row = element('div', 'week');
+    for (let weekday = 0; weekday < 7; weekday++) {
+      const day = DAYS[week * 7 + weekday];
+      const cell = element('div', 'week-day');
+      if (week === 0) cell.append(element('small', '', WEEKDAYS[weekday]));
+      if (day) cell.append(dayTile(day.id));
+      row.append(cell);
+    }
+    board.append(row);
   }
-  root.append(grid, element('div', 'note', 'Apprentice 20 ★  ·  Junior Cook 36 ★  ·  Cook 71 ★  ·  Senior Chef 106 ★'), button('BACK', home));
+  for (const [stars, title] of RANK_STEPS) {
+    const row = element('div', `rank-row${total >= stars ? ' reached' : ''}`);
+    row.append(element('i', 'rank-badge', total >= stars ? '★' : ''), element('span', 'rank-stars', `${stars} ★`), element('span', 'rank-title', title));
+    row.setAttribute('aria-label', `${title}: ${stars} stars${total >= stars ? ', reached' : ', locked'}`);
+    board.append(row);
+  }
+  root.append(board, button('Back', home));
+}
+function dayTile(id: number): HTMLButtonElement {
+  const day = dayFor(id);
+  const stars = save.profile.stars[String(id)] ?? 0;
+  const locked = id > save.profile.unlockedDay;
+  const b = element('button', `day${day.challenge ? ' test' : ''}${id === save.profile.unlockedDay ? ' current' : ''}${stars === 5 ? ' perfect' : stars ? ' done' : ''}`);
+  b.type = 'button';
+  b.disabled = locked;
+  b.title = `${day.name}${day.challenge ? ' · Kitchen test' : ''}`;
+  b.setAttribute('aria-label', `Day ${id}: ${day.name}${stars ? `, ${stars} stars` : ''}`);
+  b.append(element('small', '', stars === 5 ? 'Perfect' : day.challenge ? 'test' : 'day'), element('strong', '', stars ? `${stars}★` : String(id)));
+  b.addEventListener('click', () => briefing(id, 'career'));
+  return b;
+}
+function headline(day: number): string {
+  const d = dayFor(day);
+  if (d.challenge) return 'Kitchen test';
+  if (day === 1) return 'Welcome, Chef';
+  const before = dayFor(day - 1);
+  if (d.courses > before.courses) return d.courses === 3 ? 'Three courses' : 'Dessert course';
+  if (d.tables > before.tables) return 'Additional table';
+  if (d.groupSize > before.groupSize) return 'Larger parties';
+  if (d.parties > before.parties) return 'More customers';
+  if (d.arrivalEvery < before.arrivalEvery) return 'A busier room';
+  return d.name;
 }
 function briefing(day: number, mode: Run['mode']): void {
   const d = dayFor(day);
-  const root = layout('briefing-screen', mode === 'arcade' ? 'Arcade' : `Day ${day}`, mode === 'arcade' ? 'KEEP THE ORDERS MOVING' : 'TODAY’S SERVICE');
-  const card = element('div', 'briefing');
-  card.append(element('h3', '', mode === 'arcade' ? 'Four minutes. One kitchen.' : d.name));
-  card.append(
-    element(
-      'p',
-      '',
-      mode === 'arcade'
-        ? 'Orders arrive directly at your station. Plate the complete order to send it. Survive four minutes and serve as many orders as you can.'
-        : d.challenge
-          ? 'Orders arrive in the red and blue kitchens. Switch between them and plate every dish in an order to send it automatically.'
-          : 'Greet guests, take their orders, and coordinate the kitchen. Serve each table together. Quality is everything.',
-    ),
-  );
-  stats(
-    card,
-    mode === 'arcade'
-      ? [
-          ['4:00', 'Time limit'],
-          [String(save.profile.arcadeBest), 'Best orders'],
-        ]
-      : [
-          [String(d.parties), 'Tables to serve'],
-          [String(d.challenge ? 1 : d.courses), 'Courses'],
-          [String(d.groupSize), 'Dishes per order'],
-        ],
-  );
-  if (mode === 'career') card.append(menu(day));
-  if (mode === 'career' && day <= 3) card.append(howTo());
-  card.append(element('p', 'note', 'Start the slowest dishes first so an order finishes together. Plate a dish the moment it is READY — it burns if you wait.'));
-  const row = element('div', 'row');
-  row.append(
-    button(
-      'OPEN HELL’S KITCHEN',
-      () => {
-        if (save.profile.activeRun) confirmReplace(day, mode);
-        else start(day, mode);
-      },
-      true,
-    ),
-    button('BACK', mode === 'career' ? calendar : home),
-  );
-  card.append(row);
-  root.append(card);
+  const arcade = mode === 'arcade';
+  const root = layout('briefing-screen');
+  root.append(hkBar(element('div', 'hk-tab', arcade ? 'ARCADE' : `DAY ${day}`)));
+  const panel = element('div', 'brief-panel');
+  const cards = element('div', 'brief-cards');
+  const special = element('section', 'special-card');
+  const info = element('section', 'info-card');
+  if (arcade) {
+    special.append(
+      element('small', 'new', 'FOUR MINUTES'),
+      element('h3', '', 'ARCADE'),
+      element('div', 'arcade-clock', '4:00'),
+      element('span', 'dish-name', `Best: ${save.profile.arcadeBest} orders`),
+    );
+    info.append(
+      element('h3', '', 'One kitchen. No waiting.'),
+      element('p', '', 'Orders arrive directly at your station. Plate every dish of an order to send it out. Survive four minutes and serve as many orders as you can.'),
+    );
+  } else {
+    const recipes = menuFor(day, 'career');
+    const known = day > 1 ? new Set(menuFor(day - 1, 'career').map((r) => r.id)) : new Set<number>();
+    const fresh = recipes.filter((r) => !known.has(r.id));
+    const dish = fresh[fresh.length - 1] ?? recipes[recipes.length - 1];
+    special.append(element('small', 'new', fresh.length && day > 1 ? 'NEW!' : 'ON THE MENU'), element('h3', '', 'TODAY’S SPECIAL'), plate(dish.id), element('span', 'dish-name', dish.name));
+    special.append(button('Check Today’s Recipe', () => recipeDetail(dish.id, () => briefing(day, mode))));
+    info.append(
+      element('h3', '', headline(day)),
+      element(
+        'p',
+        '',
+        d.challenge
+          ? 'Orders arrive in the red and blue kitchens. Switch between them and plate every dish of an order to send it out.'
+          : `${d.parties} tables of ${d.groupSize === 1 ? 'one guest' : `${d.groupSize} guests`} tonight${d.courses > 1 ? `, ${d.courses} courses each` : ''}. Seat them, take their orders and serve each table together.`,
+      ),
+      element('strong', 'tip-title', 'Tip:'),
+      element('p', '', TIPS[(day - 1) % TIPS.length]),
+    );
+  }
+  cards.append(special, info);
+  panel.append(cards);
+  if (!arcade) panel.append(menu(day));
+  if (!arcade && day <= 3) panel.append(howTo());
+  const open = element('button', 'open-kitchen', 'OPEN\nHELL’S KITCHEN');
+  open.type = 'button';
+  open.addEventListener('click', () => {
+    if (save.profile.activeRun) confirmReplace(day, mode);
+    else start(day, mode);
+  });
+  panel.append(open);
+  root.append(panel, button('Back', arcade ? home : calendar));
+}
+function plate(recipeId: number): HTMLElement {
+  const recipe = RECIPES[recipeId];
+  const el = element('div', `plate${recipe.oven ? ' oven' : ''}`);
+  el.setAttribute('aria-hidden', 'true');
+  recipe.ingredients.forEach((ingredient, i) => {
+    const icon = ingredientIcon(ingredient);
+    const angle = (i / recipe.ingredients.length) * Math.PI * 2 - Math.PI / 2;
+    icon.style.left = `${50 + Math.cos(angle) * 16}%`;
+    icon.style.top = `${50 + Math.sin(angle) * 20}%`;
+    el.append(icon);
+  });
+  return el;
+}
+function ingredientIcon(ingredient: Ingredient): HTMLElement {
+  const icon = element('i', 'ingredient-icon');
+  const index = INGREDIENTS.indexOf(ingredient);
+  icon.style.backgroundPosition = `${(index % 4) * 33.333}% ${Math.floor(index / 4) * 100}%`;
+  return icon;
 }
 function chip(ingredient: Ingredient): HTMLSpanElement {
   const el = element('span', 'chip');
-  const icon = element('i');
-  const index = INGREDIENTS.indexOf(ingredient);
-  icon.style.backgroundPosition = `${(index % 4) * 33.333}% ${Math.floor(index / 4) * 100}%`;
-  el.append(icon, INGREDIENT_LABELS[ingredient]);
+  el.append(ingredientIcon(ingredient), INGREDIENT_LABELS[ingredient]);
   return el;
 }
 function menu(day: number): HTMLElement {
@@ -344,16 +437,16 @@ function menu(day: number): HTMLElement {
     grid.append(item);
   }
   section.append(grid);
-  if (shown.length < recipes.length) section.append(element('p', 'note', `Plus ${recipes.length - shown.length} dishes you already know. See them all in the recipe collection.`));
+  if (shown.length < recipes.length) section.append(element('p', 'note', `Plus ${recipes.length - shown.length} dishes you already know. See them all in the recipe book.`));
   return section;
 }
 function howTo(): HTMLElement {
   const strip = element('ol', 'how-to');
   for (const [title, text] of [
-    ['Prep', 'Click an ingredient bowl. It is ready when it glows.'],
-    ['Cook', 'Click the ready bowl, then the glowing pan. Add every ingredient.'],
-    ['Plate', 'Click the pan when it says READY, before it burns.'],
-    ['Serve', 'Back in the dining room, click the table showing a blue !.'],
+    ['Prep', 'Select the raw food on the counter. The bowl is ready when it glows.'],
+    ['Cook', 'Drag the ready bowl into the pot showing that ingredient.'],
+    ['Plate', 'When the timer reaches 00, drag the pot up to its plate.'],
+    ['Serve', 'Switch Rooms, then select the platter on the meal counter.'],
   ] as const) {
     const step = element('li');
     step.append(element('strong', '', title), element('span', '', text));
@@ -382,7 +475,15 @@ function results(): void {
   const won = r.status === 'won';
   const finale = won && r.mode === 'career' && r.day === 36;
   const root = layout('results', finale ? 'You made it, Chef.' : won ? 'Service complete' : 'Kitchen closed', finale ? 'HELL’S KITCHEN FINALE' : `DAY ${r.day} · ${r.mode.toUpperCase()}`);
-  root.append(element('div', 'stars', won ? '★'.repeat(starsFor(r)) + '☆'.repeat(5 - starsFor(r)) : '☆ ☆ ☆ ☆ ☆'));
+  const earned = won ? starsFor(r) : 0;
+  const verdict = element('div', 'verdict');
+  const portrait = element('div', 'verdict-chef');
+  portrait.style.backgroundPosition = won && earned >= 3 ? '50% 50%' : won ? '0 50%' : '100% 50%';
+  const column = element('div', 'verdict-stars');
+  column.setAttribute('aria-label', `${earned} of 5 stars`);
+  for (let i = 4; i >= 0; i--) column.append(element('i', i < earned ? 'on' : '', '★'));
+  verdict.append(portrait, column);
+  root.prepend(verdict);
   root.append(
     element(
       'p',
@@ -422,7 +523,7 @@ function recipeBook(): void {
   }
   root.append(grid, button('BACK', home));
 }
-function recipeDetail(id: number): void {
+function recipeDetail(id: number, back: () => void = recipeBook): void {
   const recipe = RECIPES[id];
   const root = layout('recipe');
   const card = element('article', 'recipe-detail');
@@ -441,7 +542,7 @@ function recipeDetail(id: number): void {
   const row = element('div', 'row');
   row.append(
     button('PRINT CARD', () => window.print()),
-    button('BACK', recipeBook),
+    button('BACK', back),
   );
   card.append(row);
   root.append(card);

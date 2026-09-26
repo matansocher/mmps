@@ -28,19 +28,19 @@ The Vite dev server serves `public/` without auth. Check private media against E
 
 In development builds, a read-only inspector `window.__hellsKitchen` exposes the run, profile, screen and recipes for browser tests. `window.__hellsKitchenGuide(heldIngredient)` returns the current chef's hint.
 
+## Presentation
+
+The canvas scene (`apps/hells-kitchen-web/src/game/scene.ts`) follows the original's screen layout. Coordinates live in `game/layout.ts` and procedural textures (cookware, bowls, plates, tickets) in `game/art.ts`.
+
+- **HUD:** Ramsay's portrait (pose reacts to feedback and anger), the MENU plate (pause), the HK trident with a flame meter for his anger, a day/tables plaque, and a Switch Rooms button that flashes when the other room needs you.
+- **Dining room:** reception queue with patience bars, tables with glowing lamps and status bubbles, a waiter who carries each job, and platters waiting on the meal counter (pass).
+- **Kitchen:** order tickets clip to the top. Each dish of the selected ticket gets a plate on the shelf, cookware on a burner (roasting tray for oven dishes), a bubble with the ingredient bowls it still needs, a 7-segment timer and a star arc that lights up while it cooks. Ingredient piles sit in colour-banded bowls on the counter; burnt dishes go in the trash.
+- **Interaction:** select raw food to prep it, drag a ready bowl into the pot (or select bowl → pot), drag the pot up to its plate when the timer reaches 00, then select the platter on the meal counter. Rooms slide in the original's direction (kitchen left of the dining room). Keys: D dining room, K kitchen, P/Esc pause.
+- **Screens (DOM, `main.ts`):** career calendar with Mon–Sun week rows and locked rank rows (20/36/71/106 ★), a DAY N briefing with a TODAY'S SPECIAL card, tip card, tonight's menu and a red OPEN HELL'S KITCHEN button, and a results screen with Ramsay and a vertical star bar.
+
 ## Guidance
 
-`apps/hells-kitchen-web/src/game/guide.ts` is a pure function, `nextStep(run, held)`. It returns the single most useful next action (title, text and target rect) and is drawn as a pulsing arrow plus the NEXT STEP panel. Players can turn it off in Options → "Chef's hints"; the panel then falls back to CHEF'S NOTES. The hit rects are shared with the scene through `game/layout.ts`.
-
-Other clarity cues follow the original game:
-
-- Recipe cards show coloured ingredient slots with ticks, and the pans that take the held bowl glow.
-- Bowls show "needed ×n" badges, ready or prepping states, and floating queued-prep icons.
-- Tickets show per-dish state dots.
-- Tables that need you get a blue "!".
-- Guests have patience bars.
-- Ramsay speaks in a bubble.
-- The briefing lists tonight's menu with ingredient chips and a how-to strip on days 1–3.
+`apps/hells-kitchen-web/src/game/guide.ts` is a pure function, `nextStep(run, held)`. It returns the single most useful next action (title, text and target rect). The scene draws it like the original's tutorial tips: a dark tip box next to the target with a pointer and a pulsing ring, placed to avoid the HUD. Players can turn it off in Options → "Chef's hints"; Ramsay's remarks then appear as a short feedback bubble instead. Hover tooltips explain every hit area. The briefing lists tonight's menu with ingredient chips and a how-to strip on days 1–3.
 
 ## Assets
 

@@ -142,8 +142,7 @@ p {
   z-index: 1;
   margin-left: 3%;
 }
-.metal,
-.day {
+.metal {
   border: 1px solid #8f7852;
   color: #f1dfb9;
   background: linear-gradient(#3a332b, #191612 55%, #29221b);
@@ -160,8 +159,7 @@ p {
     filter 0.15s,
     border-color 0.15s;
 }
-.metal:hover:not(:disabled),
-.day:hover:not(:disabled) {
+.metal:hover:not(:disabled) {
   filter: brightness(1.3);
   border-color: #edcc8e;
 }
@@ -199,87 +197,12 @@ p {
   padding: 3px 6px;
   pointer-events: none;
 }
-.calendar {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 7px;
-  margin: 10px 0 16px;
-}
-.day {
-  min-width: 0;
-  padding: 8px 3px;
-  height: 56px;
-  font-size: 17px;
-}
-.day span {
-  display: block;
-  margin-top: 6px;
-  font-size: 8px;
-  letter-spacing: 0;
-  color: #e5c37d;
-}
-.day.test {
-  border-color: #9b5051;
-}
-.day.current {
-  box-shadow:
-    inset 0 0 0 2px #b99b60,
-    0 0 15px #e0b16b38;
-}
-.calendar-head {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  align-items: center;
-}
-.calendar-head h2 {
-  margin-bottom: 0;
-}
-.rank {
-  color: #e8c886;
-  text-align: right;
-  font-size: 15px;
-}
-.rank small {
-  display: block;
-  margin-top: 5px;
-  color: #b9a890;
-  font:
-    11px Arial,
-    sans-serif;
-}
 .row {
   display: flex;
   gap: 12px;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-}
-.briefing {
-  width: 80%;
-  border: 1px solid #8c744d;
-  padding: 25px;
-  background: #1e1711df;
-  text-align: center;
-}
-.briefing h3 {
-  font-size: 21px;
-  font-weight: 400;
-  color: #ddc6a0;
-  margin: 10px 0;
-}
-.briefing p {
-  margin: 12px auto;
-}
-.briefing-screen {
-  justify-content: safe center;
-}
-.briefing-screen .briefing {
-  padding: 16px 22px;
-}
-.briefing-screen .stats {
-  margin: 12px 0;
 }
 .menu {
   margin: 10px 0 6px;
@@ -333,7 +256,9 @@ p {
   border-radius: 12px;
   padding: 2px 8px 2px 2px;
 }
-.chip i {
+.ingredient-icon {
+  display: inline-block;
+  flex: none;
   width: 20px;
   height: 20px;
   border-radius: 50%;
@@ -391,12 +316,6 @@ p {
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: #b4a18a;
-}
-.stars {
-  color: #ebc77c;
-  font-size: 38px;
-  letter-spacing: 6px;
-  margin: 10px 0 22px;
 }
 .recipe-grid {
   display: grid;
@@ -510,6 +429,441 @@ input[type='range'] {
   overflow: hidden;
   clip-path: inset(50%);
 }
+/* Original-style career screens: brushed metal, HK header bar */
+.screen.calendar-screen,
+.screen.briefing-screen,
+.screen.results {
+  justify-content: flex-start;
+  padding: 0 0 2%;
+  background:
+    linear-gradient(#0000 0 12%, #0006), linear-gradient(90deg, #0000 49.6%, #0009 49.8%, #fff2 50%, #0000 50.3%), repeating-linear-gradient(90deg, #ffffff05 0 2px, #0000 2px 5px),
+    radial-gradient(ellipse at 50% 20%, #6b5a43, #2c241b 70%, #17120d);
+}
+.screen.calendar-screen::before,
+.screen.briefing-screen::before {
+  content: '';
+  position: absolute;
+  inset: 12% 0 0;
+  background: url('/hells-kitchen/game-assets/kitchen.webp') center / cover;
+  filter: blur(6px) sepia(0.6) brightness(0.45);
+  opacity: 0.8;
+  z-index: -1;
+}
+.calendar-screen,
+.briefing-screen {
+  isolation: isolate;
+}
+.hk-bar {
+  position: relative;
+  width: 100%;
+  min-height: 11%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2%;
+  background: linear-gradient(#6d6a66, #3b3936 40%, #232220 60%, #45423e);
+  border-bottom: 2px solid #8d8a84;
+  box-shadow: 0 6px 16px #000a;
+}
+.hk-logo {
+  position: absolute;
+  left: 3%;
+  top: 50%;
+  transform: translateY(-50%);
+  font:
+    700 clamp(22px, 3.6vw, 46px) / 1 Georgia,
+    serif;
+  letter-spacing: -0.04em;
+  color: #e6e3de;
+  text-shadow:
+    0 2px 0 #555,
+    0 3px 6px #000;
+}
+.star-bar {
+  display: flex;
+  gap: 0.2em;
+  padding: 0.25em 1.2em;
+  font-size: clamp(16px, 2.5vw, 30px);
+  background: linear-gradient(#2a2927, #444240);
+  border: 1px solid #77746f;
+  border-radius: 3px;
+  box-shadow: inset 0 2px 6px #000c;
+}
+.star-bar i,
+.verdict-stars i {
+  font-style: normal;
+  color: #0000;
+  -webkit-text-stroke: 1.5px #9a9790;
+}
+.star-bar i.on,
+.verdict-stars i.on {
+  color: #3a8dff;
+  -webkit-text-stroke: 1.5px #e8f3ff;
+  text-shadow: 0 0 12px #52a2ff;
+}
+.hk-tab {
+  padding: 0.35em 3.2em;
+  font:
+    700 clamp(13px, 1.9vw, 22px) Arial,
+    sans-serif;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: linear-gradient(#8c8983, #5a5853);
+  border: 1px solid #aeaba4;
+  border-radius: 3px;
+  text-shadow: 0 1px 2px #000;
+}
+.career-board {
+  width: 74%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 1.5%;
+}
+.career-who {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 6%;
+  padding: 6px 4%;
+  font:
+    700 clamp(12px, 1.7vw, 18px) Arial,
+    sans-serif;
+  color: #fff;
+  background: linear-gradient(#262422, #0e0d0c);
+  border: 1px solid #5e5a55;
+  border-radius: 0 0 10px 10px;
+}
+.career-who b {
+  color: #9fcaff;
+}
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1.2%;
+  padding: 0 1%;
+}
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.week-day small {
+  font:
+    700 9px Arial,
+    sans-serif;
+  color: #f1e6d5;
+  text-shadow: 0 1px 2px #000;
+}
+.day {
+  width: 100%;
+  height: clamp(30px, 6vh, 52px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #d9d7d3;
+  background: linear-gradient(#5a5856, #2b2a28);
+  border: 1px solid #8b8883;
+  border-radius: 3px;
+  box-shadow:
+    inset 0 1px #fff3,
+    0 2px 5px #000a;
+  font-family: Arial, sans-serif;
+}
+.day small {
+  font-size: 9px;
+  line-height: 1;
+  color: #bdbab4;
+}
+.day strong {
+  font-size: clamp(14px, 2.2vw, 24px);
+  line-height: 1.05;
+  text-shadow: 0 1px 2px #000;
+}
+.day:disabled {
+  opacity: 1;
+  filter: brightness(0.45) saturate(0.5);
+}
+.day:hover:not(:disabled) {
+  filter: brightness(1.25);
+}
+.day.test {
+  background: linear-gradient(#7a3a36, #3a1916);
+  border-color: #b3625b;
+}
+.day.done strong {
+  color: #9fcaff;
+}
+.day.perfect {
+  background: linear-gradient(#e2a632, #8a5a12);
+  border-color: #ffd98a;
+}
+.day.perfect small,
+.day.perfect strong {
+  color: #fff;
+}
+.day.current {
+  border: 2px solid #e8f3ff;
+  box-shadow:
+    0 0 0 2px #3a8dff,
+    0 0 16px #52a2ff;
+}
+.rank-row {
+  display: grid;
+  grid-template-columns: 11% 24% 1fr;
+  align-items: center;
+  height: clamp(26px, 5.4vh, 40px);
+  font:
+    700 clamp(12px, 1.7vw, 18px) Arial,
+    sans-serif;
+  color: #fff;
+  background: linear-gradient(#2b2a28, #050505 55%, #1c1b1a);
+  border: 1px solid #6d6a65;
+  border-radius: 3px;
+  box-shadow: inset 0 1px #fff2;
+}
+.rank-row .rank-stars {
+  text-align: right;
+  padding-right: 18%;
+}
+.rank-row .rank-title {
+  text-align: center;
+  padding-right: 20%;
+}
+.rank-badge {
+  justify-self: center;
+  width: 30px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  color: #7c3e00;
+  background: radial-gradient(circle at 50% 70%, #ffe27a, #d19a1f 70%);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  position: relative;
+}
+.rank-row:not(.reached) .rank-badge::after {
+  content: '';
+  position: absolute;
+  left: 30%;
+  top: 38%;
+  width: 40%;
+  height: 34%;
+  background: #6d6a65;
+  border-radius: 2px;
+  box-shadow: 0 -5px 0 -2px #6d6a65;
+}
+.rank-row:not(.reached) {
+  color: #b8b4ad;
+}
+.rank-row.reached .rank-stars {
+  color: #9fcaff;
+}
+.calendar-screen > .metal,
+.briefing-screen > .metal {
+  min-width: 22%;
+  padding: 7px 20px;
+  font:
+    700 13px Arial,
+    sans-serif;
+  background: linear-gradient(#3d3b39, #0b0b0a);
+  border-color: #807c76;
+}
+.brief-panel {
+  width: 76%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.4% 1.6% 1.8%;
+  background: linear-gradient(#383634, #1f1e1c);
+  border: 1px solid #77736d;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px #fff2,
+    0 10px 30px #000c;
+  margin-bottom: 1.2%;
+}
+.brief-cards {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 2%;
+}
+.special-card,
+.info-card {
+  border-radius: 3px;
+  padding: 3% 4%;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+}
+.special-card {
+  align-items: center;
+  color: #2d2a26;
+  background: linear-gradient(#f4f2ee, #d6d3cd);
+  border: 1px solid #9c988f;
+}
+.special-card .new {
+  color: #d21e12;
+  font-weight: 700;
+  font-size: 10px;
+}
+.special-card h3 {
+  margin: 1px 0 6px;
+  font:
+    700 clamp(12px, 1.7vw, 18px) Arial,
+    sans-serif;
+  color: #3a1f12;
+}
+.special-card .dish-name {
+  font-size: 11px;
+  color: #5d5850;
+  margin: 5px 0 7px;
+}
+.special-card .metal {
+  padding: 4px 14px;
+  font:
+    700 10px Arial,
+    sans-serif;
+  background: linear-gradient(#3a3836, #0b0b0a);
+}
+.plate {
+  position: relative;
+  width: min(100%, 170px);
+  aspect-ratio: 1.3;
+  border-radius: 4px;
+  background: radial-gradient(ellipse 34% 40% at 50% 50%, #fff 0 60%, #e6e6e6 61%, #fafafa 70%, #0000 71%), radial-gradient(ellipse at 50% 60%, #6a6560, #2a2724);
+  box-shadow: inset 0 0 0 3px #0003;
+}
+.plate.oven {
+  background: radial-gradient(ellipse 36% 32% at 50% 50%, #e7b36b 0 55%, #b16a22 60%, #7d4410 70%, #0000 71%), radial-gradient(ellipse at 50% 60%, #6a6560, #2a2724);
+}
+.plate .ingredient-icon {
+  position: absolute;
+  width: 30%;
+  height: auto;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 3px #0006;
+}
+.arcade-clock {
+  font:
+    700 clamp(40px, 7vw, 72px) / 1 'Courier New',
+    monospace;
+  color: #c62c1c;
+  margin: 8px 0;
+}
+.info-card {
+  color: #e5e2dc;
+  background: linear-gradient(#1b1a19, #0a0a0a);
+  border: 1px solid #5e5b56;
+}
+.info-card h3 {
+  margin: 0 0 6px;
+  font:
+    700 clamp(14px, 2vw, 21px) Arial,
+    sans-serif;
+  color: #fff;
+}
+.info-card p {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #d8d4cd;
+  text-align: left;
+  margin: 2px 0 8px;
+}
+.info-card .tip-title {
+  font:
+    700 14px Georgia,
+    serif;
+  color: #fff;
+}
+.brief-panel .menu {
+  width: 100%;
+  margin: 8px 0 0;
+  text-align: center;
+}
+.brief-panel .menu .eyebrow {
+  margin-bottom: 0;
+}
+.brief-panel .menu-grid {
+  margin-top: 4px;
+  gap: 5px;
+}
+.brief-panel .menu-item {
+  min-width: 128px;
+  padding: 4px 8px;
+}
+.brief-panel .menu-item strong {
+  font-size: 12px;
+}
+.brief-panel .note {
+  margin: 4px auto;
+}
+.brief-panel .how-to {
+  width: 100%;
+  margin: 8px 0 0;
+}
+.open-kitchen {
+  margin-top: 1.6%;
+  min-width: 34%;
+  padding: 6px 26px;
+  white-space: pre-line;
+  font:
+    700 clamp(10px, 1.3vw, 14px) / 1.2 Arial,
+    sans-serif;
+  color: #fff;
+  background: linear-gradient(#e2372a, #8c0d05 60%, #b1180d);
+  border: 2px solid #ff8b7c;
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #3a0602,
+    0 0 18px #ff2a1466;
+  text-shadow: 0 1px 2px #000;
+}
+.open-kitchen:hover {
+  filter: brightness(1.2);
+}
+.screen.results {
+  justify-content: center;
+  background: repeating-linear-gradient(90deg, #ffffff05 0 2px, #0000 2px 5px), radial-gradient(ellipse at 50% 20%, #6b5a43, #2c241b 70%, #17120d);
+  display: grid;
+  grid-template-columns: auto minmax(0, 480px);
+  column-gap: 5%;
+  align-content: center;
+  justify-items: center;
+  padding: 4%;
+}
+.results > * {
+  grid-column: 2;
+}
+.results .verdict {
+  grid-column: 1;
+  grid-row: 1 / span 8;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.verdict-chef {
+  width: clamp(150px, 24vw, 260px);
+  aspect-ratio: 0.75;
+  background: url('/hells-kitchen/game-assets/chef.webp') 0 50% / 300% 100%;
+  border: 2px solid #8d8a84;
+  box-shadow:
+    inset 0 0 30px #000,
+    0 10px 30px #000;
+}
+.verdict-stars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: clamp(26px, 4vw, 44px);
+  padding: 8px 4px;
+  border-left: 3px solid #3a8dff;
+  box-shadow: -4px 0 12px -6px #52a2ff;
+}
 @media (max-height: 650px) {
   .screen {
     padding: 3%;
@@ -522,16 +876,6 @@ input[type='range'] {
   }
   .brand {
     font-size: 42px;
-  }
-  .day {
-    height: 45px;
-    padding: 4px;
-  }
-  .day span {
-    margin-top: 3px;
-  }
-  .calendar {
-    gap: 5px;
   }
   .stats {
     margin: 12px 0;

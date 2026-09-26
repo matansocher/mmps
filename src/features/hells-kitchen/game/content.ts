@@ -3,7 +3,8 @@ import type { Day, Ingredient, Profile, Recipe } from './types';
 export const CONTENT_VERSION = 1;
 export const INGREDIENTS: readonly Ingredient[] = ['vegetables', 'grain', 'chicken', 'fish', 'beef', 'dairy', 'fruit'];
 export const INGREDIENT_LABELS: Record<Ingredient, string> = { vegetables: 'Vegetables', grain: 'Grains', chicken: 'Poultry', fish: 'Seafood', beef: 'Meat', dairy: 'Dairy', fruit: 'Fruit' };
-export const INGREDIENT_COLORS: Record<Ingredient, number> = { vegetables: 0x81a444, grain: 0xdaa748, chicken: 0xd0926f, fish: 0x6facbb, beef: 0xb85243, dairy: 0xe2d8a7, fruit: 0xb977ac };
+// Bowl band colours match the original counter: poultry orange, meat red, produce green, dairy blue, grains yellow.
+export const INGREDIENT_COLORS: Record<Ingredient, number> = { vegetables: 0x3fae3a, grain: 0xf2c418, chicken: 0xf0862a, fish: 0x1fb5c9, beef: 0xd7262e, dairy: 0x2f7fe0, fruit: 0xb24ccf };
 
 const recipeData: readonly (readonly [string, readonly Ingredient[], number, boolean, string])[] = [
   ['Garden risotto', ['grain', 'vegetables'], 9, false, 'A creamy vegetable risotto finished with fresh herbs.'],
