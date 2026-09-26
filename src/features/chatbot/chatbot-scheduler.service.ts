@@ -8,6 +8,7 @@ import {
   dailySummary,
   earthquakeMonitor,
   exerciseReminder,
+  flightTrafficCheck,
   footballUpdate,
   gamePriceCheck,
   gameReleaseCheck,
@@ -95,5 +96,7 @@ export class ChatbotSchedulerService {
     createSchedule(`13 11 * * 1,2,3`, async () => secretaryCheckIn(this.bot, this.secretaryMessageService));
 
     createSchedule(`10,40 7-22 * * *`, async () => rainRadarAlert(this.bot));
+
+    createSchedule(`5 * * * *`, async () => flightTrafficCheck(this.bot));
   }
 }
