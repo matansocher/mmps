@@ -285,6 +285,7 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 | Polymarket | 16:05 | Daily price updates for subscribed markets. |
 | Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then (optionally) up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Disabled by default; enable with `CHATBOT_VIDEO_DIGEST=true`. Tweets with photos (up to 5 newest) follow as Telegram albums sent by url, same record/claim lifecycle with a link-only fallback. Kill switch: `CHATBOT_IMAGE_DIGEST=false`. |
 | Usage report | Sat 22:30 | Weekly cost/token breakdown DM. |
+| Email cleanup | 12:00 / 20:00 | Checks up to 50 unread inbox emails from the last 24h with TypeSafe's Jev model (`@services/typesafe`, sender + subject + snippet) and moves anything rated spam/ad at p > 0.75 to Gmail Trash. Silent unless something was trashed, or every Jev call failed (then a warning DM). Jev calls retry once on 429/529. Needs `TYPESAFE_API_KEY`. |
 
 ::: tip Pattern to remember
 **The scheduler and the chat handler share one brain.** A cron job is just another producer of a prompt into `processMessage()` — DRY, and scheduled output looks/behaves like chat output.

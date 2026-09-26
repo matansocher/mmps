@@ -146,6 +146,7 @@ Tools (weather, reminders, etc.)
 - **Daily Summary** - Generates daily summary at 23:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
+- **Email Cleanup** - 12:00 and 20:00. TypeSafe's Jev model (`@services/typesafe`) checks unread inbox emails from the last 24h (up to 50) and moves any it rates as spam/ad with probability > 0.75 to Gmail Trash. Silent unless something was trashed, or every Jev call failed (then a warning DM). Jev calls retry once on 429/529. Needs `TYPESAFE_API_KEY`
 
 ### Memory & Context
 

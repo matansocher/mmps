@@ -7,6 +7,7 @@ import {
   birthdayReminder,
   dailySummary,
   earthquakeMonitor,
+  emailCleanup,
   exerciseReminder,
   footballUpdate,
   gamePriceCheck,
@@ -61,6 +62,8 @@ export class ChatbotSchedulerService {
     createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot));
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
+
+    createSchedule(`00 12,20 * * *`, async () => emailCleanup(this.bot));
 
     createSchedule(`0 10 1 * *`, async () => modelPricingCheck(this.bot));
 
