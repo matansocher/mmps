@@ -57,3 +57,9 @@ export type ImsForecastResponse = {
   };
   readonly method: string;
 };
+
+export type HourlyRainChance = {
+  readonly time: Date;
+  readonly hour: string; // Israel local time, format: "HH:MM"
+  readonly rainChance: number; // percent
+};

@@ -2,7 +2,8 @@ import axios from 'axios';
 import type { CurrentWeather, DayForecast, HourlyWeather, TomorrowForecast } from '@services/weather-api/types';
 import { DEFAULT_LANGUAGE, IMS_BASE_URL, IMS_ENDPOINTS } from './constants';
 import { getLocationInfo } from './location-mapping';
-import type { ImsCurrentAnalysisResponse, ImsForecastResponse } from './types';
+import type { HourlyRainChance, ImsCurrentAnalysisResponse, ImsForecastResponse } from './types';
+import { extractUpcomingRainChances } from './utils/rain-chances';
 import { transformImsCurrentWeather, transformImsDayForecast, transformImsHourlyForecast } from './utils/transform-response';
 
 async function fetchImsCurrentAnalysis(locationId: number): Promise<ImsCurrentAnalysisResponse> {
@@ -101,4 +102,13 @@ export async function getForecastWeather(locationId: number, date: string): Prom
   const targetDateStr = targetDate.toISOString().split('T')[0];
 
   return transformImsDayForecast(imsResponse, locationInfo, targetDateStr);
+}
+
+export async function getUpcomingRainChances(locationId: number, hours: number, now: Date = new Date()): Promise<HourlyRainChance[]> {
+  if (!getLocationInfo(locationId)) {
+    throw new Error(`Unknown location ID: ${locationId}`);
+  }
+
+  const imsResponse = await fetchImsForecast(locationId);
+  return extractUpcomingRainChances(imsResponse, now, hours);
 }
