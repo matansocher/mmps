@@ -709,6 +709,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 
 | Service                | Purpose                                    |
 |------------------------|--------------------------------------------|
+| `adsb`                 | Live aircraft positions in a radius (adsb.lol, adsb.fi fallback; no key) |
 | `alpha-vantage`        | Stock fundamentals & quotes                |
 | `anthropic`            | Claude API helpers                         |
 | `earthquake-api`       | USGS quake feed                            |
@@ -747,7 +748,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 
 Located in `src/shared/`. Reusable across bots:
 
-`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
+`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flight-traffic`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
 
 ---
 

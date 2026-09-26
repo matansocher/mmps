@@ -145,6 +145,7 @@ Tools (weather, reminders, etc.)
 
 - **Daily Summary** - Generates daily summary at 23:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
+- **Flight Traffic Alerts** - Hourly at :05, counts airborne aircraft over Israel and Iran (ADS-B via adsb.lol with an adsb.fi fallback, filtered to the Worldly border polygon), and DMs the owner once when traffic drops to 25% or less of the same-hour median of the last 14 days. It sends a second message when traffic is back to at least 50%. Nothing fires during the first 7 days of history or in hours whose typical count is below 8 (`schedulers/flight-traffic-check.ts`, `shared/flight-traffic/`)
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
 
 ### Memory & Context
