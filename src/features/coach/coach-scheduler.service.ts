@@ -7,6 +7,7 @@ import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
 import { getActiveSubscriptions, getUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './coach.config';
 import { CoachService } from './coach.service';
+import { sendWithRetry } from './utils';
 
 export class CoachBotSchedulerService {
   constructor(
@@ -36,14 +37,26 @@ export class CoachBotSchedulerService {
       }
 
       const relevantSubscriptions = subscriptions.filter((sub) => !!sub.chatId);
+      if (!relevantSubscriptions.length) {
+        return;
+      }
+
+      // Collect every league once (each request retried inside scores365Get; leagues that keep
+      // failing are simply dropped), then hand each user only the leagues they follow. A league
+      // that failed to load is silently absent, so users still get the rest of their leagues.
+      const summaryDetails = await this.coachService.getMatchesSummary(getDateString());
+      if (!summaryDetails?.length) {
+        return;
+      }
+
       for (const { chatId, customLeagues } of relevantSubscriptions) {
         try {
-          const responseText = await this.coachService.getMatchesSummaryMessage(getDateString(), customLeagues);
+          const responseText = this.coachService.buildSummaryMessageFromDetails(summaryDetails, customLeagues);
           if (!responseText) {
             continue;
           }
           const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
-          await sendShortenedMessage(this.bot, chatId, replyText, { parse_mode: 'Markdown' });
+          await sendWithRetry(() => sendShortenedMessage(this.bot, chatId, replyText, { parse_mode: 'Markdown' }));
         } catch (err) {
           const userDetails = await getUserDetails(chatId);
           if (err.message.includes(BLOCKED_ERROR)) {
