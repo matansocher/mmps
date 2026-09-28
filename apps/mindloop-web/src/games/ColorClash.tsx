@@ -4,6 +4,7 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { useCountdown } from '../hooks/useCountdown';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { useTheme } from '../hooks/useTheme';
 import { CATEGORIES } from '../lib/categories';
 import { playSound } from '../lib/sound';
@@ -14,6 +15,7 @@ const accent = CATEGORIES.flexibility.accent;
 const TOTAL_TIME = 40;
 
 export default function ColorClash({ onFinish }: GameProps) {
+  const { clock } = useGameRuntime();
   const { theme } = useTheme();
   const [counting, setCounting] = useState(true);
   const [round, setRound] = useState(() => makeColorClashRound(0));
@@ -31,7 +33,7 @@ export default function ColorClash({ onFinish }: GameProps) {
     locked.current = chosen !== null;
   }, [chosen]);
   const nextRound = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(nextRound.current), []);
+  useEffect(() => () => clock.clearTimeout(nextRound.current), [clock]);
 
   const finish = useCallback(() => {
     if (finished.current) return;
@@ -46,7 +48,7 @@ export default function ColorClash({ onFinish }: GameProps) {
     });
   }, [onFinish]);
 
-  const { remaining, running, reset, addTime, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
+  const { remaining, running, reset, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
 
   const start = useCallback(() => {
     setCounting(false);
@@ -71,21 +73,24 @@ export default function ColorClash({ onFinish }: GameProps) {
         setCombo(0);
         scoreRef.current = Math.max(0, scoreRef.current - 5);
         setScore(scoreRef.current);
-        addTime(-2);
         playSound('wrong');
       }
-      nextRound.current = window.setTimeout(() => {
-        if (finished.current) return;
-        setRound(makeColorClashRound(correctRef.current));
-        setCompleted(correctRef.current);
-        setChosen(null);
-      }, isCorrect ? 250 : 800);
+      nextRound.current = clock.setTimeout(
+        () => {
+          if (finished.current) return;
+          setRound(makeColorClashRound(correctRef.current));
+          setCompleted(correctRef.current);
+          setChosen(null);
+        },
+        isCorrect ? 250 : 800,
+      );
     },
-    [counting, running, isExpired, addTime, round, combo, difficulty.reward],
+    [counting, running, isExpired, round.ink.name, clock, combo, difficulty.reward],
   );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (clock.isPaused()) return;
       if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       const index = ['1', '2', '3', '4', '5'].indexOf(event.key);
       if (index < 0 || !round.options[index]) return;
@@ -94,7 +99,7 @@ export default function ColorClash({ onFinish }: GameProps) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [choose, round]);
+  }, [choose, clock, round]);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -111,7 +116,7 @@ export default function ColorClash({ onFinish }: GameProps) {
             {round.word.name}
           </motion.div>
           <p role="status" className="mb-3 min-h-6 text-center text-sm font-bold text-slate-600 dark:text-slate-300">
-            {chosen === null ? `Tap a color or press 1–${round.options.length}` : chosen === round.ink.name ? 'Correct ink color!' : `Ink: ${round.ink.name} · −5 points, −2s`}
+            {chosen === null ? `Tap a color or press 1–${round.options.length}` : chosen === round.ink.name ? 'Correct ink color!' : `Ink: ${round.ink.name} · −5 points`}
           </p>
 
           <div className="grid grid-cols-3 grid-rows-2 gap-3">

@@ -1,4 +1,5 @@
 import { getMongoCollection } from '@core/mongo';
+import { addProgressRun, mergeProgress, progressFromHistory } from '@shared/mindloop/progress';
 import { MINDLOOP_DB_NAME, MINDLOOP_MAX_HISTORY_ENTRIES, MINDLOOP_MAX_MERGE_RETRIES, MINDLOOP_PLAYERS_COLLECTION } from '../constants';
 import type { MindloopBestScores, MindloopPlayEntry, MindloopPlayerDocument, MindloopSyncData } from '../types';
 
@@ -29,7 +30,7 @@ function mergeHistory(a: ReadonlyArray<MindloopPlayEntry>, b: ReadonlyArray<Mind
   for (const entry of merged) {
     if (seen.has(entry.runId)) continue;
     seen.add(entry.runId);
-    out.push({ runId: entry.runId, gameId: entry.gameId, score: entry.score, at: entry.at, ...(entry.receivedAt ? { receivedAt: entry.receivedAt } : {}) });
+    out.push({ ...entry });
     if (out.length >= MINDLOOP_MAX_HISTORY_ENTRIES) break;
   }
   return out;
@@ -71,17 +72,16 @@ export async function recordResult(telegramUserId: number, entry: MindloopPlayEn
     const now = new Date();
     const bestScores = mergeBestScores(player.bestScores, { [entry.gameId]: entry.score });
     const incoming: MindloopPlayEntry = {
-      runId: entry.runId,
-      gameId: entry.gameId,
-      score: entry.score,
-      at: entry.at,
+      ...entry,
       receivedAt: now.toISOString(),
     };
     const history = mergeHistory([incoming], player.history);
+    const previousProgress = player.progress ?? progressFromHistory(player.history, bestScores);
+    const progress = player.history.some((run) => run.runId === entry.runId) ? previousProgress : addProgressRun(previousProgress, 'legacy', entry);
 
     const updated = await collection.findOneAndUpdate(
       { _id: telegramUserId, revision: player.revision },
-      { $set: { bestScores, history, updatedAt: now }, $inc: { revision: 1 } },
+      { $set: { bestScores, history, progress, updatedAt: now }, $inc: { revision: 1 } },
       { returnDocument: 'after' },
     );
     if (updated) return updated;
@@ -96,7 +96,7 @@ export async function setFavorites(telegramUserId: number, favorites: ReadonlyAr
   const unique = [...new Set(favorites.filter((id) => typeof id === 'string' && id.length > 0))];
   const updated = await getCollection().findOneAndUpdate(
     { _id: telegramUserId },
-    { $set: { favorites: unique, updatedAt: now }, $inc: { revision: 1 } },
+    { $set: { favorites: unique, favoritesUpdatedAt: now.toISOString(), updatedAt: now }, $inc: { revision: 1 } },
     { returnDocument: 'after' },
   );
   return updated as MindloopPlayerDocument;
@@ -115,12 +115,25 @@ export async function mergeSync(telegramUserId: number, data: MindloopSyncData):
     const player = await ensurePlayer(telegramUserId);
     const now = new Date();
     const bestScores = mergeBestScores(player.bestScores, data.bestScores);
-    const favorites = [...new Set([...player.favorites, ...data.favorites].filter((id) => typeof id === 'string' && id.length > 0))];
+    const incomingFavorites = data.favoritesUpdatedAt && data.favoritesUpdatedAt >= (player.favoritesUpdatedAt ?? '');
+    const favorites = incomingFavorites ? [...data.favorites] : player.favoritesUpdatedAt ? [...player.favorites] : [...new Set([...player.favorites, ...data.favorites])];
+    const favoritesUpdatedAt = incomingFavorites ? data.favoritesUpdatedAt : player.favoritesUpdatedAt;
+    const baseProgress = player.progress ?? progressFromHistory(player.history, bestScores);
+    // Old clients may echo newer runs without progress counters. Count only unseen IDs.
+    const seen = new Set(player.history.map((run) => run.runId));
+    const legacyRuns = data.history.filter((run) => !seen.has(run.runId));
+    const progress = data.progress
+      ? mergeProgress(baseProgress, data.progress)
+      : legacyRuns.reduce((current, run) => {
+          if (seen.has(run.runId)) return current;
+          seen.add(run.runId);
+          return addProgressRun(current, 'legacy', run);
+        }, baseProgress);
     const history = mergeHistory(player.history, data.history);
 
     const updated = await collection.findOneAndUpdate(
       { _id: telegramUserId, revision: player.revision },
-      { $set: { bestScores, favorites, history, updatedAt: now }, $inc: { revision: 1 } },
+      { $set: { bestScores, favorites, favoritesUpdatedAt, progress, history, updatedAt: now }, $inc: { revision: 1 } },
       { returnDocument: 'after' },
     );
     if (updated) return updated;

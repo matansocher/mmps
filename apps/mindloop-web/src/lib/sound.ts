@@ -1,6 +1,7 @@
 import { getSettings } from './settings';
+import { telegram } from './telegram';
 
-export type SoundName = 'correct' | 'wrong' | 'gameover' | 'click' | 'start';
+export type SoundName = 'success' | 'correct' | 'wrong' | 'gameover' | 'click' | 'start';
 
 let ctx: AudioContext | null = null;
 
@@ -38,6 +39,9 @@ function tone(freq: number, startAt: number, duration: number, type: OscillatorT
 }
 
 const RECIPES: Record<SoundName, () => void> = {
+  success: () => {
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * 0.09, 0.2, 'sine', 0.07));
+  },
   click: () => tone(320, 0, 0.07, 'triangle', 0.05),
   start: () => {
     tone(523.25, 0, 0.1, 'sine', 0.08);
@@ -59,10 +63,21 @@ const RECIPES: Record<SoundName, () => void> = {
 };
 
 export function playSound(name: SoundName): void {
+  if (getSettings().haptics && (name === 'success' || name === 'wrong')) {
+    try {
+      telegram()?.HapticFeedback?.notificationOccurred(name === 'success' ? 'success' : 'error');
+    } catch {
+      /* Unsupported Telegram clients fall back to audio. */
+    }
+  }
   if (!getSettings().sound) return;
   try {
     RECIPES[name]();
   } catch {
     /* ignore audio failures */
   }
+}
+
+export function playPad(index: number): void {
+  if (getSettings().sound) tone([261.63, 329.63, 392, 523.25][index % 4], 0, 0.22, 'sine', 0.08);
 }

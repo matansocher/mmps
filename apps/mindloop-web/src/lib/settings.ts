@@ -5,12 +5,14 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 export interface Settings {
   themeMode: ThemeMode;
   sound: boolean;
+  haptics: boolean;
   reducedMotion: boolean;
 }
 
 const DEFAULTS: Settings = {
   themeMode: 'system',
   sound: true,
+  haptics: true,
   reducedMotion: false,
 };
 

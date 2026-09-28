@@ -3,16 +3,11 @@ import express from 'express';
 import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import type { TelegramBotConfig, UserDetails } from '@services/telegram';
+import { registerAnalyticsRoutes } from '../analytics.service';
 import { getPlayer, mergeSync, recordResult, setFavorites } from '../mongo';
-import { getRequestPlayer, type MindloopAuthUser, mindloopAuthMiddleware } from './auth.middleware';
-import {
-  type MindloopApiError,
-  type MindloopPlayerResponse,
-  parseFavoritesBody,
-  parseRecordResultBody,
-  parseSyncBody,
-  toPlayerDto,
-} from './dto';
+import { registerReminderRoutes } from '../reminder.service';
+import { getRequestPlayer, mindloopAuthMiddleware, type MindloopAuthUser } from './auth.middleware';
+import { type MindloopApiError, type MindloopPlayerResponse, parseFavoritesBody, parseRecordResultBody, parseSyncBody, toPlayerDto } from './dto';
 
 const logger = new Logger('mindloop:api');
 
@@ -121,5 +116,7 @@ export function registerMindloopApiRoutes(app: Express): void {
     }
   });
 
+  registerAnalyticsRoutes(app);
+  registerReminderRoutes(app);
   logger.log('Mindloop API routes registered at /api/mindloop/*');
 }

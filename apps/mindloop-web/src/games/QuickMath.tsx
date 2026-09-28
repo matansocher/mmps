@@ -4,8 +4,10 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { useCountdown } from '../hooks/useCountdown';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { useTheme } from '../hooks/useTheme';
 import { CATEGORIES } from '../lib/categories';
+import { readJson } from '../lib/progress';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
 import { makeMathProblem, nextMathLevel } from './quick-math.logic';
@@ -14,12 +16,14 @@ const accent = CATEGORIES['problem-solving'].accent;
 const TOTAL_TIME = 45;
 
 export default function QuickMath({ onFinish }: GameProps) {
+  const { clock, practice } = useGameRuntime();
   const { theme } = useTheme();
+  const startingLevel = practice ? Math.max(0, Math.min(6, readJson<number>('mindloop:math-level', 0))) : 0;
   const [counting, setCounting] = useState(true);
-  const [level, setLevel] = useState(0);
+  const [level, setLevel] = useState(startingLevel);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [problem, setProblem] = useState(() => makeMathProblem(0));
+  const [problem, setProblem] = useState(() => makeMathProblem(startingLevel));
   const [chosen, setChosen] = useState<number | null>(null);
   const finished = useRef(false);
   const scoreRef = useRef(0);
@@ -29,7 +33,7 @@ export default function QuickMath({ onFinish }: GameProps) {
     locked.current = chosen !== null;
   }, [chosen]);
   const nextRound = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(nextRound.current), []);
+  useEffect(() => () => clock.clearTimeout(nextRound.current), [clock]);
 
   const finish = useCallback(() => {
     if (finished.current) return;
@@ -40,7 +44,7 @@ export default function QuickMath({ onFinish }: GameProps) {
     });
   }, [onFinish]);
 
-  const { remaining, running, reset, addTime, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
+  const { remaining, running, reset, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
 
   const start = useCallback(() => {
     setCounting(false);
@@ -63,22 +67,25 @@ export default function QuickMath({ onFinish }: GameProps) {
         solvedRef.current += 1;
         playSound('correct');
       } else {
-        addTime(-3);
         playSound('wrong');
       }
 
-      nextRound.current = window.setTimeout(() => {
-        if (finished.current) return;
-        setLevel(nextLevel);
-        setProblem(makeMathProblem(nextLevel));
-        setChosen(null);
-      }, correct ? 300 : 900);
+      nextRound.current = clock.setTimeout(
+        () => {
+          if (finished.current) return;
+          setLevel(nextLevel);
+          setProblem(makeMathProblem(nextLevel));
+          setChosen(null);
+        },
+        correct ? 300 : 900,
+      );
     },
-    [counting, running, isExpired, addTime, problem, streak, level],
+    [counting, running, isExpired, problem.answer, problem.reward, streak, level, clock],
   );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (clock.isPaused()) return;
       if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       const index = ['1', '2', '3', '4'].indexOf(event.key);
       if (index < 0) return;
@@ -87,7 +94,7 @@ export default function QuickMath({ onFinish }: GameProps) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [choose, problem]);
+  }, [choose, clock, problem]);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -107,11 +114,11 @@ export default function QuickMath({ onFinish }: GameProps) {
               ? level >= 8
                 ? 'Brackets first, then multiplication or division'
                 : streak > 1
-                ? `${streak} in a row · keep going`
-                : 'Two correct in a row raises the level'
+                  ? `${streak} in a row · keep going`
+                  : 'Two correct in a row raises the level'
               : chosen === problem.answer
                 ? 'Correct!'
-                : `${problem.text} = ${problem.answer} · −3s`}
+                : `${problem.text} = ${problem.answer} · try the next one`}
           </p>
 
           <div className="grid grid-cols-2 gap-3">

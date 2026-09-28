@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CountdownOverlay } from '../components/CountdownOverlay';
+import { useGameRuntime } from '../hooks/useGameRuntime';
+import { getProgress, readJson, writeJson } from '../lib/progress';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
 import { advanceRun, createRun, initialSwitches, type Switches, TOTAL_TIME } from './railrouter/engine';
@@ -11,8 +13,11 @@ import { RailBoard, TrainArt } from './railrouter/RailBoard';
 type Phase = 'choose' | 'countdown' | 'running' | 'paused';
 
 export default function RailRouter({ onFinish }: GameProps) {
+  const { clock } = useGameRuntime();
   const [phase, setPhase] = useState<Phase>('choose');
-  const [level, setLevel] = useState(LEVELS[0]);
+  const progress = getProgress();
+  const remembered = LEVELS.find((l) => l.id === readJson('mindloop:rail-board', '')) ?? LEVELS[0];
+  const [level, setLevel] = useState(remembered);
   const [run, setRun] = useState(() => createRun(LEVELS[0]));
   const [switches, setSwitches] = useState<Switches>(() => initialSwitches(LEVELS[0]));
   const runRef = useRef(run);
@@ -20,6 +25,7 @@ export default function RailRouter({ onFinish }: GameProps) {
   const finished = useRef(false);
 
   const chooseBoard = (board: Level) => {
+    writeJson('mindloop:rail-board', board.id);
     const nextRun = createRun(board);
     const nextSwitches = initialSwitches(board);
     setLevel(board);
@@ -40,10 +46,6 @@ export default function RailRouter({ onFinish }: GameProps) {
 
     const tick = (timestamp: number) => {
       // A hidden tab pauses explicitly, rather than spawning a backlog of trains.
-      if (document.hidden) {
-        setPhase('paused');
-        return;
-      }
       const dt = previous === undefined ? 0 : (timestamp - previous) / 1000;
       previous = timestamp;
       const before = runRef.current;
@@ -57,32 +59,24 @@ export default function RailRouter({ onFinish }: GameProps) {
         if (!finished.current) {
           finished.current = true;
           onFinish({
+            variant: level.id,
             score: next.correct,
             stats: [
               { label: 'Correct deliveries', value: String(next.correct) },
               { label: 'Wrong stations', value: String(next.wrong) },
               { label: 'Board', value: level.name },
+              { label: 'Routing accuracy', value: `${next.correct + next.wrong ? Math.round((next.correct / (next.correct + next.wrong)) * 100) : 0}%` },
             ],
           });
         }
         return;
       }
-      frame = requestAnimationFrame(tick);
+      frame = clock.requestAnimationFrame(tick);
     };
 
-    const pauseWhenHidden = () => {
-      if (document.hidden) {
-        cancelAnimationFrame(frame);
-        setPhase('paused');
-      }
-    };
-    frame = requestAnimationFrame(tick);
-    document.addEventListener('visibilitychange', pauseWhenHidden);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('visibilitychange', pauseWhenHidden);
-    };
-  }, [phase, level, onFinish]);
+    frame = clock.requestAnimationFrame(tick);
+    return () => clock.cancelAnimationFrame(frame);
+  }, [phase, level, onFinish, clock]);
 
   const toggleSwitch = (id: string) => {
     if (phase !== 'running' || finished.current) return;
@@ -102,6 +96,9 @@ export default function RailRouter({ onFinish }: GameProps) {
           <h1>Choose a railway</h1>
           <p>One board. 90 seconds. Keep every train on the right track.</p>
         </div>
+        <button className="ml-primary" onClick={() => chooseBoard(remembered)}>
+          Play {remembered.name} again
+        </button>
         <div className="rail-levels">
           {LEVELS.map((board, index) => (
             <button key={board.id} className="rail-level" onClick={() => chooseBoard(board)} aria-label={`Play ${board.name}, ${board.difficulty}, ${board.family}`}>
@@ -113,6 +110,8 @@ export default function RailRouter({ onFinish }: GameProps) {
                 <strong>{board.name}</strong>
                 <span>
                   {board.family} · {board.difficulty}
+                  <br />
+                  {progress.awards[`rail-${board.id}`] ? 'Mastered · perfect shift' : `Best: ${progress.records[`rail-router:classic:2:${board.id}`] ?? 'Ready to begin'}`}
                 </span>
               </div>
             </button>

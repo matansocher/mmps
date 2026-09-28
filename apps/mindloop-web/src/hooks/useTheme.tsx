@@ -1,8 +1,9 @@
+import { MotionConfig } from 'framer-motion';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { MotionConfig } from 'framer-motion';
 import { getSettings, saveSettings } from '../lib/settings';
 import type { ThemeMode } from '../lib/settings';
+import { telegram } from '../lib/telegram';
 
 type Theme = 'light' | 'dark';
 
@@ -27,13 +28,11 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function systemPrefersDark(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia
-    ? window.matchMedia('(prefers-color-scheme: dark)').matches
-    : false;
+  return typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
 }
 
 function resolveTheme(mode: ThemeMode): Theme {
-  if (mode === 'system') return systemPrefersDark() ? 'dark' : 'light';
+  if (mode === 'system') return telegram()?.initData && telegram()?.colorScheme ? (telegram()?.colorScheme === 'dark' ? 'dark' : 'light') : systemPrefersDark() ? 'dark' : 'light';
   return mode;
 }
 
@@ -67,6 +66,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
     root.classList.toggle('reduce-motion', reducedMotion);
+    const bg = theme === 'dark' ? '#101d1c' : '#f5f7f1';
+    telegram()?.setHeaderColor?.(bg);
+    telegram()?.setBackgroundColor?.(bg);
   }, [themeMode, reducedMotion]);
 
   // Follow the OS when in system mode.
@@ -74,11 +76,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (themeMode !== 'system' || !window.matchMedia) return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => {
-      setResolved(mq.matches ? 'dark' : 'light');
-      document.documentElement.classList.toggle('dark', mq.matches);
+      const next = resolveTheme('system');
+      setResolved(next);
+      document.documentElement.classList.toggle('dark', next === 'dark');
     };
     mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+    telegram()?.onEvent?.('themeChanged', onChange);
+    return () => {
+      mq.removeEventListener('change', onChange);
+      telegram()?.offEvent?.('themeChanged', onChange);
+    };
   }, [themeMode]);
 
   const setThemeMode = useCallback((m: ThemeMode) => {

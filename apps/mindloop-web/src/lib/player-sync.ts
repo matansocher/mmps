@@ -1,94 +1,108 @@
-/**
- * Bridges the local (localStorage) stores with the backend.
- *
- * Design goals:
- *  - localStorage stays the working store and offline fallback.
- *  - When a durable identity exists (Telegram, or a dev user in local dev) we
- *    reconcile once on startup and then push every durable change to the server.
- *  - Device-only preferences (theme, sound, reduced-motion) are NOT handled here
- *    — they live in settings.ts and never leave the device.
- */
-import { hasRemoteIdentity, mindloopApi, type PlayerData } from './api';
+import { track } from './analytics';
+import { hasRemoteIdentity, mindloopApi } from './api';
+import type { PlayerData } from './api';
+import { getProgress, hasStorageFailure, mergeRunHistory, mergeSavedProgress, readJson, removeJson, withProgressLock, writeJson } from './progress';
+import { newId } from './utils';
 
-const BEST_KEY = 'mindloop:best-scores';
-const FAV_KEY = 'mindloop:favorites';
-const HISTORY_KEY = 'mindloop:history';
-const MAX_HISTORY = 200;
-
-let started = false;
-
-function readJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function readBestScores(): Record<string, number> {
-  const parsed = readJson<Record<string, number>>(BEST_KEY, {});
-  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-}
-
-function readFavorites(): string[] {
-  const parsed = readJson<string[]>(FAV_KEY, []);
-  return Array.isArray(parsed) ? parsed : [];
-}
-
-function readHistory(): { runId: string; gameId: string; score: number; at: string }[] {
-  const parsed = readJson<{ runId: string; gameId: string; score: number; at: string }[]>(HISTORY_KEY, []);
-  return Array.isArray(parsed) ? parsed : [];
-}
-
-/** Overwrites local stores with the authoritative merged server snapshot. */
-function applyServerSnapshot(player: PlayerData): void {
-  try {
-    localStorage.setItem(BEST_KEY, JSON.stringify(player.bestScores ?? {}));
-    localStorage.setItem(FAV_KEY, JSON.stringify(player.favorites ?? []));
-    localStorage.setItem(HISTORY_KEY, JSON.stringify((player.history ?? []).slice(0, MAX_HISTORY)));
-  } catch {
-    /* ignore quota / privacy-mode errors */
-  }
+export type SyncState = 'device' | 'syncing' | 'saved' | 'pending' | 'storage-error';
+let state: SyncState = 'device';
+let inFlight: Promise<void> | null = null;
+let retry: number | undefined;
+let attempts = 0;
+function setState(next: SyncState) {
+  state = next;
   window.dispatchEvent(new Event('mindloop:data'));
 }
-
-/**
- * Reconciles local and server data once. Pushes the local snapshot (so
- * offline progress is not lost), then adopts the merged result the server
- * returns. Safe to call when there's no identity — it simply no-ops.
- */
-export async function initPlayerSync(): Promise<void> {
-  if (started || !hasRemoteIdentity()) return;
-  started = true;
-
+export function getSyncState(): SyncState {
+  return state;
+}
+export function syncLabel(): string {
+  if (hasStorageFailure()) return state === 'saved' ? 'Saved to Telegram · device storage unavailable' : 'Device storage unavailable · keep this page open';
+  return {
+    device: 'Saved on this device',
+    syncing: 'Saving your progress…',
+    saved: 'Saved to your Telegram account',
+    pending: 'Saved here · waiting to sync',
+    'storage-error': 'Storage unavailable · keep this page open',
+  }[state];
+}
+function snapshot(): Omit<PlayerData, 'updatedAt'> {
+  return {
+    bestScores: readJson('mindloop:best-scores', {}),
+    favorites: readJson('mindloop:favorites', []),
+    history: readJson('mindloop:history', []),
+    progress: getProgress(),
+    favoritesUpdatedAt: readJson('mindloop:favorites-at', undefined),
+  };
+}
+export async function reconcileSnapshot(player: PlayerData): Promise<void> {
+  await withProgressLock(() => {
+    const local = snapshot();
+    const bestScores = { ...player.bestScores };
+    for (const [id, score] of Object.entries(local.bestScores)) bestScores[id] = Math.max(bestScores[id] ?? 0, score);
+    writeJson('mindloop:best-scores', bestScores);
+    writeJson('mindloop:history', mergeRunHistory(local.history, player.history));
+    mergeSavedProgress(player.progress);
+    if ((player.favoritesUpdatedAt ?? '') >= (local.favoritesUpdatedAt ?? '')) {
+      writeJson('mindloop:favorites', player.favorites);
+      writeJson('mindloop:favorites-at', player.favoritesUpdatedAt);
+    }
+    window.dispatchEvent(new Event('mindloop:data'));
+  });
+}
+async function flush(): Promise<void> {
+  if (!hasRemoteIdentity()) {
+    setState('device');
+    return;
+  }
+  const marker = readJson<string | null>('mindloop:pending-sync', null);
+  setState('syncing');
   try {
-    const { player } = await mindloopApi.sync({
-      bestScores: readBestScores(),
-      favorites: readFavorites(),
-      history: readHistory(),
-    });
-    applyServerSnapshot(player);
+    const { player } = await mindloopApi.sync(snapshot());
+    await reconcileSnapshot(player);
+    attempts = 0;
+    if (marker === readJson('mindloop:pending-sync', null)) {
+      removeJson('mindloop:pending-sync');
+      setState('saved');
+    } else {
+      setState('pending');
+      retry = window.setTimeout(() => void initPlayerSync(), 100);
+    }
   } catch {
-    // Offline / server error: keep using localStorage; a later change will retry.
-    started = false;
+    track('sync_failed');
+    setState('pending');
+    retry = window.setTimeout(() => void initPlayerSync(), Math.min(60000, 2000 * 2 ** Math.min(attempts++, 5)));
   }
 }
-
-/** Fire-and-forget: persist a finished run server-side. */
-export function syncResult(entry: { runId: string; gameId: string; score: number; at: string }): void {
-  if (!hasRemoteIdentity()) return;
-  mindloopApi.recordResult(entry).catch(() => {
-    /* best-effort; localStorage already holds the value */
-  });
+export async function initPlayerSync(): Promise<void> {
+  if (inFlight) return inFlight;
+  window.clearTimeout(retry);
+  inFlight = flush();
+  try {
+    await inFlight;
+  } finally {
+    inFlight = null;
+  }
 }
-
-/** Fire-and-forget: persist the favorites list server-side. */
-export function syncFavorites(favorites: string[]): void {
-  if (!hasRemoteIdentity()) return;
-  mindloopApi.setFavorites(favorites).catch(() => {
-    /* best-effort */
-  });
+export function syncResult(): void {
+  writeJson('mindloop:pending-sync', newId());
+  void initPlayerSync();
+}
+export function syncFavorites(): void {
+  writeJson('mindloop:favorites-at', new Date().toISOString());
+  syncResult();
+}
+export function startPlayerSync(): () => void {
+  const update = () => void initPlayerSync();
+  const storageError = () => setState('storage-error');
+  window.addEventListener('online', update);
+  window.addEventListener('focus', update);
+  window.addEventListener('mindloop:storage-error', storageError);
+  update();
+  return () => {
+    window.clearTimeout(retry);
+    window.removeEventListener('online', update);
+    window.removeEventListener('focus', update);
+    window.removeEventListener('mindloop:storage-error', storageError);
+  };
 }

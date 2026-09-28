@@ -263,3 +263,17 @@ describe('Block Escape timed session', () => {
     expect(undone.state.board).toEqual(initial.state.board);
   });
 });
+
+it('uses the same daily board and gives a legal route to the exit', async () => {
+  const { seededRandom } = await import('../lib/progress');
+  const { createEscapePuzzle, escapeHint, moveEscapeBlock, isEscapeSolved } = await import('./block-escape');
+  const a = createEscapePuzzle(2, undefined, seededRandom('escape-v2-2026-09-28'));
+  expect(createEscapePuzzle(2, undefined, seededRandom('escape-v2-2026-09-28'))).toEqual(a);
+  let board = a.board;
+  for (let i = 0; i < 60 && !isEscapeSolved(board); i++) {
+    const hint = escapeHint(board);
+    expect(hint).not.toBeNull();
+    board = moveEscapeBlock(board, hint!)!;
+  }
+  expect(isEscapeSolved(board)).toBe(true);
+});

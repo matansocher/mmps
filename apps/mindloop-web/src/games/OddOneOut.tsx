@@ -4,7 +4,9 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { useCountdown } from '../hooks/useCountdown';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { CATEGORIES } from '../lib/categories';
+import { readJson } from '../lib/progress';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
 import { randInt } from '../lib/utils';
@@ -22,8 +24,8 @@ function makeRound(level: number) {
   const cells = size * size;
   const odd = randInt(0, cells - 1);
   const hue = randInt(0, 359);
-  const sat = randInt(60, 80);
-  const light = randInt(45, 70);
+  const sat = 65;
+  const light = 52;
   const delta = Math.max(6, 26 - level * 1.6);
   const dir = Math.random() < 0.5 ? -1 : 1;
   return {
@@ -36,6 +38,8 @@ function makeRound(level: number) {
 }
 
 export default function OddOneOut({ onFinish }: GameProps) {
+  const { clock } = useGameRuntime();
+  const [shapeMode] = useState(() => readJson('mindloop:odd-shapes', false));
   const [counting, setCounting] = useState(true);
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
@@ -50,18 +54,19 @@ export default function OddOneOut({ onFinish }: GameProps) {
   const scoreRef = useRef(0);
   const levelRef = useRef(0);
   const nextRound = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(nextRound.current), []);
+  useEffect(() => () => clock.clearTimeout(nextRound.current), [clock]);
 
   const finish = useCallback(() => {
     if (finished.current) return;
     finished.current = true;
     onFinish({
+      variant: shapeMode ? 'shapes' : 'shades',
       score: scoreRef.current,
       stats: [{ label: 'Rounds cleared', value: String(levelRef.current) }],
     });
-  }, [onFinish]);
+  }, [onFinish, shapeMode]);
 
-  const { remaining, running, reset, addTime, isExpired } = useCountdown({
+  const { remaining, running, reset, isExpired } = useCountdown({
     seconds: TOTAL_TIME,
     autoStart: false,
     onExpire: finish,
@@ -87,18 +92,20 @@ export default function OddOneOut({ onFinish }: GameProps) {
       setFlash('bad');
       scoreRef.current = Math.max(0, scoreRef.current - 5);
       setScore(scoreRef.current);
-      addTime(-2);
       playSound('wrong');
     }
-    nextRound.current = window.setTimeout(() => {
-      if (finished.current) return;
-      if (idx === round.odd) {
-        setLevel(levelRef.current);
-        setRound(makeRound(levelRef.current));
-      }
-      setFlash(null);
-      setChosen(null);
-    }, idx === round.odd ? 250 : 650);
+    nextRound.current = clock.setTimeout(
+      () => {
+        if (finished.current) return;
+        if (idx === round.odd) {
+          setLevel(levelRef.current);
+          setRound(makeRound(levelRef.current));
+        }
+        setFlash(null);
+        setChosen(null);
+      },
+      idx === round.odd ? 250 : 650,
+    );
   };
 
   const { size, cells, odd, base, diff } = round;
@@ -107,9 +114,9 @@ export default function OddOneOut({ onFinish }: GameProps) {
     <div className="relative flex flex-1 flex-col">
       {counting && <CountdownOverlay accent={accent} onDone={start} />}
       <GameStage hud={<HUD accent={accent} score={score} time={remaining} timeFraction={remaining / TOTAL_TIME} status={String(level + 1)} />}>
-        <p className="mb-3 text-center text-sm font-bold text-slate-600 dark:text-slate-300">Find the tile with a different shade</p>
+        <p className="mb-3 text-center text-sm font-bold text-slate-600 dark:text-slate-300">{shapeMode ? 'Find the shape with a different outline' : 'Find the tile with a different shade'}</p>
         <p role="status" className="mb-4 min-h-6 text-center text-sm font-bold text-slate-600 dark:text-slate-300">
-          {flash === 'ok' ? `Found it! +${size * 10} points` : flash === 'bad' ? 'Not that tile. Try again · −5 points, −2s' : `${size} × ${size} grid · one odd tile`}
+          {flash === 'ok' ? `Found it! +${size * 10} points` : flash === 'bad' ? 'Not that tile. Try again · −5 points' : `${size} × ${size} grid · one odd tile`}
         </p>
         <motion.div
           animate={flash === 'bad' ? { x: [0, -6, 6, -4, 0] } : {}}
@@ -138,8 +145,13 @@ export default function OddOneOut({ onFinish }: GameProps) {
                 buttons?.[Math.max(0, Math.min(cells - 1, i + offset))]?.focus();
               }}
               className="ml-tap flex min-h-11 aspect-square items-center justify-center rounded-xl shadow-sm"
-              style={{ background: i === odd ? diff : base }}
+              style={{ background: shapeMode ? 'var(--ml-soft)' : i === odd ? diff : base }}
             >
+              {shapeMode && (
+                <svg viewBox="0 0 40 40" className="h-8 w-8" aria-hidden="true">
+                  <rect x="7" y="7" width="26" height="26" rx={i === odd ? 2 : Math.max(5, 12 - level * 0.4)} fill="none" stroke="var(--ml-accent)" strokeWidth="3" />
+                </svg>
+              )}
               {chosen === i && <span className="rounded-full bg-white px-2 py-1 text-sm font-black text-slate-900">{flash === 'ok' ? '✓' : '✕'}</span>}
             </motion.button>
           ))}

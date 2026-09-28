@@ -1,14 +1,7 @@
+import type { PlayerProgress, RunRecord } from '@shared/mindloop/progress';
+
 /** A single finished game run. Mirrors the web app's PlayEntry shape. */
-export type MindloopPlayEntry = {
-  /** Stable client-generated run id; used to deduplicate a run across submissions. */
-  readonly runId: string;
-  readonly gameId: string;
-  readonly score: number;
-  /** ISO timestamp of when the run finished (client clock). */
-  readonly at: string;
-  /** ISO timestamp of when the server first received this run. Server-only. */
-  readonly receivedAt?: string;
-};
+export type MindloopPlayEntry = RunRecord & { readonly receivedAt?: string };
 
 /** Best single-run score per game id. */
 export type MindloopBestScores = Readonly<Record<string, number>>;
@@ -23,6 +16,8 @@ export type MindloopPlayer = {
   readonly favorites: ReadonlyArray<string>;
   readonly history: ReadonlyArray<MindloopPlayEntry>;
   readonly updatedAt: Date | null;
+  readonly progress?: PlayerProgress;
+  readonly favoritesUpdatedAt?: string;
 };
 
 export type MindloopPlayerDocument = Omit<MindloopPlayer, 'updatedAt'> & {
@@ -39,4 +34,6 @@ export type MindloopSyncData = {
   readonly bestScores: MindloopBestScores;
   readonly favorites: ReadonlyArray<string>;
   readonly history: ReadonlyArray<MindloopPlayEntry>;
+  readonly progress?: PlayerProgress;
+  readonly favoritesUpdatedAt?: string;
 };

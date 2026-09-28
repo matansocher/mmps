@@ -1,136 +1,315 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { CATEGORIES } from '../lib/categories';
-import { getGame } from '../lib/games';
-import { pickNextGame } from '../lib/picker';
-import { commitScore, getBestScore } from '../lib/storage';
-import { recordPlay } from '../lib/history';
-import { syncResult } from '../lib/player-sync';
-import { playSound } from '../lib/sound';
-import { newId } from '../lib/utils';
-import type { GameResult } from '../lib/types';
+import { useBlocker, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Dialog } from '../components/Dialog';
+import { Icon } from '../components/Icon';
 import { IntroScreen } from '../components/IntroScreen';
 import { ResultsScreen } from '../components/ResultsScreen';
-import { Button } from '../components/Button';
-import { ThemeToggle } from '../components/ThemeToggle';
+import { GameRuntimeContext } from '../hooks/useGameRuntime';
+import { getAchievements } from '../lib/achievements';
+import { track } from '../lib/analytics';
+import { CATEGORIES } from '../lib/categories';
+import { getGame } from '../lib/games';
+import { getHistory, getTodayPlayCount, recordPlay } from '../lib/history';
+import { syncResult } from '../lib/player-sync';
+import { getProgress, localDay, readJson, scoreKey, SCORING_VERSION, writeJson } from '../lib/progress';
+import type { RunMode, RunRecord } from '../lib/progress';
+import { RunClock } from '../lib/run-clock';
+import { avoidGame, gameUrl, nextSessionGame, validChallengeDay } from '../lib/session';
+import { playSound } from '../lib/sound';
+import { telegram } from '../lib/telegram';
+import type { GameResult } from '../lib/types';
+import { newId } from '../lib/utils';
 
 type Phase = 'intro' | 'play' | 'results';
-
 export function GameShell() {
   const { gameId } = useParams();
-  const navigate = useNavigate();
   const game = getGame(gameId);
-
-  const [phase, setPhase] = useState<Phase>('intro');
-  const [result, setResult] = useState<GameResult | null>(null);
-  const [best, setBest] = useState(() => (gameId ? getBestScore(gameId) : 0));
-  const [isNewBest, setIsNewBest] = useState(false);
-  // The coach's next pick, computed when a run finishes so the session chains.
-  const [nextGame, setNextGame] = useState<ReturnType<typeof getGame>>(undefined);
-  // Remount the game component on replay so all internal state resets.
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const mode: RunMode = params.get('mode') === 'practice' ? 'practice' : params.get('mode') === 'daily' && gameId === 'block-escape' ? 'daily' : 'classic';
+  const day = validChallengeDay(params.get('day'));
+  const loop = params.get('loop') === '1';
+  const [phase, setPhase] = useState<Phase>(() => (mode === 'practice' || getHistory().some((r) => r.gameId === gameId) ? 'play' : 'intro'));
+  const [paused, setPaused] = useState<'pause' | 'exit' | 'help' | null>(null);
   const [runKey, setRunKey] = useState(0);
-  const resultRecorded = useRef(false);
-  const mainRef = useRef<HTMLElement>(null);
-
+  const [finished, setFinished] = useState<{ result: GameResult; run: RunRecord; previous: RunRecord[]; best: number; first: boolean; newBest: boolean; awards: string[] } | null>(null);
+  const allowExit = useRef(false);
+  const blocker = useBlocker(() => phase === 'play' && !allowExit.current);
+  const [clock, setClock] = useState(() => new RunClock());
+  const completed = useRef(false);
+  const firstInput = useRef(false);
+  const trackedRun = useRef(-1);
+  const runtime = useMemo(() => ({ clock, mode, day, practice: mode === 'practice' }), [clock, mode, day]);
   const category = game ? CATEGORIES[game.category] : CATEGORIES.memory;
-
-  useEffect(() => {
-    mainRef.current?.focus();
-  }, [phase]);
-
-  const handleFinish = useCallback(
-    (r: GameResult) => {
-      if (!game || resultRecorded.current) return;
-      resultRecorded.current = true;
-      // Generate a stable run id + completion time once, so the local record
-      // and the server-synced record describe the same event and dedupe cleanly.
-      const runId = newId();
-      const at = new Date().toISOString();
-      const prev = getBestScore(game.id);
-      const newBest = commitScore(game.id, r.score);
-      recordPlay({ runId, gameId: game.id, score: r.score, at });
-      syncResult({ runId, gameId: game.id, score: r.score, at });
-      playSound('gameover');
-      setResult(r);
-      setBest(newBest);
-      setIsNewBest(r.score > prev && r.score > 0);
-      // Pick after recording so the just-played game is weighted correctly.
-      setNextGame(pickNextGame({ exclude: game.id }));
-      setPhase('results');
+  const pause = useCallback(
+    (reason: 'pause' | 'exit' | 'help') => {
+      clock.setPaused(true);
+      setPaused(reason);
     },
-    [game],
+    [clock],
   );
-
-  const startPlay = useCallback(() => {
-    resultRecorded.current = false;
+  useEffect(() => {
+    if (blocker.state === 'blocked') pause('exit');
+  }, [blocker.state, pause]);
+  const exit = useCallback(() => (phase === 'play' ? pause('exit') : navigate('/')), [phase, pause, navigate]);
+  useEffect(() => {
+    const tg = telegram();
+    tg?.BackButton?.show();
+    tg?.BackButton?.onClick(exit);
+    if (phase === 'play') tg?.enableClosingConfirmation?.();
+    return () => {
+      tg?.BackButton?.offClick(exit);
+      tg?.BackButton?.hide();
+      tg?.disableClosingConfirmation?.();
+    };
+  }, [exit, phase]);
+  useEffect(() => {
+    if (phase !== 'play') return;
+    completed.current = false;
+    firstInput.current = false;
+    if (trackedRun.current !== runKey) {
+      trackedRun.current = runKey;
+      if (!readJson('mindloop:first-start', false)) {
+        track('first_game_started', { gameId, mode });
+        writeJson('mindloop:first-start', true);
+      }
+      track('game_started', { gameId, mode, loop });
+    }
+    let frame = 0;
+    let previous: number | null = null;
+    const tick = (now: number) => {
+      if (previous !== null) clock.advance(Math.max(0, now - previous) * (mode === 'practice' ? 0.75 : 1));
+      previous = now;
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    const hidden = () => {
+      if (document.hidden) {
+        previous = null;
+        pause('pause');
+      }
+    };
+    const unload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    document.addEventListener('visibilitychange', hidden);
+    window.addEventListener('beforeunload', unload);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('visibilitychange', hidden);
+      window.removeEventListener('beforeunload', unload);
+    };
+  }, [clock, phase, pause, gameId, mode, loop, runKey]);
+  const start = () => {
+    allowExit.current = false;
     playSound('start');
+    setPaused(null);
+    setClock(new RunClock());
     setRunKey((k) => k + 1);
     setPhase('play');
-  }, []);
-
-  const goHome = useCallback(() => navigate('/'), [navigate]);
-
-  const goNext = useCallback(() => {
-    if (!nextGame) return;
-    playSound('start');
-    navigate(`/game/${nextGame.id}`);
-  }, [navigate, nextGame]);
-
-  const GameComponent = useMemo(() => game?.component, [game]);
-
-  if (!game || !GameComponent) {
+  };
+  const finish = useCallback(
+    async (result: GameResult) => {
+      if (!game || completed.current) return;
+      completed.current = true;
+      const before = getProgress();
+      const count = getTodayPlayCount();
+      const run: RunRecord = {
+        runId: newId(),
+        gameId: game.id,
+        score: result.score,
+        at: new Date().toISOString(),
+        day: localDay(),
+        mode,
+        version: SCORING_VERSION,
+        variant: result.variant ?? (mode === 'daily' ? day : 'default'),
+        durationMs: Math.round(clock.now()),
+        stats: result.stats,
+      };
+      const previous = getHistory().filter((r) => scoreKey(r) === scoreKey(run));
+      const oldBest = before.records[scoreKey(run)] ?? 0;
+      await recordPlay(run);
+      syncResult();
+      const after = getProgress();
+      const awards = getAchievements()
+        .filter((a) => !before.awards[a.id] && after.awards[a.id])
+        .map((a) => a.title);
+      setFinished({ result, run, previous, best: after.records[scoreKey(run)] ?? result.score, first: !Object.hasOwn(before.records, scoreKey(run)), newBest: result.score > oldBest, awards });
+      playSound('success');
+      setPhase('results');
+      setPaused(null);
+      track('game_completed', { gameId: game.id, mode, score: result.score, durationMs: run.durationMs });
+      if (count < 3 && getTodayPlayCount() >= 3) {
+        track('goal_reached');
+        track('daily_session_completed');
+      }
+    },
+    [game, mode, day, clock],
+  );
+  const share = async () => {
+    const url = new URL(`${import.meta.env.BASE_URL}game/block-escape`, location.origin);
+    url.searchParams.set('mode', 'daily');
+    url.searchParams.set('day', day);
+    const text = `Mindloop daily escape · ${day}. Can you find a smoother escape?`;
+    try {
+      if (navigator.share) await navigator.share({ title: 'Mindloop', text, url: url.href });
+      else {
+        await navigator.clipboard.writeText(`${text} ${url.href}`);
+        setShared(true);
+      }
+      track('challenge_shared', { day });
+    } catch {
+      /* A canceled share leaves the result available. */
+    }
+  };
+  const [shared, setShared] = useState(false);
+  if (!game)
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
-        <div className="text-5xl">🤔</div>
-        <h1 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">Game not found</h1>
-        <Button onClick={goHome}>Back to home</Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
-      <header className="flex flex-none items-center justify-between">
-        <button
-          onClick={goHome}
-          className="ml-tap flex min-h-11 items-center gap-1 rounded-xl px-2 py-1 text-sm font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-        >
-          <span aria-hidden>←</span> Exit
+      <main className="ml-page">
+        <h1>Game not found</h1>
+        <button className="ml-primary" onClick={() => navigate('/')}>
+          Explore games
         </button>
-        <div className="text-sm font-extrabold" style={{ color: category.accent }}>
+      </main>
+    );
+  const Game = game.component;
+  const next = getGame(nextSessionGame());
+  return (
+    <div className="ml-game-shell">
+      <header className="ml-game-header">
+        <button onClick={exit} className="ml-text-button">
+          <Icon name="close" size={18} />
+          Exit
+        </button>
+        <strong>
           {game.title}
+          <small>{mode === 'daily' ? `Daily escape · ${day} UTC` : mode === 'practice' ? 'Gentle practice' : ''}</small>
+        </strong>
+        <div>
+          {phase === 'play' && (
+            <>
+              <button className="ml-icon-button" aria-label="How to play" onClick={() => pause('help')}>
+                <Icon name="help" />
+              </button>
+              <button className="ml-icon-button" aria-label="Pause game" onClick={() => pause('pause')}>
+                <Icon name="pause" />
+              </button>
+            </>
+          )}
         </div>
-        <ThemeToggle />
       </header>
-
-      <main ref={mainRef} tabIndex={-1} aria-label={`${game.title}: ${phase}`} className="flex flex-1 flex-col outline-none">
+      <main className="ml-game-main">
         {phase === 'intro' && (
-          <IntroScreen game={game} category={category} best={best} onStart={startPlay} />
-        )}
-
-        {phase === 'play' && (
-          <Suspense
-            fallback={
-              <div className="flex flex-1 items-center justify-center text-slate-400 dark:text-slate-500">Loading…</div>
-            }
-          >
-            <GameComponent key={runKey} onFinish={handleFinish} />
-          </Suspense>
-        )}
-
-        {phase === 'results' && result && (
-          <ResultsScreen
+          <IntroScreen
+            game={game}
             category={category}
-            result={result}
-            best={best}
-            isNewBest={isNewBest}
-            onReplay={startPlay}
-            onHome={goHome}
-            nextGame={nextGame}
-            onNext={goNext}
+            best={0}
+            onStart={start}
+            onPractice={() => {
+              navigate(gameUrl(game.id, 'practice'), { replace: true });
+              start();
+            }}
           />
         )}
+        {phase === 'play' && (
+          <GameRuntimeContext.Provider value={runtime}>
+            <div
+              className="ml-game-stage"
+              style={{ visibility: paused ? 'hidden' : 'visible' }}
+              inert={!!paused}
+              onPointerDown={() => {
+                if (!firstInput.current) {
+                  firstInput.current = true;
+                  track('first_input', { gameId, mode });
+                }
+              }}
+              onKeyDown={() => {
+                if (!firstInput.current) {
+                  firstInput.current = true;
+                  track('first_input', { gameId, mode });
+                }
+              }}
+            >
+              <Suspense fallback={<p role="status">Getting your game ready…</p>}>
+                <Game key={runKey} onFinish={finish} />
+              </Suspense>
+            </div>
+          </GameRuntimeContext.Provider>
+        )}
+        {phase === 'results' && finished && (
+          <>
+            <ResultsScreen
+              game={game}
+              {...finished}
+              onReplay={() => {
+                track('replay_clicked', { gameId, mode });
+                start();
+              }}
+              onNext={() => {
+                track('next_round_clicked');
+                navigate(gameUrl(next?.id ?? 'grid-recall', 'classic', '&loop=1'));
+              }}
+              nextTitle={next?.title ?? 'Grid Recall'}
+              loop={loop}
+              onShare={() => void share()}
+            />
+            {shared && <p role="status">Challenge link copied.</p>}
+            <button
+              className="ml-text-button ml-less-like"
+              onClick={() => {
+                avoidGame(game.id);
+                navigate('/');
+              }}
+            >
+              Suggest this game less often
+            </button>
+          </>
+        )}
       </main>
+      {paused && (
+        <Dialog
+          title={paused === 'exit' ? 'Leave this round?' : paused === 'help' ? 'How to play' : 'A little breather'}
+          onClose={() => {
+            if (blocker.state === 'blocked') blocker.reset();
+            clock.setPaused(false);
+            setPaused(null);
+          }}
+        >
+          {paused === 'help' ? (
+            <ol>
+              {game.howTo.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ol>
+          ) : (
+            <p>{paused === 'exit' ? 'This unfinished round won’t count. Your completed rounds are safe.' : 'Your clock is stopped. Your board will return when you’re ready.'}</p>
+          )}
+          <button
+            className="ml-primary"
+            onClick={() => {
+              if (blocker.state === 'blocked') blocker.reset();
+              clock.setPaused(false);
+              setPaused(null);
+            }}
+          >
+            Resume game
+            <Icon name="play" size={18} />
+          </button>
+          {paused === 'exit' && (
+            <button
+              className="ml-text-button"
+              onClick={() => {
+                track('game_abandoned', { gameId, mode, durationMs: Math.round(clock.now()) });
+                allowExit.current = true;
+                if (blocker.state === 'blocked') blocker.proceed();
+                else navigate('/');
+              }}
+            >
+              Leave round
+            </button>
+          )}
+        </Dialog>
+      )}
     </div>
   );
 }

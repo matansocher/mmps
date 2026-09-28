@@ -1,150 +1,61 @@
-const HISTORY_KEY = 'mindloop:history';
-const MAX_ENTRIES = 200;
+import { getProgress, localDay, mergeRunHistory, progressCounts, readJson, recordProgress, removeJson, streakForDays, withProgressLock, writeJson } from './progress';
+import type { RunRecord } from './progress';
 
-export interface PlayEntry {
-  /** Stable client-generated id for the run; used to deduplicate across sync. */
-  runId: string;
-  gameId: string;
-  score: number;
-  /** ISO timestamp of when the run finished. */
-  at: string;
-}
-
-function read(): PlayEntry[] {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function write(entries: PlayEntry[]) {
-  try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, MAX_ENTRIES)));
-  } catch {
-    /* ignore quota / privacy-mode errors */
-  }
-}
-
-/** Records a finished run. Newest entries are stored first. */
-export function recordPlay(entry: { runId: string; gameId: string; score: number; at: string }): void {
-  const entries = read().filter((e) => e.runId !== entry.runId);
-  entries.unshift({ runId: entry.runId, gameId: entry.gameId, score: entry.score, at: entry.at });
-  write(entries);
-  window.dispatchEvent(new Event('mindloop:data'));
-}
-
+export type PlayEntry = RunRecord;
 export function getHistory(): PlayEntry[] {
-  return read();
+  return readJson<PlayEntry[]>('mindloop:history', []);
 }
-
+export async function recordPlay(entry: PlayEntry): Promise<void> {
+  await withProgressLock(() => {
+    if (entry.gameId === 'warm-up' && readJson('mindloop:warmup-earned', false)) return;
+    if (getHistory().some((run) => run.runId === entry.runId)) return;
+    // Migrate before inserting: otherwise the new run would be counted twice.
+    recordProgress(entry);
+    writeJson('mindloop:history', mergeRunHistory([entry], getHistory()));
+    if (entry.gameId === 'warm-up') writeJson('mindloop:warmup-earned', true);
+    window.dispatchEvent(new Event('mindloop:data'));
+  });
+}
 export function getPlayCount(gameId: string): number {
-  return read().filter((e) => e.gameId === gameId).length;
+  return progressCounts(getProgress()).games[gameId] ?? 0;
 }
-
 export function getTotalPlays(): number {
-  return read().length;
+  return Object.values(progressCounts(getProgress()).games).reduce((a, b) => a + b, 0);
 }
-
-/** Returns the most recently played game ids, de-duplicated, newest first. */
 export function getRecentGameIds(limit = 6): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const e of read()) {
-    if (seen.has(e.gameId)) continue;
-    seen.add(e.gameId);
-    out.push(e.gameId);
-    if (out.length >= limit) break;
-  }
-  return out;
+  return [...new Set(getHistory().map((run) => run.gameId))].slice(0, limit);
 }
-
-/** Returns the ISO timestamp of the last time a game was played, or null. */
 export function getLastPlayed(gameId: string): string | null {
-  const entry = read().find((e) => e.gameId === gameId);
-  return entry ? entry.at : null;
+  return getHistory().find((run) => run.gameId === gameId)?.at ?? null;
 }
-
-/** Count of distinct games that have been played at least once. */
 export function getGamesPlayedCount(): number {
-  return new Set(read().map((e) => e.gameId)).size;
+  return Object.keys(progressCounts(getProgress()).games).filter((id) => id !== 'warm-up').length;
 }
-
-export function clearHistory(): void {
-  try {
-    localStorage.removeItem(HISTORY_KEY);
-  } catch {
-    /* ignore */
-  }
-  window.dispatchEvent(new Event('mindloop:data'));
-}
-
-/** Local YYYY-MM-DD for a given date. */
-function dayKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-/** Set of local day keys on which at least one game was played. */
 export function getPlayedDays(): Set<string> {
-  return new Set(read().map((e) => dayKey(new Date(e.at))));
+  return new Set(Object.keys(progressCounts(getProgress()).days));
 }
-
-/** Local YYYY-MM-DD for today. */
-export function todayKey(): string {
-  return dayKey(new Date());
-}
-
-/** Number of runs finished today. */
+export const todayKey = localDay;
 export function getTodayPlayCount(): number {
-  const key = todayKey();
-  return read().filter((e) => dayKey(new Date(e.at)) === key).length;
+  return progressCounts(getProgress()).days[localDay()] ?? 0;
 }
-
-/** Distinct games played today. */
-export function getTodayGamesPlayed(): number {
-  const key = todayKey();
-  return new Set(read().filter((e) => dayKey(new Date(e.at)) === key).map((e) => e.gameId)).size;
-}
-
-/** Whether at least one game was played today. */
+export const getTodayGamesPlayed = getTodayPlayCount;
 export function playedToday(): boolean {
-  return getPlayedDays().has(todayKey());
+  return getTodayPlayCount() > 0;
 }
-
-/**
- * Consecutive-day streak ending today (or yesterday if not played today yet).
- * Returns 0 if the most recent play was before yesterday.
- */
 export function getStreak(): number {
-  const days = getPlayedDays();
-  if (days.size === 0) return 0;
-
-  const today = new Date();
-  const todayKey = dayKey(today);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = dayKey(yesterday);
-
-  // Anchor the streak at today if played today, else yesterday.
-  let cursor = new Date(today);
-  if (!days.has(todayKey)) {
-    if (days.has(yesterdayKey)) {
-      cursor = yesterday;
-    } else {
-      return 0;
-    }
-  }
-
-  let streak = 0;
-  while (days.has(dayKey(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
+  return streakForDays([...getPlayedDays()]).current;
+}
+export function getLongestStreak(): number {
+  return streakForDays([...getPlayedDays()]).longest;
+}
+export function getWeeklyDays(): number {
+  const now = new Date();
+  now.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  return [...getPlayedDays()].filter((day) => day >= localDay(now) && day <= localDay()).length;
+}
+export function clearHistory(): void {
+  removeJson('mindloop:history');
+  removeJson('mindloop:progress');
+  removeJson('mindloop:device');
+  window.dispatchEvent(new Event('mindloop:data'));
 }

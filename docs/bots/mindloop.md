@@ -1,101 +1,136 @@
 # Mindloop
 
-**Brain-Training Mini-App** - Original React game collection backed by MongoDB.
+Mindloop is a React mini-app with 14 original games across five categories. Express serves it at `/mindloop/*`; MongoDB stores verified Telegram players’ progress. A normal browser visit also works, with progress saved on that device.
 
-## Overview
+## Player experience
 
-Mindloop is not a Telegram bot. It is a standalone React application from `apps/mindloop-web` served at `/mindloop/*`. It ships 14 original brain-training games across 5 skill categories behind a shared game shell, and persists player progress (best scores, favorites, play history) to MongoDB keyed by Telegram user id.
+- A single playable welcome replaces the old tour. Completing its warm-up earns one round of credit, once per device.
+- Home offers a three-round daily loop, a shared daily escape puzzle, favorites, search, and category filters. Early recommendations start with Grid Recall, Odd One Out, and Quick Math. Players can request fewer recommendations of a game and restore them in Settings.
+- Every completed round counts toward the daily goal, including repeats and practice. One completed round maintains the daily streak. The weekly target is three days of play; missing a day never removes an earned reward.
+- Each unfamiliar game has a short interactive example. Previously played games start directly. The shared game header provides Help, Pause, and Exit; active navigation requires confirmation.
+- Pausing or backgrounding freezes timers, reveals, and movement. The board becomes hidden and inert while paused. Active classic timers use elapsed time, including rendering delays. Practice runs use a gentler clock and separate records.
+- Results show game metrics, a comparable recent average, a record for that mode and board, new keepsakes, and the next round. Finishing the loop provides a stopping point and a summary.
+- Progress includes lifetime totals, current and longest streaks, recent score charts, permanent keepsakes, and game-specific milestones. An earned keepsake can be carried on Home.
+- Settings include light/dark/system appearance, sound, haptics, reduced motion, shape spotting, math practice level, reminders, usage analytics, and a local-data reset.
 
-The app runs inside Telegram as a mini-app (identity comes from verified Telegram `initData`) and can also run in a plain browser during local dev. Device-only preferences (theme, sound, reduced motion) and onboarding "seen" flags intentionally never leave the device.
+### Games and practice
 
-## Features
-
-- **14 Original Games** - Across 5 skill categories: Memory, Attention, Speed, Problem Solving, and Flexibility
-- **Shared Game Shell** - Intro / how-to, countdown, live score HUD, and a results screen
-- **First-Run Onboarding** - A short, swipeable story flow ending in a real ~20s taste round; shows once per device, is skippable, and can be replayed from Settings
-- **Meta Screens** - Home (category grid), Stats, Settings (theme / sound / reduced motion / replay intro / reset), a once-per-day progress modal, and streaks
-- **Server-Backed Progress** - Best scores, favorites, and play history sync to Mongo; the client reconciles local and server state once on startup with a non-destructive merge, then pushes each finished run and favorites change
-- **Offline-First** - localStorage stays the working store and offline fallback; server writes are best-effort / fire-and-forget
-- **Dark Mode** - Full theme support
-
-### Gameplay
-
-- Shared countdowns use elapsed time, so delayed browser updates do not extend a run. Each finished run is recorded once, and replay starts with fresh game state.
-- Rail Router uses fixed railways with switchable junctions and continuously arriving trains. Match each train to the station of the same color and number during a 90-second shift; correct deliveries score one point. The game can be paused and also pauses when the tab is hidden.
-- Raindrops spaces problems into three lanes and clears the lowest drop matching an answer. Use the on-screen keypad or number keys, Enter to solve, Backspace to erase, and Delete to clear.
-- Game controls have visible keyboard focus, touch-friendly targets, and reduced-motion support. Results show the gap to your personal best.
-
-### Difficulty and replayability
-
-Most games increase difficulty with successful play, without turning timed games into survival runs. Rail Router instead offers fixed railways with preset difficulty. Visual density, speed, and preview durations have safety limits; reaching a limit does not end the run. Timed scores still depend on how many challenges you solve before time expires.
-
-| Game | Run format | Progression |
+| Game | Classic play | Improvements / practice |
 | --- | --- | --- |
-| Grid Recall | Until a mistake | Grids grow to 5×5, with no more than 12 highlighted tiles so late patterns do not become trivial. Previews shorten from 2s to 1.2s; round rewards keep growing. |
-| Pair Match | 60 seconds | Successive shuffled boards grow from 4 to 6 to 8 pairs. Later mismatches are visible for less time. Scores accumulate across boards, including partial boards, with increasing board-clear bonuses and no time refill. |
-| Sequence Echo | Until a mistake | Each round adds another sequence step; longer sequences earn more points. |
-| Sequence Track | Until a mistake | More dots and targets move faster, then tracking grows from 3.2s to 6s with shorter previews. Selection remains untimed and round rewards keep growing. |
-| Odd One Out | 45 seconds | Larger grids and subtler color differences; incorrect taps cost time. |
-| Flash Match | 45 seconds, after memorizing the first symbol | Five levels introduce more nonmatching symbols that share either shape or color with the previous symbol. Both must match for YES. |
-| Quick Math | 45 seconds | Correct streaks unlock larger operands, more operators, then multi-step and parenthesized expressions. Levels and rewards continue beyond the previous level-12 cap. |
-| Raindrops | 60 seconds or three misses | Solving drops increases fall speed, spawn frequency, and arithmetic difficulty. Higher-level drops earn more points; rewards use each drop's difficulty when spawned. |
-| Color Clash | 40 seconds | Five levels expand the palette from three to five colors and make word/ink conflicts more frequent. |
-| Rail Router | 90 seconds of active play | Choose a railway with preset difficulty, then route arriving trains by switching junctions. The selected board stays fixed throughout the shift, with no time bonuses. |
-| Ebb & Flow | 45 seconds | Five levels introduce more rule switches and more conflicts between pointing and movement. |
+| Grid Recall | Repeat growing tile patterns until a mistake | Counts remembered tiles and largest completed pattern; practice allows two corrections and ends after five patterns. |
+| Pair Match | Clear growing boards in 60 seconds | Matching efficiency and clear celebrations; board transitions receive their time back. Practice is one untimed board. |
+| Sequence Echo | Repeat an expanding sequence | Each pad has a tone. Errors replay the expected sequence. Practice offers retries and a six-pad target. |
+| Sequence Track | Follow moving targets | Clear watch/move/select phases; practice begins with one target. |
+| Odd One Out | Spot a different shade in 45 seconds | More consistent shade range, optional shape outlines, separate shade/shape records, one mistake penalty. |
+| Flash Match | Compare shape and color for 45 seconds | Match and nonmatch examples; errors explain which feature changed. |
+| Quick Math | Solve increasingly difficult problems in 45 seconds | Mistakes reset the streak without removing extra time; choose a practice starting level. |
+| Raindrops | Clear falling equations in 60 seconds or before three misses | Compact keypad, lowest-drop prompt, answer accuracy, slower drops in practice. |
+| Color Clash | Choose ink colors for 40 seconds | Ink-versus-word example and a single mistake penalty. |
+| Rail Router | Route trains on a selected railway for 90 seconds | Interactive junction lesson, remembered railway, per-board records, accuracy and mastery marks. |
+| Ebb & Flow | Switch between arrow direction and movement for 45 seconds | Separate rule examples, explicit rule labels, compact controls, one mistake penalty. |
+| Block Escape | Free blocks on successive boards in 60 seconds | Practice and daily mode use one untimed puzzle, an optimal-move target, and optional hints after inactivity. |
+| Order Up | Remember and serve six waves of orders | Ingredient art during memorization, compact serving controls, customer feedback and expected orders after mistakes. Practice waits for the player to hide orders. |
+| Shape Shift | Match rotated shapes in 60 seconds | Four options fit in one row. On a mistake, the target turns toward the correct option; the correction display time is credited. |
 
-Color Clash, Flash Match, and Ebb & Flow advance every four correct answers, show progress toward the next level, and award more points at higher levels. Existing best scores and history are retained; scoring changes do not reset progress.
+Scores describe performance in each game. Records are keyed by game, mode, scoring version, and variant; scores from unrelated games are never combined into a cognitive score.
 
-## New Games
+## Daily challenge
 
-| Game | Category | How it plays | What it practices |
-| --- | --- | --- | --- |
-| Block Escape | Problem Solving | Drag blocks with touch or mouse (or use arrow controls) to free the escape block. Solve unlimited, automatically advancing boards during a 60-second run. Verified puzzles progress from 3 to 7-9 planning slides with denser layouts; fewer squares moved earn more points, and undo keeps spent moves. | Planning moves and anticipating their consequences |
-| Order Up | Memory | Remember customers' ingredient sequences, then assemble and serve their hidden orders. Later waves add customers and order changes; a missed order breaks the streak rather than ending the run. | Holding and updating information in working memory |
-| Shape Shift | Speed | Match rotated outlines in a 60-second round. Correct answers unlock more intricate shapes and mirror-image decoys; streaks earn bonuses. | Mental rotation and visual comparison |
+Block Escape selects a deterministic puzzle using `escape-v2-YYYY-MM-DD`. The challenge date is UTC and appears in the game header. Sharing opens the native share sheet or copies a link containing the date. It never sends a Telegram message automatically. Replays use the same board; assisted solves keep a separate `-guided` record. Personal records are shown, with no public leaderboard or claim of a first-attempt competition.
 
-These games use the existing favorites, game picker, scores, results, and player sync. Their instructions include a short "What you practice" explanation. Scores describe performance in the game, not intelligence or proven improvements in everyday cognition.
+The daily loop, streak, and weekly goal use the device’s local calendar day. Daily challenge dates use UTC so friends receive the same puzzle.
 
-## Configuration
+## Saving and migration
+
+`src/shared/mindloop/progress.ts` is shared by client and server. Progress has independent counters per device, permanent award timestamps, and comparable score records. Merging takes the maximum for each device counter and record, and the earliest award timestamp. Repeating a snapshot does not double-count it. Lifetime progress is independent of recent-history caps (200 entries locally, 500 on the server).
+
+The client saves a complete snapshot and serializes requests. It reconciles responses against current local state, preserving rounds completed during an in-flight request. A durable dirty marker schedules another save when necessary. Failed requests retry with bounded exponential delay, and startup, focus, and network recovery trigger reconciliation. Favorite replacements use timestamps so removal does not become an accidental union.
+
+Legacy history is migrated once into a legacy counter source. Earlier best scores and earned 500/1000-point awards are retained. The new scoring system starts separate records. Counts already lost to the old history cap cannot be reconstructed from absent records.
+
+The UI distinguishes device-only, syncing, saved, pending, and unavailable local storage. An in-memory fallback keeps the current visit playable if storage fails. “Clear this device” does not delete a Telegram profile; synchronized data can return on the next sync.
+
+## Telegram setup
+
+The page loads the official Telegram Web App SDK. Initialization supplies safe-area spacing, follows Telegram’s theme when appearance is set to system, handles Back and closing confirmation, and uses optional haptics and home-screen installation where supported. Identity still comes exclusively from server verification of signed `initData`.
+
+A plain URL opened from a Telegram message is not necessarily a signed Mini App launch. Configure the bot’s Mini App/menu button to open the public HTTPS `/mindloop/` URL. Verify that `initData` is present through that launch path; do not infer authentication from Telegram’s browser appearance.
 
 ```bash
 MONGO_DB_URL=mongodb://localhost:27017
 MINDLOOP_TELEGRAM_BOT_TOKEN=...
+# Public HTTPS mini-app URL. Required to enable reminder opt-in.
+MINDLOOP_APP_URL=https://your-host.example/mindloop/
 ```
 
-Mindloop does not use `LOCAL_ACTIVE_BOT_ID`; it initializes independently of bot selection. The Telegram bot token is used only to verify mini-app `initData` server-side. In local dev without a verified user, an `X-Mindloop-Dev-User` header (or a fixed dev id) provides a durable identity.
+Mindloop initializes independently of `LOCAL_ACTIVE_BOT_ID`. The token verifies identity and sends explicitly enabled reminders through an API-only Telegram client; it does not create another polling bot. Local API testing supports `X-Mindloop-Dev-User`; the frontend can set it with `?devUser=123` outside production.
 
-## Getting Started
+### Optional reminders
 
-Run the backend and React development server:
+Players choose a local time and IANA time zone and grant Telegram write access. Settings always provides an off switch. The server scans once per minute in production only when both token and HTTPS app URL are configured. It skips completed loops, claims each player/date before sending, and does not retry ambiguous send failures that day. A five-minute catch-up window avoids late reminders after an outage. Claims prevent duplicates across processes or repeated daylight-saving hours. Telegram 403 responses disable that subscription.
+
+No reminders are sent by the development preview or unit tests.
+
+## API and storage
+
+All `/api/mindloop/player*` routes require verified Telegram or local-development identity.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /api/mindloop/player` | Retrieve the player snapshot. |
+| `POST /api/mindloop/player/sync` | Reconcile history, permanent progress, records, and favorites. |
+| `POST /api/mindloop/player/result` | Compatibility endpoint for individual results. |
+| `PUT /api/mindloop/player/favorites` | Compatibility endpoint for favorite replacement. |
+| `GET /api/mindloop/player/reminder` | Reminder availability and current preference. |
+| `PUT /api/mindloop/player/reminder` | Enable, update, or disable a reminder. |
+| `POST /api/mindloop/player/events` | Collect authenticated, pseudonymous usage events. |
+| `POST /api/mindloop/events` | Collect device-identified browser events. |
+
+MongoDB database `Mindloop` contains `Players`, `Reminders`, and `Events`. Player updates retain revision-guarded compare-and-swap merges. Events deduplicate on event ID, validate an allowlist of properties, impose batch and rate limits, and expire after 90 days. Authenticated analytics use an HMAC of the verified user ID; raw Telegram authentication data and messages are not stored in events. Browser identity stays device-specific. Analytics can be disabled in Settings.
+
+## Retention measurement
+
+Events cover opens, onboarding, first game start, starts, first inputs, completions, explicit abandons, replays, next rounds, goal completion, sync failure, reminder choices, reminder opens, and challenge sharing. Properties include game/mode, duration when applicable, scoring version, launch context, source, returning status, and viewport. The offline event queue is bounded; it is diagnostic, not an audit log. Forced process termination can omit abandonment events, so also measure starts without completions.
+
+Compare cohorts by their first observed `app_open` date and launch context. Keep authenticated Telegram users separate from browser devices. For each sufficiently mature cohort, report:
+
+- First-input and first-game completion rates.
+- Fraction completing a second round in the opening session.
+- D1 and D7 return rates, using the same timezone and exact calendar-day definition throughout.
+- Three-round completion, replay, and next-round rates.
+- Abandonment and completion by game, mode, viewport, and first/returning visit.
+- Sync failure/recovery and reminder opt-out rates.
+
+Example read-only `mongosh` aggregation for daily completion activity:
+
+```javascript
+db.getSiblingDB('Mindloop').Events.aggregate([
+  { $match: { name: 'game_completed', at: { $gte: ISODate('2026-09-28T00:00:00Z') } } },
+  { $group: {
+    _id: { day: { $dateToString: { date: '$at', format: '%Y-%m-%d', timezone: 'UTC' } }, game: '$properties.gameId', launch: '$properties.launch' },
+    rounds: { $sum: 1 }, players: { $addToSet: '$player' }
+  } },
+  { $project: { rounds: 1, players: { $size: '$players' } } },
+  { $sort: { '_id.day': 1, '_id.game': 1 } }
+]);
+```
+
+There is no trustworthy historical funnel baseline if these events were not previously collected. Review the first eligible D1/D7 cohorts after release; do not treat a UI change as evidence of improved retention. Pair the numbers with a handful of observed first-time sessions and short conversations with players who did not return. Run one follow-up experiment at a time.
+
+## Development and release checks
 
 ```bash
 npm run dev
-npm run dev:mindloop-web
+npm run dev:mindloop-web -- --port 5488
+npm run build:mindloop-web
+npx vitest run src/features/mindloop src/shared/mindloop apps/mindloop-web/src
 ```
 
-## API Routes
+Use a separate frontend port in each worktree. The frontend proxies `/api/mindloop` to `localhost:3111`. A browser without a dev or Telegram identity remains device-only.
 
-All `/api/mindloop/player*` routes require an authenticated Telegram (or dev) user.
+Before releasing, verify signed launches on Telegram iOS and Android, reopening from a second device, a save during an offline/reconnect cycle, device-local day rollover, reminder permission denial and opt-out, and compact layouts with the client’s actual safe areas. Browser emulation and mocked API tests cannot establish those external-client behaviors. After release, inspect events before drawing retention conclusions.
 
-- `GET /api/mindloop/player` - Load the player's best scores, favorites, and history
-- `POST /api/mindloop/player/result` - Record a finished run (updates best score + play history)
-- `PUT /api/mindloop/player/favorites` - Replace the player's favorites list
-- `POST /api/mindloop/player/sync` - Merge a full client snapshot (non-destructive union, used once on startup)
-- `GET /mindloop/*` - Serve the built React SPA
-
-## Database
-
-**Database name**: `Mindloop`
-
-**Collection**: `Players`
-
-Each document is keyed by the Telegram user id (`_id`) and stores `bestScores`, `favorites`, and a newest-first `history` (capped at 500 entries), plus `createdAt` / `updatedAt`.
-
-## Scheduled Tasks
-
-Mindloop does not register scheduled tasks.
-
-## Next Steps
+## Related documentation
 
 - [Bot and Web Feature Overview](/bots/overview)
 - [Database Architecture](/architecture/database)

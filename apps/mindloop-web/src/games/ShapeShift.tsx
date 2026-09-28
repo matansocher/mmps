@@ -4,12 +4,13 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { useCountdown } from '../hooks/useCountdown';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { useTheme } from '../hooks/useTheme';
 import { CATEGORIES } from '../lib/categories';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
 import { cx } from '../lib/utils';
-import { createShapeRound, INITIAL_SHAPE_SCORE, scoreShapeAnswer } from './shape-shift';
+import { createShapeRound, INITIAL_SHAPE_SCORE, normalizeShape, rotateShape, scoreShapeAnswer } from './shape-shift';
 import type { Shape } from './shape-shift';
 
 const TOTAL_TIME = 60;
@@ -30,6 +31,7 @@ function ShapePicture({ shape, label }: { readonly shape: Shape; readonly label:
 }
 
 export function ShapeShift({ onFinish }: GameProps) {
+  const { clock } = useGameRuntime();
   const [counting, setCounting] = useState(true);
   const [round, setRound] = useState(() => createShapeRound(0));
   const [tally, setTally] = useState(INITIAL_SHAPE_SCORE);
@@ -42,7 +44,9 @@ export function ShapeShift({ onFinish }: GameProps) {
 
   useEffect(() => {
     finished.current = false;
-    return () => { finished.current = true; };
+    return () => {
+      finished.current = true;
+    };
   }, []);
 
   const finish = useCallback(() => {
@@ -71,17 +75,17 @@ export function ShapeShift({ onFinish }: GameProps) {
 
   useEffect(() => {
     if (!feedback) return;
-    const id = window.setTimeout(
+    const id = clock.setTimeout(
       () => {
         if (finished.current) return;
         setRound(createShapeRound(tallyRef.current.correct));
         setFeedback(null);
         locked.current = false;
       },
-      feedback.right ? 450 : 900,
+      feedback.right ? 450 : 1400,
     );
-    return () => window.clearTimeout(id);
-  }, [feedback]);
+    return () => clock.clearTimeout(id);
+  }, [clock, feedback]);
 
   const answer = useCallback(
     (selected: number) => {
@@ -91,14 +95,16 @@ export function ShapeShift({ onFinish }: GameProps) {
       const next = scoreShapeAnswer(tallyRef.current, right, round.level);
       tallyRef.current = next;
       setTally(next);
+      if (!right) timer.addTime(1.4);
       setFeedback({ right, selected });
       playSound(right ? 'correct' : 'wrong');
     },
-    [counting, timer.remaining, round],
+    [counting, timer, round.correctIndex, round.level],
   );
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
+      if (clock.isPaused()) return;
       if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
       const index = Number(event.key) - 1;
       if (!Number.isInteger(index) || index < 0 || index >= round.options.length) return;
@@ -107,8 +113,9 @@ export function ShapeShift({ onFinish }: GameProps) {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [answer, round.options.length]);
+  }, [answer, clock, round.options.length]);
 
+  const turns = [0, 1, 2, 3].find((n) => JSON.stringify(rotateShape(round.target, n)) === JSON.stringify(normalizeShape(round.options[round.correctIndex]))) ?? 0;
   return (
     <MotionConfig reducedMotion={reducedMotion || systemReducedMotion ? 'always' : 'never'}>
       <div className="relative flex flex-1 flex-col py-4">
@@ -124,7 +131,7 @@ export function ShapeShift({ onFinish }: GameProps) {
             <div className="flex w-full items-center justify-center gap-6 rounded-3xl bg-amber-50 p-4 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:ring-amber-800">
               <div className="text-center">
                 <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-200">Target</span>
-                <div className="h-32 w-32 text-amber-700 dark:text-amber-300">
+                <div className="h-24 w-24 text-amber-700 dark:text-amber-300 ml-shape-correction" style={{ transform: `rotate(${feedback && !feedback.right ? turns * 90 : 0}deg)` }}>
                   <ShapePicture shape={round.target} label="Target outline" />
                 </div>
               </div>
@@ -136,7 +143,7 @@ export function ShapeShift({ onFinish }: GameProps) {
             <p role="status" className="min-h-12 text-center text-base font-bold text-slate-700 dark:text-slate-200">
               {feedback ? (feedback.right ? 'Perfect match! Keep it going.' : `Not quite. Option ${round.correctIndex + 1} is the match.`) : 'Tap the matching shape'}
             </p>
-            <div className={cx('grid w-full gap-3', round.options.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
+            <div className={cx('grid w-full gap-3', round.options.length === 3 ? 'grid-cols-3' : 'grid-cols-4')}>
               {round.options.map((shape, index) => (
                 <button
                   key={index}
@@ -145,7 +152,7 @@ export function ShapeShift({ onFinish }: GameProps) {
                   disabled={counting || feedback !== null || timer.remaining <= 0}
                   onClick={() => answer(index)}
                   className={cx(
-                    'ml-tap flex min-h-32 flex-col items-center rounded-2xl p-2 text-amber-700 shadow-sm ring-2 transition-colors focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-amber-600 disabled:cursor-default dark:text-amber-300',
+                    'ml-tap flex min-h-24 flex-col items-center rounded-2xl p-2 text-amber-700 shadow-sm ring-2 transition-colors focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-amber-600 disabled:cursor-default dark:text-amber-300',
                     feedback && index === round.correctIndex
                       ? 'bg-emerald-100 ring-emerald-600 dark:bg-emerald-950 dark:ring-emerald-400'
                       : feedback && index === feedback.selected
@@ -153,7 +160,7 @@ export function ShapeShift({ onFinish }: GameProps) {
                         : 'bg-white ring-slate-200 enabled:hover:bg-amber-50 enabled:active:bg-amber-100 dark:bg-slate-800 dark:ring-slate-600 dark:enabled:hover:bg-slate-700',
                   )}
                 >
-                  <div className="h-24 w-full">
+                  <div className="h-20 w-full">
                     <ShapePicture shape={shape} label={`Outline ${index + 1}`} />
                   </div>
                   <span className="text-sm font-bold text-slate-700 dark:text-slate-200">

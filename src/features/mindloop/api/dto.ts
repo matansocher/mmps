@@ -1,100 +1,84 @@
-import type { MindloopPlayEntry, MindloopPlayerDocument, MindloopSyncData } from '../types';
+import { z } from 'zod';
+import { progressFromHistory } from '@shared/mindloop/progress';
+import type { MindloopPlayerDocument, MindloopSyncData } from '../types';
 
 export type MindloopApiError = { readonly error: string };
-
-/** Client-facing player shape (no Mongo internals). */
-export type MindloopPlayerDto = {
-  readonly bestScores: Record<string, number>;
-  readonly favorites: string[];
-  readonly history: MindloopPlayEntry[];
-  readonly updatedAt: string | null;
-};
-
+export type MindloopPlayerDto = MindloopSyncData & { readonly updatedAt: string | null };
 export type MindloopPlayerResponse = { readonly player: MindloopPlayerDto };
-
-export const EMPTY_PLAYER_DTO: MindloopPlayerDto = {
-  bestScores: {},
-  favorites: [],
-  history: [],
-  updatedAt: null,
-};
-
+export const EMPTY_PLAYER_DTO: MindloopPlayerDto = { bestScores: {}, favorites: [], history: [], updatedAt: null };
 export function toPlayerDto(doc: MindloopPlayerDocument | null): MindloopPlayerDto {
   if (!doc) return EMPTY_PLAYER_DTO;
   return {
     bestScores: { ...doc.bestScores },
     favorites: [...doc.favorites],
-    history: doc.history.map((e) => ({ runId: e.runId, gameId: e.gameId, score: e.score, at: e.at })),
-    updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : null,
+    history: doc.history.map((run) => {
+      const entry = { ...run };
+      delete entry.receivedAt;
+      return entry;
+    }),
+    progress: doc.progress ?? progressFromHistory(doc.history, doc.bestScores),
+    favoritesUpdatedAt: doc.favoritesUpdatedAt,
+    updatedAt: doc.updatedAt?.toISOString() ?? null,
   };
 }
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isRunId(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value.length <= 128;
-}
-
-export type RecordResultBody = { readonly runId: string; readonly gameId: string; readonly score: number; readonly at: string };
-
+const safeKey = z
+  .string()
+  .min(1)
+  .max(160)
+  .regex(/^[a-zA-Z0-9:_@.-]+$/)
+  .refine((key) => !['__proto__', 'constructor', 'prototype'].includes(key));
+const timestamp = z
+  .string()
+  .max(40)
+  .refine((v) => Number.isFinite(Date.parse(v)));
+const score = z.number().finite().min(0).max(10_000_000).transform(Math.round);
+const countMap = z.record(safeKey, z.number().int().min(0).max(100_000_000)).refine((value) => Object.keys(value).length <= 10000);
+export const progressSchema = z.object({
+  sources: z.record(safeKey, z.object({ games: countMap, days: z.record(z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.number().int().min(0).max(100000)) })).refine((v) => Object.keys(v).length <= 100),
+  awards: z.record(safeKey, timestamp),
+  records: countMap,
+});
+const runSchema = z.object({
+  runId: z.string().min(1).max(128),
+  gameId: z.string().min(1).max(64),
+  score,
+  at: timestamp,
+  day: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  mode: z.enum(['classic', 'practice', 'daily']).optional(),
+  version: z.number().int().min(1).max(100).optional(),
+  variant: safeKey.optional(),
+  durationMs: z.number().min(0).max(86400000).optional(),
+  stats: z
+    .array(z.object({ label: z.string().max(50), value: z.string().max(100) }))
+    .max(12)
+    .optional(),
+});
+export type RecordResultBody = import('@shared/mindloop/progress').RunRecord;
 export function parseRecordResultBody(body: unknown): RecordResultBody | null {
-  if (!body || typeof body !== 'object') return null;
-  const { runId, gameId, score, at } = body as Record<string, unknown>;
-  if (!isRunId(runId)) return null;
-  if (typeof gameId !== 'string' || gameId.length === 0 || gameId.length > 64) return null;
-  if (!isFiniteNumber(score) || score < 0 || score > 10_000_000) return null;
-  if (typeof at !== 'string' || Number.isNaN(Date.parse(at))) return null;
-  return { runId, gameId, score: Math.round(score), at };
+  const parsed = runSchema.safeParse(body);
+  return parsed.success ? (parsed.data as RecordResultBody) : null;
 }
-
+const favoritesSchema = z.array(z.string().min(1).max(64)).max(200);
 export function parseFavoritesBody(body: unknown): string[] | null {
-  if (!body || typeof body !== 'object') return null;
-  const { favorites } = body as Record<string, unknown>;
-  if (!Array.isArray(favorites)) return null;
-  if (favorites.length > 200) return null;
-  if (!favorites.every((id) => typeof id === 'string' && id.length > 0 && id.length <= 64)) return null;
-  return favorites as string[];
+  const result = z.object({ favorites: favoritesSchema }).safeParse(body);
+  return result.success ? result.data.favorites : null;
 }
-
-function parseHistoryEntry(value: unknown): MindloopPlayEntry | null {
-  if (!value || typeof value !== 'object') return null;
-  const { runId, gameId, score, at } = value as Record<string, unknown>;
-  if (typeof gameId !== 'string' || gameId.length === 0 || gameId.length > 64) return null;
-  if (!isFiniteNumber(score) || score < 0 || score > 10_000_000) return null;
-  if (typeof at !== 'string' || Number.isNaN(Date.parse(at))) return null;
-  // Legacy entries lack a runId; derive a stable one so they still dedupe.
-  const id = isRunId(runId) ? runId : `legacy:${gameId}@${at}`;
-  return { runId: id, gameId, score: Math.round(score), at };
-}
-
 export function parseSyncBody(body: unknown): MindloopSyncData | null {
-  if (!body || typeof body !== 'object') return null;
-  const { bestScores, favorites, history } = body as Record<string, unknown>;
-
-  const scores: Record<string, number> = {};
-  if (bestScores && typeof bestScores === 'object' && !Array.isArray(bestScores)) {
-    for (const [gameId, score] of Object.entries(bestScores as Record<string, unknown>)) {
-      if (gameId.length > 64) return null;
-      if (!isFiniteNumber(score) || score < 0 || score > 10_000_000) return null;
-      scores[gameId] = Math.round(score);
-    }
-  }
-
-  const favs = parseFavoritesBody({ favorites }) ?? (favorites === undefined ? [] : null);
-  if (favs === null) return null;
-
-  if (history !== undefined && !Array.isArray(history)) return null;
-  const hist: MindloopPlayEntry[] = [];
-  if (Array.isArray(history)) {
-    if (history.length > 1000) return null;
-    for (const raw of history) {
-      const parsed = parseHistoryEntry(raw);
-      if (!parsed) return null;
-      hist.push(parsed);
-    }
-  }
-
-  return { bestScores: scores, favorites: favs, history: hist };
+  const result = z
+    .object({
+      bestScores: z.record(safeKey, score).default({}),
+      favorites: favoritesSchema.default([]),
+      history: z
+        .array(runSchema.extend({ runId: z.string().min(1).max(128).optional() }))
+        .max(1000)
+        .default([]),
+      progress: progressSchema.optional(),
+      favoritesUpdatedAt: timestamp.optional(),
+    })
+    .safeParse(body);
+  if (!result.success) return null;
+  return { ...result.data, history: result.data.history.map((entry) => ({ ...entry, runId: entry.runId ?? `legacy:${entry.gameId}@${entry.at}` })) } as MindloopSyncData;
 }
