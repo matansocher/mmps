@@ -1,9 +1,4 @@
-export type CategoryId =
-  | 'memory'
-  | 'attention'
-  | 'speed'
-  | 'problem-solving'
-  | 'flexibility';
+export type CategoryId = 'memory' | 'attention' | 'speed' | 'problem-solving' | 'flexibility';
 
 export interface Category {
   id: CategoryId;
@@ -28,11 +23,12 @@ export type GameMeta = {
 };
 
 /** Result reported by a game when a run finishes. */
-export interface GameResult {
+export type GameResult = {
+  readonly variant?: string;
   score: number;
   /** Optional extra stats shown on the results screen. */
   stats?: { label: string; value: string }[];
-}
+};
 
 /** Props every game component receives from the shell. */
 export interface GameProps {

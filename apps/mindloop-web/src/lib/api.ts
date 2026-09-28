@@ -8,19 +8,15 @@
  * "local only" and never hit the network — localStorage is the source of truth.
  */
 
-export interface PlayEntry {
-  runId: string;
-  gameId: string;
-  score: number;
-  at: string;
-}
-
-export interface PlayerData {
-  bestScores: Record<string, number>;
-  favorites: string[];
-  history: PlayEntry[];
-  updatedAt: string | null;
-}
+export type { RunRecord as PlayEntry } from './progress';
+export type PlayerData = {
+  readonly bestScores: Record<string, number>;
+  readonly favorites: string[];
+  readonly history: import('./progress').RunRecord[];
+  readonly progress?: import('./progress').PlayerProgress;
+  readonly favoritesUpdatedAt?: string;
+  readonly updatedAt: string | null;
+};
 
 interface PlayerResponse {
   player: PlayerData;
@@ -66,11 +62,12 @@ export function hasRemoteIdentity(): boolean {
   return authHeaders() !== null;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = authHeaders();
   if (!headers) throw new Error('no_identity');
 
   const response = await fetch(path, {
+    signal: AbortSignal.timeout(15000),
     ...init,
     headers: {
       Accept: 'application/json',
@@ -108,7 +105,7 @@ export const mindloopApi = {
       body: JSON.stringify({ favorites }),
     }),
 
-  sync: (snapshot: { bestScores: Record<string, number>; favorites: string[]; history: PlayEntry[] }) =>
+  sync: (snapshot: Omit<PlayerData, 'updatedAt'>) =>
     request<PlayerResponse>('/api/mindloop/player/sync', {
       method: 'POST',
       body: JSON.stringify(snapshot),

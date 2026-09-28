@@ -3,6 +3,7 @@ import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { useTheme } from '../hooks/useTheme';
 import { CATEGORIES } from '../lib/categories';
 import { playSound } from '../lib/sound';
@@ -59,6 +60,7 @@ function CustomerArt({ index }: { readonly index: number }) {
 }
 
 export function OrderUp({ onFinish }: GameProps) {
+  const { clock, practice } = useGameRuntime();
   const { reducedMotion } = useTheme();
   const systemReducedMotion = useReducedMotion();
   const [state, dispatch] = useReducer(orderUpReducer, undefined, () => createOrderUpState(Array.from({ length: ORDER_UP_WAVES }, (_, index) => createOrderWave(index))));
@@ -71,13 +73,13 @@ export function OrderUp({ onFinish }: GameProps) {
   const start = useCallback(() => dispatch({ type: 'start' }), []);
 
   useEffect(() => {
-    if (state.phase !== 'watch') return;
-    const deadline = Date.now() + wave.revealSeconds * 1000;
-    const timer = window.setInterval(() => {
-      dispatch({ type: 'tick', wave: wave.index, remaining: Math.max(0, Math.ceil((deadline - Date.now()) / 1000)) });
+    if (state.phase !== 'watch' || practice) return;
+    const deadline = clock.now() + wave.revealSeconds * 1000;
+    const timer = clock.setInterval(() => {
+      dispatch({ type: 'tick', wave: wave.index, remaining: Math.max(0, Math.ceil((deadline - clock.now()) / 1000)) });
     }, 100);
-    return () => window.clearInterval(timer);
-  }, [state.phase, wave]);
+    return () => clock.clearInterval(timer);
+  }, [clock, practice, state.phase, wave]);
 
   useEffect(() => {
     if (state.attempted <= soundedAttempt.current) return;
@@ -105,7 +107,7 @@ export function OrderUp({ onFinish }: GameProps) {
       <GameStage hud={<HUD accent={accent} score={state.score} status={`${state.waveIndex + 1}/${ORDER_UP_WAVES}`} statusLabel="Wave" />}>
         <section
           aria-label="Order Up café"
-          className="w-full max-w-xl overflow-hidden rounded-3xl border border-teal-200 bg-[#fffdf6] text-slate-800 shadow-sm dark:border-teal-800 dark:bg-slate-900 dark:text-slate-100"
+          className="ml-order-up w-full max-w-xl overflow-hidden rounded-3xl border border-teal-200 bg-[#fffdf6] text-slate-800 shadow-sm dark:border-teal-800 dark:bg-slate-900 dark:text-slate-100"
         >
           <div aria-hidden="true" className="h-4 bg-[repeating-linear-gradient(90deg,#147d72_0px,#147d72_28px,#d9efe7_28px,#d9efe7_56px)]" />
           <div className="p-4 sm:p-5">
@@ -132,7 +134,13 @@ export function OrderUp({ onFinish }: GameProps) {
             {state.phase === 'watch' && (
               <div className="mb-4 flex items-center justify-between gap-2 rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-900 dark:bg-teal-950 dark:text-teal-100">
                 <span role="timer" aria-label="Seconds until orders hide">
-                  Hiding in <strong className="tabular-nums">{state.remaining}s</strong>
+                  {practice ? (
+                    'Take your time'
+                  ) : (
+                    <>
+                      Hiding in <strong className="tabular-nums">{state.remaining}s</strong>
+                    </>
+                  )}
                 </span>
                 <button type="button" className={cx(control, 'bg-teal-700 text-white hover:bg-teal-800')} onClick={() => dispatch({ type: 'hide', wave: wave.index })}>
                   Ready — hide
@@ -167,6 +175,9 @@ export function OrderUp({ onFinish }: GameProps) {
                         {order.ingredients.map((ingredient, position) => (
                           <li key={position} className="flex items-center justify-center gap-1 text-xs sm:text-sm">
                             <span className="text-slate-500 dark:text-slate-400">{position + 1}.</span>
+                            <span className="ml-order-food">
+                              <FoodArt ingredient={ingredient} />
+                            </span>
                             <span className="capitalize">{ingredient}</span>
                           </li>
                         ))}
@@ -175,8 +186,8 @@ export function OrderUp({ onFinish }: GameProps) {
                       <p className="mt-1 text-center text-xs font-medium text-slate-600 dark:text-slate-300">
                         {result
                           ? result === 'correct'
-                            ? '✓ Served'
-                            : 'Order lost'
+                            ? '✓ Thank you!'
+                            : `Wanted: ${order.ingredients.join(' → ')}`
                           : state.phase === 'serve'
                             ? `${state.drafts[order.id]?.length ?? 0}/${order.ingredients.length} on tray`
                             : 'Order hidden'}

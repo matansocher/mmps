@@ -1,100 +1,150 @@
-import { motion } from 'framer-motion';
-import { CATEGORIES } from '../lib/categories';
+import { Link } from 'react-router-dom';
 import type { GameEntry } from '../lib/games';
-import { pickReason } from '../lib/picker';
-import type { Category, GameResult } from '../lib/types';
-import { Button } from './Button';
+import { getTodayPlayCount } from '../lib/history';
+import { getHistory } from '../lib/history';
+import { syncLabel } from '../lib/player-sync';
+import type { RunRecord } from '../lib/progress';
+import { localDay } from '../lib/progress';
+import type { GameResult } from '../lib/types';
+import { GameArt } from './GameArt';
+import { Icon } from './Icon';
+import { ReminderPrompt } from './ReminderPrompt';
 
-interface Props {
-  category: Category;
-  result: GameResult;
-  best: number;
-  isNewBest: boolean;
-  onReplay: () => void;
-  onHome: () => void;
-  /** The coach's suggested next game, chained to keep the session going. */
-  nextGame?: GameEntry;
-  onNext?: () => void;
-}
-
-export function ResultsScreen({ category, result, best, isNewBest, onReplay, onHome, nextGame, onNext }: Props) {
-  const nextCategory = nextGame ? CATEGORIES[nextGame.category] : null;
-
+export function ResultsScreen({
+  game,
+  result,
+  best,
+  previous,
+  first,
+  awards,
+  onReplay,
+  onNext,
+  nextTitle,
+  loop,
+  run,
+  onShare,
+  newBest,
+}: {
+  readonly newBest: boolean;
+  readonly game: GameEntry;
+  readonly result: GameResult;
+  readonly best: number;
+  readonly previous: readonly RunRecord[];
+  readonly first: boolean;
+  readonly awards: readonly string[];
+  readonly onReplay: () => void;
+  readonly onNext: () => void;
+  readonly nextTitle: string;
+  readonly loop: boolean;
+  readonly run: RunRecord;
+  readonly onShare: () => void;
+}) {
+  const today = getHistory().filter((r) => r.day === localDay() && r.gameId !== 'warm-up');
+  const tip: Record<string, string> = {
+    'grid-recall': 'Try grouping the lit tiles into a simple shape.',
+    'pair-match': 'Name each symbol as you turn it over.',
+    'sequence-echo': 'Listen for the melody as well as the lights.',
+    'sequence-track': 'Keep your eyes near the center and follow the marked dots.',
+    'odd-one-out': 'Scan one row at a time. Shape spotting is available in Settings.',
+    'quick-math': 'Start with the easy part of each expression.',
+    raindrops: 'Clear the lowest drop first.',
+    'flash-match': 'Check both the color and the shape.',
+    'color-clash': 'Say the ink color quietly to yourself.',
+    'rail-router': 'Set the next junction before the train arrives.',
+    'ebb-flow': 'Read POINTS or MOVES before choosing a direction.',
+    'block-escape': 'Make room for the blocker before moving your friend.',
+    'order-up': 'Turn each order into a short story.',
+    'shape-shift': 'Follow one distinctive corner as you rotate the shape.',
+  };
+  const done = getTodayPlayCount();
+  const complete = done >= 3;
+  const recent = previous.slice(0, 5);
+  const average = recent.length ? Math.round(recent.reduce((a, b) => a + b.score, 0) / recent.length) : null;
+  const headline = first ? 'Your first score is set.' : newBest ? 'A new personal best.' : 'Another little step forward.';
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center gap-6 py-6 text-center"
-    >
-      <motion.div
-        initial={{ rotate: -8, scale: 0.8 }}
-        animate={{ rotate: 0, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 220, damping: 12 }}
-        className="text-6xl"
-      >
-        {isNewBest ? '🏆' : '✨'}
-      </motion.div>
-
-      <div>
-        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">
-          {isNewBest ? 'New Best Score!' : result.score === 0 ? 'Ready for another try?' : 'Nice work!'}
-        </h2>
-        <div className="mt-4 text-6xl font-extrabold tabular-nums" style={{ color: category.accent }}>
-          {result.score}
-        </div>
-        <div className="mt-1 text-sm font-semibold text-slate-400 dark:text-slate-500">this run</div>
+    <div className="ml-results">
+      <div className="ml-results-art">
+        <GameArt gameId={game.id} category={game.category} fallback={game.icon} title="" className="h-14 w-14" />
       </div>
-
-      {result.stats && result.stats.length > 0 && (
-        <div className="grid w-full grid-cols-2 gap-3">
-          {result.stats.map((s) => (
-            <div key={s.label} className="rounded-2xl bg-white/70 p-3 shadow-sm ring-1 ring-slate-100 dark:bg-white/10 dark:ring-white/10">
-              <div className="text-lg font-extrabold text-slate-700 dark:text-slate-100">{s.value}</div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{s.label}</div>
-            </div>
+      <p className="ml-eyebrow">{run.mode === 'practice' ? 'PRACTICE COMPLETE' : game.title}</p>
+      <h1>{headline}</h1>
+      <div className="ml-result-score">
+        {result.score}
+        <span>points · {run.mode === 'practice' ? 'practice record' : 'this run'}</span>
+      </div>
+      <div className="ml-result-stats">
+        {result.stats?.map((stat) => (
+          <div key={stat.label}>
+            <strong>{stat.value}</strong>
+            <span>{stat.label}</span>
+          </div>
+        ))}
+      </div>
+      <p className="ml-result-insight">
+        {average === null
+          ? 'A starting point to build on. Your next round is a new chance.'
+          : result.score >= average
+            ? `${result.score - average} points above your recent average. Keep that rhythm.`
+            : `Your recent average is ${average}. Every practice round helps you learn the game.`}{' '}
+        <span>Best in this mode: {best}</span>
+      </p>
+      <p className="ml-result-tip">Next time: {tip[game.id]}</p>
+      {awards.length > 0 && (
+        <div className="ml-award-toast" role="status">
+          <Icon name="spark" />
+          <span>
+            <strong>A new keepsake</strong>
+            {awards.join(' · ')}
+          </span>
+        </div>
+      )}
+      <div className="ml-result-loop">
+        <span>{complete ? 'Today’s loop complete' : `${Math.min(done, 3)} of 3 rounds today`}</span>
+        <div>
+          {[0, 1, 2].map((i) => (
+            <i key={i} className={i < done ? 'done' : ''} />
           ))}
         </div>
-      )}
-
-      <div className="w-full rounded-2xl px-4 py-3 font-bold" style={{ background: category.soft, color: category.accent }}>
-        Best score: {best}
-        {best > result.score && (
-          <div className="mt-1 text-sm font-semibold">{best - result.score} points to match your best</div>
-        )}
+        <p>
+          {complete
+            ? `You finished ${done} rounds today${today.length ? ` across ${new Set(today.map((r) => r.gameId)).size} games` : ''}. Tomorrow brings a fresh mix.`
+            : 'Every finished round counts, including your favorites.'}
+        </p>
       </div>
-
-      {/* Up next: chain the coach's next pick so the session keeps flowing. */}
-      {nextGame && nextCategory && onNext && (
-        <button
-          onClick={onNext}
-          className="ml-tap w-full rounded-2xl p-4 text-left shadow-sm ring-1 ring-slate-100 transition-transform active:scale-[0.98] dark:ring-white/10"
-          style={{ background: nextCategory.soft }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-2xl shadow-sm" style={{ background: '#fff' }}>
-              {nextGame.icon}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-xs font-bold uppercase tracking-wide" style={{ color: nextCategory.accent }}>
-                Up next · {pickReason(nextGame)}
-              </span>
-              <span className="block truncate text-base font-extrabold text-slate-800 dark:text-slate-900">{nextGame.title}</span>
-            </span>
-            <span className="flex-none text-xl font-extrabold" style={{ color: nextCategory.accent }} aria-hidden>
-              →
-            </span>
-          </div>
+      {loop && !complete ? (
+        <button className="ml-primary" onClick={onNext}>
+          Next round · {nextTitle}
+          <Icon name="arrow" />
+        </button>
+      ) : loop && complete ? (
+        <Link className="ml-primary" to="/stats">
+          See your progress
+          <Icon name="arrow" />
+        </Link>
+      ) : (
+        <button className="ml-primary" onClick={onReplay}>
+          Play again
+          <Icon name="play" size={18} />
         </button>
       )}
-
-      <div className="flex w-full gap-3">
-        <Button variant="ghost" className="flex-1" onClick={onHome}>
-          Home
-        </Button>
-        <Button accent={category.accent} className="flex-1" onClick={onReplay}>
-          Play Again
-        </Button>
+      <div className="ml-result-actions">
+        {loop && (
+          <button className="ml-text-button" onClick={onReplay}>
+            Play again
+          </button>
+        )}
+        <Link className="ml-text-button" to="/">
+          Explore games
+        </Link>
+        {run.mode === 'daily' && (
+          <button className="ml-text-button" onClick={onShare}>
+            <Icon name="share" size={18} />
+            Challenge a friend
+          </button>
+        )}
       </div>
-    </motion.div>
+      {complete && <ReminderPrompt />}
+      <p className="ml-save-note">{syncLabel()}</p>
+    </div>
   );
 }

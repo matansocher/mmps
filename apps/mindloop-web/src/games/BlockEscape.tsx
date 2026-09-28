@@ -4,8 +4,10 @@ import type { KeyboardEvent, PointerEvent } from 'react';
 import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { useTheme } from '../hooks/useTheme';
 import { CATEGORIES } from '../lib/categories';
+import { seededRandom } from '../lib/progress';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
 import {
@@ -17,6 +19,7 @@ import {
   ESCAPE_TARGET,
   escapeDragOffset,
   escapeDragRange,
+  escapeHint,
   escapeScore,
   escapeTimeRemaining,
   isEscapeSolved,
@@ -41,7 +44,11 @@ type Drag = {
 type DragPreview = { readonly id: string; readonly offset: number };
 
 export function BlockEscape({ onFinish }: GameProps) {
-  const [run, setRun] = useState(() => createEscapeSession(createEscapePuzzle(0)));
+  const { clock, practice, mode, day } = useGameRuntime();
+  const untimed = practice || mode === 'daily';
+  const [run, setRun] = useState(() => createEscapeSession(createEscapePuzzle(mode === 'daily' ? 2 : 0, undefined, mode === 'daily' ? seededRandom(`escape-v2-${day}`) : Math.random)));
+  const [hintCount, setHintCount] = useState(0);
+  const [offerHint, setOfferHint] = useState(false);
   const runRef = useRef(run);
   const [selected, setSelected] = useState(ESCAPE_TARGET);
   const [counting, setCounting] = useState(true);
@@ -73,45 +80,47 @@ export function BlockEscape({ onFinish }: GameProps) {
     drag.current = null;
     const result = runRef.current;
     onFinish({
+      variant: mode === 'daily' ? `${day}${hintCount ? '-guided' : ''}` : hintCount ? 'guided' : 'default',
       score: result.score,
       stats: [
         { label: 'Friends freed', value: String(result.solved) },
         { label: 'Moves', value: String(result.moves) },
         { label: 'Undos', value: String(result.undos) },
-        { label: 'Run length', value: '60 seconds' },
+        { label: 'Pace', value: untimed ? 'Untimed' : '60 seconds' },
+        { label: 'Hints used', value: String(hintCount) },
       ],
     });
-  }, [onFinish]);
+  }, [day, hintCount, mode, onFinish, untimed]);
 
   const canPlay = useCallback(() => {
     if (deadline.current === null || finished.current) return false;
-    if (escapeTimeRemaining(deadline.current, Date.now()) === 0) {
+    if (!untimed && escapeTimeRemaining(deadline.current, clock.now()) === 0) {
       finish();
       return false;
     }
     return true;
-  }, [finish]);
+  }, [clock, finish, untimed]);
 
   const start = useCallback(() => {
     if (deadline.current !== null) return;
-    deadline.current = Date.now() + ESCAPE_SECONDS * 1000;
+    deadline.current = clock.now() + ESCAPE_SECONDS * 1000;
     setCounting(false);
-  }, []);
+  }, [clock]);
 
   useEffect(() => {
-    if (counting) return;
+    if (counting || untimed) return;
     const tick = () => {
-      const time = escapeTimeRemaining(deadline.current!, Date.now());
+      const time = escapeTimeRemaining(deadline.current!, clock.now());
       setRemaining(time);
       if (time === 0) finish();
     };
-    const timer = window.setInterval(tick, 100);
+    const timer = clock.setInterval(tick, 100);
     document.addEventListener('visibilitychange', tick);
     return () => {
-      window.clearInterval(timer);
+      clock.clearInterval(timer);
       document.removeEventListener('visibilitychange', tick);
     };
-  }, [counting, finish]);
+  }, [clock, counting, finish, untimed]);
 
   useEffect(() => {
     if (!counting) friendButton.current?.focus({ preventScroll: true });
@@ -119,17 +128,35 @@ export function BlockEscape({ onFinish }: GameProps) {
 
   useEffect(() => {
     if (!won) return;
-    const timer = window.setTimeout(() => {
+    const timer = clock.setTimeout(() => {
       if (!canPlay()) return;
+      if (untimed) {
+        finish();
+        return;
+      }
       const current = runRef.current;
       const next = createEscapePuzzle(current.solved, current.puzzle.board);
       commit(advanceEscapeSession(current, next));
       setSelected(ESCAPE_TARGET);
       setNotice('New board. Keep the escapes coming!');
     }, 350);
-    return () => window.clearTimeout(timer);
-  }, [won, run.solved, canPlay, commit]);
+    return () => clock.clearTimeout(timer);
+  }, [won, run.solved, canPlay, commit, clock, untimed, finish]);
 
+  useEffect(() => {
+    if (counting || won) return;
+    setOfferHint(false);
+    const id = clock.setTimeout(() => setOfferHint(true), 12000);
+    return () => clock.clearTimeout(id);
+  }, [run.state.board, counting, won, clock]);
+  const showHint = () => {
+    const hint = escapeHint(run.state.board);
+    if (!hint) return;
+    setHintCount((n) => n + 1);
+    setSelected(hint.id);
+    const block = run.state.board.find((b) => b.id === hint.id)!;
+    setNotice(`Try ${hint.id === 'friend' ? 'your friend' : `block ${hint.id}`} one square ${block.axis === 'horizontal' ? (hint.delta < 0 ? 'left' : 'right') : hint.delta < 0 ? 'up' : 'down'}.`);
+  };
   const move = (id: string, delta: number) => {
     if (!canPlay() || drag.current) return;
     const next = moveEscapeSession(runRef.current, { id, delta });
@@ -205,14 +232,25 @@ export function BlockEscape({ onFinish }: GameProps) {
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <div className="relative flex flex-1 flex-col">
         {counting && <CountdownOverlay accent={ACCENT} onDone={start} />}
-        <GameStage hud={<HUD accent={ACCENT} score={run.score} time={remaining} timeFraction={remaining / ESCAPE_SECONDS} status={String(run.solved)} statusLabel="Freed" />}>
-          <div className="w-full max-w-sm space-y-4" onKeyDown={onKeyDown}>
+        <GameStage
+          hud={
+            <HUD
+              accent={ACCENT}
+              score={run.score}
+              time={untimed ? undefined : remaining}
+              timeFraction={untimed ? undefined : remaining / ESCAPE_SECONDS}
+              status={String(run.solved)}
+              statusLabel="Freed"
+            />
+          }
+        >
+          <div className="ml-escape w-full max-w-sm space-y-4" onKeyDown={onKeyDown}>
             <div className="text-center">
               <h2 className="text-lg font-bold">{TITLES[Math.min(4, run.solved)]}</h2>
               <p id="escape-instructions" className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                 Drag blocks to free your friend through the gate.
                 <br />
-                Solve as many boards as you can in one minute.
+                {untimed ? 'One puzzle. Take all the time you need.' : 'Solve as many boards as you can in one minute.'}
               </p>
             </div>
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
@@ -295,7 +333,9 @@ export function BlockEscape({ onFinish }: GameProps) {
               </span>
             </div>
             <div className="space-y-2">
-              <p className="text-center text-sm font-semibold">{won ? 'Free at last! Next board coming...' : `${name} selected · ${horizontal ? 'horizontal' : 'vertical'}`}</p>
+              <p className="text-center text-sm font-semibold">
+                {won ? (untimed ? 'Free at last! Nicely done.' : 'Free at last! Next board coming...') : `${name} selected · ${horizontal ? 'horizontal' : 'vertical'}`}
+              </p>
               <div className="grid grid-cols-3 gap-2">
                 {[-1, 1].map((delta) => (
                   <button
@@ -318,6 +358,11 @@ export function BlockEscape({ onFinish }: GameProps) {
                 </button>
               </div>
             </div>
+            {offerHint && (
+              <button className="ml-text-button" onClick={showHint}>
+                A little hint?
+              </button>
+            )}
             <p role="status" aria-live="polite" className="min-h-10 text-center text-sm text-slate-600 dark:text-slate-300">
               {notice}
             </p>

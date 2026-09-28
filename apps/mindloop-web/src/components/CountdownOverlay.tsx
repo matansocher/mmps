@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 
 interface Props {
   accent: string;
@@ -8,6 +9,7 @@ interface Props {
 
 /** A 3 · 2 · 1 · GO! overlay shown before a game starts. */
 export function CountdownOverlay({ accent, onDone }: Props) {
+  const { clock } = useGameRuntime();
   const [n, setN] = useState(3);
   const doneRef = useRef(onDone);
   const completed = useRef(false);
@@ -23,9 +25,9 @@ export function CountdownOverlay({ accent, onDone }: Props) {
       }
       return;
     }
-    const id = window.setTimeout(() => setN((v) => v - 1), n === 0 ? 500 : 750);
-    return () => window.clearTimeout(id);
-  }, [n]);
+    const id = clock.setTimeout(() => setN((v) => v - 1), n === 0 ? 500 : 750);
+    return () => clock.clearTimeout(id);
+  }, [clock, n]);
 
   const label = n <= 0 ? 'GO!' : String(n);
 

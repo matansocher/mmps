@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { Home } from './pages/Home';
-import { GameShell } from './pages/GameShell';
-import { Stats } from './pages/Stats';
-import { Settings } from './pages/Settings';
 import { NavBar } from './components/NavBar';
-import { DailyProgressModal } from './components/DailyProgressModal';
-import { Onboarding, hasOnboarded } from './components/Onboarding';
-import { initPlayerSync } from './lib/player-sync';
+import { hasOnboarded, Onboarding } from './components/Onboarding';
+import { track } from './lib/analytics';
+import { startPlayerSync } from './lib/player-sync';
+import { initializeTelegram } from './lib/telegram';
+import { GameShell } from './pages/GameShell';
+import { Home } from './pages/Home';
+import { Settings } from './pages/Settings';
+import { Stats } from './pages/Stats';
 
 export default function App() {
+  const tracked = useRef(false);
   const location = useLocation();
   const isGame = location.pathname.startsWith('/game/');
   const [onboarding, setOnboarding] = useState(() => !hasOnboarded());
@@ -21,23 +23,27 @@ export default function App() {
     return () => window.removeEventListener('mindloop:replay-onboarding', replay);
   }, []);
 
-  // Reconcile local progress with the backend once on startup (no-op when
-  // there's no Telegram / dev identity — localStorage keeps working offline).
   useEffect(() => {
-    const tg = (window as unknown as { Telegram?: { WebApp?: { ready?: () => void; expand?: () => void } } }).Telegram?.WebApp;
-    tg?.ready?.();
-    tg?.expand?.();
-    void initPlayerSync();
+    const cleanupTelegram = initializeTelegram();
+    const cleanupSync = startPlayerSync();
+    if (!tracked.current) {
+      track('app_open');
+      if (new URLSearchParams(window.location.search).get('source') === 'reminder') track('reminder_open');
+      tracked.current = true;
+    }
+    return () => {
+      cleanupTelegram();
+      cleanupSync();
+    };
   }, []);
 
   return (
     <>
       {!isGame && <NavBar />}
-      {!isGame && !onboarding && <DailyProgressModal />}
       {onboarding && <Onboarding onClose={() => setOnboarding(false)} />}
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/game/:gameId" element={<GameShell key={location.pathname} />} />
+        <Route path="/game/:gameId" element={<GameShell key={location.pathname + location.search} />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Home />} />

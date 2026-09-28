@@ -4,11 +4,12 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { useCountdown } from '../hooks/useCountdown';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { useTheme } from '../hooks/useTheme';
 import { CATEGORIES } from '../lib/categories';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
-import { EBB_GREEN as GREEN, EBB_ORANGE as ORANGE, getEbbFlowDifficulty, getEbbTarget, getReactionLevel, getReactionProgress, makeEbbRound } from './reaction-progression';
+import { getEbbFlowDifficulty, getEbbTarget, getReactionLevel, getReactionProgress, EBB_GREEN as GREEN, makeEbbRound, EBB_ORANGE as ORANGE } from './reaction-progression';
 import type { EbbDirection as Dir, EbbRound } from './reaction-progression';
 
 const accent = CATEGORIES.flexibility.accent;
@@ -24,6 +25,7 @@ const KEYMAP: Record<string, Dir> = {
 };
 
 export default function EbbFlow({ onFinish }: GameProps) {
+  const { clock } = useGameRuntime();
   const prefersReducedMotion = useReducedMotion();
   const { reducedMotion: settingsReducedMotion, theme } = useTheme();
   const reducedMotion = prefersReducedMotion || settingsReducedMotion;
@@ -45,7 +47,7 @@ export default function EbbFlow({ onFinish }: GameProps) {
     locked.current = flash !== null;
   }, [flash]);
   const nextRound = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(nextRound.current), []);
+  useEffect(() => () => clock.clearTimeout(nextRound.current), [clock]);
 
   const finish = useCallback(() => {
     if (finished.current) return;
@@ -60,7 +62,7 @@ export default function EbbFlow({ onFinish }: GameProps) {
     });
   }, [onFinish]);
 
-  const { remaining, running, reset, addTime, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
+  const { remaining, running, reset, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
 
   const start = useCallback(() => {
     setCounting(false);
@@ -85,23 +87,26 @@ export default function EbbFlow({ onFinish }: GameProps) {
         setCombo(0);
         scoreRef.current = Math.max(0, scoreRef.current - 8);
         setScore(scoreRef.current);
-        addTime(-1);
         setFlash('bad');
         playSound('wrong');
       }
-      nextRound.current = window.setTimeout(() => {
-        if (finished.current) return;
-        setRound(makeEbbRound(correctRef.current, round));
-        setCompleted(correctRef.current);
-        setIndex((i) => i + 1);
-        setFlash(null);
-      }, dir === target ? 250 : 800);
+      nextRound.current = clock.setTimeout(
+        () => {
+          if (finished.current) return;
+          setRound(makeEbbRound(correctRef.current, round));
+          setCompleted(correctRef.current);
+          setIndex((i) => i + 1);
+          setFlash(null);
+        },
+        dir === target ? 250 : 800,
+      );
     },
-    [counting, running, isExpired, addTime, round, combo, difficulty.reward],
+    [counting, running, isExpired, round, clock, combo, difficulty.reward],
   );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (clock.isPaused()) return;
       if (e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       const dir = KEYMAP[e.key];
       if (dir) {
@@ -111,7 +116,7 @@ export default function EbbFlow({ onFinish }: GameProps) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [answer]);
+  }, [answer, clock]);
 
   const isOrange = round.color === ORANGE;
 
@@ -120,7 +125,7 @@ export default function EbbFlow({ onFinish }: GameProps) {
       {counting && <CountdownOverlay accent={accent} onDone={start} />}
       <GameStage hud={<HUD accent={accent} score={score} time={remaining} timeFraction={remaining / TOTAL_TIME} statusLabel="Streak" status={String(combo)} />}>
         <p className="mb-2 text-center text-sm font-bold text-slate-600 dark:text-slate-300">{getReactionProgress(completed)}</p>
-        <div className="mb-4 rounded-2xl px-4 py-2 text-center text-sm font-extrabold text-slate-950 shadow-sm" style={{ background: isOrange ? ORANGE : GREEN }}>
+        <div className="mb-2 rounded-2xl px-4 py-2 text-center text-sm font-extrabold text-slate-950 shadow-sm" style={{ background: isOrange ? ORANGE : GREEN }}>
           {isOrange ? 'ORANGE → where it MOVES' : 'GREEN → where it POINTS'}
         </div>
 
@@ -128,8 +133,8 @@ export default function EbbFlow({ onFinish }: GameProps) {
           key={index}
           animate={!reducedMotion && flash === 'bad' ? { x: [0, -8, 8, 0] } : {}}
           transition={{ duration: 0.22 }}
-          className="relative mb-8 flex items-center justify-center overflow-hidden rounded-3xl bg-white/70 shadow-sm ring-1 ring-slate-200 dark:bg-white/10 dark:ring-white/10"
-          style={{ width: 'min(86vw, 340px)', height: 220 }}
+          className="relative mb-3 flex items-center justify-center overflow-hidden rounded-3xl bg-white/70 shadow-sm ring-1 ring-slate-200 dark:bg-white/10 dark:ring-white/10"
+          style={{ width: 'min(86vw, 340px)', height: 'clamp(130px, 25dvh, 190px)' }}
           role="img"
           aria-label={`Arrow points ${round.points} and moves ${round.moves}`}
         >
@@ -173,11 +178,7 @@ export default function EbbFlow({ onFinish }: GameProps) {
         </motion.div>
 
         <p role="status" className="mb-3 min-h-6 text-center text-sm font-bold text-slate-600 dark:text-slate-300">
-          {flash === 'ok'
-            ? 'Correct!'
-            : flash === 'bad'
-              ? `${isOrange ? 'Moves' : 'Points'} ${GLYPH[isOrange ? round.moves : round.points]} · −8 points, −1s`
-              : 'Tap a direction or use the arrow keys'}
+          {flash === 'ok' ? 'Correct!' : flash === 'bad' ? `${isOrange ? 'Moves' : 'Points'} ${GLYPH[isOrange ? round.moves : round.points]} · −8 points` : 'Tap a direction or use the arrow keys'}
         </p>
         <div className="grid grid-cols-3 gap-2" style={{ width: 'min(80vw, 300px)' }}>
           <div />

@@ -290,3 +290,21 @@ export function advanceEscapeSession(session: EscapeSession, puzzle: EscapePuzzl
 export function escapeTimeRemaining(deadline: number, now: number): number {
   return Math.max(0, Math.min(ESCAPE_SECONDS, (deadline - now) / 1000));
 }
+
+// Breadth-first search uses one-square edges, matching the displayed move count.
+export function escapeHint(board: EscapeBoard): EscapeMove | null {
+  const queue: { board: EscapeBoard; first: EscapeMove | null }[] = [{ board, first: null }];
+  const seen = new Set([key(board)]);
+  for (let index = 0; index < queue.length && index < 20000; index++) {
+    const current = queue[index];
+    if (isEscapeSolved(current.board)) return current.first;
+    for (const move of escapeMoves(current.board)) {
+      const next = moveEscapeBlock(current.board, move)!;
+      const id = key(next);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      queue.push({ board: next, first: current.first ?? move });
+    }
+  }
+  return null;
+}

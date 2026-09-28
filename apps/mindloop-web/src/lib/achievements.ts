@@ -1,127 +1,49 @@
-import { GAMES } from './games';
-import { getBestScore } from './storage';
-import {
-  getGamesPlayedCount,
-  getStreak,
-  getTotalPlays,
-} from './history';
+import { GAME_MILESTONES, getProgress, progressCounts, streakForDays } from './progress';
 
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  unlocked: boolean;
-  /** 0..1 progress toward unlocking. */
-  progress: number;
-}
-
-/** Best single-run score achieved across all games. */
-function topScore(): number {
-  let top = 0;
-  for (const g of GAMES) {
-    const b = getBestScore(g.id);
-    if (b > top) top = b;
-  }
-  return top;
-}
-
+export type Achievement = { readonly id: string; readonly title: string; readonly description: string; readonly unlocked: boolean; readonly progress: number; readonly icon: string };
+const DEFINITIONS = [
+  ['first-steps', 'First little win', 'Complete your first round', 1, 'plays'],
+  ['getting-warmed-up', 'Finding your rhythm', 'Complete 10 rounds', 10, 'plays'],
+  ['dedicated', 'Making time', 'Complete 50 rounds', 50, 'plays'],
+  ['centurion', 'A hundred little wins', 'Complete 100 rounds', 100, 'plays'],
+  ['explorer', 'Curious mind', 'Try 5 different games', 5, 'games'],
+  ['completionist', 'Around the loop', 'Try all 14 games', 14, 'games'],
+  ['daily-loop', 'A moment for you', 'Finish a daily loop', 3, 'daily'],
+  ['on-a-roll', 'On a roll', 'Reach a 3-day streak', 3, 'streak'],
+  ['unstoppable', 'A week of play', 'Reach a 7-day streak', 7, 'streak'],
+] as const;
 export function getAchievements(): Achievement[] {
-  const totalPlays = getTotalPlays();
-  const distinct = getGamesPlayedCount();
-  const streak = getStreak();
-  const top = topScore();
-  const totalGames = GAMES.length;
-
-  const clampProgress = (value: number, target: number) =>
-    Math.max(0, Math.min(1, target === 0 ? 0 : value / target));
-
-  const list: Achievement[] = [
-    {
-      id: 'first-steps',
-      title: 'First Steps',
-      description: 'Play your very first game',
-      icon: '👟',
-      unlocked: totalPlays >= 1,
-      progress: clampProgress(totalPlays, 1),
-    },
-    {
-      id: 'getting-warmed-up',
-      title: 'Getting Warmed Up',
-      description: 'Play 10 games',
-      icon: '🔥',
-      unlocked: totalPlays >= 10,
-      progress: clampProgress(totalPlays, 10),
-    },
-    {
-      id: 'dedicated',
-      title: 'Dedicated',
-      description: 'Play 50 games',
-      icon: '💪',
-      unlocked: totalPlays >= 50,
-      progress: clampProgress(totalPlays, 50),
-    },
-    {
-      id: 'centurion',
-      title: 'Centurion',
-      description: 'Play 100 games',
-      icon: '💯',
-      unlocked: totalPlays >= 100,
-      progress: clampProgress(totalPlays, 100),
-    },
-    {
-      id: 'explorer',
-      title: 'Explorer',
-      description: 'Try 5 different games',
-      icon: '🧭',
-      unlocked: distinct >= 5,
-      progress: clampProgress(distinct, 5),
-    },
-    {
-      id: 'completionist',
-      title: 'Completionist',
-      description: 'Try every game at least once',
-      icon: '🗺️',
-      unlocked: distinct >= totalGames,
-      progress: clampProgress(distinct, totalGames),
-    },
-    {
-      id: 'high-scorer',
-      title: 'High Scorer',
-      description: 'Score 500+ in any game',
-      icon: '⭐',
-      unlocked: top >= 500,
-      progress: clampProgress(top, 500),
-    },
-    {
-      id: 'elite',
-      title: 'Elite',
-      description: 'Score 1000+ in any game',
-      icon: '🌟',
-      unlocked: top >= 1000,
-      progress: clampProgress(top, 1000),
-    },
-    {
-      id: 'on-a-roll',
-      title: 'On a Roll',
-      description: 'Reach a 3-day streak',
-      icon: '📅',
-      unlocked: streak >= 3,
-      progress: clampProgress(streak, 3),
-    },
-    {
-      id: 'unstoppable',
-      title: 'Unstoppable',
-      description: 'Reach a 7-day streak',
-      icon: '🚀',
-      unlocked: streak >= 7,
-      progress: clampProgress(streak, 7),
-    },
+  const progress = getProgress();
+  const counts = progressCounts(progress);
+  const values = {
+    plays: Object.values(counts.games).reduce((a, b) => a + b, 0),
+    games: Object.keys(counts.games).filter((g) => g !== 'warm-up').length,
+    daily: Math.max(0, ...Object.values(counts.days)),
+    streak: streakForDays(Object.keys(counts.days)).longest,
+  };
+  const list = DEFINITIONS.map(([id, title, description, target, kind]) => ({ id, title, description, unlocked: !!progress.awards[id], progress: Math.min(1, values[kind] / target), icon: 'leaf' }));
+  return [
+    ...list,
+    ...GAME_MILESTONES.map((m) => ({
+      id: `mastery-${m.game}`,
+      title: m.title,
+      description: m.description,
+      unlocked: !!progress.awards[`mastery-${m.game}`],
+      progress: progress.awards[`mastery-${m.game}`] ? 1 : 0,
+      icon: 'leaf',
+    })),
+    ...['high-scorer', 'elite']
+      .filter((id) => progress.awards[id])
+      .map((id) => ({
+        id,
+        title: id === 'elite' ? 'Elite · original collection' : 'High scorer · original collection',
+        description: 'Earned before the new scoring system',
+        unlocked: true,
+        progress: 1,
+        icon: 'leaf',
+      })),
   ];
-
-  return list;
 }
-
 export function getUnlockedCount(): number {
   return getAchievements().filter((a) => a.unlocked).length;
 }

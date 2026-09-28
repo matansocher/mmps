@@ -4,6 +4,7 @@ import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
 import { useCountdown } from '../hooks/useCountdown';
+import { useGameRuntime } from '../hooks/useGameRuntime';
 import { CATEGORIES } from '../lib/categories';
 import { playSound } from '../lib/sound';
 import type { GameProps } from '../lib/types';
@@ -29,6 +30,7 @@ function ShapeGlyph({ shape, color, size = 120 }: { readonly shape: Sym['shape']
 }
 
 export default function FlashMatch({ onFinish }: GameProps) {
+  const { clock } = useGameRuntime();
   const [counting, setCounting] = useState(true);
   const [prev, setPrev] = useState<Sym | null>(null);
   const [current, setCurrent] = useState<Sym>(() => makeFlashSymbol());
@@ -48,7 +50,7 @@ export default function FlashMatch({ onFinish }: GameProps) {
   }, [flash]);
   const seedStarted = useRef(false);
   const nextRound = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(nextRound.current), []);
+  useEffect(() => () => clock.clearTimeout(nextRound.current), [clock]);
 
   const finish = useCallback(() => {
     if (finished.current) return;
@@ -63,7 +65,7 @@ export default function FlashMatch({ onFinish }: GameProps) {
     });
   }, [onFinish]);
 
-  const { remaining, running, reset, addTime, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
+  const { remaining, running, reset, isExpired } = useCountdown({ seconds: TOTAL_TIME, autoStart: false, onExpire: finish });
 
   const start = useCallback(() => {
     setCounting(false);
@@ -89,20 +91,22 @@ export default function FlashMatch({ onFinish }: GameProps) {
         setCombo(0);
         scoreRef.current = Math.max(0, scoreRef.current - 15);
         setScore(scoreRef.current);
-        addTime(-1.5);
         setFlash('bad');
         playSound('wrong');
       }
 
-      nextRound.current = window.setTimeout(() => {
-        if (finished.current) return;
-        setPrev(current);
-        setCurrent(nextFlashSymbol(current, correctRef.current));
-        setCompleted(correctRef.current);
-        setFlash(null);
-      }, right ? 250 : 800);
+      nextRound.current = clock.setTimeout(
+        () => {
+          if (finished.current) return;
+          setPrev(current);
+          setCurrent(nextFlashSymbol(current, correctRef.current));
+          setCompleted(correctRef.current);
+          setFlash(null);
+        },
+        right ? 250 : 800,
+      );
     },
-    [counting, prev, current, running, isExpired, addTime, combo, difficulty.reward],
+    [counting, prev, running, isExpired, current, clock, combo, difficulty.reward],
   );
 
   const firstMove = prev === null;
@@ -117,6 +121,7 @@ export default function FlashMatch({ onFinish }: GameProps) {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (clock.isPaused()) return;
       if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       const key = event.key.toLowerCase();
       if (!['arrowleft', 'arrowright', 'n', 'y'].includes(key)) return;
@@ -125,7 +130,7 @@ export default function FlashMatch({ onFinish }: GameProps) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [answer]);
+  }, [answer, clock]);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -168,7 +173,7 @@ export default function FlashMatch({ onFinish }: GameProps) {
                 {flash === 'ok'
                   ? 'Correct!'
                   : flash === 'bad'
-                    ? `${current.shape === prev.shape && current.color === prev.color ? 'They match' : 'Different symbol'} · −15 points, −1.5s`
+                    ? `${current.shape === prev.shape && current.color === prev.color ? 'Both shape and color match' : current.shape === prev.shape ? 'Same shape, different color' : current.color === prev.color ? 'Same color, different shape' : 'Both shape and color changed'} · −15 points`
                     : 'Compare with the last symbol you saw'}
               </p>
               <div className="grid w-full grid-cols-2 gap-3">

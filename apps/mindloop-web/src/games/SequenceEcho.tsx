@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CATEGORIES } from '../lib/categories';
-import type { GameProps } from '../lib/types';
-import { cx, randInt } from '../lib/utils';
-import { playSound } from '../lib/sound';
+import { CountdownOverlay } from '../components/CountdownOverlay';
 import { GameStage } from '../components/GameStage';
 import { HUD } from '../components/HUD';
-import { CountdownOverlay } from '../components/CountdownOverlay';
+import { useGameRuntime } from '../hooks/useGameRuntime';
+import { CATEGORIES } from '../lib/categories';
+import { playPad, playSound } from '../lib/sound';
+import type { GameProps } from '../lib/types';
+import { cx, randInt } from '../lib/utils';
 
 const accent = CATEGORIES.memory.accent;
 
@@ -19,6 +20,7 @@ const PADS = [
 type Status = 'watch' | 'input' | 'complete' | 'over';
 
 export default function SequenceEcho({ onFinish }: GameProps) {
+  const { clock, practice } = useGameRuntime();
   const [counting, setCounting] = useState(true);
   const [sequence, setSequence] = useState<number[]>([]);
   const [active, setActive] = useState<number | null>(null);
@@ -30,38 +32,49 @@ export default function SequenceEcho({ onFinish }: GameProps) {
   const statusRef = useRef<Status>('watch');
   const inputIndexRef = useRef(0);
   const flashTimer = useRef<number | undefined>(undefined);
+  const mistakes = useRef(0);
   const started = useRef(false);
 
-  const clearTimers = () => {
-    timers.current.forEach((t) => window.clearTimeout(t));
+  const clearTimers = useCallback(() => {
+    timers.current.forEach((t) => clock.clearTimeout(t));
     timers.current = [];
-    window.clearTimeout(flashTimer.current);
-  };
-  useEffect(() => () => clearTimers(), []);
+    clock.clearTimeout(flashTimer.current);
+  }, [clock]);
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
-  const playSequence = useCallback((seq: number[]) => {
-    clearTimers();
-    statusRef.current = 'watch';
-    setStatus('watch');
-    setActive(null);
-    inputIndexRef.current = 0;
-    setInputIndex(0);
-    const step = Math.max(350, 700 - seq.length * 25);
-    seq.forEach((pad, i) => {
+  const playSequence = useCallback(
+    (seq: number[]) => {
+      clearTimers();
+      statusRef.current = 'watch';
+      setStatus('watch');
+      setActive(null);
+      inputIndexRef.current = 0;
+      setInputIndex(0);
+      const step = Math.max(350, 700 - seq.length * 25);
+      seq.forEach((pad, i) => {
+        timers.current.push(
+          clock.setTimeout(
+            () => {
+              setActive(pad);
+              playPad(pad);
+            },
+            i * step + 150,
+          ),
+        );
+        timers.current.push(clock.setTimeout(() => setActive(null), i * step + 150 + step * 0.6));
+      });
       timers.current.push(
-        window.setTimeout(() => setActive(pad), i * step + 150),
+        clock.setTimeout(
+          () => {
+            statusRef.current = 'input';
+            setStatus('input');
+          },
+          seq.length * step + 200,
+        ),
       );
-      timers.current.push(
-        window.setTimeout(() => setActive(null), i * step + 150 + step * 0.6),
-      );
-    });
-    timers.current.push(
-      window.setTimeout(() => {
-        statusRef.current = 'input';
-        setStatus('input');
-      }, seq.length * step + 200),
-    );
-  }, []);
+    },
+    [clearTimers, clock],
+  );
 
   const nextRound = useCallback(
     (prev: number[]) => {
@@ -80,9 +93,10 @@ export default function SequenceEcho({ onFinish }: GameProps) {
   }, [nextRound]);
 
   const flash = (pad: number) => {
-    window.clearTimeout(flashTimer.current);
+    clock.clearTimeout(flashTimer.current);
     setActive(pad);
-    flashTimer.current = window.setTimeout(() => setActive(null), 180);
+    playPad(pad);
+    flashTimer.current = clock.setTimeout(() => setActive(null), 180);
   };
 
   const handleTap = (pad: number) => {
@@ -99,35 +113,65 @@ export default function SequenceEcho({ onFinish }: GameProps) {
         setScore((s) => s + sequence.length * 10);
         setStatus('complete');
         playSound('correct');
-        timers.current.push(window.setTimeout(() => nextRound(sequence), 700));
+        timers.current.push(
+          clock.setTimeout(() => {
+            if (practice && sequence.length >= 6) {
+              onFinish({ score: score + sequence.length * 10, stats: [{ label: 'Longest completed', value: String(sequence.length) }] });
+              return;
+            }
+            nextRound(sequence);
+          }, 700),
+        );
       }
       return;
     }
 
+    if (practice && ++mistakes.current < 3) {
+      setExpected(sequence[idx]);
+      playSequence(sequence);
+      return;
+    }
     statusRef.current = 'over';
     setStatus('over');
     setExpected(sequence[idx]);
     clearTimers();
     setActive(sequence[idx]);
     playSound('wrong');
+    sequence.forEach((pad, i) => {
+      timers.current.push(
+        clock.setTimeout(
+          () => {
+            setActive(pad);
+            playPad(pad);
+          },
+          600 + i * 550,
+        ),
+        clock.setTimeout(() => setActive(null), 950 + i * 550),
+      );
+    });
     timers.current.push(
-      window.setTimeout(
-        () => onFinish({
-          score,
-          stats: [
-            { label: 'Longest completed', value: String(Math.max(0, sequence.length - 1)) },
-            { label: 'Sequence reached', value: String(sequence.length) },
-          ],
-        }),
-        1200,
+      clock.setTimeout(
+        () =>
+          onFinish({
+            score,
+            stats: [
+              { label: 'Longest completed', value: String(Math.max(0, sequence.length - 1)) },
+              { label: 'Sequence reached', value: String(sequence.length) },
+            ],
+          }),
+        1000 + sequence.length * 550,
       ),
     );
   };
 
-  const statusText = status === 'watch' ? 'Watch the order…' :
-    status === 'input' ? `Repeat it · ${inputIndex}/${sequence.length}` :
-    status === 'complete' ? `Sequence complete! +${sequence.length * 10}` :
-    `Next was pad ${(expected ?? 0) + 1}`;
+  const statusText =
+    status === 'watch'
+      ? 'Watch the order…'
+      : status === 'input'
+        ? `Repeat it · ${inputIndex}/${sequence.length}`
+        : status === 'complete'
+          ? `Sequence complete! +${sequence.length * 10}`
+          : `Next was pad ${(expected ?? 0) + 1} · here is the sequence again`;
 
   return (
     <div className="relative flex flex-1 flex-col">

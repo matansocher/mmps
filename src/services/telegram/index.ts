@@ -18,3 +18,4 @@ export type { RichButtonData } from './utils/rich-message';
 export { sendRichMessage, sendShortenedMessage, sendStyledMessage } from './utils/send-message';
 export * from './constants';
 export * from './types';
+export { sendMiniAppReminder } from './utils/send-mini-app-reminder';

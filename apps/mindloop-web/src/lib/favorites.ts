@@ -1,25 +1,14 @@
 import { syncFavorites } from './player-sync';
+import { readJson, removeJson, writeJson } from './progress';
 
 const FAV_KEY = 'mindloop:favorites';
 
 function read(): string[] {
-  try {
-    const raw = localStorage.getItem(FAV_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return readJson<string[]>(FAV_KEY, []);
 }
-
-function write(ids: string[]) {
-  try {
-    localStorage.setItem(FAV_KEY, JSON.stringify(ids));
-  } catch {
-    /* ignore */
-  }
-  syncFavorites(ids);
+function write(ids: string[]): void {
+  writeJson(FAV_KEY, ids);
+  syncFavorites();
   window.dispatchEvent(new Event('mindloop:data'));
 }
 
@@ -47,7 +36,7 @@ export function toggleFavorite(gameId: string): boolean {
 
 export function clearFavorites(): void {
   try {
-    localStorage.removeItem(FAV_KEY);
+    removeJson(FAV_KEY);
   } catch {
     /* ignore */
   }
