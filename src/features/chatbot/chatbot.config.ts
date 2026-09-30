@@ -10,6 +10,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
   },
 };
 
+const SUMMARY_KEEP_TOKENS = parseInt(env.CHATBOT_SUMMARY_KEEP_TOKENS || '8000', 10);
+
 export const CHATBOT_CONFIG = {
   // Toggle per-turn token/cost observability. Defaults on; set CHATBOT_USAGE_TRACKING=false to disable.
   usageTracking: env.CHATBOT_USAGE_TRACKING !== 'false',
@@ -23,8 +25,11 @@ export const CHATBOT_CONFIG = {
     // Secondary message-count trigger (OR with the token trigger) so very chatty short threads
     // still get compressed even when they stay under the token budget.
     triggerMessages: parseInt(env.CHATBOT_SUMMARY_TRIGGER_MESSAGES || '40', 10),
+    // The message-count trigger also requires this many tokens. Otherwise a retained tail of
+    // ~keepTokens made of short messages stays at the message count and re-summarizes every turn.
+    messageTriggerMinTokens: SUMMARY_KEEP_TOKENS * 2,
     // Keep roughly this many tokens of the most recent turns verbatim after summarizing the rest.
-    keepTokens: parseInt(env.CHATBOT_SUMMARY_KEEP_TOKENS || '8000', 10),
+    keepTokens: SUMMARY_KEEP_TOKENS,
   },
   // Bounded execution budget for a single turn. A request timeout only covers one model call,
   // and recursionLimit only bounds graph steps — these are the real per-turn ceilings.
@@ -62,6 +67,12 @@ export const CHATBOT_CONFIG = {
     maxPostsPerChat: parseInt(env.CHATBOT_IMAGE_DIGEST_MAX_POSTS || '5', 10),
   },
 };
+
+// OR'd conditions; each object's properties are AND'd.
+export const CHATBOT_SUMMARIZATION_TRIGGER = [
+  { tokens: CHATBOT_CONFIG.summarization.triggerTokens },
+  { messages: CHATBOT_CONFIG.summarization.triggerMessages, tokens: CHATBOT_CONFIG.summarization.messageTriggerMinTokens },
+];
 
 // {messages} is required — the middleware substitutes the messages being summarized there.
 export const CHATBOT_SUMMARY_PROMPT = `You are compressing the older part of a personal-assistant conversation so it can replace the original messages while staying within the token budget.

@@ -182,18 +182,20 @@ const summarization = summarizationMiddleware({
   model: this.summaryModel,                                      // gpt-5-nano, low reasoning effort
   trigger: [
     { tokens: CHATBOT_CONFIG.summarization.triggerTokens },      // ~24k (primary bound)
-    { messages: CHATBOT_CONFIG.summarization.triggerMessages },  // ~40  (OR fallback)
+    { messages: CHATBOT_CONFIG.summarization.triggerMessages,    // ~40  (OR fallback)
+      tokens: CHATBOT_CONFIG.summarization.messageTriggerMinTokens }, // AND ~16k (2x keep)
   ],
   keep: { tokens: CHATBOT_CONFIG.summarization.keepTokens },     // ~8k
   summaryPrompt: CHATBOT_SUMMARY_PROMPT,
 });
 ```
 
-- Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
+- Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** while holding at least **~16k tokens** (2× keep, so a retained tail of short messages can't re-trigger every turn) — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
 - Summaries run on the small model (`GPT_SMALL_MODEL`, `gpt-5-nano`, reasoning effort `low`, no custom temperature) — compression doesn't need the main model, and it's ~8x cheaper on input.
 - The summary is written back into state and **persisted by the checkpointer** — old turns are compressed in Mongo, not deleted.
 - This **replaced** an older manual "drop-oldest" truncation (`truncateThread`) — the middleware does it *inside* the graph loop.
 - The summary prompt is tuned to preserve durable facts (name, location, health, diet, open tasks, decisions) and to **keep the original language** (Hebrew stays Hebrew).
+- Each summary logs metadata only (message count, estimated tokens before→after, duration) under `chatbot:safe-summarization`.
 - Tunable via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
 ::: tip Checkpointer vs. summarization
@@ -323,7 +325,7 @@ A single call returns one answer. A ReAct agent loops: it reasons, decides to ca
 A LangGraph **MongoDBSaver checkpointer** snapshots graph state after each step, keyed by `thread_id` (the Telegram chatId). On the next message it reloads that thread's state. A 30-day TTL expires stale threads.
 
 **Q: The context window is limited — how do you handle long conversations?**
-`summarizationMiddleware`: past ~40 messages it compresses the oldest turns into a running summary and keeps the last ~20 verbatim. The summary is persisted by the checkpointer, so we bound tokens without dropping important facts.
+`summarizationMiddleware`: past ~24k tokens (or ~40 messages holding at least ~16k tokens) it compresses the oldest turns into a running summary and keeps the most recent ~8k tokens verbatim. The summary is persisted by the checkpointer, so we bound tokens without dropping important facts.
 
 **Q: How are tools defined and how does the model know when to use them?**
 Each tool is `tool(runner, { name, description, schema })` with a Zod schema where every field is `.describe()`d. Those descriptions (which carry each tool's trigger phrases and usage rules) are converted to JSON schema for OpenAI function-calling; the model emits a tool call, the runtime executes it, and the result re-enters the loop.
