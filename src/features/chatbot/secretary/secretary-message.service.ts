@@ -81,10 +81,12 @@ export class SecretaryMessageService {
     try {
       const other = messages.find((m) => !m.fromOwner);
       const otherName = other?.senderName || other?.senderUsername || `chat ${messages[0].chatId}`;
-      const dateStr = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), 'dd/MM/yyyy');
+      const nowLocal = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+      const dateStr = format(nowLocal, 'dd/MM/yyyy');
+      const generatedAt = format(nowLocal, 'yyyy-MM-dd HH:mm');
 
       const transcript = messages.map((m) => `${m.fromOwner ? OWNER_NAME : otherName}: ${m.text}`).join('\n');
-      const userPrompt = `Conversation with ${otherName} on ${dateStr} (use this date to resolve relative dates):\n\n${transcript}`;
+      const userPrompt = `Conversation with ${otherName} on ${dateStr} (use this date to resolve relative dates). Briefing generated at ${generatedAt} (${DEFAULT_TIMEZONE}); exclude actions due at or before this time:\n\n${transcript}`;
 
       const structured = this.model.withStructuredOutput(summarySchema, { name: 'daily_summary' });
       const usageHandler = new UsageCallbackHandler();
