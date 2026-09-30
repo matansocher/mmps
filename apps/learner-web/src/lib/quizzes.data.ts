@@ -1255,4 +1255,142 @@ export const QUIZZES: QuizQuestion[] = [
     answerIndex: 1,
     explanation: 'Route easy tasks to cheap models, cache (incl. semantic), rerank to shrink context, and stream for perceived speed.',
   },
+
+  // ===== AI Engineering: Multi-Agent Systems & Harnesses =====
+  {
+    biteId: 'ai-engineering:multi-agent-harnesses',
+    question: 'What is the key difference between a single LLM call and a ReAct agent?',
+    options: [
+      'A ReAct agent uses a bigger model',
+      'A ReAct agent loops — reason, call a tool, read the result, repeat — until it can answer',
+      'A single call can use tools but a ReAct agent cannot',
+      'There is no difference',
+    ],
+    answerIndex: 1,
+    explanation: 'A single call returns one answer. ReAct loops over reason → act → observe; LangGraph compiles it into an LLM node, a tool node, and a conditional edge bounded by a recursion limit.',
+  },
+  {
+    biteId: 'ai-engineering:multi-agent-harnesses',
+    question: 'Why does the industry now focus on harnesses, not just models?',
+    options: [
+      'Harnesses are just prompt engineering',
+      'A well-designed harness can lift the same model from ~30% to ~95% on a hard benchmark like ARC-AGI',
+      'Models no longer matter at all',
+      'Harnesses make models cheaper to train',
+    ],
+    answerIndex: 1,
+    explanation: 'The scaffolding (loop, tools, memory, context management, observability) is what makes a model reliable — treat the LLM as a processor in a larger stateful system.',
+  },
+  {
+    biteId: 'ai-engineering:multi-agent-harnesses',
+    question: 'What is the dominant real-world failure mode of multi-agent systems?',
+    options: [
+      'Out-of-memory crashes',
+      'Silent mis-routing — the wrong specialist gives a confidently wrong answer with no error to log',
+      'Too few tokens used',
+      'Tools running too fast',
+    ],
+    answerIndex: 1,
+    explanation: 'Routing adds a failure mode that throws no exception. Mitigate with routing evals, logged routing decisions, and fallbacks.',
+  },
+  {
+    biteId: 'ai-engineering:multi-agent-harnesses',
+    question: 'How do a checkpointer and summarization relate?',
+    options: [
+      'They are the same thing',
+      'Checkpointer = persistence; summarization = context bounding — orthogonal concerns that combine into durable-but-bounded memory',
+      'Summarization replaces the need for persistence',
+      'Checkpointers shrink the context window',
+    ],
+    answerIndex: 1,
+    explanation: 'Persistence makes state durable and resumable; summarization keeps that state small and cheap.',
+  },
+
+  // ===== AI Engineering: Case Study — The MMPS Chatbot Agent =====
+  {
+    biteId: 'ai-engineering:mmps-agents',
+    question: 'How does the MMPS chatbot remember conversations across restarts?',
+    options: [
+      'An in-memory MemorySaver',
+      'A MongoDB checkpointer snapshots graph state per thread_id (the Telegram chatId), with a 30-day TTL',
+      'It re-reads the Telegram chat history',
+      'It stores nothing between messages',
+    ],
+    answerIndex: 1,
+    explanation: 'A MongoDBSaver checkpointer snapshots state after each step keyed by thread_id; the next message reloads it; stale threads expire after 30 days.',
+  },
+  {
+    biteId: 'ai-engineering:mmps-agents',
+    question: 'What does it take to add a new capability to the MMPS chatbot?',
+    options: [
+      'Add a new node and edge to the LangGraph graph',
+      'A new tool file (Zod schema + runner), a barrel export, and one line in the agent descriptor tools array',
+      'Fine-tune the model',
+      'Create a new Telegram bot',
+    ],
+    answerIndex: 1,
+    explanation: 'No graph changes — the ReAct loop picks up any tool in the descriptor. Also list its read-only actions in READ_ONLY_TOOL_ACTIONS.',
+  },
+  {
+    biteId: 'ai-engineering:mmps-agents',
+    question: 'What was the "scheduler thread bug" in the single-agent design?',
+    options: [
+      'Schedulers ran on the wrong timezone',
+      "Schedulers called processMessage with the user's chat id, so scheduled prompts polluted the user's conversation thread",
+      'Schedulers used a different model',
+      'Schedulers never ran',
+    ],
+    answerIndex: 1,
+    explanation: 'Reusing the agent and sharing the thread were the same line of code. A separate threadId per scheduler (or isolated agents) prevents it.',
+  },
+  {
+    biteId: 'ai-engineering:mmps-agents',
+    question: 'Which is a real cost of moving the MMPS chatbot to multiple agents?',
+    options: [
+      'Lower latency',
+      '~1.5–3× tokens, ~2× latency, context loss at handoffs, and harder cross-domain requests',
+      'Fewer tests to write',
+      'Guaranteed better tool selection',
+    ],
+    answerIndex: 1,
+    explanation: 'Multi-agent buys focus, isolation, and per-agent models, but pays in tokens, latency, routing risk, and state design.',
+  },
+
+  // ===== System Design: Ad Click Aggregator =====
+  {
+    biteId: 'system-design:q-ad-click',
+    question: 'Why should the ad click aggregator use event-time rather than processing-time windows?',
+    options: [
+      'Event time is faster to compute',
+      'So clicks are grouped into the minute they actually happened, handling late-arriving events accurately',
+      'Processing time is not supported by Flink',
+      'Event time removes the need for a stream',
+    ],
+    answerIndex: 1,
+    explanation: 'Event-time windows (with watermarks) put a late click into the correct 1-minute bucket instead of the minute it happened to be processed.',
+  },
+  {
+    biteId: 'system-design:q-ad-click',
+    question: 'A single viral ad overloads one partition. What is the standard fix?',
+    options: [
+      'Drop some of its clicks',
+      'Append a random suffix (AdId:0-N) to spread it across partitions, then strip the suffix before summing',
+      'Move it to a separate database',
+      'Increase the stream retention',
+    ],
+    answerIndex: 1,
+    explanation: 'Salting the hot key splits the load; the processor strips the suffix so partial counts merge back into one ad.',
+  },
+  {
+    biteId: 'system-design:q-ad-click',
+    question: 'How do you avoid double-counting clicks under at-least-once delivery?',
+    options: [
+      'Switch to at-most-once and accept loss',
+      'Make tracking idempotent with a unique request id and a deduplication window',
+      'Count only on the client',
+      'Disable retries',
+    ],
+    answerIndex: 1,
+    explanation: 'Unique ids + dedupe make retries harmless; stream retention (e.g. 7 days) lets you replay missed windows after failures.',
+  },
 ];
