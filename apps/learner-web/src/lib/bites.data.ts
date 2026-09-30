@@ -1077,6 +1077,52 @@ const prompt = \`Answer using only:\\n\${chunks.map(c =&gt; c.content).join("\\n
   <div class="next"><a href="#dd-bigdata">← Big Data</a><a href="#cheatsheet">Next: Cheat Sheet →</a></div>`,
   },
   {
+    id: "system-design:q-ad-click",
+    guide: "system-design",
+    sectionId: "q-ad-click",
+    title: "Ad Click Aggregator",
+    subtitle: "",
+    minutes: 4,
+    isReference: false,
+    html: `<div class="crumbs">Problem Breakdown · Write-Heavy Analytics</div>
+  <h2>Ad Click Aggregator</h2>
+  <p class="lead">Users click ads, and advertisers query click metrics over time windows (per ad, per minute and up). The core challenge is absorbing a huge write stream and turning it into accurate, queryable aggregates.</p>
+
+  <h3>1. Architectural design &amp; pattern</h3>
+  <ul>
+    <li><b>Scaling writes.</b> The system is heavily <b>write-intensive</b>: around <b>10k clicks/sec at peak</b>, against far lower read volume from advertisers. The core flow pairs <b>stream ingestion</b> with <b>stream pre-aggregation</b> instead of querying raw logs directly.</li>
+    <li><b>Stream ingestion (Kafka / Kinesis).</b> An <b>append-only buffer</b> that absorbs write-traffic spikes and <b>decouples ingestion from aggregation</b>. The click service just appends and redirects the user.</li>
+    <li><b>Stream processing (Apache Flink).</b> Aggregates clicks using <b>event-time semantics</b> (not processing time), so events are grouped into accurate <b>1-minute windows</b>, and <b>late-arriving clicks</b> are handled gracefully with watermarks and allowed lateness.</li>
+    <li><b>Storage layer.</b> <b>Raw event logs</b> belong in a write-optimized database like <b>Cassandra</b>. <b>Aggregated metrics</b> go into an OLAP database like <b>ClickHouse, Snowflake, or BigQuery</b> for fast multi-dimensional analytical queries.</li>
+  </ul>
+  <pre><code class="ts">Click ──► Click Service ──► Kafka/Kinesis (sharded by AdId, 7-day retention)
+                                   │
+                                   ├──► Flink: event-time, 1-min tumbling windows, keyed by AdId
+                                   │        └──► OLAP (ClickHouse / Snowflake / BigQuery) ◄── Advertiser queries
+                                   └──► Raw sink ──► Cassandra (raw click log, replay/reconciliation)</code></pre>
+
+  <h3>2. Handling high throughput &amp; hotspots</h3>
+  <ul>
+    <li><b>Sharding key.</b> Shard both the stream and the stream processors by <b>AdId</b>, so different ads aggregate in parallel on separate workers.</li>
+    <li><b>Hot-shard mitigation.</b> For viral ads, append a <b>random partition suffix</b> to the id (<code>AdId:0-N</code>) to spread heavy traffic across multiple partitions. The stream processor <b>strips the suffix</b> before upserting or summing in the database, so the partial counts merge back into one ad.</li>
+  </ul>
+  <pre><code class="ts">// Producer side: only hot ads get salted.
+const key = hotAds.has(adId) ? \`\${adId}:\${Math.floor(Math.random() * N)}\` : adId;
+await producer.send({ topic: 'clicks', messages: [{ key, value: JSON.stringify(click) }] });
+
+// Aggregation side: strip the suffix, then sum partials into one row per (adId, minute).
+const baseAdId = key.split(':')[0];</code></pre>
+
+  <h3>3. Data integrity &amp; resilience</h3>
+  <ul>
+    <li><b>At-least-once delivery + idempotency.</b> Retries can double-count, so make tracking <b>idempotent</b>: attach a <b>unique request/impression id</b> to every click and dedupe within a <b>deduplication window</b>.</li>
+    <li><b>Fault tolerance.</b> Keep a <b>retention period</b> on the stream (for example <b>7 days</b>). If the stream processor fails, missing time windows get <b>replayed from the stream</b> instead of being lost. Flink checkpoints let a restarted job resume from its last consistent offset.</li>
+  </ul>
+
+  <div class="callout key"><div class="t">Interview soundbite</div>"It's write-heavy, so I don't query raw logs. Clicks are appended to Kafka sharded by AdId, and Flink pre-aggregates them into event-time 1-minute windows, writing to an OLAP store for advertisers while the raw log lands in Cassandra. Viral ads get a salted key that Flink strips before summing. Clicks carry a unique id for idempotent, deduplicated counting, and 7 days of stream retention lets me replay any window after a failure."</div>
+  <div class="callout"><div class="t">Related</div>Builds on <b>Scaling Writes</b>, <b>Kafka</b>, <b>Flink</b>, and <b>Cassandra</b>.</div>`,
+  },
+  {
     id: "system-design:cheatsheet",
     guide: "system-design",
     sectionId: "cheatsheet",
@@ -1970,6 +2016,343 @@ class AgentMemory {
       </div>`,
   },
   {
+    id: "ai-engineering:multi-agent-harnesses",
+    guide: "ai-engineering",
+    sectionId: "multi-agent-harnesses",
+    title: "Multi-Agent Systems & Harnesses",
+    subtitle: "The model is the processor; the harness is the computer. ReAct loops, context management, tools, multi-agent tradeoffs, and where AI engineering is heading.",
+    minutes: 10,
+    isReference: false,
+    html: `<h2>The shift: from models to harnesses</h2>
+      <p>The field is moving its focus from the <strong>model</strong> to the <strong>harness</strong> (also called scaffolding): the software around the model that makes it functional, reliable, and scalable in real environments. The industry undervalued this layer for years and filed it under "prompt engineering". It's much more than that.</p>
+
+      <div class="callout key">
+        <span class="label">Why the harness matters</span>
+        A well-designed harness is what lets a model score around <strong>95%</strong> on a hard benchmark like <strong>ARC-AGI</strong>, while the raw model on its own might only hit about <strong>30%</strong>. Same weights. The difference is the system wrapped around them.
+      </div>
+
+      <p>The mental model to take away: <strong>stop treating AI as a model API</strong>. Treat the LLM as a <strong>processor</strong> inside a larger, stateful software architecture. The harness supplies everything a processor needs to do useful work: memory, I/O (tools), a scheduler (the loop), an OS for coordinating many processes (multi-agent), and observability.</p>
+
+      <h2>Single LLM call vs. a ReAct agent</h2>
+      <p>A single call returns one answer and stops. A <strong>ReAct agent</strong> (Reason + Act) runs a loop: it reasons, decides to call a tool, reads the tool result (the <em>observation</em>), and repeats until it has enough to answer.</p>
+      <pre><code class="ts">// The ReAct loop, stripped to its essence.
+async function reactAgent(userMessage: string, tools: Record&lt;string, Tool&gt;, maxSteps = 8): Promise&lt;string&gt; {
+  const messages: Message[] = [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: userMessage },
+  ];
+
+  for (let step = 0; step &lt; maxSteps; step++) {
+    const reply = await llmWithTools(messages, Object.values(tools)); // Reason
+    messages.push(reply);
+    if (!reply.toolCalls?.length) return reply.content; // No tool needed: final answer
+
+    for (const call of reply.toolCalls) { // Act
+      const result = await tools[call.name].run(call.args).catch((err) =&gt; ({ success: false, error: String(err) }));
+      messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(result) }); // Observe
+    }
+  }
+  return "I ran out of steps before I could finish."; // The recursion limit
+}</code></pre>
+      <p>Frameworks such as <strong>LangGraph</strong> compile this loop into a <strong>state graph</strong>: an <em>LLM node</em>, a <em>tool node</em>, and a <em>conditional edge</em> that routes back to the tool node while the model keeps requesting tools, or ends the run once it answers. A <strong>recursion limit</strong> caps the number of graph steps so a confused model can't loop forever.</p>
+
+      <h2>The agentic primitives you need to master</h2>
+      <div class="grid">
+        <div class="card"><h4>Context management</h4><p>Compaction, memory (CRUD operations on history), and garbage collection, so long-horizon tasks fit into a finite context window.</p></div>
+        <div class="card"><h4>Tool use &amp; skills</h4><p>Letting the model call Python, read/write files, hit APIs, and chain tools together (the Voyager and Toolformer lines of work).</p></div>
+        <div class="card"><h4>Multi-agent coordination</h4><p>Several agents with specific roles that communicate and share context to finish projects too big for one agent.</p></div>
+        <div class="card"><h4>Self-improvement</h4><p>Harnesses that optimize their own system prompts or rewrite their own code, using genetic programming or DSPy-style workflows.</p></div>
+        <div class="card"><h4>Infrastructure</h4><p>Secure, scalable infrastructure for agent fleets, and balancing on-device performance against cloud capability.</p></div>
+        <div class="card"><h4>Observability</h4><p>"Cockpits" for your agents: traces, token/cost metering, and per-step logs, so you can see what the agent actually did.</p></div>
+      </div>
+
+      <h3>1. Context management</h3>
+      <p>The context window is finite, and long tasks overflow it. Treat context the way an OS treats RAM:</p>
+      <ul>
+        <li><strong>Compaction / summarization.</strong> Once history passes a threshold, compress the oldest turns into a running summary and keep the most recent turns verbatim.</li>
+        <li><strong>Memory as CRUD.</strong> Give the agent explicit operations to <em>create, read, update, and delete</em> facts in a store, instead of hoping important facts survive in the transcript.</li>
+        <li><strong>Garbage collection.</strong> Drop stale tool outputs, huge payloads (base64 images, full transcripts), and finished sub-task scratchpads.</li>
+        <li><strong>Persistence is a separate concern.</strong> A <em>checkpointer</em> makes state durable and resumable. <em>Summarization</em> keeps that state small and cheap. The two are orthogonal, and together they give you <strong>durable-but-bounded memory</strong>.</li>
+      </ul>
+
+      <h3>2. Tool use &amp; skills</h3>
+      <p>A tool is a name, a description, and an argument schema (JSON Schema, often generated from Zod). The model never executes anything. It <em>emits a tool call</em>, the runtime executes it, and the result goes back into the loop as an observation. Tool <strong>descriptions are prompts</strong>: they're how the model decides <em>when</em> a tool applies. <strong>Voyager</strong> showed agents building a growing library of reusable skills. <strong>Toolformer</strong> showed models learning when to call APIs.</p>
+      <div class="callout warn">
+        <span class="label">Failures are observations, not crashes</span>
+        Wrap tool bodies so they return <code>{ success: false, error }</code> instead of throwing. The model then sees the error, and it can retry with fixed arguments, try another tool, or tell the user what went wrong, all without killing the turn. Retry <em>only read-only</em> calls on transient errors. A retried "send email" can run twice.
+      </div>
+
+      <h3>3. Multi-agent coordination</h3>
+      <p>Multi-agent systems split a job across several agents, each with its <strong>own role, system prompt, tools, and context</strong>, plus a way to <strong>communicate and share context</strong>. The common shapes:</p>
+      <table>
+        <tr><th>Topology</th><th>How it works</th><th>Good for</th></tr>
+        <tr><td><strong>Router</strong></td><td>A cheap classifier picks <em>one</em> specialist per request</td><td>Many unrelated domains behind one chat</td></tr>
+        <tr><td><strong>Supervisor / orchestrator</strong></td><td>A lead agent calls sub-agents <em>as tools</em> and merges their results</td><td>Cross-domain requests, with one voice to the user</td></tr>
+        <tr><td><strong>Handoff (swarm)</strong></td><td>The active agent transfers control, and the conversation, to a peer</td><td>Support flows (triage → billing → tech)</td></tr>
+        <tr><td><strong>Parallel fan-out</strong></td><td>Independent sub-tasks run concurrently, then merge</td><td>Research, daily digests, gathering data from several sources</td></tr>
+        <tr><td><strong>Pipeline / critic loop</strong></td><td>Plan → do → review, and repeat until it passes</td><td>Code generation, report writing</td></tr>
+      </table>
+
+      <pre><code class="ts">// Supervisor pattern: sub-agents are exposed to the lead agent as ordinary tools.
+const sportsAgent = createAgent({ model: strongModel, tools: sportsTools, systemPrompt: SPORTS_PROMPT });
+const musicAgent = createAgent({ model: miniModel, tools: spotifyTools, systemPrompt: MUSIC_PROMPT });
+
+const askSports = tool(
+  async ({ request }) =&gt; {
+    const res = await sportsAgent.invoke({ messages: [{ role: "user", content: request }] });
+    return res.messages.at(-1).content; // Only the final answer reaches the supervisor
+  },
+  { name: "ask_sports", description: "Football fixtures, tables, predictions.", schema: z.object({ request: z.string().describe("Self-contained request, including any context the sub-agent needs") }) },
+);
+
+const supervisor = createAgent({ model: miniModel, tools: [askSports, askMusic], systemPrompt: "Route each part of the request to the right specialist." });</code></pre>
+      <div class="callout warn">
+        <span class="label">Notice the handoff problem</span>
+        The sub-agent only sees <code>request</code>. Anything the supervisor fails to put in that string (earlier turns, user preferences) is gone. And only the sub-agent's <em>final answer</em> comes back, so its tool results never reach the main thread. This is the core tradeoff of every multi-agent design.
+      </div>
+
+      <h2>Single agent vs. multi agent: the tradeoff</h2>
+      <div class="grid">
+        <div class="card"><h4>Single agent wins on</h4><ul>
+          <li><strong>Unified state.</strong> One thread, one memory. Cross-domain requests need zero plumbing.</li>
+          <li><strong>Latency.</strong> One hop per turn, and no router call on the critical path.</li>
+          <li><strong>Cost for shallow turns.</strong> 1–2 tool hops beat any routed alternative.</li>
+          <li><strong>Small code.</strong> The machinery is tiny, and most of it is prompt.</li>
+          <li><strong>One failure domain.</strong> No partial failures where agent A succeeded and agent B timed out.</li>
+          <li><strong>Emergent combinations.</strong> The model can chain tools in pairings you never anticipated.</li>
+        </ul></div>
+        <div class="card"><h4>Multi agent wins on</h4><ul>
+          <li><strong>Focused context.</strong> Each agent sees few tools and short rules, which means better instruction adherence.</li>
+          <li><strong>Per-agent model &amp; temperature.</strong> A nano model for trivial jobs, a strong one for reasoning.</li>
+          <li><strong>Real isolation.</strong> Changing one agent can't regress another.</li>
+          <li><strong>Independent testability.</strong> Each agent gets its own spec.</li>
+          <li><strong>Scales past the ceiling.</strong> At 50+ tools a flat surface stops working. A routed one keeps going.</li>
+          <li><strong>Parallelism.</strong> Independent sub-tasks can run concurrently.</li>
+        </ul></div>
+      </div>
+      <div class="callout warn">
+        <span class="label">What multi-agent costs you</span>
+        <strong>Routing becomes a new, silent failure mode.</strong> A mis-route produces a confidently wrong answer with no error to log, and it's the dominant real-world failure of multi-agent systems. You also get <strong>context loss at handoffs</strong>, <strong>1.5–3× the tokens and about 2× the latency</strong> for the same task, <strong>hard state design</strong> (a shared checkpointer or one per agent? who owns the summary?), harder <strong>cross-domain requests</strong>, and <strong>debugging</strong> that means correlating N traces instead of reading one state dump.
+      </div>
+
+      <h3>When to split: a decision checklist</h3>
+      <ol>
+        <li>Is there a <strong>measured</strong> quality problem (wrong tool chosen, rules ignored), or only an aesthetic one? Measure first.</li>
+        <li>Can cheaper fixes solve it? Move rules into tool descriptions, dedupe the prompt, merge overlapping tools, add evals.</li>
+        <li>Do domains genuinely need <strong>different models, temperatures, or safety policies</strong>?</li>
+        <li>Is the tool count heading past the point where selection accuracy degrades (roughly 30–50)?</li>
+        <li>Are cross-domain requests <em>rare</em>? If they're common, a supervisor beats a router.</li>
+        <li>Can you afford the extra latency on a user-facing path?</li>
+      </ol>
+      <p>If most answers are "no", keep one agent and fix the harness around it. If they're "yes", start with a <strong>supervisor that calls sub-agents as tools</strong>. It keeps a single voice and a single thread, and it degrades gracefully.</p>
+
+      <h2>The frontier: self-improving harnesses</h2>
+      <p>The newest work turns the harness on itself. The system <strong>optimizes its own system prompts</strong> (DSPy compiles prompts against a metric), or <strong>rewrites its own code</strong> through genetic programming: generate variants, score them on an eval, keep the winners. The precondition is always the same: <strong>a trustworthy eval</strong>. Without one, "self-improvement" is random drift.</p>
+
+      <h2>Developer infrastructure is the job</h2>
+      <p>Projects like <strong>OpenJarvis</strong> and <strong>QM</strong> show that much of AI engineering is classic systems engineering:</p>
+      <ul>
+        <li><strong>Moving the "brain" out of isolated sandboxes.</strong> The agent's reasoning and state live outside the throwaway execution environment, so sandboxes become disposable workers.</li>
+        <li><strong>Secure, scalable infrastructure for agent fleets.</strong> Isolation, credentials, quotas, and scheduling for many concurrent agents.</li>
+        <li><strong>Local vs. cloud.</strong> Balance on-device performance (privacy, latency, cost) against cloud capability (bigger models, more tools).</li>
+        <li><strong>Standardized protocols</strong> for agent communication and tool access (MCP for tools, agent-to-agent protocols for peers).</li>
+      </ul>
+
+      <div class="callout tip">
+        <span class="label">Actionable advice for a senior dev moving into AI engineering</span>
+        Stop thinking of AI as a model API. Build systems that treat the LLM as a processor in a larger, stateful architecture. Focus on <strong>observability</strong> (cockpits for your agents), <strong>persistent memory</strong>, and <strong>standardized protocols</strong> for agent communication. Your distributed-systems instincts (idempotency, retries, timeouts, backpressure, tracing) transfer directly.
+      </div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What is a ReAct agent and how does it differ from a single LLM call?</summary>
+        <div class="answer">A single call returns one answer. A ReAct agent loops: it reasons, decides to call a tool, reads the tool result, and repeats until it can answer. LangGraph compiles this into a state graph with an LLM node, a tool node, and a conditional edge, bounded by a recursion limit.</div></details>
+      <details class="qa"><summary>What is a "harness" and why does it matter more than people think?</summary>
+        <div class="answer">It's the scaffolding around the model: the loop, tools, memory, context management, retries, and observability. It isn't just prompt engineering. A good harness can take a model from about 30% to about 95% on a hard benchmark like ARC-AGI with the same weights.</div></details>
+      <details class="qa"><summary>What's the difference between a checkpointer and summarization?</summary>
+        <div class="answer">The checkpointer handles persistence: durable, resumable state per thread. Summarization handles context bounding: it keeps that state small and cheap. They're orthogonal concerns that combine into durable-but-bounded memory.</div></details>
+      <details class="qa"><summary>When would you move from a single agent to multiple agents?</summary>
+        <div class="answer">When there's a measured quality problem that cheaper fixes (better tool descriptions, prompt dedupe, merged tools) can't solve. Other triggers: domains need different models or temperatures, the tool count is heading past about 30–50, or you need real isolation and per-domain tests. Otherwise the extra 1.5–3× tokens, about 2× latency, and silent mis-routes aren't worth it.</div></details>
+      <details class="qa"><summary>What is the dominant failure mode of multi-agent systems?</summary>
+        <div class="answer">Mis-routing. The router sends the request to the wrong specialist, and that specialist gives a confident, wrong answer with no exception to log. Close behind it is context loss at handoffs. Mitigate with routing evals, logging every routing decision, a fallback "generalist" route, and passing enough history in handoffs.</div></details>
+      <details class="qa"><summary>What happens if a tool fails?</summary>
+        <div class="answer">The tool returns a structured error (<code>{ success: false, error }</code>) instead of throwing. The model sees it as an observation and can retry, pick another tool, or explain the failure, so the turn doesn't crash. Only read-only calls should be retried automatically.</div></details>
+      <details class="qa"><summary>How does a harness improve itself?</summary>
+        <div class="answer">It optimizes its own prompts against a metric (DSPy-style compilation), or it evolves its own code (genetic programming: mutate, evaluate, select). Both need a reliable eval suite. The eval is the fitness function.</div></details>`,
+  },
+  {
+    id: "ai-engineering:mmps-agents",
+    guide: "ai-engineering",
+    sectionId: "mmps-agents",
+    title: "Case Study: The MMPS Chatbot Agent",
+    subtitle: "How the MMPS Telegram assistant is built as a single LangGraph ReAct agent, the single-vs-multi-agent tradeoff for this repo, and the interview Q&A.",
+    minutes: 12,
+    isReference: false,
+    html: `<h2>The 60-second pitch</h2>
+      <div class="callout key">
+        <span class="label">Say this out loud</span>
+        "It's a Telegram AI assistant built as a LangGraph ReAct agent. A user message enters through a grammY controller, gets enriched with user-id and local time, and is passed to a single agent wired with 31 Zod-schema tools. The agent runs a reason→act loop: the LLM decides whether to call tools, the tool node executes them, results re-enter the loop until it answers.<br><br>
+        State lives in a MongoDB checkpointer keyed per user, so memory survives restarts, with a 30-day TTL. To stay within the context window I use summarization middleware that compresses old turns into a running summary while keeping recent ones verbatim — durable but bounded memory. Every turn is metered by a callback handler that sums tokens per model and stores cost in Mongo, with a weekly report.<br><br>
+        It's multimodal — images and voice are transcribed to text first — and proactive, with cron schedulers that reuse the exact same agent to push nightly summaries, predictions, and reminders. Adding a capability is just a new tool file plus one line in the agent descriptor."
+      </div>
+
+      <h2>Architecture: one message, end to end</h2>
+      <ol>
+        <li><strong>Entry.</strong> <code>ChatbotController</code> (grammY) receives a text, voice, or photo message. Voice is transcribed first with <code>getTranscriptFromAudio</code>.</li>
+        <li><strong>Enrichment.</strong> <code>ChatbotService</code> prefixes the text with <code>[Context: User ID: xxx, Time: xxx]</code>, so the agent knows who is asking and the local time (<code>Asia/Jerusalem</code>).</li>
+        <li><strong>Agent.</strong> <code>ChatbotService.processMessage(text, chatId, schema?)</code> invokes one agent built by <code>createAgentService(agent(), opts)</code>. That factory is a thin wrapper around LangChain's <code>createAgent({ model, tools, systemPrompt, checkpointer, middleware })</code>.</li>
+        <li><strong>Loop.</strong> The compiled LangGraph graph runs LLM node → tool node → LLM node … until the model answers without tool calls.</li>
+        <li><strong>Memory.</strong> After each step the Mongo checkpointer snapshots the state under <code>thread_id</code>, which is derived from <code>chatId</code>.</li>
+        <li><strong>Metering.</strong> A per-turn <code>UsageCallbackHandler</code> sums tokens, and <code>recordModelUsage</code> prices them and persists a record.</li>
+        <li><strong>Reply.</strong> The controller sends the answer back through <code>MessageLoader</code> (reaction, "typing…", and a delayed loader message).</li>
+      </ol>
+
+      <h3>The files that matter</h3>
+      <table>
+        <tr><th>File</th><th>Role</th></tr>
+        <tr><td><code>features/chatbot/agent/agent.ts</code></td><td>The <strong>AgentDescriptor</strong>: name, system prompt, description, and the <code>tools</code> array</td></tr>
+        <tr><td><code>features/chatbot/agent/factory.ts</code></td><td><code>createAgentService()</code> wraps <code>createAgent</code> and attaches the <code>ToolCallbackHandler</code></td></tr>
+        <tr><td><code>features/chatbot/agent/service.ts</code></td><td><code>AiService</code> invokes the graph with thread id, recursion limit, callbacks, and images</td></tr>
+        <tr><td><code>features/chatbot/agent/checkpointer.ts</code></td><td><code>createChatbotCheckpointer()</code> is the MongoDBSaver (db <code>Chatbot</code>, 30-day TTL)</td></tr>
+        <tr><td><code>features/chatbot/chatbot.service.ts</code></td><td>Builds the model (<code>gpt-4.1-mini</code> at <code>0.2</code>) and the middleware stack</td></tr>
+        <tr><td><code>shared/ai/tools/*</code></td><td>One folder per tool: Zod schema + runner + <code>tool()</code></td></tr>
+        <tr><td><code>shared/ai/usage/*</code></td><td>Usage records, aggregation, and the pricing table</td></tr>
+      </table>
+
+      <h3>The middleware stack (order matters)</h3>
+      <pre><code class="ts">middleware: [
+  summarization,        // compress old turns into a running summary (small model: gpt-5-nano, low effort)
+  modelCallLimit,       // max model requests per turn (default 8), exits gracefully
+  toolCallLimit,        // max tool calls per turn (default 12), blocks more tools but lets the model answer
+  toolRetry,            // retry READ-ONLY calls on transient errors; turn exceptions into error ToolMessages
+  createStructuredResponseMiddleware(), // optional schema'd final reply via a final_reply tool call
+]
+// Plus: recursionLimit on the graph and a wall-clock turn deadline (default 180s) via AbortSignal.</code></pre>
+
+      <h2>Adding a capability</h2>
+      <pre><code class="ts">// src/shared/ai/tools/weather/weather.tool.ts
+const schema = z.object({
+  action: z.enum(['current', 'forecast']).describe('Action to perform'),
+  location: z.string().describe('The city or location'),
+  date: z.string().optional().describe('Date in YYYY-MM-DD format'),
+});
+
+async function runner({ action, location, date }: z.infer&lt;typeof schema&gt;) {
+  switch (action) {
+    case 'current': return getCurrentWeather(location);
+    case 'forecast': return getForecastWeather(location, date!);
+  }
+}
+
+export const weatherTool = tool(runner, { name: 'weather', description: 'Get weather information…', schema });
+
+// 1. export it from src/shared/ai/tools/index.ts
+// 2. add weatherTool to the tools array in agent.ts
+// 3. list its read-only actions in READ_ONLY_TOOL_ACTIONS (tool-retry.ts)
+// No graph changes: the ReAct loop picks it up automatically.</code></pre>
+
+      <h2>Single agent: pros &amp; cons (the MMPS design review)</h2>
+      <p>These numbers come from a design review of the chatbot, taken when it had 29 tools and a 365-line prompt. The reasoning holds even as the exact counts drift.</p>
+      <div class="grid">
+        <div class="card"><h4>Advantages</h4><ul>
+          <li><strong>Unified state.</strong> One thread, one checkpointer, one summary. Cross-domain requests need zero plumbing.</li>
+          <li><strong>Lowest latency.</strong> One hop per turn, with no router call on the critical path. That matters for a Telegram bot where the user is watching a "typing…" indicator.</li>
+          <li><strong>Cheapest for shallow turns.</strong> 1–2 tool hops beat any routed alternative.</li>
+          <li><strong>Trivially small code.</strong> <code>agent.ts</code> + <code>factory.ts</code> + <code>service.ts</code> = 438 lines, and 365 of those are the prompt. The <em>machinery</em> is about 73 lines.</li>
+          <li><strong>Free reuse.</strong> Schedulers and the API controller get all 29 tools by calling one method.</li>
+          <li><strong>One failure domain.</strong> No partial-failure states where agent A succeeded and agent B timed out.</li>
+          <li><strong>Emergent combinations work.</strong> The model can chain tools in pairings you never anticipated.</li>
+        </ul></div>
+        <div class="card"><h4>Disadvantages</h4><ul>
+          <li><strong>Fixed 17.8k/turn tax</strong>, paid again on every tool hop in the loop.</li>
+          <li><strong>Attention dilution.</strong> 8k of prose on a mini model. Domain rules compete with each other, and the middle gets ignored.</li>
+          <li><strong>The prompt is a monolith.</strong> 365 lines, with confirmed verbatim duplicates (the GitHub NL list at lines 120 &amp; 122, the 18:00 rule at 202 &amp; 252, "implement this issue" at 181 &amp; 182).</li>
+          <li><strong>Tool-selection accuracy degrades with count.</strong> 29 tools with overlapping surfaces. <code>twitter</code> / <code>tiktok</code> / <code>youtube</code> / <code>telegram_channels</code> all expose <code>subscribe</code> / <code>unsubscribe</code> / <code>list</code>, which invites mis-selection.</li>
+          <li><strong>No per-domain tuning.</strong> Betting predictions want <code>temperature 0</code> and a stronger model. Casual chat wants neither. You're locked to one <code>gpt-4.1-mini</code> at <code>0.2</code>.</li>
+          <li><strong>Changes are global.</strong> Editing the prompt to fix Spotify behaviour can regress reminders. Nothing is isolated.</li>
+          <li><strong>Untestable in units.</strong> You can't test "the sports brain" separately from everything else.</li>
+          <li><strong>Coupling is easy to write.</strong> See the scheduler thread bug below. The design made it a one-liner.</li>
+        </ul></div>
+      </div>
+
+      <div class="callout warn">
+        <span class="label">The scheduler thread bug</span>
+        Schedulers reuse the same agent by calling <code>chatbotService.processMessage(prompt, MY_USER_ID)</code>. The thread id is derived from the chat id, so every scheduled prompt (football update, email summary, exercise reminder) runs <strong>inside the user's personal conversation thread</strong>. Scheduler prompts and their tool output land in the user's history, count toward summarization, and can steer the next real reply. Nothing in the design stops it, because "reuse the agent" and "share the thread" are the same line of code. A multi-agent design, or even a separate <code>threadId</code> per scheduler, prevents this by construction.
+      </div>
+
+      <h2>Multi agent: pros &amp; cons (for this repo)</h2>
+      <div class="grid">
+        <div class="card"><h4>Advantages</h4><ul>
+          <li><strong>Focused context.</strong> A sports agent sees 6 tools and 40 lines of sports rules. Instruction adherence gets dramatically better.</li>
+          <li><strong>Per-agent model &amp; temperature.</strong> <code>gpt-5-nano</code> for the trivial <code>wolt_summary</code>, and a stronger model for prediction reasoning.</li>
+          <li><strong>Real isolation.</strong> Changing the Spotify agent provably can't regress reminders.</li>
+          <li><strong>Independently testable.</strong> Each agent gets its own spec, which matches the existing <code>*.spec.ts</code> conventions.</li>
+          <li><strong>Scales past the ceiling.</strong> At 50+ tools a flat surface stops working. A routed one keeps going.</li>
+          <li><strong>Parallelism.</strong> A daily summary could fan out weather + calendar + reminders concurrently.</li>
+          <li><strong>Prevents accidental coupling</strong> by construction, like the scheduler thread bug.</li>
+        </ul></div>
+        <div class="card"><h4>Disadvantages</h4><ul>
+          <li><strong>Routing is a new, silent failure mode.</strong> A mis-route produces a confidently wrong answer with no error to log. This is <em>the</em> dominant real-world failure of multi-agent systems.</li>
+          <li><strong>Context loss at handoffs.</strong> "The match you mentioned earlier" breaks unless the orchestrator forwards enough history, and you can't know in advance what "enough" is.</li>
+          <li><strong>Directly attacks Premise 2</strong>, the design's memory premise. Sub-agent tool results usually never reach the main thread, so you end up summarizing answers, not context.</li>
+          <li><strong>1.5–3× tokens and 2× latency</strong> for the same task.</li>
+          <li><strong>State design becomes a real problem.</strong> Shared checkpointer? One per agent? Who owns the summary? Every option has sharp edges.</li>
+          <li><strong>Cross-domain requests get harder</strong>, and those are common in a personal assistant.</li>
+          <li><strong>Debugging cost jumps.</strong> N traces to correlate instead of one state dump.</li>
+          <li><strong>Meaningful migration risk</strong> on a system that works today and has one user who notices every regression.</li>
+        </ul></div>
+      </div>
+
+      <h2>What the repo actually did (and what's next)</h2>
+      <p>Rather than jumping to multi-agent, the chatbot fixed the single agent's biggest pain points inside the harness:</p>
+      <ul>
+        <li><strong>Prompt monolith → tool descriptions.</strong> Per-tool rules (trigger phrases, call sequences, confirmations, defaults, reply formatting) moved out of <code>AGENT_PROMPT</code> into each tool's <code>description</code>. The system prompt now holds only general behaviour, which removes the duplicates and much of the attention dilution.</li>
+        <li><strong>Overlapping social tools → one <code>social</code> tool.</strong> The four follow/subscribe surfaces were merged, cutting mis-selection.</li>
+        <li><strong>Bounded turns.</strong> A model-call limit (8), a tool-call limit (12), a recursion limit, and a 180s wall-clock deadline.</li>
+        <li><strong>Resilient tools.</strong> <code>createToolRetryMiddleware()</code> retries only allow-listed read-only actions (<code>READ_ONLY_TOOL_ACTIONS</code>) on transient errors (timeouts, <code>ECONNRESET</code>, 408/425/429, 5xx) with exponential backoff, and never retries side effects.</li>
+        <li><strong>A cheaper model where it's safe.</strong> Summarization runs on <code>gpt-5-nano</code> (low reasoning effort), not the main model. That's a first step toward per-task model choice.</li>
+      </ul>
+      <div class="callout tip">
+        <span class="label">The seam for going multi-agent</span>
+        <code>types.ts</code> already defines an <code>OrchestratorDescriptor</code> (a descriptor with <code>agents: AgentDescriptor[]</code>), and <code>createAgentService()</code> already accepts it. The low-risk path is a <strong>supervisor</strong>: keep the main agent and thread, and expose a domain agent (sports predictions first, since it wants <code>temperature 0</code> and a stronger model) as a single tool. Cross-domain requests keep working, memory stays in one thread, and the new agent gets its own spec. Pair it with a routing eval before moving more domains.
+      </div>
+
+      <h2>Interview Q&amp;A: the MMPS chatbot</h2>
+      <p>Each answer is the spoken version. The "in the code today" notes list where the current implementation has moved beyond it. Mention them to show you know the system as it is now.</p>
+
+      <details class="qa"><summary>What is a ReAct agent and how does it differ from a single LLM call?</summary>
+        <div class="answer">A single call returns one answer. A ReAct agent loops: it reasons, decides to call a tool, reads the tool result, and repeats until it can answer. LangGraph compiles this into a state graph with an LLM node, a tool node, and a conditional edge, bounded by a recursion limit.<br><br><em>In the code today:</em> besides <code>recursionLimit</code> (default 100 graph steps), each turn is capped by <code>modelCallLimitMiddleware</code> (8 model calls), <code>toolCallLimitMiddleware</code> (12 tool calls), and a 180s wall-clock deadline.</div></details>
+
+      <details class="qa"><summary>How does the bot remember conversations across restarts?</summary>
+        <div class="answer">A LangGraph MongoDBSaver checkpointer snapshots graph state after each step, keyed by thread_id (the Telegram chatId). On the next message it reloads that thread's state. A 30-day TTL expires stale threads.<br><br><em>In the code today:</em> <code>createChatbotCheckpointer()</code> in <code>agent/checkpointer.ts</code>, database <code>Chatbot</code>. Outside production the thread id is <code>dev-&lt;chatId&gt;</code>, so local runs don't touch the production thread.</div></details>
+
+      <details class="qa"><summary>The context window is limited — how do you handle long conversations?</summary>
+        <div class="answer">summarizationMiddleware: past ~40 messages it compresses the oldest turns into a running summary and keeps the last ~20 verbatim. The summary is persisted by the checkpointer, so we bound tokens without dropping important facts.<br><br><em>In the code today:</em> bounding is by <strong>tokens</strong>, because one retained turn can carry a base64 image or a full transcript, and a message count doesn't bound the context window or the 16 MiB Mongo document. The trigger is an OR: over ~24k tokens, <em>or</em> over ~40 messages holding at least ~16k tokens. That floor stops a tail of short messages from re-summarizing every turn. It keeps ~8k tokens verbatim, and the summary runs on <code>gpt-5-nano</code>.</div></details>
+
+      <details class="qa"><summary>How are tools defined and how does the model know when to use them?</summary>
+        <div class="answer">Each tool is <code>tool(runner, { name, description, schema })</code> with a Zod schema where every field is <code>.describe()</code>d. Those descriptions + the system prompt (which lists trigger phrases per tool) are converted to JSON schema for OpenAI function-calling; the model emits a tool call, the runtime executes it, and the result re-enters the loop.<br><br><em>In the code today:</em> trigger phrases and per-tool rules now live in each tool's <code>description</code>, and the system prompt keeps only general behaviour.</div></details>
+
+      <details class="qa"><summary>How do you track cost?</summary>
+        <div class="answer">A per-turn <code>UsageCallbackHandler</code> sums <code>usage_metadata</code> tokens per model across every LLM call in the loop. <code>recordModelUsage</code> multiplies by a per-model price table (longest-prefix match for dated snapshots) and fire-and-forget stores a record in Mongo. A weekly cron DMs a breakdown.<br><br><em>In the code today:</em> <code>resolveModelPrice()</code> maps <strong>only exact dated snapshots</strong> (<code>gpt-4.1-mini-2025-04-14</code> → <code>gpt-4.1-mini</code>). A general prefix match would misprice siblings like <code>gpt-5-mini</code> as <code>gpt-5</code> (5×). Cached input tokens are billed at the cache-hit rate. Records go to <code>Chatbot.usage</code> (90-day TTL), and the report runs Saturdays at 22:30. A monthly job also diffs the price table against OpenAI's pricing docs.</div></details>
+
+      <details class="qa"><summary>How would you add a new capability?</summary>
+        <div class="answer">Create <code>src/shared/ai/tools/{name}/{name}.tool.ts</code> with a Zod schema + runner, export it from the barrel, add it to the tools array in <code>agent.ts</code>, and describe it in the system prompt. No graph changes needed — the ReAct loop picks it up automatically.<br><br><em>In the code today:</em> describe it in the tool's own <code>description</code> rather than the system prompt, and add its read-only actions to <code>READ_ONLY_TOOL_ACTIONS</code> so transient failures get retried.</div></details>
+
+      <details class="qa"><summary>What's the difference between the checkpointer and the summarization middleware?</summary>
+        <div class="answer">Checkpointer = persistence (durable, resumable state per thread). Summarization = context bounding (keeps the state small &amp; cheap). Orthogonal concerns that combine into durable-but-bounded memory.</div></details>
+
+      <details class="qa"><summary>How does it handle images / voice?</summary>
+        <div class="answer">Non-text is converted to text first: photos via OpenAI vision (<code>analyzeImage</code>), audio via transcription (<code>getTranscriptFromAudio</code>). The resulting text is fed into the same agent — the agent itself is text-in/text-out.<br><br><em>In the code today:</em> voice is still transcribed with <code>getTranscriptFromAudio</code>. Photos are now passed straight to the agent as multimodal image blocks (<code>processMessage(prompt, chatId, { images })</code>), so the main model sees the image itself instead of a description of it.</div></details>
+
+      <details class="qa"><summary>What happens if a tool fails?</summary>
+        <div class="answer">Tools wrap their body in try/catch and return <code>{ success:false, error }</code> as a string; a <code>ToolCallbackHandler.onToolError</code> logs it. The agent sees the error as an observation and can apologize or try another approach — the turn doesn't crash.<br><br><em>In the code today:</em> tools that <em>throw</em> are handled by <code>createToolRetryMiddleware()</code>. It retries read-only calls on transient errors (up to 2 retries, 500ms → 1s backoff) and converts exceptions into error <code>ToolMessage</code>s. That's required, because once any middleware defines <code>wrapToolCall</code>, LangChain's <code>ToolNode</code> re-raises exceptions. For side-effecting calls the message tells the model the outcome is unknown and not to repeat the call.</div></details>
+
+      <details class="qa"><summary>Why is it a single agent and not a multi-agent system?</summary>
+        <div class="answer">For one user with many shallow, often cross-domain requests, a single agent gives unified state, the lowest latency, and one failure domain. Multi-agent would cost 1.5–3× the tokens and about 2× the latency, add silent mis-routes, and lose context at handoffs. The real pain points (prompt monolith, overlapping tools) were fixed inside the harness instead. If prediction quality needs a stronger model at <code>temperature 0</code>, the next step is a supervisor that exposes a sports sub-agent as one tool.</div></details>
+
+      <details class="qa"><summary>What's the scheduler thread bug and how would you fix it?</summary>
+        <div class="answer">Schedulers call <code>processMessage(prompt, MY_USER_ID)</code>, so scheduled prompts run in the user's own conversation thread and pollute its history. The fix is to give schedulers their own <code>threadId</code> (or a stateless invocation), or to isolate them structurally with dedicated agents.</div></details>`,
+  },
+  {
     id: "ai-engineering:multimodal",
     guide: "ai-engineering",
     sectionId: "multimodal",
@@ -2487,6 +2870,8 @@ export const CURRICULUM: string[] = [
   "ai-engineering:agents",
   "system-design:sharding",
   "ai-engineering:multi-agent",
+  "ai-engineering:multi-agent-harnesses",
+  "ai-engineering:mmps-agents",
   "system-design:consistent-hashing",
   "ai-engineering:multimodal",
   "system-design:cap",
@@ -2513,5 +2898,6 @@ export const CURRICULUM: string[] = [
   "system-design:dd-timeseries",
   "system-design:dd-vectordb",
   "system-design:dd-bigdata",
-  "system-design:dd-cdc"
+  "system-design:dd-cdc",
+  "system-design:q-ad-click"
 ];

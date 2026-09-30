@@ -89,6 +89,31 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
   },
+  {
+    biteId: 'ai-engineering:mmps-agents',
+    title: 'Prediction quality is slipping',
+    prompt:
+      'Football predictions from the MMPS chatbot are inconsistent. They would benefit from temperature 0 and a stronger model, but the single agent runs gpt-4.1-mini at 0.2 for everything. What do you do?',
+    choices: [
+      {
+        label: 'Expose a sports sub-agent to the main agent as one tool (supervisor pattern)',
+        feedback:
+          'Best choice. The domain gets its own model, temperature, prompt, and spec, while the main thread, memory, and cross-domain requests keep working. Add a routing eval before moving more domains.',
+        recommended: true,
+      },
+      {
+        label: 'Split the whole bot into a router plus one agent per domain',
+        feedback:
+          'This buys isolation everywhere at once, but it costs 1.5–3× tokens and about 2× latency, adds silent mis-routes and context loss at handoffs, and is a big migration risk for a working system.',
+        recommended: false,
+      },
+      {
+        label: 'Switch the single agent to a stronger model at temperature 0',
+        feedback: 'Predictions may improve, but every turn pays for the stronger model and casual chat loses its warmth. There is no per-domain tuning.',
+        recommended: false,
+      },
+    ],
+  },
 ] as const;
 
 const BY_BITE = new Map(SCENARIOS.map((scenario) => [scenario.biteId, scenario]));
