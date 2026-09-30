@@ -17,6 +17,7 @@ import {
   matchPredictionTool,
   matchSummaryTool,
   meetupsTool,
+  placesTool,
   polymarketTool,
   recipesTool,
   reminderTool,
@@ -33,7 +34,7 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to real-time web search, weather, earthquake monitoring, calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points, plus up to 5 of the newest new TikTok videos attached as playable Telegram videos), and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to real-time web search, weather, earthquake monitoring, Google Places lookup (addresses, phone, opening hours), calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points, plus up to 5 of the newest new TikTok videos attached as playable Telegram videos), and a personal friends contact list for social suggestions';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
@@ -76,6 +77,7 @@ export function agent(): AgentDescriptor {
     recipesTool,
     woltTool,
     worldlyTool,
+    placesTool,
     polymarketTool,
     githubTool,
     contactsTool,

@@ -173,7 +173,7 @@ src/services/{name}/
 
 | ID          | Display Name    | Path                          | Env token                        | Purpose |
 |-------------|-----------------|-------------------------------|----------------------------------|---------|
-| `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~27 tools (weather, calendar, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability. |
+| `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~28 tools (weather, calendar, google places, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability. |
 | `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
 | `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules. |
 | `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
@@ -628,11 +628,11 @@ src/shared/ai/tools/
 └── index.ts          # barrel — every tool re-exported here
 ```
 
-### Available AI Tools (27 registered in `src/features/chatbot/agent/agent.ts`)
+### Available AI Tools (28 registered in `src/features/chatbot/agent/agent.ts`)
 
 Grouped roughly by domain:
 
-- **Personal / productivity:** `calendar`, `gmail`, `reminders`, `contacts`, `meetups`, `recipes`, `exercise`, `exercise-analytics`
+- **Personal / productivity:** `calendar`, `google-places`, `gmail`, `reminders`, `contacts`, `meetups`, `recipes`, `exercise`, `exercise-analytics`
 - **Media / social:** `spotify`, `spotify-podcast`, `tiktok`, `twitter`, `youtube`, `telegram-channels`
 - **Information:** `weather`, `earthquake`
 - **Sports / games:** `competitions-list`, `competition-matches`, `competition-table`, `match-summary`, `top-matches-for-prediction`, `match-prediction`, `makavdia` (NBA Deni Avdija), `wolt` (delivery stats), `worldly` (geography game stats)
@@ -717,6 +717,7 @@ Located in `src/services/`. Each has its own README-via-code structure (`api.ts`
 | `github`               | Octokit + GitHub App auth                  |
 | `gmail`                | Gmail send/list/delete                     |
 | `google-calendar`      | Calendar CRUD                              |
+| `google-places`        | Place search + details (Places API New)    |
 | `google-sheets`        | Sheets logging (prod)                      |
 | `google-translate`     | Translation                                |
 | `imgur`                | Image upload                               |
