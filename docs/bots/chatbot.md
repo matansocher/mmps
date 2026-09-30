@@ -153,7 +153,7 @@ Tools (weather, reminders, etc.)
 Conversation memory is two complementary layers:
 
 - **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
-- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~40 messages), the older turns are compressed into a running summary and the most recent (~20) are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on the small model (`gpt-5-nano`), not the main agent model.
+- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~24k tokens, or ~40 messages holding at least ~16k tokens), the older turns are compressed into a running summary and the most recent ~8k tokens are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on the small model (`gpt-5-nano`), not the main agent model.
 
 Tune via environment variables:
 
@@ -161,7 +161,7 @@ Tune via environment variables:
 # Optional: conversation summarization (defaults in code)
 # Optional: conversation summarization (defaults in code)
 CHATBOT_SUMMARY_TRIGGER_TOKENS=24000  # summarize once retained history passes this many tokens (primary bound)
-CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # also summarize once a thread passes this many messages (OR)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # also summarize once a thread passes this many messages (OR; needs 2x KEEP_TOKENS)
 CHATBOT_SUMMARY_KEEP_TOKENS=8000      # recent tokens kept verbatim after summarizing
 ```
 

@@ -11,7 +11,7 @@ import { CHAT_COMPLETIONS_MINI_MODEL, GPT_SMALL_MODEL } from '@services/openai/c
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
 import { AiService, createAgentService, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
-import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
+import { CHATBOT_CONFIG, CHATBOT_SUMMARIZATION_TRIGGER, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
@@ -51,14 +51,15 @@ export class ChatbotService {
     // Bounded by tokens, not message counts: a single retained message can carry a base64 image
     // or a full transcript, so a message-only limit doesn't bound the context window or the size
     // of the MongoDB checkpoint document (16 MiB limit). The trigger array is OR'd — summarize
-    // when the history exceeds the token budget OR the message-count fallback — and `keep` is
-    // token-based so the retained tail fits a real budget.
+    // when the history exceeds the token budget OR the message-count fallback (which also needs
+    // a token floor so it can't re-fire every turn) — and `keep` is token-based so the retained
+    // tail fits a real budget.
     //
     // Wrapped in a safe guard: if the underlying summarizer fails, the original history is
     // preserved rather than replaced with an error-shaped summary.
     const summarization = createSafeSummarizationMiddleware({
       model: this.summaryModel,
-      trigger: [{ tokens: CHATBOT_CONFIG.summarization.triggerTokens }, { messages: CHATBOT_CONFIG.summarization.triggerMessages }],
+      trigger: CHATBOT_SUMMARIZATION_TRIGGER,
       keep: { tokens: CHATBOT_CONFIG.summarization.keepTokens },
       summaryPrompt: CHATBOT_SUMMARY_PROMPT,
     });

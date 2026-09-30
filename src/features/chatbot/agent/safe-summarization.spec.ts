@@ -3,7 +3,8 @@ import { createSafeSummarizationMiddleware } from './safe-summarization';
 
 const beforeModelMock = vi.fn();
 
-vi.mock('langchain', () => ({
+vi.mock('langchain', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('langchain')>()),
   summarizationMiddleware: vi.fn(() => ({ name: 'SummarizationMiddleware', beforeModel: (state: unknown, runtime: unknown) => beforeModelMock(state, runtime) })),
 }));
 
