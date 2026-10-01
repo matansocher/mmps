@@ -10,9 +10,10 @@ import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
-import { registerPortfolioApiRoutes } from '@features/portfolio';
+import { initHellsKitchen } from '@features/hells-kitchen';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initMindloop } from '@features/mindloop';
+import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initSavings } from '@features/savings';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
@@ -59,6 +60,13 @@ async function main() {
   }
 
   registerPortfolioApiRoutes(app);
+
+  try {
+    await initHellsKitchen(app);
+  } catch (err) {
+    failedComponents.push('hells-kitchen');
+    logger.error(`Failed to init Hell’s Kitchen: ${getErrorMessage(err)}`);
+  }
 
   registerSwaggerRoutes(app);
 
