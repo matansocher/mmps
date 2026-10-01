@@ -75,7 +75,7 @@ If you change conventions or architecture, **update `AGENTS.md`** (the symlinks 
 
 ### GitHub AI workflows
 
-Two labels in `.github/workflows/claude.yml` trigger automation:
+Two labels trigger OpenAI Codex automation (`.github/workflows/ai.yml`):
 
 - **`review`** on a PR → AI code review.
 - **`implement`** on an issue → AI generates an implementation PR.

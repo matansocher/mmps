@@ -160,7 +160,7 @@ The bot will:
 - Open a new pull request with the code
 - Reference the original issue
 
-Both features are triggered by labels and configured in `.github/workflows/claude.yml`.
+Both features are triggered by labels and handled by OpenAI Codex in `.github/workflows/ai.yml`.
 
 ## Questions?
 
