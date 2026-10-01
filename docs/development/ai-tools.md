@@ -203,7 +203,7 @@ The chatbot can trigger automated GitHub Actions workflows:
 - Action: Uses Codex to generate implementation code and create a new pull request
 - Use case: Request implementation generation with natural language like "implement this issue" or "generate code for this"
 
-The workflows are `.github/workflows/review.yml` and `.github/workflows/implement.yml`, both using `openai/codex-action`.
+Both are jobs in `.github/workflows/ai.yml`, using `openai/codex-action`.
 
 When the chatbot recognizes these requests, it uses the GitHub tool to add the appropriate label, triggering the automation:
 

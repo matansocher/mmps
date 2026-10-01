@@ -130,7 +130,7 @@ mmps/
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
 ├── assets/             # Static assets (downloads dir, images)
 ├── .github/
-│   ├── workflows/      # ci.yml, implement.yml + review.yml (Codex AI), docs-deploy.yml
+│   ├── workflows/      # ci.yml, ai.yml (Codex implement + review), docs-deploy.yml
 │   └── copilot-instructions.md → ../AGENTS.md   # symlink
 ├── .agents/
 │   └── skills/         # MMPS skills (canonical; SKILL.md format)
@@ -493,8 +493,8 @@ Shows reaction emoji immediately, "typing…" action, loader message after 3s, a
 ### GitHub Automation
 
 Two GitHub labels trigger OpenAI Codex workflows (`openai/codex-action`):
-- **`review`** on a PR → `.github/workflows/review.yml` posts an AI code review comment
-- **`implement`** on an issue → `.github/workflows/implement.yml` creates an implementation PR
+- **`review`** on a PR → `.github/workflows/ai.yml` posts an AI code review comment
+- **`implement`** on an issue → `.github/workflows/ai.yml` creates an implementation PR
 
 The chatbot agent has a `githubTool` that can add these labels through natural language.
 
