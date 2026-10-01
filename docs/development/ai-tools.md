@@ -195,15 +195,15 @@ The chatbot can trigger automated GitHub Actions workflows:
 
 **Code Review Workflow**
 - Trigger: Add the `review` label to a pull request
-- Action: Uses Claude to analyze code quality, suggest improvements, check for bugs
+- Action: Uses Codex to check the diff for bugs, security and performance issues, and posts a review comment
 - Use case: Request AI-powered code review with natural language like "review this PR" or "analyze this pull request"
 
 **Implementation Workflow**
 - Trigger: Add the `implement` label to an issue
-- Action: Uses Claude to generate implementation code and create a new pull request
+- Action: Uses Codex to generate implementation code and create a new pull request
 - Use case: Request implementation generation with natural language like "implement this issue" or "generate code for this"
 
-Both workflows are configured in `.github/workflows/claude.yml` and use Claude Code Action.
+The workflows are `.github/workflows/review.yml` and `.github/workflows/implement.yml`, both using `openai/codex-action`.
 
 When the chatbot recognizes these requests, it uses the GitHub tool to add the appropriate label, triggering the automation:
 

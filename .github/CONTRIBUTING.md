@@ -119,7 +119,7 @@ PRs are squash-merged, so **the PR title becomes the commit message — it must 
 
 ## AI-assisted workflows
 
-Adding the **`implement`** label to an issue triggers `.github/workflows/implement.yml`, which runs Aider and opens an implementation PR. It is restricted to the repo owner and the companion app account, and its output still needs review before merging.
+Adding the **`implement`** label to an issue triggers `.github/workflows/implement.yml`, which runs OpenAI Codex and opens an implementation PR. Adding the **`review`** label to a PR triggers `.github/workflows/review.yml`, which posts a Codex code review comment. Both are restricted to the repo owner and the companion app account, and its output still needs review before merging.
 
 Project-local agent skills live in `.agents/skills/` (e.g. `review-style`, `planner`, `scaffold-ai-tool`, `scaffold-service`, `update-docs`) and are shared across agents — Copilot CLI reads `.agents/skills/` directly and Claude Code reaches it via the `.claude/skills` symlink. `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are symlinks to `AGENTS.md` — edit `AGENTS.md` only.
 
