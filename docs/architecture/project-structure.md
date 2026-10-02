@@ -7,7 +7,7 @@ Detailed breakdown of the MMPS directory structure.
 ```
 mmps/
 ├── src/                    # Source code
-├── apps/                   # npm workspaces — Vite mini-apps (savings-web, mindloop-web)
+├── apps/                   # npm workspaces — Vite mini-apps (savings-web, mindloop-web, earth-web)
 ├── docs/                   # VitePress documentation
 ├── dist/                   # Compiled JavaScript (generated)
 ├── coverage/               # Test coverage reports (generated)
@@ -40,7 +40,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (6 bots + savings & mindloop web apps)
+├── features/              # Bot implementations (6 bots + savings, mindloop & earth web apps)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── schedulers/    # Scheduler implementations
@@ -55,6 +55,7 @@ src/
 │   ├── chilli/            # Cat persona bot (Hebrew)
 │   ├── coach/             # Sports bot
 │   ├── mindloop/          # Brain-training mini-app backend (Mongo player API)
+│   ├── earth/             # 3D globe mini-app backend (SPA + browser-key config)
 │   ├── savings/           # Shared MongoDB-backed portfolio SPA
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot
