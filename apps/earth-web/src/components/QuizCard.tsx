@@ -1,9 +1,9 @@
 import type { QuizState } from '../game/quiz';
 import { lastAnswer, score } from '../game/quiz';
-import { countryLabel } from '../lib/format';
 import type { Country } from '../types';
 import { GameCard } from './GameCard';
 import { Icon } from './Icon';
+import { SplitFlap } from './SplitFlap';
 
 type Props = {
   readonly title: string;
@@ -15,15 +15,31 @@ type Props = {
   readonly onChangeMode: () => void;
 };
 
-function ProgressDots({ quiz }: { readonly quiz: QuizState }) {
+function Legs({ quiz }: { readonly quiz: QuizState }) {
   return (
-    <ol className="flex gap-1.5" aria-label="Progress">
+    <ol className="flex gap-1" aria-label={`Question ${quiz.index + 1} of ${quiz.questions.length}`}>
       {quiz.questions.map((code, i) => {
         const result = quiz.answers[i];
-        const tone = result ? (result.correct ? 'bg-[#34a853]' : 'bg-[#ea4335]') : i === quiz.index ? 'bg-white' : 'bg-white/20';
-        return <li key={code} className={`h-1.5 flex-1 rounded-full ${tone}`} />;
+        const tone = result ? (result.correct ? 'bg-[var(--color-ok)] text-[var(--color-ink)]' : 'bg-[var(--color-bad)] text-[var(--color-ink)]') : i === quiz.index ? 'bg-transparent ring-2 ring-[var(--color-signage)] ring-inset' : 'bg-white/10';
+        return (
+          <li key={code} className={`grid h-4 flex-1 place-items-center rounded-[3px] text-[10px] font-bold ${tone}`} aria-hidden="true">
+            {result ? (result.correct ? '✓' : '✗') : ''}
+          </li>
+        );
       })}
     </ol>
+  );
+}
+
+export function TargetBoard({ country, sound = true }: { readonly country: Country | undefined; readonly sound?: boolean }) {
+  if (!country) return null;
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[var(--color-tile)] text-2xl" aria-hidden="true">
+        {country.flag}
+      </span>
+      <SplitFlap text={country.name} sound={sound} className="text-[24px] sm:text-[30px]" />
+    </div>
   );
 }
 
@@ -33,50 +49,35 @@ export function QuizCard({ title, quiz, byCode, hint, onSkip, onNext, onChangeMo
   const guess = last?.guess ? byCode.get(last.guess) : undefined;
 
   return (
-    <GameCard title={title} status={`Question ${quiz.index + 1} of ${quiz.questions.length}`} aside={`Score ${score(quiz)}`} onChangeMode={onChangeMode}>
-      <ProgressDots quiz={quiz} />
-
-      {quiz.phase === 'asking' && (
-        <div className="mt-3 flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-medium tracking-[0.14em] text-white/50 uppercase">Find</div>
-            <div className="truncate text-2xl font-semibold">{countryLabel(target)}</div>
-          </div>
-          <button type="button" className="chip shrink-0" onClick={onSkip} title="Skip (S)">
+    <GameCard title={title} status={`· ${quiz.index + 1}/${quiz.questions.length}`} aside={`Score ${score(quiz)}`} onChangeMode={onChangeMode}>
+      <Legs quiz={quiz} />
+      <div className="mt-3 flex items-center gap-3">
+        <TargetBoard key={quiz.index} country={target} />
+        {quiz.phase === 'asking' && (
+          <button type="button" className="btn shrink-0" onClick={onSkip} title="Skip (S)">
             Skip
           </button>
-        </div>
-      )}
-      {quiz.phase === 'asking' && hint && <div className="mt-1.5 text-sm text-white/60">{hint}</div>}
-
-      {last && (
-        <div className="mt-3 flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            {last.correct && (
-              <div className="flex items-center gap-2 text-lg font-semibold text-[#5bd27a]">
-                <Icon name="check" /> Correct! {countryLabel(target)}
-              </div>
-            )}
-            {!last.correct && guess && (
-              <>
-                <div className="truncate text-lg font-semibold text-[#ff7b6e]">That’s {countryLabel(guess)}</div>
-                <div className="truncate text-sm text-white/65">{target?.name} is shown in green</div>
-              </>
-            )}
-            {!last.correct && !guess && (
-              <>
-                <div className="truncate text-lg font-semibold">Skipped</div>
-                <div className="truncate text-sm text-white/65">{countryLabel(target)} is shown in green</div>
-              </>
-            )}
-          </div>
-          {!last.correct && (
-            <button type="button" className="chip flex shrink-0 items-center gap-1" aria-pressed="true" onClick={onNext} title="Next (Enter)" autoFocus>
-              Next <Icon name="next" size={16} />
-            </button>
-          )}
-        </div>
-      )}
+        )}
+        {last && !last.correct && (
+          <button type="button" className="btn btn-signage shrink-0" onClick={onNext} title="Next (Enter)" autoFocus>
+            Next <Icon name="next" size={16} />
+          </button>
+        )}
+      </div>
+      <div className="mt-2 min-h-5 text-[15px]">
+        {quiz.phase === 'asking' && <span className="text-white/60">{hint ?? 'Spin the globe and tap the country.'}</span>}
+        {last?.correct && (
+          <span className="flex items-center gap-1.5 font-bold text-[var(--color-ok)]">
+            <Icon name="check" size={18} /> Cleared for landing
+          </span>
+        )}
+        {last && !last.correct && (
+          <span className="block min-w-0">
+            <span className="board-type mr-2 rounded bg-[var(--color-bad)] px-1.5 py-0.5 text-[14px] font-bold text-[var(--color-ink)]">✗ Gate change</span>
+            <span className="text-white/75">{guess ? `That’s ${guess.name}. ` : 'Skipped. '}The right one is in green.</span>
+          </span>
+        )}
+      </div>
     </GameCard>
   );
 }

@@ -47,7 +47,7 @@ Original React game collection served at `/mindloop/*` with 14 games across 5 sk
 - **[Learn more →](/bots/mindloop)**
 
 ### **Earth** - Find the Country Quiz
-Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the plain political map and click the country you are asked for, in four modes: Classic, Time Attack, Continent Sprint and Neighbours.
+Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the political map and click the country you are asked for. Modes are picked from an airport departures board: Today's flight, Classic, Time Attack, Continent Sprint and Neighbours. Players earn miles and tiers and collect passport stamps, all stored on the device.
 - **Database**: none (browser storage only)
 - **[Learn more →](/bots/earth)**
 

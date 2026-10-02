@@ -13,19 +13,35 @@ import {
   type Viewer,
 } from 'cesium';
 import type { Country, Ring } from '../types';
+import { PALETTE } from './colors';
 
-export const LAND_COLOR = '#f4f5f0';
-export const BORDER_COLOR = '#8796a8';
+const LAND_COLOR = PALETTE.land;
+const GRATICULE_STEP = 15;
 
 // Slightly above the ellipsoid so land never z-fights with the ocean, borders above land.
 const LAND_HEIGHT = 2_000;
 const BORDER_HEIGHT = 4_000;
+const GRATICULE_HEIGHT = 500;
 
 const toPositions = (ring: Ring, height: number) => {
   const coords: number[] = [];
   for (let i = 0; i < ring.length; i += 2) coords.push(ring[i], ring[i + 1], height);
   return Cartesian3.fromDegreesArrayHeights(coords);
 };
+
+// Faint latitude/longitude lines on the sea, like a navigation chart. Land is drawn over them.
+function graticule(): GeometryInstance[] {
+  const color = ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString(PALETTE.graticule));
+  const line = (coords: number[]) =>
+    new GeometryInstance({
+      geometry: new SimplePolylineGeometry({ positions: Cartesian3.fromDegreesArrayHeights(coords), arcType: ArcType.RHUMB, granularity: CesiumMath.RADIANS_PER_DEGREE }),
+      attributes: { color },
+    });
+  const lines: GeometryInstance[] = [];
+  for (let lon = -180; lon < 180; lon += GRATICULE_STEP) lines.push(line([lon, -80, GRATICULE_HEIGHT, lon, 0, GRATICULE_HEIGHT, lon, 80, GRATICULE_HEIGHT]));
+  for (let lat = -75; lat <= 75; lat += GRATICULE_STEP) lines.push(line([-180, lat, GRATICULE_HEIGHT, -60, lat, GRATICULE_HEIGHT, 60, lat, GRATICULE_HEIGHT, 180, lat, GRATICULE_HEIGHT]));
+  return lines;
+}
 
 export class CountriesLayer {
   private readonly land: Primitive;
@@ -37,9 +53,9 @@ export class CountriesLayer {
   constructor(viewer: Viewer, countries: readonly Country[]) {
     this.viewer = viewer;
     const landColor = ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString(LAND_COLOR));
-    const borderColor = ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString(BORDER_COLOR));
+    const borderColor = ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString(PALETTE.border));
     const landInstances: GeometryInstance[] = [];
-    const borderInstances: GeometryInstance[] = [];
+    const borderInstances: GeometryInstance[] = graticule();
 
     for (const country of countries) {
       const ids: string[] = [];

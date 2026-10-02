@@ -7,7 +7,9 @@ import type { Country } from '../types';
 const HINT_MS = 2200;
 
 // Turns globe clicks into country picks and tracks the hovered country while `active`.
-export function useGlobePointer(engine: EarthEngine, active: boolean, onPick: (country: Country) => void) {
+export type ScreenPoint = { readonly x: number; readonly y: number };
+
+export function useGlobePointer(engine: EarthEngine, active: boolean, onPick: (country: Country, at: ScreenPoint) => void) {
   const { viewer, countries } = engine;
   const [hover, setHover] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export function useGlobePointer(engine: EarthEngine, active: boolean, onPick: (c
       }
       setHint(null);
       setHover(null);
-      onPickRef.current(country);
+      onPickRef.current(country, { x: position.x, y: position.y });
     }, ScreenSpaceEventType.LEFT_CLICK);
 
     let frame = 0;

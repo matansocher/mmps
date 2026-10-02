@@ -1,7 +1,6 @@
 import { Color, ScreenSpaceEventType, Viewer } from 'cesium';
 import { MAX_ALTITUDE, MIN_ALTITUDE } from './camera';
-
-export const OCEAN_COLOR = '#1f5fa8';
+import { PALETTE } from './colors';
 
 export function createEarthViewer(container: HTMLElement): Viewer {
   const viewer = new Viewer(container, {
@@ -28,12 +27,18 @@ export function createEarthViewer(container: HTMLElement): Viewer {
   viewer.resolutionScale = Math.min(dpr, 2) / dpr;
 
   const { scene } = viewer;
-  scene.globe.baseColor = Color.fromCssColorString(OCEAN_COLOR);
+  scene.globe.baseColor = Color.fromCssColorString(PALETTE.ocean);
   scene.globe.showGroundAtmosphere = false;
   scene.globe.enableLighting = false;
   scene.fog.enabled = false;
-  if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
-  scene.backgroundColor = Color.BLACK;
+  // A warm dusk halo around the limb, like the view from a night flight.
+  if (scene.skyAtmosphere) {
+    scene.skyAtmosphere.show = true;
+    scene.skyAtmosphere.hueShift = -0.08;
+    scene.skyAtmosphere.saturationShift = -0.15;
+    scene.skyAtmosphere.brightnessShift = 0.05;
+  }
+  scene.backgroundColor = Color.fromCssColorString('#060a0e');
   if (scene.skyBox) scene.skyBox.show = true;
   if (scene.sun) scene.sun.show = false;
   if (scene.moon) scene.moon.show = false;

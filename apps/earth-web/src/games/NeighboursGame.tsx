@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GameCard } from '../components/GameCard';
 import { Icon } from '../components/Icon';
+import { TargetBoard } from '../components/QuizCard';
 import { RoundSummary } from '../components/RoundSummary';
+import { Stamps, useStamps } from '../components/Stamps';
 import { bestScoreKey, questionPool } from '../game/modes';
 import { classifyGuess, createNeighbours, currentQuestion, giveUp, guess, isComplete, MAX_MISSES, maxScore, type NeighboursState, next, score } from '../game/neighbours';
 import { COLORS } from '../globe/colors';
 import { useBestScore } from '../hooks/useBestScore';
 import { useGlobePointer } from '../hooks/useGlobePointer';
 import { useKeyboard } from '../hooks/useKeyboard';
-import { countryLabel } from '../lib/format';
+import { useRoundOutcome } from '../store/progress';
+import { drawLeg, flightCode, useContinentOf } from './flight';
 import { focusRegion } from './focus';
 import type { GameProps } from './types';
 
 type Feedback = { readonly good: boolean; readonly text: string };
 
 export function NeighboursGame({ engine, mode, onChangeMode }: GameProps<{ readonly kind: 'neighbours' }>) {
-  const { countries, layer } = engine;
+  const { countries, layer, route } = engine;
   const pool = useMemo(() => questionPool(countries.countries, mode), [countries, mode]);
   const [game, setGame] = useState<NeighboursState>(() => createNeighbours(pool));
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -26,12 +29,21 @@ export function NeighboursGame({ engine, mode, onChangeMode }: GameProps<{ reado
   const shown = question ?? (review === null ? null : game.questions[review]);
   const nameOf = (code: string) => countries.byCode.get(code)?.name ?? code;
 
-  const { hover, hint, setHint } = useGlobePointer(engine, game.phase === 'asking', (country) => {
+  const { stamps, stamp } = useStamps();
+  const continentOf = useContinentOf(engine);
+  const { hover, hint, setHint } = useGlobePointer(engine, game.phase === 'asking', (country, at) => {
     if (!question) return;
     const kind = classifyGuess(question, country.code);
     if (kind === 'center') setHint(`That’s ${country.name} itself — click the countries around it.`);
-    if (kind === 'hit') setFeedback({ good: true, text: `✓ ${country.name}` });
-    if (kind === 'miss') setFeedback({ good: false, text: `✗ ${country.name} doesn’t border ${nameOf(question.center)}` });
+    if (kind === 'hit') {
+      stamp(at.x, at.y, true, country.name);
+      drawLeg(engine, question.center, country.code);
+      setFeedback({ good: true, text: `✓ ${country.name}` });
+    }
+    if (kind === 'miss') {
+      stamp(at.x, at.y, false, country.name);
+      setFeedback({ good: false, text: `✗ ${country.name} doesn’t border ${nameOf(question.center)}` });
+    }
     setGame((g) => guess(g, country.code));
   });
 
@@ -49,21 +61,29 @@ export function NeighboursGame({ engine, mode, onChangeMode }: GameProps<{ reado
     layer.setColor(shown.center, COLORS.center);
   }, [layer, game.phase, shown, hover]);
 
+  const outcome = useRoundOutcome(
+    game.phase === 'finished' ? game : null,
+    () => ({ kind: 'neighbours', score: score(game), outOf: maxScore(game), found: game.questions.flatMap((q) => q.found) }),
+    continentOf,
+  );
+
   useEffect(() => {
     if (game.phase === 'finished') setNewBest(record(score(game)));
   }, [game, record]);
 
   const goNext = useCallback(() => {
     setFeedback(null);
+    route.clear();
     setGame(next);
-  }, []);
+  }, [route]);
   const goGiveUp = useCallback(() => setGame(giveUp), []);
   const playAgain = useCallback(() => {
     setReview(null);
     setNewBest(false);
     setFeedback(null);
+    route.clear();
     setGame(createNeighbours(pool));
-  }, [pool]);
+  }, [pool, route]);
 
   useKeyboard({
     Enter: () => (game.phase === 'finished' ? playAgain() : game.phase === 'answered' && goNext()),
@@ -74,57 +94,52 @@ export function NeighboursGame({ engine, mode, onChangeMode }: GameProps<{ reado
   if (game.phase === 'finished') {
     const items = game.questions.map((q) => ({ code: q.center, correct: isComplete(q), note: `${q.found.length} / ${q.neighbours.length}` }));
     const showQuestion = (code: string) => setReview(game.questions.findIndex((q) => q.center === code));
-    return <RoundSummary heading="Neighbours · Round complete" score={score(game)} outOf={maxScore(game)} best={best} newBest={newBest} items={items} byCode={countries.byCode} onPlayAgain={playAgain} onChangeMode={onChangeMode} onShowCountry={showQuestion} />;
+    return <RoundSummary title="Neighbours" flight={flightCode(mode)} outcome={outcome} score={score(game)} outOf={maxScore(game)} best={best} newBest={newBest} items={items} byCode={countries.byCode} onPlayAgain={playAgain} onChangeMode={onChangeMode} onShowCountry={showQuestion} />;
   }
   if (!question) return null;
 
   const total = question.neighbours.length;
-  const center = countryLabel(countries.byCode.get(question.center));
+  const centerCountry = countries.byCode.get(question.center);
 
   return (
-    <GameCard title="Neighbours" status={`Question ${game.index + 1} of ${game.questions.length}`} aside={`Score ${score(game)}`} onChangeMode={onChangeMode}>
-      {game.phase === 'asking' ? (
-        <>
-          <div className="text-[11px] font-medium tracking-[0.14em] text-white/50 uppercase">Click every country bordering</div>
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1 truncate text-2xl font-semibold">{center}</div>
-            <button type="button" className="chip shrink-0" onClick={goGiveUp} title="Give up (S)">
+    <>
+      <GameCard title="Neighbours" status={`· ${game.index + 1}/${game.questions.length}`} aside={`Score ${score(game)}`} onChangeMode={onChangeMode}>
+        <div className="board-type mb-1.5 text-[15px] font-semibold text-white/60">Connecting flights from</div>
+        <div className="flex items-center gap-3">
+          <TargetBoard key={question.center} country={centerCountry} />
+          {game.phase === 'asking' ? (
+            <button type="button" className="btn shrink-0" onClick={goGiveUp} title="Give up (S)">
               Give up
             </button>
-          </div>
-          <div className="mt-2 flex items-center gap-3 text-sm text-white/70">
-            <span className="tabular-nums">
-              Found <span className="font-semibold text-white">{question.found.length}</span> of {total}
-            </span>
-            <span className="flex items-center gap-1" aria-label={`${question.misses.length} of ${MAX_MISSES} misses used`}>
-              {Array.from({ length: MAX_MISSES }, (_, i) => (
-                <span key={i} className={`h-2 w-2 rounded-full ${i < question.misses.length ? 'bg-[#ea4335]' : 'bg-white/25'}`} />
-              ))}
-            </span>
-          </div>
-          {(hint || feedback) && <div className={`mt-1 truncate text-sm ${hint ? 'text-white/60' : feedback?.good ? 'text-[#5bd27a]' : 'text-[#ff7b6e]'}`}>{hint ?? feedback?.text}</div>}
-        </>
-      ) : (
-        <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            {isComplete(question) ? (
-              <div className="flex items-center gap-2 text-lg font-semibold text-[#5bd27a]">
-                <Icon name="check" /> All {total} found!
-              </div>
-            ) : (
-              <>
-                <div className="truncate text-lg font-semibold">
-                  Found {question.found.length} of {total}
-                </div>
-                <div className="truncate text-sm text-white/65">Missed neighbours are shown in light green</div>
-              </>
-            )}
-          </div>
-          <button type="button" className="chip flex shrink-0 items-center gap-1" aria-pressed="true" onClick={goNext} title="Next (Enter)" autoFocus>
-            Next <Icon name="next" size={16} />
-          </button>
+          ) : (
+            <button type="button" className="btn btn-signage shrink-0" onClick={goNext} title="Next (Enter)" autoFocus>
+              Next <Icon name="next" size={16} />
+            </button>
+          )}
         </div>
-      )}
-    </GameCard>
+        <div className="mt-2.5 flex items-center gap-3 text-[15px] text-white/70">
+          <span className="board-type text-[17px] tabular-nums">
+            Found <span className="font-bold text-white">{question.found.length}</span>/{total}
+          </span>
+          <span className="flex items-center gap-1" aria-label={`${question.misses.length} of ${MAX_MISSES} misses used`}>
+            {Array.from({ length: MAX_MISSES }, (_, i) => (
+              <span key={i} className={`grid h-4 w-4 place-items-center rounded-[3px] text-[10px] font-bold ${i < question.misses.length ? 'bg-[var(--color-bad)] text-[var(--color-ink)]' : 'bg-white/10'}`}>
+                {i < question.misses.length ? '✗' : ''}
+              </span>
+            ))}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-right">
+            {game.phase === 'asking' ? (
+              <span className={hint ? 'text-white/60' : feedback?.good ? 'text-[var(--color-ok)]' : 'text-[var(--color-bad)]'}>{hint ?? feedback?.text ?? 'Tap every bordering country.'}</span>
+            ) : isComplete(question) ? (
+              <span className="font-bold text-[var(--color-ok)]">✓ All {total} found!</span>
+            ) : (
+              <span>Missed ones are in pale green</span>
+            )}
+          </span>
+        </div>
+      </GameCard>
+      <Stamps stamps={stamps} />
+    </>
   );
 }
