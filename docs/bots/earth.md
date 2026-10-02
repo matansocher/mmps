@@ -4,20 +4,26 @@ Earth is a public geography quiz on a 3D globe. It is built with React and Cesiu
 
 ## How it plays
 
-- The globe is a plain political map: blue ocean, every country a white surface with grey borders and no names.
-- Each round asks for 10 countries. Spin and zoom the globe, then click the country you're asked for. You get one try per question.
-- **Correct:** the country turns green and the next question follows automatically.
-- **Wrong:** your pick turns red, the right country turns green and the camera flies to it. **Skip** works the same way.
-- Clicking water or space only shows a hint and does not count as a guess.
-- At the end of the round a summary lists every answer (click one to fly there) and your best score, which is kept in `localStorage`.
+The globe is a plain political map: blue ocean, every country a white surface with grey borders and no names. Spin and zoom it, then click the country you are asked for. Clicking water or space only shows a hint and is not counted as a guess.
+
+Pick one of four modes on the start screen (press `M` or the close button to come back to it):
+
+| Mode | Rules |
+| --- | --- |
+| **Classic** | 10 countries from anywhere on Earth, one try each. Correct: the country turns green and the next question follows. Wrong or skipped: your pick turns red, the right country turns green and the camera flies to it. |
+| **Time Attack** | Find as many countries as you can in 60 seconds. Each miss or skip costs 3 seconds. The pick flashes red, the answer flashes green, and the next question follows right away. |
+| **Continent Sprint** | Classic rules, limited to one continent (Africa, Asia, Europe, North America, South America or Oceania). The camera starts over that continent. A round has up to 10 questions; Oceania has 7. |
+| **Neighbours** | One country is highlighted in yellow. Click every country that borders it (found ones turn green). You can make up to 3 wrong clicks per question; when they run out, or when you press `S` to give up, the missed neighbours are shown in light green. A round has 5 questions, and each neighbour found is worth 1 point. Only countries with at least 2 neighbours are asked. |
+
+- At the end of a round, a summary lists every question (click one to fly there). Each mode keeps its own best score in `localStorage`, and each continent has a separate one.
 - Countries under 1,000 km² (Vatican, Monaco, Singapore…) are drawn and clickable, but never asked.
-- **Keyboard:** press `?` for the shortcut list (`Enter` next, `S` skip, `+`/`-` zoom, arrows rotate, `N` north up, `R` home).
+- **Keyboard:** press `?` for the shortcut list (`Enter` next, `S` skip / give up, `M` change mode, `+`/`-` zoom, arrows rotate, `N` north up, `R` home).
 
 ## Architecture
 
 | Layer | Path | Notes |
 | --- | --- | --- |
-| Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe rendering in `src/globe/`. Quiz logic and point-in-country lookup in `src/game/` (pure, unit-tested). |
+| Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe rendering in `src/globe/`. Mode logic (`modes.ts`, `quiz.ts`, `time-attack.ts`, `neighbours.ts`) and point-in-country lookup in `src/game/` (pure, unit-tested). One React component per mode in `src/games/`. |
 | Data | `apps/earth-web/public/data/countries.json` | Country polygons generated from the Worldly bot's `src/features/worldly/assets/countries.json`. |
 | Backend | `src/features/earth` | Only serves the built SPA. |
 
@@ -35,7 +41,8 @@ The script rebuilds `countries.json`. It:
 
 - computes each country's area;
 - drops territories that the source draws twice (French Guiana also appears inside France);
-- cuts enclaves (San Marino, Vatican City, Monaco) out of the surrounding country as holes.
+- cuts enclaves (San Marino, Vatican City, Monaco) out of the surrounding country as holes;
+- finds each country's land neighbours: two countries are neighbours when their borders come within 0.01° of each other.
 
 Clicks on any remaining border slivers go to the smaller country.
 

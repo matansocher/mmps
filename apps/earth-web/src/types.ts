@@ -19,5 +19,6 @@ export type Country = {
   readonly flag: string;
   readonly continent: string;
   readonly area: number; // km²
+  readonly neighbours: readonly string[]; // Codes of countries sharing a land border
   readonly polygons: readonly Polygon[];
 };

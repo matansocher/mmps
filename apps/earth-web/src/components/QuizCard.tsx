@@ -1,14 +1,18 @@
 import type { QuizState } from '../game/quiz';
 import { lastAnswer, score } from '../game/quiz';
+import { countryLabel } from '../lib/format';
 import type { Country } from '../types';
+import { GameCard } from './GameCard';
 import { Icon } from './Icon';
 
 type Props = {
+  readonly title: string;
   readonly quiz: QuizState;
   readonly byCode: ReadonlyMap<string, Country>;
   readonly hint: string | null;
   readonly onSkip: () => void;
   readonly onNext: () => void;
+  readonly onChangeMode: () => void;
 };
 
 function ProgressDots({ quiz }: { readonly quiz: QuizState }) {
@@ -23,28 +27,20 @@ function ProgressDots({ quiz }: { readonly quiz: QuizState }) {
   );
 }
 
-const label = (country: Country | undefined) => (country ? `${country.flag} ${country.name}` : '');
-
-export function QuizCard({ quiz, byCode, hint, onSkip, onNext }: Props) {
+export function QuizCard({ title, quiz, byCode, hint, onSkip, onNext, onChangeMode }: Props) {
   const target = byCode.get(quiz.questions[quiz.index]);
   const last = quiz.phase === 'answered' ? lastAnswer(quiz) : null;
   const guess = last?.guess ? byCode.get(last.guess) : undefined;
 
   return (
-    <section className="glass fixed top-4 left-1/2 z-20 w-[min(460px,calc(100vw-24px))] -translate-x-1/2 rounded-2xl px-5 pt-3.5 pb-4" aria-live="polite">
-      <div className="mb-2 flex items-center justify-between text-xs text-white/55">
-        <span>
-          Question {quiz.index + 1} of {quiz.questions.length}
-        </span>
-        <span>Score {score(quiz)}</span>
-      </div>
+    <GameCard title={title} status={`Question ${quiz.index + 1} of ${quiz.questions.length}`} aside={`Score ${score(quiz)}`} onChangeMode={onChangeMode}>
       <ProgressDots quiz={quiz} />
 
       {quiz.phase === 'asking' && (
         <div className="mt-3 flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-medium tracking-[0.14em] text-white/50 uppercase">Find</div>
-            <div className="truncate text-2xl font-semibold">{label(target)}</div>
+            <div className="truncate text-2xl font-semibold">{countryLabel(target)}</div>
           </div>
           <button type="button" className="chip shrink-0" onClick={onSkip} title="Skip (S)">
             Skip
@@ -58,19 +54,19 @@ export function QuizCard({ quiz, byCode, hint, onSkip, onNext }: Props) {
           <div className="min-w-0 flex-1">
             {last.correct && (
               <div className="flex items-center gap-2 text-lg font-semibold text-[#5bd27a]">
-                <Icon name="check" /> Correct! {label(target)}
+                <Icon name="check" /> Correct! {countryLabel(target)}
               </div>
             )}
             {!last.correct && guess && (
               <>
-                <div className="truncate text-lg font-semibold text-[#ff7b6e]">That’s {label(guess)}</div>
+                <div className="truncate text-lg font-semibold text-[#ff7b6e]">That’s {countryLabel(guess)}</div>
                 <div className="truncate text-sm text-white/65">{target?.name} is shown in green</div>
               </>
             )}
             {!last.correct && !guess && (
               <>
                 <div className="truncate text-lg font-semibold">Skipped</div>
-                <div className="truncate text-sm text-white/65">{label(target)} is shown in green</div>
+                <div className="truncate text-sm text-white/65">{countryLabel(target)} is shown in green</div>
               </>
             )}
           </div>
@@ -81,6 +77,6 @@ export function QuizCard({ quiz, byCode, hint, onSkip, onNext }: Props) {
           )}
         </div>
       )}
-    </section>
+    </GameCard>
   );
 }

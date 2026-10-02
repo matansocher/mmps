@@ -73,3 +73,15 @@ export async function loadCountries(url = `${import.meta.env.BASE_URL}data/count
   if (!response.ok) throw new Error(`Couldn’t load the map data (${response.status}).`);
   return (await response.json()) as Country[];
 }
+
+// Frames several countries at once (a country and its neighbours) by their main landmasses.
+export function regionFocus(countries: readonly Country[]): LatLon & { readonly spanKm: number } {
+  const boxes = countries.map((country) => country.polygons.map((polygon) => ringBBox(polygon[0])).reduce((best, box) => (bboxArea(box) > bboxArea(best) ? box : best)));
+  const west = Math.min(...boxes.map((b) => b.west));
+  const east = Math.max(...boxes.map((b) => b.east));
+  const south = Math.min(...boxes.map((b) => b.south));
+  const north = Math.max(...boxes.map((b) => b.north));
+  const lat = (south + north) / 2;
+  const widthKm = (east - west) * 111.32 * Math.cos((lat * Math.PI) / 180);
+  return { lat, lon: (west + east) / 2, spanKm: Math.max(widthKm, (north - south) * 110.57) };
+}

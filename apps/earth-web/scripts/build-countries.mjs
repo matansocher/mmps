@@ -87,10 +87,48 @@ const parsed = source
     };
   });
 
+// Coarse borders don't always share vertices (Andorra), so countries closer than this touch.
+const NEIGHBOUR_TOLERANCE_DEG = 0.01;
+
+function segmentDistance(px, py, ax, ay, bx, by) {
+  const [dx, dy] = [bx - ax, by - ay];
+  const lengthSq = dx * dx + dy * dy;
+  const t = lengthSq ? Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / lengthSq)) : 0;
+  return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+}
+
+function touches(a, b) {
+  for (const ring of a.polygons.flat()) {
+    for (const other of b.polygons.flat()) {
+      for (let i = 0; i < ring.length; i += 2) {
+        for (let j = 0; j < other.length; j += 2) {
+          const k = (j + 2) % other.length;
+          if (segmentDistance(ring[i], ring[i + 1], other[j], other[j + 1], other[k], other[k + 1]) < NEIGHBOUR_TOLERANCE_DEG) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function addNeighbours(countries) {
+  for (const country of countries) country.neighbours = [];
+  for (let i = 0; i < countries.length; i++) {
+    for (let j = i + 1; j < countries.length; j++) {
+      const [a, b] = [countries[i], countries[j]];
+      if (!touches(a, b) && !touches(b, a)) continue;
+      a.neighbours.push(b.code);
+      b.neighbours.push(a.code);
+    }
+  }
+  for (const country of countries) country.neighbours.sort();
+}
+
 resolveOverlaps(parsed);
+addNeighbours(parsed);
 
 const countries = parsed
-  .map(({ polygons, ...country }) => ({ ...country, area: Math.round(polygons.reduce((sum, polygon) => sum + polygonArea(polygon), 0)), polygons }))
+  .map(({ polygons, neighbours, ...country }) => ({ ...country, area: Math.round(polygons.reduce((sum, polygon) => sum + polygonArea(polygon), 0)), neighbours, polygons }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
 writeFileSync(TARGET, JSON.stringify(countries));

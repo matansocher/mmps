@@ -29,6 +29,13 @@ export function ErrorScreen({ title, message, onRetry }: { readonly title: strin
   );
 }
 
+const MODES: ReadonlyArray<readonly [string, string]> = [
+  ['Classic', '10 countries, one click each. Miss and the right one lights up in green.'],
+  ['Time Attack', 'As many countries as you can in 60 seconds. A wrong click or a skip costs 3 seconds.'],
+  ['Continent Sprint', 'Classic rules, but every country comes from the continent you pick.'],
+  ['Neighbours', 'Click every country bordering the yellow one. Three misses ends the question.'],
+];
+
 const SHORTCUTS: ReadonlyArray<readonly [string, string]> = [
   ['Click', 'Pick a country'],
   ['Drag', 'Spin the globe'],
@@ -36,7 +43,8 @@ const SHORTCUTS: ReadonlyArray<readonly [string, string]> = [
   ['← ↑ → ↓', 'Spin'],
   ['+ / −', 'Zoom in / out'],
   ['Enter', 'Next question'],
-  ['S', 'Skip'],
+  ['S', 'Skip / give up'],
+  ['M', 'Change mode'],
   ['N', 'Reset to north'],
   ['R', 'Show the whole globe'],
   ['?', 'Show this help'],
@@ -60,9 +68,13 @@ export function HelpDialog({ onClose }: { readonly onClose: () => void }) {
           Close
         </button>
       </div>
-      <p className="px-5 pt-4 text-sm leading-relaxed text-white/75">
-        Each round asks for 10 countries. Spin and zoom the globe, then click the country you’re asked for. You get one try per country — if you miss, the right one lights up in green.
-      </p>
+      <ul className="space-y-1.5 px-5 pt-4 text-sm leading-relaxed text-white/75">
+        {MODES.map(([name, rule]) => (
+          <li key={name}>
+            <span className="font-medium text-white">{name}</span> — {rule}
+          </li>
+        ))}
+      </ul>
       <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 px-5 py-4 text-sm">
         {SHORTCUTS.map(([key, desc]) => (
           <div key={key} className="contents">
