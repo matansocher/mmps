@@ -1,7 +1,7 @@
 import type { IconName } from './Icon';
 import { Icon } from './Icon';
 
-export type PanelId = 'voyager' | 'places' | 'layers' | 'measure';
+export type PanelId = 'voyager' | 'places' | 'layers' | 'measure' | 'usage';
 
 type RailButton = { readonly id: string; readonly icon: IconName; readonly label: string; readonly pressed?: boolean; readonly onClick: () => void; readonly desktopOnly?: boolean };
 
@@ -28,6 +28,7 @@ export function Rail({ panel, onPanel, onLucky, onScreenshot, onShare, onFullscr
     { id: 'screenshot', icon: 'camera', label: 'Screenshot', onClick: onScreenshot },
     { id: 'share', icon: 'share', label: 'Copy link to this view', onClick: onShare },
     { id: 'fullscreen', icon: fullscreen ? 'fullscreenExit' : 'fullscreen', label: fullscreen ? 'Exit full screen' : 'Full screen', onClick: onFullscreen, desktopOnly: true },
+    { id: 'usage', icon: 'usage', label: 'API usage & cost', pressed: panel === 'usage', onClick: () => onPanel('usage'), desktopOnly: true },
     { id: 'help', icon: 'help', label: 'Keyboard shortcuts', onClick: onHelp, desktopOnly: true },
   ];
 

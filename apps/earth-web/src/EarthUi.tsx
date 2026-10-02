@@ -9,6 +9,7 @@ import { PlacesPanel } from './components/PlacesPanel';
 import { Rail, type PanelId } from './components/Rail';
 import { SearchBox } from './components/SearchBox';
 import { TourBar } from './components/TourBar';
+import { UsagePanel } from './components/UsagePanel';
 import { VoyagerPanel } from './components/VoyagerPanel';
 import { flyToPlace, flyToTarget, getCameraView, nudge, resetNorth, toggleTilt, zoomBy } from './globe/camera';
 import { EngineContext } from './globe/context';
@@ -481,6 +482,7 @@ export function EarthUi({ engine, config }: Props) {
       {panel === 'measure' && (
         <MeasurePanel result={measureResult} units={settings.units} onMode={onMeasureMode} onUndo={() => engine.measure.undo()} onClear={() => engine.measure.clear()} onClose={() => setPanel(null)} />
       )}
+      {panel === 'usage' && <UsagePanel onClose={() => setPanel(null)} />}
       {panel === 'voyager' && <VoyagerPanel tour={tour} onPlayTour={(stops) => { setPanel(null); playStops(stops); }} onVisit={(stop) => playStops([stop])} onClose={() => setPanel(null)} />}
 
       {selection && !tour && (

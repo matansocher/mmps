@@ -26,6 +26,7 @@ export function SearchBox({ apiKey, placesEnabled, getBias, inputRef, onSelect, 
   const [active, setActive] = useState(0);
   const [recents, setRecents] = useState<Recent[]>(() => readJson('recents', [], isRecentList));
   const sessionToken = useRef(newId());
+  const selectedQuery = useRef<string | null>(null); // the name filled in after a pick; not a new search
   const listId = useId();
   const getBiasRef = useRef(getBias);
   useEffect(() => {
@@ -36,6 +37,8 @@ export function SearchBox({ apiKey, placesEnabled, getBias, inputRef, onSelect, 
   const coordinates = trimmed ? parseCoordinates(trimmed) : null;
 
   useEffect(() => {
+    if (trimmed === selectedQuery.current) return;
+    selectedQuery.current = null;
     if (!trimmed || coordinates || !placesEnabled) {
       setResults([]);
       setLoading(false);
@@ -79,6 +82,7 @@ export function SearchBox({ apiKey, placesEnabled, getBias, inputRef, onSelect, 
   const finish = (place: PlaceTarget) => {
     remember(place);
     onSelect(place);
+    selectedQuery.current = place.name.trim();
     setQuery(place.name);
     setOpen(false);
     inputRef.current?.blur();

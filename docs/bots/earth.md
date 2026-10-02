@@ -9,6 +9,7 @@ Earth is a public 3D globe in the style of Google Earth. It is built with React 
 - **Search:** Google Places autocomplete, biased to the current view. Accepts coordinates (`48.858, 2.294`). Clicking a result flies the camera there and shows an info card.
 - **Voyager:** guided tours (Wonders of the World, Great Cities, Natural Marvels, Around the Mediterranean) and single places. Tours have previous/next/stop controls. "I'm feeling lucky" flies to a random landmark.
 - **Tools:** distance and area measuring, saved places (stored in this browser) with KML/GeoJSON export, KML/KMZ/GeoJSON import by file picker or drag-and-drop, PNG screenshots, and shareable links.
+- **API usage & cost:** a rail panel (desktop) estimates this month's Google API cost for the current browser. It counts billed root 3D tileset requests and 2D tiles by watching network requests (`PerformanceObserver`), and Places autocomplete and details calls from the search box. Autocomplete requests become free when the search ends in a picked place. Each counter is shown against Google's free monthly amount, priced at the first paid tier. Counts are stored per month in `localStorage`. The panel links to the Cloud Console metrics and billing report, which have the exact bill.
 - **Shareable views:** the URL hash stores the camera as `#@lat,lon,{altitude}a,{heading}h,{tilt}t`. Opening the link restores the view.
 - **Keyboard:** press `?` for the shortcut list.
 

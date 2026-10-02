@@ -1,4 +1,5 @@
 import type { LatLon, PlaceTarget, SearchResult } from '../types';
+import { recordAutocomplete, recordPlaceDetails } from './usage';
 
 const BASE = 'https://places.googleapis.com/v1';
 
@@ -26,6 +27,7 @@ const toLatLon = (p: GoogleLatLng): LatLon => ({ lat: p.latitude, lon: p.longitu
 export async function autocompletePlaces(key: string, input: string, sessionToken: string, signal: AbortSignal, bias?: LatLon): Promise<SearchResult[]> {
   const body: Record<string, unknown> = { input, sessionToken };
   if (bias) body.locationBias = { circle: { center: { latitude: bias.lat, longitude: bias.lon }, radius: 50_000 } };
+  recordAutocomplete(sessionToken);
   const response = await fetch(`${BASE}/places:autocomplete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key },
@@ -47,6 +49,7 @@ export async function autocompletePlaces(key: string, input: string, sessionToke
 
 export async function getPlaceDetails(key: string, placeId: string, sessionToken: string): Promise<PlaceTarget> {
   const url = `${BASE}/places/${encodeURIComponent(placeId)}?sessionToken=${encodeURIComponent(sessionToken)}`;
+  recordPlaceDetails(sessionToken);
   const response = await fetch(url, {
     headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'displayName,formattedAddress,location,viewport' },
   });
