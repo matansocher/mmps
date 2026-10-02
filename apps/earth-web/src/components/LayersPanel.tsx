@@ -54,7 +54,8 @@ export function LayersPanel(props: Props) {
       </div>
 
       <SectionTitle>Layers</SectionTitle>
-      <Toggle label="Place labels" checked={settings.labels} onChange={(labels) => onSettings({ labels })} hint="Countries and cities" />
+      <Toggle label="Country names" checked={settings.countryLabels} onChange={(countryLabels) => onSettings({ countryLabels })} />
+      <Toggle label="City names" checked={settings.cityLabels} onChange={(cityLabels) => onSettings({ cityLabels })} hint="Capitals and major cities" />
       <Toggle label="Borders" checked={settings.borders} onChange={(borders) => onSettings({ borders })} />
       <Toggle label="Gridlines" checked={settings.grid} onChange={(grid) => onSettings({ grid })} hint="Latitude / longitude every 15°" />
       <Toggle label="Atmosphere" checked={settings.atmosphere} onChange={(atmosphere) => onSettings({ atmosphere })} />

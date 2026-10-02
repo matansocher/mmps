@@ -71,13 +71,64 @@ export function flyToPlace(viewer: Viewer, place: PlaceTarget): Promise<boolean>
   return flyToTarget(viewer, { lat: place.lat, lon: place.lon, height: 0, range, heading: 0, pitch });
 }
 
+export const MAX_ALTITUDE = 60_000_000;
+
+const FULL_TILT_BELOW = 400_000;
+const NO_TILT_ABOVE = 6_000_000;
+const USER_INPUT_WINDOW_MS = 1200;
+
+// Like Google Earth: the higher you go, the less the view may tilt, so zooming out always ends straight down on a centered globe.
+export function maxPitchForHeight(height: number): number {
+  const t = Math.min(Math.max((height - FULL_TILT_BELOW) / (NO_TILT_ABOVE - FULL_TILT_BELOW), 0), 1);
+  return CesiumMath.toRadians(-90 * t);
+}
+
+export function limitTilt(viewer: Viewer): void {
+  const { camera, scene } = viewer;
+  const maxPitch = maxPitchForHeight(camera.positionCartographic.height);
+  if (camera.pitch <= maxPitch + 1e-4) return;
+  const center = pickScreenCenter(viewer);
+  if (center) {
+    const range = Math.min(Cartesian3.distance(camera.positionWC, center), MAX_ALTITUDE);
+    camera.lookAt(center, new HeadingPitchRange(camera.heading, maxPitch, range));
+    camera.lookAtTransform(Matrix4.IDENTITY);
+  } else {
+    camera.setView({ orientation: { heading: camera.heading, pitch: maxPitch, roll: 0 } });
+  }
+  scene.requestRender();
+}
+
+// Only clamps right after user input (incl. inertia) so programmatic flights and tours aren't fought.
+export function installTiltLimiter(viewer: Viewer): () => void {
+  const canvas = viewer.scene.canvas;
+  let lastInput = 0;
+  const mark = () => (lastInput = performance.now());
+  const markDrag = (event: PointerEvent) => event.buttons !== 0 && mark();
+  const options = { passive: true, capture: true };
+  canvas.addEventListener('wheel', mark, options);
+  canvas.addEventListener('pointerdown', mark, options);
+  canvas.addEventListener('pointermove', markDrag, options);
+  canvas.addEventListener('touchmove', mark, options);
+  const removePreUpdate = viewer.scene.preUpdate.addEventListener(() => {
+    if (performance.now() - lastInput < USER_INPUT_WINDOW_MS) limitTilt(viewer);
+  });
+  return () => {
+    removePreUpdate();
+    canvas.removeEventListener('wheel', mark, options);
+    canvas.removeEventListener('pointerdown', mark, options);
+    canvas.removeEventListener('pointermove', markDrag, options);
+    canvas.removeEventListener('touchmove', mark, options);
+  };
+}
+
 function orbitAroundCenter(viewer: Viewer, heading: number, pitch: number | null, rangeFactor: number, seconds: number): boolean {
   const center = pickScreenCenter(viewer);
   if (!center) return false;
   const { camera } = viewer;
-  const range = Cartesian3.distance(camera.positionWC, center) * rangeFactor;
+  const range = Math.min(Math.max(Cartesian3.distance(camera.positionWC, center) * rangeFactor, 20), 50_000_000);
+  const targetPitch = Math.min(pitch ?? camera.pitch, maxPitchForHeight(range));
   camera.flyToBoundingSphere(new BoundingSphere(center, 0), {
-    offset: new HeadingPitchRange(heading, pitch ?? camera.pitch, Math.min(Math.max(range, 20), 50_000_000)),
+    offset: new HeadingPitchRange(heading, targetPitch, range),
     duration: duration(seconds),
   });
   return true;

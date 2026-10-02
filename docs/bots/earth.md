@@ -4,8 +4,8 @@ Earth is a public 3D globe in the style of Google Earth. It is built with React 
 
 ## Features
 
-- **Globe navigation:** drag to rotate the globe, scroll or right-drag to zoom, and Ctrl/Shift-drag or middle-drag to tilt and rotate. There are compass, tilt (2D/3D), zoom and "my location" controls. Double-click zooms toward a point.
-- **Map styles:** 3D (photorealistic cities and terrain), Satellite, Hybrid and Map. Toggles for place labels, borders, lat/long gridlines, atmosphere and day/night sunlight.
+- **Globe navigation:** drag to rotate the globe, scroll or right-drag to zoom, and Ctrl/Shift-drag or middle-drag to tilt and rotate. There are compass, tilt (2D/3D), zoom and "my location" controls. Double-click zooms toward a point. As in Google Earth, the view flattens toward straight-down as you zoom out (full tilt below ~400 km, none above ~6,000 km), so the whole globe ends up centered.
+- **Map styles:** 3D (photorealistic cities and terrain), Satellite, Hybrid and Map. Toggles for country names, city names, borders, lat/long gridlines, atmosphere and day/night sunlight.
 - **Search:** Google Places autocomplete, biased to the current view. Accepts coordinates (`48.858, 2.294`). Clicking a result flies the camera there and shows an info card.
 - **Voyager:** guided tours (Wonders of the World, Great Cities, Natural Marvels, Around the Mediterranean) and single places. Tours have previous/next/stop controls. "I'm feeling lucky" flies to a random landmark.
 - **Tools:** distance and area measuring, saved places (stored in this browser) with KML/GeoJSON export, KML/KMZ/GeoJSON import by file picker or drag-and-drop, PNG screenshots, and shareable links.

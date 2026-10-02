@@ -1,4 +1,5 @@
 import { CameraEventType, Cesium3DTileset, Color, createGooglePhotorealistic3DTileset, DynamicAtmosphereLightingType, GoogleMaps, KeyboardEventModifier, ScreenSpaceEventType, Viewer } from 'cesium';
+import { MAX_ALTITUDE } from './camera';
 
 export type EarthViewer = {
   readonly viewer: Viewer;
@@ -46,7 +47,7 @@ export async function createEarthViewer(container: HTMLElement, key: string): Pr
 
   const controller = scene.screenSpaceCameraController;
   controller.minimumZoomDistance = 5;
-  controller.maximumZoomDistance = 60_000_000;
+  controller.maximumZoomDistance = MAX_ALTITUDE;
   controller.inertiaSpin = 0.93;
   controller.inertiaTranslate = 0.93;
   controller.inertiaZoom = 0.85;

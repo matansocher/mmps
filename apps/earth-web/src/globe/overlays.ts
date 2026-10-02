@@ -33,10 +33,11 @@ type BordersData = ReadonlyArray<readonly number[]>; // flat [lon, lat, lon, lat
 
 const dataUrl = (file: string) => `${import.meta.env.BASE_URL}data/${file}`;
 
+// Labels stay visible from far out; screen-space decluttering keeps them from overlapping.
 function countryFar(rank: number): number {
-  if (rank <= 2) return 30_000_000;
-  if (rank <= 4) return 14_000_000;
-  return 7_000_000;
+  if (rank <= 3) return 40_000_000;
+  if (rank <= 5) return 25_000_000;
+  return 12_000_000;
 }
 
 function cityFar(rank: number): number {
@@ -47,7 +48,10 @@ function cityFar(rank: number): number {
   return 450_000;
 }
 
+export type LabelVisibility = { readonly countries: boolean; readonly cities: boolean };
+
 type Placed = {
+  readonly kind: keyof LabelVisibility;
   readonly position: Cartesian3;
   readonly label: Label;
   readonly point?: PointPrimitive;
@@ -67,7 +71,11 @@ export class OverlayController {
   private placed: Placed[] = [];
   private borders: GroundPolylinePrimitive | null = null;
   private grid: GroundPolylinePrimitive | null = null;
-  private labelsVisible = false;
+  private visibility: LabelVisibility = { countries: false, cities: false };
+  private bordersVisible = false;
+  // Shared so concurrent setters (e.g. StrictMode double effects) never build duplicate primitives.
+  private labelsLoading: Promise<void> | null = null;
+  private bordersLoading: Promise<void> | null = null;
   private removeCameraListener: (() => void) | null = null;
 
   private readonly viewer: Viewer;
@@ -76,9 +84,10 @@ export class OverlayController {
     this.viewer = viewer;
   }
 
-  async setLabels(visible: boolean): Promise<void> {
-    this.labelsVisible = visible;
-    if (visible && !this.labels) await this.loadLabels();
+  async setLabels(visibility: LabelVisibility): Promise<void> {
+    this.visibility = visibility;
+    if (visibility.countries || visibility.cities) await (this.labelsLoading ??= this.loadLabels());
+    const visible = this.visibility.countries || this.visibility.cities;
     if (this.labels) this.labels.show = visible;
     if (this.points) this.points.show = visible;
     if (visible) this.updateHorizonCulling();
@@ -86,27 +95,30 @@ export class OverlayController {
   }
 
   async setBorders(visible: boolean): Promise<void> {
-    if (visible && !this.borders) {
-      const lines = (await (await fetch(dataUrl('borders.json'))).json()) as BordersData;
-      this.borders = this.viewer.scene.groundPrimitives.add(
-        new GroundPolylinePrimitive({
-          geometryInstances: lines
-            .filter((l) => l.length >= 4)
-            .map(
-              (flat) =>
-                new GeometryInstance({
-                  geometry: new GroundPolylineGeometry({ positions: Cartesian3.fromDegreesArray(flat as number[]), width: 1.6, arcType: ArcType.GEODESIC }),
-                  attributes: { color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString('#fde68a').withAlpha(0.8)) },
-                }),
-            ),
-          appearance: new PolylineColorAppearance(),
-          classificationType: ClassificationType.BOTH,
-          asynchronous: true,
-        }),
-      );
-    }
-    if (this.borders) this.borders.show = visible;
+    this.bordersVisible = visible;
+    if (visible) await (this.bordersLoading ??= this.loadBorders());
+    if (this.borders) this.borders.show = this.bordersVisible;
     this.viewer.scene.requestRender();
+  }
+
+  private async loadBorders(): Promise<void> {
+    const lines = (await (await fetch(dataUrl('borders.json'))).json()) as BordersData;
+    this.borders = this.viewer.scene.groundPrimitives.add(
+      new GroundPolylinePrimitive({
+        geometryInstances: lines
+          .filter((l) => l.length >= 4)
+          .map(
+            (flat) =>
+              new GeometryInstance({
+                geometry: new GroundPolylineGeometry({ positions: Cartesian3.fromDegreesArray(flat as number[]), width: 1.6, arcType: ArcType.GEODESIC }),
+                attributes: { color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString('#fde68a').withAlpha(0.8)) },
+              }),
+          ),
+        appearance: new PolylineColorAppearance(),
+        classificationType: ClassificationType.BOTH,
+        asynchronous: true,
+      }),
+    );
   }
 
   setGrid(visible: boolean): void {
@@ -148,7 +160,7 @@ export class OverlayController {
       const label = labels.add({
         position,
         text: name.toUpperCase(),
-        font: '600 13px Inter, system-ui, sans-serif',
+        font: `600 ${rank <= 3 ? 14 : 12}px Inter, system-ui, sans-serif`,
         fillColor: Color.fromCssColorString('#fef3c7'),
         outlineColor: Color.BLACK.withAlpha(0.85),
         outlineWidth: 3,
@@ -159,7 +171,7 @@ export class OverlayController {
         translucencyByDistance: new NearFarScalar(350_000, 0.0, 700_000, 1.0),
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       });
-      placed.push({ position, label, priority: rank * 2, near: 350_000, far: countryFar(rank), width: name.length * 9, anchor: 'center' });
+      placed.push({ kind: 'countries', position, label, priority: rank, near: 350_000, far: countryFar(rank), width: name.length * (rank <= 3 ? 9.5 : 8.2), anchor: 'center' });
     }
 
     for (const [name, lat, lon, rank, , capital] of data.cities) {
@@ -189,7 +201,7 @@ export class OverlayController {
         distanceDisplayCondition: new DistanceDisplayCondition(0, far),
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       });
-      placed.push({ position, label, point, priority: rank * 2 + (capital ? 0 : 1), near: 0, far, width: name.length * 7 + 8, anchor: 'left' });
+      placed.push({ kind: 'cities', position, label, point, priority: 100 + rank * 2 + (capital ? 0 : 1), near: 0, far, width: name.length * 7 + 8, anchor: 'left' });
     }
     placed.sort((a, b) => a.priority - b.priority);
 
@@ -203,13 +215,13 @@ export class OverlayController {
   // Labels ignore depth so they float above 3D buildings: hide the ones behind the planet,
   // then drop lower-priority labels that would overlap ones already placed on screen.
   private updateHorizonCulling(): void {
-    if (!this.labelsVisible || this.placed.length === 0) return;
+    if (!(this.visibility.countries || this.visibility.cities) || this.placed.length === 0) return;
     const { scene, camera } = this.viewer;
     const occluder = new EllipsoidalOccluder(Ellipsoid.WGS84, camera.positionWC);
     const boxes: Array<readonly [number, number, number, number]> = [];
     const screen = new Cartesian2();
     for (const item of this.placed) {
-      let visible = occluder.isPointVisible(item.position);
+      let visible = this.visibility[item.kind] && occluder.isPointVisible(item.position);
       if (visible) {
         const distance = Cartesian3.distance(camera.positionWC, item.position);
         const inRange = distance >= item.near && distance <= item.far;

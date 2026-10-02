@@ -35,7 +35,8 @@ export type Units = 'metric' | 'imperial';
 
 export type Settings = {
   readonly mapStyle: MapStyle;
-  readonly labels: boolean;
+  readonly countryLabels: boolean;
+  readonly cityLabels: boolean;
   readonly borders: boolean;
   readonly grid: boolean;
   readonly atmosphere: boolean;
