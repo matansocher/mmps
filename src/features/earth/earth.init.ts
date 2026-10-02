@@ -1,14 +1,11 @@
 import express, { type Express } from 'express';
 import path from 'node:path';
 import { Logger } from '@core/utils';
-import { registerEarthApiRoutes } from './api';
 import { EARTH_BASE_PATH } from './constants';
 
 const logger = new Logger('earth:init');
 
 export async function initEarth(app: Express): Promise<void> {
-  registerEarthApiRoutes(app);
-
   const spaDist = path.resolve('apps/earth-web/dist');
   app.use(EARTH_BASE_PATH, express.static(spaDist));
   app.get(`${EARTH_BASE_PATH}/*splat`, (_req, res) => {

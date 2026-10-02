@@ -1,41 +1,47 @@
-# Earth
+# Earth — Find the Country
 
-Earth is a public 3D globe in the style of Google Earth. It is built with React and CesiumJS on Google Photorealistic 3D Tiles. Express serves it at `/earth/*`. It needs no login and no database.
+Earth is a public geography quiz on a 3D globe. It is built with React and CesiumJS, and Express serves it at `/earth/*`. It needs no login, no database and no API keys.
 
-## Features
+## How it plays
 
-- **Globe navigation:** drag to rotate the globe, scroll or right-drag to zoom, and Ctrl/Shift-drag or middle-drag to tilt and rotate. There are compass, tilt (2D/3D), zoom and "my location" controls. Double-click zooms toward a point. As in Google Earth, the view flattens toward straight-down as you zoom out (full tilt below ~400 km, none above ~6,000 km), so the whole globe ends up centered.
-- **Map styles:** 3D (photorealistic cities and terrain), Satellite, Hybrid and Map. Toggles for country names, city names, borders, lat/long gridlines, atmosphere and day/night sunlight.
-- **Search:** Google Places autocomplete, biased to the current view. Accepts coordinates (`48.858, 2.294`). Clicking a result flies the camera there and shows an info card.
-- **Voyager:** guided tours (Wonders of the World, Great Cities, Natural Marvels, Around the Mediterranean) and single places. Tours have previous/next/stop controls. "I'm feeling lucky" flies to a random landmark.
-- **Tools:** distance and area measuring, saved places (stored in this browser) with KML/GeoJSON export, KML/KMZ/GeoJSON import by file picker or drag-and-drop, PNG screenshots, and shareable links.
-- **API usage & cost:** a rail panel (desktop) estimates this month's Google API cost for the current browser. It counts billed root 3D tileset requests and 2D tiles by watching network requests (`PerformanceObserver`), and Places autocomplete and details calls from the search box. Autocomplete requests become free when the search ends in a picked place. Each counter is shown against Google's free monthly amount, priced at the first paid tier. Counts are stored per month in `localStorage`. The panel links to the Cloud Console metrics and billing report, which have the exact bill.
-- **Shareable views:** the URL hash stores the camera as `#@lat,lon,{altitude}a,{heading}h,{tilt}t`. Opening the link restores the view.
-- **Keyboard:** press `?` for the shortcut list.
+- The globe is a plain political map: blue ocean, every country a white surface with grey borders and no names.
+- Each round asks for 10 countries. Spin and zoom the globe, then click the country you're asked for. You get one try per question.
+- **Correct:** the country turns green and the next question follows automatically.
+- **Wrong:** your pick turns red, the right country turns green and the camera flies to it. **Skip** works the same way.
+- Clicking water or space only shows a hint and does not count as a guess.
+- At the end of the round a summary lists every answer (click one to fly there) and your best score, which is kept in `localStorage`.
+- Countries under 1,000 km² (Vatican, Monaco, Singapore…) are drawn and clickable, but never asked.
+- **Keyboard:** press `?` for the shortcut list (`Enter` next, `S` skip, `+`/`-` zoom, arrows rotate, `N` north up, `R` home).
 
 ## Architecture
 
 | Layer | Path | Notes |
 | --- | --- | --- |
-| Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe engine in `src/globe/`, tools in `src/tools/`, tours in `src/voyager/`. |
-| Backend | `src/features/earth` | Serves the built SPA and `GET /api/earth/config`. |
-| Storage | browser | Settings and saved places in `localStorage`; imported files in IndexedDB. |
+| Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe rendering in `src/globe/`. Quiz logic and point-in-country lookup in `src/game/` (pure, unit-tested). |
+| Data | `apps/earth-web/public/data/countries.json` | Country polygons generated from the Worldly bot's `src/features/worldly/assets/countries.json`. |
+| Backend | `src/features/earth` | Only serves the built SPA. |
+
+Cesium draws the countries as one batched polygon primitive with per-country colors, plus one border polyline primitive. The globe has no imagery layer, so no tiles are downloaded. Clicks are resolved in the browser by ray-casting the clicked lon/lat against the country polygons.
 
 Cesium's static assets (workers, widgets, third-party files) are copied to `dist/cesiumStatic/` at build time. `CESIUM_BASE_URL` points there.
 
-## Configuration
+## Country data
 
-`GET /api/earth/config` returns the browser key from `EARTH_GOOGLE_MAPS_BROWSER_KEY`, falling back to `GOOGLE_MAPS_API_KEY`. The key is sent to the browser, so in Google Cloud:
+```bash
+npm run data:countries --workspace=@mmps/earth-web
+```
 
-1. Enable the **Map Tiles API** and **Places API (New)**.
-2. Restrict the key by **HTTP referrer** to your production domain and `localhost`.
-3. Restrict the key to those two APIs and set quotas plus a budget alert.
+The script rebuilds `countries.json`. It:
+
+- computes each country's area;
+- drops territories that the source draws twice (French Guiana also appears inside France);
+- cuts enclaves (San Marino, Vatican City, Monaco) out of the surrounding country as holes.
+
+Clicks on any remaining border slivers go to the smaller country.
 
 ## Development
 
 ```bash
-npm run dev:earth-web     # Vite on :5373, proxies /api/earth to the backend
+npm run dev:earth-web     # Vite on :5373 at /earth/
 npm run build:earth-web
 ```
-
-Set `EARTH_API_TARGET` to point the Vite proxy at a backend other than `http://localhost:3000`.

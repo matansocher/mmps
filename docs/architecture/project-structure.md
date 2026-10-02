@@ -55,7 +55,7 @@ src/
 │   ├── chilli/            # Cat persona bot (Hebrew)
 │   ├── coach/             # Sports bot
 │   ├── mindloop/          # Brain-training mini-app backend (Mongo player API)
-│   ├── earth/             # 3D globe mini-app backend (SPA + browser-key config)
+│   ├── earth/             # Find-the-country globe quiz (serves the SPA)
 │   ├── savings/           # Shared MongoDB-backed portfolio SPA
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot

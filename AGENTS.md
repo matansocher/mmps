@@ -182,7 +182,7 @@ src/services/{name}/
 
 **Also not a bot:** `SAVINGS` (`src/features/savings/`) is a password-protected React SPA (`apps/savings-web`) served at `/savings/*`. It stores one shared family portfolio in the `Savings` MongoDB database, uses real ILS values with reactive rebalancing, and protects explicit saves with revision conflict detection. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
-**Also not a bot:** `EARTH` (`src/features/earth/`) is a public, Google-Earth-like 3D globe (`apps/earth-web`, CesiumJS + Google Photorealistic 3D Tiles) served at `/earth/*`. It has Places search, Voyager tours, "I'm feeling lucky", map styles (3D / satellite / hybrid / map), country/city names, borders, gridlines, sunlight, distance/area measuring, saved places, KML/KMZ/GeoJSON import and export, screenshots, shareable camera links (`#@lat,lon,{alt}a,{heading}h,{tilt}t`) and an "API usage & cost" panel that estimates this browser's monthly Google API cost (`apps/earth-web/src/lib/usage.ts`). There is no database: saved places and settings live in localStorage, imported files in IndexedDB. The backend only serves the SPA and `GET /api/earth/config`, which returns the browser key (`EARTH_GOOGLE_MAPS_BROWSER_KEY`, falling back to `GOOGLE_MAPS_API_KEY`). The key must be HTTP-referrer restricted to Map Tiles API + Places API (New). Cesium static assets are copied to `dist/cesiumStatic/` by `vite-plugin-static-copy`. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+**Also not a bot:** `EARTH` (`src/features/earth/`) is a public "Find the Country" geography quiz on a 3D globe (`apps/earth-web`, CesiumJS) served at `/earth/*`. The globe is a plain political map — blue ocean, white countries, no names, no imagery and no Google APIs — and the player spins/zooms it to click the country asked for (rounds of 10; correct = green, wrong = red and the camera flies to the answer). Country shapes come from `public/data/countries.json`, generated from the Worldly bot's `countries.json` by `npm run data:countries --workspace=@mmps/earth-web` (duplicate territories dropped, enclaves cut out as holes). Countries under 1,000 km² are drawn but never asked. There is no database or API: the best score lives in localStorage and the backend only serves the SPA. Cesium static assets are copied to `dist/cesiumStatic/` by `vite-plugin-static-copy`. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
 **Also not a bot:** `MINDLOOP` (`src/features/mindloop/`) is a React brain-training mini-app (`apps/mindloop-web`) served at `/mindloop/*`. It ships 14 original games across 5 skill categories and persists player progress (best scores, favorites, play history) to the `Mindloop` MongoDB database keyed by Telegram user id. The client is offline-first (localStorage) and reconciles with the server via a non-destructive merge; server writes are best-effort. Identity comes from verified Telegram `initData` (`MINDLOOP_TELEGRAM_BOT_TOKEN`) or an `X-Mindloop-Dev-User` header in local dev. Device-only preferences (theme, sound, reduced motion) never leave the device. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
@@ -702,7 +702,7 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 - `GET /` — health (`{ success: true }`)
 - `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
 - Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
-- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes; `initEarth(app)` serves the Earth SPA at `/earth/*` with `GET /api/earth/config`.
+- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes; `initEarth(app)` serves the Earth quiz SPA at `/earth/*` (no API routes).
 
 ---
 
@@ -771,7 +771,6 @@ The full list is in `.env.example`. Everything that the code references via `env
 - `PORT` — Express port (default 3000).
 - `SAVINGS_APP_PASSWORD` — shared password for the standalone `/savings` portfolio app.
 - `MINDLOOP_TELEGRAM_BOT_TOKEN` — used only to verify Telegram `initData` for the `/mindloop` mini-app (no bot runs).
-- `EARTH_GOOGLE_MAPS_BROWSER_KEY` — referrer-restricted browser key for `/earth` (Map Tiles API + Places API (New)); falls back to `GOOGLE_MAPS_API_KEY`.
 
 **Observability (Grafana Cloud via OpenTelemetry) — production only:**
 - `OTEL_EXPORTER_OTLP_ENDPOINT` — Grafana OTLP gateway (e.g. `https://otlp-gateway-prod-<region>.grafana.net/otlp`). Empty = telemetry disabled (local dev).

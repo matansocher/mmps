@@ -9,56 +9,15 @@ export type CameraView = LatLon & {
   readonly pitch: number; // degrees, -90 = straight down
 };
 
-export type Placemark = LatLon & {
-  readonly id: string;
+export type Ring = readonly number[]; // Format: [lon, lat, lon, lat, ...], open (no repeated closing point)
+
+export type Polygon = readonly Ring[]; // First ring is the outline, the rest are holes
+
+export type Country = {
+  readonly code: string; // ISO 3166-1 alpha-2
   readonly name: string;
-  readonly description: string;
-  readonly height: number;
-  readonly color: string; // Format: "#rrggbb"
-  readonly createdAt: string; // ISO
-};
-
-export type ImportedLayerKind = 'kml' | 'kmz' | 'geojson';
-
-export type ImportedLayer = {
-  readonly id: string;
-  readonly name: string;
-  readonly kind: ImportedLayerKind;
-  readonly visible: boolean;
-  readonly sizeBytes: number;
-  readonly addedAt: string; // ISO
-};
-
-export type MapStyle = 'photorealistic' | 'satellite' | 'hybrid' | 'roadmap';
-
-export type Units = 'metric' | 'imperial';
-
-export type Settings = {
-  readonly mapStyle: MapStyle;
-  readonly countryLabels: boolean;
-  readonly cityLabels: boolean;
-  readonly borders: boolean;
-  readonly grid: boolean;
-  readonly atmosphere: boolean;
-  readonly sunLighting: boolean;
-  readonly units: Units;
-};
-
-export type SearchResult = {
-  readonly id: string;
-  readonly primary: string;
-  readonly secondary: string;
-  readonly kind: 'place' | 'coordinates' | 'recent';
-  readonly coordinates?: LatLon;
-};
-
-export type PlaceTarget = LatLon & {
-  readonly name: string;
-  readonly address?: string;
-  readonly viewport?: { readonly low: LatLon; readonly high: LatLon };
-};
-
-export type EarthConfig = {
-  readonly googleMapsKey: string;
-  readonly features: { readonly photorealistic: boolean; readonly places: boolean };
+  readonly flag: string;
+  readonly continent: string;
+  readonly area: number; // km²
+  readonly polygons: readonly Polygon[];
 };

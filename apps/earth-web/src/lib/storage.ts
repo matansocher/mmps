@@ -34,7 +34,3 @@ export function writeJson(key: string, value: unknown, storage?: Storage): boole
 }
 
 export const isArray = (value: unknown): value is unknown[] => Array.isArray(value);
-
-export const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
-
-export const newId = (): string => (globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);

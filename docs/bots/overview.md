@@ -46,8 +46,8 @@ Original React game collection served at `/mindloop/*` with 14 games across 5 sk
 - **Database**: `Mindloop`
 - **[Learn more →](/bots/mindloop)**
 
-### **Earth** - 3D Globe Mini-App
-Google-Earth-like globe served at `/earth/*`, built on CesiumJS and Google Photorealistic 3D Tiles. Search, Voyager tours, measuring, saved places and KML/GeoJSON import.
+### **Earth** - Find the Country Quiz
+Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the plain political map and click the country you are asked for.
 - **Database**: none (browser storage only)
 - **[Learn more →](/bots/earth)**
 
@@ -136,8 +136,6 @@ SAVINGS_APP_PASSWORD=...
 # Bot-less Mindloop mini-app (token used only to verify Telegram initData)
 MINDLOOP_TELEGRAM_BOT_TOKEN=...
 
-# Earth 3D globe (referrer-restricted; falls back to GOOGLE_MAPS_API_KEY)
-EARTH_GOOGLE_MAPS_BROWSER_KEY=...
 ```
 
 ## Next Steps
@@ -150,7 +148,7 @@ Select a bot to explore:
 - **[Worldly](/bots/worldly)** - Geography education
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
 - **[Mindloop](/bots/mindloop)** - Brain-training mini-app
-- **[Earth](/bots/earth)** - 3D globe mini-app
+- **[Earth](/bots/earth)** - Find-the-country globe quiz
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

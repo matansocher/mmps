@@ -1,63 +1,30 @@
-import { type Cesium3DTileset, JulianDate, type Viewer } from 'cesium';
-import { type MeasureResult, MeasureTool } from '../tools/measure';
-import { PlacemarksLayer } from '../tools/placemarks-layer';
-import type { MapStyle, Settings } from '../types';
-import { installTiltLimiter } from './camera';
-import { OverlayController } from './overlays';
-import { MapStyleController } from './styles';
+import type { Viewer } from 'cesium';
+import { type CountryIndex, createCountryIndex, loadCountries } from '../game/countries';
+import { CountriesLayer } from './countries-layer';
 import { createEarthViewer } from './viewer';
 
 export type EarthEngine = {
   readonly viewer: Viewer;
-  readonly tileset: Cesium3DTileset | null;
-  readonly tilesetError: string | null;
-  readonly styles: MapStyleController;
-  readonly overlays: OverlayController;
-  readonly placemarks: PlacemarksLayer;
-  readonly measure: MeasureTool;
-  readonly measureListeners: Set<(result: MeasureResult) => void>;
-  readonly applySettings: (settings: Settings) => Promise<MapStyle>;
-  readonly setTimeOfDay: (date: Date | null) => void;
+  readonly countries: CountryIndex;
+  readonly layer: CountriesLayer;
   readonly destroy: () => void;
 };
 
-export async function createEngine(container: HTMLElement, key: string): Promise<EarthEngine> {
-  const { viewer, tileset, tilesetError } = await createEarthViewer(container, key);
-  const styles = new MapStyleController(viewer, tileset);
-  const overlays = new OverlayController(viewer);
-  const placemarks = new PlacemarksLayer(viewer);
-  const measureListeners = new Set<(result: MeasureResult) => void>();
-  const removeTiltLimiter = installTiltLimiter(viewer);
-  const measure = new MeasureTool(viewer, (result) => measureListeners.forEach((fn) => fn(result)));
-
-  const applySettings = async (settings: Settings): Promise<MapStyle> => {
-    const { scene } = viewer;
-    if (scene.skyAtmosphere) scene.skyAtmosphere.show = settings.atmosphere;
-    scene.globe.showGroundAtmosphere = settings.atmosphere;
-    scene.fog.enabled = settings.atmosphere;
-    scene.globe.enableLighting = settings.sunLighting;
-    scene.light.intensity = 2.0;
-    overlays.setGrid(settings.grid);
-    await Promise.all([overlays.setLabels({ countries: settings.countryLabels, cities: settings.cityLabels }), overlays.setBorders(settings.borders)]);
-    const effective = await styles.apply(settings.mapStyle);
-    scene.requestRender();
-    return effective;
-  };
-
-  const setTimeOfDay = (date: Date | null) => {
-    viewer.clock.currentTime = JulianDate.fromDate(date ?? new Date());
-    viewer.scene.requestRender();
-  };
-
+export async function createEngine(container: HTMLElement): Promise<EarthEngine> {
+  const countries = await loadCountries();
+  const viewer = createEarthViewer(container);
+  const layer = new CountriesLayer(viewer, countries);
   const destroy = () => {
-    removeTiltLimiter();
-    overlays.destroy();
-    measure.destroy();
-    placemarks.destroy();
+    layer.destroy();
     if (!viewer.isDestroyed()) viewer.destroy();
   };
-
-  return { viewer, tileset, tilesetError, styles, overlays, placemarks, measure, measureListeners, applySettings, setTimeOfDay, destroy };
+  try {
+    await layer.whenReady();
+  } catch (err) {
+    destroy();
+    throw err;
+  }
+  return { viewer, countries: createCountryIndex(countries), layer, destroy };
 }
 
 export function isWebGLAvailable(): boolean {

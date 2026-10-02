@@ -1,34 +1,14 @@
 import { useEffect, useRef } from 'react';
-import type { Toast } from '../hooks/useToasts';
 
-export function Toasts({ toasts, onDismiss }: { readonly toasts: readonly Toast[]; readonly onDismiss: (id: number) => void }) {
-  return (
-    <div className="pointer-events-none fixed top-20 left-1/2 z-50 flex w-[min(420px,calc(100vw-24px))] -translate-x-1/2 flex-col items-center gap-2" aria-live="polite">
-      {toasts.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          onClick={() => onDismiss(t.id)}
-          className={`pointer-events-auto rounded-xl px-4 py-2.5 text-sm shadow-lg ${t.tone === 'error' ? 'bg-[#5c1d1d]/95 text-red-50' : 'bg-[#202124]/95 text-white'}`}
-        >
-          {t.message}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-export function Splash({ visible, progress }: { readonly visible: boolean; readonly progress: number }) {
+export function Splash({ visible }: { readonly visible: boolean }) {
   return (
     <div
       className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_center,#0d1730_0%,#000_70%)] transition-opacity duration-700 ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       aria-hidden={!visible}
     >
-      <div className="relative mb-6 h-20 w-20 rounded-full bg-[radial-gradient(circle_at_35%_35%,#8ab4f8,#1a73e8_45%,#0b1e3a_75%)] shadow-[0_0_60px_rgb(66_133_244/0.45)]" />
-      <div className="text-xl font-semibold tracking-wide">Earth</div>
-      <div className="mt-6 h-1 w-48 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full bg-[var(--color-accent)] transition-[width] duration-300" style={{ width: `${Math.round(progress * 100)}%` }} />
-      </div>
+      <div className="relative mb-6 h-20 w-20 animate-pulse rounded-full bg-[radial-gradient(circle_at_35%_35%,#f4f5f0_0_18%,#1f5fa8_19%_60%,#0b1e3a_80%)] shadow-[0_0_60px_rgb(66_133_244/0.45)]" />
+      <div className="text-xl font-semibold tracking-wide">Find the Country</div>
+      <div className="mt-2 text-sm text-white/50">Loading the globe…</div>
     </div>
   );
 }
@@ -50,18 +30,15 @@ export function ErrorScreen({ title, message, onRetry }: { readonly title: strin
 }
 
 const SHORTCUTS: ReadonlyArray<readonly [string, string]> = [
-  ['Drag', 'Rotate the globe'],
+  ['Click', 'Pick a country'],
+  ['Drag', 'Spin the globe'],
   ['Scroll / pinch', 'Zoom'],
-  ['Right-drag', 'Zoom'],
-  ['Ctrl/Shift + drag, middle-drag', 'Tilt and rotate'],
-  ['Double-click', 'Zoom in on a point'],
-  ['/', 'Search'],
-  ['← ↑ → ↓', 'Move'],
+  ['← ↑ → ↓', 'Spin'],
   ['+ / −', 'Zoom in / out'],
+  ['Enter', 'Next question'],
+  ['S', 'Skip'],
   ['N', 'Reset to north'],
-  ['U', 'Toggle 2D / 3D tilt'],
-  ['R', 'Reset view'],
-  ['Esc', 'Close panels, stop tour'],
+  ['R', 'Show the whole globe'],
   ['?', 'Show this help'],
 ];
 
@@ -78,11 +55,14 @@ export function HelpDialog({ onClose }: { readonly onClose: () => void }) {
       className="glass m-auto w-[min(460px,calc(100vw-24px))] rounded-2xl p-0 text-white backdrop:bg-black/50"
     >
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
-        <h2 className="font-semibold">Navigation & shortcuts</h2>
+        <h2 className="font-semibold">How to play</h2>
         <button type="button" className="chip" onClick={() => ref.current?.close()}>
           Close
         </button>
       </div>
+      <p className="px-5 pt-4 text-sm leading-relaxed text-white/75">
+        Each round asks for 10 countries. Spin and zoom the globe, then click the country you’re asked for. You get one try per country — if you miss, the right one lights up in green.
+      </p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 px-5 py-4 text-sm">
         {SHORTCUTS.map(([key, desc]) => (
           <div key={key} className="contents">
@@ -91,7 +71,7 @@ export function HelpDialog({ onClose }: { readonly onClose: () => void }) {
           </div>
         ))}
       </dl>
-      <p className="px-5 pb-4 text-xs text-white/40">Imagery and 3D data © Google and its data providers. Labels and borders: Natural Earth.</p>
+      <p className="px-5 pb-4 text-xs text-white/40">Country shapes: Natural Earth (public domain).</p>
     </dialog>
   );
 }

@@ -50,8 +50,5 @@ export default defineConfig({
   server: {
     port: 5373,
     strictPort: true,
-    proxy: {
-      '/api/earth': process.env.EARTH_API_TARGET || 'http://localhost:3000',
-    },
   },
 });
