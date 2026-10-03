@@ -12,7 +12,7 @@ export async function getActiveSubscriptions(chatId: number = null): Promise<Sub
     const subscriptionCollection = getCollection();
     const filter = { isActive: true };
     if (chatId) filter['chatId'] = chatId;
-    return subscriptionCollection.find(filter).toArray();
+    return await subscriptionCollection.find(filter).toArray();
   } catch (err) {
     logger.error(`getActiveSubscriptions - err: ${getErrorMessage(err)}`);
     return [];
