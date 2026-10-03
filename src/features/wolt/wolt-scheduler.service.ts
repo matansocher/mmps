@@ -140,7 +140,10 @@ export class WoltSchedulerService {
         keyboard.text(hours === 1 ? '⏳ עוד שעה' : `⏳ עוד ${hours} שעות`, [BOT_ACTIONS.EXTEND, subscription._id.toString(), hours].join(INLINE_KEYBOARD_SEPARATOR));
       }
       await this.bot.api.sendMessage(chatId, messageText, { disable_notification: isQuietHours, reply_markup: keyboard });
-      this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
+      // analytics only - a failed user lookup must not become an unhandled rejection
+      this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED).catch((err) =>
+        this.logger.error(`Failed to notify subscription expiry for chatId ${chatId}: ${getErrorMessage(err)}`),
+      );
     } catch (err) {
       this.logger.error(`Failed to clean subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
