@@ -189,5 +189,64 @@ describe('WoltController E2E', () => {
       expect(answers).toHaveLength(1);
       expect(answers[0].payload.text).toContain('לא הבנתי');
     });
+
+    describe('venue ids', () => {
+      const VENUE_ID = '5f1a2b3c4d5e6f7a8b9c0d1e';
+      const SUBSCRIPTION_ID = '65a1b2c3d4e5f6a7b8c9d0e1';
+      const branches = [
+        { id: 'other-branch', name: 'Shila - Sharon Cohen', isOnline: true, photo: 'other.jpg', link: 'https://wolt.com/other' },
+        { id: VENUE_ID, name: 'Shila - Sharon Cohen', isOnline: false, photo: 'shila.jpg', link: 'https://wolt.com/shila' },
+      ];
+
+      it('puts the venue id, not the name, in the add button', async () => {
+        mocks.getRestaurants.mockResolvedValue([{ id: VENUE_ID, name: 'Pizza With A Very Long Name That Would Not Fit', isOnline: false, link: 'l' }]);
+
+        await simulateUpdate(testBot, buildTextMessageUpdate({ text: 'pizza' }));
+
+        const [button] = testBot.transport.callsByMethod('sendMessage')[0].payload.reply_markup.inline_keyboard.flat();
+        expect(button.callback_data).toEqual([BOT_ACTIONS.ADD, VENUE_ID].join(INLINE_KEYBOARD_SEPARATOR));
+      });
+
+      it('subscribes to the exact branch picked, even when its name contains the separator', async () => {
+        mocks.getActiveSubscriptions.mockResolvedValue([]);
+        mocks.getRestaurants.mockResolvedValue(branches);
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, VENUE_ID].join(INLINE_KEYBOARD_SEPARATOR) }));
+
+        expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID);
+        expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).toContain('אני אתריע');
+      });
+
+      it('still handles old add buttons that carry the name', async () => {
+        mocks.getActiveSubscriptions.mockResolvedValue([]);
+        mocks.getRestaurants.mockResolvedValue([branches[1]]);
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, 'Shila - Sharon Cohen'].join(INLINE_KEYBOARD_SEPARATOR) }));
+
+        expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID);
+      });
+
+      it('puts the subscription id in the /list remove button and removes by it', async () => {
+        const subscription = { _id: { toString: () => SUBSCRIPTION_ID }, restaurant: 'Shila - Sharon Cohen', createdAt: new Date() };
+        mocks.getActiveSubscriptions.mockResolvedValue([subscription]);
+
+        await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/list' }));
+        const [button] = testBot.transport.callsByMethod('sendMessage')[0].payload.reply_markup.inline_keyboard.flat();
+        expect(button.callback_data).toEqual([BOT_ACTIONS.REMOVE, SUBSCRIPTION_ID].join(INLINE_KEYBOARD_SEPARATOR));
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: button.callback_data }));
+
+        expect(mocks.archiveSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', false);
+      });
+
+      it('does not echo the id when the subscription is already gone', async () => {
+        mocks.getActiveSubscriptions.mockResolvedValue([]);
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.REMOVE, SUBSCRIPTION_ID].join(INLINE_KEYBOARD_SEPARATOR) }));
+
+        expect(mocks.archiveSubscription).not.toHaveBeenCalled();
+        expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).not.toContain(SUBSCRIPTION_ID);
+      });
+    });
   });
 });

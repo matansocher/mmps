@@ -66,7 +66,7 @@ export class WoltController {
         const keyboard = buildInlineKeyboard([
           {
             text: '⛔️ הסרה ⛔️',
-            data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
+            data: [BOT_ACTIONS.REMOVE, String(subscription._id)].join(INLINE_KEYBOARD_SEPARATOR),
             style: 'danger',
           },
         ]);
@@ -145,28 +145,29 @@ export class WoltController {
   private async callbackQueryHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails, data } = getCallbackQueryData(ctx);
 
-    const [action, restaurant, page] = data.split(INLINE_KEYBOARD_SEPARATOR);
-    const restaurantName = restaurant.replace(BOT_ACTIONS.REMOVE, '').replace(INLINE_KEYBOARD_SEPARATOR, '');
-    const activeSubscriptions = await getActiveSubscriptions(chatId);
+    const [action, ...values] = data.split(INLINE_KEYBOARD_SEPARATOR);
+    // buttons sent before ids were used carry the restaurant name, which may itself contain the separator
+    const value = values.join(INLINE_KEYBOARD_SEPARATOR);
     try {
       switch (action) {
         case BOT_ACTIONS.REMOVE: {
           await ctx.answerCallbackQuery().catch(() => {});
-          await this.removeSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
+          await this.removeSubscription(ctx, chatId, userDetails, value, await getActiveSubscriptions(chatId));
           break;
         }
         case BOT_ACTIONS.ADD: {
           await ctx.answerCallbackQuery().catch(() => {});
-          await this.addSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
+          await this.addSubscription(ctx, chatId, userDetails, value, await getActiveSubscriptions(chatId));
           break;
         }
         case BOT_ACTIONS.CHANGE_PAGE: {
+          const [searchId, page] = values;
           const pageNumber = parseInt(page, 10);
           if (!Number.isInteger(pageNumber) || pageNumber < 1) {
             await ctx.answerCallbackQuery({ text: 'לא הבנתי את הבקשה שלך 😕' });
             break;
           }
-          await this.changePage(ctx, userDetails, restaurant, pageNumber);
+          await this.changePage(ctx, userDetails, searchId, pageNumber);
           break;
         }
         default: {
@@ -182,7 +183,16 @@ export class WoltController {
     }
   }
 
-  async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
+  // restaurantKey is the venue id, or the restaurant name on buttons sent before ids were used
+  async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurantKey: string, activeSubscriptions: Subscription[]): Promise<void> {
+    const restaurants = await restaurantsService.getRestaurants();
+    const restaurantDetails = restaurants.find((r) => r.id === restaurantKey) ?? restaurants.find((r) => r.name === restaurantKey);
+    if (!restaurantDetails) {
+      await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
+      return;
+    }
+    const restaurant = restaurantDetails.name;
+
     const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
     if (existingSubscription) {
       const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
@@ -195,12 +205,6 @@ export class WoltController {
       return;
     }
 
-    const restaurants = await restaurantsService.getRestaurants();
-    const restaurantDetails = restaurants.find((r: WoltRestaurant): boolean => r.name === restaurant);
-    if (!restaurantDetails) {
-      await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
-      return;
-    }
     if (restaurantDetails.isOnline) {
       const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
       const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link).success();
@@ -209,20 +213,22 @@ export class WoltController {
     }
 
     const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await addSubscription(chatId, restaurant, restaurantDetails?.photo);
+    await addSubscription(chatId, restaurant, restaurantDetails.photo, restaurantDetails.id);
     await ctx.reply(replyText);
     await ctx.react('🤝').catch(() => {});
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
   }
 
-  async removeSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
-    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
+  // subscriptionKey is the subscription id, or the restaurant name on buttons sent before ids were used
+  async removeSubscription(ctx: Context, chatId: number, userDetails: UserDetails, subscriptionKey: string, activeSubscriptions: Subscription[]): Promise<void> {
+    const existingSubscription = activeSubscriptions.find((s) => s._id?.toString() === subscriptionKey || s.restaurant === subscriptionKey);
+    const restaurant = existingSubscription?.restaurant ?? (OBJECT_ID_REGEX.test(subscriptionKey) ? '' : subscriptionKey);
     if (existingSubscription) {
       await archiveSubscription(chatId, restaurant, false);
       await ctx.reply([`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n'));
     } else {
-      await ctx.reply([`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n'));
+      await ctx.reply(restaurant ? [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n') : '🤔 הכל טוב, ההתראה הזאת כבר לא פתוחה');
     }
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     await ctx.react('👌').catch(() => {});
@@ -251,6 +257,8 @@ export class WoltController {
   }
 }
 
+const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
+
 function uniqueById(restaurants: WoltRestaurant[]): WoltRestaurant[] {
   const seen = new Set<string>();
   return restaurants.filter((r) => !seen.has(r.id) && seen.add(r.id));
@@ -262,7 +270,8 @@ function buildResultsPageKeyboard(restaurants: WoltRestaurant[], searchId: strin
 
   const keyboard = new InlineKeyboard();
   for (const r of restaurants.slice(from, to)) {
-    keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR));
+    // the id, not the name: names can contain the separator and long ones overflow Telegram's 64-byte callback data
+    keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.id].join(INLINE_KEYBOARD_SEPARATOR));
     if (r.isOnline) {
       keyboard.success();
     } else {
