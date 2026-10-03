@@ -8,9 +8,7 @@ export type Continent = (typeof CONTINENTS)[number];
 export type GameMode =
   | { readonly kind: 'daily'; readonly day: string } // Format: "YYYY-MM-DD" (local)
   | { readonly kind: 'classic' }
-  | { readonly kind: 'time-attack' }
-  | { readonly kind: 'continent'; readonly continent: Continent }
-  | { readonly kind: 'neighbours' };
+  | { readonly kind: 'continent'; readonly continent: Continent };
 
 export const CONTINENT_VIEWS: Record<Continent, CameraView> = {
   Africa: { lat: 2, lon: 20, altitude: 11_000_000, heading: 0, pitch: -90 },
@@ -21,21 +19,15 @@ export const CONTINENT_VIEWS: Record<Continent, CameraView> = {
   Oceania: { lat: -22, lon: 150, altitude: 9_000_000, heading: 0, pitch: -90 },
 };
 
-// Countries with fewer neighbours make for a dull question (one click and done).
-export const MIN_NEIGHBOURS = 2;
-
 const askable = (country: Country) => country.area >= MIN_QUESTION_AREA_KM2;
 
 export function questionPool(countries: readonly Country[], mode: GameMode): Country[] {
   switch (mode.kind) {
     case 'daily':
     case 'classic':
-    case 'time-attack':
       return countries.filter(askable);
     case 'continent':
       return countries.filter((country) => askable(country) && country.continent === mode.continent);
-    case 'neighbours':
-      return countries.filter((country) => askable(country) && country.neighbours.length >= MIN_NEIGHBOURS);
   }
 }
 
@@ -51,12 +43,8 @@ export function modeTitle(mode: GameMode): string {
       return 'Today’s flight';
     case 'classic':
       return 'Classic';
-    case 'time-attack':
-      return 'Time Attack';
     case 'continent':
       return mode.continent;
-    case 'neighbours':
-      return 'Neighbours';
   }
 }
 
@@ -67,10 +55,6 @@ export function gateFor(mode: GameMode): string {
       return 'D0';
     case 'classic':
       return 'A1';
-    case 'time-attack':
-      return 'A2';
-    case 'neighbours':
-      return 'N1';
     case 'continent':
       return `C${CONTINENTS.indexOf(mode.continent) + 1}`;
   }

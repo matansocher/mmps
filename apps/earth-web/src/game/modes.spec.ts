@@ -9,9 +9,7 @@ const COUNTRIES = [country('FR', 'Europe', 550_000, ['BE', 'DE']), country('VA',
 describe('questionPool()', () => {
   test.each([
     { mode: { kind: 'classic' } as const, expected: ['FR', 'KE', 'BR'] },
-    { mode: { kind: 'time-attack' } as const, expected: ['FR', 'KE', 'BR'] },
     { mode: { kind: 'continent', continent: 'Europe' } as const, expected: ['FR'] },
-    { mode: { kind: 'neighbours' } as const, expected: ['FR', 'BR'] },
   ])('should pick $expected for $mode.kind', ({ mode, expected }) => {
     expect(questionPool(COUNTRIES, mode).map((c) => c.code)).toEqual(expected);
   });

@@ -16,7 +16,7 @@ type Props = {
   readonly title: string;
   readonly flight: string;
   readonly score: number;
-  readonly outOf?: number;
+  readonly outOf: number;
   readonly best: number;
   readonly newBest: boolean;
   readonly items: readonly SummaryItem[];
@@ -75,7 +75,7 @@ export function RoundSummary({ title, flight, score, outOf, best, newBest, items
   const progress = useProgress();
   const earned = useCountUp(outcome?.earned ?? 0);
   const { tier, next, progress: toNext } = tierFor(progress.miles);
-  const suffix = outOf === undefined ? '' : `/${outOf}`;
+  const suffix = `/${outOf}`;
   const from = byCode.get(items[0]?.code ?? '');
   const to = byCode.get(items.at(-1)?.code ?? '');
 

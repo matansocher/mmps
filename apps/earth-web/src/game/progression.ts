@@ -15,7 +15,7 @@ export type Progress = {
 export type RoundResult = {
   readonly kind: FlightKind;
   readonly score: number;
-  readonly outOf: number | null; // null = open-ended (Time Attack)
+  readonly outOf: number;
   readonly found: readonly string[]; // codes the player found this round
 };
 
@@ -48,7 +48,7 @@ export const TIERS: readonly Tier[] = [
   { name: 'Captain', miles: 25_000 },
 ];
 
-export const MILES_PER_POINT: Readonly<Record<FlightKind, number>> = { classic: 100, continent: 100, daily: 150, 'time-attack': 80, neighbours: 60 };
+export const MILES_PER_POINT: Readonly<Record<FlightKind, number>> = { classic: 100, continent: 100, daily: 150 };
 export const PERFECT_BONUS = 500;
 export const NEW_STAMP_BONUS = 50;
 const DAILY_HISTORY = 60;
@@ -61,8 +61,6 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'well-travelled', title: 'Well travelled', detail: 'Collect 25 passport stamps' },
   { id: 'globetrotter', title: 'Globetrotter', detail: 'Collect 100 passport stamps' },
   { id: 'six-continents', title: 'Six continents', detail: 'Collect a stamp from every continent' },
-  { id: 'supersonic', title: 'Supersonic', detail: 'Find 20 countries in one Time Attack' },
-  { id: 'good-neighbour', title: 'Good neighbour', detail: 'Find every neighbour in a Neighbours round' },
   { id: 'business-class', title: 'Business class', detail: 'Reach Business tier' },
 ];
 
@@ -110,7 +108,7 @@ export function flightNumber(day: string): number {
 }
 
 export function milesFor(round: RoundResult): number {
-  const perfect = round.outOf !== null && round.outOf > 0 && round.score === round.outOf;
+  const perfect = round.outOf > 0 && round.score === round.outOf;
   return round.score * MILES_PER_POINT[round.kind] + (perfect ? PERFECT_BONUS : 0);
 }
 
@@ -122,17 +120,15 @@ function trimDaily(daily: Record<string, number>): Record<string, number> {
 function earnedAchievements(progress: Progress, round: RoundResult, continentOf: (code: string) => string | undefined): string[] {
   const stampCount = Object.keys(progress.stamps).length;
   const continents = new Set(Object.keys(progress.stamps).map(continentOf).filter(Boolean));
-  const perfect = round.outOf !== null && round.outOf > 0 && round.score === round.outOf;
+  const perfect = round.outOf > 0 && round.score === round.outOf;
   const checks: Record<string, boolean> = {
     'first-flight': true,
-    'perfect-landing': perfect && round.kind !== 'neighbours',
+    'perfect-landing': perfect,
     commuter: progress.streak >= 3,
     'frequent-flyer': progress.streak >= 7,
     'well-travelled': stampCount >= 25,
     globetrotter: stampCount >= 100,
     'six-continents': continents.size >= CONTINENT_COUNT,
-    supersonic: round.kind === 'time-attack' && round.score >= 20,
-    'good-neighbour': perfect && round.kind === 'neighbours',
     'business-class': progress.miles >= TIERS[2].miles,
   };
   return ACHIEVEMENTS.filter(({ id }) => checks[id] && !progress.achievements.includes(id)).map(({ id }) => id);

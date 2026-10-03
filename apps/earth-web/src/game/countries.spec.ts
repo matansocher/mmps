@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from 'vitest';
 import type { Country } from '../types';
-import { countryFocus, createCountryIndex, pointInPolygon, pointInRing, regionFocus, ringBBox } from './countries';
+import { countryFocus, createCountryIndex, pointInPolygon, pointInRing, ringBBox } from './countries';
 
 const square = (west: number, south: number, east: number, north: number) => [west, south, east, south, east, north, west, north];
 
@@ -64,14 +64,5 @@ describe('countryFocus()', () => {
     expect(focus.lat).toEqual(25);
     expect(focus.lon).toEqual(25);
     expect(Math.round(focus.spanKm)).toEqual(1106);
-  });
-});
-
-describe('regionFocus()', () => {
-  it('should frame all countries together', () => {
-    const focus = regionFocus([country('A', [square(0, 0, 10, 10)]), country('B', [square(10, 0, 20, 10)])]);
-    expect(focus.lat).toEqual(5);
-    expect(focus.lon).toEqual(10);
-    expect(Math.round(focus.spanKm)).toEqual(2218);
   });
 });

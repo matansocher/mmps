@@ -57,8 +57,6 @@ export function DeparturesBoard({ countries, onPick, onPassport }: Props) {
       ? { mode: { kind: 'daily', day: today }, destination: 'Today’s flight', detail: `Flight ${flightNumber(today)} · same 10 countries for everyone · 1.5× miles`, status: 'Boarding', tone: 'go' }
       : { mode: { kind: 'daily', day: today }, destination: 'Today’s flight', detail: 'New flight tomorrow', status: `Landed ${dailyScore}/10`, tone: 'done', disabled: true },
     { mode: { kind: 'classic' }, destination: 'Classic', detail: '10 countries, anywhere on Earth', status: bestStatus({ kind: 'classic' }, 'On time'), tone: 'idle' },
-    { mode: { kind: 'time-attack' }, destination: 'Time Attack', detail: '60 seconds · misses cost 3 s', status: bestStatus({ kind: 'time-attack' }, 'On time'), tone: 'idle' },
-    { mode: { kind: 'neighbours' }, destination: 'Neighbours', detail: 'Find every bordering country', status: bestStatus({ kind: 'neighbours' }, 'On time'), tone: 'idle' },
     ...CONTINENTS.map((continent): Row => {
       const mode: GameMode = { kind: 'continent', continent };
       return { mode, destination: continent, detail: `${questionPool(countries, mode).length} countries`, status: bestStatus(mode, 'On time'), tone: 'idle' };

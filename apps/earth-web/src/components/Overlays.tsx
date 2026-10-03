@@ -32,9 +32,7 @@ export function ErrorScreen({ title, message, onRetry }: { readonly title: strin
 const MODES: ReadonlyArray<readonly [string, string]> = [
   ['Today’s flight', 'The same 10 countries for everyone, once a day. Fly daily to build a streak and earn 1.5× miles.'],
   ['Classic', '10 countries, one click each. Miss and the right one lights up in green.'],
-  ['Time Attack', 'As many countries as you can in 60 seconds. A wrong click or a skip costs 3 seconds.'],
   ['Continent Sprint', 'Classic rules, but every country comes from the continent you pick.'],
-  ['Neighbours', 'Click every country bordering the yellow one. Three misses ends the question.'],
   ['Miles & passport', 'Every round earns miles that lift your tier. Each country you find stamps your passport. Progress stays on this device.'],
 ];
 

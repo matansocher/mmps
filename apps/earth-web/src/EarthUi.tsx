@@ -8,8 +8,6 @@ import { bestScoreKey, type GameMode } from './game/modes';
 import { COLORS } from './globe/colors';
 import { ClassicGame } from './games/ClassicGame';
 import { focusCountry } from './games/focus';
-import { NeighboursGame } from './games/NeighboursGame';
-import { TimeAttackGame } from './games/TimeAttackGame';
 import { flyToView, HOME_VIEW, nudge, resetNorth, zoomBy } from './globe/camera';
 import type { EarthEngine } from './globe/engine';
 import { useHeading } from './hooks/useHeading';
@@ -22,10 +20,6 @@ function Game({ engine, mode, onChangeMode }: { readonly engine: EarthEngine; re
     case 'classic':
     case 'continent':
       return <ClassicGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
-    case 'time-attack':
-      return <TimeAttackGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
-    case 'neighbours':
-      return <NeighboursGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
   }
 }
 

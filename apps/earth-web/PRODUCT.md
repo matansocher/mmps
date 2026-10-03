@@ -26,7 +26,7 @@ Most geography quizzes use flat maps or multiple choice. Here the player physica
 
 ## Capabilities and Constraints
 
-- Modes: Classic (10 countries anywhere), Time Attack (60 s, misses/skips cost 3 s), Continent Sprint (Classic limited to one continent), Neighbours (click every country bordering the highlighted one).
+- Modes: Today's flight (the same 10 countries for everyone, once per day), Classic (10 countries anywhere), Continent Sprint (Classic limited to one continent).
 - Countries are never labeled on the map; that is the core challenge. Countries under 1,000 km² are drawn but never asked.
 - No backend and no database: all progress lives in `localStorage` on the device.
 - In scope for retention: a daily challenge, streaks, XP/levels and achievements, all local-only.

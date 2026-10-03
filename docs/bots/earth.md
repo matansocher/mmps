@@ -12,9 +12,7 @@ The app is themed as an airport. The start screen is a split-flap **departures b
 | --- | --- |
 | **Today's flight** (gate D0) | 10 countries, the same for everyone on a given day. It can be flown once per day; the row shows your result until tomorrow. |
 | **Classic** | 10 countries from anywhere on Earth, one try each. Correct: the country turns green and the next question follows. Wrong or skipped: your pick turns red, the right country turns green and the camera flies to it. |
-| **Time Attack** | Find as many countries as you can in 60 seconds. Each miss or skip costs 3 seconds. The pick flashes red, the answer flashes green, and the next question follows right away. |
 | **Continent Sprint** | Classic rules, limited to one continent (Africa, Asia, Europe, North America, South America or Oceania). The camera starts over that continent. A round has up to 10 questions; Oceania has 7. |
-| **Neighbours** | One country is highlighted in yellow. Click every country that borders it (found ones turn green). You can make up to 3 wrong clicks per question; when they run out, or when you press `S` to give up, the missed neighbours are shown in light green. A round has 5 questions, and each neighbour found is worth 1 point. Only countries with at least 2 neighbours are asked. |
 
 - Every click drops a passport stamp at the click point: "Admitted" for a hit, "Gate change" for a miss. Each correct answer draws a flight arc from the previous correct country.
 - At the end of a round, a **boarding pass** shows the score, the miles earned, your tier, new stamps and achievements, and an itinerary of every question (click one to fly there). Each mode keeps its own best score, and each continent has a separate one.
@@ -25,9 +23,9 @@ The app is themed as an airport. The start screen is a split-flap **departures b
 
 All progress lives in `localStorage` on the device; there is no account and nothing is sent to the server.
 
-- **Miles:** every point earns miles (Classic and Continent 100, Today's flight 150, Time Attack 80, Neighbours 60). A perfect round adds 500, and each new passport stamp adds 50.
+- **Miles:** every point earns miles (Classic and Continent 100, Today's flight 150). A perfect round adds 500, and each new passport stamp adds 50.
 - **Tiers:** Economy → Premium (1,500 mi) → Business (5,000) → First (12,000) → Captain (25,000).
-- **Passport (`P`):** one stamp for every country you have found, grouped by continent (click one to fly there), plus 10 achievements such as Perfect landing, Commuter (3-day daily streak) and Six continents.
+- **Passport (`P`):** one stamp for every country you have found, grouped by continent (click one to fly there), plus 8 achievements such as Perfect landing, Commuter (3-day daily streak) and Six continents.
 - **Streak:** the number of consecutive days you flew Today's flight.
 - Countries under 1,000 km² (Vatican, Monaco, Singapore…) are drawn and clickable, but never asked.
 
@@ -35,7 +33,7 @@ All progress lives in `localStorage` on the device; there is no account and noth
 
 | Layer | Path | Notes |
 | --- | --- | --- |
-| Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe rendering in `src/globe/`. Mode logic (`modes.ts`, `quiz.ts`, `time-attack.ts`, `neighbours.ts`) and progression (`progression.ts`: miles, tiers, stamps, achievements, daily seed) and point-in-country lookup in `src/game/` (pure, unit-tested). One React component per mode in `src/games/`. |
+| Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe rendering in `src/globe/`. Mode logic (`modes.ts`, `quiz.ts`) and progression (`progression.ts`: miles, tiers, stamps, achievements, daily seed) and point-in-country lookup in `src/game/` (pure, unit-tested). One React component per mode in `src/games/`. |
 | Data | `apps/earth-web/public/data/countries.json` | Country polygons generated from the Worldly bot's `src/features/worldly/assets/countries.json`. |
 | Backend | `src/features/earth` | Only serves the built SPA. |
 

@@ -64,7 +64,6 @@ describe('milesFor()', () => {
     { round: { kind: 'classic', score: 7, outOf: 10, found: [] }, expected: 700 },
     { round: { kind: 'classic', score: 10, outOf: 10, found: [] }, expected: 1_000 + PERFECT_BONUS },
     { round: { kind: 'daily', score: 4, outOf: 10, found: [] }, expected: 600 },
-    { round: { kind: 'time-attack', score: 12, outOf: null, found: [] }, expected: 960 },
     { round: { kind: 'classic', score: 0, outOf: 10, found: [] }, expected: 0 },
   ] as const)('should award $expected for $round.kind $round.score', ({ round, expected }) => {
     expect(milesFor(round)).toEqual(expected);
@@ -100,11 +99,9 @@ describe('applyRound()', () => {
     expect(outcome.unlocked.map((a) => a.id)).toContain('six-continents');
   });
 
-  it('should tell perfect landings from good neighbours', () => {
+  it('should unlock a perfect landing', () => {
     const classic = applyRound(EMPTY_PROGRESS, { kind: 'classic', score: 10, outOf: 10, found: [] }, '2026-05-01', continentOf);
-    const neighbours = applyRound(EMPTY_PROGRESS, { kind: 'neighbours', score: 20, outOf: 20, found: [] }, '2026-05-01', continentOf);
     expect(classic.unlocked.map((a) => a.id)).toContain('perfect-landing');
-    expect(neighbours.unlocked.map((a) => a.id)).toEqual(['first-flight', 'good-neighbour']);
   });
 
   describe('daily streak', () => {
