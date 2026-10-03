@@ -12,6 +12,7 @@ export type WoltRestaurant = {
   readonly priceRange?: number; // 1-4
   readonly rating?: number; // 0-10
   readonly estimateMinutes?: number;
+  readonly estimateRange?: string; // Format: "15-25" (minutes)
   readonly shortDescription?: string;
 };
 

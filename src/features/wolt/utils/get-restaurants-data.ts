@@ -42,7 +42,7 @@ async function fetchCityRestaurants(city: WoltCity): Promise<WoltRestaurant[]> {
 
   return items.map((item) => {
     const { venue, title: name, image } = item;
-    const { id, online: isOnline, slug, tags, price_range: priceRange, rating, estimate, short_description: shortDescription } = venue;
+    const { id, online: isOnline, slug, tags, price_range: priceRange, rating, estimate, estimate_range: estimateRange, short_description: shortDescription } = venue;
     const link = RESTAURANT_LINK_BASE_URL.replace('{area}', city.areaSlug).replace('{slug}', slug);
     return {
       id,
@@ -56,6 +56,7 @@ async function fetchCityRestaurants(city: WoltCity): Promise<WoltRestaurant[]> {
       priceRange: typeof priceRange === 'number' ? priceRange : undefined,
       rating: rating && typeof rating.score === 'number' ? rating.score : undefined,
       estimateMinutes: typeof estimate === 'number' ? estimate : undefined,
+      estimateRange: typeof estimateRange === 'string' && estimateRange ? estimateRange : undefined,
       shortDescription: typeof shortDescription === 'string' ? shortDescription : undefined,
     } as WoltRestaurant;
   });

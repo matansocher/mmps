@@ -5,6 +5,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
+import { formatRestaurantDetails } from './utils';
 import {
   ANALYTIC_EVENT_NAMES,
   BOT_ACTIONS,
@@ -76,7 +77,7 @@ export class WoltSchedulerService {
       const { name, link } = restaurant;
       const { chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
       const keyboard = new InlineKeyboard().url(`🍽️ ${name} 🍽️`, link);
-      const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, 'אפשר להזמין עכשיו! 📱'].join('\n');
+      const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, formatRestaurantDetails(restaurant), 'אפשר להזמין עכשיו! 📱'].filter(Boolean).join('\n');
 
       try {
         await this.bot.api.sendPhoto(chatId, restaurantPhoto, { reply_markup: keyboard, caption: replyText });
