@@ -48,7 +48,7 @@ export const TIERS: readonly Tier[] = [
   { name: 'Captain', miles: 25_000 },
 ];
 
-export const MILES_PER_POINT: Readonly<Record<FlightKind, number>> = { classic: 100, continent: 100, daily: 150 };
+export const MILES_PER_POINT: Readonly<Record<FlightKind, number>> = { classic: 100, continent: 100, daily: 150, 'name-it': 80, cleanup: 40 };
 export const PERFECT_BONUS = 500;
 export const NEW_STAMP_BONUS = 50;
 const DAILY_HISTORY = 60;
@@ -56,6 +56,7 @@ const DAILY_HISTORY = 60;
 export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'first-flight', title: 'First flight', detail: 'Finish any round' },
   { id: 'perfect-landing', title: 'Perfect landing', detail: 'Get every question right in a round' },
+  { id: 'clean-sweep', title: 'Clean sweep', detail: 'Find every country in a Continent cleanup' },
   { id: 'commuter', title: 'Commuter', detail: 'Fly the daily flight 3 days in a row' },
   { id: 'frequent-flyer', title: 'Frequent flyer', detail: 'Fly the daily flight 7 days in a row' },
   { id: 'well-travelled', title: 'Well travelled', detail: 'Collect 25 passport stamps' },
@@ -124,6 +125,7 @@ function earnedAchievements(progress: Progress, round: RoundResult, continentOf:
   const checks: Record<string, boolean> = {
     'first-flight': true,
     'perfect-landing': perfect,
+    'clean-sweep': perfect && round.kind === 'cleanup',
     commuter: progress.streak >= 3,
     'frequent-flyer': progress.streak >= 7,
     'well-travelled': stampCount >= 25,

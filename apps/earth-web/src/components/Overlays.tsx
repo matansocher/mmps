@@ -33,6 +33,8 @@ const MODES: ReadonlyArray<readonly [string, string]> = [
   ['Today’s flight', 'The same 10 countries for everyone, once a day. Fly daily to build a streak and earn 1.5× miles.'],
   ['Classic', '10 countries, one click each. Miss and the right one lights up in green.'],
   ['Continent Sprint', 'Classic rules, but every country comes from the continent you pick.'],
+  ['Name it', 'A country lights up on the globe. Pick its name from 4 options, all from the same neighbourhood.'],
+  ['Continent cleanup', 'Find every country on a continent. You get 3 tries each, and the map fills in as you go.'],
   ['Miles & passport', 'Every round earns miles that lift your tier. Each country you find stamps your passport. Progress stays on this device.'],
 ];
 
@@ -42,6 +44,7 @@ const SHORTCUTS: ReadonlyArray<readonly [string, string]> = [
   ['Scroll / pinch', 'Zoom'],
   ['← ↑ → ↓', 'Spin'],
   ['+ / −', 'Zoom in / out'],
+  ['1–4', 'Pick an answer in Name it'],
   ['Enter', 'Next question'],
   ['S', 'Skip / give up'],
   ['M', 'Change mode'],

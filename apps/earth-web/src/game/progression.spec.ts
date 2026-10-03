@@ -101,7 +101,14 @@ describe('applyRound()', () => {
 
   it('should unlock a perfect landing', () => {
     const classic = applyRound(EMPTY_PROGRESS, { kind: 'classic', score: 10, outOf: 10, found: [] }, '2026-05-01', continentOf);
-    expect(classic.unlocked.map((a) => a.id)).toContain('perfect-landing');
+    expect(classic.unlocked.map((a) => a.id)).toEqual(['first-flight', 'perfect-landing']);
+  });
+
+  it('should unlock a clean sweep only for a perfect cleanup', () => {
+    const sweep = applyRound(EMPTY_PROGRESS, { kind: 'cleanup', score: 14, outOf: 14, found: [] }, '2026-05-01', continentOf);
+    const partial = applyRound(EMPTY_PROGRESS, { kind: 'cleanup', score: 13, outOf: 14, found: [] }, '2026-05-01', continentOf);
+    expect(sweep.unlocked.map((a) => a.id)).toContain('clean-sweep');
+    expect(partial.unlocked.map((a) => a.id)).not.toContain('clean-sweep');
   });
 
   describe('daily streak', () => {

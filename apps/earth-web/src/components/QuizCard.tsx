@@ -15,7 +15,7 @@ type Props = {
   readonly onChangeMode: () => void;
 };
 
-function Legs({ quiz }: { readonly quiz: QuizState }) {
+export function Legs({ quiz }: { readonly quiz: QuizState }) {
   return (
     <ol className="flex gap-1" aria-label={`Question ${quiz.index + 1} of ${quiz.questions.length}`}>
       {quiz.questions.map((code, i) => {

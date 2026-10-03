@@ -8,7 +8,9 @@ export type Continent = (typeof CONTINENTS)[number];
 export type GameMode =
   | { readonly kind: 'daily'; readonly day: string } // Format: "YYYY-MM-DD" (local)
   | { readonly kind: 'classic' }
-  | { readonly kind: 'continent'; readonly continent: Continent };
+  | { readonly kind: 'continent'; readonly continent: Continent }
+  | { readonly kind: 'name-it' }
+  | { readonly kind: 'cleanup'; readonly continent: Continent };
 
 export const CONTINENT_VIEWS: Record<Continent, CameraView> = {
   Africa: { lat: 2, lon: 20, altitude: 11_000_000, heading: 0, pitch: -90 },
@@ -25,14 +27,17 @@ export function questionPool(countries: readonly Country[], mode: GameMode): Cou
   switch (mode.kind) {
     case 'daily':
     case 'classic':
+    case 'name-it':
       return countries.filter(askable);
     case 'continent':
+    case 'cleanup':
       return countries.filter((country) => askable(country) && country.continent === mode.continent);
   }
 }
 
 export function bestScoreKey(mode: GameMode): string {
   if (mode.kind === 'continent') return `best:continent:${mode.continent}`;
+  if (mode.kind === 'cleanup') return `best:cleanup:${mode.continent}`;
   if (mode.kind === 'daily') return `best:daily:${mode.day}`;
   return `best:${mode.kind}`;
 }
@@ -45,6 +50,10 @@ export function modeTitle(mode: GameMode): string {
       return 'Classic';
     case 'continent':
       return mode.continent;
+    case 'name-it':
+      return 'Name it';
+    case 'cleanup':
+      return `${mode.continent} cleanup`;
   }
 }
 
@@ -57,5 +66,9 @@ export function gateFor(mode: GameMode): string {
       return 'A1';
     case 'continent':
       return `C${CONTINENTS.indexOf(mode.continent) + 1}`;
+    case 'name-it':
+      return 'B1';
+    case 'cleanup':
+      return `E${CONTINENTS.indexOf(mode.continent) + 1}`;
   }
 }

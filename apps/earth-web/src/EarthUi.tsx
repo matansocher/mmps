@@ -7,7 +7,9 @@ import { Passport } from './components/Passport';
 import { bestScoreKey, type GameMode } from './game/modes';
 import { COLORS } from './globe/colors';
 import { ClassicGame } from './games/ClassicGame';
+import { CleanupGame } from './games/CleanupGame';
 import { focusCountry } from './games/focus';
+import { NameItGame } from './games/NameItGame';
 import { flyToView, HOME_VIEW, nudge, resetNorth, zoomBy } from './globe/camera';
 import type { EarthEngine } from './globe/engine';
 import { useHeading } from './hooks/useHeading';
@@ -20,6 +22,10 @@ function Game({ engine, mode, onChangeMode }: { readonly engine: EarthEngine; re
     case 'classic':
     case 'continent':
       return <ClassicGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
+    case 'name-it':
+      return <NameItGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
+    case 'cleanup':
+      return <CleanupGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
   }
 }
 

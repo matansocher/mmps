@@ -12,4 +12,6 @@ export const COLORS = {
   correct: '#3fbf7f',
   wrong: '#ef5b45',
   review: '#ffc72c',
+  target: '#ffc72c',
+  missed: '#f0a08f',
 } as const;

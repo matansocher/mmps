@@ -10,6 +10,8 @@ describe('questionPool()', () => {
   test.each([
     { mode: { kind: 'classic' } as const, expected: ['FR', 'KE', 'BR'] },
     { mode: { kind: 'continent', continent: 'Europe' } as const, expected: ['FR'] },
+    { mode: { kind: 'name-it' } as const, expected: ['FR', 'KE', 'BR'] },
+    { mode: { kind: 'cleanup', continent: 'Africa' } as const, expected: ['KE'] },
   ])('should pick $expected for $mode.kind', ({ mode, expected }) => {
     expect(questionPool(COUNTRIES, mode).map((c) => c.code)).toEqual(expected);
   });
@@ -18,6 +20,7 @@ describe('questionPool()', () => {
 describe('bestScoreKey()', () => {
   it('should keep a separate best per continent', () => {
     expect(bestScoreKey({ kind: 'continent', continent: 'Asia' })).toEqual('best:continent:Asia');
+    expect(bestScoreKey({ kind: 'cleanup', continent: 'Asia' })).toEqual('best:cleanup:Asia');
     expect(bestScoreKey({ kind: 'classic' })).toEqual('best:classic');
   });
 });

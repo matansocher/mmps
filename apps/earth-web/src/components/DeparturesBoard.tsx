@@ -57,11 +57,13 @@ export function DeparturesBoard({ countries, onPick, onPassport }: Props) {
       ? { mode: { kind: 'daily', day: today }, destination: 'Today’s flight', detail: `Flight ${flightNumber(today)} · same 10 countries for everyone · 1.5× miles`, status: 'Boarding', tone: 'go' }
       : { mode: { kind: 'daily', day: today }, destination: 'Today’s flight', detail: 'New flight tomorrow', status: `Landed ${dailyScore}/10`, tone: 'done', disabled: true },
     { mode: { kind: 'classic' }, destination: 'Classic', detail: '10 countries, anywhere on Earth', status: bestStatus({ kind: 'classic' }, 'On time'), tone: 'idle' },
+    { mode: { kind: 'name-it' }, destination: 'Name it', detail: 'Pick the lit-up country from 4 nearby names', status: bestStatus({ kind: 'name-it' }, 'On time'), tone: 'idle' },
     ...CONTINENTS.map((continent): Row => {
       const mode: GameMode = { kind: 'continent', continent };
       return { mode, destination: continent, detail: `${questionPool(countries, mode).length} countries`, status: bestStatus(mode, 'On time'), tone: 'idle' };
     }),
   ];
+  const [cleanupOpen, setCleanupOpen] = useState(false);
 
   return (
     <section
@@ -124,6 +126,45 @@ export function DeparturesBoard({ countries, onPick, onPassport }: Props) {
             </button>
           </li>
         ))}
+        <li>
+          <button
+            type="button"
+            aria-expanded={cleanupOpen}
+            aria-controls="cleanup-continents"
+            className="grid w-full grid-cols-[44px_1fr_auto] items-center gap-3 px-5 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
+            onClick={() => setCleanupOpen((open) => !open)}
+          >
+            <span className="board-type text-[19px] font-bold text-white/55">E</span>
+            <span className="min-w-0">
+              <SplitFlap text="Continent cleanup" delayMs={120 + rows.length * 70} className="text-[17px]" />
+              <span className="mt-1 block truncate text-[13px] text-white/55">Find every country on one continent</span>
+            </span>
+            <span className="board-type flex items-center gap-1 rounded px-2 py-0.5 text-[15px] font-bold whitespace-nowrap text-white/70">
+              {cleanupOpen ? 'Pick one' : 'Choose'}
+              <Icon name="chevron" size={18} className={`transition-transform duration-200 ${cleanupOpen ? 'rotate-90' : ''}`} />
+            </span>
+          </button>
+          {cleanupOpen && (
+            <div id="cleanup-continents" className="grid grid-cols-2 gap-2 px-5 pb-3 sm:grid-cols-3">
+              {CONTINENTS.map((continent) => {
+                const mode: GameMode = { kind: 'cleanup', continent };
+                const total = questionPool(countries, mode).length;
+                const best = readBestScore(bestScoreKey(mode));
+                return (
+                  <button key={continent} type="button" className="flex flex-col items-start rounded-lg bg-[var(--color-tile)] px-3 py-2 text-left transition-colors hover:bg-white/15" onClick={() => onPick(mode)}>
+                    <span className="flex w-full items-baseline justify-between gap-2">
+                      <span className="board-type text-[13px] font-bold text-white/45">{gateFor(mode)}</span>
+                      <span className={`text-[12px] tabular-nums ${best === total ? 'font-bold text-[var(--color-ok)]' : 'text-white/55'}`}>
+                        {best > 0 ? `${best}/${total}` : `${total}`}
+                      </span>
+                    </span>
+                    <span className="text-[15px] font-semibold">{continent}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </li>
       </ul>
     </section>
   );
