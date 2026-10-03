@@ -43,16 +43,14 @@ async function main() {
       }
     }
 
-    // logger.log('restaurantsCount');
-    // logger.log(restaurantsCount);
-    // logger.log('areasCount');
-    // logger.log(areasCount);
+    logger.log(`restaurantsCount: ${JSON.stringify(restaurantsCount, null, 2)}`);
+    logger.log(`areasCount: ${JSON.stringify(areasCount, null, 2)}`);
   } catch (err) {
-    logger.error(`Error during insertion: ${getErrorMessage(err)}`);
+    logger.error(`Failed to check subscriptions areas: ${getErrorMessage(err)}`);
   } finally {
     await client.close();
     logger.log('Disconnected from MongoDB.');
   }
 }
 
-main().catch((err) => logger.error(err));
+main().catch((err) => logger.error(getErrorMessage(err)));
