@@ -177,7 +177,6 @@ export class WoltController {
         }
       }
     } catch (err) {
-      this.logger.error(`Failed to handle callback query: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, what: action, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
       throw err;
     }
