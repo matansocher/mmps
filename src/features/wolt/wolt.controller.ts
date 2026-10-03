@@ -10,7 +10,7 @@ import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoade
 import { addSubscription, archiveSubscription, getActiveSubscriptions, getSubscriptionById, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getSearchResults, saveSearchResults } from './search-results.store';
-import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
+import { getRestaurantsByName, hasWoltLink, rankRestaurantsByRelevance } from './utils';
 import {
   ANALYTIC_EVENT_NAMES,
   BOT_ACTIONS,
@@ -99,7 +99,8 @@ export class WoltController {
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     try {
-      if (hasHebrew(restaurant)) {
+      // links shared from the Hebrew app come with Hebrew text around them
+      if (hasHebrew(restaurant) && !hasWoltLink(restaurant)) {
         await ctx.reply('אני מדבר עברית שוטף, אבל אני יכול לחפש מסעדות רק באנגלית 🇺🇸');
         return;
       }
