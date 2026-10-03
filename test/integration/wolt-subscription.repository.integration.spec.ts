@@ -149,7 +149,7 @@ describe('wolt subscription repository', () => {
       await addSubscription(2, 'Burger', 'b.jpg');
       await addSubscription(1, 'Sushi', 's.jpg');
 
-      const top = await getTopBy('restaurant');
+      const top = await getTopBy('restaurant', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
       expect(top[0]._id).toBe('Pizza');
       expect(top[0].count).toBe(3);
@@ -163,10 +163,20 @@ describe('wolt subscription repository', () => {
       await addSubscription(10, 'C', 'c.jpg');
       await addSubscription(20, 'D', 'd.jpg');
 
-      const top = await getTopBy('chatId');
+      const top = await getTopBy('chatId', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
       expect(top[0]._id).toBe(10);
       expect(top[0].count).toBe(3);
+    });
+
+    it('should ignore subscriptions created before the given date', async () => {
+      await addSubscription(10, 'Recent', 'r.jpg');
+      const { getMongoCollection } = await import('@core/mongo');
+      await getMongoCollection(DB_NAME, COLLECTION_NAME).insertOne({ chatId: 20, restaurant: 'Old', isActive: false, createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) });
+
+      const top = await getTopBy('restaurant', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+
+      expect(top.map(({ _id }) => _id)).toEqual(['Recent']);
     });
   });
 });
