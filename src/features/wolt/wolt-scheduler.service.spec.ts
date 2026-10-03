@@ -1,12 +1,13 @@
 import { type Bot, GrammyError } from 'grammy';
 import { notify } from '@services/notifier';
-import { archiveSubscription, type Subscription, type WoltRestaurant } from '@shared/wolt';
+import { archiveSubscription, getSubscriptionById, type Subscription, type WoltRestaurant } from '@shared/wolt';
 import { WoltSchedulerService } from './wolt-scheduler.service';
 
 vi.mock('@shared/wolt', () => ({
   archiveSubscription: vi.fn(),
   getActiveSubscriptions: vi.fn(),
   getExpiredSubscriptions: vi.fn(),
+  getSubscriptionById: vi.fn(),
   getUserDetails: vi.fn(),
 }));
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
@@ -18,6 +19,8 @@ describe('WoltSchedulerService.cleanSubscription()', () => {
   let scheduler: WoltSchedulerService;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(archiveSubscription).mockResolvedValue(true);
     vi.useFakeTimers();
     sendMessage = vi.fn().mockResolvedValue({});
     scheduler = new WoltSchedulerService({ api: { sendMessage } } as unknown as Bot);
@@ -37,8 +40,16 @@ describe('WoltSchedulerService.cleanSubscription()', () => {
 
     await scheduler.cleanSubscription(subscription);
 
-    expect(archiveSubscription).toHaveBeenCalledWith(123, 'Pizza Place', false);
+    expect(archiveSubscription).toHaveBeenCalledWith(subscription._id, false);
     expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('Pizza Place'), expect.objectContaining({ disable_notification: silent }));
+  });
+
+  it('should not tell the user when the subscription was already removed or alerted', async () => {
+    vi.mocked(archiveSubscription).mockResolvedValue(false);
+
+    await scheduler.cleanSubscription(subscription);
+
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
   it('should offer buttons to extend the subscription', async () => {
@@ -90,13 +101,14 @@ describe('WoltSchedulerService.scheduleInterval()', () => {
 
 describe('WoltSchedulerService.alertSubscription()', () => {
   const restaurant = { name: 'Pizza Place', link: 'https://wolt.com/pizza-place' } as WoltRestaurant;
-  const subscription = { chatId: 123, restaurant: 'Pizza Place', restaurantPhoto: 'https://photo.jpg' } as Subscription;
+  const subscription = { _id: { toString: () => 'sub-1' }, chatId: 123, restaurant: 'Pizza Place', restaurantPhoto: 'https://photo.jpg' } as unknown as Subscription;
   const blockedError = new GrammyError('Forbidden: bot was blocked by the user', { ok: false, error_code: 403, description: 'Forbidden: bot was blocked by the user' }, 'sendPhoto', {});
   let api: { sendPhoto: ReturnType<typeof vi.fn>; sendMessage: ReturnType<typeof vi.fn> };
   let scheduler: WoltSchedulerService;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getSubscriptionById).mockResolvedValue({ ...subscription, isActive: true });
     api = { sendPhoto: vi.fn().mockResolvedValue({}), sendMessage: vi.fn().mockResolvedValue({}) };
     scheduler = new WoltSchedulerService({ api } as unknown as Bot);
   });
@@ -105,7 +117,19 @@ describe('WoltSchedulerService.alertSubscription()', () => {
     await scheduler.alertSubscription(restaurant, subscription);
 
     expect(api.sendPhoto).toHaveBeenCalledTimes(1);
-    expect(archiveSubscription).toHaveBeenCalledWith(123, 'Pizza Place', true);
+    expect(archiveSubscription).toHaveBeenCalledWith(subscription._id, true);
+  });
+
+  test.each([
+    { case: 'removed', current: { ...subscription, isActive: false } },
+    { case: 'deleted', current: null },
+  ])('should not alert when the subscription was $case after it was read', async ({ current }) => {
+    vi.mocked(getSubscriptionById).mockResolvedValue(current);
+
+    await scheduler.alertSubscription(restaurant, subscription);
+
+    expect(api.sendPhoto).not.toHaveBeenCalled();
+    expect(archiveSubscription).not.toHaveBeenCalled();
   });
 
   it('should add the rating, delivery time and price line to the alert', async () => {
@@ -126,7 +150,7 @@ describe('WoltSchedulerService.alertSubscription()', () => {
     await scheduler.alertSubscription(restaurant, subscription);
 
     expect(api.sendMessage).toHaveBeenCalledTimes(1);
-    expect(archiveSubscription).toHaveBeenCalledWith(123, 'Pizza Place', true);
+    expect(archiveSubscription).toHaveBeenCalledWith(subscription._id, true);
     expect(notify).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'ALERT_SUBSCRIPTION_FAILED' }));
   });
 
@@ -136,7 +160,7 @@ describe('WoltSchedulerService.alertSubscription()', () => {
     await scheduler.alertSubscription(restaurant, subscription);
 
     expect(api.sendMessage).not.toHaveBeenCalled();
-    expect(archiveSubscription).toHaveBeenCalledWith(123, 'Pizza Place', false);
+    expect(archiveSubscription).toHaveBeenCalledWith(subscription._id, false);
     expect(notify).not.toHaveBeenCalled();
   });
 
