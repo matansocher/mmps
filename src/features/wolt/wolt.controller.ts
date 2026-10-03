@@ -214,10 +214,11 @@ export class WoltController {
     }
     const restaurant = restaurantDetails.name;
 
-    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
+    const alreadySubscribedText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
+    // records from before venue ids were stored only have the name
+    const existingSubscription = activeSubscriptions.find((s) => (s.restaurantId ? s.restaurantId === restaurantDetails.id : s.restaurant === restaurant));
     if (existingSubscription) {
-      const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
-      await ctx.reply(replyText);
+      await ctx.reply(alreadySubscribedText);
       return false;
     }
 
@@ -237,7 +238,12 @@ export class WoltController {
     const replyText = extensionHours
       ? [`סגור, הארכתי את ההתראה עד ${formatInTimeZone(expiresAt, DEFAULT_TIMEZONE, 'HH:mm')} ⏳`, restaurant].join('\n')
       : ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await addSubscription(chatId, restaurant, restaurantDetails.photo, restaurantDetails.id, expiresAt);
+    const insertResult = await addSubscription(chatId, restaurant, restaurantDetails.photo, restaurantDetails.id, expiresAt);
+    if (!insertResult) {
+      // a concurrent tap created it first
+      await ctx.reply(alreadySubscribedText);
+      return false;
+    }
     await ctx.reply(replyText);
     await ctx.react('🤝').catch(() => {});
 
@@ -266,7 +272,7 @@ export class WoltController {
     const existingSubscription = activeSubscriptions.find((s) => s._id?.toString() === subscriptionKey || s.restaurant === subscriptionKey);
     const restaurant = existingSubscription?.restaurant ?? (OBJECT_ID_REGEX.test(subscriptionKey) ? '' : subscriptionKey);
     if (existingSubscription) {
-      await archiveSubscription(chatId, restaurant, false);
+      await archiveSubscription(existingSubscription._id, false);
       await ctx.reply([`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n'));
     } else {
       await ctx.reply(restaurant ? [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n') : '🤔 הכל טוב, ההתראה הזאת כבר לא פתוחה');
