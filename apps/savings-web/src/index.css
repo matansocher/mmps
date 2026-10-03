@@ -1656,7 +1656,7 @@ button.danger:not(:disabled):hover {
 }
 
 .investments-section {
-  overflow: hidden;
+  overflow: clip;
 }
 
 .investments-toolbar {
@@ -1821,6 +1821,27 @@ button.danger:not(:disabled):hover {
 
 .investments-table .investment-share strong {
   display: block;
+  white-space: nowrap;
+}
+
+.investments-table tfoot td {
+  padding-block: 12px;
+  border-top: 2px solid var(--line-strong);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 0.9rem;
+}
+
+.investments-total-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.investments-total-count {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -2794,6 +2815,38 @@ button.danger:not(:disabled):hover {
 
   .investments-table .investment-actions::before {
     content: none;
+  }
+
+  .investments-table tfoot {
+    position: sticky;
+    bottom: 8px;
+    z-index: 1;
+    display: block;
+    margin-top: 12px;
+  }
+
+  .investments-table tfoot tr {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: var(--shadow-strong);
+  }
+
+  .investments-table tfoot td {
+    border-top: 0;
+    border-bottom: 0;
+  }
+
+  .investments-table tfoot td:first-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .investments-total-label {
+    justify-content: space-between;
+  }
+
+  .investments-table tfoot td:first-child::before,
+  .investments-table .investments-total-spacer {
+    display: none;
   }
 
   .investments-table td input,
