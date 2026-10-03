@@ -1,6 +1,6 @@
 import { type Bot, GrammyError } from 'grammy';
 import { notify } from '@services/notifier';
-import { archiveSubscription, type Subscription, type WoltRestaurant } from '@shared/wolt';
+import { archiveSubscription, getUserDetails, type Subscription, type WoltRestaurant } from '@shared/wolt';
 import { WoltSchedulerService } from './wolt-scheduler.service';
 
 vi.mock('@shared/wolt', () => ({
@@ -48,6 +48,20 @@ describe('WoltSchedulerService.cleanSubscription()', () => {
     const buttons = reply_markup.inline_keyboard.flat();
     expect(buttons.map((b) => b.callback_data)).toEqual(['extend - sub-1 - 1', 'extend - sub-1 - 4']);
     expect(buttons.map((b) => b.text)).toEqual(['⏳ עוד שעה', '⏳ עוד 4 שעות']);
+  });
+
+  it('should contain a failed analytics user lookup', async () => {
+    vi.mocked(getUserDetails).mockRejectedValueOnce(new Error('mongo down'));
+    const onUnhandled = vi.fn<(reason: unknown) => void>();
+    process.on('unhandledRejection', onUnhandled);
+
+    await scheduler.cleanSubscription(subscription);
+    await vi.advanceTimersByTimeAsync(0);
+
+    process.off('unhandledRejection', onUnhandled);
+    expect(getUserDetails).toHaveBeenCalledWith(123);
+    expect(onUnhandled).not.toHaveBeenCalled();
+    expect(sendMessage).toHaveBeenCalledTimes(1);
   });
 });
 
