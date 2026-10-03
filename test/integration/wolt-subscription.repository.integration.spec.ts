@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { startMongoContainer, clearCollection, stopMongoContainer } from './helpers/mongo-container';
-import { addSubscription, getSubscription, getActiveSubscriptions, archiveSubscription, getExpiredSubscriptions, getTopBy } from '@shared/wolt/mongo/subscription';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { addSubscription, archiveSubscription, ensureSubscriptionIndexes, getActiveSubscriptions, getExpiredSubscriptions, getSubscription, getTopBy } from '@shared/wolt/mongo/subscription';
+import { clearCollection, startMongoContainer, stopMongoContainer } from './helpers/mongo-container';
 
 const DB_NAME = 'Wolt';
 const COLLECTION_NAME = 'Subscription';
@@ -8,6 +8,7 @@ const COLLECTION_NAME = 'Subscription';
 describe('wolt subscription repository', () => {
   beforeAll(async () => {
     await startMongoContainer(DB_NAME);
+    await ensureSubscriptionIndexes();
   }, 30_000);
 
   afterEach(async () => {
@@ -28,6 +29,24 @@ describe('wolt subscription repository', () => {
       expect(sub).not.toBeNull();
       expect(sub.isActive).toBe(true);
       expect(sub.restaurantPhoto).toBe('https://photo.jpg');
+    });
+
+    it('should not create a second active subscription for the same restaurant', async () => {
+      await addSubscription(100, 'Pizza Place', 'a.jpg');
+
+      const result = await addSubscription(100, 'Pizza Place', 'b.jpg');
+
+      expect(result).toBeNull();
+      expect(await getActiveSubscriptions(100)).toHaveLength(1);
+    });
+
+    it('should allow subscribing again after the previous subscription was archived', async () => {
+      await addSubscription(100, 'Pizza Place', 'a.jpg');
+      await archiveSubscription(100, 'Pizza Place', true);
+
+      await addSubscription(100, 'Pizza Place', 'b.jpg');
+
+      expect(await getActiveSubscriptions(100)).toHaveLength(1);
     });
   });
 
