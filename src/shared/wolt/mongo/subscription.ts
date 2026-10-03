@@ -1,3 +1,4 @@
+import { MongoServerError } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { getErrorMessage, Logger } from '@core/utils';
 import { Subscription } from '../types';
@@ -34,7 +35,13 @@ export async function addSubscription(chatId: number, restaurant: string, restau
     isActive: true,
     createdAt: new Date(),
   } as Subscription;
-  return subscriptionCollection.insertOne(subscription);
+  try {
+    return await subscriptionCollection.insertOne(subscription);
+  } catch (err) {
+    // the user already has an active subscription for this restaurant (e.g. a double-tapped button) - nothing to add
+    if (err instanceof MongoServerError && err.code === 11000) return null;
+    throw err;
+  }
 }
 
 export async function archiveSubscription(chatId: number, restaurant: string, isSuccess: boolean) {
@@ -54,4 +61,9 @@ export async function getExpiredSubscriptions(subscriptionExpirationHours: numbe
 export async function getTopBy(topBy: 'restaurant' | 'chatId'): Promise<any[]> {
   const subscriptionCollection = getCollection();
   return subscriptionCollection.aggregate([{ $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
+}
+
+// one active subscription per user and restaurant; archived ones are kept as history
+export async function ensureSubscriptionIndexes(): Promise<void> {
+  await getCollection().createIndex({ chatId: 1, restaurant: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
 }
