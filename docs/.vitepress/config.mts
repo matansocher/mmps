@@ -72,6 +72,7 @@ export default defineConfig({
             { text: 'Chilli', link: '/bots/chilli' },
             { text: 'Coach', link: '/bots/coach' },
             { text: 'Mindloop', link: '/bots/mindloop' },
+            { text: 'Earth', link: '/bots/earth' },
             { text: 'Savings', link: '/bots/savings' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },
