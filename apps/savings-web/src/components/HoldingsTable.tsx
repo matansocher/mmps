@@ -187,6 +187,7 @@ export function HoldingsTable({ holdings, editable, onAmountChange, onRowClick }
   }
 
   const isFiltered = hasActiveFilters(filters);
+  const visibleTotal = filteredHoldings.reduce((sum, holding) => sum + numericValue(holding.currentAmountIls), 0);
 
   return (
     <div className="investments-table-wrap">
@@ -352,6 +353,25 @@ export function HoldingsTable({ holdings, editable, onAmountChange, onRowClick }
             </tr>
           ) : null}
         </tbody>
+        <tfoot>
+          <tr className="investments-total-row" aria-live="polite">
+            <td data-label={isFiltered ? 'סה״כ מסונן' : 'סה״כ'}>
+              <span className="investments-total-label">
+                <strong>{isFiltered ? 'סה״כ מסונן' : 'סה״כ'}</strong>
+                <span className="investments-total-count">
+                  {isFiltered ? `${filteredHoldings.length} מתוך ${holdings.length} השקעות` : `${holdings.length} השקעות`}
+                </span>
+              </span>
+            </td>
+            <td className="number" data-label="שווי נוכחי">
+              <strong className="readonly-number">{formatIls(visibleTotal)}</strong>
+            </td>
+            <td className="number investment-share" data-label="מהתיק">
+              <strong>{formatPercent(total > 0 ? (visibleTotal / total) * 100 : 0)}</strong>
+            </td>
+            <td colSpan={6} className="investments-total-spacer" />
+          </tr>
+        </tfoot>
       </table>
     </div>
   );
