@@ -7,6 +7,7 @@ import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
+import { getSearchResults, saveSearchResults } from './search-results.store';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
@@ -131,24 +132,14 @@ export class WoltController {
       await ctx.replyWithChatAction('typing');
       matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
     }
+    matchedRestaurants = uniqueById(matchedRestaurants);
 
-    let buttons: { text: string; data: string; style?: 'danger' | 'success' | 'primary' }[] = matchedRestaurants.map((restaurant) => {
-      return {
-        text: `${restaurant.name} - ${restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`,
-        data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
-        style: (restaurant.isOnline ? 'success' : 'danger') as 'success' | 'danger',
-      };
-    });
-
-    if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
-      buttons = [...buttons.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW)];
-      buttons.push({ text: 'דף הבא (2) ➡️', data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, 2].join(INLINE_KEYBOARD_SEPARATOR) });
-    }
-
-    const keyboard = buildInlineKeyboard(buttons);
+    const searchId = saveSearchResults(matchedRestaurants.map((r) => r.id));
+    const keyboard = buildResultsPageKeyboard(matchedRestaurants, searchId, 1);
     const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
     await ctx.reply(replyText, { reply_markup: keyboard });
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
+    const shownNames = matchedRestaurants.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW).map((r) => r.name);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, matches: matchedRestaurants.length, restaurants: shownNames.join(' | ') }, userDetails);
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
@@ -160,10 +151,12 @@ export class WoltController {
     try {
       switch (action) {
         case BOT_ACTIONS.REMOVE: {
+          await ctx.answerCallbackQuery().catch(() => {});
           await this.removeSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
           break;
         }
         case BOT_ACTIONS.ADD: {
+          await ctx.answerCallbackQuery().catch(() => {});
           await this.addSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
           break;
         }
@@ -173,7 +166,7 @@ export class WoltController {
             await ctx.answerCallbackQuery({ text: 'לא הבנתי את הבקשה שלך 😕' });
             break;
           }
-          await this.changePage(ctx, userDetails, restaurantName, pageNumber);
+          await this.changePage(ctx, userDetails, restaurant, pageNumber);
           break;
         }
         default: {
@@ -237,38 +230,52 @@ export class WoltController {
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
   }
 
-  async changePage(ctx: Context, userDetails: UserDetails, restaurant: string, page: number): Promise<void> {
+  async changePage(ctx: Context, userDetails: UserDetails, searchId: string, page: number): Promise<void> {
+    const restaurantIds = getSearchResults(searchId);
+    if (!restaurantIds) {
+      await ctx.answerCallbackQuery({ text: 'החיפוש הזה כבר לא בתוקף, אפשר לחפש שוב 🔍' });
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+      return;
+    }
+    await ctx.answerCallbackQuery().catch(() => {});
+
     const restaurants = await restaurantsService.getRestaurants();
-    let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
-    if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
-      matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
-    }
-    const from = MAX_NUM_OF_RESTAURANTS_TO_SHOW * (page - 1);
-    const to = from + MAX_NUM_OF_RESTAURANTS_TO_SHOW;
-    const newPageRestaurants = matchedRestaurants.slice(from, to);
+    const restaurantsById = new Map(restaurants.map((r) => [r.id, r]));
+    const matchedRestaurants = restaurantIds.map((id) => restaurantsById.get(id)).filter(Boolean);
+    const keyboard = buildResultsPageKeyboard(matchedRestaurants, searchId, page);
 
-    const keyboard = new InlineKeyboard();
-    for (const r of newPageRestaurants) {
-      keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR));
-      if (r.isOnline) {
-        keyboard.success();
-      } else {
-        keyboard.danger();
-      }
-      keyboard.row();
-    }
+    // the results message may have been deleted by the user while the bot was busy
+    await ctx.editMessageReplyMarkup({ reply_markup: keyboard }).catch((err) => this.logger.warn(`Failed to change page: ${getErrorMessage(err)}`));
 
-    const previousPageExists = page > 1;
-    const nextPageExists = to < matchedRestaurants.length;
-    if (previousPageExists) {
-      keyboard.text(['⬅️', `(${page - 1})`, 'דף הקודם'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, restaurant, page - 1].join(INLINE_KEYBOARD_SEPARATOR));
-    }
-    if (nextPageExists) {
-      keyboard.text(['➡️', `(${page + 1})`, 'דף הבא'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, restaurant, page + 1].join(INLINE_KEYBOARD_SEPARATOR));
-    }
-
-    await ctx.editMessageReplyMarkup({ reply_markup: keyboard });
-
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, restaurant }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, page }, userDetails);
   }
+}
+
+function uniqueById(restaurants: WoltRestaurant[]): WoltRestaurant[] {
+  const seen = new Set<string>();
+  return restaurants.filter((r) => !seen.has(r.id) && seen.add(r.id));
+}
+
+function buildResultsPageKeyboard(restaurants: WoltRestaurant[], searchId: string, page: number): InlineKeyboard {
+  const from = MAX_NUM_OF_RESTAURANTS_TO_SHOW * (page - 1);
+  const to = from + MAX_NUM_OF_RESTAURANTS_TO_SHOW;
+
+  const keyboard = new InlineKeyboard();
+  for (const r of restaurants.slice(from, to)) {
+    keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR));
+    if (r.isOnline) {
+      keyboard.success();
+    } else {
+      keyboard.danger();
+    }
+    keyboard.row();
+  }
+
+  if (page > 1) {
+    keyboard.text(['⬅️', `(${page - 1})`, 'דף הקודם'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, searchId, page - 1].join(INLINE_KEYBOARD_SEPARATOR));
+  }
+  if (to < restaurants.length) {
+    keyboard.text(['➡️', `(${page + 1})`, 'דף הבא'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, searchId, page + 1].join(INLINE_KEYBOARD_SEPARATOR));
+  }
+  return keyboard;
 }

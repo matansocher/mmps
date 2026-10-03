@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from '@src/features/wolt/wolt.config';
 import { WoltController } from '@src/features/wolt/wolt.controller';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildCallbackQueryUpdate, buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
 
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
@@ -22,6 +22,10 @@ vi.mock('@shared/wolt', () => ({
 
 vi.mock('@src/features/wolt/restaurants.service', () => ({
   restaurantsService: { getRestaurants: mocks.getRestaurants },
+}));
+
+vi.mock('@src/features/wolt/utils/rank-restaurants-by-relevance', () => ({
+  rankRestaurantsByRelevance: vi.fn(async (restaurants: unknown[]) => restaurants),
 }));
 
 describe('WoltController E2E', () => {
@@ -119,8 +123,8 @@ describe('WoltController E2E', () => {
 
     it('returns a keyboard of matched restaurants', async () => {
       mocks.getRestaurants.mockResolvedValue([
-        { name: 'Pizza Hut', isOnline: true, link: 'https://wolt.com/pizza-hut' },
-        { name: 'Pizza Place', isOnline: false, link: 'https://wolt.com/pizza-place' },
+        { id: '1', name: 'Pizza Hut', isOnline: true, link: 'https://wolt.com/pizza-hut' },
+        { id: '2', name: 'Pizza Place', isOnline: false, link: 'https://wolt.com/pizza-place' },
       ]);
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: 'pizza' }));
@@ -133,15 +137,43 @@ describe('WoltController E2E', () => {
     });
   });
 
+  describe('pagination', () => {
+    const manyPizzas = Array.from({ length: 10 }, (_, i) => ({ id: `${i}`, name: `Pizza ${i}`, isOnline: false, link: `https://wolt.com/pizza-${i}` }));
+
+    it('pages through stored results using a short search id', async () => {
+      mocks.getRestaurants.mockResolvedValue(manyPizzas);
+
+      await simulateUpdate(testBot, buildTextMessageUpdate({ text: 'a very long search query that mentions pizza and a lot of other words' }));
+
+      const buttons = testBot.transport.callsByMethod('sendMessage')[0].payload.reply_markup.inline_keyboard.flat();
+      const nextPage = buttons.find((b: any) => b.callback_data.startsWith(BOT_ACTIONS.CHANGE_PAGE));
+      expect(Buffer.byteLength(nextPage.callback_data)).toBeLessThanOrEqual(64);
+
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: nextPage.callback_data }));
+
+      expect(testBot.transport.callsByMethod('answerCallbackQuery')).toHaveLength(1);
+      const edited = testBot.transport.callsByMethod('editMessageReplyMarkup')[0].payload.reply_markup.inline_keyboard.flat();
+      expect(edited.map((b: any) => b.text)).toEqual(expect.arrayContaining(['Pizza 7 - 🛑 לא זמין 🛑', 'Pizza 9 - 🛑 לא זמין 🛑']));
+    });
+
+    it('asks to search again when the stored search is gone', async () => {
+      mocks.getActiveSubscriptions.mockResolvedValue([]);
+
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.CHANGE_PAGE, 'missing', 2].join(INLINE_KEYBOARD_SEPARATOR) }));
+
+      const answers = testBot.transport.callsByMethod('answerCallbackQuery');
+      expect(answers).toHaveLength(1);
+      expect(answers[0].payload.text).toContain('לחפש שוב');
+      expect(mocks.getRestaurants).not.toHaveBeenCalled();
+    });
+  });
+
   describe('callback_query', () => {
     it('removes an existing subscription and reacts', async () => {
       mocks.getActiveSubscriptions.mockResolvedValue([{ restaurant: 'Pizza Hut', createdAt: new Date() }]);
       mocks.archiveSubscription.mockResolvedValue(undefined);
 
-      await simulateUpdate(
-        testBot,
-        buildCallbackQueryUpdate({ data: [BOT_ACTIONS.REMOVE, 'Pizza Hut'].join(INLINE_KEYBOARD_SEPARATOR) }),
-      );
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.REMOVE, 'Pizza Hut'].join(INLINE_KEYBOARD_SEPARATOR) }));
 
       expect(mocks.archiveSubscription).toHaveBeenCalledWith(expect.any(Number), 'Pizza Hut', false);
       const sent = testBot.transport.callsByMethod('sendMessage');

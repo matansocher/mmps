@@ -15,6 +15,8 @@ export const INLINE_KEYBOARD_SEPARATOR = ' - ';
 
 export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 6;
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 7;
+export const MAX_NUM_OF_RESTAURANTS_TO_RANK = 30;
+export const SEARCH_RESULTS_TTL_MS = 60 * 60 * 1000;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
 
 export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number> = {
