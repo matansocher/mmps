@@ -85,8 +85,9 @@ describe('WoltController E2E', () => {
 
     it('renders one message per active subscription with a remove button', async () => {
       mocks.getActiveSubscriptions.mockResolvedValue([
-        { restaurant: 'Pizza Place', createdAt: new Date('2024-01-01T10:30:00') },
-        { restaurant: 'Burger Joint', createdAt: new Date('2024-01-01T11:05:00') },
+        // times are shown in Israel time (UTC+2 in winter), not in the server's timezone
+        { restaurant: 'Pizza Place', createdAt: new Date('2024-01-01T08:30:00Z') },
+        { restaurant: 'Burger Joint', createdAt: new Date('2024-01-01T09:05:00Z') },
       ]);
 
       await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/list' }));
