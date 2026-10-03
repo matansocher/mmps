@@ -67,9 +67,9 @@ export async function getExpiredSubscriptions(subscriptionExpirationHours: numbe
   return subscriptionCollection.find(filter).toArray();
 }
 
-export async function getTopBy(topBy: 'restaurant' | 'chatId'): Promise<any[]> {
+export async function getTopBy(topBy: 'restaurant' | 'chatId', since: Date): Promise<any[]> {
   const subscriptionCollection = getCollection();
-  return subscriptionCollection.aggregate([{ $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
+  return subscriptionCollection.aggregate([{ $match: { createdAt: { $gte: since } } }, { $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
 }
 
 // one active subscription per user and restaurant; archived ones are kept as history
