@@ -3,7 +3,7 @@ import type { ObjectId } from 'mongodb';
 export type WoltRestaurant = {
   readonly id: string;
   readonly name: string;
-  readonly isOnline: string;
+  readonly isOnline: boolean;
   readonly slug: string;
   readonly area: string;
   readonly photo: string;
