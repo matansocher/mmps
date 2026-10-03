@@ -120,6 +120,8 @@ describe('WoltController E2E', () => {
 
       const sent = testBot.transport.callsByMethod('sendMessage');
       expect(sent[0].payload.text).toContain('לא מצאתי');
+      expect(sent[0].payload.text).toContain('לינק');
+      expect(sent[0].payload.reply_markup).toBeUndefined();
     });
 
     it('returns a keyboard of matched restaurants', async () => {
