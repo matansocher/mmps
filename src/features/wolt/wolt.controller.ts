@@ -119,7 +119,7 @@ export class WoltController {
   }
 
   private async searchRestaurants(ctx: Context, userDetails: UserDetails, restaurant: string, rawRestaurant: string): Promise<void> {
-    const restaurants = await restaurantsService.getRestaurants();
+    const restaurants = await restaurantsService.getRestaurants({ allowStale: true });
     let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
     if (!matchedRestaurants.length) {
       const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, 'לפעמים השרתים של וולט לא מחזירים את כל המסעדות, אבל אני בודק פתרונות אפשריים לזה'].join('\n');
@@ -239,7 +239,7 @@ export class WoltController {
     }
     await ctx.answerCallbackQuery().catch(() => {});
 
-    const restaurants = await restaurantsService.getRestaurants();
+    const restaurants = await restaurantsService.getRestaurants({ allowStale: true });
     const restaurantsById = new Map(restaurants.map((r) => [r.id, r]));
     const matchedRestaurants = restaurantIds.map((id) => restaurantsById.get(id)).filter(Boolean);
     const keyboard = buildResultsPageKeyboard(matchedRestaurants, searchId, page);

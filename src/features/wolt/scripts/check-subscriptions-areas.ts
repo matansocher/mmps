@@ -18,7 +18,7 @@ async function main() {
 
     const subscriptionsCollection = client.db(DB_NAME).collection('Subscription');
 
-    const [restaurants, subscriptions] = await Promise.all([getRestaurantsList(), subscriptionsCollection.find().toArray()]);
+    const [{ restaurants }, subscriptions] = await Promise.all([getRestaurantsList(), subscriptionsCollection.find().toArray()]);
     const restaurantsCount: Record<string, number> = {};
     const areasCount: Record<string, number> = {};
 

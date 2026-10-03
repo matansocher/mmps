@@ -51,9 +51,10 @@ describe('getRestaurantsList()', () => {
   it('should fetch only supported cities, never more than 2 at a time', async () => {
     mockRestaurants(async (slug) => restaurantsResponse(slug));
 
-    const restaurants = await getRestaurantsList();
+    const { restaurants, failedAreas } = await getRestaurantsList();
 
     expect(restaurants.map((r) => r.area).sort()).toEqual(['hasharon', 'petah-tikva', 'tel-aviv']);
+    expect(failedAreas).toEqual([]);
     expect(maxInFlight).toBeLessThanOrEqual(2);
   });
 
@@ -65,9 +66,10 @@ describe('getRestaurantsList()', () => {
       return restaurantsResponse(slug);
     });
 
-    const restaurants = await getRestaurantsList();
+    const { restaurants, failedAreas } = await getRestaurantsList();
 
     expect(restaurants.map((r) => r.area).sort()).toEqual(['petah-tikva', 'tel-aviv']);
+    expect(failedAreas).toEqual(['hasharon']);
     expect(attempts).toEqual({ 'tel-aviv': 1, hasharon: 3, 'petah-tikva': 1 });
   });
 
@@ -81,8 +83,9 @@ describe('getRestaurantsList()', () => {
       return restaurantsResponse(slug);
     });
 
-    const restaurants = await getRestaurantsList();
+    const { restaurants, failedAreas } = await getRestaurantsList();
 
     expect(restaurants.map((r) => r.area).sort()).toEqual(['hasharon', 'petah-tikva', 'tel-aviv']);
+    expect(failedAreas).toEqual([]);
   });
 });

@@ -27,6 +27,8 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
 };
 
 export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
+// searches can be answered from an older list while a fresh one loads in the background
+export const STALE_LIST_MAX_AGE_MS = 15 * 60 * 1000;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;

@@ -90,7 +90,12 @@ async function fetchCitiesInBatches(cities: WoltCity[]): Promise<CityFetchResult
   return { restaurants, failedCities };
 }
 
-export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
+export type RestaurantsListResult = {
+  readonly restaurants: WoltRestaurant[];
+  readonly failedAreas: string[]; // areas that could not be fetched even after retries
+};
+
+export async function getRestaurantsList(): Promise<RestaurantsListResult> {
   const logger = new Logger('wolt:get-restaurants-list');
   try {
     const cities = await getCitiesList();
@@ -113,10 +118,10 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
       logger.warn(`Could not fetch restaurants for areas after ${MAX_CITY_FETCH_RETRIES} retries: ${citiesToFetch.map((c) => c.areaSlug).join(', ')}`);
     }
 
-    return restaurants;
+    return { restaurants, failedAreas: citiesToFetch.map((c) => c.areaSlug) };
   } catch (err) {
     logger.error(`Failed to fetch restaurants list: ${getErrorMessage(err)}`);
-    return [];
+    return { restaurants: [], failedAreas: [] };
   }
 }
 
