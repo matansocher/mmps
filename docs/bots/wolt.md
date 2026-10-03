@@ -58,7 +58,7 @@ Collections:
 ## Scheduled Tasks
 
 - **Availability Check** - Adaptive interval based on time of day
-- **Expired Subscription Cleanup** - Archives subscriptions after the configured expiration window
+- **Expired Subscription Cleanup** - Archives subscriptions once they expire (4 hours by default) and offers buttons to extend them by 1 or 4 hours
 
 ## Next Steps
 

@@ -1,4 +1,4 @@
-import { MongoServerError } from 'mongodb';
+import { MongoServerError, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { getErrorMessage, Logger } from '@core/utils';
 import { Subscription } from '../types';
@@ -26,7 +26,12 @@ export async function getSubscription(chatId: number, restaurant: string): Promi
   return subscriptionCollection.findOne(filter);
 }
 
-export async function addSubscription(chatId: number, restaurant: string, restaurantPhoto: string, restaurantId?: string) {
+export async function getSubscriptionById(id: string): Promise<Subscription | null> {
+  if (!ObjectId.isValid(id)) return null;
+  return getCollection().findOne({ _id: new ObjectId(id) });
+}
+
+export async function addSubscription(chatId: number, restaurant: string, restaurantPhoto: string, restaurantId?: string, expiresAt?: Date) {
   const subscriptionCollection = getCollection();
   const subscription = {
     chatId,
@@ -35,6 +40,7 @@ export async function addSubscription(chatId: number, restaurant: string, restau
     restaurantPhoto,
     isActive: true,
     createdAt: new Date(),
+    expiresAt,
   } as Subscription;
   try {
     return await subscriptionCollection.insertOne(subscription);
@@ -54,8 +60,10 @@ export async function archiveSubscription(chatId: number, restaurant: string, is
 
 export async function getExpiredSubscriptions(subscriptionExpirationHours: number): Promise<Subscription[]> {
   const subscriptionCollection = getCollection();
-  const validLimitTimestamp = new Date(Date.now() - subscriptionExpirationHours * 60 * 60 * 1000);
-  const filter = { isActive: true, createdAt: { $lt: validLimitTimestamp } };
+  const now = new Date();
+  const validLimitTimestamp = new Date(now.getTime() - subscriptionExpirationHours * 60 * 60 * 1000);
+  // subscriptions created before expiresAt was stored fall back to the fixed expiration
+  const filter = { isActive: true, $or: [{ expiresAt: { $lt: now } }, { expiresAt: null, createdAt: { $lt: validLimitTimestamp } }] };
   return subscriptionCollection.find(filter).toArray();
 }
 

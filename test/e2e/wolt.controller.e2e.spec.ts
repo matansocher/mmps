@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   getActiveSubscriptions: vi.fn(),
   addSubscription: vi.fn(),
   archiveSubscription: vi.fn(),
+  getSubscriptionById: vi.fn(),
   getRestaurants: vi.fn(),
 }));
 
@@ -18,6 +19,7 @@ vi.mock('@shared/wolt', () => ({
   getActiveSubscriptions: mocks.getActiveSubscriptions,
   addSubscription: mocks.addSubscription,
   archiveSubscription: mocks.archiveSubscription,
+  getSubscriptionById: mocks.getSubscriptionById,
 }));
 
 vi.mock('@src/features/wolt/restaurants.service', () => ({
@@ -216,7 +218,7 @@ describe('WoltController E2E', () => {
 
         await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, VENUE_ID].join(INLINE_KEYBOARD_SEPARATOR) }));
 
-        expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID);
+        expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID, expect.any(Date));
         expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).toContain('אני אתריע');
       });
 
@@ -226,7 +228,7 @@ describe('WoltController E2E', () => {
 
         await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, 'Shila - Sharon Cohen'].join(INLINE_KEYBOARD_SEPARATOR) }));
 
-        expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID);
+        expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID, expect.any(Date));
       });
 
       it('puts the subscription id in the /list remove button and removes by it', async () => {
@@ -249,6 +251,57 @@ describe('WoltController E2E', () => {
 
         expect(mocks.archiveSubscription).not.toHaveBeenCalled();
         expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).not.toContain(SUBSCRIPTION_ID);
+      });
+    });
+
+    describe('extend', () => {
+      const SUBSCRIPTION_ID = '65a1b2c3d4e5f6a7b8c9d0e1';
+      const expiredSubscription = { chatId: 123_456, restaurant: 'Pizza Hut', restaurantId: 'venue-1', isActive: false };
+      const extendData = (hours: number) => [BOT_ACTIONS.EXTEND, SUBSCRIPTION_ID, hours].join(INLINE_KEYBOARD_SEPARATOR);
+
+      beforeEach(() => {
+        mocks.getActiveSubscriptions.mockResolvedValue([]);
+        mocks.getRestaurants.mockResolvedValue([{ id: 'venue-1', name: 'Pizza Hut', isOnline: false, photo: 'p.jpg', link: 'l' }]);
+      });
+
+      it('renews the expired subscription for the chosen hours and removes the buttons', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2024-01-01T10:00:00Z'));
+        mocks.getSubscriptionById.mockResolvedValue(expiredSubscription);
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: extendData(1) }));
+        vi.useRealTimers();
+
+        expect(mocks.getSubscriptionById).toHaveBeenCalledWith(SUBSCRIPTION_ID);
+        expect(mocks.addSubscription).toHaveBeenCalledWith(123_456, 'Pizza Hut', 'p.jpg', 'venue-1', new Date('2024-01-01T11:00:00Z'));
+        expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).toContain('הארכתי את ההתראה עד 13:00');
+        expect(testBot.transport.callsByMethod('editMessageReplyMarkup')).toHaveLength(1);
+      });
+
+      it('rejects hours that are not offered', async () => {
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: extendData(48) }));
+
+        expect(mocks.getSubscriptionById).not.toHaveBeenCalled();
+        expect(mocks.addSubscription).not.toHaveBeenCalled();
+      });
+
+      it("does not extend another user's subscription", async () => {
+        mocks.getSubscriptionById.mockResolvedValue({ ...expiredSubscription, chatId: 999 });
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: extendData(4) }));
+
+        expect(mocks.addSubscription).not.toHaveBeenCalled();
+        expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).toContain('לא הצלחתי להאריך');
+      });
+
+      it('keeps the buttons when the user is at the subscription limit', async () => {
+        mocks.getSubscriptionById.mockResolvedValue(expiredSubscription);
+        mocks.getActiveSubscriptions.mockResolvedValue(Array.from({ length: 6 }, (_, i) => ({ restaurant: `R${i}` })));
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: extendData(4) }));
+
+        expect(mocks.addSubscription).not.toHaveBeenCalled();
+        expect(testBot.transport.callsByMethod('editMessageReplyMarkup')).toHaveLength(0);
       });
     });
   });
