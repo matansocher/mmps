@@ -108,6 +108,18 @@ describe('WoltSchedulerService.alertSubscription()', () => {
     expect(archiveSubscription).toHaveBeenCalledWith(123, 'Pizza Place', true);
   });
 
+  it('should add the rating, delivery time and price line to the alert', async () => {
+    await scheduler.alertSubscription({ ...restaurant, rating: 8, estimateRange: '15-25', priceRange: 2 }, subscription);
+
+    expect(api.sendPhoto.mock.calls[0][2].caption).toEqual(['מצאתי מסעדה שנפתחה! 🍔🍕🍣', 'Pizza Place', '⭐ 8.0 · 🕒 15-25 דק׳ · ₪₪', 'אפשר להזמין עכשיו! 📱'].join('\n'));
+  });
+
+  it('should skip the details line when nothing is known', async () => {
+    await scheduler.alertSubscription(restaurant, subscription);
+
+    expect(api.sendPhoto.mock.calls[0][2].caption).toEqual(['מצאתי מסעדה שנפתחה! 🍔🍕🍣', 'Pizza Place', 'אפשר להזמין עכשיו! 📱'].join('\n'));
+  });
+
   it('should fall back to a text message without notifying when the photo fails', async () => {
     api.sendPhoto.mockRejectedValue(new Error('wrong file identifier'));
 

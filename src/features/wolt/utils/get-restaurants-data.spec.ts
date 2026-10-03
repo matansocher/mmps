@@ -88,4 +88,19 @@ describe('getRestaurantsList()', () => {
     expect(restaurants.map((r) => r.area).sort()).toEqual(['hasharon', 'petah-tikva', 'tel-aviv']);
     expect(failedAreas).toEqual([]);
   });
+
+  it('should parse the rating, delivery time range and price', async () => {
+    mockRestaurants(async (slug) => ({
+      data: {
+        sections: [
+          {},
+          { items: [{ title: `${slug}-place`, image: { url: 'img' }, venue: { id: slug, online: true, slug, rating: { score: 8.4 }, estimate: 20, estimate_range: '15-25', price_range: 2 } }] },
+        ],
+      },
+    }));
+
+    const { restaurants } = await getRestaurantsList();
+
+    expect(restaurants[0]).toEqual(expect.objectContaining({ rating: 8.4, estimateMinutes: 20, estimateRange: '15-25', priceRange: 2 }));
+  });
 });
