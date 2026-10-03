@@ -112,11 +112,10 @@ export class WoltSchedulerService {
       const { chatId, restaurant } = subscription;
       await archiveSubscription(chatId, restaurant, false);
       const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
-      if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
-        // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER
-        const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n');
-        await this.bot.api.sendMessage(chatId, messageText);
-      }
+      // between MAX_HOUR_TO_ALERT_USER and MIN_HOUR_TO_ALERT_USER the message is sent silently, so the user still learns the subscription was closed
+      const isQuietHours = currentHour >= MAX_HOUR_TO_ALERT_USER && currentHour < MIN_HOUR_TO_ALERT_USER;
+      const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n');
+      await this.bot.api.sendMessage(chatId, messageText, { disable_notification: isQuietHours });
       this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
       this.logger.error(`Failed to clean subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);
