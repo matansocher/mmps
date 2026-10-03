@@ -75,14 +75,15 @@ export async function getTopBy(topBy: 'restaurant' | 'chatId'): Promise<any[]> {
 }
 
 const LEGACY_NAME_INDEX = 'chatId_1_restaurant_1';
-const INDEX_NOT_FOUND_CODE = 27;
+// the legacy index or the whole collection may not exist yet
+const MISSING_INDEX_CODES = [26, 27]; // NamespaceNotFound, IndexNotFound
 
 // one active subscription per user and venue; archived ones are kept as history.
 // keyed by venue id so same-name branches can be tracked separately - records from before ids were stored are skipped
 export async function ensureSubscriptionIndexes(): Promise<void> {
   const collection = getCollection();
   await collection.dropIndex(LEGACY_NAME_INDEX).catch((err) => {
-    if (!(err instanceof MongoServerError && err.code === INDEX_NOT_FOUND_CODE)) throw err;
+    if (!(err instanceof MongoServerError && MISSING_INDEX_CODES.includes(err.code as number))) throw err;
   });
   await collection.createIndex({ chatId: 1, restaurantId: 1 }, { unique: true, partialFilterExpression: { isActive: true, restaurantId: { $exists: true } } });
 }
