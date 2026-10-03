@@ -1,3 +1,4 @@
+import { addHours } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Bot, Context } from 'grammy';
 import { InlineKeyboard } from 'grammy';
@@ -10,7 +11,15 @@ import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserD
 import { restaurantsService } from './restaurants.service';
 import { getSearchResults, saveSearchResults } from './search-results.store';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_ACTIONS,
+  BOT_CONFIG,
+  INLINE_KEYBOARD_SEPARATOR,
+  MAX_NUM_OF_RESTAURANTS_TO_SHOW,
+  MAX_NUM_OF_SUBSCRIPTIONS_PER_USER,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+} from './wolt.config';
 
 export class WoltController {
   private readonly logger = new Logger('wolt:controller');
@@ -72,7 +81,9 @@ export class WoltController {
           },
         ]);
         const subscriptionTime = formatInTimeZone(subscription.createdAt, DEFAULT_TIMEZONE, 'HH:mm');
-        return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
+        const expiryTime = formatInTimeZone(addHours(subscription.createdAt, SUBSCRIPTION_EXPIRATION_HOURS), DEFAULT_TIMEZONE, 'HH:mm');
+        const replyText = [`${subscriptionTime} - ${subscription.restaurant}`, `⏳ ההתראה פעילה עד ${expiryTime}`].join('\n');
+        return ctx.reply(replyText, { reply_markup: keyboard });
       });
       await Promise.all(promisesArr);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);

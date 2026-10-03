@@ -94,7 +94,7 @@ describe('WoltController E2E', () => {
 
       const sent = testBot.transport.callsByMethod('sendMessage');
       expect(sent).toHaveLength(2);
-      expect(sent.map((c) => c.payload.text)).toEqual(expect.arrayContaining(['10:30 - Pizza Place', '11:05 - Burger Joint']));
+      expect(sent.map((c) => c.payload.text)).toEqual(expect.arrayContaining(['10:30 - Pizza Place\n⏳ ההתראה פעילה עד 14:30', '11:05 - Burger Joint\n⏳ ההתראה פעילה עד 15:05']));
       for (const call of sent) {
         const buttons = call.payload.reply_markup?.inline_keyboard?.flat();
         expect(buttons).toHaveLength(1);
