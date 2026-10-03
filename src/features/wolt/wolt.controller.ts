@@ -9,7 +9,7 @@ import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoade
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getSearchResults, saveSearchResults } from './search-results.store';
-import { getRestaurantsByName, getSimilarRestaurants, rankRestaurantsByRelevance } from './utils';
+import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
 
 export class WoltController {
@@ -123,16 +123,6 @@ export class WoltController {
     const restaurants = await restaurantsService.getRestaurants({ allowStale: true });
     let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
     if (!matchedRestaurants.length) {
-      const similarRestaurants = uniqueById(getSimilarRestaurants(restaurants, restaurant));
-      if (similarRestaurants.length) {
-        const searchId = saveSearchResults(similarRestaurants.map((r) => r.id));
-        const keyboard = buildResultsPageKeyboard(similarRestaurants, searchId, 1);
-        await ctx.reply(`לא מצאתי מסעדה בשם "${restaurant}", אולי התכוונת לאחת מאלה?`, { reply_markup: keyboard });
-        const shownNames = similarRestaurants.map((r) => r.name);
-        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, matches: 0, restaurants: `Did you mean: ${shownNames.join(' | ')}` }, userDetails);
-        return;
-      }
-
       const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, '', 'כדאי לבדוק את האיות, או לנסות חלק משם המסעדה.', 'אפשר גם להדביק כאן לינק למסעדה מאפליקציית וולט ואני אמצא אותה.'].join(
         '\n',
       );

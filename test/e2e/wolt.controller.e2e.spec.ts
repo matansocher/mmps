@@ -124,22 +124,6 @@ describe('WoltController E2E', () => {
       expect(sent[0].payload.reply_markup).toBeUndefined();
     });
 
-    it('suggests close matches when the search has a typo', async () => {
-      mocks.getRestaurants.mockResolvedValue([
-        { id: '1', name: 'Casata', isOnline: true, link: 'https://wolt.com/casata' },
-        { id: '2', name: 'Pizza Hut', isOnline: true, link: 'https://wolt.com/pizza-hut' },
-      ]);
-
-      await simulateUpdate(testBot, buildTextMessageUpdate({ text: 'cassatta' }));
-
-      const sent = testBot.transport.callsByMethod('sendMessage');
-      expect(sent).toHaveLength(1);
-      expect(sent[0].payload.text).toContain('אולי התכוונת');
-      const buttons = sent[0].payload.reply_markup?.inline_keyboard?.flat();
-      expect(buttons.map((b) => b.text)).toEqual(expect.arrayContaining([expect.stringContaining('Casata')]));
-      expect(buttons.some((b) => b.text.includes('Pizza Hut'))).toBe(false);
-    });
-
     it('returns a keyboard of matched restaurants', async () => {
       mocks.getRestaurants.mockResolvedValue([
         { id: '1', name: 'Pizza Hut', isOnline: true, link: 'https://wolt.com/pizza-hut' },
