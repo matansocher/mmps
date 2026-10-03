@@ -1,8 +1,9 @@
+import { formatInTimeZone } from 'date-fns-tz';
 import type { Bot, Context } from 'grammy';
 import { InlineKeyboard } from 'grammy';
-import { MY_USER_NAME } from '@core/config';
+import { DEFAULT_TIMEZONE, MY_USER_NAME } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { getDateNumber, hasHebrew } from '@core/utils';
+import { hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
 import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
@@ -70,7 +71,7 @@ export class WoltController {
             style: 'danger',
           },
         ]);
-        const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
+        const subscriptionTime = formatInTimeZone(subscription.createdAt, DEFAULT_TIMEZONE, 'HH:mm');
         return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
       });
       await Promise.all(promisesArr);
