@@ -4,7 +4,7 @@ import { CITIES_SLUGS_SUPPORTED } from '../wolt.config';
 const MIN_SEARCH_WORD_LENGTH = 3;
 const WOLT_LINK_REGEX = /wolt\.com\/\S*?\/(?:restaurant|venue)\/([^/?#\s]+)/i;
 
-function normalize(str: string): string {
+export function normalize(str: string): string {
   return str
     .toLowerCase()
     .replace(/['"`?!,.-]/g, '') // remove common special characters
