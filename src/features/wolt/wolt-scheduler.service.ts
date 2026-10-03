@@ -5,7 +5,17 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
 import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_ACTIONS,
+  BOT_CONFIG,
+  HOUR_OF_DAY_TO_REFRESH_MAP,
+  INLINE_KEYBOARD_SEPARATOR,
+  MAX_HOUR_TO_ALERT_USER,
+  MIN_HOUR_TO_ALERT_USER,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+  SUBSCRIPTION_EXTENSION_HOURS,
+} from './wolt.config';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
 
@@ -117,8 +127,12 @@ export class WoltSchedulerService {
       const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
       // between MAX_HOUR_TO_ALERT_USER and MIN_HOUR_TO_ALERT_USER the message is sent silently, so the user still learns the subscription was closed
       const isQuietHours = currentHour >= MAX_HOUR_TO_ALERT_USER && currentHour < MIN_HOUR_TO_ALERT_USER;
-      const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n');
-      await this.bot.api.sendMessage(chatId, messageText, { disable_notification: isQuietHours });
+      const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `אפשר להאריך את ההתראה:`].join('\n');
+      const keyboard = new InlineKeyboard();
+      for (const hours of SUBSCRIPTION_EXTENSION_HOURS) {
+        keyboard.text(hours === 1 ? '⏳ עוד שעה' : `⏳ עוד ${hours} שעות`, [BOT_ACTIONS.EXTEND, subscription._id.toString(), hours].join(INLINE_KEYBOARD_SEPARATOR));
+      }
+      await this.bot.api.sendMessage(chatId, messageText, { disable_notification: isQuietHours, reply_markup: keyboard });
       this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
     } catch (err) {
       this.logger.error(`Failed to clean subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);

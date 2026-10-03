@@ -13,7 +13,7 @@ vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
 vi.mock('./restaurants.service', () => ({ restaurantsService: {} }));
 
 describe('WoltSchedulerService.cleanSubscription()', () => {
-  const subscription = { chatId: 123, restaurant: 'Pizza Place' } as Subscription;
+  const subscription = { _id: { toString: () => 'sub-1' }, chatId: 123, restaurant: 'Pizza Place' } as unknown as Subscription;
   let sendMessage: ReturnType<typeof vi.fn>;
   let scheduler: WoltSchedulerService;
 
@@ -38,7 +38,16 @@ describe('WoltSchedulerService.cleanSubscription()', () => {
     await scheduler.cleanSubscription(subscription);
 
     expect(archiveSubscription).toHaveBeenCalledWith(123, 'Pizza Place', false);
-    expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('Pizza Place'), { disable_notification: silent });
+    expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('Pizza Place'), expect.objectContaining({ disable_notification: silent }));
+  });
+
+  it('should offer buttons to extend the subscription', async () => {
+    await scheduler.cleanSubscription(subscription);
+
+    const { reply_markup } = sendMessage.mock.calls[0][2];
+    const buttons = reply_markup.inline_keyboard.flat();
+    expect(buttons.map((b) => b.callback_data)).toEqual(['extend - sub-1 - 1', 'extend - sub-1 - 4']);
+    expect(buttons.map((b) => b.text)).toEqual(['⏳ עוד שעה', '⏳ עוד 4 שעות']);
   });
 });
 

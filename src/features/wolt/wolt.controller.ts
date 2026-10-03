@@ -7,7 +7,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
-import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
+import { addSubscription, archiveSubscription, getActiveSubscriptions, getSubscriptionById, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { getSearchResults, saveSearchResults } from './search-results.store';
 import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
@@ -19,6 +19,7 @@ import {
   MAX_NUM_OF_RESTAURANTS_TO_SHOW,
   MAX_NUM_OF_SUBSCRIPTIONS_PER_USER,
   SUBSCRIPTION_EXPIRATION_HOURS,
+  SUBSCRIPTION_EXTENSION_HOURS,
 } from './wolt.config';
 
 export class WoltController {
@@ -81,7 +82,7 @@ export class WoltController {
           },
         ]);
         const subscriptionTime = formatInTimeZone(subscription.createdAt, DEFAULT_TIMEZONE, 'HH:mm');
-        const expiryTime = formatInTimeZone(addHours(subscription.createdAt, SUBSCRIPTION_EXPIRATION_HOURS), DEFAULT_TIMEZONE, 'HH:mm');
+        const expiryTime = formatInTimeZone(subscription.expiresAt ?? addHours(subscription.createdAt, SUBSCRIPTION_EXPIRATION_HOURS), DEFAULT_TIMEZONE, 'HH:mm');
         const replyText = [`${subscriptionTime} - ${subscription.restaurant}`, `⏳ ההתראה פעילה עד ${expiryTime}`].join('\n');
         return ctx.reply(replyText, { reply_markup: keyboard });
       });
@@ -174,6 +175,12 @@ export class WoltController {
           await this.addSubscription(ctx, chatId, userDetails, value, await getActiveSubscriptions(chatId));
           break;
         }
+        case BOT_ACTIONS.EXTEND: {
+          await ctx.answerCallbackQuery().catch(() => {});
+          const [subscriptionId, hours] = values;
+          await this.extendSubscription(ctx, chatId, userDetails, subscriptionId, parseInt(hours, 10));
+          break;
+        }
         case BOT_ACTIONS.CHANGE_PAGE: {
           const [searchId, page] = values;
           const pageNumber = parseInt(page, 10);
@@ -197,12 +204,13 @@ export class WoltController {
   }
 
   // restaurantKey is the venue id, or the restaurant name on buttons sent before ids were used
-  async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurantKey: string, activeSubscriptions: Subscription[]): Promise<void> {
+  // returns whether a subscription was created
+  async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurantKey: string, activeSubscriptions: Subscription[], extensionHours?: number): Promise<boolean> {
     const restaurants = await restaurantsService.getRestaurants();
     const restaurantDetails = restaurants.find((r) => r.id === restaurantKey) ?? restaurants.find((r) => r.name === restaurantKey);
     if (!restaurantDetails) {
       await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
-      return;
+      return false;
     }
     const restaurant = restaurantDetails.name;
 
@@ -210,27 +218,47 @@ export class WoltController {
     if (existingSubscription) {
       const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
       await ctx.reply(replyText);
-      return;
+      return false;
     }
 
     if (activeSubscriptions?.length >= MAX_NUM_OF_SUBSCRIPTIONS_PER_USER) {
       await ctx.reply(['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', `יש לי הגבלה של עד ${MAX_NUM_OF_SUBSCRIPTIONS_PER_USER} התראות למשתמש 😥`].join('\n'));
-      return;
+      return false;
     }
 
     if (restaurantDetails.isOnline) {
       const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
       const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link).success();
       await ctx.reply(replyText, { reply_markup: keyboard });
-      return;
+      return false;
     }
 
-    const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await addSubscription(chatId, restaurant, restaurantDetails.photo, restaurantDetails.id);
+    const expiresAt = addHours(new Date(), extensionHours ?? SUBSCRIPTION_EXPIRATION_HOURS);
+    const replyText = extensionHours
+      ? [`סגור, הארכתי את ההתראה עד ${formatInTimeZone(expiresAt, DEFAULT_TIMEZONE, 'HH:mm')} ⏳`, restaurant].join('\n')
+      : ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
+    await addSubscription(chatId, restaurant, restaurantDetails.photo, restaurantDetails.id, expiresAt);
     await ctx.reply(replyText);
     await ctx.react('🤝').catch(() => {});
 
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
+    const action = extensionHours ? ANALYTIC_EVENT_NAMES.EXTEND : ANALYTIC_EVENT_NAMES.SUBSCRIBE;
+    notify(BOT_CONFIG, { action, restaurant, ...(extensionHours ? { hours: extensionHours } : {}) }, userDetails);
+    return true;
+  }
+
+  // renews an expired subscription from the buttons on the expiry message
+  async extendSubscription(ctx: Context, chatId: number, userDetails: UserDetails, subscriptionId: string, hours: number): Promise<void> {
+    const subscription = SUBSCRIPTION_EXTENSION_HOURS.includes(hours) ? await getSubscriptionById(subscriptionId) : null;
+    if (!subscription || subscription.chatId !== chatId) {
+      await ctx.reply('לא הצלחתי להאריך את ההתראה הזאת, אפשר לחפש את המסעדה שוב 🔍');
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+      return;
+    }
+
+    const isExtended = await this.addSubscription(ctx, chatId, userDetails, subscription.restaurantId ?? subscription.restaurant, await getActiveSubscriptions(chatId), hours);
+    if (isExtended) {
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    }
   }
 
   // subscriptionKey is the subscription id, or the restaurant name on buttons sent before ids were used

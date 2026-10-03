@@ -30,4 +30,5 @@ export type Subscription = {
   readonly isSuccess: boolean;
   readonly finishedAt: Date;
   readonly createdAt: Date;
+  readonly expiresAt?: Date; // missing on subscriptions created before extensions, which expire SUBSCRIPTION_EXPIRATION_HOURS after createdAt
 };

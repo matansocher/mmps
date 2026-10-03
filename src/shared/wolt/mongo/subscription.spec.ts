@@ -1,6 +1,6 @@
 import { MongoServerError } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { addSubscription } from './subscription';
+import { addSubscription, getExpiredSubscriptions, getSubscriptionById } from './subscription';
 
 vi.mock('@core/mongo', () => ({ getMongoCollection: vi.fn() }));
 
@@ -31,5 +31,32 @@ describe('addSubscription()', () => {
     insertOne.mockRejectedValue(new Error('network'));
 
     await expect(addSubscription(1, 'Pizza', 'photo')).rejects.toThrow('network');
+  });
+});
+
+describe('getExpiredSubscriptions()', () => {
+  it('should match subscriptions past expiresAt, and old ones without it by createdAt', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2024-01-01T10:00:00Z'));
+    const find = vi.fn().mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) });
+    vi.mocked(getMongoCollection).mockReturnValue({ find } as never);
+
+    await getExpiredSubscriptions(4);
+    vi.useRealTimers();
+
+    expect(find).toHaveBeenCalledWith({
+      isActive: true,
+      $or: [{ expiresAt: { $lt: new Date('2024-01-01T10:00:00Z') } }, { expiresAt: null, createdAt: { $lt: new Date('2024-01-01T06:00:00Z') } }],
+    });
+  });
+});
+
+describe('getSubscriptionById()', () => {
+  it('should return null for an invalid id without querying', async () => {
+    const findOne = vi.fn();
+    vi.mocked(getMongoCollection).mockReturnValue({ findOne } as never);
+
+    expect(await getSubscriptionById('not-an-id')).toBeNull();
+    expect(findOne).not.toHaveBeenCalled();
   });
 });
