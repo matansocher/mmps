@@ -85,5 +85,5 @@ export async function ensureSubscriptionIndexes(): Promise<void> {
   await collection.dropIndex(LEGACY_NAME_INDEX).catch((err) => {
     if (!(err instanceof MongoServerError && MISSING_INDEX_CODES.includes(err.code as number))) throw err;
   });
-  await collection.createIndex({ chatId: 1, restaurantId: 1 }, { unique: true, partialFilterExpression: { isActive: true, restaurantId: { $exists: true } } });
+  await collection.createIndex({ chatId: 1, restaurantId: 1 }, { unique: true, partialFilterExpression: { isActive: true, restaurantId: { $type: 'string' } } });
 }
