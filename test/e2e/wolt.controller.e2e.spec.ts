@@ -74,6 +74,36 @@ describe('WoltController E2E', () => {
     });
   });
 
+  describe('database read errors', () => {
+    beforeEach(() => {
+      mocks.getActiveSubscriptions.mockRejectedValue(new Error('mongo down'));
+    });
+
+    it('asks to retry /list instead of saying there are no alerts', async () => {
+      await expect(simulateUpdate(testBot, buildTextMessageUpdate({ text: '/list' }))).rejects.toThrow('mongo down');
+
+      const texts = testBot.transport.callsByMethod('sendMessage').map((c) => c.payload.text);
+      expect(texts).toEqual([expect.stringContaining('לנסות שוב')]);
+    });
+
+    it('keeps the remove button and does not claim the alert is gone', async () => {
+      await expect(simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.REMOVE, '65a1b2c3d4e5f6a7b8c9d0e1'].join(INLINE_KEYBOARD_SEPARATOR) }))).rejects.toThrow('mongo down');
+
+      const texts = testBot.transport.callsByMethod('sendMessage').map((c) => c.payload.text);
+      expect(texts).toEqual([expect.stringContaining('לנסות שוב')]);
+      expect(testBot.transport.callsByMethod('editMessageReplyMarkup')).toHaveLength(0);
+      expect(mocks.archiveSubscription).not.toHaveBeenCalled();
+    });
+
+    it('asks to retry adding instead of subscribing past the limit', async () => {
+      await expect(simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, 'venue-1'].join(INLINE_KEYBOARD_SEPARATOR) }))).rejects.toThrow('mongo down');
+
+      const texts = testBot.transport.callsByMethod('sendMessage').map((c) => c.payload.text);
+      expect(texts).toEqual([expect.stringContaining('לנסות שוב')]);
+      expect(mocks.addSubscription).not.toHaveBeenCalled();
+    });
+  });
+
   describe('/list', () => {
     it('tells the user when there are no subscriptions', async () => {
       mocks.getActiveSubscriptions.mockResolvedValue([]);

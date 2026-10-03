@@ -90,6 +90,7 @@ export class WoltController {
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
     } catch (err) {
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${err}`, method: this.listHandler.name }, userDetails);
+      await ctx.reply(RETRY_LATER_MESSAGE).catch(() => {});
       throw err;
     }
   }
@@ -199,6 +200,8 @@ export class WoltController {
       }
     } catch (err) {
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, what: action, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
+      // the buttons are kept so the user can tap again
+      await ctx.reply(RETRY_LATER_MESSAGE).catch(() => {});
       throw err;
     }
   }
@@ -299,6 +302,7 @@ export class WoltController {
 }
 
 const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
+const RETRY_LATER_MESSAGE = 'משהו השתבש אצלי, אפשר לנסות שוב בעוד רגע 🙏';
 
 function uniqueById(restaurants: WoltRestaurant[]): WoltRestaurant[] {
   const seen = new Set<string>();

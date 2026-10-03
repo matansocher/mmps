@@ -1,23 +1,16 @@
 import { MongoServerError, ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { getErrorMessage, Logger } from '@core/utils';
 import { Subscription } from '../types';
 import { DB_NAME } from './constants';
 
-const logger = new Logger('wolt:subscription');
-
 const getCollection = () => getMongoCollection<Subscription>(DB_NAME, 'Subscription');
 
+// throws on database errors - an empty list would tell the user they have no alerts
 export async function getActiveSubscriptions(chatId: number = null): Promise<Subscription[]> {
-  try {
-    const subscriptionCollection = getCollection();
-    const filter = { isActive: true };
-    if (chatId) filter['chatId'] = chatId;
-    return await subscriptionCollection.find(filter).toArray();
-  } catch (err) {
-    logger.error(`getActiveSubscriptions - err: ${getErrorMessage(err)}`);
-    return [];
-  }
+  const subscriptionCollection = getCollection();
+  const filter = { isActive: true };
+  if (chatId) filter['chatId'] = chatId;
+  return subscriptionCollection.find(filter).toArray();
 }
 
 export async function getSubscription(chatId: number, restaurant: string): Promise<Subscription> {
