@@ -4,6 +4,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
   id: 'WOLT',
   name: 'Wolt Bot 🍔',
   token: 'WOLT_TELEGRAM_BOT_TOKEN',
+  // a search can wait tens of seconds for the restaurants list - it must not hold up other users
+  concurrentUpdates: true,
   commands: {
     START: { command: '/start', description: 'התחל מהתחלה' },
     LIST: { command: '/list', description: '🩵 רשימת ההתראות הפתוחות 🩵' },
