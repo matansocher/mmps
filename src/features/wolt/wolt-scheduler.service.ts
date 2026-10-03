@@ -95,13 +95,16 @@ export class WoltSchedulerService {
   }
 
   async alertSubscriptions(subscriptions: Subscription[]): Promise<void> {
-    const restaurantsNames = subscriptions.map((subscription: Subscription) => subscription.restaurant);
     const restaurants = await restaurantsService.getRestaurants();
-    const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
+    const restaurantsById = new Map(restaurants.map((r) => [r.id, r]));
 
-    for (const restaurant of onlineRestaurants) {
-      const relevantSubscriptions = subscriptions.filter((subscription) => subscription.restaurant === restaurant.name);
-      for (const subscription of relevantSubscriptions) {
+    // one lookup per subscription, so a chain with several open branches still alerts only once
+    for (const subscription of subscriptions) {
+      const restaurant = subscription.restaurantId
+        ? restaurantsById.get(subscription.restaurantId)
+        : // subscriptions created before venue ids were stored fall back to any open branch with that name
+          restaurants.find((r) => r.name === subscription.restaurant && r.isOnline);
+      if (restaurant?.isOnline) {
         await this.alertSubscription(restaurant, subscription);
       }
     }

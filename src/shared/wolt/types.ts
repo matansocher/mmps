@@ -24,6 +24,7 @@ export type Subscription = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly restaurant: string;
+  readonly restaurantId?: string; // Wolt venue id - missing on subscriptions created before it was stored
   readonly restaurantPhoto: string;
   readonly isActive: boolean;
   readonly isSuccess: boolean;

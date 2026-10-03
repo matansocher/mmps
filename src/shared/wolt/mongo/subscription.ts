@@ -26,11 +26,12 @@ export async function getSubscription(chatId: number, restaurant: string): Promi
   return subscriptionCollection.findOne(filter);
 }
 
-export async function addSubscription(chatId: number, restaurant: string, restaurantPhoto: string) {
+export async function addSubscription(chatId: number, restaurant: string, restaurantPhoto: string, restaurantId?: string) {
   const subscriptionCollection = getCollection();
   const subscription = {
     chatId,
     restaurant,
+    restaurantId,
     restaurantPhoto,
     isActive: true,
     createdAt: new Date(),
