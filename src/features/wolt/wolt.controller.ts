@@ -191,7 +191,7 @@ export class WoltController {
     }
 
     if (activeSubscriptions?.length >= MAX_NUM_OF_SUBSCRIPTIONS_PER_USER) {
-      await ctx.reply(['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', 'יש לי הגבלה של עד 3 התראות למשתמש 😥'].join('\n'));
+      await ctx.reply(['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', `יש לי הגבלה של עד ${MAX_NUM_OF_SUBSCRIPTIONS_PER_USER} התראות למשתמש 😥`].join('\n'));
       return;
     }
 
