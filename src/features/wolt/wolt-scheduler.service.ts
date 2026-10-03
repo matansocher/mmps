@@ -1,5 +1,5 @@
 import { toZonedTime } from 'date-fns-tz';
-import { type Bot, InlineKeyboard } from 'grammy';
+import { type Bot, GrammyError, InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
@@ -71,14 +71,24 @@ export class WoltSchedulerService {
       try {
         await this.bot.api.sendPhoto(chatId, restaurantPhoto, { reply_markup: keyboard, caption: replyText });
       } catch (err) {
+        if (isBotBlocked(err)) throw err;
         this.logger.warn(`Failed to send alert photo for chatId ${chatId}, retrying without photo: ${getErrorMessage(err)}`);
-        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
         await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
       }
 
       await archiveSubscription(chatId, restaurantName, true);
       await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
+      if (isBotBlocked(err)) {
+        // the user blocked the bot - retrying every tick until the subscription expires would only spam the notifier
+        this.logger.warn(`Archiving subscription for chatId ${subscription.chatId}, the user blocked the bot: ${getErrorMessage(err)}`);
+        try {
+          await archiveSubscription(subscription.chatId, subscription.restaurant, false);
+        } catch (archiveErr) {
+          this.logger.error(`Failed to archive subscription for chatId ${subscription.chatId}: ${getErrorMessage(archiveErr)}`);
+        }
+        return;
+      }
       this.logger.error(`Failed to alert subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
     }
@@ -122,4 +132,8 @@ export class WoltSchedulerService {
     const userDetails = await getUserDetails(chatId);
     notify(BOT_CONFIG, { restaurant, action }, userDetails);
   }
+}
+
+function isBotBlocked(err: unknown): boolean {
+  return err instanceof GrammyError && err.error_code === 403;
 }
