@@ -146,6 +146,17 @@ describe('WoltController E2E', () => {
       expect(mocks.getRestaurants).not.toHaveBeenCalled();
     });
 
+    it('finds the restaurant from a link shared with Hebrew text around it', async () => {
+      mocks.getRestaurants.mockResolvedValue([{ id: 'venue-1', name: 'Pizza Hut', slug: 'pizza-hut', area: 'tel-aviv', isOnline: false, link: 'l' }]);
+
+      await simulateUpdate(testBot, buildTextMessageUpdate({ text: 'בואו להזמין מ-Pizza Hut בוולט: https://wolt.com/he/isr/tel-aviv/restaurant/pizza-hut' }));
+
+      const sent = testBot.transport.callsByMethod('sendMessage');
+      expect(sent[0].payload.text).not.toContain('באנגלית');
+      const [button] = sent[0].payload.reply_markup.inline_keyboard.flat();
+      expect(button.callback_data).toEqual([BOT_ACTIONS.ADD, 'venue-1'].join(INLINE_KEYBOARD_SEPARATOR));
+    });
+
     it('replies with no-results message when nothing matches', async () => {
       mocks.getRestaurants.mockResolvedValue([{ name: 'Pizza Hut', isOnline: true }]);
 
