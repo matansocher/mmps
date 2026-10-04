@@ -245,15 +245,13 @@ export function HomePage() {
           </div>
         </Section>
 
-        <Section title="מוצרים נבחרים" intro="שלוש נקודות כניסה ברורות למוצרים שהלקוחות מחפשים הרבה באתר הנוכחי.">
+        <Section title="מוצרים נבחרים" intro="ארבע נקודות כניסה ברורות למוצרים שהלקוחות מחפשים הרבה באתר הנוכחי.">
           <div className="c-friendly__featured">
-            <article className="c-friendly__z11-card">
-              <div>
-                <h3>{z11.name}</h3>
-                <p>{z11.oneLiner} מחיר החל מ-{formatIls(Math.min(...z11.variants.map((variant) => variant.priceIls)))}.</p>
-                <Link className="c-friendly__text-link" to="/friendly/product/z-11">למידע נוסף ←</Link>
-              </div>
-              <img src={z11.image} alt="אריזת אלקטרודות Z-11" width="572" height="466" loading="lazy" />
+            <article className="c-friendly__product-card">
+              <div className="c-friendly__product-stage"><img src={z11.image} alt="אריזת אלקטרודות Z-11" loading="lazy" /></div>
+              <h3>{z11.name}</h3>
+              <p>{z11.oneLiner} מחיר החל מ-{formatIls(Math.min(...z11.variants.map((variant) => variant.priceIls)))}.</p>
+              <Link className="c-friendly__text-link" to="/friendly/product/z-11">למידע נוסף ←</Link>
             </article>
             {featuredProducts.map((product) => (
               <article className="c-friendly__product-card" key={product.id}>

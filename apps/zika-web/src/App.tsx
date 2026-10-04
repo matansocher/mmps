@@ -8,7 +8,6 @@ type ConceptModule = { Home: ComponentType; Product: ComponentType };
 
 const loaders: Record<ConceptSlug, () => Promise<ConceptModule>> = {
   bold: () => import('./concepts/bold/index.ts'),
-  commerce: () => import('./concepts/commerce/index.ts'),
   catalog: () => import('./concepts/catalog/index.ts'),
   friendly: () => import('./concepts/friendly/index.ts'),
 };

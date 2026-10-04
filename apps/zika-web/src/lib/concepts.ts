@@ -1,4 +1,4 @@
-export type ConceptSlug = 'bold' | 'commerce' | 'catalog' | 'friendly';
+export type ConceptSlug = 'bold' | 'catalog' | 'friendly';
 
 export type Concept = {
   readonly slug: ConceptSlug;
@@ -27,21 +27,9 @@ export const concepts: readonly Concept[] = [
     swatches: ['#ffffff', '#141414', '#d4a017'],
   },
   {
-    slug: 'commerce',
-    preview: 'previews/commerce.jpg',
-    index: 2,
-    name: 'Brand Commerce',
-    hebrewName: 'מותג וחנות',
-    idea: 'הצבע הזהוב של זיקה הופך לפס המותג של האתר. קטגוריות כאייקונים עגולים, מדף מוצרים עם לשוניות, ודף מוצר עם סרגל ניווט דביק – אתר שמרגיש כמו חנות.',
-    inspiredBy: ['ESAB – פס מותג צבעוני, קטגוריות עגולות ומדף מוצרים בלשוניות', 'ESAB – דף מוצר עם סרגל עוגנים דביק וטבלת מפרט'],
-    whyClients: ['הדרך הקצרה ביותר מהבית לסל', 'זהות זיקה מזוהה מיד', 'כל המידע הטכני בדף אחד מסודר'],
-    bestFor: 'מכירות אונליין ולקוחות חוזרים',
-    swatches: ['#f2b705', '#1a1a1a', '#f4f4f2'],
-  },
-  {
     slug: 'catalog',
     preview: 'previews/catalog.jpg',
-    index: 3,
+    index: 2,
     name: 'Technical Catalog',
     hebrewName: 'קטלוג טכני',
     idea: 'נקי, בהיר ומסודר כמו קטלוג מקצועי: משפחות מוצרים בתמונות, טבלת מוצרים עם תקנים וגיליונות נתונים, ודף מוצר שכל הנתונים בו במבט אחד.',
@@ -53,7 +41,7 @@ export const concepts: readonly Concept[] = [
   {
     slug: 'friendly',
     preview: 'previews/friendly.jpg',
-    index: 4,
+    index: 3,
     name: 'Modern Friendly',
     hebrewName: 'מודרני וידידותי',
     idea: 'פינות מעוגלות, הרבה אוויר וחיפוש שיושב על התמונה הראשית. כרטיס קטלוג כהה ופס קיצורי דרך – אתר מזמין שקל להתמצא בו גם למי שלא מכיר ריתוך.',

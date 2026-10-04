@@ -27,7 +27,7 @@ export function Cover() {
       <main>
         <section className="cv-intro" aria-labelledby="cv-title">
           <h1 id="cv-title">
-            ארבע גרסאות מלוטשות <br />
+            שלוש גרסאות מלוטשות <br />
             לאתר של זיקה.
           </h1>
           <div className="cv-intro__body">
@@ -35,7 +35,7 @@ export function Cover() {
               מאז {brand.founded} זיקה מייצרת בישראל את מה שרתכים סומכים עליו. האתר הנוכחי לא מספר את זה: הוא נראה מיושן, קשה לשימוש בנייד, והקנייה בו מתבצעת באתר חנות נפרד.
             </p>
             <p>
-              בדקנו את האתרים של יצרניות הריתוך המובילות בעולם – Lincoln Electric, ESAB, Miller, Böhler, Hobart ו-Migatronic – ולקחנו מכל אחד את מה שעובד הכי טוב. לפניכם ארבע גרסאות, כל אחת עם <strong>דף בית</strong> שמהדק את האתר הקיים ו<strong>דף מוצר</strong> של אלקטרודת Z‑11 עם סל קניות פעיל. אותו תוכן, אותם מחירים ואותן תמונות.
+              בדקנו את האתרים של יצרניות הריתוך המובילות בעולם – Lincoln Electric, Miller, Böhler, Hobart ו-Migatronic – ולקחנו מכל אחד את מה שעובד הכי טוב. לפניכם שלוש גרסאות, כל אחת עם <strong>דף בית</strong> שמהדק את האתר הקיים ו<strong>דף מוצר</strong> של אלקטרודת Z‑11 עם סל קניות פעיל. אותו תוכן, אותם מחירים ואותן תמונות.
             </p>
           </div>
         </section>
