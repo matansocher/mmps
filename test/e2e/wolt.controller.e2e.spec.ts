@@ -51,8 +51,13 @@ describe('WoltController E2E', () => {
       expect(mocks.saveUserDetails).toHaveBeenCalledTimes(1);
       const sent = testBot.transport.callsByMethod('sendMessage');
       expect(sent).toHaveLength(1);
-      expect(sent[0].payload.text).toContain('שלום');
-      expect(sent[0].payload.text).toContain('בוולט');
+      expect(sent[0].payload.text).toContain('היי');
+      expect(sent[0].payload.text).toContain('איך זה עובד');
+      expect(sent[0].payload.text).toContain('לינק');
+      expect(sent[0].payload.text).toContain('פתח תקווה');
+      expect(sent[0].payload.text).toContain('4 שעות');
+      expect(sent[0].payload.text).toContain('עד 6 התראות');
+      expect(sent[0].payload.text).toContain('/list');
     });
 
     it('greets a returning user with the short reply', async () => {
@@ -62,6 +67,8 @@ describe('WoltController E2E', () => {
 
       const sent = testBot.transport.callsByMethod('sendMessage');
       expect(sent[0].payload.text).toContain('מעולה');
+      expect(sent[0].payload.text).toContain('איך זה עובד');
+      expect(sent[0].payload.text).not.toContain('כדאי לדעת');
     });
   });
 
