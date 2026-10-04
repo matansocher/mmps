@@ -3,6 +3,7 @@ import { MemorySaver } from '@langchain/langgraph';
 import { fakeModel } from 'langchain';
 import { recordModelUsage } from '@shared/ai';
 import { weatherTool } from '@shared/ai/tools';
+import { expectLogs } from '@test/expect-logs';
 import { ChatbotService } from './chatbot.service';
 
 // Guards the per-turn LLM call budget of the real ChatbotService (agent + full middleware stack),
@@ -55,6 +56,7 @@ describe('chatbot LLM call budget', () => {
   });
 
   it('should answer a simple greeting with a single model call and no summary', async () => {
+    expectLogs('warn', 'No price configured for model "unknown"; reporting cost 0');
     const { service, main, summary } = setup(textReplies(fakeModel(), 1));
 
     await service.processMessage('how are you?', CHAT_ID);
@@ -65,6 +67,7 @@ describe('chatbot LLM call budget', () => {
   });
 
   it('should answer a single-tool question with two model calls and one tool call', async () => {
+    expectLogs('warn', 'No price configured for model "unknown"; reporting cost 0');
     vi.spyOn(weatherTool as unknown as { func: () => Promise<string> }, 'func').mockResolvedValue('sunny, 25°C');
     const main = textReplies(fakeModel().respondWithTools([{ name: 'weather', args: { action: 'current', location: 'Tel Aviv' } }]), 1);
     const { service, summary } = setup(main);

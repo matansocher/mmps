@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosHeaders } from 'axios';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { expectLogs } from '@test/expect-logs';
 import { isTransientScoresError, scores365Get } from './scores-365-get';
 
 function axiosError(code?: string, status?: number): AxiosError {
@@ -32,6 +33,7 @@ describe('scores365Get()', () => {
   });
 
   it('should retry a timeout and return the next successful response', async () => {
+    expectLogs('warn', 'Request failed (ECONNABORTED), retrying 1/2: https://example.com');
     const get = vi
       .spyOn(axios, 'get')
       .mockRejectedValueOnce(axiosError('ECONNABORTED'))
@@ -45,6 +47,7 @@ describe('scores365Get()', () => {
   });
 
   it('should give up after 2 retries', async () => {
+    expectLogs('warn', 'Request failed (ECONNABORTED), retrying 1/2: https://example.com', 'Request failed (ECONNABORTED), retrying 2/2: https://example.com');
     const get = vi.spyOn(axios, 'get').mockRejectedValue(axiosError('ECONNABORTED'));
 
     const promise = scores365Get('https://example.com');

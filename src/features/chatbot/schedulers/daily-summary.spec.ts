@@ -7,6 +7,7 @@ import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
+import { expectLogs } from '@test/expect-logs';
 import { dailySummary } from './daily-summary';
 
 vi.mock('@services/telegram', () => ({ sendRichMessage: vi.fn() }));
@@ -205,6 +206,7 @@ describe('dailySummary()', () => {
   });
 
   it('should still send a summary when the forecast fails', async () => {
+    expectLogs('error', "Failed to fetch tomorrow's forecast: weather down");
     vi.mocked(getTomorrowHourlyForecast).mockRejectedValue(new Error('weather down'));
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
 
@@ -267,6 +269,7 @@ describe('dailySummary()', () => {
   });
 
   it('should still send a summary when fetching reminders fails', async () => {
+    expectLogs('error', 'Failed to fetch unfinished reminders: mongo down');
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockRejectedValue(new Error('mongo down'));

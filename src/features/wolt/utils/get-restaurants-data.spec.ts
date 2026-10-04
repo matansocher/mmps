@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { expectLogs } from '@test/expect-logs';
 import { CITIES_BASE_URL } from '../wolt.config';
 import { getRestaurantsList } from './get-restaurants-data';
 
@@ -59,6 +60,7 @@ describe('getRestaurantsList()', () => {
   });
 
   it('should keep the other cities when one city keeps failing', async () => {
+    expectLogs('warn', 'Retrying 1 failed area(s) (attempt 1/2): hasharon', 'Retrying 1 failed area(s) (attempt 2/2): hasharon', 'Could not fetch restaurants for areas after 2 retries: hasharon');
     const attempts: Record<string, number> = {};
     mockRestaurants(async (slug) => {
       attempts[slug] = (attempts[slug] ?? 0) + 1;
@@ -74,6 +76,7 @@ describe('getRestaurantsList()', () => {
   });
 
   it('should recover a city after a transient failure', async () => {
+    expectLogs('warn', 'Retrying 1 failed area(s) (attempt 1/2): tel-aviv');
     let failedOnce = false;
     mockRestaurants(async (slug) => {
       if (slug === 'tel-aviv' && !failedOnce) {
@@ -131,6 +134,7 @@ describe('getRestaurantsList()', () => {
     { case: 'no sections', data: { error: 'quota exceeded' } },
     { case: 'sections without venues', data: { sections: [{}, { items: [{ title: 'banner' }] }] } },
   ])('should report the city as failed for $case, so its cached restaurants are kept', async ({ data }) => {
+    expectLogs('warn', 'Retrying 1 failed area(s) (attempt 1/2): hasharon', 'Retrying 1 failed area(s) (attempt 2/2): hasharon', 'Could not fetch restaurants for areas after 2 retries: hasharon');
     mockRestaurants(async (slug) => (slug === 'hasharon' ? { data } : restaurantsResponse(slug)));
 
     const { restaurants, failedAreas } = await getRestaurantsList();

@@ -5,6 +5,7 @@ import type { CalendarEvent } from '@services/google-calendar';
 import { getCompetitionTable, getUpcomingMatches } from '@services/scores-365';
 import type { UpcomingMatch } from '@services/scores-365';
 import { sendShortenedMessage } from '@services/telegram';
+import { expectLogs } from '@test/expect-logs';
 import { sportsCalendar } from './sports-calendar';
 
 vi.mock('@services/google-calendar', () => ({
@@ -119,6 +120,7 @@ describe('sportsCalendar()', () => {
   });
 
   it('should not mutate the calendar when fixture retrieval fails', async () => {
+    expectLogs('error', 'Failed to sync sports calendar: provider unavailable');
     vi.mocked(getUpcomingMatches).mockRejectedValue(new Error('provider unavailable'));
 
     await sportsCalendar(bot);
@@ -130,6 +132,7 @@ describe('sportsCalendar()', () => {
   });
 
   it('should still sync favorite-team matches when standings retrieval fails', async () => {
+    expectLogs('warn', 'Israeli Premier League standings are unavailable; skipping standings-based matches: standings unavailable');
     vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
     vi.mocked(getCompetitionTable).mockRejectedValue(new Error('standings unavailable'));
 

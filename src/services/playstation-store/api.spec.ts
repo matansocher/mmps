@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { expectLogs } from '@test/expect-logs';
 import { getGamePrice, getGamePriceFromProduct } from './api';
 import type { PsStoreCache, PsStorePriceResponse } from './types';
 
@@ -66,6 +67,7 @@ describe('getGamePriceFromProduct()', () => {
   });
 
   it('should return null when the product has no standalone price', async () => {
+    expectLogs('warn', `No standalone price found for product ${BETA_PRODUCT_ID}`);
     mockFetchHtml(buildStorePage());
 
     const game = await getGamePriceFromProduct(BETA_PRODUCT_ID);
@@ -87,6 +89,7 @@ describe('getGamePrice()', () => {
   });
 
   it('should return null when the concept default product has no standalone price', async () => {
+    expectLogs('warn', `No standalone price found for concept ${CONCEPT_ID}`);
     mockFetchHtml(buildStorePage());
 
     const game = await getGamePrice(CONCEPT_ID);

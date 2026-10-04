@@ -5,6 +5,7 @@ import { sendShortenedMessage } from '@services/telegram';
 import { downloadTikTokVideo } from '@services/tiktok';
 import { claimDigestVideo, finalizeDigestVideo, getDigestDelivery } from '@shared/social-follower';
 import type { DigestDelivery, DigestVideoEntry } from '@shared/social-follower';
+import { expectLogs } from '@test/expect-logs';
 import { CHATBOT_CONFIG } from '../chatbot.config';
 import { buildVideoCaption, deliverDigestVideos, MAX_CAPTION_LENGTH } from './social-media-video-delivery';
 
@@ -78,6 +79,8 @@ describe('deliverDigestVideos()', () => {
   });
 
   it('falls back to a link-only message when the download fails', async () => {
+    expectLogs('warn', 'Retrying digest video e1 (attempt 1 failed): oversized');
+    expectLogs('error', 'Digest video e1 failed on attempt 2, falling back to link-only: oversized');
     const e = entry();
     vi.mocked(getDigestDelivery).mockResolvedValue(record([e]));
     vi.mocked(claimDigestVideo).mockResolvedValue(e);
@@ -92,6 +95,7 @@ describe('deliverDigestVideos()', () => {
   });
 
   it('on an ambiguous send timeout does NOT re-upload and falls back to link-only', async () => {
+    expectLogs('error', 'Digest video e1 failed on attempt 1, falling back to link-only: network timeout');
     const e = entry();
     vi.mocked(getDigestDelivery).mockResolvedValue(record([e]));
     vi.mocked(claimDigestVideo).mockResolvedValue(e);
@@ -121,6 +125,7 @@ describe('deliverDigestVideos()', () => {
   });
 
   it('isolates failures: one video failing does not stop the others', async () => {
+    expectLogs('error', 'Digest video a failed on attempt 1, falling back to link-only: boom');
     const a = entry({ entryId: 'a', url: 'https://tiktok.com/a' });
     const b = entry({ entryId: 'b', url: 'https://tiktok.com/b' });
     vi.mocked(getDigestDelivery).mockResolvedValue(record([a, b]));
@@ -138,6 +143,7 @@ describe('deliverDigestVideos()', () => {
   });
 
   it('retries a rate-limited send within budget then finalizes as sent', async () => {
+    expectLogs('warn', 'Retrying digest video e1 (attempt 1 failed): Too Many Requests (429: retry)');
     const e = entry();
     vi.mocked(getDigestDelivery).mockResolvedValue(record([e]));
     vi.mocked(claimDigestVideo).mockResolvedValue(e);
@@ -155,6 +161,11 @@ describe('deliverDigestVideos()', () => {
   });
 
   it('stops retrying and falls back to link-only once the overall per-video budget is exhausted after the first attempt', async () => {
+    expectLogs(
+      'warn',
+      'Retrying digest video e1 (attempt 1 failed): slow download',
+      `Digest video e1 exhausted its ${CHATBOT_CONFIG.videoDigest.totalBudgetMs}ms budget before attempt 2, falling back to link-only`,
+    );
     vi.useFakeTimers();
     try {
       const e = entry();
@@ -180,6 +191,7 @@ describe('deliverDigestVideos()', () => {
   });
 
   it('does not sleep-and-retry when a 429 retry_after exceeds the remaining budget; falls back to link-only', async () => {
+    expectLogs('error', 'Digest video e1 failed on attempt 1, falling back to link-only: Too Many Requests (429: retry)');
     const e = entry();
     vi.mocked(getDigestDelivery).mockResolvedValue(record([e]));
     vi.mocked(claimDigestVideo).mockResolvedValue(e);

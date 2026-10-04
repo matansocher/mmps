@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { expectLogs } from '@test/expect-logs';
 import { getAircraftInRadius } from './api';
 
 vi.mock('axios', () => ({ default: { get: vi.fn() } }));
@@ -18,6 +19,7 @@ describe('getAircraftInRadius()', () => {
   });
 
   it('should fall back to adsb.fi when adsb.lol fails', async () => {
+    expectLogs('warn', 'adsb.lol failed, falling back to adsb.fi: down');
     vi.mocked(axios.get)
       .mockRejectedValueOnce(new Error('down'))
       .mockResolvedValueOnce({ data: { aircraft: [{ hex: 'def' }] } });
@@ -29,6 +31,7 @@ describe('getAircraftInRadius()', () => {
   });
 
   it('should fall back when adsb.lol returns an unexpected shape, and throw when both fail', async () => {
+    expectLogs('warn', 'adsb.lol failed, falling back to adsb.fi: adsb.lol returned an unexpected response');
     vi.mocked(axios.get)
       .mockResolvedValueOnce({ data: { msg: 'rate limited' } })
       .mockResolvedValueOnce({ data: {} });

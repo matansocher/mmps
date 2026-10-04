@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { expectLogs } from '@test/expect-logs';
 import { createRateLimiter } from './rate-limit';
 
 vi.mock('@core/services', () => ({
@@ -30,6 +31,7 @@ function mockRes(): Response & { statusCode: number; body: unknown } {
 
 describe('createRateLimiter() (in-memory fallback)', () => {
   it('should allow requests up to the max', async () => {
+    expectLogs('warn', ...Array(3).fill('Redis unavailable, falling back to in-memory rate limiting: no redis'));
     const limiter = createRateLimiter({ windowMs: 1000, max: 3, prefix: 'test-allow' });
     const next = vi.fn() as unknown as NextFunction;
 
@@ -42,6 +44,7 @@ describe('createRateLimiter() (in-memory fallback)', () => {
   });
 
   it('should reject with 429 once the max is exceeded', async () => {
+    expectLogs('warn', ...Array(3).fill('Redis unavailable, falling back to in-memory rate limiting: no redis'));
     const limiter = createRateLimiter({ windowMs: 1000, max: 2, prefix: 'test-reject' });
     const next = vi.fn() as unknown as NextFunction;
 
@@ -56,6 +59,7 @@ describe('createRateLimiter() (in-memory fallback)', () => {
   });
 
   it('should track different IPs independently', async () => {
+    expectLogs('warn', ...Array(2).fill('Redis unavailable, falling back to in-memory rate limiting: no redis'));
     const limiter = createRateLimiter({ windowMs: 1000, max: 1, prefix: 'test-ip' });
     const next = vi.fn() as unknown as NextFunction;
 
@@ -69,6 +73,7 @@ describe('createRateLimiter() (in-memory fallback)', () => {
   });
 
   it('should reset the count after the window expires', async () => {
+    expectLogs('warn', ...Array(3).fill('Redis unavailable, falling back to in-memory rate limiting: no redis'));
     vi.useFakeTimers();
     const limiter = createRateLimiter({ windowMs: 1000, max: 1, prefix: 'test-window' });
     const next = vi.fn() as unknown as NextFunction;

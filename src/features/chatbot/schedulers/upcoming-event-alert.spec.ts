@@ -3,6 +3,7 @@ import { MY_USER_ID } from '@core/config';
 import { listEvents } from '@services/google-calendar';
 import type { CalendarEvent } from '@services/google-calendar';
 import { getEventOutcomes } from '@services/polymarket';
+import { expectLogs } from '@test/expect-logs';
 import { parseMatchTeams, upcomingEventAlert } from './upcoming-event-alert';
 import { findMatchEventSlug } from './utils';
 
@@ -80,6 +81,7 @@ describe('upcomingEventAlert()', () => {
   });
 
   it('should send the plain alert when polymarket fails', async () => {
+    expectLogs('warn', 'Failed to fetch Polymarket odds for Real Madrid vs Espanyol: 503');
     vi.mocked(listEvents).mockResolvedValue([createCalendarEvent()]);
     vi.mocked(findMatchEventSlug).mockRejectedValue(new Error('503'));
 

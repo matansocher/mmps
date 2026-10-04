@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { sendShortenedMessage } from '@services/telegram';
 import { claimDigestImage, finalizeDigestImage, getDigestDelivery } from '@shared/social-follower';
 import type { DigestDelivery, DigestImageEntry } from '@shared/social-follower';
+import { expectLogs } from '@test/expect-logs';
 import { buildImageCaption, deliverDigestImages } from './social-media-image-delivery';
 import { MAX_CAPTION_LENGTH } from './social-media-video-delivery';
 
@@ -104,6 +105,7 @@ describe('deliverDigestImages()', () => {
   });
 
   it('falls back to a link-only message when the album fails', async () => {
+    expectLogs('error', 'Digest images e1 failed, falling back to link-only: wrong file identifier/HTTP URL specified');
     const bot = makeBot();
     vi.mocked(getDigestDelivery).mockResolvedValue(record([entry()]));
     bot.api.sendMediaGroup.mockRejectedValue(new Error('wrong file identifier/HTTP URL specified'));

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { expectLogs } from '@test/expect-logs';
 import { computeModelCost, MODEL_PRICING } from './model-pricing';
 
 describe('computeModelCost()', () => {
@@ -16,6 +17,7 @@ describe('computeModelCost()', () => {
   });
 
   it('should return 0 and not throw for an unknown model', () => {
+    expectLogs('warn', 'No price configured for model "some-unreleased-model"; reporting cost 0');
     expect(computeModelCost('some-unreleased-model', { inputTokens: 1000, outputTokens: 1000 })).toEqual(0);
   });
 
@@ -82,6 +84,7 @@ describe('computeModelCost()', () => {
     });
 
     it('should report 0 for an unlisted sibling rather than guessing a wrong price', () => {
+      expectLogs('warn', 'No price configured for model "gpt-5-pro"; reporting cost 0');
       // gpt-5-pro is real but unlisted; silently billing it at gpt-5 rates would understate cost 12x.
       expect(computeModelCost('gpt-5-pro', { inputTokens: 1_000_000, outputTokens: 0 })).toEqual(0);
     });

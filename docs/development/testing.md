@@ -6,7 +6,7 @@ Testing guide for MMPS.
 
 MMPS uses Vitest 4.x for testing. TypeScript runs natively via the Vite pipeline — no `ts-jest` setup required. Three suites live side by side:
 
-- **Unit** — `src/**/*.spec.ts`, run with `npm test`.
+- **Unit** — `src/**/*.spec.ts`, mini-app specs, and test-helper specs in `test/*.spec.ts`, run with `npm test`.
 - **Integration** — `test/integration/**/*.spec.ts`, run with `npm run test:integration`.
 - **E2E bot** — `test/e2e/**/*.spec.ts`, run with `npm run test:e2e` (uses the grammY mock harness in `test/e2e/harness/`).
 
@@ -95,6 +95,23 @@ describe('ChatbotService', () => {
   });
 });
 ```
+
+### Expected Error Logs
+
+Failure-path tests should assert expected application warnings and errors rather than print them as alarming CI output:
+
+```typescript
+import { expectLogs } from '@test/expect-logs';
+
+it('should keep pending posts when Telegram fails', async () => {
+  expectLogs('error', 'Failed to send digest message to chat 1: telegram down');
+  // Set up the simulated failure, exercise the code, and assert recovery behavior.
+});
+```
+
+Call `expectLogs` once per level inside the test, before exercising the failure. Pass every expected message in order, including repeats; use a narrowly scoped regular expression for dynamic values such as durations. The helper silences only matching calls, verifies their messages and counts when the test finishes, and restores the logger even if verification fails. Unexpected calls remain visible, and unexpected calls at the watched level also fail the test.
+
+This helper spies on `Logger.prototype`, so use it in sequential tests, not concurrent tests. If a test calls `vi.resetModules()`, dynamically import the helper after that reset so it uses the same logger as the reloaded code. Do not silence the entire suite or change production logging to hide expected test errors.
 
 ## Best Practices
 

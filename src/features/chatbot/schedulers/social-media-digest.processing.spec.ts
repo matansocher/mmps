@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { sendShortenedMessage } from '@services/telegram';
 import { claimDigestDelivery, deletePendingPosts, markDigestTextDelivered } from '@shared/social-follower';
 import type { DigestDelivery, PendingPost } from '@shared/social-follower';
+import { expectLogs } from '@test/expect-logs';
 import { CHATBOT_CONFIG } from '../chatbot.config';
 import { processDigestForChat, selectTwitterImagePendingPosts } from './social-media-digest';
 import { deliverDigestImages } from './social-media-image-delivery';
@@ -79,6 +80,7 @@ describe('processDigestForChat()', () => {
   });
 
   it('on a total text-delivery failure does NOT attach videos and retains the posts', async () => {
+    expectLogs('error', 'Failed to send digest message to chat 1: telegram down', 'Failed to send digest chunk to chat 1, keeping 1 posts for next digest');
     vi.mocked(sendShortenedMessage).mockRejectedValue(new Error('telegram down'));
 
     await processDigestForChat(bot, CHAT_ID, [tiktokPost('a')], DIGEST_DATE);
@@ -100,6 +102,7 @@ describe('processDigestForChat()', () => {
   });
 
   it('snapshots tweets with photos into the delivery record and delivers images after the text', async () => {
+    expectLogs('error', 'Failed to build digest section for twitter/@creator: offline');
     await processDigestForChat(bot, CHAT_ID, [tweetPost('t1', ['https://pbs.twimg.com/media/a.jpg']), tweetPost('t2')], DIGEST_DATE);
 
     const [{ images }] = vi.mocked(claimDigestDelivery).mock.calls[0];
@@ -109,6 +112,12 @@ describe('processDigestForChat()', () => {
   });
 
   it('does not deliver images when the text digest failed entirely', async () => {
+    expectLogs(
+      'error',
+      'Failed to build digest section for twitter/@creator: offline',
+      'Failed to send digest message to chat 1: telegram down',
+      'Failed to send digest chunk to chat 1, keeping 1 posts for next digest',
+    );
     vi.mocked(sendShortenedMessage).mockRejectedValue(new Error('telegram down'));
 
     await processDigestForChat(bot, CHAT_ID, [tweetPost('t1', ['https://pbs.twimg.com/media/a.jpg'])], DIGEST_DATE);

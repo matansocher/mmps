@@ -3,6 +3,7 @@ import { lookup } from 'node:dns/promises';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { expectLogs } from '@test/expect-logs';
 import { getVideoDownloadUrl } from './api';
 import { downloadTikTokVideo, isPrivateIp } from './download-video';
 
@@ -85,6 +86,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('throws and cleans up when the download yields an empty (0-byte) body', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: download produced only 0 bytes (< 1024 min), treating as unavailable`);
     const fetchMock = vi.fn().mockResolvedValue(okResponse([]));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -93,6 +95,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('aborts and cleans up when the stream exceeds the byte cap with a missing Content-Length', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: video exceeds byte cap of 15 bytes`);
     const fetchMock = vi.fn().mockResolvedValue(okResponse([new Uint8Array(10), new Uint8Array(10)]));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -101,6 +104,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('aborts when the stream exceeds the byte cap even though Content-Length lies', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: video exceeds byte cap of 20 bytes`);
     const fetchMock = vi.fn().mockResolvedValue(okResponse([new Uint8Array(50)], { 'content-length': '5' }));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -109,6 +113,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('fails fast when Content-Length already exceeds the cap', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: video Content-Length 999 exceeds byte cap of 100 bytes`);
     const bodyStart = vi.fn();
     const stream = new ReadableStream<Uint8Array>({ start: bodyStart });
     const fetchMock = vi.fn().mockResolvedValue(new Response(stream, { status: 200, headers: { 'content-length': '999' } }));
@@ -133,6 +138,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('rejects a redirect that resolves to a private IP', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: download host resolves to a blocked address (169.254.1.1): internal.example.com`);
     vi.mocked(lookup)
       .mockResolvedValueOnce([{ address: '93.184.216.34', family: 4 }] as never)
       .mockResolvedValueOnce([{ address: '169.254.1.1', family: 4 }] as never);
@@ -144,6 +150,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('rejects when the download URL resolves to a private IP before any fetch', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: download host resolves to a blocked address (10.1.2.3): cdn.example.com`);
     vi.mocked(lookup).mockResolvedValue([{ address: '10.1.2.3', family: 4 }] as never);
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
@@ -153,6 +160,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('aborts on the wall-clock timeout and leaves no temp file', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: aborted`);
     const fetchMock = vi.fn().mockImplementation((_url, init?: { signal?: AbortSignal }) => {
       return new Promise((_resolve, reject) => {
         init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
@@ -165,6 +173,7 @@ describe('downloadTikTokVideo()', () => {
   });
 
   it('rejects an unsupported URL scheme', async () => {
+    expectLogs('warn', `Failed to download TikTok video ${SOURCE}: unsupported download url scheme: ftp:`);
     vi.mocked(getVideoDownloadUrl).mockResolvedValue('ftp://cdn.example.com/v.mp4');
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

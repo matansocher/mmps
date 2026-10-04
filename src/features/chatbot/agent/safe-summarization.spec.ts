@@ -1,4 +1,5 @@
 import { HumanMessage, RemoveMessage } from '@langchain/core/messages';
+import { expectLogs } from '@test/expect-logs';
 import { createSafeSummarizationMiddleware } from './safe-summarization';
 
 const beforeModelMock = vi.fn();
@@ -34,6 +35,7 @@ describe('createSafeSummarizationMiddleware', () => {
   });
 
   it('should drop an error-shaped summary update to preserve history', async () => {
+    expectLogs('error', /^Summarization failed to produce a valid summary; preserving original conversation history instead of replacing it\. messages=0->2 tokens\u22480->28 duration=\d+ms$/);
     beforeModelMock.mockResolvedValue(summaryUpdate('Error generating summary: Error: request timed out'));
 
     const middleware = createSafeSummarizationMiddleware({} as never) as { beforeModel: (s: unknown, r: unknown) => Promise<unknown> };

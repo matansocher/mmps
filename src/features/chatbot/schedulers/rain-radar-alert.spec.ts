@@ -71,6 +71,8 @@ describe('rainRadarAlert()', () => {
     vi.mocked(getUpcomingRainChances).mockResolvedValue(chances([80]));
     sendAnimation.mockRejectedValueOnce(new Error('too big'));
     const { rainRadarAlert } = await loadAlert();
+    const { expectLogs } = await import('@test/expect-logs');
+    expectLogs('warn', 'Failed to send radar animation, sending still image instead: too big');
 
     await rainRadarAlert(bot, NOW);
 
@@ -82,6 +84,8 @@ describe('rainRadarAlert()', () => {
     vi.mocked(getUpcomingRainChances).mockResolvedValue(chances([80]));
     vi.mocked(generateRainRadarAnimation).mockRejectedValue(new Error('IMS down'));
     const { rainRadarAlert } = await loadAlert();
+    const { expectLogs } = await import('@test/expect-logs');
+    expectLogs('error', 'Failed to generate radar animation: IMS down');
 
     await rainRadarAlert(bot, NOW);
 

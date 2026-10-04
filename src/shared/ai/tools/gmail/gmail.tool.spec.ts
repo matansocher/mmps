@@ -1,3 +1,4 @@
+import { expectLogs } from '@test/expect-logs';
 import { gmailTool } from './gmail.tool';
 
 const { send, trash } = vi.hoisted(() => ({ send: vi.fn(), trash: vi.fn() }));
@@ -19,11 +20,13 @@ describe('gmailTool', () => {
   });
 
   it('should not report success when gmail returns no message id on send', async () => {
+    expectLogs('error', 'Failed to send email: Gmail returned no message ID; send outcome is unknown');
     send.mockResolvedValue({ data: {} });
     await expect(gmailTool.invoke({ action: 'send', recipient: 'a@b.com', subject: 's', body: 'b' })).rejects.toThrow(/no message ID/);
   });
 
   it('should not report success when gmail returns no message id on delete', async () => {
+    expectLogs('error', 'Failed to trash email: Gmail returned no message ID; trash outcome is unknown');
     trash.mockResolvedValue({ data: {} });
     await expect(gmailTool.invoke({ action: 'delete', emailId: 'e1' })).rejects.toThrow(/no message ID/);
   });

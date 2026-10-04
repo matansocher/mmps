@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { expectLogs } from '@test/expect-logs';
 import { UsageCallbackHandler } from './usage-callback-handler';
 
 type FakeUsage = { input_tokens?: number; output_tokens?: number; input_token_details?: { cache_read?: number } };
@@ -63,6 +64,7 @@ describe('UsageCallbackHandler', () => {
   });
 
   it('should treat a turn with no usage metadata as zero cost but still count the call', async () => {
+    expectLogs('warn', 'No price configured for model "unknown"; reporting cost 0');
     const handler = new UsageCallbackHandler();
     await handler.handleLLMEnd({ generations: [[{ text: '' }]] } as never);
 
@@ -73,6 +75,7 @@ describe('UsageCallbackHandler', () => {
   });
 
   it('should fall back to the unknown model bucket when the model cannot be determined', async () => {
+    expectLogs('warn', 'No price configured for model "unknown"; reporting cost 0');
     const handler = new UsageCallbackHandler();
     await handler.handleLLMEnd({ generations: [[{ text: '', message: { usage_metadata: { input_tokens: 10, output_tokens: 5 } } }]] } as never);
 

@@ -2,6 +2,7 @@ import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { getSamplesForHour, getTrafficState, sampleCountryTraffic, saveSample, setTrafficState } from '@shared/flight-traffic';
 import { getAllCountries } from '@shared/worldly';
+import { expectLogs } from '@test/expect-logs';
 import { flightTrafficCheck } from './flight-traffic-check';
 
 vi.mock('@shared/flight-traffic', async (importOriginal) => ({
@@ -90,6 +91,7 @@ describe('flightTrafficCheck()', () => {
   });
 
   it('should keep checking the other country when one fails, without storing a sample for it', async () => {
+    expectLogs('error', 'Failed to check flight traffic over Israel: adsb down');
     mockSnapshots({ IL: new Error('adsb down'), IR: { insideCount: 0, outsideCount: 55 } });
 
     await flightTrafficCheck(bot, NOW);
@@ -100,6 +102,7 @@ describe('flightTrafficCheck()', () => {
   });
 
   it('should skip a country with no border geometry', async () => {
+    expectLogs('error', 'No border geometry found for Israel in the Worldly countries collection');
     vi.mocked(getAllCountries).mockResolvedValue([{ alpha2: 'IR', geometry }] as never);
     mockSnapshots({ IR: { insideCount: 42, outsideCount: 58 } });
 

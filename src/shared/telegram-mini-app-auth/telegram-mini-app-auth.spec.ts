@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import crypto from 'node:crypto';
+import { expectLogs } from '@test/expect-logs';
 import { createTelegramMiniAppAuthMiddleware, type VerifiedTelegramInitData, verifyTelegramInitData } from '.';
 
 const BOT_TOKEN = 'test-bot-token';
@@ -151,6 +152,7 @@ describe('createTelegramMiniAppAuthMiddleware()', () => {
       },
     },
   ])('rejects $name', ({ expectedStatus, expectedError, setup }) => {
+    if (expectedError === 'bot_not_configured') expectLogs('error', 'TEST_BOT_TOKEN not configured');
     setup();
 
     createMiddleware()(request, response, next);

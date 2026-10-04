@@ -1,3 +1,4 @@
+import { expectLogs } from '@test/expect-logs';
 import { createChatbotCheckpointer } from './checkpointer';
 
 const { setup } = vi.hoisted(() => ({ setup: vi.fn() }));
@@ -14,6 +15,7 @@ describe('createChatbotCheckpointer()', () => {
   beforeEach(() => setup.mockReset());
 
   it('should fail loudly when index setup reports errors', async () => {
+    expectLogs('error', 'checkpointer setup error: index build failed');
     setup.mockResolvedValue([new Error('index build failed')]);
     await expect(createChatbotCheckpointer()).rejects.toThrow(/setup failed/);
   });

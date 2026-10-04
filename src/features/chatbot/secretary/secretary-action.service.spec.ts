@@ -1,5 +1,6 @@
 import { AIMessage, ToolMessage } from '@langchain/core/messages';
 import { describe, expect, it, test } from 'vitest';
+import { expectLogs } from '@test/expect-logs';
 import { SecretaryActionService } from './secretary-action.service';
 
 function createService(messages: Array<AIMessage | ToolMessage>): SecretaryActionService {
@@ -42,6 +43,7 @@ describe('SecretaryActionService.execute()', () => {
   });
 
   it('should fail with the agent error when invocation throws', async () => {
+    expectLogs('error', 'Action execution failed: agent unavailable');
     const service = new SecretaryActionService(async () => {
       throw new Error('agent unavailable');
     });

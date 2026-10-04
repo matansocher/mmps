@@ -54,6 +54,8 @@ describe('provideTelegramBot()', () => {
     start.mockRejectedValue(new Error('409 Conflict'));
     const { provideTelegramBot } = await import('./provide-telegram-bot');
 
+    const { expectLogs } = await import('@test/expect-logs');
+    expectLogs('error', 'Failed to set commands for bot TEST: 401 Unauthorized', 'Polling failed for bot TEST: 409 Conflict');
     provideTelegramBot(BOT_CONFIG);
     await flush();
 
@@ -76,6 +78,8 @@ describe('provideTelegramBot()', () => {
     run.mockReturnValue({ task: () => Promise.reject(new Error('409 Conflict')), isRunning: () => true, stop: runnerStop });
     const { provideTelegramBot, stopAllTelegramBots } = await import('./provide-telegram-bot');
 
+    const { expectLogs } = await import('@test/expect-logs');
+    expectLogs('error', 'Polling failed for bot TEST: 409 Conflict');
     const bot = provideTelegramBot({ ...BOT_CONFIG, concurrentUpdates: true });
     await flush();
 

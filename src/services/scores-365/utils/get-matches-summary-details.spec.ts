@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { expectLogs } from '@test/expect-logs';
 import type { Competition, CompetitionDetails } from '../interface';
 import { getMatchesForCompetition } from './get-matches-for-competition';
 import { getMatchesSummaryDetails } from './get-matches-summary-details';
@@ -13,6 +14,7 @@ describe('getMatchesSummaryDetails()', () => {
   });
 
   it('should skip a failing competition and return the rest', async () => {
+    expectLogs('warn', 'Skipping competition 572 in matches summary: Error: timeout of 30000ms exceeded');
     vi.mocked(getMatchesForCompetition).mockImplementation(async (competition) => {
       if (competition.id === 572) throw new Error('timeout of 30000ms exceeded');
       return { competition, matches: competition.id === 42 ? [{ id: 1 }] : [] } as CompetitionDetails;

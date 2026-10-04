@@ -1,6 +1,7 @@
 import { type Bot, GrammyError } from 'grammy';
 import { notify } from '@services/notifier';
 import { archiveSubscription, getSubscriptionById, getUserDetails, type Subscription, type WoltRestaurant } from '@shared/wolt';
+import { expectLogs } from '@test/expect-logs';
 import { WoltSchedulerService } from './wolt-scheduler.service';
 
 vi.mock('@shared/wolt', () => ({
@@ -62,6 +63,7 @@ describe('WoltSchedulerService.cleanSubscription()', () => {
   });
 
   it('should contain a failed analytics user lookup', async () => {
+    expectLogs('error', 'Failed to notify subscription expiry for chatId 123: mongo down');
     vi.mocked(getUserDetails).mockRejectedValueOnce(new Error('mongo down'));
     const onUnhandled = vi.fn<(reason: unknown) => void>();
     process.on('unhandledRejection', onUnhandled);
@@ -90,6 +92,7 @@ describe('WoltSchedulerService.scheduleInterval()', () => {
   });
 
   it('should keep the loop alive when the interval flow fails', async () => {
+    expectLogs('error', 'Error in interval flow: mongo down', 'Error in interval flow: mongo down');
     const flow = vi.spyOn(scheduler, 'handleIntervalFlow').mockRejectedValue(new Error('mongo down'));
 
     await expect(scheduler.scheduleInterval()).resolves.toBeUndefined();
@@ -159,6 +162,7 @@ describe('WoltSchedulerService.alertSubscription()', () => {
   });
 
   it('should fall back to a text message without notifying when the photo fails', async () => {
+    expectLogs('warn', 'Failed to send alert photo for chatId 123, retrying without photo: wrong file identifier');
     api.sendPhoto.mockRejectedValue(new Error('wrong file identifier'));
 
     await scheduler.alertSubscription(restaurant, subscription);
@@ -169,6 +173,7 @@ describe('WoltSchedulerService.alertSubscription()', () => {
   });
 
   it('should archive without retrying when the user blocked the bot', async () => {
+    expectLogs('warn', `Archiving subscription for chatId 123, the user blocked the bot: ${blockedError.message}`);
     api.sendPhoto.mockRejectedValue(blockedError);
 
     await scheduler.alertSubscription(restaurant, subscription);
@@ -179,6 +184,8 @@ describe('WoltSchedulerService.alertSubscription()', () => {
   });
 
   it('should keep the subscription for the next tick on other errors', async () => {
+    expectLogs('warn', 'Failed to send alert photo for chatId 123, retrying without photo: photo failed');
+    expectLogs('error', 'Failed to alert subscription for chatId 123: network down');
     api.sendPhoto.mockRejectedValue(new Error('photo failed'));
     api.sendMessage.mockRejectedValue(new Error('network down'));
 

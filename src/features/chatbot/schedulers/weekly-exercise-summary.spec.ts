@@ -1,6 +1,7 @@
 import type { Bot } from 'grammy';
 import { sendRichMessage } from '@services/telegram';
 import { getWeeklyExerciseStats, type WeeklyExerciseStats } from '@shared/trainer';
+import { expectLogs } from '@test/expect-logs';
 import { weeklyExerciseSummary } from './weekly-exercise-summary';
 
 vi.mock('@services/telegram', () => ({ sendRichMessage: vi.fn() }));
@@ -67,6 +68,7 @@ describe('weeklyExerciseSummary()', () => {
   });
 
   it('should not throw when fetching stats fails', async () => {
+    expectLogs('error', 'Failed to send weekly exercise summary: mongo down');
     vi.mocked(getWeeklyExerciseStats).mockRejectedValue(new Error('mongo down'));
     await expect(weeklyExerciseSummary(bot)).resolves.toBeUndefined();
     expect(sendRichMessage).not.toHaveBeenCalled();

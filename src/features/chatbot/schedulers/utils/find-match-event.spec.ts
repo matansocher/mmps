@@ -1,5 +1,6 @@
 import { searchEvents } from '@services/polymarket';
 import type { EventSummary } from '@services/polymarket';
+import { expectLogs } from '@test/expect-logs';
 import { findMatchEventSlug, isMatchEventFor, tokenizeTeamName } from './find-match-event';
 
 vi.mock('@services/polymarket', () => ({
@@ -137,6 +138,7 @@ describe('findMatchEventSlug()', () => {
   });
 
   it('should keep searching when a query throws', async () => {
+    expectLogs('warn', "Polymarket search failed for 'Real Madrid Espanyol': 503");
     vi.mocked(searchEvents)
       .mockRejectedValueOnce(new Error('503'))
       .mockResolvedValue({ events: [createEvent()], keyword: '', fetchedAt: '' });
@@ -145,6 +147,7 @@ describe('findMatchEventSlug()', () => {
   });
 
   it('should return null when every query throws', async () => {
+    expectLogs('warn', "Polymarket search failed for 'Real Madrid Espanyol': 503", "Polymarket search failed for 'Real Madrid': 503", "Polymarket search failed for 'Espanyol': 503");
     vi.mocked(searchEvents).mockRejectedValue(new Error('503'));
 
     expect(await findMatchEventSlug('Real Madrid', 'Espanyol', KICKOFF)).toEqual(null);
