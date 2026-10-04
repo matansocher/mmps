@@ -51,7 +51,7 @@ export const DELAY_BETWEEN_CITY_RETRIES_MS = 1500;
 
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 export const RESTAURANTS_BASE_URL = 'https://restaurant-api.wolt.com/v1/pages/restaurants';
-export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
+export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/he/isr/{area}/restaurant/{slug}';
 
 // the order of this array is important, this will determine the order of multiple results in restaurants search
 export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'petah-tikva'];
