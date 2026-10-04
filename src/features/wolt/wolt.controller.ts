@@ -214,7 +214,8 @@ export class WoltController {
   // restaurantKey is the venue id, or the restaurant name on buttons sent before ids were used
   // returns whether a subscription was created
   async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurantKey: string, activeSubscriptions: Subscription[], extensionHours?: number): Promise<boolean> {
-    const restaurants = await restaurantsService.getRestaurants();
+    // waiting for a fresh list can take a minute - a slightly old one has the venue details, and the scheduler re-checks availability
+    const restaurants = await restaurantsService.getRestaurants({ allowStale: true });
     const restaurantDetails = restaurants.find((r) => r.id === restaurantKey) ?? restaurants.find((r) => r.name === restaurantKey);
     if (!restaurantDetails) {
       await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');

@@ -270,6 +270,8 @@ describe('WoltController E2E', () => {
 
         expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID, expect.any(Date));
         expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).toContain('אני אתריע');
+        // the tap must not wait for a full refresh of the restaurants list
+        expect(mocks.getRestaurants).toHaveBeenCalledWith({ allowStale: true });
       });
 
       it('still handles old add buttons that carry the name', async () => {
