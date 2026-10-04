@@ -1,14 +1,26 @@
+import { addHours } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import type { Bot, Context } from 'grammy';
 import { InlineKeyboard } from 'grammy';
-import { MY_USER_NAME } from '@core/config';
+import { DEFAULT_TIMEZONE, MY_USER_NAME } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { getDateNumber, hasHebrew } from '@core/utils';
+import { hasHebrew } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
-import { addSubscription, archiveSubscription, getActiveSubscriptions, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
+import { addSubscription, archiveSubscription, getActiveSubscriptions, getSubscriptionById, saveUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { getRestaurantsByName, rankRestaurantsByRelevance } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR, MAX_NUM_OF_RESTAURANTS_TO_SHOW, MAX_NUM_OF_SUBSCRIPTIONS_PER_USER } from './wolt.config';
+import { getSearchResults, saveSearchResults } from './search-results.store';
+import { getRestaurantsByName, hasWoltLink, rankRestaurantsByRelevance } from './utils';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_ACTIONS,
+  BOT_CONFIG,
+  INLINE_KEYBOARD_SEPARATOR,
+  MAX_NUM_OF_RESTAURANTS_TO_SHOW,
+  MAX_NUM_OF_SUBSCRIPTIONS_PER_USER,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+  SUBSCRIPTION_EXTENSION_HOURS,
+} from './wolt.config';
 
 export class WoltController {
   private readonly logger = new Logger('wolt:controller');
@@ -29,15 +41,19 @@ export class WoltController {
     const { userDetails } = getMessageData(ctx);
     const saveResult = await saveUserDetails(userDetails);
 
+    const howItWorksText = [`איך זה עובד:`, `1️⃣ שלחו לי שם של מסעדה באנגלית, או לינק מאפליקציית וולט`, `2️⃣ בחרו את הסניף מהרשימה`, `3️⃣ אשלח לכם הודעה ברגע שהיא נפתחת 🔔`].join('\n');
     const newUserReplyText = [
-      `שלום {firstName}!`,
-      `אני בוט שמתריע על מסעדות שנפתחות להזמנה בוולט`,
-      `פשוט תשלחו לי את שם המסעדה (באנגלית 🇺🇸), ואני אגיד לכם מתי היא נפתחת`,
-      `כדי לראות את רשימת ההתראות הפתוחות אפשר להשתמש בפקודה /list`,
-    ]
-      .join('\n')
-      .replace('{firstName}', userDetails.firstName || userDetails.username || '');
-    const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
+      `היי ${userDetails.firstName || userDetails.username || ''} 👋`,
+      `אני מתריע כשמסעדה סגורה בוולט נפתחת להזמנות 🍔`,
+      '',
+      howItWorksText,
+      '',
+      `כדאי לדעת:`,
+      `📍 אני מכיר רק מסעדות באזור ת״א–הרצליה, השרון ופתח תקווה`,
+      `⏱ התראה נסגרת אחרי ${SUBSCRIPTION_EXPIRATION_HOURS} שעות, ואפשר להאריך אותה`,
+      `📋 עד ${MAX_NUM_OF_SUBSCRIPTIONS_PER_USER} התראות במקביל, לרשימה: ${BOT_CONFIG.commands.LIST.command}`,
+    ].join('\n');
+    const existingUserReplyText = [`מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`, '', howItWorksText, '', `ההתראות הפתוחות: ${BOT_CONFIG.commands.LIST.command}`].join('\n');
     await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText);
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: saveResult === 'created' }, userDetails);
@@ -65,17 +81,20 @@ export class WoltController {
         const keyboard = buildInlineKeyboard([
           {
             text: '⛔️ הסרה ⛔️',
-            data: [BOT_ACTIONS.REMOVE, subscription.restaurant].join(INLINE_KEYBOARD_SEPARATOR),
+            data: [BOT_ACTIONS.REMOVE, String(subscription._id)].join(INLINE_KEYBOARD_SEPARATOR),
             style: 'danger',
           },
         ]);
-        const subscriptionTime = `${getDateNumber(subscription.createdAt.getHours())}:${getDateNumber(subscription.createdAt.getMinutes())}`;
-        return ctx.reply(`${subscriptionTime} - ${subscription.restaurant}`, { reply_markup: keyboard });
+        const subscriptionTime = formatInTimeZone(subscription.createdAt, DEFAULT_TIMEZONE, 'HH:mm');
+        const expiryTime = formatInTimeZone(subscription.expiresAt ?? addHours(subscription.createdAt, SUBSCRIPTION_EXPIRATION_HOURS), DEFAULT_TIMEZONE, 'HH:mm');
+        const replyText = [`${subscriptionTime} - ${subscription.restaurant}`, `⏳ ההתראה פעילה עד ${expiryTime}`].join('\n');
+        return ctx.reply(replyText, { reply_markup: keyboard });
       });
       await Promise.all(promisesArr);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LIST }, userDetails);
     } catch (err) {
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, error: `error - ${err}`, method: this.listHandler.name }, userDetails);
+      await ctx.reply(RETRY_LATER_MESSAGE).catch(() => {});
       throw err;
     }
   }
@@ -85,7 +104,8 @@ export class WoltController {
     const restaurant = rawRestaurant.toLowerCase().trim();
 
     try {
-      if (hasHebrew(restaurant)) {
+      // links shared from the Hebrew app come with Hebrew text around them
+      if (hasHebrew(restaurant) && !hasWoltLink(restaurant)) {
         await ctx.reply('אני מדבר עברית שוטף, אבל אני יכול לחפש מסעדות רק באנגלית 🇺🇸');
         return;
       }
@@ -118,10 +138,12 @@ export class WoltController {
   }
 
   private async searchRestaurants(ctx: Context, userDetails: UserDetails, restaurant: string, rawRestaurant: string): Promise<void> {
-    const restaurants = await restaurantsService.getRestaurants();
+    const restaurants = await restaurantsService.getRestaurants({ allowStale: true });
     let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
     if (!matchedRestaurants.length) {
-      const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, 'לפעמים השרתים של וולט לא מחזירים את כל המסעדות, אבל אני בודק פתרונות אפשריים לזה'].join('\n');
+      const replyText = ['לא מצאתי אף מסעדה שמתאימה לחיפוש:', restaurant, '', 'כדאי לבדוק את האיות, או לנסות חלק משם המסעדה.', 'אפשר גם להדביק כאן לינק למסעדה מאפליקציית וולט ואני אמצא אותה.'].join(
+        '\n',
+      );
       await ctx.reply(replyText);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: 'No matched restaurants' }, userDetails);
       return;
@@ -131,49 +153,48 @@ export class WoltController {
       await ctx.replyWithChatAction('typing');
       matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
     }
+    matchedRestaurants = uniqueById(matchedRestaurants);
 
-    let buttons: { text: string; data: string; style?: 'danger' | 'success' | 'primary' }[] = matchedRestaurants.map((restaurant) => {
-      return {
-        text: `${restaurant.name} - ${restaurant.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`,
-        data: [BOT_ACTIONS.ADD, restaurant.name].join(INLINE_KEYBOARD_SEPARATOR),
-        style: (restaurant.isOnline ? 'success' : 'danger') as 'success' | 'danger',
-      };
-    });
-
-    if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
-      buttons = [...buttons.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW)];
-      buttons.push({ text: 'דף הבא (2) ➡️', data: [BOT_ACTIONS.CHANGE_PAGE, restaurant, 2].join(INLINE_KEYBOARD_SEPARATOR) });
-    }
-
-    const keyboard = buildInlineKeyboard(buttons);
+    const searchId = saveSearchResults(matchedRestaurants.map((r) => r.id));
+    const keyboard = buildResultsPageKeyboard(matchedRestaurants, searchId, 1);
     const replyText = `אפשר לבחור את אחת מהמסעדות האלה, ואני אתריע כשהיא נפתחת`;
     await ctx.reply(replyText, { reply_markup: keyboard });
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, restaurants: matchedRestaurants.map((r) => r.name).join(' | ') }, userDetails);
+    const shownNames = matchedRestaurants.slice(0, MAX_NUM_OF_RESTAURANTS_TO_SHOW).map((r) => r.name);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SEARCH, search: rawRestaurant, matches: matchedRestaurants.length, restaurants: shownNames.join(' | ') }, userDetails);
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails, data } = getCallbackQueryData(ctx);
 
-    const [action, restaurant, page] = data.split(INLINE_KEYBOARD_SEPARATOR);
-    const restaurantName = restaurant.replace(BOT_ACTIONS.REMOVE, '').replace(INLINE_KEYBOARD_SEPARATOR, '');
-    const activeSubscriptions = await getActiveSubscriptions(chatId);
+    const [action, ...values] = data.split(INLINE_KEYBOARD_SEPARATOR);
+    // buttons sent before ids were used carry the restaurant name, which may itself contain the separator
+    const value = values.join(INLINE_KEYBOARD_SEPARATOR);
     try {
       switch (action) {
         case BOT_ACTIONS.REMOVE: {
-          await this.removeSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
+          await ctx.answerCallbackQuery().catch(() => {});
+          await this.removeSubscription(ctx, chatId, userDetails, value, await getActiveSubscriptions(chatId));
           break;
         }
         case BOT_ACTIONS.ADD: {
-          await this.addSubscription(ctx, chatId, userDetails, restaurantName, activeSubscriptions);
+          await ctx.answerCallbackQuery().catch(() => {});
+          await this.addSubscription(ctx, chatId, userDetails, value, await getActiveSubscriptions(chatId));
+          break;
+        }
+        case BOT_ACTIONS.EXTEND: {
+          await ctx.answerCallbackQuery().catch(() => {});
+          const [subscriptionId, hours] = values;
+          await this.extendSubscription(ctx, chatId, userDetails, subscriptionId, parseInt(hours, 10));
           break;
         }
         case BOT_ACTIONS.CHANGE_PAGE: {
+          const [searchId, page] = values;
           const pageNumber = parseInt(page, 10);
           if (!Number.isInteger(pageNumber) || pageNumber < 1) {
             await ctx.answerCallbackQuery({ text: 'לא הבנתי את הבקשה שלך 😕' });
             break;
           }
-          await this.changePage(ctx, userDetails, restaurantName, pageNumber);
+          await this.changePage(ctx, userDetails, searchId, pageNumber);
           break;
         }
         default: {
@@ -183,53 +204,87 @@ export class WoltController {
         }
       }
     } catch (err) {
-      this.logger.error(`Failed to handle callback query: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ERROR, what: action, error: `${err}`, method: this.callbackQueryHandler.name }, userDetails);
+      // the buttons are kept so the user can tap again
+      await ctx.reply(RETRY_LATER_MESSAGE).catch(() => {});
       throw err;
     }
   }
 
-  async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
-    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
+  // restaurantKey is the venue id, or the restaurant name on buttons sent before ids were used
+  // returns whether a subscription was created
+  async addSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurantKey: string, activeSubscriptions: Subscription[], extensionHours?: number): Promise<boolean> {
+    // waiting for a fresh list can take a minute - a slightly old one has the venue details, and the scheduler re-checks availability
+    const restaurants = await restaurantsService.getRestaurants({ allowStale: true });
+    const restaurantDetails = restaurants.find((r) => r.id === restaurantKey) ?? restaurants.find((r) => r.name === restaurantKey);
+    if (!restaurantDetails) {
+      await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
+      return false;
+    }
+    const restaurant = restaurantDetails.name;
+
+    const alreadySubscribedText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
+    // records from before venue ids were stored only have the name
+    const existingSubscription = activeSubscriptions.find((s) => (s.restaurantId ? s.restaurantId === restaurantDetails.id : s.restaurant === restaurant));
     if (existingSubscription) {
-      const replyText = ['הכל טוב, כבר יש לך התראה על המסעדה:', restaurant].join('\n');
-      await ctx.reply(replyText);
-      return;
+      await ctx.reply(alreadySubscribedText);
+      return false;
     }
 
     if (activeSubscriptions?.length >= MAX_NUM_OF_SUBSCRIPTIONS_PER_USER) {
-      await ctx.reply(['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', 'יש לי הגבלה של עד 3 התראות למשתמש 😥'].join('\n'));
-      return;
+      await ctx.reply(['אני מצטער, אבל יש כבר יותר מדי התראות פתוחות', `יש לי הגבלה של עד ${MAX_NUM_OF_SUBSCRIPTIONS_PER_USER} התראות למשתמש 😥`].join('\n'));
+      return false;
     }
 
-    const restaurants = await restaurantsService.getRestaurants();
-    const restaurantDetails = restaurants.find((r: WoltRestaurant): boolean => r.name === restaurant);
-    if (!restaurantDetails) {
-      await ctx.reply('אני מצטער אבל לא הצלחתי למצוא את המסעדה הזאת');
-      return;
-    }
     if (restaurantDetails.isOnline) {
       const replyText = [`נראה שהמסעדה פתוחה ממש עכשיו 🟢`, `אפשר להזמין ממנה עכשיו! 🍴`].join('\n');
       const keyboard = new InlineKeyboard().url(restaurantDetails.name, restaurantDetails.link).success();
       await ctx.reply(replyText, { reply_markup: keyboard });
-      return;
+      return false;
     }
 
-    const replyText = ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
-    await addSubscription(chatId, restaurant, restaurantDetails?.photo);
+    const expiresAt = addHours(new Date(), extensionHours ?? SUBSCRIPTION_EXPIRATION_HOURS);
+    const replyText = extensionHours
+      ? [`סגור, הארכתי את ההתראה עד ${formatInTimeZone(expiresAt, DEFAULT_TIMEZONE, 'HH:mm')} ⏳`, restaurant].join('\n')
+      : ['סגור, אני אתריע ברגע שאני אראה שהמסעדה נפתחת 🚨', restaurant].join('\n');
+    const insertResult = await addSubscription(chatId, restaurant, restaurantDetails.photo, restaurantDetails.id, expiresAt);
+    if (!insertResult) {
+      // a concurrent tap created it first
+      await ctx.reply(alreadySubscribedText);
+      return false;
+    }
     await ctx.reply(replyText);
     await ctx.react('🤝').catch(() => {});
 
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.SUBSCRIBE, restaurant }, userDetails);
+    const action = extensionHours ? ANALYTIC_EVENT_NAMES.EXTEND : ANALYTIC_EVENT_NAMES.SUBSCRIBE;
+    notify(BOT_CONFIG, { action, restaurant, ...(extensionHours ? { hours: extensionHours } : {}) }, userDetails);
+    return true;
   }
 
-  async removeSubscription(ctx: Context, chatId: number, userDetails: UserDetails, restaurant: string, activeSubscriptions: Subscription[]): Promise<void> {
-    const existingSubscription = activeSubscriptions.find((s) => s.restaurant === restaurant);
+  // renews an expired subscription from the buttons on the expiry message
+  async extendSubscription(ctx: Context, chatId: number, userDetails: UserDetails, subscriptionId: string, hours: number): Promise<void> {
+    const subscription = SUBSCRIPTION_EXTENSION_HOURS.includes(hours) ? await getSubscriptionById(subscriptionId) : null;
+    if (!subscription || subscription.chatId !== chatId) {
+      await ctx.reply('לא הצלחתי להאריך את ההתראה הזאת, אפשר לחפש את המסעדה שוב 🔍');
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+      return;
+    }
+
+    const isExtended = await this.addSubscription(ctx, chatId, userDetails, subscription.restaurantId ?? subscription.restaurant, await getActiveSubscriptions(chatId), hours);
+    if (isExtended) {
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    }
+  }
+
+  // subscriptionKey is the subscription id, or the restaurant name on buttons sent before ids were used
+  async removeSubscription(ctx: Context, chatId: number, userDetails: UserDetails, subscriptionKey: string, activeSubscriptions: Subscription[]): Promise<void> {
+    const existingSubscription = activeSubscriptions.find((s) => s._id?.toString() === subscriptionKey || s.restaurant === subscriptionKey);
+    const restaurant = existingSubscription?.restaurant ?? (OBJECT_ID_REGEX.test(subscriptionKey) ? '' : subscriptionKey);
     if (existingSubscription) {
-      await archiveSubscription(chatId, restaurant, false);
+      await archiveSubscription(existingSubscription._id, false);
       await ctx.reply([`סבבה, הורדתי את ההתראה ל:`, restaurant].join('\n'));
     } else {
-      await ctx.reply([`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n'));
+      await ctx.reply(restaurant ? [`🤔 הכל טוב, כבר אין לך התראה פתוחה על:`, restaurant].join('\n') : '🤔 הכל טוב, ההתראה הזאת כבר לא פתוחה');
     }
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     await ctx.react('👌').catch(() => {});
@@ -237,38 +292,56 @@ export class WoltController {
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.UNSUBSCRIBE, restaurant }, userDetails);
   }
 
-  async changePage(ctx: Context, userDetails: UserDetails, restaurant: string, page: number): Promise<void> {
-    const restaurants = await restaurantsService.getRestaurants();
-    let matchedRestaurants = getRestaurantsByName(restaurants, restaurant);
-    if (matchedRestaurants.length > MAX_NUM_OF_RESTAURANTS_TO_SHOW) {
-      matchedRestaurants = await rankRestaurantsByRelevance(matchedRestaurants, restaurant);
+  async changePage(ctx: Context, userDetails: UserDetails, searchId: string, page: number): Promise<void> {
+    const restaurantIds = getSearchResults(searchId);
+    if (!restaurantIds) {
+      await ctx.answerCallbackQuery({ text: 'החיפוש הזה כבר לא בתוקף, אפשר לחפש שוב 🔍' });
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+      return;
     }
-    const from = MAX_NUM_OF_RESTAURANTS_TO_SHOW * (page - 1);
-    const to = from + MAX_NUM_OF_RESTAURANTS_TO_SHOW;
-    const newPageRestaurants = matchedRestaurants.slice(from, to);
+    await ctx.answerCallbackQuery().catch(() => {});
 
-    const keyboard = new InlineKeyboard();
-    for (const r of newPageRestaurants) {
-      keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.name].join(INLINE_KEYBOARD_SEPARATOR));
-      if (r.isOnline) {
-        keyboard.success();
-      } else {
-        keyboard.danger();
-      }
-      keyboard.row();
-    }
+    const restaurants = await restaurantsService.getRestaurants({ allowStale: true });
+    const restaurantsById = new Map(restaurants.map((r) => [r.id, r]));
+    const matchedRestaurants = restaurantIds.map((id) => restaurantsById.get(id)).filter(Boolean);
+    const keyboard = buildResultsPageKeyboard(matchedRestaurants, searchId, page);
 
-    const previousPageExists = page > 1;
-    const nextPageExists = to < matchedRestaurants.length;
-    if (previousPageExists) {
-      keyboard.text(['⬅️', `(${page - 1})`, 'דף הקודם'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, restaurant, page - 1].join(INLINE_KEYBOARD_SEPARATOR));
-    }
-    if (nextPageExists) {
-      keyboard.text(['➡️', `(${page + 1})`, 'דף הבא'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, restaurant, page + 1].join(INLINE_KEYBOARD_SEPARATOR));
-    }
+    // the results message may have been deleted by the user while the bot was busy
+    await ctx.editMessageReplyMarkup({ reply_markup: keyboard }).catch((err) => this.logger.warn(`Failed to change page: ${getErrorMessage(err)}`));
 
-    await ctx.editMessageReplyMarkup({ reply_markup: keyboard });
-
-    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, restaurant }, userDetails);
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CHANGE_PAGE, page }, userDetails);
   }
+}
+
+const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
+const RETRY_LATER_MESSAGE = 'משהו השתבש אצלי, אפשר לנסות שוב בעוד רגע 🙏';
+
+function uniqueById(restaurants: WoltRestaurant[]): WoltRestaurant[] {
+  const seen = new Set<string>();
+  return restaurants.filter((r) => !seen.has(r.id) && seen.add(r.id));
+}
+
+function buildResultsPageKeyboard(restaurants: WoltRestaurant[], searchId: string, page: number): InlineKeyboard {
+  const from = MAX_NUM_OF_RESTAURANTS_TO_SHOW * (page - 1);
+  const to = from + MAX_NUM_OF_RESTAURANTS_TO_SHOW;
+
+  const keyboard = new InlineKeyboard();
+  for (const r of restaurants.slice(from, to)) {
+    // the id, not the name: names can contain the separator and long ones overflow Telegram's 64-byte callback data
+    keyboard.text(`${r.name} - ${r.isOnline ? '🟢 זמין 🟢' : '🛑 לא זמין 🛑'}`, [BOT_ACTIONS.ADD, r.id].join(INLINE_KEYBOARD_SEPARATOR));
+    if (r.isOnline) {
+      keyboard.success();
+    } else {
+      keyboard.danger();
+    }
+    keyboard.row();
+  }
+
+  if (page > 1) {
+    keyboard.text(['⬅️', `(${page - 1})`, 'דף הקודם'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, searchId, page - 1].join(INLINE_KEYBOARD_SEPARATOR));
+  }
+  if (to < restaurants.length) {
+    keyboard.text(['➡️', `(${page + 1})`, 'דף הבא'].join(' '), [BOT_ACTIONS.CHANGE_PAGE, searchId, page + 1].join(INLINE_KEYBOARD_SEPARATOR));
+  }
+  return keyboard;
 }

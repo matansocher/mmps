@@ -3,7 +3,7 @@ import type { ObjectId } from 'mongodb';
 export type WoltRestaurant = {
   readonly id: string;
   readonly name: string;
-  readonly isOnline: string;
+  readonly isOnline: boolean;
   readonly slug: string;
   readonly area: string;
   readonly photo: string;
@@ -12,6 +12,7 @@ export type WoltRestaurant = {
   readonly priceRange?: number; // 1-4
   readonly rating?: number; // 0-10
   readonly estimateMinutes?: number;
+  readonly estimateRange?: string; // Format: "15-25" (minutes)
   readonly shortDescription?: string;
 };
 
@@ -24,9 +25,11 @@ export type Subscription = {
   readonly _id: ObjectId;
   readonly chatId: number;
   readonly restaurant: string;
+  readonly restaurantId?: string; // Wolt venue id - missing on subscriptions created before it was stored
   readonly restaurantPhoto: string;
   readonly isActive: boolean;
   readonly isSuccess: boolean;
   readonly finishedAt: Date;
   readonly createdAt: Date;
+  readonly expiresAt?: Date; // missing on subscriptions created before extensions, which expire SUBSCRIPTION_EXPIRATION_HOURS after createdAt
 };

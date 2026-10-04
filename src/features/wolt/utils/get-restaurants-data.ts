@@ -32,17 +32,30 @@ function buildRestaurantsUrl(lat: number, lon: number): string {
   return `${RESTAURANTS_BASE_URL}?lat=${lat}&lon=${lon}`;
 }
 
+// venues are looked up across all sections rather than at a fixed index, and malformed items are skipped instead of failing the whole city
+function getVenueItems(data: any): any[] {
+  const sections = Array.isArray(data?.sections) ? data.sections : [];
+  const items = sections.flatMap((section) => (Array.isArray(section?.items) ? section.items : [])).filter((item) => item?.venue?.id && item.title);
+  // the same venue can appear in more than one section
+  const seenIds = new Set<string>();
+  return items.filter((item) => !seenIds.has(item.venue.id) && seenIds.add(item.venue.id));
+}
+
 async function fetchCityRestaurants(city: WoltCity): Promise<WoltRestaurant[]> {
   const url = buildRestaurantsUrl(city.lat, city.lon);
   // Apps Script follows a 302 to a googleusercontent download URL, so the relay needs more than the
   // global 30s axios default to finish a multi-megabyte response.
   const timeout = env.WOLT_RELAY_URL ? RELAY_REQUEST_TIMEOUT_MS : undefined;
   const { data } = await axios.get(url, { timeout });
-  const items = data?.sections?.[1]?.items ?? [];
+  const items = getVenueItems(data);
+  // an error page or a changed layout - failing keeps the city's previous restaurants instead of wiping them
+  if (!items.length) {
+    throw new Error(`No restaurants found in the response for ${city.areaSlug}`);
+  }
 
   return items.map((item) => {
     const { venue, title: name, image } = item;
-    const { id, online: isOnline, slug, tags, price_range: priceRange, rating, estimate, short_description: shortDescription } = venue;
+    const { id, online: isOnline, slug, tags, price_range: priceRange, rating, estimate, estimate_range: estimateRange, short_description: shortDescription } = venue;
     const link = RESTAURANT_LINK_BASE_URL.replace('{area}', city.areaSlug).replace('{slug}', slug);
     return {
       id,
@@ -50,12 +63,13 @@ async function fetchCityRestaurants(city: WoltCity): Promise<WoltRestaurant[]> {
       isOnline,
       slug,
       area: city.areaSlug,
-      photo: image.url,
+      photo: image?.url,
       link,
       tags: Array.isArray(tags) ? tags : undefined,
       priceRange: typeof priceRange === 'number' ? priceRange : undefined,
       rating: rating && typeof rating.score === 'number' ? rating.score : undefined,
       estimateMinutes: typeof estimate === 'number' ? estimate : undefined,
+      estimateRange: typeof estimateRange === 'string' && estimateRange ? estimateRange : undefined,
       shortDescription: typeof shortDescription === 'string' ? shortDescription : undefined,
     } as WoltRestaurant;
   });
@@ -90,7 +104,12 @@ async function fetchCitiesInBatches(cities: WoltCity[]): Promise<CityFetchResult
   return { restaurants, failedCities };
 }
 
-export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
+export type RestaurantsListResult = {
+  readonly restaurants: WoltRestaurant[];
+  readonly failedAreas: string[]; // areas that could not be fetched even after retries
+};
+
+export async function getRestaurantsList(): Promise<RestaurantsListResult> {
   const logger = new Logger('wolt:get-restaurants-list');
   try {
     const cities = await getCitiesList();
@@ -113,10 +132,10 @@ export async function getRestaurantsList(): Promise<WoltRestaurant[]> {
       logger.warn(`Could not fetch restaurants for areas after ${MAX_CITY_FETCH_RETRIES} retries: ${citiesToFetch.map((c) => c.areaSlug).join(', ')}`);
     }
 
-    return restaurants;
+    return { restaurants, failedAreas: citiesToFetch.map((c) => c.areaSlug) };
   } catch (err) {
     logger.error(`Failed to fetch restaurants list: ${getErrorMessage(err)}`);
-    return [];
+    return { restaurants: [], failedAreas: [] };
   }
 }
 

@@ -7,8 +7,13 @@ import { BOT_CONFIG } from '../wolt.config';
 
 const logger = new Logger('wolt:script:broadcast');
 
-// Paste the affected chat ids here, e.g. [123456789, 987654321].
-const CHAT_IDS: number[] = [5660723464, 253901676, 5205717975, 7404564565, 1809195019, 2012077456, 186702734, 5833146559, 597884902, 398475771, 1198554451];
+// Comma-separated chat ids to send to, e.g. WOLT_BROADCAST_CHAT_IDS=123456789,987654321 - kept out of the repo on purpose.
+function getChatIds(): number[] {
+  return (env.WOLT_BROADCAST_CHAT_IDS ?? '')
+    .split(',')
+    .map((id) => Number(id.trim()))
+    .filter((id) => Number.isInteger(id) && id !== 0);
+}
 
 // The message to send. Edit before running.
 const MESSAGE = [
@@ -62,11 +67,11 @@ async function main(): Promise<void> {
 
   const bot = new Bot(token); // bare API client - no bot.start(), so it never conflicts with the live bot's polling
 
-  // Pass a chat id as an argument for a dry run to a single user; pass nothing to send to all CHAT_IDS.
+  // Pass a chat id as an argument for a dry run to a single user; pass nothing to send to all WOLT_BROADCAST_CHAT_IDS.
   const dryRunChatId = argv[2] ? Number(argv[2]) : null;
-  const targets = dryRunChatId !== null ? [dryRunChatId] : CHAT_IDS;
+  const targets = dryRunChatId !== null ? [dryRunChatId] : getChatIds();
   if (!targets.length) {
-    logger.log('No chat ids to send to. Fill CHAT_IDS (or pass a chat id argument) and re-run.');
+    logger.log('No chat ids to send to. Set WOLT_BROADCAST_CHAT_IDS (or pass a chat id argument) and re-run.');
     return;
   }
 

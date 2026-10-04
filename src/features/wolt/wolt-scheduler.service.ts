@@ -1,11 +1,22 @@
 import { toZonedTime } from 'date-fns-tz';
-import { type Bot, InlineKeyboard } from 'grammy';
+import { type Bot, GrammyError, InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
+import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getSubscriptionById, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
-import { ANALYTIC_EVENT_NAMES, BOT_CONFIG, HOUR_OF_DAY_TO_REFRESH_MAP, MAX_HOUR_TO_ALERT_USER, MIN_HOUR_TO_ALERT_USER, SUBSCRIPTION_EXPIRATION_HOURS } from './wolt.config';
+import { formatRestaurantDetails } from './utils';
+import {
+  ANALYTIC_EVENT_NAMES,
+  BOT_ACTIONS,
+  BOT_CONFIG,
+  HOUR_OF_DAY_TO_REFRESH_MAP,
+  INLINE_KEYBOARD_SEPARATOR,
+  MAX_HOUR_TO_ALERT_USER,
+  MIN_HOUR_TO_ALERT_USER,
+  SUBSCRIPTION_EXPIRATION_HOURS,
+  SUBSCRIPTION_EXTENSION_HOURS,
+} from './wolt.config';
 
 export type AnalyticEventValue = (typeof ANALYTIC_EVENT_NAMES)[keyof typeof ANALYTIC_EVENT_NAMES];
 
@@ -64,34 +75,51 @@ export class WoltSchedulerService {
   async alertSubscription(restaurant: WoltRestaurant, subscription: Subscription): Promise<void> {
     try {
       const { name, link } = restaurant;
-      const { chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
+      const { _id, chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
+      // the user may have removed or replaced it while restaurants were being refreshed
+      const current = await getSubscriptionById(_id.toString());
+      if (!current?.isActive) return;
+
       const keyboard = new InlineKeyboard().url(`🍽️ ${name} 🍽️`, link);
-      const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, 'אפשר להזמין עכשיו! 📱'].join('\n');
+      const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, formatRestaurantDetails(restaurant), 'אפשר להזמין עכשיו! 📱'].filter(Boolean).join('\n');
 
       try {
         await this.bot.api.sendPhoto(chatId, restaurantPhoto, { reply_markup: keyboard, caption: replyText });
       } catch (err) {
+        if (isBotBlocked(err)) throw err;
         this.logger.warn(`Failed to send alert photo for chatId ${chatId}, retrying without photo: ${getErrorMessage(err)}`);
-        notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}`, whatNow: 'retrying to alert the user without photo' });
         await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
       }
 
-      await archiveSubscription(chatId, restaurantName, true);
+      await archiveSubscription(_id, true);
       await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
+      if (isBotBlocked(err)) {
+        // the user blocked the bot - retrying every tick until the subscription expires would only spam the notifier
+        this.logger.warn(`Archiving subscription for chatId ${subscription.chatId}, the user blocked the bot: ${getErrorMessage(err)}`);
+        try {
+          await archiveSubscription(subscription._id, false);
+        } catch (archiveErr) {
+          this.logger.error(`Failed to archive subscription for chatId ${subscription.chatId}: ${getErrorMessage(archiveErr)}`);
+        }
+        return;
+      }
       this.logger.error(`Failed to alert subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.ALERT_SUBSCRIPTION_FAILED, error: `${err}` });
     }
   }
 
   async alertSubscriptions(subscriptions: Subscription[]): Promise<void> {
-    const restaurantsNames = subscriptions.map((subscription: Subscription) => subscription.restaurant);
     const restaurants = await restaurantsService.getRestaurants();
-    const onlineRestaurants = restaurants.filter(({ name, isOnline }) => restaurantsNames.includes(name) && isOnline);
+    const restaurantsById = new Map(restaurants.map((r) => [r.id, r]));
 
-    for (const restaurant of onlineRestaurants) {
-      const relevantSubscriptions = subscriptions.filter((subscription) => subscription.restaurant === restaurant.name);
-      for (const subscription of relevantSubscriptions) {
+    // one lookup per subscription, so a chain with several open branches still alerts only once
+    for (const subscription of subscriptions) {
+      const restaurant = subscription.restaurantId
+        ? restaurantsById.get(subscription.restaurantId)
+        : // subscriptions created before venue ids were stored fall back to any open branch with that name
+          restaurants.find((r) => r.name === subscription.restaurant && r.isOnline);
+      if (restaurant?.isOnline) {
         await this.alertSubscription(restaurant, subscription);
       }
     }
@@ -99,15 +127,23 @@ export class WoltSchedulerService {
 
   async cleanSubscription(subscription: Subscription): Promise<void> {
     try {
-      const { chatId, restaurant } = subscription;
-      await archiveSubscription(chatId, restaurant, false);
+      const { _id, chatId, restaurant } = subscription;
+      // removed or alerted since it was read - the user must not get an expiry message for it
+      const isArchived = await archiveSubscription(_id, false);
+      if (!isArchived) return;
       const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
-      if (currentHour >= MIN_HOUR_TO_ALERT_USER || currentHour < MAX_HOUR_TO_ALERT_USER) {
-        // let user know that subscription was removed only between MIN_HOUR_TO_ALERT_USER and MAX_HOUR_TO_ALERT_USER
-        const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `תמיד אפשר ליצור התראה חדשה`].join('\n');
-        await this.bot.api.sendMessage(chatId, messageText);
+      // between MAX_HOUR_TO_ALERT_USER and MIN_HOUR_TO_ALERT_USER the message is sent silently, so the user still learns the subscription was closed
+      const isQuietHours = currentHour >= MAX_HOUR_TO_ALERT_USER && currentHour < MIN_HOUR_TO_ALERT_USER;
+      const messageText = [`אני רואה שהמסעדה הזאת לא עומדת להיפתח בקרוב אז אני סוגר את ההתראה כרגע`, `אני כמובן מדבר על:`, restaurant, `אפשר להאריך את ההתראה:`].join('\n');
+      const keyboard = new InlineKeyboard();
+      for (const hours of SUBSCRIPTION_EXTENSION_HOURS) {
+        keyboard.text(hours === 1 ? '⏳ עוד שעה' : `⏳ עוד ${hours} שעות`, [BOT_ACTIONS.EXTEND, subscription._id.toString(), hours].join(INLINE_KEYBOARD_SEPARATOR));
       }
-      this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED);
+      await this.bot.api.sendMessage(chatId, messageText, { disable_notification: isQuietHours, reply_markup: keyboard });
+      // analytics only - a failed user lookup must not become an unhandled rejection
+      this.notifyWithUserDetails(chatId, restaurant, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FAILED).catch((err) =>
+        this.logger.error(`Failed to notify subscription expiry for chatId ${chatId}: ${getErrorMessage(err)}`),
+      );
     } catch (err) {
       this.logger.error(`Failed to clean subscription for chatId ${subscription.chatId}: ${getErrorMessage(err)}`);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.CLEAN_EXPIRED_SUBSCRIPTION_FAILED, error: `${err}` });
@@ -123,4 +159,8 @@ export class WoltSchedulerService {
     const userDetails = await getUserDetails(chatId);
     notify(BOT_CONFIG, { restaurant, action }, userDetails);
   }
+}
+
+function isBotBlocked(err: unknown): boolean {
+  return err instanceof GrammyError && err.error_code === 403;
 }

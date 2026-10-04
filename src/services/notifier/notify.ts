@@ -5,6 +5,7 @@ import { provideTelegramBot, TelegramBotConfig, UserDetails } from '@services/te
 const logger = new Logger('notifier');
 
 const NOTIFIER_CHAT_ID = MY_USER_ID;
+const MAX_MESSAGE_LENGTH = 4096; // Telegram's sendMessage limit
 const botConfig = {
   id: 'NOTIFIER',
   name: 'Notifier Bot 🦔',
@@ -27,7 +28,8 @@ function getNotyMessageText(botName: string, options: NotifyOptions, userDetails
   sentences.push(`action: ${action.replaceAll('_', ' ')}`);
   otherOptions && Object.keys(otherOptions).length && sentences.push(`data: ${JSON.stringify(otherOptions, null, 2)}`);
   plainText && sentences.push(plainText);
-  return sentences.join('\n');
+  const text = sentences.join('\n');
+  return text.length > MAX_MESSAGE_LENGTH ? `${text.slice(0, MAX_MESSAGE_LENGTH - 1)}…` : text;
 }
 
 export function notify(bot: TelegramBotConfig, options: NotifyOptions, userDetails?: UserDetails): void {

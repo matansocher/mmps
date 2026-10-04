@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 6 specialized Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings and Mindloop are initialized independently of bot selection.
+MMPS includes 6 specialized Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings, Mindloop and Earth are initialized independently of bot selection.
 
 ## The Bots
 
@@ -46,6 +46,11 @@ Original React game collection served at `/mindloop/*` with 14 games across 5 sk
 - **Database**: `Mindloop`
 - **[Learn more →](/bots/mindloop)**
 
+### **Earth** - Find the Country Quiz
+Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the political map and click the country you are asked for. Modes are picked from an airport departures board: Today's flight, Classic, Continent Sprint, Name it and Continent cleanup. Players earn miles and tiers and collect passport stamps, all stored on the device.
+- **Database**: none (browser storage only)
+- **[Learn more →](/bots/earth)**
+
 ## Running Bots
 
 ### Development Mode (One Bot)
@@ -62,7 +67,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `WOLT`, `WORLDLY`.
 IS_PROD=true npm start
 ```
 
-Production initializes all 6 Telegram bots. Savings and Mindloop initialize in development and production.
+Production initializes all 6 Telegram bots. Savings, Mindloop and Earth initialize in development and production.
 
 ## Bot Architecture
 
@@ -130,6 +135,7 @@ SAVINGS_APP_PASSWORD=...
 
 # Bot-less Mindloop mini-app (token used only to verify Telegram initData)
 MINDLOOP_TELEGRAM_BOT_TOKEN=...
+
 ```
 
 ## Next Steps
@@ -142,6 +148,7 @@ Select a bot to explore:
 - **[Worldly](/bots/worldly)** - Geography education
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
 - **[Mindloop](/bots/mindloop)** - Brain-training mini-app
+- **[Earth](/bots/earth)** - Find-the-country globe quiz
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

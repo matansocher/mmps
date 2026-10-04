@@ -1,0 +1,303 @@
+@import 'tailwindcss';
+@import 'cesium/Build/Cesium/Widgets/widgets.css';
+
+@theme {
+  --font-sans: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-board: 'Barlow Condensed', 'Arial Narrow', ui-sans-serif, sans-serif;
+  --color-ink: #0a1115;
+  --color-board: #0f181c;
+  --color-tile: #1c262b;
+  --color-rule: rgb(255 255 255 / 0.09);
+  --color-signage: #ffc72c;
+  --color-paper: #f4ecd8;
+  --color-paper-ink: #1b282e;
+  --color-ok: #4fd08f;
+  --color-bad: #ff6b57;
+  --color-passport: #5b1e2a;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #060a0e;
+    font-family: var(--font-sans);
+    color: #ecebe4;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: default;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signage);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Solid board surfaces, like an airport display housing. */
+  .panel {
+    background: rgb(13 21 25 / 0.96);
+    border: 1px solid var(--color-rule);
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
+  }
+
+  .board-type {
+    font-family: var(--font-board);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    color: #ecebe4;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .icon-btn:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 8px;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    font-family: var(--font-board);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn:hover {
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn-signage {
+    background: var(--color-signage);
+    border-color: var(--color-signage);
+    color: var(--color-ink);
+  }
+
+  .btn-signage:hover {
+    background: #ffd65c;
+  }
+
+  .btn-paper {
+    border-color: rgb(27 40 46 / 0.3);
+    color: var(--color-paper-ink);
+  }
+
+  .btn-paper:hover {
+    background: rgb(27 40 46 / 0.07);
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+  }
+
+  /* Split-flap tile: two half-cards with a hinge line. */
+  .flap {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 0.72em;
+    height: 1.24em;
+    border-radius: 0.1em;
+    background: linear-gradient(#34444c 0 50%, #2a383f 50% 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 1px rgb(0 0 0 / 0.5);
+    font-family: var(--font-board);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--color-signage);
+    perspective: 200px;
+  }
+
+  .flap::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    height: 1px;
+    background: rgb(0 0 0 / 0.7);
+  }
+
+  .flap > span {
+    display: block;
+    animation: flap-in 70ms ease-out;
+  }
+
+  .flap-space {
+    width: 0.32em;
+  }
+
+  .stamp {
+    position: fixed;
+    z-index: 25;
+    pointer-events: none;
+    translate: -50% -50%;
+    animation: stamp-slam 1.5s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  }
+
+  .perforation {
+    position: relative;
+    border-top: 2px dashed rgb(27 40 46 / 0.25);
+  }
+
+  .perforation::before,
+  .perforation::after {
+    content: '';
+    position: absolute;
+    top: -11px;
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    background: #060a0e;
+  }
+
+  .perforation::before {
+    left: -11px;
+  }
+
+  .perforation::after {
+    right: -11px;
+  }
+}
+
+@keyframes flap-in {
+  from {
+    transform: rotateX(-80deg);
+    filter: brightness(0.5);
+  }
+}
+
+@keyframes stamp-slam {
+  0% {
+    opacity: 0;
+    scale: 2.4;
+  }
+  14% {
+    opacity: 1;
+    scale: 1;
+  }
+  18% {
+    scale: 1.06;
+  }
+  24% {
+    scale: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Cesium chrome: keep only the canvas + credits, styled to match the app. */
+.cesium-viewer,
+.cesium-widget,
+.cesium-widget canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.cesium-viewer-bottom {
+  left: auto !important;
+  right: 8px !important;
+  bottom: 4px !important;
+  padding: 0 !important;
+  max-width: calc(100% - 16px);
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.cesium-widget-credits {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 10px !important;
+  color: rgb(255 255 255 / 0.75) !important;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+}
+
+.cesium-credit-logoContainer {
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.cesium-credit-expand-link {
+  color: rgb(255 255 255 / 0.85) !important;
+}
+
+.cesium-credit-lightbox-overlay {
+  z-index: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Stamps still need to appear and leave; they just don't move. */
+  .stamp {
+    animation: stamp-fade 1.5s steps(1, end) forwards !important;
+  }
+}
+
+@keyframes stamp-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .globe-lifted {
+    transform: translateY(-32dvh);
+  }
+}
