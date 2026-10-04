@@ -15,7 +15,7 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 - **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
 - **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
 - **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/savings-web` and `apps/mindloop-web` are Vite mini-apps (npm workspaces).
+- **Apps workspace:** `apps/savings-web`, `apps/mindloop-web` and `apps/zika-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -125,7 +125,8 @@ mmps/
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # npm workspaces — Vite mini-apps for bots
 │   ├── savings-web/
-│   └── mindloop-web/
+│   ├── mindloop-web/
+│   └── zika-web/
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
 ├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
 ├── assets/             # Static assets (downloads dir, images)
@@ -183,6 +184,8 @@ src/services/{name}/
 
 **Also not a bot:** `MINDLOOP` (`src/features/mindloop/`) is a React brain-training mini-app (`apps/mindloop-web`) served at `/mindloop/*`. It ships 14 original games across 5 skill categories and persists player progress (best scores, favorites, play history) to the `Mindloop` MongoDB database keyed by Telegram user id. The client is offline-first (localStorage) and reconciles with the server via a non-destructive merge; server writes are best-effort. Identity comes from verified Telegram `initData` (`MINDLOOP_TELEGRAM_BOT_TOKEN`) or an `X-Mindloop-Dev-User` header in local dev. Device-only preferences (theme, sound, reduced motion) never leave the device. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
+**Also not a bot:** `ZIKA` (`src/features/zika/`) is a static React showcase (`apps/zika-web`) served at `/zika/*`: four redesign options (bold, commerce, catalog, friendly) for zika.co.il (Zika Industries), each with a home page and a Z‑11 product page, behind a cover page for management. Hebrew RTL; all copy, prices and images come from `apps/zika-web/src/content/index.ts` (scraped from zika.co.il / shop.zika.co.il). The cart is client-side only (localStorage) and checkout links out to the real shop. No API routes, no DB. Each concept lives in `src/concepts/<slug>/` with CSS scoped under `.c-<slug>`. Initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+
 **Boot logic** (`src/index.ts`):
 ```typescript
 const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
@@ -202,7 +205,7 @@ await initBot(woltConfig, () => initWolt());
 await initBot(worldlyConfig, () => initWorldly(app));
 ```
 
-In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one. The `savings` and `mindloop` web features are initialized separately (`initSavings(app)` / `initMindloop(app)`), wrapped in their own try/catch, and boot regardless of `LOCAL_ACTIVE_BOT_ID`.
+In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one. The `savings`, `mindloop` and `zika` web features are initialized separately (`initSavings(app)` / `initMindloop(app)` / `initZika(app)`), wrapped in their own try/catch, and boot regardless of `LOCAL_ACTIVE_BOT_ID`.
 
 ---
 
@@ -699,7 +702,7 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 - `GET /` — health (`{ success: true }`)
 - `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
 - Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
-- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes.
+- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes; `initZika(app)` serves the static Zika redesign showcase at `/zika/*`.
 
 ---
 
@@ -806,9 +809,10 @@ npm run format
 npm run docs:dev          # VitePress local dev
 npm run docs:build
 
-# Mini-app workspaces (savings-web, mindloop-web)
+# Mini-app workspaces (savings-web, mindloop-web, zika-web)
 npm run dev:savings-web
 npm run dev:mindloop-web
+npm run dev:zika-web
 ```
 
 ---
