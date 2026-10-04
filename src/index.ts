@@ -15,6 +15,7 @@ import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initMindloop } from '@features/mindloop';
 import { initSavings } from '@features/savings';
+import { initZika } from '@features/zika';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
@@ -64,6 +65,13 @@ async function main() {
   } catch (err) {
     failedComponents.push('earth');
     logger.error(`Failed to init earth app: ${getErrorMessage(err)}`);
+  }
+
+  try {
+    initZika(app);
+  } catch (err) {
+    failedComponents.push('zika');
+    logger.error(`Failed to init zika app: ${getErrorMessage(err)}`);
   }
 
   registerPortfolioApiRoutes(app);
