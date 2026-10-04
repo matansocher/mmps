@@ -11,6 +11,6 @@ async function runner() {
 export const woltTool = tool(runner, {
   name: 'wolt_summary',
   description:
-    'Get a summary of Wolt food delivery statistics including top users and top restaurants for the current week. Use this when asked about Wolt usage, popular restaurants, or food delivery trends.',
+    'Get a summary of Wolt food delivery statistics including top users and top restaurants from the last 7 days. Use this when asked about Wolt usage, popular restaurants, or food delivery trends.',
   schema,
 });
