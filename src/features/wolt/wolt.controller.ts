@@ -41,15 +41,19 @@ export class WoltController {
     const { userDetails } = getMessageData(ctx);
     const saveResult = await saveUserDetails(userDetails);
 
+    const howItWorksText = [`איך זה עובד:`, `1️⃣ שלחו לי שם של מסעדה באנגלית, או לינק מאפליקציית וולט`, `2️⃣ בחרו את הסניף מהרשימה`, `3️⃣ אשלח לכם הודעה ברגע שהיא נפתחת 🔔`].join('\n');
     const newUserReplyText = [
-      `שלום {firstName}!`,
-      `אני בוט שמתריע על מסעדות שנפתחות להזמנה בוולט`,
-      `פשוט תשלחו לי את שם המסעדה (באנגלית 🇺🇸), ואני אגיד לכם מתי היא נפתחת`,
-      `כדי לראות את רשימת ההתראות הפתוחות אפשר להשתמש בפקודה /list`,
-    ]
-      .join('\n')
-      .replace('{firstName}', userDetails.firstName || userDetails.username || '');
-    const existingUserReplyText = `מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`;
+      `היי ${userDetails.firstName || userDetails.username || ''} 👋`,
+      `אני מתריע כשמסעדה סגורה בוולט נפתחת להזמנות 🍔`,
+      '',
+      howItWorksText,
+      '',
+      `כדאי לדעת:`,
+      `📍 אני מכיר רק מסעדות באזור ת״א–הרצליה, השרון ופתח תקווה`,
+      `⏱ התראה נסגרת אחרי ${SUBSCRIPTION_EXPIRATION_HOURS} שעות, ואפשר להאריך אותה`,
+      `📋 עד ${MAX_NUM_OF_SUBSCRIPTIONS_PER_USER} התראות במקביל, לרשימה: ${BOT_CONFIG.commands.LIST.command}`,
+    ].join('\n');
+    const existingUserReplyText = [`מעולה, הכל מוכן ואפשר להתחיל לחפש 🍔🍕🍟`, '', howItWorksText, '', `ההתראות הפתוחות: ${BOT_CONFIG.commands.LIST.command}`].join('\n');
     await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText);
 
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.START, isNewUser: saveResult === 'created' }, userDetails);
