@@ -44,11 +44,13 @@ export async function addSubscription(chatId: number, restaurant: string, restau
   }
 }
 
-export async function archiveSubscription(chatId: number, restaurant: string, isSuccess: boolean) {
+// archives this exact record only if it is still active - returns false when it was already archived (removed, alerted or expired)
+export async function archiveSubscription(id: ObjectId, isSuccess: boolean): Promise<boolean> {
   const subscriptionCollection = getCollection();
-  const filter = { chatId, restaurant, isActive: true };
+  const filter = { _id: id, isActive: true };
   const updateObj = { $set: { isActive: false, isSuccess, finishedAt: new Date() } } as Partial<Subscription>;
-  return subscriptionCollection.updateOne(filter, updateObj);
+  const result = await subscriptionCollection.updateOne(filter, updateObj);
+  return result.modifiedCount === 1;
 }
 
 export async function getExpiredSubscriptions(subscriptionExpirationHours: number): Promise<Subscription[]> {
@@ -65,7 +67,16 @@ export async function getTopBy(topBy: 'restaurant' | 'chatId'): Promise<any[]> {
   return subscriptionCollection.aggregate([{ $group: { _id: `$${topBy}`, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).toArray();
 }
 
-// one active subscription per user and restaurant; archived ones are kept as history
+const LEGACY_NAME_INDEX = 'chatId_1_restaurant_1';
+// the legacy index or the whole collection may not exist yet
+const MISSING_INDEX_CODES = [26, 27]; // NamespaceNotFound, IndexNotFound
+
+// one active subscription per user and venue; archived ones are kept as history.
+// keyed by venue id so same-name branches can be tracked separately - records from before ids were stored are skipped
 export async function ensureSubscriptionIndexes(): Promise<void> {
-  await getCollection().createIndex({ chatId: 1, restaurant: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
+  const collection = getCollection();
+  await collection.dropIndex(LEGACY_NAME_INDEX).catch((err) => {
+    if (!(err instanceof MongoServerError && MISSING_INDEX_CODES.includes(err.code as number))) throw err;
+  });
+  await collection.createIndex({ chatId: 1, restaurantId: 1 }, { unique: true, partialFilterExpression: { isActive: true, restaurantId: { $type: 'string' } } });
 }

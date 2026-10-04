@@ -31,20 +31,27 @@ describe('wolt subscription repository', () => {
       expect(sub.restaurantPhoto).toBe('https://photo.jpg');
     });
 
-    it('should not create a second active subscription for the same restaurant', async () => {
-      await addSubscription(100, 'Pizza Place', 'a.jpg');
+    it('should not create a second active subscription for the same venue', async () => {
+      await addSubscription(100, 'Pizza Place', 'a.jpg', 'venue-1');
 
-      const result = await addSubscription(100, 'Pizza Place', 'b.jpg');
+      const result = await addSubscription(100, 'Pizza Place', 'b.jpg', 'venue-1');
 
       expect(result).toBeNull();
       expect(await getActiveSubscriptions(100)).toHaveLength(1);
     });
 
-    it('should allow subscribing again after the previous subscription was archived', async () => {
-      await addSubscription(100, 'Pizza Place', 'a.jpg');
-      await archiveSubscription(100, 'Pizza Place', true);
+    it('should allow two branches that share a name', async () => {
+      await addSubscription(100, 'Pizza Place', 'a.jpg', 'venue-1');
+      await addSubscription(100, 'Pizza Place', 'b.jpg', 'venue-2');
 
-      await addSubscription(100, 'Pizza Place', 'b.jpg');
+      expect(await getActiveSubscriptions(100)).toHaveLength(2);
+    });
+
+    it('should allow subscribing again after the previous subscription was archived', async () => {
+      const { insertedId } = await addSubscription(100, 'Pizza Place', 'a.jpg', 'venue-1');
+      await archiveSubscription(insertedId, true);
+
+      await addSubscription(100, 'Pizza Place', 'b.jpg', 'venue-1');
 
       expect(await getActiveSubscriptions(100)).toHaveLength(1);
     });
@@ -71,8 +78,8 @@ describe('wolt subscription repository', () => {
     });
 
     it('should not return archived subscriptions', async () => {
-      await addSubscription(100, 'Restaurant A', 'a.jpg');
-      await archiveSubscription(100, 'Restaurant A', true);
+      const { insertedId } = await addSubscription(100, 'Restaurant A', 'a.jpg');
+      await archiveSubscription(insertedId, true);
 
       const active = await getActiveSubscriptions(100);
 
@@ -80,25 +87,42 @@ describe('wolt subscription repository', () => {
     });
   });
 
+  describe('ensureSubscriptionIndexes', () => {
+    it('should replace the legacy name index and be safe to run again', async () => {
+      const { getMongoCollection } = await import('@core/mongo');
+      const collection = getMongoCollection(DB_NAME, COLLECTION_NAME);
+      await collection.dropIndexes();
+      await collection.createIndex({ chatId: 1, restaurant: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
+
+      await ensureSubscriptionIndexes();
+      await ensureSubscriptionIndexes();
+
+      const names = (await collection.indexes()).map((i) => i.name);
+      expect(names).not.toContain('chatId_1_restaurant_1');
+      expect(names).toContain('chatId_1_restaurantId_1');
+    });
+  });
+
   describe('archiveSubscription', () => {
     it('should set isActive to false and record success status', async () => {
-      await addSubscription(300, 'Sushi Bar', 'sushi.jpg');
+      const { insertedId } = await addSubscription(300, 'Sushi Bar', 'sushi.jpg');
 
-      await archiveSubscription(300, 'Sushi Bar', true);
+      expect(await archiveSubscription(insertedId, true)).toBe(true);
 
       const sub = await getSubscription(300, 'Sushi Bar');
       expect(sub).toBeNull(); // getSubscription filters by isActive: true
     });
 
-    it('should only archive the active subscription for that restaurant', async () => {
-      await addSubscription(300, 'Burger Joint', 'burger.jpg');
-      await addSubscription(300, 'Taco Shop', 'taco.jpg');
+    it('should only archive that record, not a replacement with the same name', async () => {
+      const { insertedId: oldId } = await addSubscription(300, 'Burger Joint', 'burger.jpg', 'venue-1');
+      await archiveSubscription(oldId, false);
+      await addSubscription(300, 'Burger Joint', 'burger.jpg', 'venue-1');
 
-      await archiveSubscription(300, 'Burger Joint', false);
+      expect(await archiveSubscription(oldId, true)).toBe(false);
 
       const active = await getActiveSubscriptions(300);
       expect(active).toHaveLength(1);
-      expect(active[0].restaurant).toBe('Taco Shop');
+      expect(active[0].restaurant).toBe('Burger Joint');
     });
   });
 

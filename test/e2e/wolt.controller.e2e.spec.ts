@@ -36,6 +36,7 @@ describe('WoltController E2E', () => {
   beforeEach(() => {
     resetUpdateBuilderCounters();
     vi.clearAllMocks();
+    mocks.addSubscription.mockResolvedValue({ acknowledged: true });
     testBot = createTestBot(BOT_CONFIG);
     const controller = new WoltController(testBot.bot);
     controller.init();
@@ -205,12 +206,13 @@ describe('WoltController E2E', () => {
 
   describe('callback_query', () => {
     it('removes an existing subscription and reacts', async () => {
-      mocks.getActiveSubscriptions.mockResolvedValue([{ restaurant: 'Pizza Hut', createdAt: new Date() }]);
-      mocks.archiveSubscription.mockResolvedValue(undefined);
+      const subscription = { _id: 'sub-1', restaurant: 'Pizza Hut', createdAt: new Date() };
+      mocks.getActiveSubscriptions.mockResolvedValue([subscription]);
+      mocks.archiveSubscription.mockResolvedValue(true);
 
       await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.REMOVE, 'Pizza Hut'].join(INLINE_KEYBOARD_SEPARATOR) }));
 
-      expect(mocks.archiveSubscription).toHaveBeenCalledWith(expect.any(Number), 'Pizza Hut', false);
+      expect(mocks.archiveSubscription).toHaveBeenCalledWith(subscription._id, false);
       const sent = testBot.transport.callsByMethod('sendMessage');
       expect(sent[0].payload.text).toContain('הורדתי את ההתראה');
     });
@@ -271,7 +273,38 @@ describe('WoltController E2E', () => {
 
         await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: button.callback_data }));
 
-        expect(mocks.archiveSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', false);
+        expect(mocks.archiveSubscription).toHaveBeenCalledWith(subscription._id, false);
+      });
+
+      it('subscribes to a branch that shares its name with an already subscribed one', async () => {
+        mocks.getActiveSubscriptions.mockResolvedValue([{ restaurant: 'Shila - Sharon Cohen', restaurantId: 'third-branch', createdAt: new Date() }]);
+        mocks.getRestaurants.mockResolvedValue(branches);
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, VENUE_ID].join(INLINE_KEYBOARD_SEPARATOR) }));
+
+        expect(mocks.addSubscription).toHaveBeenCalledWith(expect.any(Number), 'Shila - Sharon Cohen', 'shila.jpg', VENUE_ID, expect.any(Date));
+      });
+
+      it('treats a legacy subscription without a venue id as the same restaurant by name', async () => {
+        mocks.getActiveSubscriptions.mockResolvedValue([{ restaurant: 'Shila - Sharon Cohen', createdAt: new Date() }]);
+        mocks.getRestaurants.mockResolvedValue(branches);
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, VENUE_ID].join(INLINE_KEYBOARD_SEPARATOR) }));
+
+        expect(mocks.addSubscription).not.toHaveBeenCalled();
+        expect(testBot.transport.callsByMethod('sendMessage')[0].payload.text).toContain('כבר יש לך התראה');
+      });
+
+      it('reports an existing alert when a concurrent tap inserted it first', async () => {
+        mocks.getActiveSubscriptions.mockResolvedValue([]);
+        mocks.getRestaurants.mockResolvedValue(branches);
+        mocks.addSubscription.mockResolvedValue(null);
+
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: [BOT_ACTIONS.ADD, VENUE_ID].join(INLINE_KEYBOARD_SEPARATOR) }));
+
+        const texts = testBot.transport.callsByMethod('sendMessage').map((c) => c.payload.text);
+        expect(texts).toEqual([expect.stringContaining('כבר יש לך התראה')]);
+        expect(testBot.transport.callsByMethod('setMessageReaction')).toHaveLength(0);
       });
 
       it('does not echo the id when the subscription is already gone', async () => {

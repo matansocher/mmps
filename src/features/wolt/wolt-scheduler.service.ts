@@ -3,7 +3,7 @@ import { type Bot, GrammyError, InlineKeyboard } from 'grammy';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { notify } from '@services/notifier';
-import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
+import { archiveSubscription, getActiveSubscriptions, getExpiredSubscriptions, getSubscriptionById, getUserDetails, Subscription, WoltRestaurant } from '@shared/wolt';
 import { restaurantsService } from './restaurants.service';
 import { formatRestaurantDetails } from './utils';
 import {
@@ -75,7 +75,11 @@ export class WoltSchedulerService {
   async alertSubscription(restaurant: WoltRestaurant, subscription: Subscription): Promise<void> {
     try {
       const { name, link } = restaurant;
-      const { chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
+      const { _id, chatId, restaurant: restaurantName, restaurantPhoto } = subscription;
+      // the user may have removed or replaced it while restaurants were being refreshed
+      const current = await getSubscriptionById(_id.toString());
+      if (!current?.isActive) return;
+
       const keyboard = new InlineKeyboard().url(`🍽️ ${name} 🍽️`, link);
       const replyText = ['מצאתי מסעדה שנפתחה! 🍔🍕🍣', name, formatRestaurantDetails(restaurant), 'אפשר להזמין עכשיו! 📱'].filter(Boolean).join('\n');
 
@@ -87,14 +91,14 @@ export class WoltSchedulerService {
         await this.bot.api.sendMessage(chatId, replyText, { reply_markup: keyboard });
       }
 
-      await archiveSubscription(chatId, restaurantName, true);
+      await archiveSubscription(_id, true);
       await this.notifyWithUserDetails(chatId, restaurantName, ANALYTIC_EVENT_NAMES.SUBSCRIPTION_FULFILLED);
     } catch (err) {
       if (isBotBlocked(err)) {
         // the user blocked the bot - retrying every tick until the subscription expires would only spam the notifier
         this.logger.warn(`Archiving subscription for chatId ${subscription.chatId}, the user blocked the bot: ${getErrorMessage(err)}`);
         try {
-          await archiveSubscription(subscription.chatId, subscription.restaurant, false);
+          await archiveSubscription(subscription._id, false);
         } catch (archiveErr) {
           this.logger.error(`Failed to archive subscription for chatId ${subscription.chatId}: ${getErrorMessage(archiveErr)}`);
         }
@@ -123,8 +127,10 @@ export class WoltSchedulerService {
 
   async cleanSubscription(subscription: Subscription): Promise<void> {
     try {
-      const { chatId, restaurant } = subscription;
-      await archiveSubscription(chatId, restaurant, false);
+      const { _id, chatId, restaurant } = subscription;
+      // removed or alerted since it was read - the user must not get an expiry message for it
+      const isArchived = await archiveSubscription(_id, false);
+      if (!isArchived) return;
       const currentHour = toZonedTime(new Date(), DEFAULT_TIMEZONE).getHours();
       // between MAX_HOUR_TO_ALERT_USER and MIN_HOUR_TO_ALERT_USER the message is sent silently, so the user still learns the subscription was closed
       const isQuietHours = currentHour >= MAX_HOUR_TO_ALERT_USER && currentHour < MIN_HOUR_TO_ALERT_USER;
