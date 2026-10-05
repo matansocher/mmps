@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { type RoundOutcome, tierFor } from '../game/progression';
+import { levelFor, type RoundOutcome } from '../game/progression';
 import { prefersReducedMotion } from '../lib/motion';
 import { useProgress } from '../store/progress';
-import { playChime } from '../store/sound';
+import { playComplete } from '../store/sound';
 import type { Country } from '../types';
 import { Icon } from './Icon';
 
@@ -14,7 +14,6 @@ export type SummaryItem = {
 
 type Props = {
   readonly title: string;
-  readonly flight: string;
   readonly score: number;
   readonly outOf: number;
   readonly best: number;
@@ -45,116 +44,73 @@ function useCountUp(target: number, ms = 900): number {
   return value;
 }
 
-// Bars derived from the flight code, so every pass gets its own stable barcode.
-function Barcode({ seed }: { readonly seed: string }) {
-  let h = 7;
-  const bars = Array.from({ length: 42 }, (_, i) => {
-    h = (h * 31 + seed.charCodeAt(i % seed.length)) % 997;
-    return 1 + (h % 3);
-  });
+function Stat({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
   return (
-    <div className="flex h-10 items-stretch gap-[2px]" aria-hidden="true">
-      {bars.map((w, i) => (
-        <span key={i} className={i % 2 ? 'bg-transparent' : 'bg-[var(--color-paper-ink)]'} style={{ width: w }} />
-      ))}
+    <div className="rounded-xl bg-[var(--color-tile)] px-3 py-2">
+      <div className="text-[12px] font-semibold text-white/50">{label}</div>
+      <div className="text-[22px] leading-tight font-bold tabular-nums">{children}</div>
     </div>
   );
 }
 
-function Field({ label, children, wide }: { readonly label: string; readonly children: React.ReactNode; readonly wide?: boolean }) {
-  return (
-    <div className={wide ? 'col-span-2' : undefined}>
-      <div className="board-type text-[12px] font-semibold tracking-[0.12em] text-[var(--color-paper-ink)]/55">{label}</div>
-      <div className="board-type text-[22px] leading-tight font-bold">{children}</div>
-    </div>
-  );
-}
-
-export function RoundSummary({ title, flight, score, outOf, best, newBest, items, byCode, outcome, onPlayAgain, onChangeMode, onShowCountry }: Props) {
+export function RoundSummary({ title, score, outOf, best, newBest, items, byCode, outcome, onPlayAgain, onChangeMode, onShowCountry }: Props) {
   const primaryRef = useRef<HTMLButtonElement>(null);
   const progress = useProgress();
   const earned = useCountUp(outcome?.earned ?? 0);
-  const { tier, next, progress: toNext } = tierFor(progress.miles);
+  const { level, next, progress: toNext } = levelFor(progress.miles);
   const suffix = `/${outOf}`;
-  const from = byCode.get(items[0]?.code ?? '');
-  const to = byCode.get(items.at(-1)?.code ?? '');
 
   useEffect(() => {
     primaryRef.current?.focus();
-    playChime();
+    playComplete();
   }, []);
 
   return (
     <section
-      className="animate-rise fixed bottom-2 left-1/2 z-30 flex max-h-[min(78dvh,720px)] w-[min(420px,calc(100vw-16px))] -translate-x-1/2 flex-col overflow-hidden rounded-2xl bg-[var(--color-paper)] text-[var(--color-paper-ink)] shadow-[0_24px_60px_rgb(0_0_0/0.55)] sm:top-4 sm:bottom-auto sm:left-4 sm:max-h-[calc(100dvh-32px)] sm:translate-x-0"
+      className="panel animate-rise fixed bottom-2 left-1/2 z-30 flex max-h-[min(78dvh,720px)] w-[min(420px,calc(100vw-16px))] -translate-x-1/2 flex-col overflow-hidden rounded-2xl sm:top-4 sm:bottom-auto sm:left-4 sm:max-h-[calc(100dvh-32px)] sm:translate-x-0"
       aria-label="Round results"
     >
-      <header className="board-type flex items-center justify-between bg-[var(--color-ink)] px-5 py-2.5 text-[15px] font-semibold text-[var(--color-paper)]">
-        <span className="flex items-center gap-2">
-          <Icon name="plane" size={16} className="rotate-45 text-[var(--color-signage)]" /> Boarding pass · {title}
-        </span>
-        <span className="text-[var(--color-signage)]">{flight}</span>
+      <header className="flex items-center justify-between border-b border-[var(--color-rule)] px-5 py-3">
+        <span className="text-[15px] font-semibold text-white/60">Results · {title}</span>
       </header>
 
       <div className="scroll-thin flex-1 overflow-y-auto">
         <div className="px-5 pt-4">
-          {from && to && (
-            <div className="flex items-end justify-between gap-3">
-              <div className="min-w-0">
-                <div className="board-type text-[44px] leading-none font-bold">{from.code}</div>
-                <div className="truncate text-[13px] opacity-70">{from.name}</div>
-              </div>
-              <div className="mb-5 flex flex-1 items-center gap-1 opacity-50" aria-hidden="true">
-                <span className="h-px flex-1 border-t-2 border-dotted border-current" />
-                <Icon name="plane" size={20} className="rotate-90" />
-                <span className="h-px flex-1 border-t-2 border-dotted border-current" />
-              </div>
-              <div className="min-w-0 text-right">
-                <div className="board-type text-[44px] leading-none font-bold">{to.code}</div>
-                <div className="truncate text-[13px] opacity-70">{to.name}</div>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4 grid grid-cols-3 gap-x-4 gap-y-3">
-            <Field label="Score">
+          <div className="grid grid-cols-3 gap-2">
+            <Stat label="Score">
               {score}
-              <span className="text-[16px] opacity-55">{suffix}</span>
-            </Field>
-            <Field label="Miles">
-              <span className="text-[#1f7a4d]">+{earned.toLocaleString()}</span>
-            </Field>
-            <Field label={newBest ? 'New best' : 'Best'}>
-              {newBest ? (
-                <span className="rounded bg-[var(--color-signage)] px-1">
-                  {score}
-                  {suffix}
-                </span>
-              ) : (
-                `${best}${suffix}`
-              )}
-            </Field>
+              <span className="text-[16px] text-white/45">{suffix}</span>
+            </Stat>
+            <Stat label="XP">
+              <span className="text-[var(--color-ok)]">+{earned.toLocaleString()}</span>
+            </Stat>
+            <Stat label={newBest ? 'New best!' : 'Best'}>
+              <span className={newBest ? 'text-[var(--color-accent-soft)]' : undefined}>
+                {newBest ? score : best}
+                <span className="text-[16px] text-white/45">{suffix}</span>
+              </span>
+            </Stat>
           </div>
 
           <div className="mt-4">
             <div className="flex items-baseline justify-between text-[13px]">
-              <span className="board-type text-[17px] font-bold">{outcome?.tierUp ? `Upgraded to ${tier.name}!` : `${tier.name} class`}</span>
-              <span className="tabular-nums opacity-70">{next ? `${(next.miles - progress.miles).toLocaleString()} mi to ${next.name}` : `${progress.miles.toLocaleString()} mi`}</span>
+              <span className="text-[16px] font-bold">{outcome?.levelUp ? `Level up! Level ${level.level}` : `Level ${level.level}`}</span>
+              <span className="text-white/55 tabular-nums">{next ? `${(next.xp - progress.miles).toLocaleString()} XP to level ${next.level}` : `${progress.miles.toLocaleString()} XP`}</span>
             </div>
-            <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--color-paper-ink)]/12" role="progressbar" aria-label={`Progress to ${next?.name ?? 'top tier'}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(toNext * 100)}>
-              <div className="h-full rounded-full bg-[var(--color-paper-ink)] transition-[width] duration-700" style={{ width: `${toNext * 100}%` }} />
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label={next ? `Progress to level ${next.level}` : 'Max level'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(toNext * 100)}>
+              <div className="h-full rounded-full bg-[var(--color-accent)] transition-[width] duration-700" style={{ width: `${toNext * 100}%` }} />
             </div>
           </div>
 
-          {outcome && (outcome.newStamps.length > 0 || outcome.unlocked.length > 0) && (
+          {outcome && (outcome.newCountries.length > 0 || outcome.unlocked.length > 0) && (
             <ul className="mt-3 flex flex-wrap gap-1.5 text-[13px]">
-              {outcome.newStamps.length > 0 && (
-                <li className="rounded-full border border-[#1f7a4d]/40 px-2.5 py-0.5 font-bold text-[#1f7a4d]">
-                  +{outcome.newStamps.length} new passport stamp{outcome.newStamps.length > 1 ? 's' : ''}
+              {outcome.newCountries.length > 0 && (
+                <li className="rounded-full border border-[var(--color-ok)]/40 px-2.5 py-0.5 font-bold text-[var(--color-ok)]">
+                  +{outcome.newCountries.length} new countr{outcome.newCountries.length > 1 ? 'ies' : 'y'} found
                 </li>
               )}
               {outcome.unlocked.map((a) => (
-                <li key={a.id} className="rounded-full bg-[var(--color-paper-ink)] px-2.5 py-0.5 font-bold text-[var(--color-signage)]" title={a.detail}>
+                <li key={a.id} className="rounded-full bg-[var(--color-accent)]/20 px-2.5 py-0.5 font-bold text-[var(--color-accent-soft)]" title={a.detail}>
                   ★ {a.title}
                 </li>
               ))}
@@ -162,20 +118,20 @@ export function RoundSummary({ title, flight, score, outOf, best, newBest, items
           )}
         </div>
 
-        <div className="perforation mx-0 mt-4 px-3 pt-2 pb-1">
-          <ul aria-label="Itinerary">
+        <div className="mt-4 border-t border-[var(--color-rule)] px-3 pt-2 pb-1">
+          <ul aria-label="Answers">
             {items.map(({ code, correct, note }, i) => {
               const country = byCode.get(code);
               return (
                 <li key={`${code}-${i}`}>
-                  <button type="button" className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left text-[14px] hover:bg-[var(--color-paper-ink)]/6" onClick={() => onShowCountry(code)}>
-                    <span className={`grid h-5 w-5 shrink-0 place-items-center rounded text-[12px] font-bold text-white ${correct ? 'bg-[#1f8a57]' : 'bg-[#c8321f]'}`} aria-label={correct ? 'Found' : 'Missed'}>
+                  <button type="button" className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left text-[14px] hover:bg-white/6" onClick={() => onShowCountry(code)}>
+                    <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[12px] font-bold text-[#0b1220] ${correct ? 'bg-[var(--color-ok)]' : 'bg-[var(--color-bad)]'}`} aria-label={correct ? 'Found' : 'Missed'}>
                       {correct ? '✓' : '✗'}
                     </span>
                     <span className="min-w-0 flex-1 truncate">
                       {country?.flag} {country?.name}
                     </span>
-                    {note && <span className="shrink-0 truncate text-[12px] opacity-55">{note}</span>}
+                    {note && <span className="shrink-0 truncate text-[12px] text-white/45">{note}</span>}
                   </button>
                 </li>
               );
@@ -184,18 +140,15 @@ export function RoundSummary({ title, flight, score, outOf, best, newBest, items
         </div>
       </div>
 
-      <div className="flex items-center gap-3 border-t border-[var(--color-paper-ink)]/12 px-5 pt-3 pb-4">
-        <Barcode seed={flight + score} />
-        <div className="ml-auto flex gap-2">
-          <button ref={onPlayAgain ? undefined : primaryRef} type="button" className="btn btn-paper" onClick={onChangeMode}>
-            Departures
+      <div className="flex justify-end gap-2 border-t border-[var(--color-rule)] px-5 pt-3 pb-4">
+        <button ref={onPlayAgain ? undefined : primaryRef} type="button" className="btn" onClick={onChangeMode}>
+          Menu
+        </button>
+        {onPlayAgain && (
+          <button ref={primaryRef} type="button" className="btn btn-primary" onClick={onPlayAgain}>
+            <Icon name="replay" size={18} /> Play again
           </button>
-          {onPlayAgain && (
-            <button ref={primaryRef} type="button" className="btn btn-signage" onClick={onPlayAgain}>
-              <Icon name="replay" size={18} /> Fly again
-            </button>
-          )}
-        </div>
+        )}
       </div>
     </section>
   );

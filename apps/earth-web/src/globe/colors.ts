@@ -1,17 +1,16 @@
-// Route-map palette: paper countries on an ink-teal sea.
+// Plain political map: white countries on a blue sea.
 export const PALETTE = {
-  ocean: '#0e3440',
-  land: '#efe5cf',
-  border: '#9c8f74',
-  graticule: '#1d4b58',
-  route: '#ffc72c',
+  ocean: '#1d4e89',
+  land: '#f4f6f8',
+  border: '#8a96a8',
+  graticule: '#2a5d98',
 } as const;
 
 export const COLORS = {
-  hover: '#ffe08a',
-  correct: '#3fbf7f',
-  wrong: '#ef5b45',
-  review: '#ffc72c',
-  target: '#ffc72c',
-  missed: '#f0a08f',
+  hover: '#bfdbfe',
+  correct: '#34d399',
+  wrong: '#f87171',
+  review: '#3b82f6',
+  target: '#3b82f6',
+  missed: '#fca5a5',
 } as const;

@@ -1,27 +1,27 @@
 import type { GameMode } from './modes';
 
-export type FlightKind = GameMode['kind'];
+export type ModeKind = GameMode['kind'];
 
 export type Progress = {
-  readonly miles: number;
+  readonly miles: number; // total xp (stored under the original key)
   readonly rounds: number;
-  readonly stamps: Readonly<Record<string, number>>; // country code -> times found
+  readonly stamps: Readonly<Record<string, number>>; // country code -> times found (the collection)
   readonly achievements: readonly string[];
-  readonly streak: number; // consecutive days with a daily flight, as of `lastDaily`
+  readonly streak: number; // consecutive days with a daily challenge, as of `lastDaily`
   readonly lastDaily: string | null; // Format: "YYYY-MM-DD" (local)
-  readonly daily: Readonly<Record<string, number>>; // day -> daily flight score
+  readonly daily: Readonly<Record<string, number>>; // day -> daily challenge score
 };
 
 export type RoundResult = {
-  readonly kind: FlightKind;
+  readonly kind: ModeKind;
   readonly score: number;
   readonly outOf: number;
   readonly found: readonly string[]; // codes the player found this round
 };
 
-export type Tier = {
-  readonly name: string;
-  readonly miles: number; // miles needed to reach it
+export type Level = {
+  readonly level: number;
+  readonly xp: number; // xp needed to reach it
 };
 
 export type Achievement = {
@@ -33,46 +33,40 @@ export type Achievement = {
 export type RoundOutcome = {
   readonly progress: Progress;
   readonly earned: number;
-  readonly newStamps: readonly string[];
+  readonly newCountries: readonly string[];
   readonly unlocked: readonly Achievement[];
-  readonly tierUp: Tier | null;
+  readonly levelUp: Level | null;
 };
 
 export const EMPTY_PROGRESS: Progress = { miles: 0, rounds: 0, stamps: {}, achievements: [], streak: 0, lastDaily: null, daily: {} };
 
-export const TIERS: readonly Tier[] = [
-  { name: 'Economy', miles: 0 },
-  { name: 'Premium', miles: 1_500 },
-  { name: 'Business', miles: 5_000 },
-  { name: 'First', miles: 12_000 },
-  { name: 'Captain', miles: 25_000 },
-];
+export const LEVELS: readonly Level[] = [0, 1_500, 5_000, 12_000, 25_000, 40_000, 60_000, 85_000, 115_000, 150_000].map((xp, i) => ({ level: i + 1, xp }));
 
-export const MILES_PER_POINT: Readonly<Record<FlightKind, number>> = { classic: 100, continent: 100, daily: 150, 'name-it': 80, cleanup: 40 };
+export const XP_PER_POINT: Readonly<Record<ModeKind, number>> = { classic: 100, continent: 100, daily: 150, 'name-it': 80, cleanup: 40 };
 export const PERFECT_BONUS = 500;
-export const NEW_STAMP_BONUS = 50;
+export const NEW_COUNTRY_BONUS = 50;
 const DAILY_HISTORY = 60;
 
 export const ACHIEVEMENTS: readonly Achievement[] = [
-  { id: 'first-flight', title: 'First flight', detail: 'Finish any round' },
-  { id: 'perfect-landing', title: 'Perfect landing', detail: 'Get every question right in a round' },
+  { id: 'first-flight', title: 'First round', detail: 'Finish any round' },
+  { id: 'perfect-landing', title: 'Perfect round', detail: 'Get every question right in a round' },
   { id: 'clean-sweep', title: 'Clean sweep', detail: 'Find every country in a Continent cleanup' },
-  { id: 'commuter', title: 'Commuter', detail: 'Fly the daily flight 3 days in a row' },
-  { id: 'frequent-flyer', title: 'Frequent flyer', detail: 'Fly the daily flight 7 days in a row' },
-  { id: 'well-travelled', title: 'Well travelled', detail: 'Collect 25 passport stamps' },
-  { id: 'globetrotter', title: 'Globetrotter', detail: 'Collect 100 passport stamps' },
-  { id: 'six-continents', title: 'Six continents', detail: 'Collect a stamp from every continent' },
-  { id: 'business-class', title: 'Business class', detail: 'Reach Business tier' },
+  { id: 'commuter', title: '3-day streak', detail: 'Play the daily challenge 3 days in a row' },
+  { id: 'frequent-flyer', title: '7-day streak', detail: 'Play the daily challenge 7 days in a row' },
+  { id: 'well-travelled', title: '25 countries', detail: 'Find 25 different countries' },
+  { id: 'globetrotter', title: '100 countries', detail: 'Find 100 different countries' },
+  { id: 'six-continents', title: 'Six continents', detail: 'Find a country on every continent' },
+  { id: 'business-class', title: 'Level 3', detail: 'Reach level 3' },
 ];
 
 const CONTINENT_COUNT = 6;
 
-export function tierFor(miles: number): { readonly tier: Tier; readonly next: Tier | null; readonly progress: number } {
-  const index = TIERS.findLastIndex((tier) => miles >= tier.miles);
-  const tier = TIERS[Math.max(index, 0)];
-  const next = TIERS[index + 1] ?? null;
-  const progress = next ? (miles - tier.miles) / (next.miles - tier.miles) : 1;
-  return { tier, next, progress };
+export function levelFor(xp: number): { readonly level: Level; readonly next: Level | null; readonly progress: number } {
+  const index = LEVELS.findLastIndex((level) => xp >= level.xp);
+  const level = LEVELS[Math.max(index, 0)];
+  const next = LEVELS[index + 1] ?? null;
+  const progress = next ? (xp - level.xp) / (next.xp - level.xp) : 1;
+  return { level, next, progress };
 }
 
 export function localDay(date: Date): string {
@@ -85,12 +79,12 @@ export function previousDay(day: string): string {
   return localDay(new Date(y, m - 1, d - 1));
 }
 
-// The streak still counts today if the last daily flight was today or yesterday.
+// The streak still counts today if the last daily challenge was today or yesterday.
 export function currentStreak(progress: Progress, today: string): number {
   return progress.lastDaily === today || progress.lastDaily === previousDay(today) ? progress.streak : 0;
 }
 
-// Deterministic per-day random, so everyone gets the same daily flight.
+// Deterministic per-day random, so everyone gets the same daily challenge.
 export function dailyRandom(day: string): () => number {
   let seed = 2166136261;
   for (const char of day) seed = Math.imul(seed ^ char.charCodeAt(0), 16777619);
@@ -102,15 +96,15 @@ export function dailyRandom(day: string): () => number {
   };
 }
 
-// Day number shown as the daily flight's number, counted from launch.
-export function flightNumber(day: string): number {
+// Daily challenge number, counted from launch.
+export function dailyNumber(day: string): number {
   const [y, m, d] = day.split('-').map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2026, 0, 1)) / 86_400_000) + 1;
 }
 
-export function milesFor(round: RoundResult): number {
+export function xpFor(round: RoundResult): number {
   const perfect = round.outOf > 0 && round.score === round.outOf;
-  return round.score * MILES_PER_POINT[round.kind] + (perfect ? PERFECT_BONUS : 0);
+  return round.score * XP_PER_POINT[round.kind] + (perfect ? PERFECT_BONUS : 0);
 }
 
 function trimDaily(daily: Record<string, number>): Record<string, number> {
@@ -131,16 +125,16 @@ function earnedAchievements(progress: Progress, round: RoundResult, continentOf:
     'well-travelled': stampCount >= 25,
     globetrotter: stampCount >= 100,
     'six-continents': continents.size >= CONTINENT_COUNT,
-    'business-class': progress.miles >= TIERS[2].miles,
+    'business-class': progress.miles >= LEVELS[2].xp,
   };
   return ACHIEVEMENTS.filter(({ id }) => checks[id] && !progress.achievements.includes(id)).map(({ id }) => id);
 }
 
 export function applyRound(progress: Progress, round: RoundResult, today: string, continentOf: (code: string) => string | undefined): RoundOutcome {
   const stamps = { ...progress.stamps };
-  const newStamps: string[] = [];
+  const newCountries: string[] = [];
   for (const code of new Set(round.found)) {
-    if (!stamps[code]) newStamps.push(code);
+    if (!stamps[code]) newCountries.push(code);
     stamps[code] = (stamps[code] ?? 0) + 1;
   }
 
@@ -151,17 +145,17 @@ export function applyRound(progress: Progress, round: RoundResult, today: string
     daily = trimDaily({ ...daily, [today]: round.score });
   }
 
-  const earned = milesFor(round) + newStamps.length * NEW_STAMP_BONUS;
+  const earned = xpFor(round) + newCountries.length * NEW_COUNTRY_BONUS;
   const next: Progress = { ...progress, miles: progress.miles + earned, rounds: progress.rounds + 1, stamps, streak, lastDaily, daily };
   const unlockedIds = earnedAchievements(next, round, continentOf);
-  const before = tierFor(progress.miles).tier;
-  const after = tierFor(next.miles).tier;
+  const before = levelFor(progress.miles).level;
+  const after = levelFor(next.miles).level;
   return {
     progress: { ...next, achievements: [...next.achievements, ...unlockedIds] },
     earned,
-    newStamps,
+    newCountries,
     unlocked: ACHIEVEMENTS.filter(({ id }) => unlockedIds.includes(id)),
-    tierUp: after.miles > before.miles ? after : null,
+    levelUp: after.level > before.level ? after : null,
   };
 }
 

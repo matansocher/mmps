@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GameCard } from '../components/GameCard';
 import { Icon } from '../components/Icon';
-import { TargetBoard } from '../components/QuizCard';
+import { Target } from '../components/QuizCard';
 import { RoundSummary } from '../components/RoundSummary';
-import { Stamps, useStamps } from '../components/Stamps';
+import { Feedback, useFeedback } from '../components/Feedback';
 import { cleanupTarget, type CleanupState, createCleanup, giveUp, guessCountry, isCleanupFinished, isOnMap } from '../game/cleanup';
 import { bestScoreKey, type Continent, CONTINENT_VIEWS, modeTitle, questionPool } from '../game/modes';
 import { flyToView } from '../globe/camera';
@@ -12,7 +12,7 @@ import { useBestScore } from '../hooks/useBestScore';
 import { useGlobePointer } from '../hooks/useGlobePointer';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useRoundOutcome } from '../store/progress';
-import { drawLeg, flightCode, useContinentOf } from './flight';
+import { useContinentOf } from './continent';
 import { focusCountry } from './focus';
 import type { GameProps } from './types';
 
@@ -37,14 +37,14 @@ function Coverage({ state }: { readonly state: CleanupState }) {
 }
 
 export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly kind: 'cleanup'; readonly continent: Continent }>) {
-  const { viewer, countries, layer, route } = engine;
+  const { viewer, countries, layer } = engine;
   const pool = useMemo(() => questionPool(countries.countries, mode).map((c) => c.code), [countries, mode]);
   const [state, setState] = useState<CleanupState>(() => createCleanup(pool));
   const [flash, setFlash] = useState<string | null>(null);
   const [review, setReview] = useState<string | null>(null);
   const [newBest, setNewBest] = useState(false);
   const { best, record } = useBestScore(bestScoreKey(mode));
-  const { stamps, stamp } = useStamps();
+  const { marks, show } = useFeedback();
   const continentOf = useContinentOf(engine);
   const done = isCleanupFinished(state);
   const target = cleanupTarget(state);
@@ -55,9 +55,8 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
       return;
     }
     const correct = country.code === target;
-    stamp(at.x, at.y, correct, country.name);
-    if (correct) drawLeg(engine, state.found.at(-1), country.code);
-    else setFlash(country.code);
+    show(at.x, at.y, correct, country.name);
+    if (!correct) setFlash(country.code);
     setState((s) => guessCountry(s, country.code));
   });
 
@@ -95,10 +94,9 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
   const playAgain = useCallback(() => {
     setReview(null);
     setNewBest(false);
-    route.clear();
     setState(createCleanup(pool));
     void flyToView(viewer, startView, 1.5);
-  }, [pool, route, viewer, startView]);
+  }, [pool, viewer, startView]);
   const reviewCountry = useCallback(
     (code: string) => {
       setReview(code);
@@ -120,7 +118,6 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
     return (
       <RoundSummary
         title={title}
-        flight={flightCode(mode)}
         score={state.found.length}
         outOf={state.order.length}
         best={best}
@@ -143,7 +140,7 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
       <GameCard title={title} status={`· ${state.index + 1}/${state.order.length}`} aside={`Found ${state.found.length}`} onChangeMode={onChangeMode}>
         <Coverage state={state} />
         <div className="mt-3 flex items-center gap-3">
-          <TargetBoard key={state.index} country={target ? countries.byCode.get(target) : undefined} />
+          <Target key={state.index} country={target ? countries.byCode.get(target) : undefined} />
           <button type="button" className="btn shrink-0" onClick={goGiveUp} title="Give up on this one (S)">
             Give up
           </button>
@@ -162,7 +159,7 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
           )}
         </div>
       </GameCard>
-      <Stamps stamps={stamps} />
+      <Feedback marks={marks} />
     </>
   );
 }

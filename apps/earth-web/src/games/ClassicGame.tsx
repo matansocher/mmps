@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { QuizCard } from '../components/QuizCard';
 import { RoundSummary } from '../components/RoundSummary';
-import { Stamps, useStamps } from '../components/Stamps';
+import { Feedback, useFeedback } from '../components/Feedback';
 import { bestScoreKey, type Continent, CONTINENT_VIEWS, modeTitle, questionPool } from '../game/modes';
 import { dailyRandom } from '../game/progression';
 import { answer, createQuiz, currentTarget, lastAnswer, next, type QuizState, ROUND_SIZE, score, skip } from '../game/quiz';
@@ -11,7 +11,7 @@ import { useBestScore } from '../hooks/useBestScore';
 import { useGlobePointer } from '../hooks/useGlobePointer';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useRoundOutcome } from '../store/progress';
-import { drawLeg, flightCode, useContinentOf } from './flight';
+import { useContinentOf } from './continent';
 import { focusCountry } from './focus';
 import type { GameProps } from './types';
 
@@ -20,21 +20,20 @@ const AUTO_ADVANCE_MS = 1200;
 type ClassicMode = { readonly kind: 'classic' } | { readonly kind: 'continent'; readonly continent: Continent } | { readonly kind: 'daily'; readonly day: string };
 
 export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMode>) {
-  const { viewer, countries, layer, route } = engine;
+  const { viewer, countries, layer } = engine;
   const pool = useMemo(() => questionPool(countries.countries, mode).map((c) => c.code), [countries, mode]);
   const newQuiz = useCallback(() => (mode.kind === 'daily' ? createQuiz(pool, ROUND_SIZE, dailyRandom(mode.day)) : createQuiz(pool)), [pool, mode]);
   const [quiz, setQuiz] = useState<QuizState>(newQuiz);
   const [review, setReview] = useState<string | null>(null);
   const [newBest, setNewBest] = useState(false);
   const { best, record } = useBestScore(bestScoreKey(mode));
-  const { stamps, stamp } = useStamps();
+  const { marks, show } = useFeedback();
   const continentOf = useContinentOf(engine);
 
   const { hover, hint } = useGlobePointer(engine, quiz.phase === 'asking', (country, at) => {
     const target = currentTarget(quiz);
     const correct = country.code === target;
-    stamp(at.x, at.y, correct, country.name);
-    if (correct) drawLeg(engine, quiz.answers.findLast((a) => a.correct)?.target, country.code);
+    show(at.x, at.y, correct, country.name);
     setQuiz((q) => answer(q, country.code));
   });
 
@@ -83,10 +82,9 @@ export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMod
   const playAgain = useCallback(() => {
     setReview(null);
     setNewBest(false);
-    route.clear();
     setQuiz(newQuiz());
     void flyToView(viewer, startView, 1.5);
-  }, [newQuiz, route, viewer, startView]);
+  }, [newQuiz, viewer, startView]);
   const reviewCountry = useCallback(
     (code: string) => {
       setReview(code);
@@ -108,7 +106,6 @@ export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMod
     return (
       <RoundSummary
         title={title}
-        flight={flightCode(mode)}
         score={score(quiz)}
         outOf={quiz.questions.length}
         best={best}
@@ -125,7 +122,7 @@ export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMod
   return (
     <>
       {currentTarget(quiz) && <QuizCard title={title} quiz={quiz} byCode={countries.byCode} hint={hint} onSkip={goSkip} onNext={goNext} onChangeMode={onChangeMode} />}
-      <Stamps stamps={stamps} />
+      <Feedback marks={marks} />
     </>
   );
 }

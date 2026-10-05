@@ -31,14 +31,14 @@ export function createEarthViewer(container: HTMLElement): Viewer {
   scene.globe.showGroundAtmosphere = false;
   scene.globe.enableLighting = false;
   scene.fog.enabled = false;
-  // A warm dusk halo around the limb, like the view from a night flight.
+  // A soft halo around the limb.
   if (scene.skyAtmosphere) {
     scene.skyAtmosphere.show = true;
     scene.skyAtmosphere.hueShift = -0.08;
     scene.skyAtmosphere.saturationShift = -0.15;
     scene.skyAtmosphere.brightnessShift = 0.05;
   }
-  scene.backgroundColor = Color.fromCssColorString('#060a0e');
+  scene.backgroundColor = Color.fromCssColorString('#070b14');
   if (scene.skyBox) scene.skyBox.show = true;
   if (scene.sun) scene.sun.show = false;
   if (scene.moon) scene.moon.show = false;
