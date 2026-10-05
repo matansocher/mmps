@@ -38,7 +38,7 @@ async function main() {
 
   // Registered before the global JSON parser so the webhook keeps the raw body for signature validation.
   try {
-    initWhatsapp(app);
+    await initWhatsapp(app);
   } catch (err) {
     logger.error(`Failed to init whatsapp webhook: ${getErrorMessage(err)}`);
   }

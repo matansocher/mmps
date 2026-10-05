@@ -1,0 +1,146 @@
+import { createHash } from 'node:crypto';
+import { getErrorMessage, Logger } from '@core/utils';
+import { describeWhatsAppError, downloadWhatsAppMedia, sendWhatsAppMessage, sendWhatsAppSticker, uploadWhatsAppMedia } from '@services/whatsapp';
+import { STICKER_MEDIA_REUSE_MS, STICKER_SEARCH_LIMIT, STICKER_TAG_WINDOW_MS } from './constants';
+import {
+  addStickerMessageId,
+  addStickerTags,
+  countStickers,
+  createSticker,
+  deleteSticker,
+  findRecentUntaggedSticker,
+  findStickerByMessageId,
+  findStickerBySha,
+  getRandomSticker,
+  getStickerData,
+  markStickerReceived,
+  searchStickers,
+  setStickerMedia,
+} from './mongo';
+import type { IncomingMessage, IncomingStickerMessage, IncomingTextMessage, StickerSummary } from './types';
+import { tokenize } from './whatsapp.utils';
+
+const logger = new Logger('whatsapp:sticker-vault');
+
+const HELP_MESSAGE = [
+  '🗂️ *Sticker vault*',
+  '• Send me a sticker to save it.',
+  '• Then send a few words to tag it (within 5 minutes), or reply to any sticker with words to add tags.',
+  '• Send words to get matching stickers back.',
+  '• *random* sends a random sticker.',
+  '• Reply *delete* to a sticker to remove it.',
+].join('\n');
+
+export async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
+  if (message.kind === 'sticker') return handleSticker(message);
+  return handleText(message);
+}
+
+async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMessage): Promise<void> {
+  const { data, mimeType } = await downloadWhatsAppMedia(mediaId);
+  const sha256 = createHash('sha256').update(data).digest('hex');
+
+  const existing = await findStickerBySha(from, sha256);
+  if (existing) {
+    await markStickerReceived(existing._id, id);
+    const reply = existing.tags.length ? `Already saved 🏷️ ${existing.tags.join(', ')}` : 'Already saved, but it has no tags yet. Send a few words to tag it.';
+    await sendWhatsAppMessage(from, reply);
+    return;
+  }
+
+  try {
+    await createSticker({ ownerPhone: from, sha256, data, mimeType, animated, messageId: id });
+  } catch (err) {
+    // Two deliveries of the same sticker raced past the lookup; the unique index kept one.
+    if ((err as { code?: number })?.code === 11000) return;
+    throw err;
+  }
+  logger.log(`Saved sticker ${sha256.slice(0, 12)} for ${from} (${data.length} bytes, animated=${animated})`);
+  await sendWhatsAppMessage(from, 'Saved ✅ Send a few words to tag it, or reply to it anytime to add tags.');
+}
+
+async function handleText({ from, text, contextId }: IncomingTextMessage): Promise<void> {
+  const command = text.trim().toLowerCase();
+  const words = tokenize(text);
+
+  if (contextId) {
+    const quoted = await findStickerByMessageId(from, contextId);
+    if (quoted) {
+      if (command === 'delete') {
+        await deleteSticker(quoted._id);
+        await sendWhatsAppMessage(from, 'Deleted 🗑️');
+        return;
+      }
+      await tagSticker(from, quoted, words);
+      return;
+    }
+  }
+
+  if (command === 'help') {
+    const count = await countStickers(from);
+    await sendWhatsAppMessage(from, `${HELP_MESSAGE}\n\nYou have ${count} saved sticker${count === 1 ? '' : 's'}.`);
+    return;
+  }
+
+  if (command === 'random') {
+    const sticker = await getRandomSticker(from);
+    if (!sticker) {
+      await sendWhatsAppMessage(from, 'Your vault is empty. Send me a sticker to save it.');
+      return;
+    }
+    await sendStoredSticker(from, sticker);
+    return;
+  }
+
+  if (!words.length) {
+    await sendWhatsAppMessage(from, HELP_MESSAGE);
+    return;
+  }
+
+  const pending = await findRecentUntaggedSticker(from, new Date(Date.now() - STICKER_TAG_WINDOW_MS));
+  if (pending) {
+    await tagSticker(from, pending, words);
+    return;
+  }
+
+  const matches = await searchStickers(from, words, STICKER_SEARCH_LIMIT);
+  if (!matches.length) {
+    await sendWhatsAppMessage(from, `No stickers match "${words.join(' ')}". Send *help* to see how tagging works.`);
+    return;
+  }
+  for (const sticker of matches) {
+    await sendStoredSticker(from, sticker);
+  }
+}
+
+async function tagSticker(from: string, sticker: StickerSummary, words: string[]): Promise<void> {
+  if (!words.length) {
+    await sendWhatsAppMessage(from, 'Reply with words to tag this sticker, or *delete* to remove it.');
+    return;
+  }
+  const tags = await addStickerTags(sticker._id, words);
+  await sendWhatsAppMessage(from, `Tagged 🏷️ ${tags.join(', ')}`);
+}
+
+async function sendStoredSticker(to: string, sticker: StickerSummary): Promise<void> {
+  const cachedMediaId = sticker.mediaId && sticker.mediaUploadedAt && Date.now() - new Date(sticker.mediaUploadedAt).getTime() < STICKER_MEDIA_REUSE_MS ? sticker.mediaId : null;
+
+  let messageId: string | null = null;
+  if (cachedMediaId) {
+    try {
+      messageId = await sendWhatsAppSticker(to, cachedMediaId);
+    } catch (err) {
+      logger.warn(`Cached media ${cachedMediaId} failed, re-uploading: ${describeWhatsAppError(err)}`);
+    }
+  }
+
+  if (!messageId) {
+    const data = await getStickerData(sticker._id);
+    if (!data) throw new Error(`Sticker ${sticker._id} has no data`);
+    const mediaId = await uploadWhatsAppMedia(data, sticker.mimeType || 'image/webp', 'sticker.webp');
+    await setStickerMedia(sticker._id, mediaId);
+    messageId = await sendWhatsAppSticker(to, mediaId);
+  }
+
+  if (messageId) await addStickerMessageId(sticker._id, messageId).catch((err) => logger.error(`Failed to record sent sticker id: ${getErrorMessage(err)}`));
+}

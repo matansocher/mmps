@@ -2,10 +2,10 @@ import express from 'express';
 import { createHmac } from 'node:crypto';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { sendWhatsAppMessage } from '@services/whatsapp';
+import { handleIncomingMessage } from './sticker-vault.service';
 import { registerWhatsappRoutes } from './whatsapp.controller';
 
-vi.mock('@services/whatsapp', () => ({ sendWhatsAppMessage: vi.fn(async () => undefined) }));
+vi.mock('./sticker-vault.service', () => ({ handleIncomingMessage: vi.fn(async () => undefined) }));
 
 describe('WhatsApp webhook routes', () => {
   let server: Server;
@@ -25,7 +25,7 @@ describe('WhatsApp webhook routes', () => {
   beforeEach(() => {
     vi.stubEnv('VERIFY_TOKEN', 'verify-me');
     vi.stubEnv('WHATSAPP_APP_SECRET', '');
-    vi.mocked(sendWhatsAppMessage).mockClear();
+    vi.mocked(handleIncomingMessage).mockClear();
   });
 
   afterEach(() => vi.unstubAllEnvs());
@@ -51,10 +51,10 @@ describe('WhatsApp webhook routes', () => {
     const body = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ from: '972500000000', id: '1', timestamp: '0', type: 'text', text: { body: 'hello' } }] } }] }] });
     const post = (headers: Record<string, string> = {}) => fetch(`${baseUrl}/whatsapp-webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
 
-    it('should ack and reply to a text message', async () => {
+    it('should ack and hand a text message to the sticker vault', async () => {
       const res = await post();
       expect(res.status).toEqual(200);
-      await vi.waitFor(() => expect(sendWhatsAppMessage).toHaveBeenCalledWith('972500000000', 'You said: hello'));
+      await vi.waitFor(() => expect(handleIncomingMessage).toHaveBeenCalledWith({ kind: 'text', from: '972500000000', id: '1', text: 'hello' }));
     });
 
     it('should accept a valid signature when the app secret is set', async () => {
@@ -62,14 +62,14 @@ describe('WhatsApp webhook routes', () => {
       const signature = `sha256=${createHmac('sha256', 'secret').update(body).digest('hex')}`;
       const res = await post({ 'X-Hub-Signature-256': signature });
       expect(res.status).toEqual(200);
-      await vi.waitFor(() => expect(sendWhatsAppMessage).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => expect(handleIncomingMessage).toHaveBeenCalledTimes(1));
     });
 
     it('should reject an invalid signature when the app secret is set', async () => {
       vi.stubEnv('WHATSAPP_APP_SECRET', 'secret');
       const res = await post({ 'X-Hub-Signature-256': 'sha256=deadbeef' });
       expect(res.status).toEqual(401);
-      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+      expect(handleIncomingMessage).not.toHaveBeenCalled();
     });
   });
 });

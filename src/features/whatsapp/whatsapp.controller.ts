@@ -2,10 +2,10 @@ import type { Express, Request, Response } from 'express';
 import express from 'express';
 import { env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
-import { sendWhatsAppMessage } from '@services/whatsapp';
 import { WHATSAPP_SIGNATURE_HEADER, WHATSAPP_WEBHOOK_PATH } from './constants';
+import { handleIncomingMessage } from './sticker-vault.service';
 import type { WhatsAppWebhookPayload } from './types';
-import { buildReply, describePayload, extractTextMessage, isValidSignature } from './whatsapp.utils';
+import { describePayload, extractIncomingMessage, isValidSignature } from './whatsapp.utils';
 
 const logger = new Logger('whatsapp:webhook');
 
@@ -51,14 +51,14 @@ export function registerWhatsappRoutes(app: Express): void {
 
       res.sendStatus(200);
 
-      const message = extractTextMessage(payload);
+      const message = extractIncomingMessage(payload);
       if (!message) {
-        logger.log('Webhook event has no text message, nothing to reply to');
+        logger.log('Webhook event has no text or sticker message, nothing to handle');
         return;
       }
 
-      logger.log(`Incoming message from ${message.from}: ${message.text}`);
-      sendWhatsAppMessage(message.from, buildReply(message.text)).catch((err) => logger.error(`Failed to reply: ${getErrorMessage(err)}`));
+      logger.log(`Incoming ${message.kind} from ${message.from}: ${message.kind === 'text' ? message.text : message.mediaId}`);
+      handleIncomingMessage(message).catch((err) => logger.error(`Failed to handle ${message.kind} message: ${getErrorMessage(err)}`));
     },
   );
 }

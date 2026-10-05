@@ -1,11 +1,11 @@
 # WhatsApp — Cloud API Webhook
 
-A WhatsApp bot on top of Meta's WhatsApp Cloud API. It runs on the shared MMPS Express server and needs no database.
+A WhatsApp sticker vault on top of Meta's WhatsApp Cloud API. Send it stickers and it saves them, tag them with words, then send a word to get matching stickers back as real WhatsApp stickers. It runs on the shared MMPS Express server.
 
 - `GET /whatsapp-webhook` handles Meta's verification handshake.
-- `POST /whatsapp-webhook` receives incoming messages and replies to text messages.
+- `POST /whatsapp-webhook` receives incoming messages (stickers and text).
 
-Code lives in `src/features/whatsapp/` (routes, payload parsing, signature check) and `src/services/whatsapp/` (the Graph API client).
+Code lives in `src/features/whatsapp/` (routes, payload parsing, signature check, vault logic, Mongo repository) and `src/services/whatsapp/` (the Graph API client: text, sticker send, media download and upload).
 
 ## How it works
 
@@ -23,10 +23,35 @@ If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the 
 
 1. If `WHATSAPP_APP_SECRET` is set, the `X-Hub-Signature-256` header is checked against an HMAC-SHA256 of the raw request body. A missing or invalid signature returns `401`.
 2. The server answers `200 OK` right away, so Meta doesn't retry.
-3. It reads `entry[0].changes[0].value.messages[0]`. Anything that isn't a `text` message is ignored (this includes status updates such as delivered or read receipts).
-4. It logs the sender (`from`) and the text (`text.body`), then replies through `sendWhatsAppMessage(to, text)`.
+3. It reads `entry[0].changes[0].value.messages[0]`. Only `sticker` and `text` messages are handled; everything else (including delivered/read status updates) is ignored.
+4. It logs the message and hands it to `handleIncomingMessage` in `sticker-vault.service.ts`.
 
-The default reply echoes the message (`You said: …`). To change it, edit `buildReply` in `src/features/whatsapp/whatsapp.utils.ts`.
+## Sticker vault
+
+### Saving
+
+When a sticker arrives, the bot downloads it from the Graph API and hashes the bytes (sha256). If the same sender already saved that sticker, it says so instead of storing a copy. Otherwise it stores the bytes and replies asking for tags.
+
+### Commands (text messages)
+
+| You send | What happens |
+|----------|--------------|
+| Words, within 5 minutes of saving an untagged sticker | Those words become the sticker's tags |
+| A quote-reply to a sticker with words | Adds those words as tags to that sticker (works on stickers you sent and stickers the bot sent) |
+| A quote-reply to a sticker with `delete` | Removes the sticker |
+| `random` | Sends a random saved sticker |
+| `help` | Shows usage and how many stickers you have |
+| Anything else | Searches tags and sends up to 3 matching stickers, or replies "No stickers match" |
+
+Text is lowercased and split into words; tags are matched on whole words.
+
+### Sending stickers back
+
+Stickers go out as `type: "sticker"` messages, so they show up as stickers, not images. WhatsApp media ids expire, so the bot keeps the last uploaded media id and reuses it for up to 25 days. If it's older, or the send fails, the bot re-uploads the stored bytes (`sticker.webp`) and retries. The id of every sent message is stored on the sticker so quote-replies to it work.
+
+### Storage
+
+MongoDB database `Whatsapp`, collection `stickers`, one document per sender + sticker. Each document holds the sticker bytes, sha256, mime type, animated flag, tags, related message ids and the cached media id. Indexes (unique `ownerPhone + sha256`, tags, message ids) are created at boot by `ensureStickerIndexes`. The connection uses `MONGO_DB_URL`.
 
 ### Sending (`sendWhatsAppMessage`)
 
@@ -38,13 +63,14 @@ Content-Type: application/json
 { "messaging_product": "whatsapp", "recipient_type": "individual", "to": "<number>", "type": "text", "text": { "body": "<reply>" } }
 ```
 
-When a send fails, the Graph API error body (`error.response?.data`) is logged and the error is swallowed, so a failed reply never crashes the webhook.
+When a text send fails, the Graph API error body (`error.response?.data`) is logged and the error is swallowed, so a failed reply never crashes the webhook. `sendWhatsAppSticker`, `downloadWhatsAppMedia` and `uploadWhatsAppMedia` throw instead, so the vault can fall back (for example, re-upload and retry).
 
 ## Environment variables
 
 | Variable              | Required | Description |
 |-----------------------|----------|-------------|
 | `PORT`                | no       | Express port (default `3000`) |
+| `MONGO_DB_URL`        | yes      | MongoDB connection string (sticker storage) |
 | `WHATSAPP_TOKEN`      | yes      | Meta Graph API access token (temporary or System User token) |
 | `PHONE_NUMBER_ID`     | yes      | WhatsApp Business phone number id (not the phone number itself) |
 | `VERIFY_TOKEN`        | yes      | Any string you choose. It must match the "Verify token" field in the Meta dashboard |
@@ -112,4 +138,4 @@ Any Node.js host that runs `npm run build && npm start` and exposes HTTPS works:
 npx vitest run src/features/whatsapp
 ```
 
-The tests cover payload extraction, signature validation, the verification handshake, the immediate ack, the reply call and signature rejection.
+The tests cover payload extraction (text, quote-replies, stickers), tokenizing, signature validation, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, delete, search, random, help and media re-upload.

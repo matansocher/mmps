@@ -1,20 +1,46 @@
 import { createHmac } from 'node:crypto';
 import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
-import { extractTextMessage, isValidSignature } from './whatsapp.utils';
+import { extractIncomingMessage, isValidSignature, tokenize } from './whatsapp.utils';
 
-describe('extractTextMessage()', () => {
+describe('extractIncomingMessage()', () => {
   const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
 
-  it('should return sender and text for a text message', () => {
-    expect(extractTextMessage(payload({ from: '972500000000', id: '1', timestamp: '0', type: 'text', text: { body: 'hi' } }))).toEqual({ from: '972500000000', text: 'hi' });
+  it('should extract a text message', () => {
+    expect(extractIncomingMessage(payload({ from: '972500000000', id: 'w1', timestamp: '0', type: 'text', text: { body: 'hi' } }))).toEqual({
+      kind: 'text',
+      from: '972500000000',
+      id: 'w1',
+      text: 'hi',
+    });
+  });
+
+  it('should include the quoted message id of a reply', () => {
+    const message = extractIncomingMessage(payload({ from: '1', id: 'w2', timestamp: '0', type: 'text', text: { body: 'cat' }, context: { id: 'w1' } }));
+    expect(message).toEqual({ kind: 'text', from: '1', id: 'w2', text: 'cat', contextId: 'w1' });
+  });
+
+  it('should extract a sticker message', () => {
+    const message = extractIncomingMessage(payload({ from: '1', id: 'w3', timestamp: '0', type: 'sticker', sticker: { id: 'm1', animated: true } }));
+    expect(message).toEqual({ kind: 'sticker', from: '1', id: 'w3', mediaId: 'm1', animated: true });
   });
 
   test.each([
-    { name: 'non-text message', body: payload({ from: '1', id: '1', timestamp: '0', type: 'image' }) },
+    { name: 'image message', body: payload({ from: '1', id: '1', timestamp: '0', type: 'image' }) },
     { name: 'status update without messages', body: payload(null) },
     { name: 'empty payload', body: {} as WhatsAppWebhookPayload },
   ])('should return null for $name', ({ body }) => {
-    expect(extractTextMessage(body)).toEqual(null);
+    expect(extractIncomingMessage(body)).toEqual(null);
+  });
+});
+
+describe('tokenize()', () => {
+  test.each([
+    { text: 'Happy  Cat!', expected: ['happy', 'cat'] },
+    { text: 'חתול שמח, חתול', expected: ['חתול', 'שמח'] },
+    { text: 'lol 100%', expected: ['lol', '100'] },
+    { text: '  ?! ', expected: [] },
+  ])('should tokenize "$text"', ({ text, expected }) => {
+    expect(tokenize(text)).toEqual(expected);
   });
 });
 
