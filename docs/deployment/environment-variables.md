@@ -50,6 +50,14 @@ WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 ```
 
+### WhatsApp Webhook
+```bash
+WHATSAPP_TOKEN=...        # Meta Graph API access token
+PHONE_NUMBER_ID=...       # WhatsApp Business phone number id
+VERIFY_TOKEN=...          # Any string; must match the Meta dashboard verify token
+WHATSAPP_APP_SECRET=...   # Optional; enables X-Hub-Signature-256 validation
+```
+
 ## Production Variables
 
 ### Google Sheets Logging

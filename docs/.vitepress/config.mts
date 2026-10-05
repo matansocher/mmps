@@ -74,6 +74,7 @@ export default defineConfig({
             { text: 'Mindloop', link: '/bots/mindloop' },
             { text: 'Earth', link: '/bots/earth' },
             { text: 'Savings', link: '/bots/savings' },
+            { text: 'WhatsApp', link: '/bots/whatsapp' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },
           ],

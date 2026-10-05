@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 6 specialized Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings, Mindloop and Earth are initialized independently of bot selection.
+MMPS includes 6 specialized Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings, Mindloop, Earth and the WhatsApp webhook are initialized independently of bot selection.
 
 ## The Bots
 
@@ -51,6 +51,11 @@ Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the p
 - **Database**: none (browser storage only)
 - **[Learn more →](/bots/earth)**
 
+### **WhatsApp** - Cloud API Webhook
+Meta WhatsApp Cloud API webhook at `GET/POST /whatsapp-webhook`. It verifies the webhook subscription, optionally validates `X-Hub-Signature-256`, and replies to incoming text messages through the Graph API.
+- **Database**: none
+- **[Learn more →](/bots/whatsapp)**
+
 ## Running Bots
 
 ### Development Mode (One Bot)
@@ -67,7 +72,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `WOLT`, `WORLDLY`.
 IS_PROD=true npm start
 ```
 
-Production initializes all 6 Telegram bots. Savings, Mindloop and Earth initialize in development and production.
+Production initializes all 6 Telegram bots. Savings, Mindloop, Earth and the WhatsApp webhook initialize in development and production.
 
 ## Bot Architecture
 
@@ -149,6 +154,7 @@ Select a bot to explore:
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
 - **[Mindloop](/bots/mindloop)** - Brain-training mini-app
 - **[Earth](/bots/earth)** - Find-the-country globe quiz
+- **[WhatsApp](/bots/whatsapp)** - Cloud API webhook bot
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design
