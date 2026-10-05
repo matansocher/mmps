@@ -22,7 +22,7 @@ export type CreateStickerData = Pick<Sticker, 'ownerPhone' | 'sha256' | 'mimeTyp
 
 export async function createSticker({ data, messageId, ...rest }: CreateStickerData): Promise<StickerSummary> {
   const now = new Date();
-  const summary: StickerSummary = { ...rest, tags: [], messageIds: [messageId], lastReceivedAt: now, createdAt: now, updatedAt: now };
+  const summary: StickerSummary = { ...rest, byteSize: data.length, tags: [], messageIds: [messageId], lastReceivedAt: now, createdAt: now, updatedAt: now };
   const { insertedId } = await getCollection().insertOne({ ...summary, data: new Binary(data) });
   return { ...summary, _id: insertedId };
 }
@@ -89,4 +89,9 @@ export async function getStickerData(id: ObjectId): Promise<Buffer | null> {
 
 export async function setStickerMedia(id: ObjectId, mediaId: string): Promise<void> {
   await getCollection().updateOne({ _id: id }, { $set: { mediaId, mediaUploadedAt: new Date() } });
+}
+
+// Also drops the cached Meta upload, since it holds the old bytes.
+export async function replaceStickerData(id: ObjectId, data: Buffer): Promise<void> {
+  await getCollection().updateOne({ _id: id }, { $set: { data: new Binary(data), byteSize: data.length, updatedAt: new Date() }, $unset: { mediaId: '', mediaUploadedAt: '' } });
 }

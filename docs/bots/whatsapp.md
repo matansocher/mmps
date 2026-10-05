@@ -23,7 +23,7 @@ If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the 
 
 1. If `WHATSAPP_APP_SECRET` is set, the `X-Hub-Signature-256` header is checked against an HMAC-SHA256 of the raw request body. A missing or invalid signature returns `401`.
 2. The server answers `200 OK` right away, so Meta doesn't retry.
-3. It reads `entry[0].changes[0].value.messages[0]`. Only `sticker` and `text` messages are handled; everything else (including delivered/read status updates) is ignored.
+3. It reads `entry[0].changes[0].value.messages[0]`. Only `sticker` and `text` messages are handled; everything else is ignored. Status updates with `status: "failed"` are logged with Meta's error code and details (an accepted send can still fail delivery later).
 4. It logs the message and hands it to `handleIncomingMessage` in `sticker-vault.service.ts`.
 
 ## Sticker vault
@@ -31,6 +31,8 @@ If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the 
 ### Saving
 
 When a sticker arrives, the bot downloads it from the Graph API and hashes the bytes (sha256). If the same sender already saved that sticker, it says so instead of storing a copy. Otherwise it stores the bytes and replies asking for tags.
+
+WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (animated). Larger ones are re-encoded with sharp (resized to 512×512, lower WebP quality) before saving. If it still doesn't fit, the bot refuses it. Stickers saved before this check are shrunk the first time they're sent.
 
 ### Commands (text messages)
 

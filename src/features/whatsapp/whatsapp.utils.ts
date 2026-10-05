@@ -38,3 +38,14 @@ export function describePayload(payload: WhatsAppWebhookPayload): string {
   const statuses = changes.flatMap((change) => change.value?.statuses ?? []).map((status) => status.status);
   return `object=${payload?.object} field=${fields} messages=[${messages.join(',')}] statuses=[${statuses.join(',')}]`;
 }
+
+// One line per failed delivery, e.g. "wamid.X to 972501234567: 131053 Media upload error - Sticker file too large"
+export function describeFailedStatuses(payload: WhatsAppWebhookPayload): string[] {
+  const statuses = (payload?.entry ?? []).flatMap((entry) => entry.changes ?? []).flatMap((change) => change.value?.statuses ?? []);
+  return statuses
+    .filter((status) => status.status === 'failed')
+    .map((status) => {
+      const errors = (status.errors ?? []).map((error) => [error.code, error.title, error.error_data?.details && `- ${error.error_data.details}`].filter(Boolean).join(' '));
+      return `${status.id} to ${status.recipient_id}: ${errors.join('; ') || 'no error details'}`;
+    });
+}

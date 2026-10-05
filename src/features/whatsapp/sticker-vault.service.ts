@@ -14,9 +14,11 @@ import {
   getRandomSticker,
   getStickerData,
   markStickerReceived,
+  replaceStickerData,
   searchStickers,
   setStickerMedia,
 } from './mongo';
+import { fitStickerToLimit, getStickerByteLimit } from './sticker-image';
 import type { IncomingMessage, IncomingStickerMessage, IncomingTextMessage, StickerSummary } from './types';
 import { tokenize } from './whatsapp.utils';
 
@@ -48,14 +50,23 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
     return;
   }
 
+  // sha256 stays on the original bytes so re-sends of the same sticker still dedupe.
+  const fitted = await fitStickerToLimit(data, animated);
+  if (!fitted) {
+    logger.warn(`Sticker ${sha256.slice(0, 12)} from ${from} is too large to resend (${data.length} bytes, animated=${animated})`);
+    await sendWhatsAppMessage(from, "This sticker is too large for WhatsApp to send back, so I didn't save it.");
+    return;
+  }
+
   try {
-    await createSticker({ ownerPhone: from, sha256, data, mimeType, animated, messageId: id });
+    await createSticker({ ownerPhone: from, sha256, data: fitted, mimeType: fitted === data ? mimeType : 'image/webp', animated, messageId: id });
   } catch (err) {
     // Two deliveries of the same sticker raced past the lookup; the unique index kept one.
     if ((err as { code?: number })?.code === 11000) return;
     throw err;
   }
-  logger.log(`Saved sticker ${sha256.slice(0, 12)} for ${from} (${data.length} bytes, animated=${animated})`);
+  const sizeNote = fitted === data ? `${data.length} bytes` : `${data.length} → ${fitted.length} bytes`;
+  logger.log(`Saved sticker ${sha256.slice(0, 12)} for ${from} (${sizeNote}, animated=${animated})`);
   await sendWhatsAppMessage(from, 'Saved ✅ Send a few words to tag it, or reply to it anytime to add tags.');
 }
 
@@ -88,7 +99,7 @@ async function handleText({ from, text, contextId }: IncomingTextMessage): Promi
       await sendWhatsAppMessage(from, 'Your vault is empty. Send me a sticker to save it.');
       return;
     }
-    await sendStoredSticker(from, sticker);
+    await sendStickers(from, [sticker]);
     return;
   }
 
@@ -108,9 +119,20 @@ async function handleText({ from, text, contextId }: IncomingTextMessage): Promi
     await sendWhatsAppMessage(from, `No stickers match "${words.join(' ')}". Send *help* to see how tagging works.`);
     return;
   }
-  for (const sticker of matches) {
-    await sendStoredSticker(from, sticker);
+  await sendStickers(from, matches);
+}
+
+async function sendStickers(to: string, stickers: StickerSummary[]): Promise<void> {
+  let failed = 0;
+  for (const sticker of stickers) {
+    try {
+      await sendStoredSticker(to, sticker);
+    } catch (err) {
+      failed++;
+      logger.error(`Failed to send sticker ${sticker._id} to ${to}: ${describeWhatsAppError(err)}`);
+    }
   }
+  if (failed) await sendWhatsAppMessage(to, failed === stickers.length ? "Sorry, I couldn't send that sticker." : `Sorry, ${failed} of ${stickers.length} stickers couldn't be sent.`);
 }
 
 async function tagSticker(from: string, sticker: StickerSummary, words: string[]): Promise<void> {
@@ -123,7 +145,9 @@ async function tagSticker(from: string, sticker: StickerSummary, words: string[]
 }
 
 async function sendStoredSticker(to: string, sticker: StickerSummary): Promise<void> {
-  const cachedMediaId = sticker.mediaId && sticker.mediaUploadedAt && Date.now() - new Date(sticker.mediaUploadedAt).getTime() < STICKER_MEDIA_REUSE_MS ? sticker.mediaId : null;
+  // Stickers saved before size limits were enforced may be too big; their cached upload would "send" and then silently fail delivery.
+  const needsSizeCheck = sticker.byteSize === undefined || sticker.byteSize > getStickerByteLimit(sticker.animated);
+  const cachedMediaId = !needsSizeCheck && sticker.mediaId && sticker.mediaUploadedAt && Date.now() - new Date(sticker.mediaUploadedAt).getTime() < STICKER_MEDIA_REUSE_MS ? sticker.mediaId : null;
 
   let messageId: string | null = null;
   if (cachedMediaId) {
@@ -135,8 +159,17 @@ async function sendStoredSticker(to: string, sticker: StickerSummary): Promise<v
   }
 
   if (!messageId) {
-    const data = await getStickerData(sticker._id);
+    let data = await getStickerData(sticker._id);
     if (!data) throw new Error(`Sticker ${sticker._id} has no data`);
+    if (needsSizeCheck) {
+      const fitted = await fitStickerToLimit(data, sticker.animated);
+      if (!fitted) throw new Error(`Sticker ${sticker._id} is too large to send (${data.length} bytes)`);
+      if (fitted !== data || sticker.byteSize === undefined) {
+        if (fitted !== data) logger.log(`Re-encoded stored sticker ${sticker._id}: ${data.length} → ${fitted.length} bytes`);
+        await replaceStickerData(sticker._id, fitted);
+      }
+      data = fitted;
+    }
     const mediaId = await uploadWhatsAppMedia(data, sticker.mimeType || 'image/webp', 'sticker.webp');
     await setStickerMedia(sticker._id, mediaId);
     messageId = await sendWhatsAppSticker(to, mediaId);

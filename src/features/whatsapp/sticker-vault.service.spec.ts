@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { createHash } from 'node:crypto';
 import { downloadWhatsAppMedia, sendWhatsAppMessage, sendWhatsAppSticker, uploadWhatsAppMedia } from '@services/whatsapp';
 import * as repo from './mongo';
+import { fitStickerToLimit } from './sticker-image';
 import { handleIncomingMessage } from './sticker-vault.service';
 import type { StickerSummary } from './types';
 
@@ -25,8 +26,14 @@ vi.mock('./mongo', () => ({
   getRandomSticker: vi.fn(async () => null),
   getStickerData: vi.fn(async () => Buffer.from('webp')),
   markStickerReceived: vi.fn(async () => undefined),
+  replaceStickerData: vi.fn(async () => undefined),
   searchStickers: vi.fn(async () => []),
   setStickerMedia: vi.fn(async () => undefined),
+}));
+
+vi.mock('./sticker-image', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./sticker-image')>()),
+  fitStickerToLimit: vi.fn(async (data: Buffer) => data),
 }));
 
 const FROM = '972500000000';
@@ -36,6 +43,7 @@ const sticker = (overrides: Partial<StickerSummary> = {}): StickerSummary => ({
   sha256: 'abc',
   mimeType: 'image/webp',
   animated: false,
+  byteSize: 4,
   tags: [],
   messageIds: ['wamid.in'],
   lastReceivedAt: new Date(),
@@ -73,6 +81,21 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(repo.createSticker).mockRejectedValueOnce(Object.assign(new Error('dup'), { code: 11000 }));
       await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: false });
       expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+    });
+
+    it('should save the shrunk version of an oversized sticker', async () => {
+      const shrunk = Buffer.from('small');
+      vi.mocked(fitStickerToLimit).mockResolvedValueOnce(shrunk);
+      await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true });
+      expect(fitStickerToLimit).toHaveBeenCalledWith(data, true);
+      expect(repo.createSticker).toHaveBeenCalledWith(expect.objectContaining({ sha256, data: shrunk }));
+    });
+
+    it('should refuse a sticker that cannot be shrunk under the limit', async () => {
+      vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
+      await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true });
+      expect(repo.createSticker).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('too large'));
     });
   });
 
@@ -123,6 +146,34 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce(new Error('expired'));
       await text('cat');
       expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(FROM, 'media.new');
+    });
+
+    it('should shrink a stored oversized sticker and skip its cached media id', async () => {
+      const match = sticker({ animated: true, byteSize: 700 * 1024, mediaId: 'media.cached', mediaUploadedAt: new Date() });
+      const shrunk = Buffer.from('small');
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce([match]);
+      vi.mocked(fitStickerToLimit).mockResolvedValueOnce(shrunk);
+      await text('cat');
+      expect(repo.replaceStickerData).toHaveBeenCalledWith(match._id, shrunk);
+      expect(uploadWhatsAppMedia).toHaveBeenCalledWith(shrunk, 'image/webp', 'sticker.webp');
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(1);
+      expect(sendWhatsAppSticker).toHaveBeenCalledWith(FROM, 'media.new');
+    });
+
+    it('should record the size of a legacy sticker that already fits', async () => {
+      const match = sticker({ byteSize: undefined });
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce([match]);
+      await text('cat');
+      expect(repo.replaceStickerData).toHaveBeenCalledWith(match._id, Buffer.from('webp'));
+      expect(sendWhatsAppSticker).toHaveBeenCalledWith(FROM, 'media.new');
+    });
+
+    it('should keep sending other matches when one fails, then say so', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce([sticker({ byteSize: undefined }), sticker()]);
+      vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
+      await text('cat');
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(1);
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('1 of 2'));
     });
 
     it('should say when nothing matches', async () => {

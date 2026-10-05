@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
-import { extractIncomingMessage, isValidSignature, tokenize } from './whatsapp.utils';
+import { describeFailedStatuses, extractIncomingMessage, isValidSignature, tokenize } from './whatsapp.utils';
 
 describe('extractIncomingMessage()', () => {
   const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
@@ -60,5 +60,22 @@ describe('isValidSignature()', () => {
     { name: 'truncated signature', header: sign(body).slice(0, 20) },
   ])('should reject $name', ({ header }) => {
     expect(isValidSignature(body, header, secret)).toEqual(false);
+  });
+});
+
+describe('describeFailedStatuses()', () => {
+  const payload = (statuses: unknown[]): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ field: 'messages', value: { statuses } }] }] }) as WhatsAppWebhookPayload;
+
+  it('should describe failed deliveries with their errors', () => {
+    const failed = { id: 'wamid.x', status: 'failed', recipient_id: '972', errors: [{ code: 131053, title: 'Media upload error', error_data: { details: 'too large' } }] };
+    expect(describeFailedStatuses(payload([failed, { id: 'wamid.y', status: 'delivered' }]))).toEqual(['wamid.x to 972: 131053 Media upload error - too large']);
+  });
+
+  it('should handle failures without error details', () => {
+    expect(describeFailedStatuses(payload([{ id: 'wamid.x', status: 'failed', recipient_id: '972' }]))).toEqual(['wamid.x to 972: no error details']);
+  });
+
+  it('should return nothing for message events', () => {
+    expect(describeFailedStatuses({ entry: [{ changes: [{ value: { messages: [] } }] }] } as WhatsAppWebhookPayload)).toEqual([]);
   });
 });
