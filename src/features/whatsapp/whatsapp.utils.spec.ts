@@ -1,8 +1,9 @@
 import { createHmac } from 'node:crypto';
+import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
 import { extractTextMessage, isValidSignature } from './whatsapp.utils';
 
 describe('extractTextMessage()', () => {
-  const payload = (message: unknown) => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
+  const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
 
   it('should return sender and text for a text message', () => {
     expect(extractTextMessage(payload({ from: '972500000000', id: '1', timestamp: '0', type: 'text', text: { body: 'hi' } }))).toEqual({ from: '972500000000', text: 'hi' });
@@ -11,7 +12,7 @@ describe('extractTextMessage()', () => {
   test.each([
     { name: 'non-text message', body: payload({ from: '1', id: '1', timestamp: '0', type: 'image' }) },
     { name: 'status update without messages', body: payload(null) },
-    { name: 'empty payload', body: {} },
+    { name: 'empty payload', body: {} as WhatsAppWebhookPayload },
   ])('should return null for $name', ({ body }) => {
     expect(extractTextMessage(body)).toEqual(null);
   });
