@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLEANUP_TRIES, cleanupTarget, createCleanup, giveUp, guessCountry, isCleanupFinished } from './cleanup';
+import { cleanupTarget, createCleanup, giveUp, guessCountry, isCleanupFinished } from './cleanup';
 
 const inOrder = () => 0.999;
 
@@ -24,15 +24,13 @@ describe('guessCountry()', () => {
     expect(next.last).toEqual({ kind: 'found', code: target });
   });
 
-  it('should count wrong picks and reveal after the last try', () => {
+  it('should reveal the country on the first wrong pick', () => {
     let state = createCleanup(['FR', 'DE'], inOrder);
     const target = cleanupTarget(state);
     state = guessCountry(state, 'IT');
-    expect(state.last).toEqual({ kind: 'wrong', code: target, guess: 'IT', triesLeft: CLEANUP_TRIES - 1 });
-    for (let i = 1; i < CLEANUP_TRIES; i++) state = guessCountry(state, 'IT');
     expect(state.missed).toEqual([target]);
+    expect(state.index).toEqual(1);
     expect(state.last).toEqual({ kind: 'revealed', code: target, guess: 'IT' });
-    expect(state.misses).toEqual(0);
   });
 
   it('should ignore countries already on the map', () => {
