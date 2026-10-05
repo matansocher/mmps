@@ -2,7 +2,7 @@ import { tool } from '@langchain/core/tools';
 import { fromZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { CalendarEvent, createEvent, deleteEvent, formatEvent, getUpcomingEvents, listEvents, updateEvent } from '@services/google-calendar';
+import { CalendarEvent, createEvent, deleteEvent, formatEvent, getEvent, getUpcomingEvents, listEvents, updateEvent } from '@services/google-calendar';
 
 const schema = z.object({
   action: z.enum(['create', 'list', 'upcoming', 'update', 'delete']).describe('The action to perform with calendar events'),
@@ -12,6 +12,7 @@ const schema = z.object({
   endDateTime: z.string().optional().describe('End date and time in ISO format (e.g., "2024-01-15T15:30:00")'),
   location: z.string().optional().describe('Location of the event'),
   description: z.string().optional().describe('Description or notes for the event'),
+  attendees: z.array(z.string().email()).optional().describe('Email addresses of people to invite to the event'),
   // For listing/searching events
   searchQuery: z.string().optional().describe('Search query to filter events when listing'),
   startDate: z.string().optional().describe('Start date to filter events from (ISO format: "2024-01-15" or "2024-01-15T00:00:00")'),
@@ -23,12 +24,15 @@ const schema = z.object({
 
 type SchemaType = z.infer<typeof schema>;
 
-async function createEventInternal(params: Pick<SchemaType, 'title' | 'description' | 'startDateTime' | 'endDateTime' | 'location'>): Promise<any> {
-  const { title, description, location, startDateTime, endDateTime } = params;
+type EventFields = Pick<SchemaType, 'title' | 'description' | 'startDateTime' | 'endDateTime' | 'location' | 'attendees'>;
+
+async function createEventInternal(params: EventFields): Promise<any> {
+  const { title, description, location, startDateTime, endDateTime, attendees } = params;
   const event: CalendarEvent = {
     summary: title,
     description,
     location,
+    ...(attendees?.length && { attendees: attendees.map((email) => ({ email })) }),
     start: {
       dateTime: startDateTime,
       timeZone: DEFAULT_TIMEZONE,
@@ -96,9 +100,19 @@ async function getUpcomingEventsInternal(days: number): Promise<any> {
   };
 }
 
-async function updateEventInternal(eventId: string, params: Pick<SchemaType, 'title' | 'description' | 'startDateTime' | 'endDateTime' | 'location'>): Promise<any> {
-  const { title, description, location, startDateTime, endDateTime } = params;
+async function mergeAttendees(eventId: string, emails: string[]): Promise<CalendarEvent['attendees']> {
+  const { attendees: existing = [] } = await getEvent(eventId);
+  const merged = new Map(existing.map((attendee) => [attendee.email.toLowerCase(), attendee]));
+  emails.forEach((email) => {
+    if (!merged.has(email.toLowerCase())) merged.set(email.toLowerCase(), { email });
+  });
+  return [...merged.values()];
+}
+
+async function updateEventInternal(eventId: string, params: EventFields): Promise<any> {
+  const { title, description, location, startDateTime, endDateTime, attendees } = params;
   const changes: Partial<CalendarEvent> = {
+    ...(attendees?.length && { attendees: await mergeAttendees(eventId, attendees) }),
     ...(title !== undefined && { summary: title }),
     ...(description !== undefined && { description }),
     ...(location !== undefined && { location }),
@@ -107,7 +121,7 @@ async function updateEventInternal(eventId: string, params: Pick<SchemaType, 'ti
   };
 
   if (Object.keys(changes).length === 0) {
-    throw new Error('Provide at least one field to update (title, startDateTime, endDateTime, location, or description)');
+    throw new Error('Provide at least one field to update (title, startDateTime, endDateTime, location, description, or attendees)');
   }
 
   const updatedEvent = await updateEvent(eventId, changes);
@@ -126,13 +140,13 @@ async function deleteEventInternal(eventId: string): Promise<any> {
   };
 }
 
-async function runner({ action, title, startDateTime, endDateTime, location, description, eventId, days, searchQuery, startDate, endDate }: SchemaType) {
+async function runner({ action, title, startDateTime, endDateTime, location, description, attendees, eventId, days, searchQuery, startDate, endDate }: SchemaType) {
   switch (action) {
     case 'create':
       if (!title || !startDateTime || !endDateTime) {
         throw new Error('Title, start time, and end time are required for creating an event');
       }
-      return await createEventInternal({ title, startDateTime, endDateTime, location, description });
+      return await createEventInternal({ title, startDateTime, endDateTime, location, description, attendees });
 
     case 'list':
       return await listEventsInternal(searchQuery, startDate, endDate);
@@ -144,7 +158,7 @@ async function runner({ action, title, startDateTime, endDateTime, location, des
       if (!eventId) {
         throw new Error('Event ID is required for updating an event');
       }
-      return await updateEventInternal(eventId, { title, startDateTime, endDateTime, location, description });
+      return await updateEventInternal(eventId, { title, startDateTime, endDateTime, location, description, attendees });
 
     case 'delete':
       if (!eventId) {
@@ -161,6 +175,7 @@ export const calendarTool = tool(runner, {
   name: 'calendar',
   description: `Create, list, update, or delete Google Calendar events.
 - To update or delete an event, first find its id with list (searchQuery/dates) or upcoming, then call update/delete with eventId. On update pass only the fields that change.
-- When the user wants an event's location set to a real place (restaurant, business, venue), resolve it with google_places first and use "<name>, <address>" as the location.`,
+- When the user wants an event's location set to a real place (restaurant, business, venue), resolve it with google_places first and use "<name>, <address>" as the location.
+- Invite guests by passing their email addresses in attendees (on update they are added to the existing guests; nobody is removed). Google emails them the invite. If the user names someone without an email, look it up with the contacts tool or ask for it. Never invent an email address.`,
   schema,
 });

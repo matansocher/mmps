@@ -104,7 +104,7 @@ describe('weatherTool', () => {
 
 27 tools are registered in `src/features/chatbot/agent/agent.ts`, grouped by domain:
 
-- **Personal / productivity**: calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics
+- **Personal / productivity**: calendar (can invite guests by email via `attendees`), gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics
 - **Media / social**: spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels
 - **Information**: weather, earthquake
 - **Sports / games**: competitions-list, competition-matches, competition-table, match-summary, top-matches-for-prediction, match-prediction, makavdia, wolt, worldly

@@ -173,6 +173,28 @@ describe('formatEvent', () => {
     expect(result.date).toBeDefined();
   });
 
+  it('should map attendees to email and responseStatus', () => {
+    const event = createMockEvent({
+      attendees: [
+        { email: 'a@example.com', displayName: 'Alice', responseStatus: 'accepted' },
+        { email: 'b@example.com', responseStatus: 'needsAction' },
+      ],
+    });
+    const result = formatEvent(event);
+
+    expect(result.attendees).toEqual([
+      { email: 'a@example.com', responseStatus: 'accepted' },
+      { email: 'b@example.com', responseStatus: 'needsAction' },
+    ]);
+  });
+
+  it('should leave attendees undefined when the event has none', () => {
+    const event = createMockEvent({ attendees: undefined });
+    const result = formatEvent(event);
+
+    expect(result.attendees).toBeUndefined();
+  });
+
   it('should preserve event id for reference', () => {
     const event = createMockEvent({ id: 'unique-event-id-abc123' });
     const result = formatEvent(event);
