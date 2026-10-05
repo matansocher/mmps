@@ -10,6 +10,20 @@ export type WhatsAppIncomingMessage = {
   readonly context?: { readonly from?: string; readonly id?: string };
 };
 
+export type WhatsAppStatusError = {
+  readonly code?: number;
+  readonly title?: string;
+  readonly message?: string;
+  readonly error_data?: { readonly details?: string };
+};
+
+export type WhatsAppMessageStatus = {
+  readonly id?: string;
+  readonly status?: string;
+  readonly recipient_id?: string;
+  readonly errors?: ReadonlyArray<WhatsAppStatusError>;
+};
+
 export type WhatsAppWebhookPayload = {
   readonly object?: string;
   readonly entry?: ReadonlyArray<{
@@ -19,7 +33,7 @@ export type WhatsAppWebhookPayload = {
       readonly value?: {
         readonly messaging_product?: string;
         readonly messages?: ReadonlyArray<WhatsAppIncomingMessage>;
-        readonly statuses?: ReadonlyArray<{ readonly status?: string; readonly recipient_id?: string }>;
+        readonly statuses?: ReadonlyArray<WhatsAppMessageStatus>;
       };
     }>;
   }>;
@@ -45,15 +59,17 @@ export type IncomingMessage = IncomingTextMessage | IncomingStickerMessage;
 
 export type Sticker = {
   readonly _id?: ObjectId;
-  readonly ownerPhone: string;
-  readonly sha256: string; // hex sha256 of the webp bytes, unique per owner
+  readonly ownerPhone: string; // who first saved it; only they can delete it
+  readonly sha256: string; // hex sha256 of the received webp bytes, unique across the shared vault
   readonly data: Binary;
   readonly mimeType: string;
   readonly animated: boolean;
+  readonly byteSize?: number; // size of data; missing on stickers saved before size limits were enforced
   readonly tags: string[];
   readonly messageIds: string[]; // wamids of chat messages showing this sticker, for quote-reply lookup
   readonly mediaId?: string; // last upload to Meta, reusable until it expires
   readonly mediaUploadedAt?: Date;
+  readonly lastReceivedFrom?: string; // who last sent it to the bot, for the per-sender tagging window
   readonly lastReceivedAt: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;

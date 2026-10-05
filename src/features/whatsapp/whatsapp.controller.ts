@@ -5,7 +5,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { WHATSAPP_SIGNATURE_HEADER, WHATSAPP_WEBHOOK_PATH } from './constants';
 import { handleIncomingMessage } from './sticker-vault.service';
 import type { WhatsAppWebhookPayload } from './types';
-import { describePayload, extractIncomingMessage, isValidSignature } from './whatsapp.utils';
+import { describeFailedStatuses, describePayload, extractIncomingMessage, isValidSignature } from './whatsapp.utils';
 
 const logger = new Logger('whatsapp:webhook');
 
@@ -50,6 +50,8 @@ export function registerWhatsappRoutes(app: Express): void {
       }
 
       res.sendStatus(200);
+
+      describeFailedStatuses(payload).forEach((failure) => logger.error(`Message delivery failed: ${failure}`));
 
       const message = extractIncomingMessage(payload);
       if (!message) {
