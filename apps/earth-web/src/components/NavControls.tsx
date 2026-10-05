@@ -17,8 +17,8 @@ export function NavControls({ raised, heading, onResetNorth, onHome, onZoomIn, o
       </button>
       <button type="button" className="panel icon-btn" aria-label="Reset to north" title="Reset to north (N)" onClick={onResetNorth}>
         <svg width="26" height="26" viewBox="0 0 26 26" style={{ transform: `rotate(${-heading}deg)` }} className="transition-transform duration-75" aria-hidden="true">
-          <path d="M13 2 17 13H9z" fill="#ffc72c" />
-          <path d="M13 24 9 13h8z" fill="#f4ecd8" />
+          <path d="M13 2 17 13H9z" fill="#3b82f6" />
+          <path d="M13 24 9 13h8z" fill="#ffffff" />
         </svg>
       </button>
       <div className="panel flex flex-col overflow-hidden rounded-[10px] max-sm:hidden">

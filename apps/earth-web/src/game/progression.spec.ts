@@ -1,24 +1,24 @@
 import { describe, expect, it, test } from 'vitest';
-import { applyRound, currentStreak, dailyRandom, EMPTY_PROGRESS, flightNumber, isProgress, milesFor, NEW_STAMP_BONUS, PERFECT_BONUS, previousDay, type Progress, tierFor } from './progression';
+import { applyRound, currentStreak, dailyRandom, EMPTY_PROGRESS, dailyNumber, isProgress, xpFor, NEW_COUNTRY_BONUS, PERFECT_BONUS, previousDay, type Progress, levelFor } from './progression';
 
 const CONTINENT: Record<string, string> = { FR: 'Europe', DE: 'Europe', KE: 'Africa', JP: 'Asia', BR: 'South America', US: 'North America', AU: 'Oceania' };
 const continentOf = (code: string) => CONTINENT[code];
 
-describe('tierFor()', () => {
+describe('levelFor()', () => {
   test.each([
-    { miles: 0, tier: 'Economy', next: 'Premium' },
-    { miles: 1_499, tier: 'Economy', next: 'Premium' },
-    { miles: 1_500, tier: 'Premium', next: 'Business' },
-    { miles: 30_000, tier: 'Captain', next: null },
-  ])('should be $tier at $miles miles', ({ miles, tier, next }) => {
-    const result = tierFor(miles);
-    expect(result.tier.name).toEqual(tier);
-    expect(result.next?.name ?? null).toEqual(next);
+    { xp: 0, level: 1, next: 2 },
+    { xp: 1_499, level: 1, next: 2 },
+    { xp: 1_500, level: 2, next: 3 },
+    { xp: 200_000, level: 10, next: null },
+  ])('should be level $level at $xp xp', ({ xp, level, next }) => {
+    const result = levelFor(xp);
+    expect(result.level.level).toEqual(level);
+    expect(result.next?.level ?? null).toEqual(next);
   });
 
-  it('should report progress towards the next tier', () => {
-    expect(tierFor(750).progress).toEqual(0.5);
-    expect(tierFor(99_999).progress).toEqual(1);
+  it('should report progress towards the next level', () => {
+    expect(levelFor(750).progress).toEqual(0.5);
+    expect(levelFor(999_999).progress).toEqual(1);
   });
 });
 
@@ -52,29 +52,29 @@ describe('dailyRandom()', () => {
   });
 });
 
-describe('flightNumber()', () => {
+describe('dailyNumber()', () => {
   it('should count days from launch', () => {
-    expect(flightNumber('2026-01-01')).toEqual(1);
-    expect(flightNumber('2026-02-01')).toEqual(32);
+    expect(dailyNumber('2026-01-01')).toEqual(1);
+    expect(dailyNumber('2026-02-01')).toEqual(32);
   });
 });
 
-describe('milesFor()', () => {
+describe('xpFor()', () => {
   test.each([
     { round: { kind: 'classic', score: 7, outOf: 10, found: [] }, expected: 700 },
     { round: { kind: 'classic', score: 10, outOf: 10, found: [] }, expected: 1_000 + PERFECT_BONUS },
     { round: { kind: 'daily', score: 4, outOf: 10, found: [] }, expected: 600 },
     { round: { kind: 'classic', score: 0, outOf: 10, found: [] }, expected: 0 },
   ] as const)('should award $expected for $round.kind $round.score', ({ round, expected }) => {
-    expect(milesFor(round)).toEqual(expected);
+    expect(xpFor(round)).toEqual(expected);
   });
 });
 
 describe('applyRound()', () => {
-  it('should add miles, stamps and the first achievement', () => {
+  it('should add XP, found countries and the first achievement', () => {
     const outcome = applyRound(EMPTY_PROGRESS, { kind: 'classic', score: 2, outOf: 10, found: ['FR', 'KE'] }, '2026-05-01', continentOf);
-    expect(outcome.earned).toEqual(200 + 2 * NEW_STAMP_BONUS);
-    expect(outcome.newStamps).toEqual(['FR', 'KE']);
+    expect(outcome.earned).toEqual(200 + 2 * NEW_COUNTRY_BONUS);
+    expect(outcome.newCountries).toEqual(['FR', 'KE']);
     expect(outcome.progress.stamps).toEqual({ FR: 1, KE: 1 });
     expect(outcome.progress.rounds).toEqual(1);
     expect(outcome.unlocked.map((a) => a.id)).toEqual(['first-flight']);
@@ -83,15 +83,15 @@ describe('applyRound()', () => {
   it('should only give the new-stamp bonus once per country', () => {
     const first = applyRound(EMPTY_PROGRESS, { kind: 'classic', score: 1, outOf: 10, found: ['FR'] }, '2026-05-01', continentOf);
     const second = applyRound(first.progress, { kind: 'classic', score: 1, outOf: 10, found: ['FR'] }, '2026-05-01', continentOf);
-    expect(second.newStamps).toEqual([]);
+    expect(second.newCountries).toEqual([]);
     expect(second.earned).toEqual(100);
     expect(second.progress.stamps.FR).toEqual(2);
     expect(second.unlocked).toEqual([]);
   });
 
-  it('should report a tier upgrade', () => {
+  it('should report a level up', () => {
     const progress: Progress = { ...EMPTY_PROGRESS, miles: 1_400 };
-    expect(applyRound(progress, { kind: 'classic', score: 1, outOf: 10, found: [] }, '2026-05-01', continentOf).tierUp?.name).toEqual('Premium');
+    expect(applyRound(progress, { kind: 'classic', score: 1, outOf: 10, found: [] }, '2026-05-01', continentOf).levelUp?.level).toEqual(2);
   });
 
   it('should unlock six continents', () => {
@@ -99,7 +99,7 @@ describe('applyRound()', () => {
     expect(outcome.unlocked.map((a) => a.id)).toContain('six-continents');
   });
 
-  it('should unlock a perfect landing', () => {
+  it('should unlock a perfect round', () => {
     const classic = applyRound(EMPTY_PROGRESS, { kind: 'classic', score: 10, outOf: 10, found: [] }, '2026-05-01', continentOf);
     expect(classic.unlocked.map((a) => a.id)).toEqual(['first-flight', 'perfect-landing']);
   });
@@ -126,7 +126,7 @@ describe('applyRound()', () => {
       expect(progress.daily).toEqual({ '2026-05-01': 5, '2026-05-02': 5, '2026-05-03': 5, '2026-05-05': 5 });
     });
 
-    it('should count only the first daily flight of a day', () => {
+    it('should count only the first daily challenge of a day', () => {
       const once = daily(EMPTY_PROGRESS, '2026-05-01', 3);
       const twice = daily(once, '2026-05-01', 9);
       expect(twice.streak).toEqual(1);
@@ -146,7 +146,7 @@ describe('currentStreak()', () => {
     { lastDaily: '2026-05-02', expected: 4 },
     { lastDaily: '2026-05-01', expected: 0 },
     { lastDaily: null, expected: 0 },
-  ])('should be $expected when the last daily flight was $lastDaily', ({ lastDaily, expected }) => {
+  ])('should be $expected when the last daily challenge was $lastDaily', ({ lastDaily, expected }) => {
     expect(currentStreak({ ...EMPTY_PROGRESS, streak: 4, lastDaily }, '2026-05-03')).toEqual(expected);
   });
 });

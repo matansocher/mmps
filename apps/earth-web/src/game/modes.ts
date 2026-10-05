@@ -45,30 +45,14 @@ export function bestScoreKey(mode: GameMode): string {
 export function modeTitle(mode: GameMode): string {
   switch (mode.kind) {
     case 'daily':
-      return 'Today’s flight';
+      return 'Daily challenge';
     case 'classic':
       return 'Classic';
     case 'continent':
-      return mode.continent;
+      return `${mode.continent} sprint`;
     case 'name-it':
       return 'Name it';
     case 'cleanup':
       return `${mode.continent} cleanup`;
-  }
-}
-
-// The gate number each mode departs from on the departures board.
-export function gateFor(mode: GameMode): string {
-  switch (mode.kind) {
-    case 'daily':
-      return 'D0';
-    case 'classic':
-      return 'A1';
-    case 'continent':
-      return `C${CONTINENTS.indexOf(mode.continent) + 1}`;
-    case 'name-it':
-      return 'B1';
-    case 'cleanup':
-      return `E${CONTINENTS.indexOf(mode.continent) + 1}`;
   }
 }
