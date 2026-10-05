@@ -15,6 +15,15 @@ export function isValidSignature(rawBody: Buffer, signatureHeader: string | unde
   return expected.length === received.length && timingSafeEqual(expected, received);
 }
 
+// One-line summary of a webhook event for logs, e.g. "object=whatsapp_business_account field=messages messages=[text] statuses=[]"
+export function describePayload(payload: WhatsAppWebhookPayload): string {
+  const changes = (payload?.entry ?? []).flatMap((entry) => entry.changes ?? []);
+  const fields = changes.map((change) => change.field).join(',');
+  const messages = changes.flatMap((change) => change.value?.messages ?? []).map((message) => message.type);
+  const statuses = changes.flatMap((change) => change.value?.statuses ?? []).map((status) => status.status);
+  return `object=${payload?.object} field=${fields} messages=[${messages.join(',')}] statuses=[${statuses.join(',')}]`;
+}
+
 export function buildReply(text: string): string {
   return `You said: ${text}`;
 }
