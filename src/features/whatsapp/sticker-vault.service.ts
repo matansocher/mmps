@@ -28,7 +28,7 @@ const HELP_MESSAGE = [
   '🗂️ *Sticker vault*',
   '• Send me a sticker to save it. The vault is shared by everyone who uses this bot.',
   '• Then send a few words to tag it (within 5 minutes), or reply to any sticker with words to add tags.',
-  '• Send words to get matching stickers back.',
+  '• Send words to get stickers tagged with all of them.',
   '• *random* sends a random sticker.',
   '• Reply *delete* to a sticker you saved to remove it.',
 ].join('\n');

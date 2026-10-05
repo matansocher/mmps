@@ -76,17 +76,12 @@ export async function countStickers(): Promise<number> {
   return getCollection().countDocuments();
 }
 
-// Best matches first: most tags in common with the query, then most recently updated.
+// Only stickers tagged with every query word, most recently updated first.
 export async function searchStickers(words: string[], limit: number): Promise<StickerSummary[]> {
   return getCollection()
-    .aggregate<StickerSummary>([
-      { $match: { tags: { $in: words } } },
-      { $project: { data: 0 } },
-      { $addFields: { score: { $size: { $setIntersection: ['$tags', words] } } } },
-      { $sort: { score: -1, updatedAt: -1 } },
-      { $limit: limit },
-      { $project: { score: 0 } },
-    ])
+    .find({ tags: { $all: words } }, WITHOUT_DATA)
+    .sort({ updatedAt: -1 })
+    .limit(limit)
     .toArray();
 }
 

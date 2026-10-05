@@ -43,7 +43,7 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 | A quote-reply to a sticker with `delete` | Removes the sticker, only if you are the one who saved it |
 | `random` | Sends a random saved sticker |
 | `help` | Shows usage and how many stickers you have |
-| Anything else | Searches tags and sends up to 3 matching stickers, or replies "No stickers match" |
+| Anything else | Searches tags and sends up to 3 stickers tagged with every word sent, or replies "No stickers match" |
 
 Text is lowercased and split into words; tags are matched on whole words.
 
