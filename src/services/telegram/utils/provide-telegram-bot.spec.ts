@@ -88,6 +88,75 @@ describe('provideTelegramBot()', () => {
     expect(runnerStop).toHaveBeenCalledTimes(1);
   });
 
+  describe('polling conflicts (409)', () => {
+    const conflict = Object.assign(new Error('409: Conflict: terminated by other getUpdates request'), { error_code: 409 });
+
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('should restart polling after a conflict until it succeeds', async () => {
+      setMyCommands.mockResolvedValue(true);
+      start.mockRejectedValueOnce(conflict).mockReturnValue(new Promise(() => {}));
+      const { provideTelegramBot } = await import('./provide-telegram-bot');
+
+      provideTelegramBot(BOT_CONFIG);
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(start).toHaveBeenCalledTimes(2);
+    });
+
+    it('should restart the runner after a conflict', async () => {
+      setMyCommands.mockResolvedValue(true);
+      run
+        .mockReturnValueOnce({ task: () => Promise.reject(conflict), isRunning: () => false, stop: runnerStop })
+        .mockReturnValue({ task: () => new Promise(() => {}), isRunning: () => true, stop: runnerStop });
+      const { provideTelegramBot, stopAllTelegramBots } = await import('./provide-telegram-bot');
+
+      provideTelegramBot({ ...BOT_CONFIG, concurrentUpdates: true });
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(run).toHaveBeenCalledTimes(2);
+      await stopAllTelegramBots();
+      expect(runnerStop).toHaveBeenCalledTimes(1);
+    });
+
+    it('should give up after the retry limit', async () => {
+      setMyCommands.mockResolvedValue(true);
+      start.mockRejectedValue(conflict);
+      const { provideTelegramBot } = await import('./provide-telegram-bot');
+
+      provideTelegramBot(BOT_CONFIG);
+      await vi.advanceTimersByTimeAsync(5000 * 20);
+
+      expect(start).toHaveBeenCalledTimes(13);
+    });
+
+    it('should not retry other errors', async () => {
+      setMyCommands.mockResolvedValue(true);
+      start.mockRejectedValue(Object.assign(new Error('401: Unauthorized'), { error_code: 401 }));
+      const { provideTelegramBot } = await import('./provide-telegram-bot');
+
+      provideTelegramBot(BOT_CONFIG);
+      await vi.advanceTimersByTimeAsync(5000 * 2);
+
+      expect(start).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not retry once the bots are stopping', async () => {
+      setMyCommands.mockResolvedValue(true);
+      let rejectPolling: (err: unknown) => void;
+      start.mockReturnValue(new Promise((_, reject) => (rejectPolling = reject)));
+      const { provideTelegramBot, stopAllTelegramBots } = await import('./provide-telegram-bot');
+
+      provideTelegramBot(BOT_CONFIG);
+      await stopAllTelegramBots();
+      rejectPolling(conflict);
+      await vi.advanceTimersByTimeAsync(5000 * 2);
+
+      expect(start).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('should key sequential processing by chat', async () => {
     setMyCommands.mockResolvedValue(true);
     const { provideTelegramBot } = await import('./provide-telegram-bot');
