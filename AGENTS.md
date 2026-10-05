@@ -189,7 +189,7 @@ src/services/{name}/
 
 **Also not a bot:** `ZIKA` (`src/features/zika/`) is a static React showcase (`apps/zika-web`) served at `/zika/*`: three redesign options (bold, catalog, friendly) for zika.co.il (Zika Industries), each with a home page and a Z‑11 product page, behind a cover page for management. Hebrew RTL; all copy, prices and images come from `apps/zika-web/src/content/index.ts` (scraped from zika.co.il / shop.zika.co.il). The cart is client-side only (localStorage) and checkout links out to the real shop. No API routes, no DB. Each concept lives in `src/concepts/<slug>/` with CSS scoped under `.c-<slug>`. Initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
-**Also not a bot:** `WHATSAPP` (`src/features/whatsapp/`) is a Meta WhatsApp Cloud API webhook on the shared Express server. `GET /webhook` answers Meta's verification handshake (`hub.mode=subscribe` + `VERIFY_TOKEN` → echoes `hub.challenge`, else 403). `POST /webhook` acks 200 immediately, reads `entry[0].changes[0].value.messages[0]`, and for text messages replies via `sendWhatsAppMessage(to, text)` from `@services/whatsapp` (Graph API v20.0, `WHATSAPP_TOKEN` + `PHONE_NUMBER_ID`). When `WHATSAPP_APP_SECRET` is set, requests with an invalid `X-Hub-Signature-256` get 401. `initWhatsapp(app)` must run **before** the global `express.json()` because the route keeps the raw body for the HMAC check. No DB. Initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+**Also not a bot:** `WHATSAPP` (`src/features/whatsapp/`) is a Meta WhatsApp Cloud API webhook on the shared Express server. `GET /whatsapp-webhook` answers Meta's verification handshake (`hub.mode=subscribe` + `VERIFY_TOKEN` → echoes `hub.challenge`, else 403). `POST /whatsapp-webhook` acks 200 immediately, reads `entry[0].changes[0].value.messages[0]`, and for text messages replies via `sendWhatsAppMessage(to, text)` from `@services/whatsapp` (Graph API v20.0, `WHATSAPP_TOKEN` + `PHONE_NUMBER_ID`). When `WHATSAPP_APP_SECRET` is set, requests with an invalid `X-Hub-Signature-256` get 401. `initWhatsapp(app)` must run **before** the global `express.json()` because the route keeps the raw body for the HMAC check. No DB. Initialized independently of `LOCAL_ACTIVE_BOT_ID`.
 
 **Boot logic** (`src/index.ts`):
 ```typescript
@@ -707,7 +707,7 @@ Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `R
 - `GET /` — health (`{ success: true }`)
 - `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
 - Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
-- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes; `initEarth(app)` serves the Earth quiz SPA at `/earth/*` (no API routes).; `initZika(app)` serves the static Zika redesign showcase at `/zika/*`; `initWhatsapp(app)` registers `GET/POST /webhook` for the WhatsApp Cloud API (registered before the global JSON parser).
+- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes; `initEarth(app)` serves the Earth quiz SPA at `/earth/*` (no API routes).; `initZika(app)` serves the static Zika redesign showcase at `/zika/*`; `initWhatsapp(app)` registers `GET/POST /whatsapp-webhook` for the WhatsApp Cloud API (registered before the global JSON parser).
 
 ---
 

@@ -52,7 +52,7 @@ Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the p
 - **[Learn more →](/bots/earth)**
 
 ### **WhatsApp** - Cloud API Webhook
-Meta WhatsApp Cloud API webhook at `GET/POST /webhook`. It verifies the webhook subscription, optionally validates `X-Hub-Signature-256`, and replies to incoming text messages through the Graph API.
+Meta WhatsApp Cloud API webhook at `GET/POST /whatsapp-webhook`. It verifies the webhook subscription, optionally validates `X-Hub-Signature-256`, and replies to incoming text messages through the Graph API.
 - **Database**: none
 - **[Learn more →](/bots/whatsapp)**
 

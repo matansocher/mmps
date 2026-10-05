@@ -30,9 +30,9 @@ describe('WhatsApp webhook routes', () => {
 
   afterEach(() => vi.unstubAllEnvs());
 
-  describe('GET /webhook', () => {
+  describe('GET /whatsapp-webhook', () => {
     it('should echo the challenge when the token matches', async () => {
-      const res = await fetch(`${baseUrl}/webhook?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=12345`);
+      const res = await fetch(`${baseUrl}/whatsapp-webhook?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=12345`);
       expect(res.status).toEqual(200);
       expect(await res.text()).toEqual('12345');
     });
@@ -42,14 +42,14 @@ describe('WhatsApp webhook routes', () => {
       { name: 'wrong mode', query: 'hub.mode=unsubscribe&hub.verify_token=verify-me&hub.challenge=1' },
       { name: 'no params', query: '' },
     ])('should return 403 for $name', async ({ query }) => {
-      const res = await fetch(`${baseUrl}/webhook?${query}`);
+      const res = await fetch(`${baseUrl}/whatsapp-webhook?${query}`);
       expect(res.status).toEqual(403);
     });
   });
 
-  describe('POST /webhook', () => {
+  describe('POST /whatsapp-webhook', () => {
     const body = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ from: '972500000000', id: '1', timestamp: '0', type: 'text', text: { body: 'hello' } }] } }] }] });
-    const post = (headers: Record<string, string> = {}) => fetch(`${baseUrl}/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
+    const post = (headers: Record<string, string> = {}) => fetch(`${baseUrl}/whatsapp-webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
 
     it('should ack and reply to a text message', async () => {
       const res = await post();

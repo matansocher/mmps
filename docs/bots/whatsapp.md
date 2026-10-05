@@ -2,24 +2,24 @@
 
 A WhatsApp bot on top of Meta's WhatsApp Cloud API. It runs on the shared MMPS Express server and needs no database.
 
-- `GET /webhook` handles Meta's verification handshake.
-- `POST /webhook` receives incoming messages and replies to text messages.
+- `GET /whatsapp-webhook` handles Meta's verification handshake.
+- `POST /whatsapp-webhook` receives incoming messages and replies to text messages.
 
 Code lives in `src/features/whatsapp/` (routes, payload parsing, signature check) and `src/services/whatsapp/` (the Graph API client).
 
 ## How it works
 
-### Verification (`GET /webhook`)
+### Verification (`GET /whatsapp-webhook`)
 
 When you subscribe the webhook in the Meta dashboard, Meta calls:
 
 ```
-GET /webhook?hub.mode=subscribe&hub.verify_token=<VERIFY_TOKEN>&hub.challenge=<random>
+GET /whatsapp-webhook?hub.mode=subscribe&hub.verify_token=<VERIFY_TOKEN>&hub.challenge=<random>
 ```
 
 If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the server returns `200` with `hub.challenge` as the plain-text body. Anything else gets `403 Forbidden`.
 
-### Incoming messages (`POST /webhook`)
+### Incoming messages (`POST /whatsapp-webhook`)
 
 1. If `WHATSAPP_APP_SECRET` is set, the `X-Hub-Signature-256` header is checked against an HMAC-SHA256 of the raw request body. A missing or invalid signature returns `401`.
 2. The server answers `200 OK` right away, so Meta doesn't retry.
@@ -56,7 +56,7 @@ Copy `.env.example` to `.env` and fill these in. If any of them are missing, a w
 
 1. Create an app at [developers.facebook.com](https://developers.facebook.com/apps) of type **Business** and add the **WhatsApp** product.
 2. Under **WhatsApp → API Setup**, copy the temporary access token (`WHATSAPP_TOKEN`) and the **Phone number ID** (`PHONE_NUMBER_ID`). Add your own number as a test recipient.
-3. Under **WhatsApp → Configuration → Webhook**, set the callback URL to `https://<your-host>/webhook` and the verify token to your `VERIFY_TOKEN`. Then click **Verify and save**.
+3. Under **WhatsApp → Configuration → Webhook**, set the callback URL to `https://<your-host>/whatsapp-webhook` and the verify token to your `VERIFY_TOKEN`. Then click **Verify and save**.
 4. Subscribe to the **messages** webhook field.
 5. For production, create a permanent System User token in Business Settings. The temporary token expires after 24 hours.
 
@@ -66,7 +66,7 @@ Copy `.env.example` to `.env` and fill these in. If any of them are missing, a w
 npm install
 cp .env.example .env    # fill in the WhatsApp variables
 npm run dev             # starts Express on PORT (default 3000)
-ngrok http 3000         # use the https URL + /webhook as the Meta callback URL
+ngrok http 3000         # use the https URL + /whatsapp-webhook as the Meta callback URL
 ```
 
 The webhook runs no matter what `LOCAL_ACTIVE_BOT_ID` is set to.
@@ -75,17 +75,17 @@ Test it with curl:
 
 ```bash
 # Verification: prints "12345"
-curl "http://localhost:3000/webhook?hub.mode=subscribe&hub.verify_token=$VERIFY_TOKEN&hub.challenge=12345"
+curl "http://localhost:3000/whatsapp-webhook?hub.mode=subscribe&hub.verify_token=$VERIFY_TOKEN&hub.challenge=12345"
 
 # Incoming text message (without WHATSAPP_APP_SECRET set)
-curl -X POST http://localhost:3000/webhook \
+curl -X POST http://localhost:3000/whatsapp-webhook \
   -H 'Content-Type: application/json' \
   -d '{"object":"whatsapp_business_account","entry":[{"changes":[{"value":{"messages":[{"from":"15551234567","id":"wamid.1","type":"text","text":{"body":"hello"}}]}}]}]}'
 
 # With WHATSAPP_APP_SECRET set, sign the exact body
 BODY='{"entry":[]}'
 SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$WHATSAPP_APP_SECRET" | sed 's/^.* //')
-curl -X POST http://localhost:3000/webhook -H 'Content-Type: application/json' -H "X-Hub-Signature-256: sha256=$SIG" -d "$BODY"
+curl -X POST http://localhost:3000/whatsapp-webhook -H 'Content-Type: application/json' -H "X-Hub-Signature-256: sha256=$SIG" -d "$BODY"
 ```
 
 ## Deploying
@@ -100,7 +100,7 @@ heroku config:set WHATSAPP_TOKEN=... PHONE_NUMBER_ID=... VERIFY_TOKEN=... WHATSA
 git push heroku main
 ```
 
-Then set the Meta callback URL to `https://<app>.herokuapp.com/webhook`.
+Then set the Meta callback URL to `https://<app>.herokuapp.com/whatsapp-webhook`.
 
 ### Other hosts
 
