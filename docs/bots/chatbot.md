@@ -22,7 +22,7 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 ### Available Tools
 - 🌤️ **Weather** - Current conditions and forecasts
 - ⏰ **Reminders** - Set and manage reminders
-- 📅 **Calendar** - Calendar integration
+- 📅 **Calendar** - Create, list, update and delete Google Calendar events, and invite guests by email (Google sends them the invite, update and cancellation emails)
 - 🐙 **GitHub** - Repository and code interaction
 - 📊 **Google Sheets** - Spreadsheet operations
 - 🔍 **Web Search** - Search the internet
@@ -47,6 +47,7 @@ GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----...  # GitHub App private 
 GITHUB_APP_INSTALLATION_ID=456789    # GitHub App installation ID for the repo
 WEATHERAPI_KEY=...              # For weather data
 GOOGLE_SHEETS_CREDENTIALS=...   # For Sheets integration
+GOOGLE_CALENDAR_REFRESH_TOKEN=... # OAuth refresh token (calendar scope, minted with GMAIL_CLIENT_ID/SECRET), needed to invite attendees; without it the calendar falls back to the GOOGLE_CALENDAR_CLIENT_EMAIL/PRIVATE_KEY service account, which can't invite
 ```
 
 ### Bot Config

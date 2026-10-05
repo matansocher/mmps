@@ -4,6 +4,6 @@ import { CalendarEvent } from '../types';
 
 export async function createEvent(eventDetails: CalendarEvent, calendarId = DEFAULT_CALENDAR_ID): Promise<CalendarEvent> {
   const calendar = provideCalendar();
-  const response = await calendar.events.insert({ calendarId, requestBody: eventDetails });
+  const response = await calendar.events.insert({ calendarId, requestBody: eventDetails, sendUpdates: 'all' });
   return response.data as CalendarEvent;
 }
