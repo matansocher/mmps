@@ -9,6 +9,9 @@ import { getBotToken } from './get-bot-token';
 const logger = new Logger('telegram:bot-factory');
 const botInstances = new Map<string, Bot>();
 const runnerHandles = new Map<string, RunnerHandle>();
+const CONFLICT_RETRY_DELAY_MS = 5000;
+const MAX_CONFLICT_RETRIES = 12;
+let stopping = false;
 
 export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
   if (botInstances.has(botConfig.id)) {
@@ -44,22 +47,43 @@ export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
 
   botInstances.set(botConfig.id, bot);
 
-  // Long-running poller - its promise resolves only when the bot stops. A startup/polling rejection
-  // must stay contained to this bot instead of escaping to the process-wide unhandledRejection handler.
-  if (botConfig.concurrentUpdates) {
-    const runner = run(bot);
-    runnerHandles.set(botConfig.id, runner);
-    runner.task()?.catch((err) => logger.error(`Polling failed for bot ${botConfig.id}: ${getErrorMessage(err)}`));
-  } else {
-    bot.start().catch((err) => logger.error(`Polling failed for bot ${botConfig.id}: ${getErrorMessage(err)}`));
-  }
+  startPolling(botConfig, bot);
 
   logger.log(`Bot ${botConfig.id} (${botConfig.name}) initialized successfully`);
 
   return bot;
 };
 
+const isConflictError = (err: unknown): boolean => (err as { error_code?: number })?.error_code === 409;
+
+// Long-running poller - its promise resolves only when the bot stops. A startup/polling rejection
+// must stay contained to this bot instead of escaping to the process-wide unhandledRejection handler.
+// grammY stops polling for good on 409, which happens briefly when a deploy/restart overlaps the old
+// instance - retry so the bot recovers once the old instance is gone.
+function startPolling(botConfig: TelegramBotConfig, bot: Bot, conflictRetries = 0): void {
+  const onError = (err: unknown) => {
+    if (stopping || botInstances.get(botConfig.id) !== bot) return;
+    if (isConflictError(err) && conflictRetries < MAX_CONFLICT_RETRIES) {
+      logger.warn(`Polling conflict for bot ${botConfig.id}, retrying in ${CONFLICT_RETRY_DELAY_MS / 1000}s (${conflictRetries + 1}/${MAX_CONFLICT_RETRIES})`);
+      setTimeout(() => {
+        if (!stopping && botInstances.get(botConfig.id) === bot) startPolling(botConfig, bot, conflictRetries + 1);
+      }, CONFLICT_RETRY_DELAY_MS).unref();
+      return;
+    }
+    logger.error(`Polling failed for bot ${botConfig.id}: ${getErrorMessage(err)}`);
+  };
+
+  if (botConfig.concurrentUpdates) {
+    const runner = run(bot);
+    runnerHandles.set(botConfig.id, runner);
+    runner.task()?.catch(onError);
+  } else {
+    bot.start().catch(onError);
+  }
+}
+
 export async function stopAllTelegramBots(): Promise<void> {
+  stopping = true;
   const runners = [...runnerHandles.values()].filter((runner) => runner.isRunning());
   await Promise.allSettled([...botInstances.values()].map((bot) => bot.stop()).concat(runners.map((runner) => runner.stop())));
   botInstances.clear();
