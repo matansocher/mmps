@@ -59,8 +59,8 @@ export type IncomingMessage = IncomingTextMessage | IncomingStickerMessage;
 
 export type Sticker = {
   readonly _id?: ObjectId;
-  readonly ownerPhone: string;
-  readonly sha256: string; // hex sha256 of the webp bytes, unique per owner
+  readonly ownerPhone: string; // who first saved it; only they can delete it
+  readonly sha256: string; // hex sha256 of the received webp bytes, unique across the shared vault
   readonly data: Binary;
   readonly mimeType: string;
   readonly animated: boolean;
@@ -69,6 +69,7 @@ export type Sticker = {
   readonly messageIds: string[]; // wamids of chat messages showing this sticker, for quote-reply lookup
   readonly mediaId?: string; // last upload to Meta, reusable until it expires
   readonly mediaUploadedAt?: Date;
+  readonly lastReceivedFrom?: string; // who last sent it to the bot, for the per-sender tagging window
   readonly lastReceivedAt: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;

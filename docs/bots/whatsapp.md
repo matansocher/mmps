@@ -1,6 +1,6 @@
 # WhatsApp — Cloud API Webhook
 
-A WhatsApp sticker vault on top of Meta's WhatsApp Cloud API. Send it stickers and it saves them, tag them with words, then send a word to get matching stickers back as real WhatsApp stickers. It runs on the shared MMPS Express server.
+A WhatsApp sticker vault on top of Meta's WhatsApp Cloud API. The vault is shared: every sticker anyone saves can be found by everyone. Send it stickers and it saves them, tag them with words, then send a word to get matching stickers back as real WhatsApp stickers. It runs on the shared MMPS Express server.
 
 - `GET /whatsapp-webhook` handles Meta's verification handshake.
 - `POST /whatsapp-webhook` receives incoming messages (stickers and text).
@@ -30,7 +30,7 @@ If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the 
 
 ### Saving
 
-When a sticker arrives, the bot downloads it from the Graph API and hashes the bytes (sha256). If the same sender already saved that sticker, it says so instead of storing a copy. Otherwise it stores the bytes and replies asking for tags.
+When a sticker arrives, the bot downloads it from the Graph API and hashes the bytes (sha256). If anyone already saved that sticker, it says so instead of storing a copy. Otherwise it stores the bytes and replies asking for tags.
 
 WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (animated). Larger ones are re-encoded with sharp (resized to 512×512, lower WebP quality) before saving. If it still doesn't fit, the bot refuses it. Stickers saved before this check are shrunk the first time they're sent.
 
@@ -38,9 +38,9 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 
 | You send | What happens |
 |----------|--------------|
-| Words, within 5 minutes of saving an untagged sticker | Those words become the sticker's tags |
+| Words, within 5 minutes of sending an untagged sticker (tracked per sender) | Those words become the sticker's tags |
 | A quote-reply to a sticker with words | Adds those words as tags to that sticker (works on stickers you sent and stickers the bot sent) |
-| A quote-reply to a sticker with `delete` | Removes the sticker |
+| A quote-reply to a sticker with `delete` | Removes the sticker, only if you are the one who saved it |
 | `random` | Sends a random saved sticker |
 | `help` | Shows usage and how many stickers you have |
 | Anything else | Searches tags and sends up to 3 matching stickers, or replies "No stickers match" |
@@ -53,7 +53,7 @@ Stickers go out as `type: "sticker"` messages, so they show up as stickers, not 
 
 ### Storage
 
-MongoDB database `Whatsapp`, collection `stickers`, one document per sender + sticker. Each document holds the sticker bytes, sha256, mime type, animated flag, tags, related message ids and the cached media id. Indexes (unique `ownerPhone + sha256`, tags, message ids) are created at boot by `ensureStickerIndexes`. The connection uses `MONGO_DB_URL`.
+MongoDB database `Whatsapp`, collection `stickers`, one document per sticker, shared by all users. Each document holds the uploader (`ownerPhone`), the last sender (`lastReceivedFrom`), the sticker bytes, sha256, mime type, animated flag, tags, related message ids and the cached media id. Indexes (unique `sha256`, tags, message ids, `lastReceivedFrom + lastReceivedAt`) are created at boot by `ensureStickerIndexes`, which also drops the old per-sender indexes. The connection uses `MONGO_DB_URL`.
 
 ### Sending (`sendWhatsAppMessage`)
 

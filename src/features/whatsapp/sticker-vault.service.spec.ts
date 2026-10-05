@@ -73,7 +73,8 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(repo.findStickerBySha).mockResolvedValueOnce(existing);
       await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.again', mediaId: 'm1', animated: false });
       expect(repo.createSticker).not.toHaveBeenCalled();
-      expect(repo.markStickerReceived).toHaveBeenCalledWith(existing._id, 'wamid.again');
+      expect(repo.findStickerBySha).toHaveBeenCalledWith(expect.any(String));
+      expect(repo.markStickerReceived).toHaveBeenCalledWith(existing._id, 'wamid.again', FROM);
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('cat'));
     });
 
@@ -111,8 +112,23 @@ describe('handleIncomingMessage()', () => {
       const quoted = sticker();
       vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(quoted);
       await text('Delete', 'wamid.in');
+      expect(repo.findStickerByMessageId).toHaveBeenCalledWith('wamid.in');
       expect(repo.deleteSticker).toHaveBeenCalledWith(quoted._id);
       expect(repo.addStickerTags).not.toHaveBeenCalled();
+    });
+
+    it('should not let someone else delete a sticker they did not save', async () => {
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(sticker({ ownerPhone: '972511111111' }));
+      await text('delete', 'wamid.in');
+      expect(repo.deleteSticker).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'Only the person who saved this sticker can delete it.');
+    });
+
+    it('should let anyone tag a shared sticker', async () => {
+      const quoted = sticker({ ownerPhone: '972511111111' });
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(quoted);
+      await text('cat', 'wamid.in');
+      expect(repo.addStickerTags).toHaveBeenCalledWith(quoted._id, ['cat']);
     });
 
     it('should tag the recently received untagged sticker', async () => {
@@ -191,7 +207,7 @@ describe('handleIncomingMessage()', () => {
     it('should reply with help and the sticker count', async () => {
       vi.mocked(repo.countStickers).mockResolvedValueOnce(3);
       await text('help');
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('You have 3 saved stickers'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('The vault has 3 stickers'));
     });
   });
 });

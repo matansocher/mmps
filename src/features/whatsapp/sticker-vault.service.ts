@@ -26,11 +26,11 @@ const logger = new Logger('whatsapp:sticker-vault');
 
 const HELP_MESSAGE = [
   '🗂️ *Sticker vault*',
-  '• Send me a sticker to save it.',
+  '• Send me a sticker to save it. The vault is shared by everyone who uses this bot.',
   '• Then send a few words to tag it (within 5 minutes), or reply to any sticker with words to add tags.',
   '• Send words to get matching stickers back.',
   '• *random* sends a random sticker.',
-  '• Reply *delete* to a sticker to remove it.',
+  '• Reply *delete* to a sticker you saved to remove it.',
 ].join('\n');
 
 export async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
@@ -42,9 +42,9 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
   const { data, mimeType } = await downloadWhatsAppMedia(mediaId);
   const sha256 = createHash('sha256').update(data).digest('hex');
 
-  const existing = await findStickerBySha(from, sha256);
+  const existing = await findStickerBySha(sha256);
   if (existing) {
-    await markStickerReceived(existing._id, id);
+    await markStickerReceived(existing._id, id, from);
     const reply = existing.tags.length ? `Already saved 🏷️ ${existing.tags.join(', ')}` : 'Already saved, but it has no tags yet. Send a few words to tag it.';
     await sendWhatsAppMessage(from, reply);
     return;
@@ -75,9 +75,13 @@ async function handleText({ from, text, contextId }: IncomingTextMessage): Promi
   const words = tokenize(text);
 
   if (contextId) {
-    const quoted = await findStickerByMessageId(from, contextId);
+    const quoted = await findStickerByMessageId(contextId);
     if (quoted) {
       if (command === 'delete') {
+        if (quoted.ownerPhone !== from) {
+          await sendWhatsAppMessage(from, 'Only the person who saved this sticker can delete it.');
+          return;
+        }
         await deleteSticker(quoted._id);
         await sendWhatsAppMessage(from, 'Deleted 🗑️');
         return;
@@ -88,15 +92,15 @@ async function handleText({ from, text, contextId }: IncomingTextMessage): Promi
   }
 
   if (command === 'help') {
-    const count = await countStickers(from);
-    await sendWhatsAppMessage(from, `${HELP_MESSAGE}\n\nYou have ${count} saved sticker${count === 1 ? '' : 's'}.`);
+    const count = await countStickers();
+    await sendWhatsAppMessage(from, `${HELP_MESSAGE}\n\nThe vault has ${count} sticker${count === 1 ? '' : 's'}.`);
     return;
   }
 
   if (command === 'random') {
-    const sticker = await getRandomSticker(from);
+    const sticker = await getRandomSticker();
     if (!sticker) {
-      await sendWhatsAppMessage(from, 'Your vault is empty. Send me a sticker to save it.');
+      await sendWhatsAppMessage(from, 'The vault is empty. Send me a sticker to save it.');
       return;
     }
     await sendStickers(from, [sticker]);
@@ -114,7 +118,7 @@ async function handleText({ from, text, contextId }: IncomingTextMessage): Promi
     return;
   }
 
-  const matches = await searchStickers(from, words, STICKER_SEARCH_LIMIT);
+  const matches = await searchStickers(words, STICKER_SEARCH_LIMIT);
   if (!matches.length) {
     await sendWhatsAppMessage(from, `No stickers match "${words.join(' ')}". Send *help* to see how tagging works.`);
     return;
