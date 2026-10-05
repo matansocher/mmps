@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
 import { useProgress } from '../hooks/useProgress';
@@ -17,6 +17,7 @@ const STATUS_LABEL: Record<BiteStatus, string> = {
 export function KnowledgeMapPage() {
   const { progress } = useProgress();
   const now = useMemo(() => new Date(), []);
+  const [active, setActive] = useState<GuideId>('system-design');
 
   return (
     <div>
@@ -32,8 +33,22 @@ export function KnowledgeMapPage() {
         <p className="lead">Follow each curriculum from foundations to advanced topics. Every stop opens its learning bite.</p>
       </div>
 
+      <div className="guide-switcher" role="group" aria-label="Choose a guide">
+        {GUIDE_ORDER.map((guide) => (
+          <button
+            key={guide}
+            type="button"
+            className={`btn ${active === guide ? 'primary' : ''}`}
+            aria-pressed={active === guide}
+            onClick={() => setActive(guide)}
+          >
+            <AppIcon name={guide} size={19} /> {GUIDES[guide].label}
+          </button>
+        ))}
+      </div>
+
       <div className="knowledge-map">
-        {GUIDE_ORDER.map((guideId) => {
+        {GUIDE_ORDER.filter((guideId) => guideId === active).map((guideId) => {
           const bites = bitesByGuide(guideId);
           const courseSummary = summarize(
             progress,
@@ -78,4 +93,3 @@ export function KnowledgeMapPage() {
     </div>
   );
 }
-
