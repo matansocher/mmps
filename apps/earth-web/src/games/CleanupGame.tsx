@@ -155,15 +155,10 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
             <span className="flex items-center gap-1.5 font-bold text-[var(--color-ok)]">
               <Icon name="check" size={18} /> {name(last.code)} is on the map
             </span>
-          ) : last?.kind === 'wrong' ? (
-            <span className="text-white/75">
-              <span className="board-type mr-2 rounded bg-[var(--color-bad)] px-1.5 py-0.5 text-[14px] font-bold text-[var(--color-ink)]">✗ {name(last.guess)}</span>
-              {last.triesLeft === 1 ? 'Last try.' : `${last.triesLeft} tries left.`}
-            </span>
           ) : last?.kind === 'revealed' ? (
             <span className="text-white/75">{name(last.code)} was here, marked in red.</span>
           ) : (
-            <span className="text-white/60">Find them all. 3 tries each, and every find stays on the map.</span>
+            <span className="text-white/60">Find them all. One miss marks the country, and every find stays on the map.</span>
           )}
         </div>
       </GameCard>
