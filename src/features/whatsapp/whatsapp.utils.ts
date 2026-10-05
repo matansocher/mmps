@@ -1,10 +1,25 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import type { IncomingTextMessage, WhatsAppWebhookPayload } from './types';
+import type { IncomingMessage, WhatsAppWebhookPayload } from './types';
 
-export function extractTextMessage(payload: WhatsAppWebhookPayload): IncomingTextMessage | null {
+export function extractIncomingMessage(payload: WhatsAppWebhookPayload): IncomingMessage | null {
   const message = payload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-  if (!message || message.type !== 'text' || !message.text?.body) return null;
-  return { from: message.from, text: message.text.body };
+  if (!message?.from) return null;
+  if (message.type === 'text' && message.text?.body) {
+    return { kind: 'text', from: message.from, id: message.id, text: message.text.body, ...(message.context?.id && { contextId: message.context.id }) };
+  }
+  if (message.type === 'sticker' && message.sticker?.id) {
+    return { kind: 'sticker', from: message.from, id: message.id, mediaId: message.sticker.id, animated: Boolean(message.sticker.animated) };
+  }
+  return null;
+}
+
+// Lowercased, de-duplicated words in any script (Hebrew, English, digits), e.g. "Funny, CAT!! #lol" -> ["funny", "cat", "lol"]
+export function tokenize(text: string): string[] {
+  const words = text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+  return [...new Set(words)];
 }
 
 // Header format: "sha256=<hex hmac of the raw request body, keyed with the app secret>"
@@ -22,8 +37,4 @@ export function describePayload(payload: WhatsAppWebhookPayload): string {
   const messages = changes.flatMap((change) => change.value?.messages ?? []).map((message) => message.type);
   const statuses = changes.flatMap((change) => change.value?.statuses ?? []).map((status) => status.status);
   return `object=${payload?.object} field=${fields} messages=[${messages.join(',')}] statuses=[${statuses.join(',')}]`;
-}
-
-export function buildReply(text: string): string {
-  return `You said: ${text}`;
 }
