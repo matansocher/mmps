@@ -5,7 +5,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { sendWhatsAppMessage } from '@services/whatsapp';
 import { WHATSAPP_SIGNATURE_HEADER, WHATSAPP_WEBHOOK_PATH } from './constants';
 import type { WhatsAppWebhookPayload } from './types';
-import { buildReply, extractTextMessage, isValidSignature } from './whatsapp.utils';
+import { buildReply, describePayload, extractTextMessage, isValidSignature } from './whatsapp.utils';
 
 const logger = new Logger('whatsapp:webhook');
 
@@ -25,6 +25,7 @@ export function registerWhatsappRoutes(app: Express): void {
         .send(String(challenge ?? ''));
       return;
     }
+    logger.warn(`Webhook verification failed: mode=${mode}, verifyTokenConfigured=${Boolean(env.VERIFY_TOKEN)}, tokenMatches=${token === env.VERIFY_TOKEN}`);
     res.sendStatus(403);
   });
 
@@ -37,17 +38,24 @@ export function registerWhatsappRoutes(app: Express): void {
       },
     }),
     (req: RawBodyRequest, res: Response) => {
+      const payload = req.body as WhatsAppWebhookPayload;
+      const signature = req.header(WHATSAPP_SIGNATURE_HEADER);
+      logger.log(`Webhook event received (${req.rawBody?.length ?? 0} bytes, signature=${signature ? 'present' : 'missing'}): ${describePayload(payload)}`);
+
       const appSecret = env.WHATSAPP_APP_SECRET;
-      if (appSecret && !isValidSignature(req.rawBody ?? Buffer.alloc(0), req.header(WHATSAPP_SIGNATURE_HEADER), appSecret)) {
-        logger.warn('Rejected webhook with invalid signature');
+      if (appSecret && !isValidSignature(req.rawBody ?? Buffer.alloc(0), signature, appSecret)) {
+        logger.warn(`Rejected webhook with invalid signature (signature=${signature ? 'present' : 'missing'}); check WHATSAPP_APP_SECRET matches the Meta app secret`);
         res.sendStatus(401);
         return;
       }
 
       res.sendStatus(200);
 
-      const message = extractTextMessage(req.body as WhatsAppWebhookPayload);
-      if (!message) return;
+      const message = extractTextMessage(payload);
+      if (!message) {
+        logger.log('Webhook event has no text message, nothing to reply to');
+        return;
+      }
 
       logger.log(`Incoming message from ${message.from}: ${message.text}`);
       sendWhatsAppMessage(message.from, buildReply(message.text)).catch((err) => logger.error(`Failed to reply: ${getErrorMessage(err)}`));

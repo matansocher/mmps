@@ -15,6 +15,7 @@ export type WhatsAppWebhookPayload = {
       readonly value?: {
         readonly messaging_product?: string;
         readonly messages?: ReadonlyArray<WhatsAppIncomingMessage>;
+        readonly statuses?: ReadonlyArray<{ readonly status?: string; readonly recipient_id?: string }>;
       };
     }>;
   }>;

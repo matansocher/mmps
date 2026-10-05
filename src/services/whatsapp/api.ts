@@ -16,12 +16,13 @@ export async function sendWhatsAppMessage(to: string, text: string): Promise<voi
     text: { body: text },
   };
   try {
-    await axios.post(url, body, {
+    const response = await axios.post<{ readonly messages?: ReadonlyArray<{ readonly id: string }> }>(url, body, {
       headers: {
         Authorization: `Bearer ${env.WHATSAPP_TOKEN}`,
         'Content-Type': 'application/json',
       },
     });
+    logger.log(`Sent WhatsApp message to ${to} (id=${response.data?.messages?.[0]?.id})`);
   } catch (err) {
     const details = axios.isAxiosError(err) ? JSON.stringify(err.response?.data ?? err.message) : String(err);
     logger.error(`Failed to send WhatsApp message to ${to}: ${details}`);
