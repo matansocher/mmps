@@ -66,6 +66,7 @@ export default defineConfig({
                         { text: 'Coach', link: '/bots/coach' },
                         { text: 'Mindloop', link: '/bots/mindloop' },
                         { text: 'Savings', link: '/bots/savings' },
+                        { text: 'WhatsApp', link: '/bots/whatsapp' },
                         { text: 'Wolt', link: '/bots/wolt' },
                         { text: 'Worldly', link: '/bots/worldly' },
                     ],

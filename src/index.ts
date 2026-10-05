@@ -16,6 +16,7 @@ import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initMindloop } from '@features/mindloop';
 import { initSavings } from '@features/savings';
 import { initZika } from '@features/zika';
+import { initWhatsapp } from '@features/whatsapp';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { stopAllTelegramBots } from '@services/telegram';
@@ -34,6 +35,13 @@ async function main() {
   // hop so req.ip reflects the real client for rate limiting, without trusting
   // arbitrary client-supplied X-Forwarded-For headers.
   app.set('trust proxy', 1);
+
+  // Registered before the global JSON parser so the webhook keeps the raw body for signature validation.
+  try {
+    initWhatsapp(app);
+  } catch (err) {
+    logger.error(`Failed to init whatsapp webhook: ${getErrorMessage(err)}`);
+  }
 
   app.use(express.json());
 
