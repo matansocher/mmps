@@ -276,3 +276,21 @@ jobs:
           jq -n --arg body "$BODY" --arg commit_id "$HEAD_SHA" \
             '{event: "COMMENT", body: $body, commit_id: $commit_id}' |
             gh api --method POST "repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews" --input -
+
+      - name: Notify on Telegram
+        continue-on-error: true
+        env:
+          CHATBOT_TOKEN: ${{ secrets.CHATBOT_TELEGRAM_BOT_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REVIEW: ${{ needs.review.outputs.final_message }}
+        run: |
+          SNIPPET=$(printf '%s' "$REVIEW" | head -c 300)
+          TEXT=$(printf '🔍 PR review posted for #%s (%s)\n\n%s\n\n%s' \
+            "$PR_NUMBER" "$PR_TITLE" "$SNIPPET" "$PR_URL")
+          PAYLOAD=$(jq -n --arg chat_id "862305226" --arg text "$TEXT" \
+            '{chat_id: $chat_id, text: $text}')
+          curl -s -X POST "https://api.telegram.org/bot${CHATBOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            --data "$PAYLOAD" > /dev/null
