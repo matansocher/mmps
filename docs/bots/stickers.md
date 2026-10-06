@@ -73,6 +73,8 @@ This marks the message as read and shows "typing…" for up to 25 seconds or unt
 
 Meta allows about 80 messages per second per business number, but also has a per-user pair rate limit (error `131056`): roughly one message every 6 seconds sustained, with short bursts allowed. So a search sends every matching sticker, throttled: the first `STICKER_BURST_SIZE` (10) go out `STICKER_SEND_DELAY_MS` (1 second) apart, the rest `STICKER_SUSTAINED_SEND_DELAY_MS` (6 seconds) apart. When more than 10 match, the bot first says how many it found and that it's sending them gradually. If a send fails with `131056`, the bot waits `STICKER_RATE_LIMIT_BACKOFF_MS` (30 seconds) and retries that sticker once; if it fails again, it stops sending and asks the user to try again shortly.
 
+If handling a message fails unexpectedly (for example a MongoDB error), the error is logged and the user gets a Hebrew reply instead of silence: `משהו השתבש ולא הצלחתי לשמור את הסטיקר 😕 נסו שוב מאוחר יותר.` for stickers, `משהו השתבש 😕 נסו שוב מאוחר יותר.` for text (search or tag edits).
+
 ### Sending stickers back
 
 Stickers go out as `type: "sticker"` messages, so they show up as stickers, not images. WhatsApp media ids expire, so the bot keeps the last uploaded media id and reuses it for up to 25 days. If it's older, or the send fails, the bot re-uploads the stored bytes (`sticker.webp`) and retries. The id of every sent message is stored on the sticker so quote-replies to it work.

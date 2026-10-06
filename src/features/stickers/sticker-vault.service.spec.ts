@@ -110,6 +110,39 @@ describe('handleIncomingMessage()', () => {
       expect(repo.createSticker).not.toHaveBeenCalled();
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('גדול מדי'));
     });
+
+    it('should tell the user in Hebrew when saving fails', async () => {
+      vi.mocked(repo.createSticker).mockRejectedValueOnce(new Error('you are over your space quota'));
+      await expect(handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true })).resolves.toBeUndefined();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'משהו השתבש ולא הצלחתי לשמור את הסטיקר 😕 נסו שוב מאוחר יותר.');
+    });
+
+    it('should tell the user in Hebrew when downloading fails', async () => {
+      vi.mocked(downloadWhatsAppMedia).mockRejectedValueOnce(new Error('boom'));
+      await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true });
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('משהו השתבש'));
+    });
+  });
+
+  describe('errors', () => {
+    it('should tell the user in Hebrew when searching fails', async () => {
+      vi.mocked(repo.searchStickers).mockRejectedValueOnce(new Error('boom'));
+      await expect(text('cat')).resolves.toBeUndefined();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'משהו השתבש 😕 נסו שוב מאוחר יותר.');
+    });
+
+    it('should tell the user in Hebrew when tagging fails', async () => {
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(sticker());
+      vi.mocked(repo.addStickerTags).mockRejectedValueOnce(new Error('boom'));
+      await text('cat', 'wamid.in');
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'משהו השתבש 😕 נסו שוב מאוחר יותר.');
+    });
+
+    it('should not throw when the error reply itself fails', async () => {
+      vi.mocked(repo.searchStickers).mockRejectedValueOnce(new Error('boom'));
+      vi.mocked(sendWhatsAppMessage).mockRejectedValueOnce(new Error('send failed'));
+      await expect(text('cat')).resolves.toBeUndefined();
+    });
   });
 
   describe('text', () => {

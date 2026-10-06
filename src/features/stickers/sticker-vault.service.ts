@@ -49,6 +49,8 @@ const HELP_MESSAGE = [
 const ADD_WORDS_HINT = 'הגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.';
 const NO_WORDS_MESSAGE = `אין עדיין מילות חיפוש. ${ADD_WORDS_HINT}`;
 const RATE_LIMIT_MESSAGE = 'שלחתי הרבה הודעות ברצף, נסו שוב בעוד כמה שניות.';
+const STICKER_ERROR_MESSAGE = 'משהו השתבש ולא הצלחתי לשמור את הסטיקר 😕 נסו שוב מאוחר יותר.';
+const TEXT_ERROR_MESSAGE = 'משהו השתבש 😕 נסו שוב מאוחר יותר.';
 
 function formatTags(tags: string[], emptyText = NO_WORDS_MESSAGE): string {
   return tags.length ? `🔎 מילות חיפוש: ${tags.join(', ')}` : emptyText;
@@ -60,6 +62,11 @@ export async function handleIncomingMessage(message: IncomingMessage): Promise<v
   try {
     if (message.kind === 'sticker') await handleSticker(message, timer);
     else await handleText(message, timer);
+  } catch (err) {
+    logger.error(`Failed to handle ${message.kind} ${message.id} from ${message.from}: ${describeWhatsAppError(err)}`);
+    await sendWhatsAppMessage(message.from, message.kind === 'sticker' ? STICKER_ERROR_MESSAGE : TEXT_ERROR_MESSAGE).catch((sendErr) =>
+      logger.error(`Failed to send error reply to ${message.from}: ${describeWhatsAppError(sendErr)}`),
+    );
   } finally {
     // Meta's timestamp has 1s precision; a large gap points at webhook delivery or a cold start, not our code.
     const sinceSentMs = message.sentAt ? Date.now() - message.sentAt : null;
