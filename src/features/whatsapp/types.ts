@@ -61,7 +61,7 @@ export type IncomingMessage = IncomingTextMessage | IncomingStickerMessage;
 
 export type Sticker = {
   readonly _id?: ObjectId;
-  readonly ownerPhone: string; // who first saved it; only they can delete it
+  readonly ownerPhone: string; // who first saved it
   readonly sha256: string; // hex sha256 of the received webp bytes, unique across the shared vault
   readonly data: Binary;
   readonly mimeType: string;
@@ -76,3 +76,18 @@ export type Sticker = {
 };
 
 export type StickerSummary = Omit<Sticker, 'data'>;
+
+// One document per text search, for usage dashboards.
+export type SearchEvent = {
+  readonly _id?: ObjectId;
+  readonly phone: string;
+  readonly query: string; // raw message text
+  readonly words: string[]; // normalized words the search matched on (all must match)
+  readonly matchedCount: number; // capped at STICKER_SEARCH_LIMIT + 1, so a value above the limit means "more than the limit"
+  readonly hasMore: boolean;
+  readonly sentStickerIds: ObjectId[];
+  readonly failedCount: number;
+  readonly rateLimited: boolean; // sending stopped early on Meta's pair rate limit
+  readonly durationMs: number; // from handling start until the last reply
+  readonly createdAt: Date;
+};

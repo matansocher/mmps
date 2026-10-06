@@ -26,14 +26,13 @@ vi.mock('@services/whatsapp', () => ({
 vi.mock('./mongo', () => ({
   addStickerMessageId: vi.fn(async () => undefined),
   addStickerTags: vi.fn(async (_id, tags: string[]) => tags),
-  countStickers: vi.fn(async () => 0),
   createSticker: vi.fn(async () => undefined),
   deleteSticker: vi.fn(async () => undefined),
   findStickerByMessageId: vi.fn(async () => null),
   findStickerBySha: vi.fn(async () => null),
-  getRandomSticker: vi.fn(async () => null),
   getStickerData: vi.fn(async () => Buffer.from('webp')),
   markStickerReceived: vi.fn(async () => undefined),
+  recordSearchEvent: vi.fn(async () => undefined),
   removeStickerTags: vi.fn(async () => []),
   replaceStickerData: vi.fn(async () => undefined),
   searchStickers: vi.fn(async () => []),
@@ -65,7 +64,7 @@ describe('handleIncomingMessage()', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('should show the typing indicator for every incoming message', async () => {
-    await text('help');
+    await text('cat');
     expect(sendWhatsAppTypingIndicator).toHaveBeenCalledWith('wamid.text');
   });
 
@@ -137,11 +136,12 @@ describe('handleIncomingMessage()', () => {
       expect(repo.addStickerTags).not.toHaveBeenCalled();
     });
 
-    it('should not let someone else delete a sticker they did not save', async () => {
-      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(sticker({ ownerPhone: '972511111111' }));
+    it('should let anyone delete a shared sticker', async () => {
+      const quoted = sticker({ ownerPhone: '972511111111' });
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(quoted);
       await text('delete', 'wamid.in');
-      expect(repo.deleteSticker).not.toHaveBeenCalled();
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'רק מי ששמר את הסטיקר יכול למחוק אותו.');
+      expect(repo.deleteSticker).toHaveBeenCalledWith(quoted._id);
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'נמחק 🗑️');
     });
 
     it('should let anyone tag a shared sticker', async () => {
@@ -218,16 +218,16 @@ describe('handleIncomingMessage()', () => {
       expect(sendWhatsAppSticker).not.toHaveBeenCalled();
     });
 
-    it('should send a random sticker', async () => {
-      vi.mocked(repo.getRandomSticker).mockResolvedValueOnce(sticker());
-      await text('random');
-      expect(sendWhatsAppSticker).toHaveBeenCalledWith(FROM, 'media.new');
+    test.each(['help', 'עזרה', 'random', 'אקראי'])('should treat "%s" as a plain search', async (body) => {
+      await text(body);
+      expect(repo.searchStickers).toHaveBeenCalledWith([body], STICKER_SEARCH_LIMIT + 1);
+      expect(repo.recordSearchEvent).toHaveBeenCalled();
     });
 
-    it('should reply with help and the sticker count', async () => {
-      vi.mocked(repo.countStickers).mockResolvedValueOnce(3);
-      await text('help');
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('במאגר יש 3 סטיקרים'));
+    it('should reply with usage when the text has no words', async () => {
+      await text('🙂');
+      expect(repo.searchStickers).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('מאגר הסטיקרים'));
     });
 
     test.each(['מחק', '-', 'delete'])('should delete a quoted sticker on "%s"', async (body) => {
@@ -263,18 +263,6 @@ describe('handleIncomingMessage()', () => {
       expect(repo.searchStickers).toHaveBeenCalledWith(['cat'], STICKER_SEARCH_LIMIT + 1);
     });
 
-    test.each(['אקראי', 'random'])('should send a random sticker on "%s"', async (body) => {
-      vi.mocked(repo.getRandomSticker).mockResolvedValueOnce(sticker());
-      await text(body);
-      expect(sendWhatsAppSticker).toHaveBeenCalledWith(FROM, 'media.new');
-    });
-
-    it('should reply with help on "עזרה"', async () => {
-      vi.mocked(repo.countStickers).mockResolvedValueOnce(1);
-      await text('עזרה');
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('במאגר יש סטיקר אחד'));
-    });
-
     it('should wait between sends, cap the results and say there are more', async () => {
       vi.mocked(repo.searchStickers).mockResolvedValueOnce(Array.from({ length: STICKER_SEARCH_LIMIT + 1 }, () => sticker()));
       await text('cat');
@@ -306,6 +294,57 @@ describe('handleIncomingMessage()', () => {
       await text('cat');
       expect(uploadWhatsAppMedia).not.toHaveBeenCalled();
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נסו שוב'));
+    });
+  });
+
+  describe('search metrics', () => {
+    it('should record a search with the stickers it sent', async () => {
+      const matches = [sticker(), sticker()];
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(matches);
+      await text('Happy cat');
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith({
+        phone: FROM,
+        query: 'Happy cat',
+        words: ['happy', 'cat'],
+        matchedCount: 2,
+        hasMore: false,
+        sentStickerIds: matches.map((m) => m._id),
+        failedCount: 0,
+        rateLimited: false,
+        durationMs: expect.any(Number),
+      });
+    });
+
+    it('should record a search with no results', async () => {
+      await text('dog');
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ words: ['dog'], matchedCount: 0, hasMore: false, sentStickerIds: [] }));
+    });
+
+    it('should record when there are more results than were sent', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(Array.from({ length: STICKER_SEARCH_LIMIT + 1 }, () => sticker()));
+      await text('cat');
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ matchedCount: STICKER_SEARCH_LIMIT + 1, hasMore: true }));
+    });
+
+    it('should record failed sends and the pair rate limit', async () => {
+      const matches = [sticker({ byteSize: undefined }), sticker(), sticker()];
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(matches);
+      vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
+      vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.1').mockRejectedValueOnce({ code: 131056 });
+      await text('cat');
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ sentStickerIds: [matches[1]._id], failedCount: 1, rateLimited: true }));
+    });
+
+    it('should not record a tag edit', async () => {
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(sticker());
+      await text('cat', 'wamid.in');
+      expect(repo.recordSearchEvent).not.toHaveBeenCalled();
+    });
+
+    it('should still reply when recording the search fails', async () => {
+      vi.mocked(repo.recordSearchEvent).mockRejectedValueOnce(new Error('mongo down'));
+      await expect(text('dog')).resolves.toBeUndefined();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('לא נמצאו סטיקרים'));
     });
   });
 });
