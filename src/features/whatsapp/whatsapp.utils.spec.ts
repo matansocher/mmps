@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
-import { describeFailedStatuses, extractIncomingMessage, isValidSignature, tokenize } from './whatsapp.utils';
+import { describeFailedStatuses, extractIncomingMessage, isValidSignature, parseTagEdits, tokenize } from './whatsapp.utils';
 
 describe('extractIncomingMessage()', () => {
   const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
@@ -77,5 +77,18 @@ describe('describeFailedStatuses()', () => {
 
   it('should return nothing for message events', () => {
     expect(describeFailedStatuses({ entry: [{ changes: [{ value: { messages: [] } }] }] } as WhatsAppWebhookPayload)).toEqual([]);
+  });
+});
+
+describe('parseTagEdits()', () => {
+  test.each([
+    { text: 'Happy cat', expected: { add: ['happy', 'cat'], remove: [] } },
+    { text: 'טוב -לילה', expected: { add: ['טוב'], remove: ['לילה'] } },
+    { text: 'לילה- Cat', expected: { add: ['cat'], remove: ['לילה'] } },
+    { text: '-cat cat', expected: { add: [], remove: ['cat'] } },
+    { text: '-', expected: { add: [], remove: [] } },
+    { text: '  dog,  -dog-  ', expected: { add: [], remove: ['dog'] } },
+  ])('should parse "$text"', ({ text, expected }) => {
+    expect(parseTagEdits(text)).toEqual(expected);
   });
 });

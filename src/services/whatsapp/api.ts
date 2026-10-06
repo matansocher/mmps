@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
-import { WHATSAPP_GRAPH_API_URL } from './constants';
-import type { WhatsAppMediaInfo, WhatsAppSendMessageResponse, WhatsAppStickerMessageRequest, WhatsAppTextMessageRequest } from './types';
+import { WHATSAPP_GRAPH_API_URL, WHATSAPP_PAIR_RATE_LIMIT_ERROR_CODE } from './constants';
+import type { WhatsAppMediaInfo, WhatsAppSendMessageResponse, WhatsAppStickerMessageRequest, WhatsAppTextMessageRequest, WhatsAppTypingIndicatorRequest } from './types';
 
 const logger = new Logger('whatsapp:api');
 
@@ -10,6 +10,27 @@ const authHeaders = () => ({ Authorization: `Bearer ${env.WHATSAPP_TOKEN}` });
 
 export function describeWhatsAppError(err: unknown): string {
   return axios.isAxiosError(err) ? JSON.stringify(err.response?.data ?? err.message) : String(err);
+}
+
+// Too many messages to the same user in a short time (error 131056).
+export function isWhatsAppPairRateLimitError(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.data?.error?.code === WHATSAPP_PAIR_RATE_LIMIT_ERROR_CODE;
+}
+
+// Marks the message read and shows "typing…" until we reply or 25s pass. Never throws.
+export async function sendWhatsAppTypingIndicator(messageId: string): Promise<void> {
+  const url = `${WHATSAPP_GRAPH_API_URL}/${env.PHONE_NUMBER_ID}/messages`;
+  const body: WhatsAppTypingIndicatorRequest = {
+    messaging_product: 'whatsapp',
+    status: 'read',
+    message_id: messageId,
+    typing_indicator: { type: 'text' },
+  };
+  try {
+    await axios.post(url, body, { headers: { ...authHeaders(), 'Content-Type': 'application/json' } });
+  } catch (err) {
+    logger.error(`Failed to send WhatsApp typing indicator for ${messageId}: ${describeWhatsAppError(err)}`);
+  }
 }
 
 export async function sendWhatsAppMessage(to: string, text: string): Promise<void> {

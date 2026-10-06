@@ -1,7 +1,15 @@
 import { createHash } from 'node:crypto';
-import { getErrorMessage, Logger } from '@core/utils';
-import { describeWhatsAppError, downloadWhatsAppMedia, sendWhatsAppMessage, sendWhatsAppSticker, uploadWhatsAppMedia } from '@services/whatsapp';
-import { STICKER_MEDIA_REUSE_MS, STICKER_SEARCH_LIMIT, STICKER_TAG_WINDOW_MS } from './constants';
+import { getErrorMessage, Logger, sleep } from '@core/utils';
+import {
+  describeWhatsAppError,
+  downloadWhatsAppMedia,
+  isWhatsAppPairRateLimitError,
+  sendWhatsAppMessage,
+  sendWhatsAppSticker,
+  sendWhatsAppTypingIndicator,
+  uploadWhatsAppMedia,
+} from '@services/whatsapp';
+import { STICKER_MEDIA_REUSE_MS, STICKER_SEARCH_LIMIT, STICKER_SEND_DELAY_MS, STICKER_TAG_WINDOW_MS } from './constants';
 import {
   addStickerMessageId,
   addStickerTags,
@@ -14,26 +22,41 @@ import {
   getRandomSticker,
   getStickerData,
   markStickerReceived,
+  removeStickerTags,
   replaceStickerData,
   searchStickers,
   setStickerMedia,
 } from './mongo';
 import { fitStickerToLimit, getStickerByteLimit } from './sticker-image';
 import type { IncomingMessage, IncomingStickerMessage, IncomingTextMessage, StickerSummary } from './types';
-import { tokenize } from './whatsapp.utils';
+import { parseTagEdits, tokenize } from './whatsapp.utils';
+import type { TagEdits } from './whatsapp.utils';
 
 const logger = new Logger('whatsapp:sticker-vault');
 
+const HELP_COMMANDS = ['help', 'עזרה'];
+const RANDOM_COMMANDS = ['random', 'אקראי'];
+const DELETE_COMMANDS = ['delete', 'מחק', '-'];
+
 const HELP_MESSAGE = [
-  '🗂️ *Sticker vault*',
-  '• Send me a sticker to save it. The vault is shared by everyone who uses this bot.',
-  '• Then send a few words to tag it (within 5 minutes), or reply to any sticker with words to add tags.',
-  '• Send words to get stickers tagged with all of them.',
-  '• *random* sends a random sticker.',
-  '• Reply *delete* to a sticker you saved to remove it.',
+  '🗂️ *מאגר הסטיקרים*',
+  '• שלחו לי סטיקר כדי לשמור אותו. המאגר משותף לכל מי שמשתמש בבוט.',
+  '• אחר כך שלחו כמה מילים כדי לתייג אותו (תוך 5 דקות), או הגיבו לכל סטיקר עם מילים כדי להוסיף תגיות.',
+  '• מילה עם "-" בהתחלה או בסוף (למשל -לילה) מסירה את התגית.',
+  '• שלחו מילים כדי לקבל סטיקרים שמתויגים בכולן.',
+  '• *אקראי* שולח סטיקר אקראי.',
+  '• הגיבו *מחק* או *-* לסטיקר ששמרתם כדי למחוק אותו.',
 ].join('\n');
 
+const NO_TAGS_MESSAGE = 'אין עדיין תגיות. ההודעה הבאה שתשלחו תתייג אותו.';
+const RATE_LIMIT_MESSAGE = 'שלחתי הרבה הודעות ברצף, נסו שוב בעוד כמה שניות.';
+
+function formatTags(tags: string[], emptyText = NO_TAGS_MESSAGE): string {
+  return tags.length ? `🏷️ תגיות: ${tags.join(', ')}` : emptyText;
+}
+
 export async function handleIncomingMessage(message: IncomingMessage): Promise<void> {
+  void sendWhatsAppTypingIndicator(message.id);
   if (message.kind === 'sticker') return handleSticker(message);
   return handleText(message);
 }
@@ -45,8 +68,7 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
   const existing = await findStickerBySha(sha256);
   if (existing) {
     await markStickerReceived(existing._id, id, from);
-    const reply = existing.tags.length ? `Already saved 🏷️ ${existing.tags.join(', ')}` : 'Already saved, but it has no tags yet. Send a few words to tag it.';
-    await sendWhatsAppMessage(from, reply);
+    await sendWhatsAppMessage(from, `כבר קיים במאגר\n${formatTags(existing.tags)}`);
     return;
   }
 
@@ -54,7 +76,7 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
   const fitted = await fitStickerToLimit(data, animated);
   if (!fitted) {
     logger.warn(`Sticker ${sha256.slice(0, 12)} from ${from} is too large to resend (${data.length} bytes, animated=${animated})`);
-    await sendWhatsAppMessage(from, "This sticker is too large for WhatsApp to send back, so I didn't save it.");
+    await sendWhatsAppMessage(from, 'הסטיקר גדול מדי בשביל וואטסאפ, אז לא שמרתי אותו.');
     return;
   }
 
@@ -67,7 +89,7 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
   }
   const sizeNote = fitted === data ? `${data.length} bytes` : `${data.length} → ${fitted.length} bytes`;
   logger.log(`Saved sticker ${sha256.slice(0, 12)} for ${from} (${sizeNote}, animated=${animated})`);
-  await sendWhatsAppMessage(from, 'Saved ✅ Send a few words to tag it, or reply to it anytime to add tags.');
+  await sendWhatsAppMessage(from, `נשמר ✅\n${NO_TAGS_MESSAGE}`);
 }
 
 async function handleText({ from, text, contextId }: IncomingTextMessage): Promise<void> {
@@ -77,30 +99,30 @@ async function handleText({ from, text, contextId }: IncomingTextMessage): Promi
   if (contextId) {
     const quoted = await findStickerByMessageId(contextId);
     if (quoted) {
-      if (command === 'delete') {
+      if (DELETE_COMMANDS.includes(command)) {
         if (quoted.ownerPhone !== from) {
-          await sendWhatsAppMessage(from, 'Only the person who saved this sticker can delete it.');
+          await sendWhatsAppMessage(from, 'רק מי ששמר את הסטיקר יכול למחוק אותו.');
           return;
         }
         await deleteSticker(quoted._id);
-        await sendWhatsAppMessage(from, 'Deleted 🗑️');
+        await sendWhatsAppMessage(from, 'נמחק 🗑️');
         return;
       }
-      await tagSticker(from, quoted, words);
+      await editStickerTags(from, quoted, parseTagEdits(text));
       return;
     }
   }
 
-  if (command === 'help') {
+  if (HELP_COMMANDS.includes(command)) {
     const count = await countStickers();
-    await sendWhatsAppMessage(from, `${HELP_MESSAGE}\n\nThe vault has ${count} sticker${count === 1 ? '' : 's'}.`);
+    await sendWhatsAppMessage(from, `${HELP_MESSAGE}\n\nבמאגר יש ${count === 1 ? 'סטיקר אחד' : `${count} סטיקרים`}.`);
     return;
   }
 
-  if (command === 'random') {
+  if (RANDOM_COMMANDS.includes(command)) {
     const sticker = await getRandomSticker();
     if (!sticker) {
-      await sendWhatsAppMessage(from, 'The vault is empty. Send me a sticker to save it.');
+      await sendWhatsAppMessage(from, 'המאגר ריק. שלחו לי סטיקר כדי לשמור אותו.');
       return;
     }
     await sendStickers(from, [sticker]);
@@ -112,40 +134,56 @@ async function handleText({ from, text, contextId }: IncomingTextMessage): Promi
     return;
   }
 
-  const pending = await findRecentUntaggedSticker(from, new Date(Date.now() - STICKER_TAG_WINDOW_MS));
-  if (pending) {
-    await tagSticker(from, pending, words);
-    return;
+  const edits = parseTagEdits(text);
+  if (edits.add.length) {
+    const pending = await findRecentUntaggedSticker(from, new Date(Date.now() - STICKER_TAG_WINDOW_MS));
+    if (pending) {
+      await editStickerTags(from, pending, edits);
+      return;
+    }
   }
 
-  const matches = await searchStickers(words, STICKER_SEARCH_LIMIT);
+  // One extra result tells us whether there are more matches than we send.
+  const matches = await searchStickers(words, STICKER_SEARCH_LIMIT + 1);
   if (!matches.length) {
-    await sendWhatsAppMessage(from, `No stickers match "${words.join(' ')}". Send *help* to see how tagging works.`);
+    await sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}". שלחו *עזרה* כדי לראות איך מתייגים.`);
     return;
   }
-  await sendStickers(from, matches);
+  const hasMore = matches.length > STICKER_SEARCH_LIMIT;
+  const sent = await sendStickers(from, matches.slice(0, STICKER_SEARCH_LIMIT));
+  if (sent && hasMore) await sendWhatsAppMessage(from, 'יש עוד סטיקרים שמתאימים. הוסיפו מילים כדי לדייק את החיפוש.');
 }
 
-async function sendStickers(to: string, stickers: StickerSummary[]): Promise<void> {
+// Returns false when sending stopped early because of Meta's per-user rate limit.
+async function sendStickers(to: string, stickers: StickerSummary[]): Promise<boolean> {
   let failed = 0;
-  for (const sticker of stickers) {
+  for (const [index, sticker] of stickers.entries()) {
+    if (index > 0) await sleep(STICKER_SEND_DELAY_MS);
     try {
       await sendStoredSticker(to, sticker);
     } catch (err) {
+      if (isWhatsAppPairRateLimitError(err)) {
+        logger.warn(`Pair rate limit hit while sending to ${to}, stopping after ${index} of ${stickers.length}`);
+        await sendWhatsAppMessage(to, RATE_LIMIT_MESSAGE);
+        return false;
+      }
       failed++;
       logger.error(`Failed to send sticker ${sticker._id} to ${to}: ${describeWhatsAppError(err)}`);
     }
   }
-  if (failed) await sendWhatsAppMessage(to, failed === stickers.length ? "Sorry, I couldn't send that sticker." : `Sorry, ${failed} of ${stickers.length} stickers couldn't be sent.`);
+  if (failed) await sendWhatsAppMessage(to, failed === stickers.length ? 'מצטער, לא הצלחתי לשלוח את הסטיקר.' : `מצטער, ${failed} מתוך ${stickers.length} סטיקרים לא נשלחו.`);
+  return true;
 }
 
-async function tagSticker(from: string, sticker: StickerSummary, words: string[]): Promise<void> {
-  if (!words.length) {
-    await sendWhatsAppMessage(from, 'Reply with words to tag this sticker, or *delete* to remove it.');
+async function editStickerTags(from: string, sticker: StickerSummary, { add, remove }: TagEdits): Promise<void> {
+  if (!add.length && !remove.length) {
+    await sendWhatsAppMessage(from, 'הגיבו עם מילים כדי לתייג את הסטיקר, *-מילה* כדי להסיר תגית, או *מחק* כדי למחוק אותו.');
     return;
   }
-  const tags = await addStickerTags(sticker._id, words);
-  await sendWhatsAppMessage(from, `Tagged 🏷️ ${tags.join(', ')}`);
+  let tags = sticker.tags;
+  if (add.length) tags = await addStickerTags(sticker._id, add);
+  if (remove.length) tags = await removeStickerTags(sticker._id, remove);
+  await sendWhatsAppMessage(from, `עודכן ✅\n${formatTags(tags, 'אין תגיות')}`);
 }
 
 async function sendStoredSticker(to: string, sticker: StickerSummary): Promise<void> {
@@ -158,6 +196,7 @@ async function sendStoredSticker(to: string, sticker: StickerSummary): Promise<v
     try {
       messageId = await sendWhatsAppSticker(to, cachedMediaId);
     } catch (err) {
+      if (isWhatsAppPairRateLimitError(err)) throw err;
       logger.warn(`Cached media ${cachedMediaId} failed, re-uploading: ${describeWhatsAppError(err)}`);
     }
   }

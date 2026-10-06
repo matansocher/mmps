@@ -25,3 +25,10 @@ export type WhatsAppMediaInfo = {
   readonly file_size: number;
   readonly id: string;
 };
+
+export type WhatsAppTypingIndicatorRequest = {
+  readonly messaging_product: 'whatsapp';
+  readonly status: 'read';
+  readonly message_id: string;
+  readonly typing_indicator: { readonly type: 'text' };
+};

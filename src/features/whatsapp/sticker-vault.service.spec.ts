@@ -1,16 +1,25 @@
 import { ObjectId } from 'mongodb';
 import { createHash } from 'node:crypto';
-import { downloadWhatsAppMedia, sendWhatsAppMessage, sendWhatsAppSticker, uploadWhatsAppMedia } from '@services/whatsapp';
+import { sleep } from '@core/utils';
+import { downloadWhatsAppMedia, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from '@services/whatsapp';
+import { STICKER_SEARCH_LIMIT, STICKER_SEND_DELAY_MS } from './constants';
 import * as repo from './mongo';
 import { fitStickerToLimit } from './sticker-image';
 import { handleIncomingMessage } from './sticker-vault.service';
 import type { StickerSummary } from './types';
 
+vi.mock('@core/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@core/utils')>()),
+  sleep: vi.fn(async () => undefined),
+}));
+
 vi.mock('@services/whatsapp', () => ({
   describeWhatsAppError: vi.fn(() => 'error'),
   downloadWhatsAppMedia: vi.fn(),
+  isWhatsAppPairRateLimitError: vi.fn((err: { code?: number }) => err?.code === 131056),
   sendWhatsAppMessage: vi.fn(async () => undefined),
   sendWhatsAppSticker: vi.fn(async () => 'wamid.sent'),
+  sendWhatsAppTypingIndicator: vi.fn(async () => undefined),
   uploadWhatsAppMedia: vi.fn(async () => 'media.new'),
 }));
 
@@ -26,6 +35,7 @@ vi.mock('./mongo', () => ({
   getRandomSticker: vi.fn(async () => null),
   getStickerData: vi.fn(async () => Buffer.from('webp')),
   markStickerReceived: vi.fn(async () => undefined),
+  removeStickerTags: vi.fn(async () => []),
   replaceStickerData: vi.fn(async () => undefined),
   searchStickers: vi.fn(async () => []),
   setStickerMedia: vi.fn(async () => undefined),
@@ -56,6 +66,11 @@ const text = (body: string, contextId?: string) => handleIncomingMessage({ kind:
 describe('handleIncomingMessage()', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('should show the typing indicator for every incoming message', async () => {
+    await text('help');
+    expect(sendWhatsAppTypingIndicator).toHaveBeenCalledWith('wamid.text');
+  });
+
   describe('stickers', () => {
     const data = Buffer.from('sticker-bytes');
     const sha256 = createHash('sha256').update(data).digest('hex');
@@ -65,7 +80,8 @@ describe('handleIncomingMessage()', () => {
     it('should save a new sticker keyed by its content hash', async () => {
       await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true });
       expect(repo.createSticker).toHaveBeenCalledWith({ ownerPhone: FROM, sha256, data, mimeType: 'image/webp', animated: true, messageId: 'wamid.in' });
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('Saved'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נשמר ✅'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('אין עדיין תגיות'));
     });
 
     it('should not duplicate a sticker that is already saved', async () => {
@@ -75,7 +91,7 @@ describe('handleIncomingMessage()', () => {
       expect(repo.createSticker).not.toHaveBeenCalled();
       expect(repo.findStickerBySha).toHaveBeenCalledWith(expect.any(String));
       expect(repo.markStickerReceived).toHaveBeenCalledWith(existing._id, 'wamid.again', FROM);
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('cat'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'כבר קיים במאגר\n🏷️ תגיות: cat');
     });
 
     it('should stay quiet when a concurrent delivery already inserted it', async () => {
@@ -96,7 +112,7 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
       await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true });
       expect(repo.createSticker).not.toHaveBeenCalled();
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('too large'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('גדול מדי'));
     });
   });
 
@@ -121,7 +137,7 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(sticker({ ownerPhone: '972511111111' }));
       await text('delete', 'wamid.in');
       expect(repo.deleteSticker).not.toHaveBeenCalled();
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'Only the person who saved this sticker can delete it.');
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'רק מי ששמר את הסטיקר יכול למחוק אותו.');
     });
 
     it('should let anyone tag a shared sticker', async () => {
@@ -189,12 +205,12 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
       await text('cat');
       expect(sendWhatsAppSticker).toHaveBeenCalledTimes(1);
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('1 of 2'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('1 מתוך 2'));
     });
 
     it('should say when nothing matches', async () => {
       await text('dog');
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('No stickers match'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('לא נמצאו סטיקרים'));
       expect(sendWhatsAppSticker).not.toHaveBeenCalled();
     });
 
@@ -207,7 +223,86 @@ describe('handleIncomingMessage()', () => {
     it('should reply with help and the sticker count', async () => {
       vi.mocked(repo.countStickers).mockResolvedValueOnce(3);
       await text('help');
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('The vault has 3 stickers'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('במאגר יש 3 סטיקרים'));
+    });
+
+    test.each(['מחק', '-', 'delete'])('should delete a quoted sticker on "%s"', async (body) => {
+      const quoted = sticker();
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(quoted);
+      await text(body, 'wamid.in');
+      expect(repo.deleteSticker).toHaveBeenCalledWith(quoted._id);
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'נמחק 🗑️');
+    });
+
+    it('should add and remove tags in one quote-reply and list the result', async () => {
+      const quoted = sticker({ tags: ['לילה', 'cat'] });
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(quoted);
+      vi.mocked(repo.addStickerTags).mockResolvedValueOnce(['לילה', 'cat', 'טוב']);
+      vi.mocked(repo.removeStickerTags).mockResolvedValueOnce(['cat', 'טוב']);
+      await text('טוב -לילה', 'wamid.in');
+      expect(repo.addStickerTags).toHaveBeenCalledWith(quoted._id, ['טוב']);
+      expect(repo.removeStickerTags).toHaveBeenCalledWith(quoted._id, ['לילה']);
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'עודכן ✅\n🏷️ תגיות: cat, טוב');
+    });
+
+    it('should accept a trailing "-" for removal and say when no tags are left', async () => {
+      const quoted = sticker({ tags: ['לילה'] });
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(quoted);
+      await text('לילה-', 'wamid.in');
+      expect(repo.addStickerTags).not.toHaveBeenCalled();
+      expect(repo.removeStickerTags).toHaveBeenCalledWith(quoted._id, ['לילה']);
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'עודכן ✅\nאין תגיות');
+    });
+
+    it('should search instead of tagging the untagged sticker when only removing words', async () => {
+      await text('-cat');
+      expect(repo.findRecentUntaggedSticker).not.toHaveBeenCalled();
+      expect(repo.searchStickers).toHaveBeenCalledWith(['cat'], STICKER_SEARCH_LIMIT + 1);
+    });
+
+    test.each(['אקראי', 'random'])('should send a random sticker on "%s"', async (body) => {
+      vi.mocked(repo.getRandomSticker).mockResolvedValueOnce(sticker());
+      await text(body);
+      expect(sendWhatsAppSticker).toHaveBeenCalledWith(FROM, 'media.new');
+    });
+
+    it('should reply with help on "עזרה"', async () => {
+      vi.mocked(repo.countStickers).mockResolvedValueOnce(1);
+      await text('עזרה');
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('במאגר יש סטיקר אחד'));
+    });
+
+    it('should wait between sends, cap the results and say there are more', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(Array.from({ length: STICKER_SEARCH_LIMIT + 1 }, () => sticker()));
+      await text('cat');
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(STICKER_SEARCH_LIMIT);
+      expect(sleep).toHaveBeenCalledTimes(STICKER_SEARCH_LIMIT - 1);
+      expect(sleep).toHaveBeenCalledWith(STICKER_SEND_DELAY_MS);
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('יש עוד סטיקרים'));
+    });
+
+    it('should not mention more results when all matches were sent', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce([sticker()]);
+      await text('cat');
+      expect(sleep).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+    });
+
+    it('should stop sending and ask to retry on the pair rate limit', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(Array.from({ length: STICKER_SEARCH_LIMIT + 1 }, () => sticker()));
+      vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.1').mockRejectedValueOnce({ code: 131056 });
+      await text('cat');
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(2);
+      expect(sendWhatsAppMessage).toHaveBeenCalledTimes(1);
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נסו שוב'));
+    });
+
+    it('should not re-upload a cached sticker when hitting the pair rate limit', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce([sticker({ mediaId: 'media.cached', mediaUploadedAt: new Date() })]);
+      vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce({ code: 131056 });
+      await text('cat');
+      expect(uploadWhatsAppMedia).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נסו שוב'));
     });
   });
 });

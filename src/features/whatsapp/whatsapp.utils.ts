@@ -22,6 +22,22 @@ export function tokenize(text: string): string[] {
   return [...new Set(words)];
 }
 
+export type TagEdits = {
+  readonly add: string[];
+  readonly remove: string[];
+};
+
+// Words with a leading or trailing "-" remove a tag, e.g. "cat -dog night-" -> { add: ["cat"], remove: ["dog", "night"] }
+export function parseTagEdits(text: string): TagEdits {
+  const add = new Set<string>();
+  const remove = new Set<string>();
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const target = word.startsWith('-') || word.endsWith('-') ? remove : add;
+    tokenize(word).forEach((tag) => target.add(tag));
+  }
+  return { add: [...add].filter((tag) => !remove.has(tag)), remove: [...remove] };
+}
+
 // Header format: "sha256=<hex hmac of the raw request body, keyed with the app secret>"
 export function isValidSignature(rawBody: Buffer, signatureHeader: string | undefined, appSecret: string): boolean {
   if (!signatureHeader?.startsWith('sha256=')) return false;

@@ -68,6 +68,11 @@ export async function addStickerTags(id: ObjectId, tags: string[]): Promise<stri
   return updated?.tags ?? tags;
 }
 
+export async function removeStickerTags(id: ObjectId, tags: string[]): Promise<string[]> {
+  const updated = await getCollection().findOneAndUpdate({ _id: id }, { $pull: { tags: { $in: tags } }, $set: { updatedAt: new Date() } }, { returnDocument: 'after', projection: { tags: 1 } });
+  return updated?.tags ?? [];
+}
+
 export async function deleteSticker(id: ObjectId): Promise<void> {
   await getCollection().deleteOne({ _id: id });
 }
