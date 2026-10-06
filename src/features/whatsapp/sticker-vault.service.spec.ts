@@ -224,8 +224,13 @@ describe('handleIncomingMessage()', () => {
       expect(repo.recordSearchEvent).toHaveBeenCalled();
     });
 
+    it('should search by emoji', async () => {
+      await text('חתול ❤️');
+      expect(repo.searchStickers).toHaveBeenCalledWith(['חתול', '❤']);
+    });
+
     it('should reply with usage when the text has no words', async () => {
-      await text('🙂');
+      await text('?!');
       expect(repo.searchStickers).not.toHaveBeenCalled();
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('מאגר הסטיקרים'));
     });

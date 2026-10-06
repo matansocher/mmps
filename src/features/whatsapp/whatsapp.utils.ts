@@ -15,13 +15,15 @@ export function extractIncomingMessage(payload: WhatsAppWebhookPayload): Incomin
   return null;
 }
 
-// Lowercased, de-duplicated words in any script (Hebrew, English, digits), e.g. "Funny, CAT!! #lol" -> ["funny", "cat", "lol"]
+// An emoji with its skin tones and variation selectors, joined by ZWJ into one sequence (👍🏽, 👨‍👩‍👧, ❤️‍🔥), or a flag (🇮🇱)
+const EMOJI = String.raw`\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*(?:\u200D\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*)*|\p{Regional_Indicator}{2}`;
+const TOKEN_REGEX = new RegExp(String.raw`[\p{L}\p{N}]+|${EMOJI}`, 'gu');
+
+// Lowercased, de-duplicated words in any script (Hebrew, English, digits) and emojis, each emoji its own token,
+// e.g. "Funny, CAT!! #lol 😂😂" -> ["funny", "cat", "lol", "😂"]. U+FE0F is dropped so "❤" and "❤️" match.
 export function tokenize(text: string): string[] {
-  const words = text
-    .toLowerCase()
-    .split(/[^\p{L}\p{N}]+/u)
-    .filter(Boolean);
-  return [...new Set(words)];
+  const tokens = [...text.toLowerCase().matchAll(TOKEN_REGEX)].map(([token]) => token.replace(/\uFE0F/g, ''));
+  return [...new Set(tokens)];
 }
 
 export type TagEdits = {
