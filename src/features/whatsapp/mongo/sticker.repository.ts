@@ -68,6 +68,11 @@ export async function addStickerTags(id: ObjectId, tags: string[]): Promise<stri
   return updated?.tags ?? tags;
 }
 
+export async function removeStickerTags(id: ObjectId, tags: string[]): Promise<string[]> {
+  const updated = await getCollection().findOneAndUpdate({ _id: id }, { $pull: { tags: { $in: tags } }, $set: { updatedAt: new Date() } }, { returnDocument: 'after', projection: { tags: 1 } });
+  return updated?.tags ?? [];
+}
+
 export async function deleteSticker(id: ObjectId): Promise<void> {
   await getCollection().deleteOne({ _id: id });
 }
@@ -76,17 +81,12 @@ export async function countStickers(): Promise<number> {
   return getCollection().countDocuments();
 }
 
-// Best matches first: most tags in common with the query, then most recently updated.
+// Only stickers tagged with every query word, most recently updated first.
 export async function searchStickers(words: string[], limit: number): Promise<StickerSummary[]> {
   return getCollection()
-    .aggregate<StickerSummary>([
-      { $match: { tags: { $in: words } } },
-      { $project: { data: 0 } },
-      { $addFields: { score: { $size: { $setIntersection: ['$tags', words] } } } },
-      { $sort: { score: -1, updatedAt: -1 } },
-      { $limit: limit },
-      { $project: { score: 0 } },
-    ])
+    .find({ tags: { $all: words } }, WITHOUT_DATA)
+    .sort({ updatedAt: -1 })
+    .limit(limit)
     .toArray();
 }
 

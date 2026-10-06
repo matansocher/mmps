@@ -1,3 +1,3 @@
-export { describeWhatsAppError, downloadWhatsAppMedia, sendWhatsAppMessage, sendWhatsAppSticker, uploadWhatsAppMedia } from './api';
+export { describeWhatsAppError, downloadWhatsAppMedia, isWhatsAppPairRateLimitError, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from './api';
 export * from './constants';
 export * from './types';
