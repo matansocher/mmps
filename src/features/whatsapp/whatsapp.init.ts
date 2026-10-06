@@ -3,7 +3,7 @@ import { env } from 'node:process';
 import { createMongoConnection } from '@core/mongo';
 import { getErrorMessage, Logger } from '@core/utils';
 import { WHATSAPP_DB_NAME, WHATSAPP_WEBHOOK_PATH } from './constants';
-import { ensureStickerIndexes } from './mongo';
+import { ensureSearchIndexes, ensureStickerIndexes } from './mongo';
 import { registerWhatsappRoutes } from './whatsapp.controller';
 
 const logger = new Logger('whatsapp:init');
@@ -17,5 +17,8 @@ export async function initWhatsapp(app: Express): Promise<void> {
   logger.log(`WhatsApp webhook registered at ${WHATSAPP_WEBHOOK_PATH}`);
 
   await createMongoConnection(WHATSAPP_DB_NAME);
-  await ensureStickerIndexes().catch((err) => logger.error(`Failed to ensure sticker indexes: ${getErrorMessage(err)}`));
+  await Promise.all([
+    ensureStickerIndexes().catch((err) => logger.error(`Failed to ensure sticker indexes: ${getErrorMessage(err)}`)),
+    ensureSearchIndexes().catch((err) => logger.error(`Failed to ensure search indexes: ${getErrorMessage(err)}`)),
+  ]);
 }

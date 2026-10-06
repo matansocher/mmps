@@ -42,6 +42,7 @@ export function parseTagEdits(text: string): TagEdits {
 
 export type StepTimer = {
   readonly time: <T>(step: string, run: () => Promise<T>) => Promise<T>;
+  readonly elapsedMs: () => number;
   readonly summary: () => string;
 };
 
@@ -58,6 +59,7 @@ export function createStepTimer(now: () => number = Date.now): StepTimer {
         steps.push(`${step}=${now() - stepStartedAt}ms`);
       }
     },
+    elapsedMs: () => now() - startedAt,
     summary: () => [...steps, `total=${now() - startedAt}ms`].join(' '),
   };
 }

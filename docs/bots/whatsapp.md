@@ -41,7 +41,7 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 | You send | What happens |
 |----------|--------------|
 | A quote-reply to a sticker with words | Edits that sticker's tags (works on stickers you sent and stickers the bot sent) |
-| A quote-reply to a sticker with `-`, `delete` or `מחק` | Removes the sticker, only if you are the one who saved it |
+| A quote-reply to a sticker with `-`, `delete` or `מחק` | Removes the sticker (anyone can delete, not just whoever saved it) |
 | `random` / `אקראי` | Sends a random saved sticker |
 | `help` / `עזרה` | Shows usage and how many stickers you have |
 | Anything else | Searches tags and sends up to 3 stickers tagged with every word sent, or replies that nothing matched |
@@ -74,7 +74,26 @@ Stickers go out as `type: "sticker"` messages, so they show up as stickers, not 
 
 ### Storage
 
-MongoDB database `Whatsapp`, collection `stickers`, one document per sticker, shared by all users. Each document holds the uploader (`ownerPhone`), the sticker bytes, sha256, mime type, animated flag, tags, related message ids and the cached media id. Indexes (unique `sha256`, tags, message ids) are created at boot by `ensureStickerIndexes`, which also drops legacy indexes (the old per-sender and `last_received` indexes). The connection uses `MONGO_DB_URL`.
+MongoDB database `Whatsapp`, collection `stickers`, one document per sticker, shared by all users. Each document holds who first saved it (`ownerPhone`, informational only), the sticker bytes, sha256, mime type, animated flag, tags, related message ids and the cached media id. Indexes (unique `sha256`, tags, message ids) are created at boot by `ensureStickerIndexes`, which also drops legacy indexes (the old per-sender and `last_received` indexes). The connection uses `MONGO_DB_URL`.
+
+### Search metrics
+
+Every text search (not `random`, `help` or tag edits) is recorded in the `searches` collection of the same database, for dashboards. One document per search:
+
+| Field | Meaning |
+| --- | --- |
+| `phone` | Who searched |
+| `query` | The raw text |
+| `words` | The normalized words that were matched (all must match) |
+| `matchedCount` | Matches found, capped at `STICKER_SEARCH_LIMIT + 1` (no extra count query) |
+| `hasMore` | More matched than were sent |
+| `sentStickerIds` | Ids of the stickers actually delivered |
+| `failedCount` | Matches that couldn't be sent |
+| `rateLimited` | Sending stopped on error `131056` |
+| `durationMs` | Time from receiving the message to the end of sending |
+| `createdAt` | When the search happened |
+
+Indexes `{ createdAt: -1 }` and `{ words: 1, createdAt: -1 }` are created at boot by `ensureSearchIndexes`. The write is fire-and-forget: a failure is logged and never affects the reply. There is no TTL. Zero-result searches (`matchedCount: 0`) show which words people look for that the vault doesn't have yet.
 
 ### Sending (`sendWhatsAppMessage`)
 
@@ -161,4 +180,4 @@ Any Node.js host that runs `npm run build && npm start` and exposes HTTPS works:
 npx vitest run src/features/whatsapp src/services/whatsapp
 ```
 
-The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing, signature validation, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete (including `-` and Hebrew aliases), throttled search, the rate-limit stop, random, help and media re-upload.
+The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing, signature validation, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, throttled search, the rate-limit stop, random, help and media re-upload.

@@ -107,6 +107,12 @@ describe('createStepTimer()', () => {
     expect(timer.summary()).toEqual('search=15ms send=70ms total=120ms');
   });
 
+  it('should report the time elapsed since it was created', () => {
+    const ticks = [100, 350];
+    const timer = createStepTimer(() => ticks.shift());
+    expect(timer.elapsedMs()).toEqual(250);
+  });
+
   it('should record a step that throws and rethrow', async () => {
     const ticks = [0, 0, 5, 9];
     const timer = createStepTimer(() => ticks.shift());

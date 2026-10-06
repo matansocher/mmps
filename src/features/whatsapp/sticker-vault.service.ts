@@ -1,3 +1,4 @@
+import type { ObjectId } from 'mongodb';
 import { createHash } from 'node:crypto';
 import { getErrorMessage, Logger, sleep } from '@core/utils';
 import {
@@ -21,11 +22,13 @@ import {
   getRandomSticker,
   getStickerData,
   markStickerReceived,
+  recordSearchEvent,
   removeStickerTags,
   replaceStickerData,
   searchStickers,
   setStickerMedia,
 } from './mongo';
+import type { CreateSearchEventData } from './mongo';
 import { fitStickerToLimit, getStickerByteLimit } from './sticker-image';
 import type { IncomingMessage, IncomingStickerMessage, IncomingTextMessage, StickerSummary } from './types';
 import { createStepTimer, parseTagEdits, tokenize } from './whatsapp.utils';
@@ -44,7 +47,7 @@ const HELP_MESSAGE = [
   '• מילה עם "-" בהתחלה או בסוף (למשל -לילה) מסירה את מילת החיפוש.',
   '• שלחו מילים כדי לקבל סטיקרים שמתאימים לכולן.',
   '• *אקראי* שולח סטיקר אקראי.',
-  '• הגיבו *מחק* או *-* לסטיקר ששמרתם כדי למחוק אותו.',
+  '• הגיבו *מחק* או *-* לסטיקר כדי למחוק אותו.',
 ].join('\n');
 
 const ADD_WORDS_HINT = 'הגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.';
@@ -107,10 +110,6 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
     const quoted = await timer.time('findQuoted', () => findStickerByMessageId(contextId));
     if (quoted) {
       if (DELETE_COMMANDS.includes(command)) {
-        if (quoted.ownerPhone !== from) {
-          await timer.time('reply', () => sendWhatsAppMessage(from, 'רק מי ששמר את הסטיקר יכול למחוק אותו.'));
-          return;
-        }
         await timer.time('delete', () => deleteSticker(quoted._id));
         await timer.time('reply', () => sendWhatsAppMessage(from, 'נמחק 🗑️'));
         return;
@@ -143,34 +142,56 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
 
   // One extra result tells us whether there are more matches than we send.
   const matches = await timer.time('search', () => searchStickers(words, STICKER_SEARCH_LIMIT + 1));
+  const hasMore = matches.length > STICKER_SEARCH_LIMIT;
+  let result: SendResult = { sentIds: [], failed: 0, rateLimited: false };
   if (!matches.length) {
     await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}". שלחו *עזרה* כדי לראות איך מוסיפים מילות חיפוש.`));
-    return;
+  } else {
+    result = await sendStickers(from, matches.slice(0, STICKER_SEARCH_LIMIT), timer);
+    if (!result.rateLimited && hasMore) await timer.time('reply', () => sendWhatsAppMessage(from, 'יש עוד סטיקרים שמתאימים. הוסיפו מילים כדי לדייק את החיפוש.'));
   }
-  const hasMore = matches.length > STICKER_SEARCH_LIMIT;
-  const sent = await sendStickers(from, matches.slice(0, STICKER_SEARCH_LIMIT), timer);
-  if (sent && hasMore) await timer.time('reply', () => sendWhatsAppMessage(from, 'יש עוד סטיקרים שמתאימים. הוסיפו מילים כדי לדייק את החיפוש.'));
+
+  const event: CreateSearchEventData = {
+    phone: from,
+    query: text,
+    words,
+    matchedCount: matches.length,
+    hasMore,
+    sentStickerIds: result.sentIds,
+    failedCount: result.failed,
+    rateLimited: result.rateLimited,
+    durationMs: timer.elapsedMs(),
+  };
+  // Metrics must never break or slow down a search.
+  void recordSearchEvent(event).catch((err) => logger.error(`Failed to record search event: ${getErrorMessage(err)}`));
 }
 
-// Returns false when sending stopped early because of Meta's per-user rate limit.
-async function sendStickers(to: string, stickers: StickerSummary[], timer: StepTimer): Promise<boolean> {
+type SendResult = {
+  readonly sentIds: ObjectId[];
+  readonly failed: number;
+  readonly rateLimited: boolean; // stopped early because of Meta's per-user rate limit
+};
+
+async function sendStickers(to: string, stickers: StickerSummary[], timer: StepTimer): Promise<SendResult> {
+  const sentIds: ObjectId[] = [];
   let failed = 0;
   for (const [index, sticker] of stickers.entries()) {
     if (index > 0) await timer.time('delay', () => sleep(STICKER_SEND_DELAY_MS));
     try {
       await sendStoredSticker(to, sticker, timer);
+      sentIds.push(sticker._id);
     } catch (err) {
       if (isWhatsAppPairRateLimitError(err)) {
         logger.warn(`Pair rate limit hit while sending to ${to}, stopping after ${index} of ${stickers.length}`);
         await timer.time('reply', () => sendWhatsAppMessage(to, RATE_LIMIT_MESSAGE));
-        return false;
+        return { sentIds, failed, rateLimited: true };
       }
       failed++;
       logger.error(`Failed to send sticker ${sticker._id} to ${to}: ${describeWhatsAppError(err)}`);
     }
   }
   if (failed) await timer.time('reply', () => sendWhatsAppMessage(to, failed === stickers.length ? 'מצטער, לא הצלחתי לשלוח את הסטיקר.' : `מצטער, ${failed} מתוך ${stickers.length} סטיקרים לא נשלחו.`));
-  return true;
+  return { sentIds, failed, rateLimited: false };
 }
 
 async function editStickerTags(from: string, sticker: StickerSummary, { add, remove }: TagEdits, timer: StepTimer): Promise<void> {

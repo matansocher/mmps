@@ -3,6 +3,7 @@ export const WHATSAPP_SIGNATURE_HEADER = 'x-hub-signature-256';
 
 export const WHATSAPP_DB_NAME = 'Whatsapp';
 export const WHATSAPP_STICKERS_COLLECTION = 'stickers';
+export const WHATSAPP_SEARCHES_COLLECTION = 'searches';
 
 export const STICKER_SEARCH_LIMIT = 3;
 export const STICKER_SEND_DELAY_MS = 1000; // gap between search results; Meta's pair rate limit allows short bursts, ~1 msg/6s sustained
