@@ -1,11 +1,21 @@
 // An emoji with its skin tones and variation selectors, joined by ZWJ into one sequence (👍🏽, 👨‍👩‍👧, ❤️‍🔥), or a flag (🇮🇱)
 const EMOJI = String.raw`\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*(?:\u200D\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*)*|\p{Regional_Indicator}{2}`;
-const TOKEN_REGEX = new RegExp(String.raw`[\p{L}\p{N}]+|${EMOJI}`, 'gu');
+// Dots count as word characters anywhere (ת.ז, 3.5, "."); a word may hold a geresh or gershayim between letters (עו״ד, don't)
+// and a Hebrew word may also end with a geresh (ג׳ורג׳)
+const WORD = String.raw`[\p{L}\p{N}.]+(?:['"’”׳״][\p{L}\p{N}.]+)*(?:(?<=\p{Script=Hebrew})['’׳])?`;
+const TOKEN_REGEX = new RegExp(`${WORD}|${EMOJI}`, 'gu');
+const HEBREW_REGEX = /\p{Script=Hebrew}/u;
+
+// Phone keyboards type ' and " instead of ׳ and ״, so Hebrew words use the Hebrew marks and others the plain ' (ג'ורג' -> ג׳ורג׳)
+function normalizePunctuation(token: string): string {
+  if (HEBREW_REGEX.test(token)) return token.replace(/['’]/g, '׳').replace(/["”]/g, '״');
+  return token.replace(/[’׳]/g, "'").replace(/[”״]/g, '"');
+}
 
 // Lowercased, de-duplicated words in any script (Hebrew, English, digits) and emojis, each emoji its own token,
 // e.g. "Funny, CAT!! #lol 😂😂" -> ["funny", "cat", "lol", "😂"]. U+FE0F is dropped so "❤" and "❤️" match.
 export function tokenize(text: string): string[] {
-  const tokens = [...text.toLowerCase().matchAll(TOKEN_REGEX)].map(([token]) => token.replace(/\uFE0F/g, ''));
+  const tokens = [...text.toLowerCase().matchAll(TOKEN_REGEX)].map(([token]) => normalizePunctuation(token.replace(/\uFE0F/g, '')));
   return [...new Set(tokens)];
 }
 
