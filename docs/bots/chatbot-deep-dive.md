@@ -49,7 +49,7 @@ The feature lives in `src/features/chatbot/` and follows the repo's **Controller
 | `agent/agent.ts` | The **AgentDescriptor**: name, general-behavior system prompt, and the array of 27 tools. |
 | `agent/factory.ts` | `createAgentService()` — calls LangChain `createAgent()` and wraps the compiled graph. |
 | `agent/service.ts` | `AiService` — thin wrapper over the compiled graph: `invoke`/`stream`/`getState`, builds `RunnableConfig` (thread_id, callbacks, recursion limit). |
-| `agent/checkpointer.ts` | `createChatbotCheckpointer()` — Mongo-backed persistence, db `Chatbot`, 30-day TTL. |
+| `agent/checkpointer.ts` | `createChatbotCheckpointer()` — Mongo-backed persistence (`PruningMongoDBSaver`), db `Chatbot`, 30-day TTL, keeps only the 2 newest checkpoints per thread. |
 | `chatbot-scheduler.service.ts` | 15+ cron jobs (node-cron) for proactive messages. |
 | `schedulers/*.ts` | Individual scheduled tasks (daily summary, football, reminders, usage report…). |
 | `chatbot.config.ts` | Bot config, summarization thresholds, usage kill-switch, summary prompt. |
@@ -152,10 +152,18 @@ Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and 
 This is the flagship "durable state" feature. LangGraph checkpointers snapshot the graph state after every step so a conversation survives process restarts.
 
 ```ts
+export class PruningMongoDBSaver extends MongoDBSaver {
+  async put(config, checkpoint, metadata) {
+    const result = await super.put(config, checkpoint, metadata);
+    // delete this thread's checkpoints + writes older than the new checkpoint's parent
+    await this.pruneOlderThan(threadId, checkpointNs, parentCheckpointId);
+    return result;
+  }
+}
+
 export async function createChatbotCheckpointer(): Promise<MongoDBSaver> {
-  const client = new MongoClient(env.MONGO_DB_URL);
-  await client.connect();
-  const checkpointer = new MongoDBSaver({ client, dbName: 'Chatbot', ttl: THIRTY_DAYS_IN_SECONDS });
+  const client = await getMongoClient();
+  const checkpointer = new PruningMongoDBSaver({ client, dbName: 'Chatbot', ttl: THIRTY_DAYS_IN_SECONDS });
   await checkpointer.setup();  // creates collections/indexes
   return checkpointer;
 }
@@ -164,6 +172,7 @@ export async function createChatbotCheckpointer(): Promise<MongoDBSaver> {
 - Replaces the default in-RAM `MemorySaver` (which loses history on restart/deploy).
 - State is keyed by `thread_id` — derived from the Telegram `chatId`, so each user has isolated memory.
 - **30-day TTL** — old threads auto-expire (Mongo TTL index) for privacy + storage hygiene.
+- **Pruning** — a full snapshot is written after *every* graph step (each LLM call, each tool call), but resuming only reads the latest. `PruningMongoDBSaver` deletes everything older than the new checkpoint's parent after each save, so a thread holds 2 snapshots instead of hundreds. Checkpoint ids are uuid6 (time-ordered), so `$lt` on the id means "older". Prune failures are logged and never fail the turn. `src/features/chatbot/scripts/prune-checkpoints.ts` is a one-off backfill for data written before pruning existed (dry run by default, `--apply` to delete).
 
 ::: warning Sharp edge — init ordering
 The checkpointer is built **before** `provideTelegramBot()` in `init`. grammY locks the bot against new listeners once `bot.start()` polling begins, so an `await` between starting the bot and registering handlers would let polling win the race and make `controller.init()` throw. Ordering the async work carefully is the fix — a concrete example of a subtle init-order concurrency bug.
@@ -310,7 +319,7 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 |----------|----------------|
 | Single agent, 27 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by explicit, per-tool rules in each tool's description. |
 | Summarize vs. truncate | Summarizing preserves long-term facts at the cost of an extra LLM call. Chosen because it's a *personal* assistant where remembering user facts matters. |
-| Mongo checkpointer + 30-day TTL | Durable across deploys; TTL bounds storage & respects privacy. Tradeoff: memory of very old conversations is intentionally lost. |
+| Mongo checkpointer + 30-day TTL + pruning | Durable across deploys; TTL bounds storage & respects privacy; pruning keeps 2 snapshots per thread. Tradeoff: memory of very old conversations is intentionally lost, and checkpoint history (time travel/replay) isn't kept. |
 | Fire-and-forget usage writes | Observability must never slow or break a user reply; accept rare lost records. |
 | Low temperature (0.2) | Assistant/tool-routing wants determinism & correctness over creativity. |
 | `gpt-4.1-mini` | Cheap + fast for a high-frequency personal bot; big prompt makes token cost matter, hence mini + summarization + metering. |
@@ -322,7 +331,7 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 A single call returns one answer. A ReAct agent loops: it reasons, decides to call a tool, reads the tool result, and repeats until it can answer. LangGraph compiles this into a state graph with an LLM node, a tool node, and a conditional edge, bounded by a recursion limit.
 
 **Q: How does the bot remember conversations across restarts?**
-A LangGraph **MongoDBSaver checkpointer** snapshots graph state after each step, keyed by `thread_id` (the Telegram chatId). On the next message it reloads that thread's state. A 30-day TTL expires stale threads.
+A LangGraph **MongoDBSaver checkpointer** snapshots graph state after each step, keyed by `thread_id` (the Telegram chatId). On the next message it reloads that thread's state. Older snapshots are pruned after each save (only the latest is ever read), and a 30-day TTL expires stale threads.
 
 **Q: The context window is limited — how do you handle long conversations?**
 `summarizationMiddleware`: past ~24k tokens (or ~40 messages holding at least ~16k tokens) it compresses the oldest turns into a running summary and keeps the most recent ~8k tokens verbatim. The summary is persisted by the checkpointer, so we bound tokens without dropping important facts.
