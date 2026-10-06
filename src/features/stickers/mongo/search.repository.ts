@@ -1,10 +1,10 @@
 import type { Collection } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { WHATSAPP_DB_NAME, WHATSAPP_SEARCHES_COLLECTION } from '../constants';
+import { STICKERS_DB_NAME, STICKERS_SEARCHES_COLLECTION } from '../constants';
 import type { SearchEvent } from '../types';
 
 function getCollection(): Collection<SearchEvent> {
-  return getMongoCollection<SearchEvent>(WHATSAPP_DB_NAME, WHATSAPP_SEARCHES_COLLECTION);
+  return getMongoCollection<SearchEvent>(STICKERS_DB_NAME, STICKERS_SEARCHES_COLLECTION);
 }
 
 export async function ensureSearchIndexes(): Promise<void> {

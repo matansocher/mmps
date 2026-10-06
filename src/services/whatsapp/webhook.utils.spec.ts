@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
-import { createStepTimer, describeFailedStatuses, extractIncomingMessage, isAllowedSender, isValidSignature, parseAllowedPhones, parseTagEdits, tokenize } from './whatsapp.utils';
+import { describeFailedStatuses, extractIncomingMessage, isAllowedSender, isValidSignature, parseAllowedPhones } from './webhook.utils';
 
 describe('extractIncomingMessage()', () => {
   const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
@@ -38,22 +38,6 @@ describe('extractIncomingMessage()', () => {
   });
 });
 
-describe('tokenize()', () => {
-  test.each([
-    { text: 'Happy  Cat!', expected: ['happy', 'cat'] },
-    { text: 'חתול שמח, חתול', expected: ['חתול', 'שמח'] },
-    { text: 'lol 100%', expected: ['lol', '100'] },
-    { text: '  ?! ', expected: [] },
-    { text: 'חתול😂😂 🔥', expected: ['חתול', '😂', '🔥'] },
-    { text: '❤️ ❤', expected: ['❤'] },
-    { text: '👍🏽 👍', expected: ['👍🏽', '👍'] },
-    { text: '👨‍👩‍👧 ❤️‍🔥', expected: ['👨‍👩‍👧', '❤‍🔥'] },
-    { text: '🇮🇱🇺🇸', expected: ['🇮🇱', '🇺🇸'] },
-  ])('should tokenize "$text"', ({ text, expected }) => {
-    expect(tokenize(text)).toEqual(expected);
-  });
-});
-
 describe('isValidSignature()', () => {
   const secret = 'app-secret';
   const body = Buffer.from('{"object":"whatsapp_business_account"}');
@@ -87,43 +71,6 @@ describe('describeFailedStatuses()', () => {
 
   it('should return nothing for message events', () => {
     expect(describeFailedStatuses({ entry: [{ changes: [{ value: { messages: [] } }] }] } as WhatsAppWebhookPayload)).toEqual([]);
-  });
-});
-
-describe('parseTagEdits()', () => {
-  test.each([
-    { text: 'Happy cat', expected: { add: ['happy', 'cat'], remove: [] } },
-    { text: 'טוב -לילה', expected: { add: ['טוב'], remove: ['לילה'] } },
-    { text: 'לילה- Cat', expected: { add: ['cat'], remove: ['לילה'] } },
-    { text: '-cat cat', expected: { add: [], remove: ['cat'] } },
-    { text: '-', expected: { add: [], remove: [] } },
-    { text: '  dog,  -dog-  ', expected: { add: [], remove: ['dog'] } },
-    { text: '😂 cat -🔥', expected: { add: ['😂', 'cat'], remove: ['🔥'] } },
-  ])('should parse "$text"', ({ text, expected }) => {
-    expect(parseTagEdits(text)).toEqual(expected);
-  });
-});
-
-describe('createStepTimer()', () => {
-  it('should list each step duration in order, then the total', async () => {
-    const ticks = [0, 10, 25, 30, 100, 120];
-    const timer = createStepTimer(() => ticks.shift());
-    await timer.time('search', async () => 'x');
-    await timer.time('send', async () => 'y');
-    expect(timer.summary()).toEqual('search=15ms send=70ms total=120ms');
-  });
-
-  it('should report the time elapsed since it was created', () => {
-    const ticks = [100, 350];
-    const timer = createStepTimer(() => ticks.shift());
-    expect(timer.elapsedMs()).toEqual(250);
-  });
-
-  it('should record a step that throws and rethrow', async () => {
-    const ticks = [0, 0, 5, 9];
-    const timer = createStepTimer(() => ticks.shift());
-    await expect(timer.time('upload', async () => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
-    expect(timer.summary()).toEqual('upload=5ms total=9ms');
   });
 });
 

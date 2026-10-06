@@ -2,23 +2,29 @@ import type { Express, Request, Response } from 'express';
 import express from 'express';
 import { env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
-import { WHATSAPP_SIGNATURE_HEADER, WHATSAPP_WEBHOOK_PATH } from './constants';
-import { handleIncomingMessage } from './sticker-vault.service';
-import type { WhatsAppWebhookPayload } from './types';
-import { describeFailedStatuses, describePayload, extractIncomingMessage, isAllowedSender, isValidSignature, parseAllowedPhones } from './whatsapp.utils';
+import { WHATSAPP_SIGNATURE_HEADER } from './constants';
+import type { IncomingMessage, WhatsAppWebhookPayload } from './types';
+import { describeFailedStatuses, describePayload, extractIncomingMessage, isAllowedSender, isValidSignature } from './webhook.utils';
 
 const logger = new Logger('whatsapp:webhook');
 
 type RawBodyRequest = Request & { rawBody?: Buffer };
 
-export function registerWhatsappRoutes(app: Express): void {
-  app.get(WHATSAPP_WEBHOOK_PATH, (req: Request, res: Response) => {
+export type WhatsAppWebhookOptions = {
+  readonly path: string;
+  readonly onMessage: (message: IncomingMessage) => Promise<void>;
+  readonly allowedPhones?: ReadonlySet<string>; // digits only; empty or missing = everyone
+};
+
+// Must be called before the global express.json() parser, so the raw body is kept for the signature check.
+export function registerWhatsAppWebhook(app: Express, { path, onMessage, allowedPhones = new Set() }: WhatsAppWebhookOptions): void {
+  app.get(path, (req: Request, res: Response) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
     if (mode === 'subscribe' && env.VERIFY_TOKEN && token === env.VERIFY_TOKEN) {
-      logger.log('Webhook verified');
+      logger.log(`Webhook verified at ${path}`);
       res
         .status(200)
         .type('text/plain')
@@ -31,7 +37,7 @@ export function registerWhatsappRoutes(app: Express): void {
 
   // Keep the raw bytes so the X-Hub-Signature-256 HMAC can be checked against exactly what Meta signed.
   app.post(
-    WHATSAPP_WEBHOOK_PATH,
+    path,
     express.json({
       verify: (req, _res, buf) => {
         (req as RawBodyRequest).rawBody = buf;
@@ -59,13 +65,13 @@ export function registerWhatsappRoutes(app: Express): void {
         return;
       }
 
-      if (!isAllowedSender(message.from, parseAllowedPhones(env.WHATSAPP_ALLOWED_PHONES))) {
-        logger.log(`Ignoring ${message.kind} from ${message.from}: not in WHATSAPP_ALLOWED_PHONES`);
+      if (!isAllowedSender(message.from, allowedPhones)) {
+        logger.log(`Ignoring ${message.kind} from ${message.from}: not in the allowlist`);
         return;
       }
 
       logger.log(`Incoming ${message.kind} from ${message.from}: ${message.kind === 'text' ? message.text : message.mediaId}`);
-      handleIncomingMessage(message).catch((err) => logger.error(`Failed to handle ${message.kind} message: ${getErrorMessage(err)}`));
+      onMessage(message).catch((err) => logger.error(`Failed to handle ${message.kind} message: ${getErrorMessage(err)}`));
     },
   );
 }
