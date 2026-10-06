@@ -32,7 +32,7 @@ If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the 
 
 ### Saving
 
-When a sticker arrives, the bot downloads it from the Graph API and hashes the bytes (sha256). If anyone already saved that sticker, it replies "כבר קיים במאגר" instead of storing a copy. Otherwise it stores the bytes and replies "נשמר ✅". Both replies list the tags the sticker is saved under, or say it has no tags yet and that your next text message will tag it.
+When a sticker arrives, the bot downloads it from the Graph API and hashes the bytes (sha256). If anyone already saved that sticker, it replies "קיים 👍" with the sticker's search words (tags) instead of storing a copy. Otherwise it stores the bytes and replies "נשמר ✅" with a hint to quote-reply the sticker with words to add search words. A plain text message after a sticker is always a search; only a quote-reply tags. User-facing text calls tags "מילות חיפוש" (search words).
 
 WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (animated). Larger ones are re-encoded with sharp (resized to 512×512, lower WebP quality) before saving. If it still doesn't fit, the bot refuses it. Stickers saved before this check are shrunk the first time they're sent.
 
@@ -40,14 +40,17 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 
 | You send | What happens |
 |----------|--------------|
-| Words, within 5 minutes of sending an untagged sticker (tracked per sender) | Edits that sticker's tags |
 | A quote-reply to a sticker with words | Edits that sticker's tags (works on stickers you sent and stickers the bot sent) |
 | A quote-reply to a sticker with `-`, `delete` or `מחק` | Removes the sticker, only if you are the one who saved it |
 | `random` / `אקראי` | Sends a random saved sticker |
 | `help` / `עזרה` | Shows usage and how many stickers you have |
 | Anything else | Searches tags and sends up to 3 stickers tagged with every word sent, or replies that nothing matched |
 
-In a tagging message, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters and digits). After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
+In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters and digits). After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
+
+### Timing logs
+
+Every handled message logs one line with how long each step took, e.g. `Timing for text wamid.X: search=12ms sendCached=410ms recordId=8ms total=430ms sinceSent≈1500ms`. `sinceSent` compares Meta's message timestamp to now, so it includes webhook delivery delay (and Heroku cold start). A sticker's first send shows `getData`, `upload`, `setMedia` and `send` instead of `sendCached`, which is usually the slow path. Use it to find the bottleneck when replies feel slow.
 
 ### Typing indicator
 
@@ -71,7 +74,7 @@ Stickers go out as `type: "sticker"` messages, so they show up as stickers, not 
 
 ### Storage
 
-MongoDB database `Whatsapp`, collection `stickers`, one document per sticker, shared by all users. Each document holds the uploader (`ownerPhone`), the last sender (`lastReceivedFrom`), the sticker bytes, sha256, mime type, animated flag, tags, related message ids and the cached media id. Indexes (unique `sha256`, tags, message ids, `lastReceivedFrom + lastReceivedAt`) are created at boot by `ensureStickerIndexes`, which also drops the old per-sender indexes. The connection uses `MONGO_DB_URL`.
+MongoDB database `Whatsapp`, collection `stickers`, one document per sticker, shared by all users. Each document holds the uploader (`ownerPhone`), the sticker bytes, sha256, mime type, animated flag, tags, related message ids and the cached media id. Indexes (unique `sha256`, tags, message ids) are created at boot by `ensureStickerIndexes`, which also drops legacy indexes (the old per-sender and `last_received` indexes). The connection uses `MONGO_DB_URL`.
 
 ### Sending (`sendWhatsAppMessage`)
 
