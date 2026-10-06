@@ -9,8 +9,8 @@ function getCollection(): Collection<Sticker> {
   return getMongoCollection<Sticker>(WHATSAPP_DB_NAME, WHATSAPP_STICKERS_COLLECTION);
 }
 
-// Indexes from when every sender had a private vault.
-const LEGACY_INDEXES = ['owner_sha256', 'owner_tags', 'owner_message_ids', 'owner_last_received'];
+// Indexes from when every sender had a private vault, and from the removed per-sender tagging window.
+const LEGACY_INDEXES = ['owner_sha256', 'owner_tags', 'owner_message_ids', 'owner_last_received', 'last_received'];
 
 export async function ensureStickerIndexes(): Promise<void> {
   const collection = getCollection();
@@ -18,7 +18,6 @@ export async function ensureStickerIndexes(): Promise<void> {
     { key: { sha256: 1 }, name: 'sha256', unique: true },
     { key: { tags: 1 }, name: 'tags' },
     { key: { messageIds: 1 }, name: 'message_ids' },
-    { key: { lastReceivedFrom: 1, lastReceivedAt: -1 }, name: 'last_received' },
   ]);
   await Promise.all(LEGACY_INDEXES.map((name) => collection.dropIndex(name).catch(() => undefined)));
 }
@@ -32,8 +31,6 @@ export async function createSticker({ data, messageId, ...rest }: CreateStickerD
     byteSize: data.length,
     tags: [],
     messageIds: [messageId],
-    lastReceivedFrom: rest.ownerPhone,
-    lastReceivedAt: now,
     createdAt: now,
     updatedAt: now,
   };
@@ -49,14 +46,9 @@ export async function findStickerByMessageId(messageId: string): Promise<Sticker
   return getCollection().findOne({ messageIds: messageId }, WITHOUT_DATA);
 }
 
-// The tagging window is per sender, so two people sending stickers at once don't tag each other's.
-export async function findRecentUntaggedSticker(from: string, since: Date): Promise<StickerSummary | null> {
-  return getCollection().findOne({ lastReceivedFrom: from, tags: { $size: 0 }, lastReceivedAt: { $gte: since } }, { ...WITHOUT_DATA, sort: { lastReceivedAt: -1 } });
-}
-
-export async function markStickerReceived(id: ObjectId, messageId: string, from: string): Promise<void> {
-  const now = new Date();
-  await getCollection().updateOne({ _id: id }, { $addToSet: { messageIds: messageId }, $set: { lastReceivedFrom: from, lastReceivedAt: now, updatedAt: now } });
+// Records the re-sent copy so quote-replies to it work, and bumps it to the top of search results.
+export async function markStickerReceived(id: ObjectId, messageId: string): Promise<void> {
+  await getCollection().updateOne({ _id: id }, { $addToSet: { messageIds: messageId }, $set: { updatedAt: new Date() } });
 }
 
 export async function addStickerMessageId(id: ObjectId, messageId: string): Promise<void> {

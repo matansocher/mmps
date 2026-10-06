@@ -29,7 +29,6 @@ vi.mock('./mongo', () => ({
   countStickers: vi.fn(async () => 0),
   createSticker: vi.fn(async () => undefined),
   deleteSticker: vi.fn(async () => undefined),
-  findRecentUntaggedSticker: vi.fn(async () => null),
   findStickerByMessageId: vi.fn(async () => null),
   findStickerBySha: vi.fn(async () => null),
   getRandomSticker: vi.fn(async () => null),
@@ -56,7 +55,6 @@ const sticker = (overrides: Partial<StickerSummary> = {}): StickerSummary => ({
   byteSize: 4,
   tags: [],
   messageIds: ['wamid.in'],
-  lastReceivedAt: new Date(),
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -80,8 +78,7 @@ describe('handleIncomingMessage()', () => {
     it('should save a new sticker keyed by its content hash', async () => {
       await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true });
       expect(repo.createSticker).toHaveBeenCalledWith({ ownerPhone: FROM, sha256, data, mimeType: 'image/webp', animated: true, messageId: 'wamid.in' });
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נשמר ✅'));
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('אין עדיין תגיות'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'נשמר ✅\nהגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.');
     });
 
     it('should not duplicate a sticker that is already saved', async () => {
@@ -90,8 +87,8 @@ describe('handleIncomingMessage()', () => {
       await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.again', mediaId: 'm1', animated: false });
       expect(repo.createSticker).not.toHaveBeenCalled();
       expect(repo.findStickerBySha).toHaveBeenCalledWith(expect.any(String));
-      expect(repo.markStickerReceived).toHaveBeenCalledWith(existing._id, 'wamid.again', FROM);
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'כבר קיים במאגר\n🏷️ תגיות: cat');
+      expect(repo.markStickerReceived).toHaveBeenCalledWith(existing._id, 'wamid.again');
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'קיים 👍\n🔎 מילות חיפוש: cat');
     });
 
     it('should stay quiet when a concurrent delivery already inserted it', async () => {
@@ -117,6 +114,13 @@ describe('handleIncomingMessage()', () => {
   });
 
   describe('text', () => {
+    it('should log the per-step timing of a search', async () => {
+      const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+      await text('cat');
+      expect(log).toHaveBeenCalledWith(expect.stringMatching(/Timing for text wamid\.text: .*search=\d+ms.* total=\d+ms/));
+      log.mockRestore();
+    });
+
     it('should tag a quoted sticker', async () => {
       const quoted = sticker();
       vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(quoted);
@@ -147,12 +151,12 @@ describe('handleIncomingMessage()', () => {
       expect(repo.addStickerTags).toHaveBeenCalledWith(quoted._id, ['cat']);
     });
 
-    it('should tag the recently received untagged sticker', async () => {
-      const recent = sticker();
-      vi.mocked(repo.findRecentUntaggedSticker).mockResolvedValueOnce(recent);
+    it('should search on plain text right after a new sticker instead of tagging it', async () => {
+      vi.mocked(downloadWhatsAppMedia).mockResolvedValueOnce({ data: Buffer.from('new'), mimeType: 'image/webp' });
+      await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: false });
       await text('cat');
-      expect(repo.addStickerTags).toHaveBeenCalledWith(recent._id, ['cat']);
-      expect(repo.searchStickers).not.toHaveBeenCalled();
+      expect(repo.addStickerTags).not.toHaveBeenCalled();
+      expect(repo.searchStickers).toHaveBeenCalledWith(['cat'], STICKER_SEARCH_LIMIT + 1);
     });
 
     it('should send matching stickers, reusing a fresh cached media id', async () => {
@@ -242,7 +246,7 @@ describe('handleIncomingMessage()', () => {
       await text('טוב -לילה', 'wamid.in');
       expect(repo.addStickerTags).toHaveBeenCalledWith(quoted._id, ['טוב']);
       expect(repo.removeStickerTags).toHaveBeenCalledWith(quoted._id, ['לילה']);
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'עודכן ✅\n🏷️ תגיות: cat, טוב');
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'עודכן ✅\n🔎 מילות חיפוש: cat, טוב');
     });
 
     it('should accept a trailing "-" for removal and say when no tags are left', async () => {
@@ -251,12 +255,11 @@ describe('handleIncomingMessage()', () => {
       await text('לילה-', 'wamid.in');
       expect(repo.addStickerTags).not.toHaveBeenCalled();
       expect(repo.removeStickerTags).toHaveBeenCalledWith(quoted._id, ['לילה']);
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'עודכן ✅\nאין תגיות');
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'עודכן ✅\nאין מילות חיפוש');
     });
 
-    it('should search instead of tagging the untagged sticker when only removing words', async () => {
+    it('should search for the words of a plain "-word" message', async () => {
       await text('-cat');
-      expect(repo.findRecentUntaggedSticker).not.toHaveBeenCalled();
       expect(repo.searchStickers).toHaveBeenCalledWith(['cat'], STICKER_SEARCH_LIMIT + 1);
     });
 

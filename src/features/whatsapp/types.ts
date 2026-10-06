@@ -43,6 +43,7 @@ export type IncomingTextMessage = {
   readonly kind: 'text';
   readonly from: string;
   readonly id: string;
+  readonly sentAt?: number; // epoch ms from Meta's message timestamp (1s precision)
   readonly text: string;
   readonly contextId?: string; // id of the message this one quote-replies to
 };
@@ -51,6 +52,7 @@ export type IncomingStickerMessage = {
   readonly kind: 'sticker';
   readonly from: string;
   readonly id: string;
+  readonly sentAt?: number; // epoch ms from Meta's message timestamp (1s precision)
   readonly mediaId: string;
   readonly animated: boolean;
 };
@@ -69,8 +71,6 @@ export type Sticker = {
   readonly messageIds: string[]; // wamids of chat messages showing this sticker, for quote-reply lookup
   readonly mediaId?: string; // last upload to Meta, reusable until it expires
   readonly mediaUploadedAt?: Date;
-  readonly lastReceivedFrom?: string; // who last sent it to the bot, for the per-sender tagging window
-  readonly lastReceivedAt: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };

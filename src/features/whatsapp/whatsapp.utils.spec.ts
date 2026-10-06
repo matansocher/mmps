@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
-import { describeFailedStatuses, extractIncomingMessage, isValidSignature, parseTagEdits, tokenize } from './whatsapp.utils';
+import { createStepTimer, describeFailedStatuses, extractIncomingMessage, isValidSignature, parseTagEdits, tokenize } from './whatsapp.utils';
 
 describe('extractIncomingMessage()', () => {
   const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
@@ -22,6 +22,11 @@ describe('extractIncomingMessage()', () => {
   it('should extract a sticker message', () => {
     const message = extractIncomingMessage(payload({ from: '1', id: 'w3', timestamp: '0', type: 'sticker', sticker: { id: 'm1', animated: true } }));
     expect(message).toEqual({ kind: 'sticker', from: '1', id: 'w3', mediaId: 'm1', animated: true });
+  });
+
+  it('should convert the message timestamp to epoch ms', () => {
+    const message = extractIncomingMessage(payload({ from: '1', id: 'w4', timestamp: '1700000000', type: 'text', text: { body: 'hi' } }));
+    expect(message).toEqual({ kind: 'text', from: '1', id: 'w4', sentAt: 1700000000000, text: 'hi' });
   });
 
   test.each([
@@ -90,5 +95,22 @@ describe('parseTagEdits()', () => {
     { text: '  dog,  -dog-  ', expected: { add: [], remove: ['dog'] } },
   ])('should parse "$text"', ({ text, expected }) => {
     expect(parseTagEdits(text)).toEqual(expected);
+  });
+});
+
+describe('createStepTimer()', () => {
+  it('should list each step duration in order, then the total', async () => {
+    const ticks = [0, 10, 25, 30, 100, 120];
+    const timer = createStepTimer(() => ticks.shift());
+    await timer.time('search', async () => 'x');
+    await timer.time('send', async () => 'y');
+    expect(timer.summary()).toEqual('search=15ms send=70ms total=120ms');
+  });
+
+  it('should record a step that throws and rethrow', async () => {
+    const ticks = [0, 0, 5, 9];
+    const timer = createStepTimer(() => ticks.shift());
+    await expect(timer.time('upload', async () => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
+    expect(timer.summary()).toEqual('upload=5ms total=9ms');
   });
 });

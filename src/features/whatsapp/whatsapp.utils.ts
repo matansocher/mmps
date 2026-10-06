@@ -4,11 +4,13 @@ import type { IncomingMessage, WhatsAppWebhookPayload } from './types';
 export function extractIncomingMessage(payload: WhatsAppWebhookPayload): IncomingMessage | null {
   const message = payload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
   if (!message?.from) return null;
+  const sentAt = Number(message.timestamp) * 1000;
+  const base = { from: message.from, id: message.id, ...(sentAt > 0 && { sentAt }) };
   if (message.type === 'text' && message.text?.body) {
-    return { kind: 'text', from: message.from, id: message.id, text: message.text.body, ...(message.context?.id && { contextId: message.context.id }) };
+    return { kind: 'text', ...base, text: message.text.body, ...(message.context?.id && { contextId: message.context.id }) };
   }
   if (message.type === 'sticker' && message.sticker?.id) {
-    return { kind: 'sticker', from: message.from, id: message.id, mediaId: message.sticker.id, animated: Boolean(message.sticker.animated) };
+    return { kind: 'sticker', ...base, mediaId: message.sticker.id, animated: Boolean(message.sticker.animated) };
   }
   return null;
 }
@@ -36,6 +38,28 @@ export function parseTagEdits(text: string): TagEdits {
     tokenize(word).forEach((tag) => target.add(tag));
   }
   return { add: [...add].filter((tag) => !remove.has(tag)), remove: [...remove] };
+}
+
+export type StepTimer = {
+  readonly time: <T>(step: string, run: () => Promise<T>) => Promise<T>;
+  readonly summary: () => string;
+};
+
+// Records how long each awaited step took, in order, e.g. "search=42ms upload=812ms send=391ms total=1250ms"
+export function createStepTimer(now: () => number = Date.now): StepTimer {
+  const startedAt = now();
+  const steps: string[] = [];
+  return {
+    time: async (step, run) => {
+      const stepStartedAt = now();
+      try {
+        return await run();
+      } finally {
+        steps.push(`${step}=${now() - stepStartedAt}ms`);
+      }
+    },
+    summary: () => [...steps, `total=${now() - startedAt}ms`].join(' '),
+  };
 }
 
 // Header format: "sha256=<hex hmac of the raw request body, keyed with the app secret>"
