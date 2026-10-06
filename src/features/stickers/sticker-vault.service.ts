@@ -10,6 +10,7 @@ import {
   sendWhatsAppTypingIndicator,
   uploadWhatsAppMedia,
 } from '@services/whatsapp';
+import type { IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
 import { STICKER_BURST_SIZE, STICKER_MEDIA_REUSE_MS, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS, STICKER_SUSTAINED_SEND_DELAY_MS } from './constants';
 import {
   addStickerMessageId,
@@ -28,11 +29,11 @@ import {
 } from './mongo';
 import type { CreateSearchEventData } from './mongo';
 import { fitStickerToLimit, getStickerByteLimit } from './sticker-image';
-import type { IncomingMessage, IncomingStickerMessage, IncomingTextMessage, StickerSummary } from './types';
-import { createStepTimer, parseTagEdits, tokenize } from './whatsapp.utils';
-import type { StepTimer, TagEdits } from './whatsapp.utils';
+import { createStepTimer, parseTagEdits, tokenize } from './stickers.utils';
+import type { StepTimer, TagEdits } from './stickers.utils';
+import type { StickerSummary } from './types';
 
-const logger = new Logger('whatsapp:sticker-vault');
+const logger = new Logger('stickers:sticker-vault');
 
 const DELETE_COMMANDS = ['delete', 'מחק', '-'];
 

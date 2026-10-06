@@ -1,9 +1,8 @@
-export const WHATSAPP_WEBHOOK_PATH = '/whatsapp-webhook';
-export const WHATSAPP_SIGNATURE_HEADER = 'x-hub-signature-256';
+export const STICKERS_WEBHOOK_PATH = '/whatsapp-webhook';
 
-export const WHATSAPP_DB_NAME = 'Whatsapp';
-export const WHATSAPP_STICKERS_COLLECTION = 'stickers';
-export const WHATSAPP_SEARCHES_COLLECTION = 'searches';
+export const STICKERS_DB_NAME = 'Whatsapp';
+export const STICKERS_COLLECTION = 'stickers';
+export const STICKERS_SEARCHES_COLLECTION = 'searches';
 
 // Meta's per-user pair rate limit allows short bursts but only ~1 msg/6s sustained, so search results go out fast at first, then slow down.
 export const STICKER_BURST_SIZE = 10;

@@ -11,14 +11,14 @@ import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initEarth } from '@features/earth';
-import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initMindloop } from '@features/mindloop';
+import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initSavings } from '@features/savings';
-import { initZika } from '@features/zika';
-import { initWhatsapp } from '@features/whatsapp';
+import { initStickers } from '@features/stickers';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
+import { initZika } from '@features/zika';
 import { stopAllTelegramBots } from '@services/telegram';
 
 dotenv.config();
@@ -38,9 +38,9 @@ async function main() {
 
   // Registered before the global JSON parser so the webhook keeps the raw body for signature validation.
   try {
-    await initWhatsapp(app);
+    await initStickers(app);
   } catch (err) {
-    logger.error(`Failed to init whatsapp webhook: ${getErrorMessage(err)}`);
+    logger.error(`Failed to init stickers webhook: ${getErrorMessage(err)}`);
   }
 
   app.use(express.json());

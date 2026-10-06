@@ -1,12 +1,12 @@
 import { Binary, type Collection, type ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
-import { WHATSAPP_DB_NAME, WHATSAPP_STICKERS_COLLECTION } from '../constants';
+import { STICKERS_COLLECTION, STICKERS_DB_NAME } from '../constants';
 import type { Sticker, StickerSummary } from '../types';
 
 const WITHOUT_DATA = { projection: { data: 0 } } as const;
 
 function getCollection(): Collection<Sticker> {
-  return getMongoCollection<Sticker>(WHATSAPP_DB_NAME, WHATSAPP_STICKERS_COLLECTION);
+  return getMongoCollection<Sticker>(STICKERS_DB_NAME, STICKERS_COLLECTION);
 }
 
 // Indexes from when every sender had a private vault, and from the removed per-sender tagging window.

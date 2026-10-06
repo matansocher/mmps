@@ -2,18 +2,17 @@ import express from 'express';
 import { createHmac } from 'node:crypto';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { handleIncomingMessage } from './sticker-vault.service';
-import { registerWhatsappRoutes } from './whatsapp.controller';
+import { registerWhatsAppWebhook } from './webhook';
 
-vi.mock('./sticker-vault.service', () => ({ handleIncomingMessage: vi.fn(async () => undefined) }));
-
-describe('WhatsApp webhook routes', () => {
+describe('registerWhatsAppWebhook()', () => {
+  const onMessage = vi.fn(async () => undefined);
   let server: Server;
   let baseUrl: string;
 
   beforeAll(async () => {
     const app = express();
-    registerWhatsappRoutes(app);
+    registerWhatsAppWebhook(app, { path: '/whatsapp-webhook', onMessage });
+    registerWhatsAppWebhook(app, { path: '/allowlisted-webhook', onMessage, allowedPhones: new Set(['972500000000', '972511111111']) });
     app.use(express.json());
     server = app.listen(0);
     await new Promise((resolve) => server.once('listening', resolve));
@@ -25,7 +24,7 @@ describe('WhatsApp webhook routes', () => {
   beforeEach(() => {
     vi.stubEnv('VERIFY_TOKEN', 'verify-me');
     vi.stubEnv('WHATSAPP_APP_SECRET', '');
-    vi.mocked(handleIncomingMessage).mockClear();
+    onMessage.mockClear();
   });
 
   afterEach(() => vi.unstubAllEnvs());
@@ -49,12 +48,13 @@ describe('WhatsApp webhook routes', () => {
 
   describe('POST /whatsapp-webhook', () => {
     const body = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ from: '972500000000', id: '1', timestamp: '0', type: 'text', text: { body: 'hello' } }] } }] }] });
-    const post = (headers: Record<string, string> = {}) => fetch(`${baseUrl}/whatsapp-webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
+    const post = (headers: Record<string, string> = {}, path = '/whatsapp-webhook') =>
+      fetch(`${baseUrl}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
 
-    it('should ack and hand a text message to the sticker vault', async () => {
+    it('should ack and hand a text message to onMessage', async () => {
       const res = await post();
       expect(res.status).toEqual(200);
-      await vi.waitFor(() => expect(handleIncomingMessage).toHaveBeenCalledWith({ kind: 'text', from: '972500000000', id: '1', text: 'hello' }));
+      await vi.waitFor(() => expect(onMessage).toHaveBeenCalledWith({ kind: 'text', from: '972500000000', id: '1', text: 'hello' }));
     });
 
     it('should accept a valid signature when the app secret is set', async () => {
@@ -62,28 +62,27 @@ describe('WhatsApp webhook routes', () => {
       const signature = `sha256=${createHmac('sha256', 'secret').update(body).digest('hex')}`;
       const res = await post({ 'X-Hub-Signature-256': signature });
       expect(res.status).toEqual(200);
-      await vi.waitFor(() => expect(handleIncomingMessage).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => expect(onMessage).toHaveBeenCalledTimes(1));
     });
 
     it('should reject an invalid signature when the app secret is set', async () => {
       vi.stubEnv('WHATSAPP_APP_SECRET', 'secret');
       const res = await post({ 'X-Hub-Signature-256': 'sha256=deadbeef' });
       expect(res.status).toEqual(401);
-      expect(handleIncomingMessage).not.toHaveBeenCalled();
+      expect(onMessage).not.toHaveBeenCalled();
     });
 
     it('should handle a message from an allowlisted phone', async () => {
-      vi.stubEnv('WHATSAPP_ALLOWED_PHONES', '+972 50-000-0000, 972511111111');
-      await post();
-      await vi.waitFor(() => expect(handleIncomingMessage).toHaveBeenCalled());
+      await post({}, '/allowlisted-webhook');
+      await vi.waitFor(() => expect(onMessage).toHaveBeenCalled());
     });
 
     it('should ack but ignore a message from a phone outside the allowlist', async () => {
-      vi.stubEnv('WHATSAPP_ALLOWED_PHONES', '972511111111');
-      const res = await post();
+      const blocked = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ from: '972599999999', id: '2', timestamp: '0', type: 'text', text: { body: 'hi' } }] } }] }] });
+      const res = await fetch(`${baseUrl}/allowlisted-webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: blocked });
       expect(res.status).toEqual(200);
       await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(handleIncomingMessage).not.toHaveBeenCalled();
+      expect(onMessage).not.toHaveBeenCalled();
     });
   });
 });

@@ -51,10 +51,10 @@ Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the p
 - **Database**: none (browser storage only)
 - **[Learn more →](/bots/earth)**
 
-### **WhatsApp** - Cloud API Webhook
-Meta WhatsApp Cloud API webhook at `GET/POST /whatsapp-webhook`. It verifies the webhook subscription, optionally validates `X-Hub-Signature-256`, and replies to incoming text messages through the Graph API.
-- **Database**: none
-- **[Learn more →](/bots/whatsapp)**
+### **Stickers** - WhatsApp Sticker Vault
+A shared WhatsApp sticker vault on Meta's Cloud API webhook at `GET/POST /whatsapp-webhook`. Users save stickers, tag them with words or emojis, and search the tags to get the stickers back. The webhook plumbing (verification, signature check, allowlist) is the shared `registerWhatsAppWebhook` from `@services/whatsapp`.
+- **Database**: `Whatsapp`
+- **[Learn more →](/bots/stickers)**
 
 ## Running Bots
 
@@ -154,7 +154,7 @@ Select a bot to explore:
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
 - **[Mindloop](/bots/mindloop)** - Brain-training mini-app
 - **[Earth](/bots/earth)** - Find-the-country globe quiz
-- **[WhatsApp](/bots/whatsapp)** - Cloud API webhook bot
+- **[Stickers](/bots/stickers)** - WhatsApp sticker vault
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

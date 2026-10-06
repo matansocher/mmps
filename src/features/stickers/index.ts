@@ -1,3 +1,3 @@
-export { initWhatsapp } from './whatsapp.init';
+export { initStickers } from './stickers.init';
 export * from './constants';
 export * from './types';

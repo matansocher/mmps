@@ -1,11 +1,17 @@
-# WhatsApp — Cloud API Webhook
+# Stickers — WhatsApp Sticker Vault
 
 A WhatsApp sticker vault on top of Meta's WhatsApp Cloud API. The vault is shared: every sticker anyone saves can be found by everyone. Send it stickers and it saves them, tag them with words, then send a word to get matching stickers back as real WhatsApp stickers. It runs on the shared MMPS Express server.
 
 - `GET /whatsapp-webhook` handles Meta's verification handshake.
 - `POST /whatsapp-webhook` receives incoming messages (stickers and text).
 
-Code lives in `src/features/whatsapp/` (routes, payload parsing, signature check, vault logic, Mongo repository) and `src/services/whatsapp/` (the Graph API client: text, sticker send, typing indicator, media download and upload).
+Code lives in `src/features/stickers/` (vault logic, tag parsing, Mongo repositories) and the shared `src/services/whatsapp/`, which any WhatsApp bot can reuse:
+
+- `registerWhatsAppWebhook(app, { path, onMessage, allowedPhones? })` registers the GET verification and POST message routes, checks the signature, acks Meta, logs failed delivery statuses, applies the allowlist and hands each text or sticker message to `onMessage`. Call it before the global `express.json()`.
+- Webhook helpers: `extractIncomingMessage`, `isValidSignature`, `parseAllowedPhones`, `isAllowedSender`, plus the webhook payload types.
+- The Graph API client: text, sticker send, typing indicator, media download and upload.
+
+The feature was renamed from `whatsapp` to `stickers`. The webhook path (`/whatsapp-webhook`), the Mongo database (`Whatsapp`) and the env var names stay the same, so Meta's webhook config and stored data don't change.
 
 All replies are in Hebrew. English commands keep working next to their Hebrew aliases.
 
@@ -176,7 +182,7 @@ Any Node.js host that runs `npm run build && npm start` and exposes HTTPS works:
 ## Tests
 
 ```bash
-npx vitest run src/features/whatsapp src/services/whatsapp
+npx vitest run src/features/stickers src/services/whatsapp
 ```
 
 The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing (including emojis), signature validation, the phone allowlist, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, throttled search, the rate-limit stop and media re-upload.
