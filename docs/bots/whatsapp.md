@@ -26,7 +26,8 @@ If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the 
 1. If `WHATSAPP_APP_SECRET` is set, the `X-Hub-Signature-256` header is checked against an HMAC-SHA256 of the raw request body. A missing or invalid signature returns `401`.
 2. The server answers `200 OK` right away, so Meta doesn't retry.
 3. It reads `entry[0].changes[0].value.messages[0]`. Only `sticker` and `text` messages are handled; everything else is ignored. Status updates with `status: "failed"` are logged with Meta's error code and details (an accepted send can still fail delivery later).
-4. It logs the message and hands it to `handleIncomingMessage` in `sticker-vault.service.ts`.
+4. If `WHATSAPP_ALLOWED_PHONES` is set and the sender isn't in it, the message is logged and dropped: no read receipt, no typing indicator, no reply and nothing saved. When it's unset, everyone can use the bot (a warning is logged at boot).
+5. It logs the message and hands it to `handleIncomingMessage` in `sticker-vault.service.ts`.
 
 ## Sticker vault
 
@@ -42,7 +43,7 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 |----------|--------------|
 | A quote-reply to a sticker with words | Edits that sticker's tags (works on stickers you sent and stickers the bot sent) |
 | A quote-reply to a sticker with `-`, `delete` or `מחק` | Removes the sticker (anyone can delete, not just whoever saved it) |
-| Anything else | Searches tags and sends up to 3 stickers tagged with every word sent, or replies that nothing matched |
+| Anything else | Searches tags and sends every sticker tagged with every word sent (throttled), or replies `לא נמצאו סטיקרים עבור "..."` |
 
 In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters, digits and emojis). Emojis work as tags too: each emoji is its own word (`😂😂🔥` gives `😂` and `🔥`), skin tones and ZWJ sequences stay whole (`👍🏽`, `👨‍👩‍👧`), and `❤` matches `❤️`. After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
 
@@ -64,7 +65,7 @@ This marks the message as read and shows "typing…" for up to 25 seconds or unt
 
 ### Throttling
 
-Meta allows about 80 messages per second per business number, but also has a per-user pair rate limit (error `131056`): roughly one message every 6 seconds sustained, with short bursts allowed. So when a search returns several stickers, the bot waits `STICKER_SEND_DELAY_MS` (1 second) between sends and still caps results at `STICKER_SEARCH_LIMIT` (3). If more stickers match than were sent, it says there are more and suggests refining the search. If a send fails with `131056`, it stops sending and asks the user to try again shortly.
+Meta allows about 80 messages per second per business number, but also has a per-user pair rate limit (error `131056`): roughly one message every 6 seconds sustained, with short bursts allowed. So a search sends every matching sticker, throttled: the first `STICKER_BURST_SIZE` (10) go out `STICKER_SEND_DELAY_MS` (1 second) apart, the rest `STICKER_SUSTAINED_SEND_DELAY_MS` (6 seconds) apart. When more than 10 match, the bot first says how many it found and that it's sending them gradually. If a send fails with `131056`, the bot waits `STICKER_RATE_LIMIT_BACKOFF_MS` (30 seconds) and retries that sticker once; if it fails again, it stops sending and asks the user to try again shortly.
 
 ### Sending stickers back
 
@@ -83,8 +84,7 @@ Every text search (not tag edits) is recorded in the `searches` collection of th
 | `phone` | Who searched |
 | `query` | The raw text |
 | `words` | The normalized words that were matched (all must match) |
-| `matchedCount` | Matches found, capped at `STICKER_SEARCH_LIMIT + 1` (no extra count query) |
-| `hasMore` | More matched than were sent |
+| `matchedCount` | Matches found (all of them are sent) |
 | `sentStickerIds` | Ids of the stickers actually delivered |
 | `failedCount` | Matches that couldn't be sent |
 | `rateLimited` | Sending stopped on error `131056` |
@@ -115,6 +115,7 @@ When a text send fails, the Graph API error body (`error.response?.data`) is log
 | `PHONE_NUMBER_ID`     | yes      | WhatsApp Business phone number id (not the phone number itself) |
 | `VERIFY_TOKEN`        | yes      | Any string you choose. It must match the "Verify token" field in the Meta dashboard |
 | `WHATSAPP_APP_SECRET` | no       | Meta app secret (App settings → Basic). Turns on signature validation |
+| `WHATSAPP_ALLOWED_PHONES` | no   | Comma-separated phone numbers allowed to use the bot, with country code (e.g. `972501234567,972521234567`). `+`, spaces and dashes are ignored. Unset = everyone |
 
 Copy `.env.example` to `.env` and fill these in. If any of them are missing, a warning is logged at boot.
 
@@ -178,4 +179,4 @@ Any Node.js host that runs `npm run build && npm start` and exposes HTTPS works:
 npx vitest run src/features/whatsapp src/services/whatsapp
 ```
 
-The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing (including emojis), signature validation, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, throttled search, the rate-limit stop and media re-upload.
+The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing (including emojis), signature validation, the phone allowlist, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, throttled search, the rate-limit stop and media re-upload.

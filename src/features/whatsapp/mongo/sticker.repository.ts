@@ -70,11 +70,10 @@ export async function deleteSticker(id: ObjectId): Promise<void> {
 }
 
 // Only stickers tagged with every query word, most recently updated first.
-export async function searchStickers(words: string[], limit: number): Promise<StickerSummary[]> {
+export async function searchStickers(words: string[]): Promise<StickerSummary[]> {
   return getCollection()
     .find({ tags: { $all: words } }, WITHOUT_DATA)
     .sort({ updatedAt: -1 })
-    .limit(limit)
     .toArray();
 }
 

@@ -83,8 +83,7 @@ export type SearchEvent = {
   readonly phone: string;
   readonly query: string; // raw message text
   readonly words: string[]; // normalized words the search matched on (all must match)
-  readonly matchedCount: number; // capped at STICKER_SEARCH_LIMIT + 1, so a value above the limit means "more than the limit"
-  readonly hasMore: boolean;
+  readonly matchedCount: number;
   readonly sentStickerIds: ObjectId[];
   readonly failedCount: number;
   readonly rateLimited: boolean; // sending stopped early on Meta's pair rate limit

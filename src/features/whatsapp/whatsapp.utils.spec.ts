@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
-import { createStepTimer, describeFailedStatuses, extractIncomingMessage, isValidSignature, parseTagEdits, tokenize } from './whatsapp.utils';
+import { createStepTimer, describeFailedStatuses, extractIncomingMessage, isAllowedSender, isValidSignature, parseAllowedPhones, parseTagEdits, tokenize } from './whatsapp.utils';
 
 describe('extractIncomingMessage()', () => {
   const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
@@ -124,5 +124,29 @@ describe('createStepTimer()', () => {
     const timer = createStepTimer(() => ticks.shift());
     await expect(timer.time('upload', async () => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
     expect(timer.summary()).toEqual('upload=5ms total=9ms');
+  });
+});
+
+describe('parseAllowedPhones()', () => {
+  test.each([
+    { raw: undefined, expected: [] },
+    { raw: '', expected: [] },
+    { raw: '972501234567', expected: ['972501234567'] },
+    { raw: '+972 50-123-4567, 972511111111 ,,', expected: ['972501234567', '972511111111'] },
+  ])('should parse $raw', ({ raw, expected }) => {
+    expect([...parseAllowedPhones(raw)]).toEqual(expected);
+  });
+});
+
+describe('isAllowedSender()', () => {
+  it('should allow everyone when the allowlist is empty', () => {
+    expect(isAllowedSender('972500000000', new Set())).toEqual(true);
+  });
+
+  test.each([
+    { from: '972501234567', expected: true },
+    { from: '972500000000', expected: false },
+  ])('should return $expected for $from', ({ from, expected }) => {
+    expect(isAllowedSender(from, new Set(['972501234567']))).toEqual(expected);
   });
 });

@@ -10,7 +10,7 @@ import {
   sendWhatsAppTypingIndicator,
   uploadWhatsAppMedia,
 } from '@services/whatsapp';
-import { STICKER_MEDIA_REUSE_MS, STICKER_SEARCH_LIMIT, STICKER_SEND_DELAY_MS } from './constants';
+import { STICKER_BURST_SIZE, STICKER_MEDIA_REUSE_MS, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS, STICKER_SUSTAINED_SEND_DELAY_MS } from './constants';
 import {
   addStickerMessageId,
   addStickerTags,
@@ -119,15 +119,13 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
     return;
   }
 
-  // One extra result tells us whether there are more matches than we send.
-  const matches = await timer.time('search', () => searchStickers(words, STICKER_SEARCH_LIMIT + 1));
-  const hasMore = matches.length > STICKER_SEARCH_LIMIT;
+  const matches = await timer.time('search', () => searchStickers(words));
   let result: SendResult = { sentIds: [], failed: 0, rateLimited: false };
   if (!matches.length) {
-    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}". ${ADD_WORDS_HINT}`));
+    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}".`));
   } else {
-    result = await sendStickers(from, matches.slice(0, STICKER_SEARCH_LIMIT), timer);
-    if (!result.rateLimited && hasMore) await timer.time('reply', () => sendWhatsAppMessage(from, 'יש עוד סטיקרים שמתאימים. הוסיפו מילים כדי לדייק את החיפוש.'));
+    if (matches.length > STICKER_BURST_SIZE) await timer.time('reply', () => sendWhatsAppMessage(from, `נמצאו ${matches.length} סטיקרים, שולח את כולם בהדרגה.`));
+    result = await sendStickers(from, matches, timer);
   }
 
   const event: CreateSearchEventData = {
@@ -135,7 +133,6 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
     query: text,
     words,
     matchedCount: matches.length,
-    hasMore,
     sentStickerIds: result.sentIds,
     failedCount: result.failed,
     rateLimited: result.rateLimited,
@@ -155,9 +152,9 @@ async function sendStickers(to: string, stickers: StickerSummary[], timer: StepT
   const sentIds: ObjectId[] = [];
   let failed = 0;
   for (const [index, sticker] of stickers.entries()) {
-    if (index > 0) await timer.time('delay', () => sleep(STICKER_SEND_DELAY_MS));
+    if (index > 0) await timer.time('delay', () => sleep(index < STICKER_BURST_SIZE ? STICKER_SEND_DELAY_MS : STICKER_SUSTAINED_SEND_DELAY_MS));
     try {
-      await sendStoredSticker(to, sticker, timer);
+      await sendStickerWithBackoff(to, sticker, timer);
       sentIds.push(sticker._id);
     } catch (err) {
       if (isWhatsAppPairRateLimitError(err)) {
@@ -171,6 +168,18 @@ async function sendStickers(to: string, stickers: StickerSummary[], timer: StepT
   }
   if (failed) await timer.time('reply', () => sendWhatsAppMessage(to, failed === stickers.length ? 'מצטער, לא הצלחתי לשלוח את הסטיקר.' : `מצטער, ${failed} מתוך ${stickers.length} סטיקרים לא נשלחו.`));
   return { sentIds, failed, rateLimited: false };
+}
+
+// On the pair rate limit, wait for the quota to recover and retry once before giving up.
+async function sendStickerWithBackoff(to: string, sticker: StickerSummary, timer: StepTimer): Promise<void> {
+  try {
+    await sendStoredSticker(to, sticker, timer);
+  } catch (err) {
+    if (!isWhatsAppPairRateLimitError(err)) throw err;
+    logger.warn(`Pair rate limit hit while sending to ${to}, retrying in ${STICKER_RATE_LIMIT_BACKOFF_MS}ms`);
+    await timer.time('backoff', () => sleep(STICKER_RATE_LIMIT_BACKOFF_MS));
+    await sendStoredSticker(to, sticker, timer);
+  }
 }
 
 async function editStickerTags(from: string, sticker: StickerSummary, { add, remove }: TagEdits, timer: StepTimer): Promise<void> {
