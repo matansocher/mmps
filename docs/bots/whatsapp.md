@@ -43,7 +43,7 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 |----------|--------------|
 | A quote-reply to a sticker with words | Edits that sticker's tags (works on stickers you sent and stickers the bot sent) |
 | A quote-reply to a sticker with `-`, `delete` or `מחק` | Removes the sticker (anyone can delete, not just whoever saved it) |
-| Anything else | Searches tags and sends up to 3 stickers tagged with every word sent, or replies `לא נמצאו סטיקרים עבור "..."` |
+| Anything else | Searches tags and sends every sticker tagged with every word sent (throttled), or replies `לא נמצאו סטיקרים עבור "..."` |
 
 In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters and digits). After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
 
@@ -65,7 +65,7 @@ This marks the message as read and shows "typing…" for up to 25 seconds or unt
 
 ### Throttling
 
-Meta allows about 80 messages per second per business number, but also has a per-user pair rate limit (error `131056`): roughly one message every 6 seconds sustained, with short bursts allowed. So when a search returns several stickers, the bot waits `STICKER_SEND_DELAY_MS` (1 second) between sends and still caps results at `STICKER_SEARCH_LIMIT` (3). If more stickers match than were sent, it says there are more and suggests refining the search. If a send fails with `131056`, it stops sending and asks the user to try again shortly.
+Meta allows about 80 messages per second per business number, but also has a per-user pair rate limit (error `131056`): roughly one message every 6 seconds sustained, with short bursts allowed. So a search sends every matching sticker, throttled: the first `STICKER_BURST_SIZE` (10) go out `STICKER_SEND_DELAY_MS` (1 second) apart, the rest `STICKER_SUSTAINED_SEND_DELAY_MS` (6 seconds) apart. When more than 10 match, the bot first says how many it found and that it's sending them gradually. If a send fails with `131056`, the bot waits `STICKER_RATE_LIMIT_BACKOFF_MS` (30 seconds) and retries that sticker once; if it fails again, it stops sending and asks the user to try again shortly.
 
 ### Sending stickers back
 
@@ -84,8 +84,7 @@ Every text search (not tag edits) is recorded in the `searches` collection of th
 | `phone` | Who searched |
 | `query` | The raw text |
 | `words` | The normalized words that were matched (all must match) |
-| `matchedCount` | Matches found, capped at `STICKER_SEARCH_LIMIT + 1` (no extra count query) |
-| `hasMore` | More matched than were sent |
+| `matchedCount` | Matches found (all of them are sent) |
 | `sentStickerIds` | Ids of the stickers actually delivered |
 | `failedCount` | Matches that couldn't be sent |
 | `rateLimited` | Sending stopped on error `131056` |

@@ -1,151 +1,593 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WhatsApp Cloud API – Message Features</title>
-<style>
-  :root { --wa-green:#25d366; --wa-dark:#075e54; --wa-teal:#128c7e; --wa-out:#d9fdd3; --wa-bg:#efeae2; --link:#027eb5; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f4f5f7; color:#1f2328; }
-  header { background:var(--wa-dark); color:#fff; padding:32px 24px; }
-  header h1 { margin:0 0 6px; font-size:28px; }
-  header p { margin:0; opacity:.85; max-width:820px; line-height:1.5; }
-  nav { position:sticky; top:0; z-index:5; background:#fff; border-bottom:1px solid #ddd; padding:10px 24px; display:flex; gap:8px; flex-wrap:wrap; }
-  nav a { font-size:13px; text-decoration:none; color:var(--wa-dark); background:#e7f6ef; padding:5px 10px; border-radius:999px; }
-  main { max-width:1180px; margin:0 auto; padding:24px; }
-  h2.group { margin:40px 0 4px; font-size:22px; color:var(--wa-dark); }
-  p.group-sub { margin:0 0 16px; color:#57606a; }
-  .card { display:grid; grid-template-columns:320px 1fr; gap:28px; background:#fff; border-radius:14px; padding:24px; margin-bottom:22px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-  @media (max-width:820px){ .card{ grid-template-columns:1fr; } }
-  .info h3 { margin:0 0 6px; font-size:19px; }
-  .tag { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; margin-right:6px; }
-  .easy{background:#dafbe1;color:#116329}.mid{background:#fff8c5;color:#7d4e00}.hard{background:#ffebe9;color:#a40e26}.now{background:#ddf4ff;color:#0550ae}
-  .info p, .info li { line-height:1.55; font-size:14.5px; }
-  .info ul { padding-left:18px; margin:8px 0; }
-  .idea { background:#f0fdf4; border-left:4px solid var(--wa-green); padding:10px 14px; border-radius:6px; font-size:14px; margin:10px 0; }
-  pre { background:#0d1117; color:#e6edf3; padding:12px 14px; border-radius:8px; font-size:12px; overflow:auto; line-height:1.45; }
-  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-  /* phone mock */
-  .phone { width:300px; border:10px solid #111; border-radius:34px; overflow:hidden; background:var(--wa-bg); align-self:start; box-shadow:0 8px 24px rgba(0,0,0,.18); }
-  .bar { background:var(--wa-dark); color:#fff; padding:10px 12px; display:flex; align-items:center; gap:10px; font-size:14px; }
-  .avatar { width:30px; height:30px; border-radius:50%; background:var(--wa-green); display:grid; place-items:center; font-size:16px; }
-  .bar small { display:block; font-size:11px; opacity:.8; }
-  .chat { padding:12px 10px; min-height:330px; display:flex; flex-direction:column; gap:6px; position:relative; }
-  .msg { max-width:85%; padding:6px 9px 4px; border-radius:8px; font-size:13.5px; line-height:1.35; box-shadow:0 1px .5px rgba(0,0,0,.13); position:relative; }
-  .in { background:#fff; align-self:flex-start; border-top-left-radius:0; }
-  .out { background:var(--wa-out); align-self:flex-end; border-top-right-radius:0; }
-  .meta { font-size:10px; color:#667781; text-align:right; margin-top:2px; }
-  .ticks { color:#53bdeb; }
-  .footer { font-size:11.5px; color:#667781; margin-top:3px; }
-  .hdr { font-weight:700; margin-bottom:3px; }
-  .btns { align-self:flex-start; width:85%; display:flex; flex-direction:column; gap:3px; margin-top:-3px; }
-  .btn { background:#fff; color:var(--link); text-align:center; padding:8px; border-radius:8px; font-size:13.5px; box-shadow:0 1px .5px rgba(0,0,0,.13); }
-  .btn.pressed { outline:2px solid var(--wa-green); }
-  .divbtn { border-top:1px solid #e9edef; margin:6px -9px -4px; padding:8px; text-align:center; color:var(--link); font-size:13.5px; }
-  .sticker { font-size:80px; line-height:1; background:none; box-shadow:none; padding:0; }
-  .imgph { height:140px; border-radius:6px; margin:-2px -5px 4px; background:linear-gradient(135deg,#7ad3a8,#2a9d8f 60%,#264653); display:grid; place-items:center; font-size:44px; color:#fff; }
-  .react { position:absolute; bottom:-12px; left:8px; background:#fff; border-radius:999px; font-size:13px; padding:0 5px; box-shadow:0 1px 2px rgba(0,0,0,.2); }
-  .quote { background:rgba(0,0,0,.05); border-left:4px solid var(--wa-teal); border-radius:5px; padding:4px 7px; font-size:12px; margin-bottom:4px; }
-  .quote b { color:var(--wa-teal); display:block; font-size:11.5px; }
-  .typing { align-self:flex-start; background:#fff; border-radius:8px; padding:9px 12px; display:flex; gap:4px; }
-  .typing i { width:7px; height:7px; border-radius:50%; background:#9aa5ab; animation:b 1.2s infinite; }
-  .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
-  @keyframes b { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-4px);opacity:1} }
-  .sys { align-self:center; background:#fff8c5; font-size:11.5px; padding:4px 10px; border-radius:6px; color:#54656f; }
-  /* bottom sheet */
-  .sheet { position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:14px 14px 0 0; box-shadow:0 -4px 14px rgba(0,0,0,.18); padding:10px 14px 12px; }
-  .sheet .grip { width:36px; height:4px; background:#ccc; border-radius:4px; margin:0 auto 8px; }
-  .sheet h4 { margin:0 0 6px; font-size:14px; text-align:center; }
-  .sheet .sec { font-size:11px; color:var(--wa-teal); font-weight:700; text-transform:uppercase; margin:8px 0 2px; }
-  .row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f0f2f5; font-size:13px; }
-  .row small { display:block; color:#667781; font-size:11px; }
-  .radio { width:16px; height:16px; border:2px solid #8696a0; border-radius:50%; flex:none; }
-  .radio.on { border-color:var(--wa-green); box-shadow:inset 0 0 0 3px #fff; background:var(--wa-green); }
-  .check { width:16px; height:16px; border:2px solid #8696a0; border-radius:3px; flex:none; display:grid; place-items:center; font-size:11px; color:#fff; }
-  .check.on { background:var(--wa-green); border-color:var(--wa-green); }
-  .send { background:var(--wa-green); color:#fff; text-align:center; border-radius:999px; padding:8px; margin-top:10px; font-size:13.5px; font-weight:600; }
-  .field { border:1px solid #c9d1d6; border-radius:6px; padding:7px 9px; font-size:12.5px; color:#54656f; margin:4px 0; display:flex; justify-content:space-between; }
-  .map { height:110px; border-radius:6px; margin:-2px -5px 4px; background:
-      repeating-linear-gradient(0deg,#e8efe6 0 18px,#d5e4d2 18px 20px), #e8efe6; position:relative; }
-  .map::after { content:"📍"; position:absolute; left:50%; top:40%; transform:translate(-50%,-50%); font-size:28px; }
-  .contact { display:flex; gap:8px; align-items:center; }
-  .contact .avatar { background:#8696a0; }
-  table { border-collapse:collapse; width:100%; font-size:14px; background:#fff; border-radius:12px; overflow:hidden; }
-  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid #eee; vertical-align:top; }
-  th { background:#e7f6ef; color:var(--wa-dark); }
-</style>
-</head>
-<body>
-<header>
-  <h1>WhatsApp Cloud API: what a bot can send</h1>
-  <p>A visual guide to every message type our bot can use through the same <code>POST /{PHONE_NUMBER_ID}/messages</code> endpoint we already call. The mockups show roughly how each one appears on the user's phone. Each card lists the limits, the webhook reply we receive, and an idea for the sticker vault.</p>
-</header>
-<nav>
-  <a href="#basics">Basics</a><a href="#media">Media</a><a href="#buttons">Reply buttons</a><a href="#list">List</a><a href="#cta">CTA URL</a>
-  <a href="#reaction">Reactions</a><a href="#reply">Quote reply</a><a href="#typing">Read + typing</a><a href="#location">Location</a>
-  <a href="#contacts">Contacts</a><a href="#flows">Flows (multi-select)</a><a href="#templates">Templates</a><a href="#summary">Summary</a>
-</nav>
-<main>
-<h2 class="group" id="basics">1. Basic messages</h2>
-<p class="group-sub">Plain messages. We already use text and stickers.</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WhatsApp Cloud API – Message Features</title>
+    <style>
+      :root {
+        --wa-green: #25d366;
+        --wa-dark: #075e54;
+        --wa-teal: #128c7e;
+        --wa-out: #d9fdd3;
+        --wa-bg: #efeae2;
+        --link: #027eb5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f4f5f7;
+        color: #1f2328;
+      }
+      header {
+        background: var(--wa-dark);
+        color: #fff;
+        padding: 32px 24px;
+      }
+      header h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+      }
+      header p {
+        margin: 0;
+        opacity: 0.85;
+        max-width: 820px;
+        line-height: 1.5;
+      }
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: #fff;
+        border-bottom: 1px solid #ddd;
+        padding: 10px 24px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      nav a {
+        font-size: 13px;
+        text-decoration: none;
+        color: var(--wa-dark);
+        background: #e7f6ef;
+        padding: 5px 10px;
+        border-radius: 999px;
+      }
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      h2.group {
+        margin: 40px 0 4px;
+        font-size: 22px;
+        color: var(--wa-dark);
+      }
+      p.group-sub {
+        margin: 0 0 16px;
+        color: #57606a;
+      }
+      .card {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 28px;
+        background: #fff;
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 22px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+      @media (max-width: 820px) {
+        .card {
+          grid-template-columns: 1fr;
+        }
+      }
+      .info h3 {
+        margin: 0 0 6px;
+        font-size: 19px;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-right: 6px;
+      }
+      .easy {
+        background: #dafbe1;
+        color: #116329;
+      }
+      .mid {
+        background: #fff8c5;
+        color: #7d4e00;
+      }
+      .hard {
+        background: #ffebe9;
+        color: #a40e26;
+      }
+      .now {
+        background: #ddf4ff;
+        color: #0550ae;
+      }
+      .info p,
+      .info li {
+        line-height: 1.55;
+        font-size: 14.5px;
+      }
+      .info ul {
+        padding-left: 18px;
+        margin: 8px 0;
+      }
+      .idea {
+        background: #f0fdf4;
+        border-left: 4px solid var(--wa-green);
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin: 10px 0;
+      }
+      pre {
+        background: #0d1117;
+        color: #e6edf3;
+        padding: 12px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        overflow: auto;
+        line-height: 1.45;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      /* phone mock */
+      .phone {
+        width: 300px;
+        border: 10px solid #111;
+        border-radius: 34px;
+        overflow: hidden;
+        background: var(--wa-bg);
+        align-self: start;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      }
+      .bar {
+        background: var(--wa-dark);
+        color: #fff;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+      }
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--wa-green);
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+      }
+      .bar small {
+        display: block;
+        font-size: 11px;
+        opacity: 0.8;
+      }
+      .chat {
+        padding: 12px 10px;
+        min-height: 330px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+      }
+      .msg {
+        max-width: 85%;
+        padding: 6px 9px 4px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        line-height: 1.35;
+        box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+        position: relative;
+      }
+      .in {
+        background: #fff;
+        align-self: flex-start;
+        border-top-left-radius: 0;
+      }
+      .out {
+        background: var(--wa-out);
+        align-self: flex-end;
+        border-top-right-radius: 0;
+      }
+      .meta {
+        font-size: 10px;
+        color: #667781;
+        text-align: right;
+        margin-top: 2px;
+      }
+      .ticks {
+        color: #53bdeb;
+      }
+      .footer {
+        font-size: 11.5px;
+        color: #667781;
+        margin-top: 3px;
+      }
+      .hdr {
+        font-weight: 700;
+        margin-bottom: 3px;
+      }
+      .btns {
+        align-self: flex-start;
+        width: 85%;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-top: -3px;
+      }
+      .btn {
+        background: #fff;
+        color: var(--link);
+        text-align: center;
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+      }
+      .btn.pressed {
+        outline: 2px solid var(--wa-green);
+      }
+      .divbtn {
+        border-top: 1px solid #e9edef;
+        margin: 6px -9px -4px;
+        padding: 8px;
+        text-align: center;
+        color: var(--link);
+        font-size: 13.5px;
+      }
+      .sticker {
+        font-size: 80px;
+        line-height: 1;
+        background: none;
+        box-shadow: none;
+        padding: 0;
+      }
+      .imgph {
+        height: 140px;
+        border-radius: 6px;
+        margin: -2px -5px 4px;
+        background: linear-gradient(135deg, #7ad3a8, #2a9d8f 60%, #264653);
+        display: grid;
+        place-items: center;
+        font-size: 44px;
+        color: #fff;
+      }
+      .react {
+        position: absolute;
+        bottom: -12px;
+        left: 8px;
+        background: #fff;
+        border-radius: 999px;
+        font-size: 13px;
+        padding: 0 5px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+      .quote {
+        background: rgba(0, 0, 0, 0.05);
+        border-left: 4px solid var(--wa-teal);
+        border-radius: 5px;
+        padding: 4px 7px;
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .quote b {
+        color: var(--wa-teal);
+        display: block;
+        font-size: 11.5px;
+      }
+      .typing {
+        align-self: flex-start;
+        background: #fff;
+        border-radius: 8px;
+        padding: 9px 12px;
+        display: flex;
+        gap: 4px;
+      }
+      .typing i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #9aa5ab;
+        animation: b 1.2s infinite;
+      }
+      .typing i:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .typing i:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes b {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.5;
+        }
+        30% {
+          transform: translateY(-4px);
+          opacity: 1;
+        }
+      }
+      .sys {
+        align-self: center;
+        background: #fff8c5;
+        font-size: 11.5px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: #54656f;
+      }
+      /* bottom sheet */
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #fff;
+        border-radius: 14px 14px 0 0;
+        box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.18);
+        padding: 10px 14px 12px;
+      }
+      .sheet .grip {
+        width: 36px;
+        height: 4px;
+        background: #ccc;
+        border-radius: 4px;
+        margin: 0 auto 8px;
+      }
+      .sheet h4 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        text-align: center;
+      }
+      .sheet .sec {
+        font-size: 11px;
+        color: var(--wa-teal);
+        font-weight: 700;
+        text-transform: uppercase;
+        margin: 8px 0 2px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f2f5;
+        font-size: 13px;
+      }
+      .row small {
+        display: block;
+        color: #667781;
+        font-size: 11px;
+      }
+      .radio {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #8696a0;
+        border-radius: 50%;
+        flex: none;
+      }
+      .radio.on {
+        border-color: var(--wa-green);
+        box-shadow: inset 0 0 0 3px #fff;
+        background: var(--wa-green);
+      }
+      .check {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #8696a0;
+        border-radius: 3px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        color: #fff;
+      }
+      .check.on {
+        background: var(--wa-green);
+        border-color: var(--wa-green);
+      }
+      .send {
+        background: var(--wa-green);
+        color: #fff;
+        text-align: center;
+        border-radius: 999px;
+        padding: 8px;
+        margin-top: 10px;
+        font-size: 13.5px;
+        font-weight: 600;
+      }
+      .field {
+        border: 1px solid #c9d1d6;
+        border-radius: 6px;
+        padding: 7px 9px;
+        font-size: 12.5px;
+        color: #54656f;
+        margin: 4px 0;
+        display: flex;
+        justify-content: space-between;
+      }
+      .map {
+        height: 110px;
+        border-radius: 6px;
+        margin: -2px -5px 4px;
+        background: repeating-linear-gradient(0deg, #e8efe6 0 18px, #d5e4d2 18px 20px), #e8efe6;
+        position: relative;
+      }
+      .map::after {
+        content: '📍';
+        position: absolute;
+        left: 50%;
+        top: 40%;
+        transform: translate(-50%, -50%);
+        font-size: 28px;
+      }
+      .contact {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .contact .avatar {
+        background: #8696a0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+      }
+      th {
+        background: #e7f6ef;
+        color: var(--wa-dark);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>WhatsApp Cloud API: what a bot can send</h1>
+      <p>
+        A visual guide to every message type our bot can use through the same <code>POST /{PHONE_NUMBER_ID}/messages</code> endpoint we already call. The mockups show roughly how each one appears on
+        the user's phone. Each card lists the limits, the webhook reply we receive, and an idea for the sticker vault.
+      </p>
+    </header>
+    <nav>
+      <a href="#basics">Basics</a><a href="#media">Media</a><a href="#buttons">Reply buttons</a><a href="#list">List</a><a href="#cta">CTA URL</a> <a href="#reaction">Reactions</a
+      ><a href="#reply">Quote reply</a><a href="#typing">Read + typing</a><a href="#location">Location</a> <a href="#contacts">Contacts</a><a href="#flows">Flows (multi-select)</a
+      ><a href="#templates">Templates</a><a href="#summary">Summary</a>
+    </nav>
+    <main>
+      <h2 class="group" id="basics">1. Basic messages</h2>
+      <p class="group-sub">Plain messages. We already use text and stickers.</p>
 
-<section class="card">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg in">Search for <b>cat</b> 🐱<br>Visit <span style="color:var(--link)">mmps.app</span><div class="meta">15:02</div></div>
-      <div class="msg out">cat<div class="meta">15:03 <span class="ticks">✓✓</span></div></div>
-      <div class="msg in sticker">😼</div>
-      <div class="msg in"><i>Formatting:</i> *bold*, _italic_, ~strike~, ```mono```<div class="meta">15:03</div></div>
-    </div></div>
-  <div class="info">
-    <h3>Text and stickers <span class="tag now">already in use</span><span class="tag easy">easy</span></h3>
-    <p>Text supports WhatsApp formatting (<code>*bold*</code>, <code>_italic_</code>, <code>~strike~</code>, <code>```mono```</code>) and up to 4096 characters. Set <code>preview_url: true</code> to show a link preview.</p>
-    <pre><code>{ "type": "text", "text": { "body": "Hi *there*", "preview_url": true } }
+      <section class="card">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg in">
+              Search for <b>cat</b> 🐱<br />Visit <span style="color: var(--link)">mmps.app</span>
+              <div class="meta">15:02</div>
+            </div>
+            <div class="msg out">
+              cat
+              <div class="meta">15:03 <span class="ticks">✓✓</span></div>
+            </div>
+            <div class="msg in sticker">😼</div>
+            <div class="msg in">
+              <i>Formatting:</i> *bold*, _italic_, ~strike~, ```mono```
+              <div class="meta">15:03</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Text and stickers <span class="tag now">already in use</span><span class="tag easy">easy</span></h3>
+          <p>
+            Text supports WhatsApp formatting (<code>*bold*</code>, <code>_italic_</code>, <code>~strike~</code>, <code>```mono```</code>) and up to 4096 characters. Set
+            <code>preview_url: true</code> to show a link preview.
+          </p>
+          <pre><code>{ "type": "text", "text": { "body": "Hi *there*", "preview_url": true } }
 { "type": "sticker", "sticker": { "id": "&lt;MEDIA_ID&gt;" } }</code></pre>
-  </div>
-</section>
+        </div>
+      </section>
 
-<h2 class="group" id="media">2. Media</h2>
-<p class="group-sub">Send by uploaded media <code>id</code> or by a public <code>link</code>. Images, videos and documents can have a caption.</p>
-<section class="card">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg in"><div class="imgph">🖼</div>Your weekly sticker collage<div class="meta">15:10</div></div>
-      <div class="msg in">📄 <b>stickers-export.zip</b><br><span class="footer">ZIP · 2.1 MB</span><div class="meta">15:10</div></div>
-      <div class="msg in">▶️ ━━━━━━○──── 0:07<div class="meta">15:11</div></div>
-    </div></div>
-  <div class="info">
-    <h3>Image, video, audio, document <span class="tag easy">easy</span></h3>
-    <ul>
-      <li><b>image</b>: JPEG/PNG up to 5 MB</li>
-      <li><b>video</b>: MP4/3GP up to 16 MB</li>
-      <li><b>audio</b>: AAC/MP3/OGG up to 16 MB. OGG Opus is shown as a voice note.</li>
-      <li><b>document</b>: any file up to 100 MB, with a <code>filename</code></li>
-    </ul>
-    <pre><code>{ "type": "image", "image": { "link": "https://…/collage.png", "caption": "Weekly collage" } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> an "export" command that sends a ZIP of every sticker as a document, or a collage image of the top stickers.</div>
-  </div>
-</section>
-<h2 class="group">3. Interactive messages</h2>
-<p class="group-sub">Tappable UI. When the user taps, the webhook receives <code>type: "interactive"</code> with the ID we assigned, so routing on IDs is reliable and doesn't depend on parsing free text.</p>
+      <h2 class="group" id="media">2. Media</h2>
+      <p class="group-sub">Send by uploaded media <code>id</code> or by a public <code>link</code>. Images, videos and documents can have a caption.</p>
+      <section class="card">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg in">
+              <div class="imgph">🖼</div>
+              Your weekly sticker collage
+              <div class="meta">15:10</div>
+            </div>
+            <div class="msg in">
+              📄 <b>stickers-export.zip</b><br /><span class="footer">ZIP · 2.1 MB</span>
+              <div class="meta">15:10</div>
+            </div>
+            <div class="msg in">
+              ▶️ ━━━━━━○──── 0:07
+              <div class="meta">15:11</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Image, video, audio, document <span class="tag easy">easy</span></h3>
+          <ul>
+            <li><b>image</b>: JPEG/PNG up to 5 MB</li>
+            <li><b>video</b>: MP4/3GP up to 16 MB</li>
+            <li><b>audio</b>: AAC/MP3/OGG up to 16 MB. OGG Opus is shown as a voice note.</li>
+            <li><b>document</b>: any file up to 100 MB, with a <code>filename</code></li>
+          </ul>
+          <pre><code>{ "type": "image", "image": { "link": "https://…/collage.png", "caption": "Weekly collage" } }</code></pre>
+          <div class="idea">💡 <b>Sticker idea:</b> an "export" command that sends a ZIP of every sticker as a document, or a collage image of the top stickers.</div>
+        </div>
+      </section>
+      <h2 class="group">3. Interactive messages</h2>
+      <p class="group-sub">
+        Tappable UI. When the user taps, the webhook receives <code>type: "interactive"</code> with the ID we assigned, so routing on IDs is reliable and doesn't depend on parsing free text.
+      </p>
 
-<section class="card" id="buttons">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg out sticker" style="align-self:flex-end">🐸</div>
-      <div class="msg in"><div class="hdr">Sticker saved ✅</div>Tags: <i>none yet</i>. What next?<div class="footer">Sticker Vault</div><div class="meta">15:20</div></div>
-      <div class="btns"><div class="btn">🏷 Add tags</div><div class="btn pressed">🎲 Random sticker</div><div class="btn">🗑 Delete</div></div>
-      <div class="msg out" style="margin-top:6px"><div class="quote"><b>Sticker Vault</b>Sticker saved ✅</div>🎲 Random sticker<div class="meta">15:20 <span class="ticks">✓✓</span></div></div>
-    </div></div>
-  <div class="info">
-    <h3>Reply buttons <span class="tag easy">easy</span></h3>
-    <ul>
-      <li>Up to <b>3 buttons</b>. Each title is at most 20 characters, and each <code>id</code> at most 256.</li>
-      <li>Optional header (text, image, video or document), a body of up to 1024 characters, and a footer of up to 60.</li>
-      <li>Tapping a button sends its title as a reply bubble, and the webhook receives its ID.</li>
-    </ul>
-    <pre><code>{ "type": "interactive", "interactive": {
+      <section class="card" id="buttons">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg out sticker" style="align-self: flex-end">🐸</div>
+            <div class="msg in">
+              <div class="hdr">Sticker saved ✅</div>
+              Tags: <i>none yet</i>. What next?
+              <div class="footer">Sticker Vault</div>
+              <div class="meta">15:20</div>
+            </div>
+            <div class="btns">
+              <div class="btn">🏷 Add tags</div>
+              <div class="btn pressed">🎲 Random sticker</div>
+              <div class="btn">🗑 Delete</div>
+            </div>
+            <div class="msg out" style="margin-top: 6px">
+              <div class="quote"><b>Sticker Vault</b>Sticker saved ✅</div>
+              🎲 Random sticker
+              <div class="meta">15:20 <span class="ticks">✓✓</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Reply buttons <span class="tag easy">easy</span></h3>
+          <ul>
+            <li>Up to <b>3 buttons</b>. Each title is at most 20 characters, and each <code>id</code> at most 256.</li>
+            <li>Optional header (text, image, video or document), a body of up to 1024 characters, and a footer of up to 60.</li>
+            <li>Tapping a button sends its title as a reply bubble, and the webhook receives its ID.</li>
+          </ul>
+          <pre><code>{ "type": "interactive", "interactive": {
   "type": "button",
   "header": { "type": "text", "text": "Sticker saved ✅" },
   "body":   { "text": "Tags: none yet. What next?" },
@@ -158,32 +600,56 @@
 // webhook →
 { "type": "interactive", "interactive": { "type": "button_reply",
   "button_reply": { "id": "random", "title": "🎲 Random sticker" } } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> attach these buttons after every save or search result, so users no longer need to type commands like "delete" or "tag".</div>
-  </div>
-</section>
+          <div class="idea">💡 <b>Sticker idea:</b> attach these buttons after every save or search result, so users no longer need to type commands like "delete" or "tag".</div>
+        </div>
+      </section>
 
-<section class="card" id="list">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg out">cat<div class="meta">15:30 <span class="ticks">✓✓</span></div></div>
-      <div class="msg in"><div class="hdr">Found 7 stickers</div>Pick one to send 👇<div class="divbtn">☰ Choose sticker</div><div class="meta">15:30</div></div>
-      <div class="sheet"><div class="grip"></div><h4>Choose sticker</h4>
-        <div class="sec">Exact match</div>
-        <div class="row"><div>😼 Grumpy cat<small>tags: cat, angry · used 12×</small></div><div class="radio on"></div></div>
-        <div class="row"><div>😸 Happy cat<small>tags: cat, smile · used 4×</small></div><div class="radio"></div></div>
-        <div class="sec">Similar</div>
-        <div class="row"><div>🐈 Catwalk<small>tags: catwalk, fashion</small></div><div class="radio"></div></div>
-        <div class="send">Send</div>
-      </div>
-    </div></div>
-  <div class="info">
-    <h3>List message (single select) <span class="tag easy">easy</span></h3>
-    <ul>
-      <li>One button opens a bottom sheet with up to <b>10 rows in total</b>, split across up to 10 sections.</li>
-      <li>Each row has a title (at most 24 characters), an optional description (at most 72) and an <code>id</code>. The button label is at most 20 characters.</li>
-      <li>The user can pick <b>only one row</b>. For multi-select, see Flows below.</li>
-    </ul>
-    <pre><code>{ "type": "interactive", "interactive": {
+      <section class="card" id="list">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg out">
+              cat
+              <div class="meta">15:30 <span class="ticks">✓✓</span></div>
+            </div>
+            <div class="msg in">
+              <div class="hdr">Found 7 stickers</div>
+              Pick one to send 👇
+              <div class="divbtn">☰ Choose sticker</div>
+              <div class="meta">15:30</div>
+            </div>
+            <div class="sheet">
+              <div class="grip"></div>
+              <h4>Choose sticker</h4>
+              <div class="sec">Exact match</div>
+              <div class="row">
+                <div>😼 Grumpy cat<small>tags: cat, angry · used 12×</small></div>
+                <div class="radio on"></div>
+              </div>
+              <div class="row">
+                <div>😸 Happy cat<small>tags: cat, smile · used 4×</small></div>
+                <div class="radio"></div>
+              </div>
+              <div class="sec">Similar</div>
+              <div class="row">
+                <div>🐈 Catwalk<small>tags: catwalk, fashion</small></div>
+                <div class="radio"></div>
+              </div>
+              <div class="send">Send</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>List message (single select) <span class="tag easy">easy</span></h3>
+          <ul>
+            <li>One button opens a bottom sheet with up to <b>10 rows in total</b>, split across up to 10 sections.</li>
+            <li>Each row has a title (at most 24 characters), an optional description (at most 72) and an <code>id</code>. The button label is at most 20 characters.</li>
+            <li>The user can pick <b>only one row</b>. For multi-select, see Flows below.</li>
+          </ul>
+          <pre><code>{ "type": "interactive", "interactive": {
   "type": "list",
   "header": { "type": "text", "text": "Found 7 stickers" },
   "body": { "text": "Pick one to send 👇" },
@@ -193,133 +659,228 @@
 
 // webhook →
 { "interactive": { "type": "list_reply", "list_reply": { "id": "send:abc", "title": "Grumpy cat" } } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> when a search returns several matches, show a list instead of sending every sticker. A "Send all" row could keep the current behaviour.</div>
-  </div>
-</section>
+          <div class="idea">💡 <b>Sticker idea:</b> when a search returns several matches, show a list instead of sending every sticker. A "Send all" row could keep the current behaviour.</div>
+        </div>
+      </section>
 
-<section class="card" id="cta">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg in"><div class="imgph">🗂</div>Browse the whole vault with previews and search.<div class="divbtn">🔗 Open vault</div><div class="meta">15:40</div></div>
-    </div></div>
-  <div class="info">
-    <h3>CTA URL button <span class="tag easy">easy</span></h3>
-    <p>A message with <b>one</b> button that opens a URL. This keeps long links out of the chat. The button label is at most 20 characters, and the message can have a header and footer.</p>
-    <pre><code>{ "type": "interactive", "interactive": {
+      <section class="card" id="cta">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg in">
+              <div class="imgph">🗂</div>
+              Browse the whole vault with previews and search.
+              <div class="divbtn">🔗 Open vault</div>
+              <div class="meta">15:40</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>CTA URL button <span class="tag easy">easy</span></h3>
+          <p>A message with <b>one</b> button that opens a URL. This keeps long links out of the chat. The button label is at most 20 characters, and the message can have a header and footer.</p>
+          <pre><code>{ "type": "interactive", "interactive": {
   "type": "cta_url",
   "body": { "text": "Browse the whole vault…" },
   "action": { "name": "cta_url",
     "parameters": { "display_text": "Open vault", "url": "https://mmps…/stickers" } } } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> link to a small web gallery of the vault, like the Mindloop and Savings mini-apps.</div>
-  </div>
-</section>
-<h2 class="group">4. Engagement</h2>
-<p class="group-sub">Small touches that make the bot feel alive.</p>
+          <div class="idea">💡 <b>Sticker idea:</b> link to a small web gallery of the vault, like the Mindloop and Savings mini-apps.</div>
+        </div>
+      </section>
+      <h2 class="group">4. Engagement</h2>
+      <p class="group-sub">Small touches that make the bot feel alive.</p>
 
-<section class="card" id="reaction">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg out sticker" style="align-self:flex-end;position:relative">🦖<span class="react">✅</span></div>
-      <div class="msg out" style="margin-top:14px">dino, rawr<div class="meta">15:50 <span class="ticks">✓✓</span><span class="react">👍</span></div></div>
-    </div></div>
-  <div class="info">
-    <h3>Reactions <span class="tag easy">easy</span></h3>
-    <p>React with an emoji to any message using its <code>wamid</code>. Send an empty <code>emoji</code> to remove the reaction. Users' reactions to bot messages also arrive as <code>type: "reaction"</code>.</p>
-    <pre><code>{ "type": "reaction", "reaction": { "message_id": "wamid.HBg…", "emoji": "✅" } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> react ✅ to a saved sticker and 👍 to the tags message, instead of sending "Saved!" texts. If a user reacts ❤️ to a sticker the bot sent, count it as a favourite.</div>
-  </div>
-</section>
+      <section class="card" id="reaction">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg out sticker" style="align-self: flex-end; position: relative">🦖<span class="react">✅</span></div>
+            <div class="msg out" style="margin-top: 14px">
+              dino, rawr
+              <div class="meta">15:50 <span class="ticks">✓✓</span><span class="react">👍</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Reactions <span class="tag easy">easy</span></h3>
+          <p>
+            React with an emoji to any message using its <code>wamid</code>. Send an empty <code>emoji</code> to remove the reaction. Users' reactions to bot messages also arrive as
+            <code>type: "reaction"</code>.
+          </p>
+          <pre><code>{ "type": "reaction", "reaction": { "message_id": "wamid.HBg…", "emoji": "✅" } }</code></pre>
+          <div class="idea">
+            💡 <b>Sticker idea:</b> react ✅ to a saved sticker and 👍 to the tags message, instead of sending "Saved!" texts. If a user reacts ❤️ to a sticker the bot sent, count it as a favourite.
+          </div>
+        </div>
+      </section>
 
-<section class="card" id="reply">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg out">funny<div class="meta">16:00 <span class="ticks">✓✓</span></div></div>
-      <div class="msg out">dog<div class="meta">16:00 <span class="ticks">✓✓</span></div></div>
-      <div class="msg in"><div class="quote"><b>You</b>funny</div>Found 3 stickers for "funny" 👇<div class="meta">16:00</div></div>
-    </div></div>
-  <div class="info">
-    <h3>Quote reply (context) <span class="tag easy">easy</span></h3>
-    <p>Add <code>context.message_id</code> to any outgoing message and it appears as a reply to that message. This is useful when the user sends several searches in a row.</p>
-    <pre><code>{ "context": { "message_id": "wamid.HBg…" }, "type": "text", "text": { "body": "Found 3…" } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> quote the user's search word above its results, so concurrent searches don't get mixed up. It's also useful for "no match" replies.</div>
-  </div>
-</section>
+      <section class="card" id="reply">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg out">
+              funny
+              <div class="meta">16:00 <span class="ticks">✓✓</span></div>
+            </div>
+            <div class="msg out">
+              dog
+              <div class="meta">16:00 <span class="ticks">✓✓</span></div>
+            </div>
+            <div class="msg in">
+              <div class="quote"><b>You</b>funny</div>
+              Found 3 stickers for "funny" 👇
+              <div class="meta">16:00</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Quote reply (context) <span class="tag easy">easy</span></h3>
+          <p>Add <code>context.message_id</code> to any outgoing message and it appears as a reply to that message. This is useful when the user sends several searches in a row.</p>
+          <pre><code>{ "context": { "message_id": "wamid.HBg…" }, "type": "text", "text": { "body": "Found 3…" } }</code></pre>
+          <div class="idea">💡 <b>Sticker idea:</b> quote the user's search word above its results, so concurrent searches don't get mixed up. It's also useful for "no match" replies.</div>
+        </div>
+      </section>
 
-<section class="card" id="typing">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>typing…</small></div></div>
-    <div class="chat">
-      <div class="msg out">give me something funny<div class="meta">16:10 <span class="ticks" style="color:#53bdeb">✓✓</span></div></div>
-      <div class="typing"><i></i><i></i><i></i></div>
-    </div></div>
-  <div class="info">
-    <h3>Read receipt + typing indicator <span class="tag easy">easy</span></h3>
-    <p>Marks the user's message as read (blue ticks) and shows "typing…" for up to about 25 seconds, or until we reply. Both are done with one call.</p>
-    <pre><code>POST /{PHONE_NUMBER_ID}/messages
+      <section class="card" id="typing">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>typing…</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg out">
+              give me something funny
+              <div class="meta">16:10 <span class="ticks" style="color: #53bdeb">✓✓</span></div>
+            </div>
+            <div class="typing"><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Read receipt + typing indicator <span class="tag easy">easy</span></h3>
+          <p>Marks the user's message as read (blue ticks) and shows "typing…" for up to about 25 seconds, or until we reply. Both are done with one call.</p>
+          <pre><code>POST /{PHONE_NUMBER_ID}/messages
 { "messaging_product": "whatsapp", "status": "read",
   "message_id": "wamid.HBg…", "typing_indicator": { "type": "text" } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> send this as soon as a message arrives, before downloading or resizing a sticker. That can take a few seconds.</div>
-  </div>
-</section>
+          <div class="idea">💡 <b>Sticker idea:</b> send this as soon as a message arrives, before downloading or resizing a sticker. That can take a few seconds.</div>
+        </div>
+      </section>
 
-<h2 class="group" id="location">5. Location</h2>
-<section class="card">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Bot<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg in">Share where you are and I'll find stickers from nearby users 📍<div class="divbtn">📍 Send location</div><div class="meta">16:20</div></div>
-      <div class="msg out"><div class="map">📍</div><b>Tel Aviv</b><div class="footer">Rothschild Blvd</div><div class="meta">16:21 <span class="ticks">✓✓</span></div></div>
-    </div></div>
-  <div class="info">
-    <h3>Location message + location request <span class="tag easy">easy</span></h3>
-    <ul>
-      <li><b>Send</b> a pin with <code>type: "location"</code>, using latitude, longitude, name and address.</li>
-      <li><b>Ask</b> for the user's location with <code>interactive.type: "location_request_message"</code>. The answer comes back as a normal <code>location</code> message.</li>
-    </ul>
-    <pre><code>{ "type": "interactive", "interactive": { "type": "location_request_message",
+      <h2 class="group" id="location">5. Location</h2>
+      <section class="card">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Bot<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg in">
+              Share where you are and I'll find stickers from nearby users 📍
+              <div class="divbtn">📍 Send location</div>
+              <div class="meta">16:20</div>
+            </div>
+            <div class="msg out">
+              <div class="map">📍</div>
+              <b>Tel Aviv</b>
+              <div class="footer">Rothschild Blvd</div>
+              <div class="meta">16:21 <span class="ticks">✓✓</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Location message + location request <span class="tag easy">easy</span></h3>
+          <ul>
+            <li><b>Send</b> a pin with <code>type: "location"</code>, using latitude, longitude, name and address.</li>
+            <li><b>Ask</b> for the user's location with <code>interactive.type: "location_request_message"</code>. The answer comes back as a normal <code>location</code> message.</li>
+          </ul>
+          <pre><code>{ "type": "interactive", "interactive": { "type": "location_request_message",
   "body": { "text": "Share where you are…" }, "action": { "name": "send_location" } } }</code></pre>
-    <div class="idea">💡 This isn't really useful for stickers, but it's good to know about for other bots (weather, places).</div>
-  </div>
-</section>
+          <div class="idea">💡 This isn't really useful for stickers, but it's good to know about for other bots (weather, places).</div>
+        </div>
+      </section>
 
-<section class="card" id="contacts">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg in"><div class="contact"><div class="avatar">M</div><div><b>Matan</b><br><small>Vault admin</small></div></div><div class="divbtn">Message</div><div class="meta">16:30</div></div>
-    </div></div>
-  <div class="info">
-    <h3>Contacts message <span class="tag easy">easy</span></h3>
-    <p>Sends a contact card (name, phones, emails, org) that the user can save or message directly.</p>
-    <pre><code>{ "type": "contacts", "contacts": [ { "name": { "formatted_name": "Matan" },
+      <section class="card" id="contacts">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg in">
+              <div class="contact">
+                <div class="avatar">M</div>
+                <div><b>Matan</b><br /><small>Vault admin</small></div>
+              </div>
+              <div class="divbtn">Message</div>
+              <div class="meta">16:30</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Contacts message <span class="tag easy">easy</span></h3>
+          <p>Sends a contact card (name, phones, emails, org) that the user can save or message directly.</p>
+          <pre><code>{ "type": "contacts", "contacts": [ { "name": { "formatted_name": "Matan" },
   "phones": [ { "phone": "+972…", "type": "CELL", "wa_id": "972…" } ] } ] }</code></pre>
-  </div>
-</section>
-<h2 class="group" id="flows">6. WhatsApp Flows (forms and multi-select)</h2>
-<p class="group-sub">Full-screen native forms. This is the <b>only</b> way to get multi-select checkboxes, dropdowns, text inputs and date pickers.</p>
-<section class="card">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>online</small></div></div>
-    <div class="chat">
-      <div class="msg in">Tag your new sticker 🏷<div class="divbtn">✏️ Open tag editor</div><div class="meta">16:40</div></div>
-      <div class="sheet"><div class="grip"></div><h4>Tag sticker 🐸</h4>
-        <div class="sec">Pick tags (multi-select)</div>
-        <div class="row"><div>funny</div><div class="check on"></div></div>
-        <div class="row"><div>frog</div><div class="check on"></div></div>
-        <div class="row"><div>angry</div><div class="check"></div></div>
-        <div class="row"><div>love</div><div class="check"></div></div>
-        <div class="sec">Category</div>
-        <div class="field">Animals ▾</div>
-        <div class="sec">Custom tags</div>
-        <div class="field" style="color:#999">e.g. pepe, meme</div>
-        <div class="send">Save</div>
-      </div>
-    </div></div>
-  <div class="info">
-    <h3>Flows <span class="tag hard">more setup</span></h3>
-    <ul>
-      <li>Build the screens in <b>WhatsApp Manager → Flows</b> using JSON, then publish to get a <code>flow_id</code>.</li>
-      <li>Components: <b>CheckboxGroup</b> (multi-select), RadioButtonsGroup, Dropdown, TextInput, TextArea, DatePicker, OptIn, Image and text blocks. Flows can have several screens.</li>
-      <li><b>Static flows</b> need no server. <b>Dynamic flows</b> (for example, checkbox options loaded from our DB) need an HTTPS data endpoint that uses RSA/AES encryption.</li>
-      <li>The result arrives in the webhook as <code>interactive.nfm_reply.response_json</code>.</li>
-    </ul>
-    <pre><code>{ "type": "interactive", "interactive": {
+        </div>
+      </section>
+      <h2 class="group" id="flows">6. WhatsApp Flows (forms and multi-select)</h2>
+      <p class="group-sub">Full-screen native forms. This is the <b>only</b> way to get multi-select checkboxes, dropdowns, text inputs and date pickers.</p>
+      <section class="card">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>online</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg in">
+              Tag your new sticker 🏷
+              <div class="divbtn">✏️ Open tag editor</div>
+              <div class="meta">16:40</div>
+            </div>
+            <div class="sheet">
+              <div class="grip"></div>
+              <h4>Tag sticker 🐸</h4>
+              <div class="sec">Pick tags (multi-select)</div>
+              <div class="row">
+                <div>funny</div>
+                <div class="check on"></div>
+              </div>
+              <div class="row">
+                <div>frog</div>
+                <div class="check on"></div>
+              </div>
+              <div class="row">
+                <div>angry</div>
+                <div class="check"></div>
+              </div>
+              <div class="row">
+                <div>love</div>
+                <div class="check"></div>
+              </div>
+              <div class="sec">Category</div>
+              <div class="field">Animals ▾</div>
+              <div class="sec">Custom tags</div>
+              <div class="field" style="color: #999">e.g. pepe, meme</div>
+              <div class="send">Save</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Flows <span class="tag hard">more setup</span></h3>
+          <ul>
+            <li>Build the screens in <b>WhatsApp Manager → Flows</b> using JSON, then publish to get a <code>flow_id</code>.</li>
+            <li>Components: <b>CheckboxGroup</b> (multi-select), RadioButtonsGroup, Dropdown, TextInput, TextArea, DatePicker, OptIn, Image and text blocks. Flows can have several screens.</li>
+            <li><b>Static flows</b> need no server. <b>Dynamic flows</b> (for example, checkbox options loaded from our DB) need an HTTPS data endpoint that uses RSA/AES encryption.</li>
+            <li>The result arrives in the webhook as <code>interactive.nfm_reply.response_json</code>.</li>
+          </ul>
+          <pre><code>{ "type": "interactive", "interactive": {
   "type": "flow",
   "body": { "text": "Tag your new sticker 🏷" },
   "action": { "name": "flow", "parameters": {
@@ -331,51 +892,141 @@
 // webhook →
 { "interactive": { "type": "nfm_reply", "nfm_reply": {
   "response_json": "{\"tags\":[\"funny\",\"frog\"],\"flow_token\":\"sticker:abc123\"}" } } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> replace the 5-minute "next message is tags" window with a tag editor. Popular tags appear as checkboxes, with a free-text field for new ones. This removes the ambiguity between searching and tagging that we discussed.</div>
-  </div>
-</section>
+          <div class="idea">
+            💡 <b>Sticker idea:</b> replace the 5-minute "next message is tags" window with a tag editor. Popular tags appear as checkboxes, with a free-text field for new ones. This removes the
+            ambiguity between searching and tagging that we discussed.
+          </div>
+        </div>
+      </section>
 
-<h2 class="group" id="templates">7. Template messages</h2>
-<section class="card">
-  <div class="phone"><div class="bar"><div class="avatar">🤖</div><div>Sticker Vault<small>business account</small></div></div>
-    <div class="chat">
-      <div class="sys">Today</div>
-      <div class="msg in"><div class="imgph">🏆</div><b>Your weekly sticker stats</b><br>You saved 14 stickers this week. Most used: 😼 Grumpy cat.<div class="footer">Reply STOP to unsubscribe</div><div class="meta">09:00</div></div>
-      <div class="btns"><div class="btn">See top 10</div><div class="btn">Stop updates</div></div>
-    </div></div>
-  <div class="info">
-    <h3>Templates <span class="tag mid">needs approval</span></h3>
-    <ul>
-      <li>These are the <b>only</b> messages the bot can start itself, or send more than 24 hours after the user's last message.</li>
-      <li>Create them in WhatsApp Manager. Meta reviews them, usually within minutes to hours. Categories are Marketing, Utility and Authentication, and each is priced differently.</li>
-      <li>They can have variables (<code>{{1}}</code>), a media header, quick-reply buttons and URL or phone buttons.</li>
-    </ul>
-    <pre><code>{ "type": "template", "template": { "name": "weekly_stats", "language": { "code": "en" },
+      <h2 class="group" id="templates">7. Template messages</h2>
+      <section class="card">
+        <div class="phone">
+          <div class="bar">
+            <div class="avatar">🤖</div>
+            <div>Sticker Vault<small>business account</small></div>
+          </div>
+          <div class="chat">
+            <div class="sys">Today</div>
+            <div class="msg in">
+              <div class="imgph">🏆</div>
+              <b>Your weekly sticker stats</b><br />You saved 14 stickers this week. Most used: 😼 Grumpy cat.
+              <div class="footer">Reply STOP to unsubscribe</div>
+              <div class="meta">09:00</div>
+            </div>
+            <div class="btns">
+              <div class="btn">See top 10</div>
+              <div class="btn">Stop updates</div>
+            </div>
+          </div>
+        </div>
+        <div class="info">
+          <h3>Templates <span class="tag mid">needs approval</span></h3>
+          <ul>
+            <li>These are the <b>only</b> messages the bot can start itself, or send more than 24 hours after the user's last message.</li>
+            <li>Create them in WhatsApp Manager. Meta reviews them, usually within minutes to hours. Categories are Marketing, Utility and Authentication, and each is priced differently.</li>
+            <li>They can have variables (<code>{{1}}</code>), a media header, quick-reply buttons and URL or phone buttons.</li>
+          </ul>
+          <pre><code>{ "type": "template", "template": { "name": "weekly_stats", "language": { "code": "en" },
   "components": [ { "type": "body", "parameters": [ { "type": "text", "text": "14" } ] } ] } }</code></pre>
-    <div class="idea">💡 <b>Sticker idea:</b> a weekly digest or "new stickers were added to the shared vault" notification. This only works with an approved template.</div>
-  </div>
-</section>
-<h2 class="group" id="summary">Summary</h2>
-<p class="group-sub">Everything below works over the same <code>POST /{PHONE_NUMBER_ID}/messages</code> HTTP call we already use. No new package is needed.</p>
-<table>
-  <thead><tr><th>Feature</th><th>Effort</th><th>Inside 24h window only?</th><th>For the sticker vault</th></tr></thead>
-  <tbody>
-    <tr><td>Text / stickers</td><td><span class="tag now">done</span></td><td>Yes</td><td>In use</td></tr>
-    <tr><td>Media (image, doc…)</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>Export / collage</td></tr>
-    <tr><td>Reply buttons (≤3)</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>⭐ After save: Tag / Random / Delete</td></tr>
-    <tr><td>List (≤10 rows, single)</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>⭐ Pick from multiple search matches</td></tr>
-    <tr><td>CTA URL</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>Link to web gallery</td></tr>
-    <tr><td>Reactions</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>⭐ ✅ on saved stickers</td></tr>
-    <tr><td>Quote reply</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>Tie results to the search</td></tr>
-    <tr><td>Read + typing</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>⭐ While processing</td></tr>
-    <tr><td>Location / request</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>Not needed</td></tr>
-    <tr><td>Contacts</td><td><span class="tag easy">easy</span></td><td>Yes</td><td>Not needed</td></tr>
-    <tr><td>Flows (multi-select, forms)</td><td><span class="tag hard">hard</span></td><td>Yes</td><td>Tag editor with checkboxes</td></tr>
-    <tr><td>Templates</td><td><span class="tag mid">approval</span></td><td><b>No</b>, they work anytime</td><td>Weekly digest</td></tr>
-    <tr><td>Catalog / products</td><td><span class="tag hard">hard</span></td><td>Yes</td><td>Needs a commerce catalog, so it's not relevant</td></tr>
-  </tbody>
-</table>
-<div class="idea" style="margin-top:16px">⭐ <b>Suggested first step:</b> reactions, typing indicator, reply buttons after a save, and a list for multi-match searches. All of these use the existing HTTP client and need no Meta setup.</div>
-</main>
-</body>
+          <div class="idea">💡 <b>Sticker idea:</b> a weekly digest or "new stickers were added to the shared vault" notification. This only works with an approved template.</div>
+        </div>
+      </section>
+      <h2 class="group" id="summary">Summary</h2>
+      <p class="group-sub">Everything below works over the same <code>POST /{PHONE_NUMBER_ID}/messages</code> HTTP call we already use. No new package is needed.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Effort</th>
+            <th>Inside 24h window only?</th>
+            <th>For the sticker vault</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Text / stickers</td>
+            <td><span class="tag now">done</span></td>
+            <td>Yes</td>
+            <td>In use</td>
+          </tr>
+          <tr>
+            <td>Media (image, doc…)</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>Export / collage</td>
+          </tr>
+          <tr>
+            <td>Reply buttons (≤3)</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>⭐ After save: Tag / Random / Delete</td>
+          </tr>
+          <tr>
+            <td>List (≤10 rows, single)</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>⭐ Pick from multiple search matches</td>
+          </tr>
+          <tr>
+            <td>CTA URL</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>Link to web gallery</td>
+          </tr>
+          <tr>
+            <td>Reactions</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>⭐ ✅ on saved stickers</td>
+          </tr>
+          <tr>
+            <td>Quote reply</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>Tie results to the search</td>
+          </tr>
+          <tr>
+            <td>Read + typing</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>⭐ While processing</td>
+          </tr>
+          <tr>
+            <td>Location / request</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>Not needed</td>
+          </tr>
+          <tr>
+            <td>Contacts</td>
+            <td><span class="tag easy">easy</span></td>
+            <td>Yes</td>
+            <td>Not needed</td>
+          </tr>
+          <tr>
+            <td>Flows (multi-select, forms)</td>
+            <td><span class="tag hard">hard</span></td>
+            <td>Yes</td>
+            <td>Tag editor with checkboxes</td>
+          </tr>
+          <tr>
+            <td>Templates</td>
+            <td><span class="tag mid">approval</span></td>
+            <td><b>No</b>, they work anytime</td>
+            <td>Weekly digest</td>
+          </tr>
+          <tr>
+            <td>Catalog / products</td>
+            <td><span class="tag hard">hard</span></td>
+            <td>Yes</td>
+            <td>Needs a commerce catalog, so it's not relevant</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="idea" style="margin-top: 16px">
+        ⭐ <b>Suggested first step:</b> reactions, typing indicator, reply buttons after a save, and a list for multi-match searches. All of these use the existing HTTP client and need no Meta setup.
+      </div>
+    </main>
+  </body>
 </html>
