@@ -44,6 +44,11 @@ describe('tokenize()', () => {
     { text: 'חתול שמח, חתול', expected: ['חתול', 'שמח'] },
     { text: 'lol 100%', expected: ['lol', '100'] },
     { text: '  ?! ', expected: [] },
+    { text: 'חתול😂😂 🔥', expected: ['חתול', '😂', '🔥'] },
+    { text: '❤️ ❤', expected: ['❤'] },
+    { text: '👍🏽 👍', expected: ['👍🏽', '👍'] },
+    { text: '👨‍👩‍👧 ❤️‍🔥', expected: ['👨‍👩‍👧', '❤‍🔥'] },
+    { text: '🇮🇱🇺🇸', expected: ['🇮🇱', '🇺🇸'] },
   ])('should tokenize "$text"', ({ text, expected }) => {
     expect(tokenize(text)).toEqual(expected);
   });
@@ -93,6 +98,7 @@ describe('parseTagEdits()', () => {
     { text: '-cat cat', expected: { add: [], remove: ['cat'] } },
     { text: '-', expected: { add: [], remove: [] } },
     { text: '  dog,  -dog-  ', expected: { add: [], remove: ['dog'] } },
+    { text: '😂 cat -🔥', expected: { add: ['😂', 'cat'], remove: ['🔥'] } },
   ])('should parse "$text"', ({ text, expected }) => {
     expect(parseTagEdits(text)).toEqual(expected);
   });
