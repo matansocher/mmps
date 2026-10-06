@@ -124,7 +124,7 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   const hasMore = matches.length > STICKER_SEARCH_LIMIT;
   let result: SendResult = { sentIds: [], failed: 0, rateLimited: false };
   if (!matches.length) {
-    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}". ${ADD_WORDS_HINT}`));
+    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}".`));
   } else {
     result = await sendStickers(from, matches.slice(0, STICKER_SEARCH_LIMIT), timer);
     if (!result.rateLimited && hasMore) await timer.time('reply', () => sendWhatsAppMessage(from, 'יש עוד סטיקרים שמתאימים. הוסיפו מילים כדי לדייק את החיפוש.'));

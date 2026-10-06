@@ -91,3 +91,13 @@ export function describeFailedStatuses(payload: WhatsAppWebhookPayload): string[
       return `${status.id} to ${status.recipient_id}: ${errors.join('; ') || 'no error details'}`;
     });
 }
+
+// Comma/whitespace separated numbers in any format ("+972 50-000-0000") -> digits only, matching webhook `from`.
+export function parseAllowedPhones(raw: string | undefined): Set<string> {
+  return new Set((raw ?? '').split(',').map((phone) => phone.replace(/\D/g, '')).filter(Boolean));
+}
+
+// An empty allowlist means the bot is open to everyone.
+export function isAllowedSender(from: string, allowed: ReadonlySet<string>): boolean {
+  return !allowed.size || allowed.has(from.replace(/\D/g, ''));
+}

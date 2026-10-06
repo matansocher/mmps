@@ -5,7 +5,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { WHATSAPP_SIGNATURE_HEADER, WHATSAPP_WEBHOOK_PATH } from './constants';
 import { handleIncomingMessage } from './sticker-vault.service';
 import type { WhatsAppWebhookPayload } from './types';
-import { describeFailedStatuses, describePayload, extractIncomingMessage, isValidSignature } from './whatsapp.utils';
+import { describeFailedStatuses, describePayload, extractIncomingMessage, isAllowedSender, isValidSignature, parseAllowedPhones } from './whatsapp.utils';
 
 const logger = new Logger('whatsapp:webhook');
 
@@ -56,6 +56,11 @@ export function registerWhatsappRoutes(app: Express): void {
       const message = extractIncomingMessage(payload);
       if (!message) {
         logger.log('Webhook event has no text or sticker message, nothing to handle');
+        return;
+      }
+
+      if (!isAllowedSender(message.from, parseAllowedPhones(env.WHATSAPP_ALLOWED_PHONES))) {
+        logger.log(`Ignoring ${message.kind} from ${message.from}: not in WHATSAPP_ALLOWED_PHONES`);
         return;
       }
 

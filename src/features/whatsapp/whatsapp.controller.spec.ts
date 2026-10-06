@@ -71,5 +71,19 @@ describe('WhatsApp webhook routes', () => {
       expect(res.status).toEqual(401);
       expect(handleIncomingMessage).not.toHaveBeenCalled();
     });
+
+    it('should handle a message from an allowlisted phone', async () => {
+      vi.stubEnv('WHATSAPP_ALLOWED_PHONES', '+972 50-000-0000, 972511111111');
+      await post();
+      await vi.waitFor(() => expect(handleIncomingMessage).toHaveBeenCalled());
+    });
+
+    it('should ack but ignore a message from a phone outside the allowlist', async () => {
+      vi.stubEnv('WHATSAPP_ALLOWED_PHONES', '972511111111');
+      const res = await post();
+      expect(res.status).toEqual(200);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(handleIncomingMessage).not.toHaveBeenCalled();
+    });
   });
 });
