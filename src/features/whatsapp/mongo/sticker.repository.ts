@@ -69,10 +69,6 @@ export async function deleteSticker(id: ObjectId): Promise<void> {
   await getCollection().deleteOne({ _id: id });
 }
 
-export async function countStickers(): Promise<number> {
-  return getCollection().countDocuments();
-}
-
 // Only stickers tagged with every query word, most recently updated first.
 export async function searchStickers(words: string[], limit: number): Promise<StickerSummary[]> {
   return getCollection()
@@ -80,13 +76,6 @@ export async function searchStickers(words: string[], limit: number): Promise<St
     .sort({ updatedAt: -1 })
     .limit(limit)
     .toArray();
-}
-
-export async function getRandomSticker(): Promise<StickerSummary | null> {
-  const [sticker] = await getCollection()
-    .aggregate<StickerSummary>([{ $sample: { size: 1 } }, { $project: { data: 0 } }])
-    .toArray();
-  return sticker ?? null;
 }
 
 export async function getStickerData(id: ObjectId): Promise<Buffer | null> {

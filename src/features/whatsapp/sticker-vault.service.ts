@@ -14,12 +14,10 @@ import { STICKER_MEDIA_REUSE_MS, STICKER_SEARCH_LIMIT, STICKER_SEND_DELAY_MS } f
 import {
   addStickerMessageId,
   addStickerTags,
-  countStickers,
   createSticker,
   deleteSticker,
   findStickerByMessageId,
   findStickerBySha,
-  getRandomSticker,
   getStickerData,
   markStickerReceived,
   recordSearchEvent,
@@ -36,8 +34,6 @@ import type { StepTimer, TagEdits } from './whatsapp.utils';
 
 const logger = new Logger('whatsapp:sticker-vault');
 
-const HELP_COMMANDS = ['help', 'עזרה'];
-const RANDOM_COMMANDS = ['random', 'אקראי'];
 const DELETE_COMMANDS = ['delete', 'מחק', '-'];
 
 const HELP_MESSAGE = [
@@ -46,7 +42,6 @@ const HELP_MESSAGE = [
   '• הגיבו לסטיקר עם מילים כדי להוסיף לו מילות חיפוש.',
   '• מילה עם "-" בהתחלה או בסוף (למשל -לילה) מסירה את מילת החיפוש.',
   '• שלחו מילים כדי לקבל סטיקרים שמתאימים לכולן.',
-  '• *אקראי* שולח סטיקר אקראי.',
   '• הגיבו *מחק* או *-* לסטיקר כדי למחוק אותו.',
 ].join('\n');
 
@@ -119,22 +114,6 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
     }
   }
 
-  if (HELP_COMMANDS.includes(command)) {
-    const count = await timer.time('count', () => countStickers());
-    await timer.time('reply', () => sendWhatsAppMessage(from, `${HELP_MESSAGE}\n\nבמאגר יש ${count === 1 ? 'סטיקר אחד' : `${count} סטיקרים`}.`));
-    return;
-  }
-
-  if (RANDOM_COMMANDS.includes(command)) {
-    const sticker = await timer.time('random', () => getRandomSticker());
-    if (!sticker) {
-      await timer.time('reply', () => sendWhatsAppMessage(from, 'המאגר ריק. שלחו לי סטיקר כדי לשמור אותו.'));
-      return;
-    }
-    await sendStickers(from, [sticker], timer);
-    return;
-  }
-
   if (!words.length) {
     await timer.time('reply', () => sendWhatsAppMessage(from, HELP_MESSAGE));
     return;
@@ -145,7 +124,7 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   const hasMore = matches.length > STICKER_SEARCH_LIMIT;
   let result: SendResult = { sentIds: [], failed: 0, rateLimited: false };
   if (!matches.length) {
-    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}". שלחו *עזרה* כדי לראות איך מוסיפים מילות חיפוש.`));
+    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}". ${ADD_WORDS_HINT}`));
   } else {
     result = await sendStickers(from, matches.slice(0, STICKER_SEARCH_LIMIT), timer);
     if (!result.rateLimited && hasMore) await timer.time('reply', () => sendWhatsAppMessage(from, 'יש עוד סטיקרים שמתאימים. הוסיפו מילים כדי לדייק את החיפוש.'));
