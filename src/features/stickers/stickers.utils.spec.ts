@@ -4,6 +4,11 @@ describe('tokenize()', () => {
   test.each([
     { text: 'Happy  Cat!', expected: ['happy', 'cat'] },
     { text: 'חתול שמח, חתול', expected: ['חתול', 'שמח'] },
+    { text: 'ג׳ורג׳ עו״ד', expected: ['ג׳ורג׳', 'עו״ד'] },
+    { text: `ג'ורג' עו"ד`, expected: ['ג׳ורג׳', 'עו״ד'] },
+    { text: 'ג’ורג’ עו”ד', expected: ['ג׳ורג׳', 'עו״ד'] },
+    { text: '"שלום" \'cat\' don\'t', expected: ['שלום', 'cat', "don't"] },
+    { text: 'צה"ל, ה׳!', expected: ['צה״ל', 'ה׳'] },
     { text: 'lol 100%', expected: ['lol', '100'] },
     { text: '  ?! ', expected: [] },
     { text: 'חתול😂😂 🔥', expected: ['חתול', '😂', '🔥'] },
@@ -20,6 +25,7 @@ describe('parseTagEdits()', () => {
   test.each([
     { text: 'Happy cat', expected: { add: ['happy', 'cat'], remove: [] } },
     { text: 'טוב -לילה', expected: { add: ['טוב'], remove: ['לילה'] } },
+    { text: `עו"ד -ג'ורג'`, expected: { add: ['עו״ד'], remove: ['ג׳ורג׳'] } },
     { text: 'לילה- Cat', expected: { add: ['cat'], remove: ['לילה'] } },
     { text: '-cat cat', expected: { add: [], remove: ['cat'] } },
     { text: '-', expected: { add: [], remove: [] } },
