@@ -1,7 +1,8 @@
 // An emoji with its skin tones and variation selectors, joined by ZWJ into one sequence (👍🏽, 👨‍👩‍👧, ❤️‍🔥), or a flag (🇮🇱)
 const EMOJI = String.raw`\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*(?:\u200D\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*)*|\p{Regional_Indicator}{2}`;
-// A word may hold a geresh or gershayim between letters (עו״ד, ג׳ורג׳, don't); a Hebrew word may also end with a geresh (ג׳ורג׳)
-const WORD = String.raw`[\p{L}\p{N}]+(?:['"’”׳״][\p{L}\p{N}]+)*(?:(?<=\p{Script=Hebrew})['’׳])?`;
+// Dots count as word characters anywhere (ת.ז, 3.5, "."); a word may hold a geresh or gershayim between letters (עו״ד, don't)
+// and a Hebrew word may also end with a geresh (ג׳ורג׳)
+const WORD = String.raw`[\p{L}\p{N}.]+(?:['"’”׳״][\p{L}\p{N}.]+)*(?:(?<=\p{Script=Hebrew})['’׳])?`;
 const TOKEN_REGEX = new RegExp(`${WORD}|${EMOJI}`, 'gu');
 const HEBREW_REGEX = /\p{Script=Hebrew}/u;
 

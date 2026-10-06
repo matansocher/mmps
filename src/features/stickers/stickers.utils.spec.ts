@@ -10,6 +10,9 @@ describe('tokenize()', () => {
     { text: '"שלום" \'cat\' don\'t', expected: ['שלום', 'cat', "don't"] },
     { text: 'צה"ל, ה׳!', expected: ['צה״ל', 'ה׳'] },
     { text: 'lol 100%', expected: ['lol', '100'] },
+    { text: 'ת.ז U.S.A 3.5', expected: ['ת.ז', 'u.s.a', '3.5'] },
+    { text: '. ...', expected: ['.', '...'] },
+    { text: 'שלום.', expected: ['שלום.'] },
     { text: '  ?! ', expected: [] },
     { text: 'חתול😂😂 🔥', expected: ['חתול', '😂', '🔥'] },
     { text: '❤️ ❤', expected: ['❤'] },
@@ -29,6 +32,7 @@ describe('parseTagEdits()', () => {
     { text: 'לילה- Cat', expected: { add: ['cat'], remove: ['לילה'] } },
     { text: '-cat cat', expected: { add: [], remove: ['cat'] } },
     { text: '-', expected: { add: [], remove: [] } },
+    { text: '. -ת.ז', expected: { add: ['.'], remove: ['ת.ז'] } },
     { text: '  dog,  -dog-  ', expected: { add: [], remove: ['dog'] } },
     { text: '😂 cat -🔥', expected: { add: ['😂', 'cat'], remove: ['🔥'] } },
   ])('should parse "$text"', ({ text, expected }) => {
