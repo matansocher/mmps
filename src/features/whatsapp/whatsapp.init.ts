@@ -14,6 +14,7 @@ export async function initWhatsapp(app: Express): Promise<void> {
   const missing = ['WHATSAPP_TOKEN', 'PHONE_NUMBER_ID', 'VERIFY_TOKEN'].filter((key) => !env[key]);
   if (missing.length) logger.warn(`WhatsApp webhook is missing env vars: ${missing.join(', ')}`);
   if (!env.WHATSAPP_APP_SECRET) logger.warn('WHATSAPP_APP_SECRET not set — webhook signature validation is disabled');
+  if (!env.WHATSAPP_ALLOWED_PHONES?.trim()) logger.warn('WHATSAPP_ALLOWED_PHONES not set — the bot replies to everyone');
   logger.log(`WhatsApp webhook registered at ${WHATSAPP_WEBHOOK_PATH}`);
 
   await createMongoConnection(WHATSAPP_DB_NAME);

@@ -122,7 +122,7 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   const matches = await timer.time('search', () => searchStickers(words));
   let result: SendResult = { sentIds: [], failed: 0, rateLimited: false };
   if (!matches.length) {
-    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}". ${ADD_WORDS_HINT}`));
+    await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}".`));
   } else {
     if (matches.length > STICKER_BURST_SIZE) await timer.time('reply', () => sendWhatsAppMessage(from, `נמצאו ${matches.length} סטיקרים, שולח את כולם בהדרגה.`));
     result = await sendStickers(from, matches, timer);

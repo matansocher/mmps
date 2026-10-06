@@ -214,7 +214,7 @@ describe('handleIncomingMessage()', () => {
 
     it('should say when nothing matches', async () => {
       await text('dog');
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('לא נמצאו סטיקרים'));
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'לא נמצאו סטיקרים עבור "dog".');
       expect(sendWhatsAppSticker).not.toHaveBeenCalled();
     });
 
