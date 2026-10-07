@@ -1,4 +1,4 @@
-import { createStepTimer, formatStatsMessage, maskPhone, parseTagEdits, tokenize } from './stickers.utils';
+import { createStepTimer, formatStatsMessage, parseTagEdits, tokenize } from './stickers.utils';
 
 describe('tokenize()', () => {
   test.each([
@@ -63,15 +63,6 @@ describe('createStepTimer()', () => {
   });
 });
 
-describe('maskPhone()', () => {
-  test.each([
-    { phone: '972501231234', expected: '9725****1234' },
-    { phone: '12345678', expected: '****5678' },
-  ])('should mask $phone as $expected', ({ phone, expected }) => {
-    expect(maskPhone(phone)).toEqual(expected);
-  });
-});
-
 describe('formatStatsMessage()', () => {
   it('should number each section', () => {
     const message = formatStatsMessage({
@@ -87,7 +78,7 @@ describe('formatStatsMessage()', () => {
         '📊 *סטטיסטיקות*',
         '🏷️ *מילות החיפוש הנפוצות בסטיקרים*\n1. cat (3)',
         '🔎 *המילים שחיפשו הכי הרבה*\n1. dog (2)\n2. cat (1)',
-        '🏆 *המחפשים המובילים*\n1. 9725****1234 — 5 חיפושים',
+        '🏆 *המחפשים המובילים*\n1. 972501231234 — 5 חיפושים',
       ].join('\n\n'),
     );
   });

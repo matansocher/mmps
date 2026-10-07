@@ -49,7 +49,7 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 |----------|--------------|
 | A quote-reply to a sticker with words | Edits that sticker's tags (works on stickers you sent and stickers the bot sent) |
 | A quote-reply to a sticker with `-`, `delete` or `מחק` | Removes the sticker (anyone can delete, not just whoever saved it) |
-| `%` | Replies with one stats message: the top 5 sticker tags, the top 5 searched words and the top 3 searchers (phones masked, e.g. `9725****1234`). Never a tag or a search, and not recorded in `searches` |
+| `%` | Replies with one stats message: the top 5 sticker tags, the top 5 searched words and the top 3 searchers with their full phone numbers. Never a tag or a search, and not recorded in `searches` |
 | Anything else | Searches tags and sends every sticker tagged with every word sent (throttled), or replies `לא נמצאו סטיקרים עבור "..."` |
 
 In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters, digits, dots and emojis). A dot is part of the word wherever it appears, so `ת.ז`, `3.5` and even `.` on its own are tags, and `שלום.` is a different tag from `שלום`. A geresh or gershayim inside a word keeps it whole (`ג׳ורג׳`, `עו״ד`, `צה״ל`), and the plain `'` and `"` that phone keyboards type are stored as `׳` and `״`, so `ג'ורג'` and `ג׳ורג׳` are the same tag. Emojis work as tags too: each emoji is its own word (`😂😂🔥` gives `😂` and `🔥`), skin tones and ZWJ sequences stay whole (`👍🏽`, `👨‍👩‍👧`), and `❤` matches `❤️`. After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
@@ -104,7 +104,7 @@ Indexes `{ createdAt: -1 }` and `{ words: 1, createdAt: -1 }` are created at boo
 
 ### Stats (`%`)
 
-A text message that is exactly `%` (surrounding spaces ignored, quote-reply or not) is handled before any tagging or search logic. The bot runs three aggregations on the `Whatsapp` database in parallel: `getTopStickerTags` (`$unwind` the `tags` of `stickers`, count, top 5), `getTopSearchWords` (`$unwind` the `words` of `searches`, top 5) and `getTopSearchers` (group `searches` by `phone`, top 3). Ties are broken alphabetically. The reply has a "📊 סטטיסטיקות" header and three numbered sections; an empty section shows a Hebrew fallback ("אין עדיין ..."). Phone numbers are masked to the first 4 and last 4 digits.
+A text message that is exactly `%` (surrounding spaces ignored, quote-reply or not) is handled before any tagging or search logic. The bot runs three aggregations on the `Whatsapp` database in parallel: `getTopStickerTags` (`$unwind` the `tags` of `stickers`, count, top 5), `getTopSearchWords` (`$unwind` the `words` of `searches`, top 5) and `getTopSearchers` (group `searches` by `phone`, top 3). Ties are broken alphabetically. The reply has a "📊 סטטיסטיקות" header and three numbered sections; an empty section shows a Hebrew fallback ("אין עדיין ..."). Searchers are shown with their full phone numbers.
 
 ### Sending (`sendWhatsAppMessage`)
 
@@ -192,4 +192,4 @@ Any Node.js host that runs `npm run build && npm start` and exposes HTTPS works:
 npx vitest run src/features/stickers src/services/whatsapp
 ```
 
-The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing (including emojis), signature validation, the phone allowlist, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, the `%` stats command (not logged as a search, empty fallbacks, phone masking), throttled search, the rate-limit stop and media re-upload.
+The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing (including emojis), signature validation, the phone allowlist, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, the `%` stats command (not logged as a search, empty fallbacks), throttled search, the rate-limit stop and media re-upload.

@@ -61,12 +61,6 @@ export function createStepTimer(now: () => number = Date.now): StepTimer {
   };
 }
 
-// Keeps the first and last 4 digits, e.g. "972501231234" -> "9725****1234"; short numbers keep only the last 4
-export function maskPhone(phone: string): string {
-  if (phone.length <= 8) return `****${phone.slice(-4)}`;
-  return `${phone.slice(0, 4)}****${phone.slice(-4)}`;
-}
-
 export type StickerStats = {
   readonly topTags: StatCount[];
   readonly topWords: StatCount[];
@@ -93,7 +87,7 @@ export function formatStatsMessage({ topTags, topWords, topSearchers }: StickerS
     ),
     formatSection(
       '🏆 *המחפשים המובילים*',
-      topSearchers.map(({ value, count }) => `${maskPhone(value)} — ${count} חיפושים`),
+      topSearchers.map(({ value, count }) => `${value} — ${count} חיפושים`),
       'אין עדיין מחפשים.',
     ),
   ].join('\n\n');
