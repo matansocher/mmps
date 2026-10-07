@@ -31,6 +31,9 @@ vi.mock('./mongo', () => ({
   findStickerByMessageId: vi.fn(async () => null),
   findStickerBySha: vi.fn(async () => null),
   getStickerData: vi.fn(async () => Buffer.from('webp')),
+  getTopSearchers: vi.fn(async () => []),
+  getTopSearchWords: vi.fn(async () => []),
+  getTopStickerTags: vi.fn(async () => []),
   markStickerReceived: vi.fn(async () => undefined),
   recordSearchEvent: vi.fn(async () => undefined),
   removeStickerTags: vi.fn(async () => []),
@@ -393,6 +396,55 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(repo.recordSearchEvent).mockRejectedValueOnce(new Error('mongo down'));
       await expect(text('dog')).resolves.toBeUndefined();
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('לא נמצאו סטיקרים'));
+    });
+  });
+
+  describe('stats', () => {
+    it('should reply to "%" with the top tags, searched words and searchers', async () => {
+      vi.mocked(repo.getTopStickerTags).mockResolvedValueOnce([
+        { value: 'חתול', count: 12 },
+        { value: '😂', count: 7 },
+      ]);
+      vi.mocked(repo.getTopSearchWords).mockResolvedValueOnce([{ value: 'כלב', count: 4 }]);
+      vi.mocked(repo.getTopSearchers).mockResolvedValueOnce([
+        { value: '972501231234', count: 30 },
+        { value: '972509876543', count: 2 },
+      ]);
+      await text(' % ');
+      expect(repo.getTopStickerTags).toHaveBeenCalledWith(5);
+      expect(repo.getTopSearchWords).toHaveBeenCalledWith(5);
+      expect(repo.getTopSearchers).toHaveBeenCalledWith(3);
+      expect(sendWhatsAppMessage).toHaveBeenCalledTimes(1);
+      const message = vi.mocked(sendWhatsAppMessage).mock.calls[0][1];
+      expect(message).toContain('📊 *סטטיסטיקות*');
+      expect(message).toContain('1. חתול (12)\n2. 😂 (7)');
+      expect(message).toContain('1. כלב (4)');
+      expect(message).toContain('1. 9725****1234 — 30 חיפושים\n2. 9725****6543 — 2 חיפושים');
+      expect(message).not.toContain('972501231234');
+    });
+
+    it('should not search, log a search or tag on "%"', async () => {
+      await text('%');
+      await text('%', 'wamid.in');
+      expect(repo.searchStickers).not.toHaveBeenCalled();
+      expect(repo.recordSearchEvent).not.toHaveBeenCalled();
+      expect(repo.findStickerByMessageId).not.toHaveBeenCalled();
+      expect(repo.addStickerTags).not.toHaveBeenCalled();
+      expect(repo.removeStickerTags).not.toHaveBeenCalled();
+    });
+
+    it('should fall back gracefully when there is no data yet', async () => {
+      await text('%');
+      const message = vi.mocked(sendWhatsAppMessage).mock.calls[0][1];
+      expect(message).toContain('אין עדיין מילות חיפוש.');
+      expect(message).toContain('אין עדיין חיפושים.');
+      expect(message).toContain('אין עדיין מחפשים.');
+    });
+
+    it('should tell the user in Hebrew when loading the stats fails', async () => {
+      vi.mocked(repo.getTopSearchers).mockRejectedValueOnce(new Error('mongo down'));
+      await expect(text('%')).resolves.toBeUndefined();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'משהו השתבש 😕 נסו שוב מאוחר יותר.');
     });
   });
 });

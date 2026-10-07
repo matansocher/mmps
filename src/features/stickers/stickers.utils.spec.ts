@@ -1,4 +1,4 @@
-import { createStepTimer, parseTagEdits, tokenize } from './stickers.utils';
+import { createStepTimer, formatStatsMessage, maskPhone, parseTagEdits, tokenize } from './stickers.utils';
 
 describe('tokenize()', () => {
   test.each([
@@ -60,5 +60,35 @@ describe('createStepTimer()', () => {
     const timer = createStepTimer(() => ticks.shift());
     await expect(timer.time('upload', async () => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
     expect(timer.summary()).toEqual('upload=5ms total=9ms');
+  });
+});
+
+describe('maskPhone()', () => {
+  test.each([
+    { phone: '972501231234', expected: '9725****1234' },
+    { phone: '12345678', expected: '****5678' },
+  ])('should mask $phone as $expected', ({ phone, expected }) => {
+    expect(maskPhone(phone)).toEqual(expected);
+  });
+});
+
+describe('formatStatsMessage()', () => {
+  it('should number each section', () => {
+    const message = formatStatsMessage({
+      topTags: [{ value: 'cat', count: 3 }],
+      topWords: [
+        { value: 'dog', count: 2 },
+        { value: 'cat', count: 1 },
+      ],
+      topSearchers: [{ value: '972501231234', count: 5 }],
+    });
+    expect(message).toEqual(
+      [
+        '📊 *סטטיסטיקות*',
+        '🏷️ *מילות החיפוש הנפוצות בסטיקרים*\n1. cat (3)',
+        '🔎 *המילים שחיפשו הכי הרבה*\n1. dog (2)\n2. cat (1)',
+        '🏆 *המחפשים המובילים*\n1. 9725****1234 — 5 חיפושים',
+      ].join('\n\n'),
+    );
   });
 });

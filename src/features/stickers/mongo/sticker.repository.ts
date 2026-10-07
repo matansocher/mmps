@@ -1,7 +1,7 @@
 import { Binary, type Collection, type ObjectId } from 'mongodb';
 import { getMongoCollection } from '@core/mongo';
 import { STICKERS_COLLECTION, STICKERS_DB_NAME } from '../constants';
-import type { Sticker, StickerSummary } from '../types';
+import type { StatCount, Sticker, StickerSummary } from '../types';
 
 const WITHOUT_DATA = { projection: { data: 0 } } as const;
 
@@ -89,4 +89,16 @@ export async function setStickerMedia(id: ObjectId, mediaId: string): Promise<vo
 // Also drops the cached Meta upload, since it holds the old bytes.
 export async function replaceStickerData(id: ObjectId, data: Buffer): Promise<void> {
   await getCollection().updateOne({ _id: id }, { $set: { data: new Binary(data), byteSize: data.length, updatedAt: new Date() }, $unset: { mediaId: '', mediaUploadedAt: '' } });
+}
+
+export async function getTopStickerTags(limit: number): Promise<StatCount[]> {
+  return getCollection()
+    .aggregate<StatCount>([
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: limit },
+      { $project: { _id: 0, value: '$_id', count: 1 } },
+    ])
+    .toArray();
 }

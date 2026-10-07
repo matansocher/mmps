@@ -31,3 +31,8 @@ export type SearchEvent = {
   readonly durationMs: number; // from handling start until the last reply
   readonly createdAt: Date;
 };
+
+export type StatCount = {
+  readonly value: string; // tag, word or phone
+  readonly count: number;
+};
