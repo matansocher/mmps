@@ -20,6 +20,9 @@ import {
   findStickerByMessageId,
   findStickerBySha,
   getStickerData,
+  getTopSearchers,
+  getTopSearchWords,
+  getTopStickerTags,
   markStickerReceived,
   recordSearchEvent,
   removeStickerTags,
@@ -29,13 +32,16 @@ import {
 } from './mongo';
 import type { CreateSearchEventData } from './mongo';
 import { fitStickerToLimit, getStickerByteLimit } from './sticker-image';
-import { createStepTimer, parseTagEdits, tokenize } from './stickers.utils';
+import { createStepTimer, formatStatsMessage, parseTagEdits, tokenize } from './stickers.utils';
 import type { StepTimer, TagEdits } from './stickers.utils';
 import type { StickerSummary } from './types';
 
 const logger = new Logger('stickers:sticker-vault');
 
 const DELETE_COMMANDS = ['delete', 'מחק', '-'];
+const STATS_COMMAND = '%';
+const STATS_TOP_LIMIT = 5;
+const STATS_TOP_SEARCHERS_LIMIT = 3;
 
 const HELP_MESSAGE = [
   '🗂️ *מאגר הסטיקרים*',
@@ -44,6 +50,7 @@ const HELP_MESSAGE = [
   '• מילה עם "-" בהתחלה או בסוף (למשל -לילה) מסירה את מילת החיפוש.',
   '• שלחו מילים כדי לקבל סטיקרים שמתאימים לכולן.',
   '• הגיבו *מחק* או *-* לסטיקר כדי למחוק אותו.',
+  '• שלחו *%* כדי לראות סטטיסטיקות.',
 ].join('\n');
 
 const ADD_WORDS_HINT = 'הגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.';
@@ -105,8 +112,19 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
   await timer.time('reply', () => sendWhatsAppMessage(from, `נשמר ✅\n${ADD_WORDS_HINT}`));
 }
 
+async function sendStats(to: string, timer: StepTimer): Promise<void> {
+  const [topTags, topWords, topSearchers] = await timer.time('stats', () =>
+    Promise.all([getTopStickerTags(STATS_TOP_LIMIT), getTopSearchWords(STATS_TOP_LIMIT), getTopSearchers(STATS_TOP_SEARCHERS_LIMIT)]),
+  );
+  await timer.time('reply', () => sendWhatsAppMessage(to, formatStatsMessage({ topTags, topWords, topSearchers })));
+}
+
 async function handleText({ from, text, contextId }: IncomingTextMessage, timer: StepTimer): Promise<void> {
   const command = text.trim().toLowerCase();
+  if (command === STATS_COMMAND) {
+    await sendStats(from, timer);
+    return;
+  }
   const words = tokenize(text);
 
   if (contextId) {

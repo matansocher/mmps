@@ -1,3 +1,5 @@
+import type { StatCount } from './types';
+
 // An emoji with its skin tones and variation selectors, joined by ZWJ into one sequence (👍🏽, 👨‍👩‍👧, ❤️‍🔥), or a flag (🇮🇱)
 const EMOJI = String.raw`\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*(?:\u200D\p{Extended_Pictographic}[\p{Emoji_Modifier}\uFE0F]*)*|\p{Regional_Indicator}{2}`;
 // Dots count as word characters anywhere (ת.ז, 3.5, "."); a word may hold a geresh or gershayim between letters (עו״ד, don't)
@@ -57,4 +59,42 @@ export function createStepTimer(now: () => number = Date.now): StepTimer {
     elapsedMs: () => now() - startedAt,
     summary: () => [...steps, `total=${now() - startedAt}ms`].join(' '),
   };
+}
+
+// Keeps the first and last 4 digits, e.g. "972501231234" -> "9725****1234"; short numbers keep only the last 4
+export function maskPhone(phone: string): string {
+  if (phone.length <= 8) return `****${phone.slice(-4)}`;
+  return `${phone.slice(0, 4)}****${phone.slice(-4)}`;
+}
+
+export type StickerStats = {
+  readonly topTags: StatCount[];
+  readonly topWords: StatCount[];
+  readonly topSearchers: StatCount[];
+};
+
+function formatSection(title: string, items: string[], fallback: string): string {
+  const lines = items.length ? items.map((item, i) => `${i + 1}. ${item}`) : [fallback];
+  return [title, ...lines].join('\n');
+}
+
+export function formatStatsMessage({ topTags, topWords, topSearchers }: StickerStats): string {
+  return [
+    '📊 *סטטיסטיקות*',
+    formatSection(
+      '🏷️ *מילות החיפוש הנפוצות בסטיקרים*',
+      topTags.map(({ value, count }) => `${value} (${count})`),
+      'אין עדיין מילות חיפוש.',
+    ),
+    formatSection(
+      '🔎 *המילים שחיפשו הכי הרבה*',
+      topWords.map(({ value, count }) => `${value} (${count})`),
+      'אין עדיין חיפושים.',
+    ),
+    formatSection(
+      '🏆 *המחפשים המובילים*',
+      topSearchers.map(({ value, count }) => `${maskPhone(value)} — ${count} חיפושים`),
+      'אין עדיין מחפשים.',
+    ),
+  ].join('\n\n');
 }
