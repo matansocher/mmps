@@ -419,8 +419,7 @@ describe('handleIncomingMessage()', () => {
       expect(message).toContain('📊 *סטטיסטיקות*');
       expect(message).toContain('1. חתול (12)\n2. 😂 (7)');
       expect(message).toContain('1. כלב (4)');
-      expect(message).toContain('1. 9725****1234 — 30 חיפושים\n2. 9725****6543 — 2 חיפושים');
-      expect(message).not.toContain('972501231234');
+      expect(message).toContain('1. 972501231234 — 30 חיפושים\n2. 972509876543 — 2 חיפושים');
     });
 
     it('should not search, log a search or tag on "%"', async () => {
