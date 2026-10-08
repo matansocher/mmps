@@ -39,7 +39,7 @@ All progress lives in `localStorage` on the device; there is no account. The onl
 | Data | `apps/earth-web/public/data/countries.json` | Country polygons generated from the Worldly bot's `src/features/worldly/assets/countries.json`. |
 | Backend | `src/features/worldly/worldly.init.ts` | The Worldly bot serves the built SPA at `/earth/*` (same pattern as Learner). |
 | Analytics API | `src/features/worldly/api/` | `POST /api/worldly/globe/events`, verified with Telegram initData, forwards `GLOBE_*` events to the notifier. |
-| Telegram | `apps/earth-web/src/lib/telegram.ts` | Opened as a mini app from the Worldly bot (`/globe`, `/start`, menu button). Calls `ready()`/`expand()`, disables vertical swipes so dragging the globe doesn't close the app, and matches the header/background colors. Works the same outside Telegram. |
+| Telegram | `apps/earth-web/src/lib/telegram.ts` | Opened as a mini app from the Worldly bot (`/globe`, `/start`). Calls `ready()`/`expand()`, disables vertical swipes so dragging the globe doesn't close the app, and matches the header/background colors. Works the same outside Telegram. |
 
 Cesium draws the countries as one batched polygon primitive with per-country colors, plus one border polyline primitive. The globe has no imagery layer, so no tiles are downloaded. Clicks are resolved in the browser by ray-casting the clicked lon/lat against the country polygons.
 
