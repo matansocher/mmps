@@ -77,6 +77,7 @@ export default defineConfig({
             { text: 'Stickers', link: '/bots/stickers' },
             { text: 'Wolt', link: '/bots/wolt' },
             { text: 'Worldly', link: '/bots/worldly' },
+            { text: 'Zika', link: '/bots/zika' },
           ],
         },
       ],

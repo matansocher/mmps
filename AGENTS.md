@@ -1,21 +1,20 @@
 # AGENTS.md
 
-Single source of truth for AI agents (Claude Code, GitHub Copilot, Cursor, etc.) working in this repo. `CLAUDE.md` and `.github/copilot-instructions.md` are symlinks to this file — edit here, both pick it up.
+Single source of truth for AI agents (Claude Code, GitHub Copilot, Cursor, Codex, etc.) working in this repo. `CLAUDE.md`, `GEMINI.md` and `.github/copilot-instructions.md` are symlinks to this file — edit here.
 
-Read this top-to-bottom on first contact with the repo. It is intentionally dense so you can skip exploratory grepping for things that are already documented here.
+This file holds **conventions and workflow only**. Feature behaviour (what each bot does, schedules, collections, env flags) lives in the VitePress docs under `docs/` — read the linked page when you work on that feature.
 
 ---
 
 ## TL;DR for a fresh agent
 
-- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger + mini-app routes). Built around grammY, LangGraph, MongoDB native driver.
-- **Entry point:** `src/index.ts` (not `main.ts`). Bots are conditionally initialized based on `IS_PROD` or `LOCAL_ACTIVE_BOT_ID`.
-- **5 bots:** `chatbot`, `chilli`, `coach`, `wolt`, `worldly`. Each lives in `src/features/{bot}/`. `savings` and `mindloop` are bot-less web features initialized independently of bot selection. The Earth globe quiz (`apps/earth-web`) is the Worldly bot's mini app and is served by `initWorldly`.
-- **Local dev:** Set `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (uppercase, e.g. `COACH`) in `.env`, then `npm run dev`. Only that bot boots.
-- **Telegram service:** All bots use grammY via `@services/telegram` (the only telegram path — `@services/telegram-grammy` does NOT exist; any reference to it is stale).
-- **AI:** Agents are built with LangGraph (`createAgent` from `langchain`), tools defined via `tool()` + Zod schema, registered through an `AgentDescriptor`.
-- **DB:** MongoDB. Connections are managed by name (`createMongoConnection('Chatbot')`), accessed via `getMongoCollection<T>(dbName, collectionName)`.
-- **Apps workspace:** `apps/savings-web`, `apps/mindloop-web`, `apps/earth-web` and `apps/zika-web` are Vite mini-apps (npm workspaces).
+- **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger, mini-app SPAs, webhooks). Built on grammY, LangGraph, MongoDB native driver.
+- **Entry point:** `src/index.ts` (not `main.ts`). Bots boot when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches.
+- **Local dev:** `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (UPPERCASE, e.g. `COACH`) in `.env`, then `npm run dev`.
+- **Telegram:** always `@services/telegram`. `@services/telegram-grammy` does NOT exist.
+- **AI:** LangGraph agents (`createAgent` from `langchain`), tools via `tool()` + Zod, registered through an `AgentDescriptor`.
+- **DB:** MongoDB by name — `createMongoConnection('Chatbot')`, `getMongoCollection<T>(db, collection)`.
+- **Apps:** `apps/*-web` are Vite mini-apps (npm workspaces).
 
 ---
 
@@ -25,91 +24,62 @@ Read this top-to-bottom on first contact with the repo. It is intentionally dens
 
 ### 1. Think Before Coding
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-- State your assumptions explicitly. If uncertain, ask.
+- State assumptions explicitly. If uncertain, ask.
 - If multiple interpretations exist, present them — don't pick silently.
 - If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
 
 ### 2. Simplicity First
 
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
+- No features, abstractions or configurability beyond what was asked.
 - No error handling for impossible scenarios.
 - If you write 200 lines and it could be 50, rewrite it.
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
 ### 3. Surgical Changes
 
-**Touch only what you must. Clean up only your own mess.**
-
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it — don't delete it.
-
-When your changes create orphans, remove imports/variables/functions that YOUR changes made unused. Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
+- Touch only what you must. Match existing style.
+- Don't refactor or reformat adjacent code. Mention unrelated dead code — don't delete it.
+- Remove imports/variables/functions that *your* change made unused.
+- Every changed line should trace directly to the user's request.
 
 ### 4. Goal-Driven Execution
 
-**Define success criteria. Loop until verified.**
-
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+- Define success criteria and loop until verified ("fix the bug" → write a failing test, make it pass).
 
 ### 5. Never Commit Unless Asked
 
-**Do not run `git commit` (or `git push`) unless the user explicitly tells you to.**
+- Do not `git commit`, `git push`, tag, amend or rewrite history unless the user explicitly asks.
 
-- Make and stage changes, but leave committing to the user unless they ask.
-- "Fix X", "add Y", "implement Z" means write the code — not commit it.
-- Only commit when the user says so (e.g. "commit this", "commit and push").
-- This also applies to creating tags, amending, or rewriting history.
+### 6. Documentation Policy
+
+Docs are **not** part of every change. Each fact has exactly one home:
+
+| Kind of fact | Home |
+|---|---|
+| Conventions, code style, repo layout, agent workflow | `AGENTS.md` |
+| Feature behaviour, schedules, collections, env flags, setup, architecture | `docs/` (VitePress) |
+| Implementation details | the code itself |
+
+- **Update `docs/`** only when user-visible behaviour, setup, env vars or architecture change.
+- **Update `AGENTS.md`** only when conventions, structure or agent workflow change.
+- **Never duplicate** feature facts between the two — link to the docs page instead.
+- **No doc edits** for internal refactors, tests, or bug fixes that don't change documented behaviour.
+- New env var → add it to `.env.example` (always).
+- Larger drift is fixed by the periodic `/update-docs` sweep, not per change.
 
 ---
 
 ## Tech Stack
 
-### Core
-- **Plain TypeScript** — no framework, direct Node.js 24.x application
-- **TypeScript 5.9** with ES2022 target, **non-strict** mode
-- **Express 5** (HTTP server for Swagger UI, mini-app routes, webhooks)
-- **node-cron** for scheduled tasks
+- **Plain TypeScript 5.9**, ES2022, **non-strict**; Node.js 24; Express 5; `node-cron`.
+- **AI:** `langchain`, `@langchain/langgraph` (+ `@langchain/langgraph-checkpoint-mongodb`), `@langchain/openai`, `@langchain/anthropic`, `openai`, `@anthropic-ai/sdk`.
+- **Data/bots:** `mongodb` (no ODM), `grammy` (+ `@grammyjs/hydrate`), `telegram` (MTProto client mode).
+- **Utils:** `date-fns` / `date-fns-tz` (default tz `Asia/Jerusalem`), `zod`.
+- **Quality:** Vitest 4, ESLint 9 (flat), Prettier 3 (200 cols, single quotes, trailing commas, **semicolons**).
+- **Observability:** `@opentelemetry/*` → Grafana Cloud (preloaded via `node --import`, prod only).
 
-### Key Dependencies
-- **AI/LLM:** `@anthropic-ai/sdk`, `openai`, `langchain`, `@langchain/langgraph` (with `MemorySaver` as fallback), `@langchain/langgraph-checkpoint-mongodb` (durable chatbot memory), `@langchain/anthropic`, `@langchain/openai`
-- **Database:** `mongodb` (native driver, no ODM)
-- **Bot Platform:** `grammy` (+ `@grammyjs/hydrate`)
-- **Date Handling:** `date-fns`, `date-fns-tz` (default timezone: `Asia/Jerusalem`)
-- **Schema Validation:** `zod`
-- **Testing:** Vitest 4.x (unit specs in `src/**/*.spec.ts`, integration specs under `test/integration/`, E2E bot specs under `test/e2e/`)
-- **Code Quality:** ESLint 9 (flat config), Prettier 3
-- **Telegram MTProto:** `telegram` (for client-mode features, separate from bot)
-- **Observability:** `@opentelemetry/*` (OTLP traces/metrics/logs to Grafana Cloud; bootstrapped via a `node --import` preload)
-- **Other notable:** `canvas`, `sharp`, `cheerio`, `youtube-transcript-plus`, `googleapis`, `octokit`, `vitepress` (docs)
+### Path Aliases (`tsconfig.json`)
 
-### Code Formatting
-- **Prettier:** 200 char line width, single quotes, trailing commas, **semicolons required**
-- **Path Aliases (`tsconfig.json`):**
-  - `@src/*` → `src/*`
-  - `@core/*` → `src/core/*`
-  - `@features/*` → `src/features/*`
-  - `@services/*` → `src/services/*`
-  - `@shared/*` → `src/shared/*`
-  - `@decorators` → `src/decorators`
-  - `@mocks` → `src/core/mocks`
-  - `@config/*` → `src/config/*`
-  - `@test/*` → `test/*`
+`@src/*` → `src/*` · `@core/*` → `src/core/*` · `@features/*` → `src/features/*` · `@services/*` → `src/services/*` · `@shared/*` → `src/shared/*` · `@decorators` → `src/decorators` · `@mocks` → `src/core/mocks` · `@config/*` → `src/config/*` · `@test/*` → `test/*`
 
 ---
 
@@ -118,99 +88,77 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ```
 mmps/
 ├── src/
-│   ├── core/           # Config, mongo, openapi/swagger, telemetry, services, utils
-│   ├── features/       # Bots plus savings & mindloop web features
-│   ├── services/       # 30+ external service integrations
-│   ├── shared/         # Cross-bot business logic (AI tools live here)
+│   ├── core/           # Config, mongo, openapi/swagger, telemetry, utils
+│   ├── features/       # Bots + bot-less web features
+│   ├── services/       # External service integrations
+│   ├── shared/         # Cross-bot business logic (AI tools live in shared/ai/tools)
 │   └── index.ts        # Entry point — Express server + conditional bot init
-├── apps/               # npm workspaces — Vite mini-apps for bots
-│   ├── savings-web/
-│   ├── mindloop-web/
-│   ├── earth-web/
-│   └── zika-web/
+├── apps/               # Vite mini-apps (npm workspaces)
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
-├── scripts/            # Standalone scripts (cleanup, migrations, etc.)
-├── assets/             # Static assets (downloads dir, images)
-├── .github/
-│   ├── workflows/      # ci.yml, ai.yml (Codex implement + review), docs-deploy.yml
-│   └── copilot-instructions.md → ../AGENTS.md   # symlink
-├── .agents/
-│   └── skills/         # MMPS skills (canonical; SKILL.md format)
-├── .claude/
-│   ├── settings.json
-│   └── skills → ../.agents/skills               # symlink
-├── AGENTS.md           # ← you are here (canonical)
-├── CLAUDE.md → AGENTS.md                          # symlink
-└── .env.example        # All env vars the code references
+├── scripts/            # Standalone scripts
+├── test/               # integration/ and e2e/ suites
+├── .github/workflows/  # ci, ai (Codex), docs-deploy, heroku-deploy, pr-notify
+└── .agents/skills/     # MMPS skills (.claude/skills is a symlink)
 ```
 
+The full service catalog and shared-module list: [`docs/architecture/project-structure.md`](docs/architecture/project-structure.md).
+
 ### Feature Structure (per bot)
+
 ```
 src/features/{name}/
-├── {name}.init.ts                # initX(app) — wires DI, registers routes/bot
+├── {name}.init.ts                # initX(app?) — wires DI, registers routes/bot
 ├── {name}.controller.ts          # grammY handlers (ctx-driven)
 ├── {name}.service.ts             # Business logic
 ├── {name}-scheduler.service.ts   # Cron jobs (if needed)
-├── {name}.config.ts              # BOT_CONFIG: { id, name, token }
-├── launcher.service.ts           # (some bots) Mini-app deep-link helpers
+├── {name}.config.ts              # BOT_CONFIG: { id, name, token, commands }
 ├── types.ts
 ├── index.ts                      # Barrel — exports BOT_CONFIG + init function
-├── agent/                        # (chatbot only) LangGraph agent + factory
-├── schedulers/                   # (chatbot) Scheduler implementations
 └── mongo/                        # Feature-specific repositories
 ```
 
 ### Service Structure
+
 ```
 src/services/{name}/
-├── api.ts or {name}.service.ts   # Main implementation
+├── api.ts or {name}.service.ts
 ├── types.ts
 ├── constants.ts                  # (if needed)
-└── index.ts                      # Barrel exports
+└── index.ts                      # Barrel
 ```
 
 ---
 
-## The Bots
+## Features
 
-| ID          | Display Name    | Path                          | Env token                        | Purpose |
-|-------------|-----------------|-------------------------------|----------------------------------|---------|
-| `CHATBOT`   | Chatbot 🤖      | `src/features/chatbot/`       | `CHATBOT_TELEGRAM_BOT_TOKEN`     | AI assistant with ~28 tools (weather, calendar, google places, gmail, reminders, sports, exercise, recipes, github, polymarket, spotify, twitter, youtube, telegram channels, etc.); social-media follower with a daily 22:45 digest (collect → digest, see AI Patterns); durable MongoDB-backed memory + conversation summarization + per-turn token/cost observability. |
-| `CHILLI`    | Chilli 🐱       | `src/features/chilli/`        | `CHILLI_TELEGRAM_BOT_TOKEN`      | Persona bot — replies as the user's cat in Hebrew (uses GPT-small). |
-| `COACH`     | Coach Bot ⚽️    | `src/features/coach/`         | `COACH_TELEGRAM_BOT_TOKEN`       | Sports analytics, predictions, schedules. |
-| `WOLT`      | Wolt Bot 🍔     | `src/features/wolt/`          | `WOLT_TELEGRAM_BOT_TOKEN`        | Watches Wolt restaurants and notifies on availability. |
-| `WORLDLY`   | Worldly Bot 🌍  | `src/features/worldly/`       | `WORLDLY_TELEGRAM_BOT_TOKEN`     | Geography quiz/education; `/globe`, the `/start` reply and the chat menu button open the Earth globe quiz (`${MMPS_BASE_URL}/earth`) as a Telegram mini app; `initWorldly` serves the `apps/earth-web` build at `/earth/*` (Learner pattern). |
+### Bots
 
-**Also not a bot:** `SAVINGS` (`src/features/savings/`) is a password-protected React SPA (`apps/savings-web`) served at `/savings/*`. It stores one shared family portfolio in the `Savings` MongoDB database, uses real ILS values with reactive rebalancing, and protects explicit saves with revision conflict detection. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+| ID | Path | Docs |
+|---|---|---|
+| `CHATBOT` | `src/features/chatbot/` | [chatbot](docs/bots/chatbot.md), [deep dive](docs/bots/chatbot-deep-dive.md) |
+| `CHILLI` | `src/features/chilli/` | [chilli](docs/bots/chilli.md) |
+| `COACH` | `src/features/coach/` | [coach](docs/bots/coach.md) |
+| `WOLT` | `src/features/wolt/` | [wolt](docs/bots/wolt.md) |
+| `WORLDLY` | `src/features/worldly/` | [worldly](docs/bots/worldly.md); also serves the [Earth](docs/bots/earth.md) globe quiz mini app at `/earth/*` |
+| `LEARNER` | `src/features/learner/` | [overview](docs/bots/overview.md) |
 
-**Worldly mini app:** `EARTH` (`apps/earth-web`) is a "Find the Country" geography quiz on a 3D globe (CesiumJS), served at `/earth/*` by the Worldly bot's `initWorldly` and opened from it as a Telegram mini app (`src/lib/telegram.ts`: ready/expand, vertical swipes disabled so globe dragging doesn't close it). The globe is a plain political map — blue ocean, white countries, no names, no imagery and no Google APIs — and the player spins/zooms it to click the country asked for. The UI is neutral (no theme, one blue accent): modes are picked from a plain menu — Daily challenge (the same 10 countries for everyone, once per day), Classic (10 countries anywhere), Continent sprint (Classic limited to one continent), Name it (a country lights up; pick its name from 4 nearby options) and Continent cleanup (find every country on a continent, one miss marks it). Continent sprint and cleanup each collapse into one menu row that expands per continent. Rounds end with a results screen; players earn XP and levels, build a collection of found countries and unlock achievements (`src/game/progression.ts`, with specs). Pure mode logic lives in `src/game/` (with specs) and one component per mode in `src/games/`. Country shapes come from `public/data/countries.json`, generated from the Worldly bot's `countries.json` by `npm run data:countries --workspace=@mmps/earth-web` (duplicate territories dropped, enclaves cut out as holes, land neighbours computed with a 0.01° border tolerance). Countries under 1,000 km² are drawn but never asked. There is no database or API: best scores, XP, found countries, achievements, daily streak and the sound setting live in localStorage and the backend only serves the SPA. Cesium static assets are copied to `dist/cesiumStatic/` by `vite-plugin-static-copy`. Being part of Worldly, it is only served when the Worldly bot boots (prod, or `LOCAL_ACTIVE_BOT_ID=WORLDLY`).
+Token env var for each bot: `{ID}_TELEGRAM_BOT_TOKEN`.
 
-**Also not a bot:** `MINDLOOP` (`src/features/mindloop/`) is a React brain-training mini-app (`apps/mindloop-web`) served at `/mindloop/*`. It ships 14 original games across 5 skill categories and persists player progress (best scores, favorites, play history) to the `Mindloop` MongoDB database keyed by Telegram user id. The client is offline-first (localStorage) and reconciles with the server via a non-destructive merge; server writes are best-effort. Identity comes from verified Telegram `initData` (`MINDLOOP_TELEGRAM_BOT_TOKEN`) or an `X-Mindloop-Dev-User` header in local dev. Device-only preferences (theme, sound, reduced motion) never leave the device. It is initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+### Web features (no bot, boot regardless of `LOCAL_ACTIVE_BOT_ID`)
 
-**Also not a bot:** `ZIKA` (`src/features/zika/`) is a static React showcase (`apps/zika-web`) served at `/zika/*`: three redesign options (bold, catalog, friendly) for zika.co.il (Zika Industries), each with a home page and a Z‑11 product page, behind a cover page for management. Hebrew RTL; all copy, prices and images come from `apps/zika-web/src/content/index.ts` (scraped from zika.co.il / shop.zika.co.il). The cart is client-side only (localStorage) and checkout links out to the real shop. No API routes, no DB. Each concept lives in `src/concepts/<slug>/` with CSS scoped under `.c-<slug>`. Initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+| Feature | Served at | Docs |
+|---|---|---|
+| Savings | `/savings/*`, `/api/savings/*` | [savings](docs/bots/savings.md) |
+| Mindloop | `/mindloop/*`, `/api/mindloop/*` | [mindloop](docs/bots/mindloop.md) |
+| Zika | `/zika/*` | [zika](docs/bots/zika.md) |
+| Stickers (WhatsApp) | `GET/POST /whatsapp-webhook` | [stickers](docs/bots/stickers.md) |
+| Portfolio | `POST /portfolio/contact` | — |
 
-**Also not a bot:** `STICKERS` (`src/features/stickers/`, renamed from `whatsapp`) is a Meta WhatsApp Cloud API sticker vault on the shared Express server. Its routes come from the shared `registerWhatsAppWebhook(app, { path, onMessage, allowedPhones? })` in `@services/whatsapp` (`webhook.ts`), which any WhatsApp bot can reuse; the controller (`registerStickersRoutes`) only passes `STICKERS_WEBHOOK_PATH`, the allowlist and `handleIncomingMessage`. `GET /whatsapp-webhook` answers Meta's verification handshake (`hub.mode=subscribe` + `VERIFY_TOKEN` → echoes `hub.challenge`, else 403). `POST /whatsapp-webhook` acks 200 immediately, reads `entry[0].changes[0].value.messages[0]` and passes sticker/text messages to `handleIncomingMessage` (`sticker-vault.service.ts`). Incoming stickers are downloaded, deduped by sha256 across one vault shared by all users, shrunk with sharp to WhatsApp's sticker limits (512×512, 100 KB static / 500 KB animated; refused if they can't fit; `sticker-image.ts`) and stored (bytes included) in the `Whatsapp` MongoDB database, `stickers` collection. All replies are in Hebrew; the commands are delete (`delete`, `מחק` or `-`) and `%` (stats); there is no random command. A text message that is exactly `%` (trimmed) is checked before any tagging/search logic and replies with one Hebrew stats message (`formatStatsMessage` in `stickers.utils.ts`): top 5 sticker tags (`$unwind` tags on `stickers`), top 5 searched words and top 3 searchers by search count (from `searches`, full phone numbers shown), with a Hebrew fallback per empty section. `%` is never a tag or a search and is not logged in `searches`. User-facing text calls tags "מילות חיפוש". Uploads reply "נשמר ✅" plus a hint to quote-reply with words (new) or "קיים 👍" plus the sticker's search words (sha256 duplicate). Only a quote-reply to a sticker edits its tags (plain text always searches): words with a leading/trailing `-` are removed (`removeStickerTags`), others added (`parseTagEdits` splits on whitespace before normalizing; emojis are tags too, one per emoji, FE0F stripped), and the bot replies with the updated tags. A quote-reply of exactly `-`, `delete` or `מחק` deletes the sticker (anyone can delete; `ownerPhone` is informational). Any other text searches tags (all words must match) and sends the first `STICKER_PAGE_SIZE` (6) matches as real `type: sticker` messages, 1s apart (`STICKER_SEND_DELAY_MS`); if more remain it sends `יש עוד N סטיקרים.` with a **עוד ⬇️** reply button (`sendWhatsAppButtons`, id `more:<searchId>:<offset>`), and each tap (`kind: 'button'`) sends the next page, ending with `זה הכול ✅`. The ordered match list is stored on the search (`matchedStickerIds` + `nextOffset`); a tap atomically claims its page (`claimSearchPage`) so it's never sent twice, and only the sender's newest search can continue (older buttons reply that they're no longer active), so a new search always starts from the beginning. No expiry. On error `131056` it waits `STICKER_RATE_LIMIT_BACKOFF_MS` (30s) and retries that sticker once, then stops the page and offers "עוד" from the unsent sticker. Each search (not tag edits) is recorded in the `searches` collection (`search.repository.ts`: phone, query, words, `matchedCount`, `matchedStickerIds`, `nextOffset`, `sentStickerIds`, `failedCount`, `rateLimited`, `durationMs`, `createdAt`; no TTL) for dashboards and paging; a failed write is logged and only drops the button. Every incoming message first triggers a fire-and-forget `sendWhatsAppTypingIndicator` (marks read + shows typing), and each handled message logs a `Timing for <kind> <id>: step=Nms … total sinceSent≈` line (`createStepTimer` in `stickers.utils.ts`). Media ids are reused for 25 days, then the stored bytes are re-uploaded. Failed delivery statuses (`statuses[].status === 'failed'`) are logged. `@services/whatsapp` (Graph API v20.0, `WHATSAPP_TOKEN` + `PHONE_NUMBER_ID`) provides `sendWhatsAppMessage`, `sendWhatsAppButtons`, `sendWhatsAppSticker`, `sendWhatsAppTypingIndicator`, `downloadWhatsAppMedia`, `uploadWhatsAppMedia`, `isWhatsAppPairRateLimitError`, plus the webhook helpers (`registerWhatsAppWebhook`, `extractIncomingMessage`, `isValidSignature`, `parseAllowedPhones`, `isAllowedSender`) and payload types. When `WHATSAPP_APP_SECRET` is set, requests with an invalid `X-Hub-Signature-256` get 401. When `WHATSAPP_ALLOWED_PHONES` (comma-separated numbers with country code, digits compared) is set, messages from other senders are acked and silently dropped by the shared webhook (`parseAllowedPhones`/`isAllowedSender`); unset = open to everyone. Unexpected failures (e.g. Mongo errors) are logged and answered in Hebrew with "משהו השתבש… נסו שוב מאוחר יותר." (sticker or text variant) instead of silence. A search with no matches replies only `לא נמצאו סטיקרים עבור "..."`. `initStickers(app)` must run **before** the global `express.json()` because the route keeps the raw body for the HMAC check. Initialized independently of `LOCAL_ACTIVE_BOT_ID`.
+`initStickers(app)` must run **before** the global `express.json()` — the webhook needs the raw body for HMAC verification.
 
-**Boot logic** (`src/index.ts`):
-```typescript
-const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
-const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {
-  if (!shouldInitBot(config)) return;
-  try {
-    await init();
-  } catch (err) {
-    logger.error(`Failed to init bot '${config.id}': ${err}`); // one bot failing doesn't kill the rest
-  }
-};
+### Boot logic (`src/index.ts`)
 
-await initBot(chatbotConfig, () => initChatbot(app));
-await initBot(chilliConfig, () => initChilli());
-await initBot(coachConfig, () => initCoach());
-await initBot(woltConfig, () => initWolt());
-await initBot(worldlyConfig, () => initWorldly(app));
-```
-
-In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (uppercase, e.g. `COACH`) to run only that one. The `savings`, `mindloop` and `zika` web features are initialized separately (`initSavings(app)` / `initMindloop(app)` / `initZika(app)`), wrapped in their own try/catch, and boot regardless of `LOCAL_ACTIVE_BOT_ID`.
+Each bot goes through `initBot(config, init)`: it skips unless `isProd || env.LOCAL_ACTIVE_BOT_ID === config.id`, and wraps `init()` in try/catch so one failing bot doesn't kill the rest. Web features have their own try/catch. Details: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 ---
 
@@ -218,473 +166,154 @@ In production all five run. Locally, set `LOCAL_ACTIVE_BOT_ID` to the bot ID (up
 
 ### Types — NEVER use `interface`
 
-**CRITICAL: Always use `type`. NEVER use `interface`.**
-
 ```typescript
-// ✅ CORRECT
+// ✅
 export type User = {
   readonly _id?: ObjectId;
   readonly telegramUserId: number;
-  readonly chatId: number;
   readonly username?: string;
 };
 
-// ❌ WRONG
+// ❌
 interface User { /* ... */ }
 ```
 
-Rules:
-- Use `type` for all type definitions.
-- Mark properties `readonly` for immutability.
-- Prefer utility types: `Omit<T, K>`, `Pick<T, K>`, `Partial<T>`.
+- Always `type`, properties `readonly`, prefer `Omit` / `Pick` / `Partial`.
 
 ### Functions vs Classes
 
-**Functions for:** utilities, API calls, repository operations, stateless logic.
+- **Functions:** utilities, API calls, repository operations, stateless logic.
+- **Classes:** stateful services, controllers, schedulers (`private readonly logger = new Logger(X.name)`).
 
-```typescript
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+### Documentation
 
-export async function createReminder(data: CreateReminderData): Promise<InsertOneResult<Reminder>> {
-  return getCollection().insertOne({ ...data, status: 'pending', createdAt: new Date() } as Reminder);
-}
-```
+**No JSDoc.** Inline `//` comments only for format specs (`// Format: "YYYY-MM-DD HH:MM"`), non-obvious logic, or important config notes.
 
-**Classes for:** services with state, controllers, schedulers.
+### Naming
 
-```typescript
-export class ChatbotService {
-  private readonly logger = new Logger(ChatbotService.name);
-  private readonly aiService: AiService;
+| Type | Convention | Example |
+|---|---|---|
+| Files | kebab-case + suffix | `chatbot-scheduler.service.ts` |
+| Variables/Functions | camelCase | `getUserByUsername()` |
+| Constants | SCREAMING_SNAKE | `DEFAULT_TIMEZONE` |
+| Types / Classes | PascalCase (+ suffix for classes) | `CreateReminderData`, `ChatbotService` |
 
-  async processMessage(message: string, chatId: number): Promise<ChatbotResponse> { /* ... */ }
-}
-
-export class ChatbotController {
-  constructor(private readonly chatbotService: ChatbotService) {}
-  init(): void { /* register grammY handlers */ }
-}
-```
-
-### Documentation Style
-
-**No JSDoc.** Code should be self-documenting. Use inline `//` comments only for:
-- Format specifications: `readonly time: string; // Format: "YYYY-MM-DD HH:MM"`
-- Non-obvious logic
-- Important configuration notes
-
-### Naming Conventions
-
-| Type                | Convention            | Example                                    |
-|---------------------|-----------------------|--------------------------------------------|
-| Files               | kebab-case + suffix   | `chatbot-scheduler.service.ts`, `types.ts` |
-| Variables/Functions | camelCase             | `weatherData`, `getUserByUsername()`       |
-| Constants           | SCREAMING_SNAKE       | `DEFAULT_TIMEZONE`, `BOT_CONFIG`           |
-| Types               | PascalCase            | `TwitterUser`, `CreateReminderData`        |
-| Classes             | PascalCase + Suffix   | `ChatbotService`, `ChatbotController`      |
-
-**File suffixes:** `.service.ts`, `.controller.ts`, `.init.ts`, `.config.ts`, `.spec.ts`.
+Suffixes: `.service.ts`, `.controller.ts`, `.init.ts`, `.config.ts`, `.spec.ts`.
 
 ---
 
 ## Imports & Exports
 
-### Import Order (auto-sorted by Prettier)
-1. Third-party modules
-2. `@core/*` → `@decorators/*` → `@features/*` → `@mocks/*` → `@services/*` → `@shared/*` → `@test/*`
-3. Relative imports (`./`, `../`)
-
-```typescript
-import { ChatAnthropic } from '@langchain/anthropic';
-import { env } from 'node:process';
-import { Logger } from '@core/utils';
-import { BOT_CONFIG } from './chatbot.config';
-```
-
-### Export Rules
-
-**Named exports only. NEVER use default exports.**
-
-```typescript
-// ✅ Barrel exports (index.ts)
-export * from './types';
-export { ChatbotService } from './chatbot.service';
-
-// ✅ Type imports
-import type { ObjectId } from 'mongodb';
-```
+- Import order (Prettier-sorted): third-party → `@core` → `@decorators` → `@features` → `@mocks` → `@services` → `@shared` → `@test` → relative.
+- Use path aliases for shared code, never long relative paths.
+- **Named exports only — never default exports.** Every new file gets a barrel export in its `index.ts`.
+- `import type` for type-only imports. `env` from `node:process`.
 
 ---
 
 ## Async & Error Handling
 
-### Always async/await — NEVER `.then()` chains
-
-```typescript
-// ✅
-async function getUserByUsername(username: string): Promise<TwitterUser | null> {
-  const response = await axios.get<TwitterUserResponse>(url);
-  return response.data.data || null;
-}
-
-// ❌
-function getUser(username: string) {
-  return axios.get(url).then((r) => r.data);
-}
-```
-
-### Parallel Operations
-```typescript
-await Promise.all([
-  createMongoConnection('Chatbot'),
-  createMongoConnection('Coach'),
-]);
-```
-
-### Error Handling Patterns
-
-**1. Validation — throw early:**
-```typescript
-if (!apiKey) throw new Error('API key not configured');
-if (diffDays > 14) throw new Error('Forecast only available up to 14 days');
-```
-
-**2. Services — try/catch with Logger:**
-```typescript
-async processMessage(message: string): Promise<ChatbotResponse> {
-  try {
-    return await this.aiService.invoke(message);
-  } catch (err) {
-    this.logger.error(`Error: ${err}`);
-    return { message: 'An error occurred', toolResults: [] };
-  }
-}
-```
-
-**3. Non-critical — inline `.catch()`:**
-```typescript
-await connectGithubMcp().catch((err) => console.error(err));
-```
-
-### Logger
+- **Always `async/await` — never `.then()` chains.** Parallelize with `Promise.all`.
+- Validation: throw early (`if (!apiKey) throw new Error('API key not configured');`).
+- Services: try/catch + `Logger`, return a safe fallback.
+- Non-critical: inline `.catch()` (`await connectGithubMcp().catch((err) => logger.error(...))`).
 
 ```typescript
 import { Logger } from '@core/utils';
 const logger = new Logger('MyClass');
-logger.log('info');     // general
-logger.error('boom');   // errors
-logger.warn('careful'); // warnings
-logger.debug('trace');  // debug
+logger.log('info'); logger.warn('careful'); logger.error('boom'); logger.debug('trace');
 ```
 
 ---
 
 ## Architecture Patterns
 
-### Manual DI via Init Functions
+### Manual DI via init functions
 
 ```typescript
-// features/chatbot/chatbot.init.ts
 export async function initChatbot(app: Express): Promise<void> {
-  await Promise.all([
-    createMongoConnection('Chatbot'),
-    connectGithubMcp().catch((err) => console.error(err)),
-  ]);
-
+  await createMongoConnection('Chatbot');
   const chatbotService = new ChatbotService();
   const chatbotController = new ChatbotController(chatbotService);
   const chatbotScheduler = new ChatbotSchedulerService(chatbotService);
-
   chatbotController.init();
   chatbotScheduler.init();
 }
 ```
 
-Init functions accept the Express `app` only if they register HTTP routes (swagger, mini-app endpoints). `initChilli()` takes no args.
+Init functions take `app` only if they register HTTP routes.
 
-### Layered: Controller → Service → Repository
+### Controller → Service → Repository
 
-**Controller** — grammY handlers; prefer `ctx.*` methods over `bot.api.*` when `ctx` is available.
+- **Controller:** grammY handlers. Use `ctx.*` (`ctx.reply`, `ctx.deleteMessage`) when `ctx` is available — not `this.bot.api.*`.
+- **Service:** business logic; uses `bot.api.*` when there's no `ctx`.
+- **Repository:** plain functions, never classes.
 
-```typescript
-export class CoachController {
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
-  constructor(private readonly coachService: CoachService) {}
-
-  init(): void {
-    this.bot.command('start', (ctx) => this.startHandler(ctx));
-    this.bot.on('callback_query', (ctx) => this.callbackQueryHandler(ctx));
-  }
-
-  private async startHandler(ctx: Context): Promise<void> {
-    const { chatId, userDetails } = getMessageData(ctx);
-    await ctx.reply(welcomeMessage);
-  }
-}
-```
-
-**Service** — business logic; uses `bot.api.*` when there is no `ctx`:
+### Cron
 
 ```typescript
-export class CoachService {
-  private readonly bot = provideTelegramBot(BOT_CONFIG);
-  async sendChallenge(chatId: number): Promise<void> {
-    const keyboard = buildInlineKeyboard([{ text: 'Subscribe', data: 'subscribe' }]);
-    await this.bot.api.sendMessage(chatId, message, { reply_markup: keyboard });
-  }
-}
+cron.schedule('00 23 * * *', () => this.handleDailySummary(), { timezone: DEFAULT_TIMEZONE });
 ```
 
-### Cron Scheduler
+### Telegram (`@services/telegram`)
 
-```typescript
-import cron from 'node-cron';
-import { DEFAULT_TIMEZONE } from '@core/config';
+Key exports: `provideTelegramBot(config)` (memoized per bot), `buildInlineKeyboard([{ text, data }])`, `getMessageData(ctx)`, `getCallbackQueryData(ctx)`, `MessageLoader`, `MessageStreamer`, `sendStyledMessage`, `sendShortenedMessage`, `downloadFile`, `removeItemFromInlineKeyboardMarkup`.
 
-export class ChatbotSchedulerService {
-  constructor(private readonly chatbotService: ChatbotService) {}
+- Wrap file paths with `new InputFile(path)` from `grammy` for `sendVoice` / `sendPhoto` / `sendDocument`.
+- Never import `node-telegram-bot-api` or `getInlineKeyboardMarkup` (legacy).
 
-  init(): void {
-    cron.schedule('00 23 * * *', () => this.handleDailySummary(), { timezone: DEFAULT_TIMEZONE });
-    cron.schedule('59 12,23 * * *', () => this.handleFootballUpdate(), { timezone: DEFAULT_TIMEZONE });
-  }
-}
-```
+### GitHub automation
 
-### Telegram (grammY) — `@services/telegram`
-
-All Telegram code goes through `@services/telegram`. There is **no `@services/telegram-grammy`** — that path was used during migration and no longer exists. Any reference to it is stale and should be replaced with `@services/telegram`.
-
-Public exports (from `src/services/telegram/index.ts`):
-- `provideTelegramBot(config)` — memoized `Bot` instance per bot ID.
-- `buildInlineKeyboard([{ text, data }])` — each button on its own row; `data` → `callback_data`.
-- `getMessageData(ctx)`, `getCallbackQueryData(ctx)` — extract `{ chatId, userDetails, text, ... }`.
-- `MessageLoader` — shows reaction + typing + delayed loader message during long ops.
-- `MessageStreamer` — streaming message updates for LLM responses.
-- `sendStyledMessage`, `sendShortenedMessage` — fallback-safe markdown sender.
-- `downloadFile` — voice/photo/document downloader.
-- `removeItemFromInlineKeyboardMarkup`.
-- Types: `TelegramBotConfig`, `MessageData`, `CallbackQueryData`, `UserDetails`, etc.
-
-**File sending:** when calling grammY methods like `sendVoice`, `sendPhoto`, `sendDocument`, wrap paths with `new InputFile(path)` from `grammy`. Raw path strings are rejected.
-
-### Inline keyboard helper
-
-```typescript
-import { buildInlineKeyboard } from '@services/telegram';
-
-const keyboard = buildInlineKeyboard([
-  { text: 'Subscribe', data: 'subscribe' },
-  { text: 'Settings', data: 'settings' },
-]);
-await ctx.reply('Menu:', { reply_markup: keyboard });
-```
-
-### MessageLoader
-
-```typescript
-const loader = new MessageLoader(this.bot, chatId, messageId, {
-  loaderMessage: 'Processing...',
-  reactionEmoji: '👀',
-  loadingAction: 'typing',
-});
-await loader.handleMessageWithLoader(async () => {
-  const response = await this.chatbotService.processMessage(text, chatId);
-  await sendStyledMessage(this.bot, chatId, response.message);
-});
-```
-
-Shows reaction emoji immediately, "typing…" action, loader message after 3s, auto-cleanup after 15s.
-
-### GitHub Automation
-
-Two GitHub labels trigger OpenAI Codex workflows (`openai/codex-action`):
-- **`review`** on a PR → `.github/workflows/ai.yml` posts an AI code review comment
-- **`implement`** on an issue → `.github/workflows/ai.yml` creates an implementation PR
-
-The chatbot agent has a `githubTool` that can add these labels through natural language.
-
-### Caching
-
-```typescript
-export class BaseCache<T> {
-  private cache: Record<string, { value: T; timestamp: number }> = {};
-  private readonly validForMs: number;
-  constructor(validForMinutes: number) { this.validForMs = validForMinutes * 60 * 1000; }
-  get(key: string): T | null {
-    const entry = this.cache[key];
-    if (!entry || Date.now() - entry.timestamp > this.validForMs) return null;
-    return entry.value;
-  }
-  set(key: string, value: T): void { this.cache[key] = { value, timestamp: Date.now() }; }
-}
-```
+Labels trigger `.github/workflows/ai.yml` (OpenAI Codex): **`review`** on a PR → AI review comment; **`implement`** on an issue → implementation PR.
 
 ---
 
 ## AI Patterns
 
-### Agent Descriptor
-
-`src/features/chatbot/agent/` shows the canonical pattern.
+### Agent descriptor
 
 ```typescript
-// types.ts
 export type AgentDescriptor = {
   readonly name: string;
   readonly prompt: string;
   readonly description: string;
   readonly tools: StructuredTool[];
 };
-
-// agent.ts
-export function agent(): AgentDescriptor {
-  return {
-    name: 'CHATBOT',
-    prompt: `You are a helpful AI assistant...`,
-    description: 'AI assistant with tools',
-    tools: [weatherTool, reminderTool, calendarTool /* ... */],
-  };
-}
-
-// factory.ts
-export function createAgentService(descriptor: AgentDescriptor, opts: CreateAgentOptions): AiService {
-  const { model, checkpointer = new MemorySaver(), middleware, toolCallbackOptions } = opts;
-  const callbacks = toolCallbackOptions ? [new ToolCallbackHandler(toolCallbackOptions)] : undefined;
-  const reactAgent = createAgent({ model, tools: descriptor.tools, systemPrompt: descriptor.prompt, checkpointer, middleware });
-  return new AiService(reactAgent.graph, { name: descriptor.name, callbacks });
-}
 ```
 
-### Memory & context management (chatbot)
-
-The chatbot's conversation memory is two complementary pieces wired up in `features/chatbot`:
-
-- **Persistence (checkpointer).** `agent/checkpointer.ts` provides `createChatbotCheckpointer()`, a Mongo-backed `BaseCheckpointSaver` (via `@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL). It's built in `chatbot.init.ts` and injected into `ChatbotService`, replacing the in-RAM `MemorySaver` so history survives restarts/deploys. State is keyed by `thread_id` (derived from `chatId`). LangGraph saves a full snapshot after every graph step but resuming only reads the latest, so `PruningMongoDBSaver` (same file) deletes each thread's checkpoints/writes older than the new checkpoint's parent after every save — each thread keeps 2 snapshots; pruning failures are logged, never fail the turn. One-off backfill for existing data: `npx tsx src/features/chatbot/scripts/prune-checkpoints.ts` (dry run; add `--apply` to delete).
-- **Context bounding (summarization).** `chatbot.service.ts` registers LangChain's `summarizationMiddleware` (passed via `CreateAgentOptions.middleware`). It is bounded by **tokens, not message counts** — a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the MongoDB checkpoint document (16 MiB limit). The `trigger` is an **OR** array: summarize once retained history exceeds `CHATBOT_CONFIG.summarization.triggerTokens` (~24k) OR passes `triggerMessages` (~40) **and** holds at least `messageTriggerMinTokens` (2× `keepTokens`, ~16k) — without that floor, a retained tail of short messages stays at ~40 and re-summarizes every turn; `keep` is token-based (`keepTokens`, ~8k). The summary is persisted by the checkpointer, so old turns are compressed in Mongo rather than dropped. Summaries run on `GPT_SMALL_MODEL` (`gpt-5-nano`, reasoning effort `low`), not the main agent model. Each summary logs metadata only (`chatbot:safe-summarization`: message count, estimated tokens before→after, duration).
-- **Structured output.** `processMessage(msg, chatId, schema)` passes the schema via the invocation `context`; `createStructuredResponseMiddleware()` (`agent/structured-response.ts`) makes the agent's final step return it as a `final_reply` tool call via `toolStrategy` (envelope `{ message, data }`, swapped back to plain text before checkpointing). Not `providerStrategy`: its JSON-schema mode forces strict tools, which OpenAI rejects for tools with optional fields. No second model call.
-
-There is no manual history truncation any more — the old `truncateThread` was removed; the middleware handles it inside the agent graph. Tune via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
-
-### Tool retries (chatbot)
-
-`agent/tool-retry.ts` provides `createToolRetryMiddleware()`, part of the middleware stack in `chatbot.service.ts`. It wraps every tool call:
-
-- **Retries read-only calls on transient errors** — timeouts, dropped connections (`ECONNRESET`, `ETIMEDOUT`, undici socket errors, `fetch failed` with such a cause), HTTP 408/425/429 and 5xx (not 501). Up to 2 retries with exponential backoff (500ms, 1s; capped at 4s). "Read-only" is an explicit allowlist, `READ_ONLY_TOOL_ACTIONS`, keyed by tool name → `true` or the read-only `action` values (e.g. `gmail: ['list']`). Anything with side effects (send, create, delete, merge, subscribe…) and any unlisted tool is **never** retried, so it can't run twice.
-- **Turns tool exceptions into error `ToolMessage`s** instead of failing the turn. This is required, not optional: once any middleware defines `wrapToolCall`, LangChain's `ToolNode` re-raises tool exceptions rather than feeding them back to the model. Non-transient errors keep LangChain's default text (`Error: …\n Please fix your mistakes.`). Transient ones tell the model what to do: for read-only calls, "temporarily unavailable, don't call it again this turn"; for calls with side effects, "unknown whether it went through, don't repeat it".
-- Only affects tools that **throw**. Many tools catch their own errors and return `{ success: false, error }` strings, which the middleware can't see.
-
-### Token & cost observability (cross-bot)
-
-Token/cost metering is shared across the repo. The module lives in `shared/ai/usage/` (`types.ts`, `constants.ts`, `usage.repository.ts`, `record-usage.ts`, barrel `index.ts`) and is re-exported from `@shared/ai`. Each live AI call site attaches a `UsageCallbackHandler` (`shared/ai/utils/usage-callback-handler.ts`) to its `invoke` as a runtime callback; it sums `usage_metadata` across the whole call and counts LLM/tool calls. `recordModelUsage({ source, chatId?, handler, durationMs })` logs a `💰 usage` line and fire-and-forget persists a record tagged with `source`.
-
-- **Instrumented sources.** `chatbot`, `chilli`. Raw `@services/openai` helpers (embeddings, image, audio, plain completions) are intentionally **not** metered.
-- **Pricing.** `shared/ai/utils/model-pricing.ts` holds `MODEL_PRICING` (USD per 1M tokens: `input`, `output`, `cachedInput`) + `computeModelCost()`. Cached input tokens are a **subset** of `input_tokens` and are billed at the cheaper cache-hit rate (deducted from the full-price portion, never added on top). `resolveModelPrice()` resolves **dated snapshots only** (`gpt-4.1-mini-2025-04-14` → `gpt-4.1-mini`); sibling models like `gpt-5-mini` must be listed explicitly, since prefix-matching them onto `gpt-5` would misprice them 5x. Unknown models → cost `0` + `logger.warn`.
-- **Pricing drift check.** `schedulers/model-pricing-check.ts` (cron `0 10 1 * *`, 1st of each month at 10:00) fetches OpenAI's docs markdown twin (`https://developers.openai.com/api/docs/pricing.md`), parses the "Standard pricing data" table, and diffs it against `MODEL_PRICING`. **Silent when everything matches** — it only DMs `MY_USER_ID` on drift or when a priced model disappears from the docs. No AI and no HTML scraping; prices stay a checked-in constant so historical cost records remain reproducible.
-- **Sink.** db `Chatbot`, collection `usage` (`shared/ai/usage/`), 90-day TTL. Fields: `source`, `chatId`, `model`, `tokensIn`, `tokensOut`, `tokensTotal`, `tokensCached`, `cost`, `durationMs`, `llmCalls`, `toolCalls`, `createdAt`. `aggregateUsage({ source?, chatId?, from?, to? })` groups per source + user per day (`Asia/Jerusalem`). The `Chatbot` Mongo connection is registered by `chatbot.init`; non-chatbot bots only persist when chatbot is also booted (prod always; locally needs `LOCAL_ACTIVE_BOT_ID=CHATBOT`), otherwise writes fail silently.
-- **Kill-switch.** `CHATBOT_CONFIG.usageTracking` (env `CHATBOT_USAGE_TRACKING`, default on; set `false` to disable).
-- There's no official LangChain package for this — the callback handler is the implementation (no hand-roll reference file).
-- **Weekly report.** `schedulers/usage-summary.ts` (cron `30 22 * * 6`, Saturdays 22:30) calls `aggregateUsage` for the last 7 days and DMs `MY_USER_ID` a deterministic cost/usage breakdown (total cost, calls, tokens, per-day, per-bot, and per-user if >1).
-
-### Social media follower (collect → digest)
-
-Follows accounts on 4 platforms and DMs a single daily digest instead of real-time notifications. Two phases, both chatbot schedulers:
-
-- **Collect (silent).** `features/chatbot/schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter+youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`), diffs new posts against the subscription's `lastSeenId`/`lastSeenAt`, and stores them in Mongo (db `SocialFollower`, collection `PendingPost`) — nothing is sent. Pending rows are inserted **before** `lastSeen` advances; `createPendingPosts` dedupes by `platform+username+chatId+postId`, so a crash re-collects rather than loses posts.
-- **Digest.** `features/chatbot/schedulers/social-media-digest.ts` — cron `45 22 * * *`. Groups all pending posts per chat and per followed account: **telegram/twitter** get an AI key-points summary (`getResponse` with `GPT_SMALL_MODEL`, bullet count scales with volume via `targetKeyPointsCount` — ~1 per 10 posts, min 2, max 10 — written in the posts' own language, falls back to a raw listing on AI failure); **youtube/tiktok** are listed one line per post with link. Sends one combined Markdown message, then deletes exactly the rows it sent — posts collected after 22:45 roll into the next day's digest; empty day → no message; send failure keeps everything for retry tomorrow.
-- **Diffing rules.** Twitter/TikTok ids are chronological snowflakes → `BigInt(id) > BigInt(lastSeenId)` (neutralizes pinned posts). Telegram post ids are sequential per channel → numeric compare. YouTube video ids are *not* chronological → timestamp diff via `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
-- **TikTok video attachments.** After the text digest is delivered, up to 5 (`CHATBOT_VIDEO_DIGEST_MAX_VIDEOS`) of the newest collected TikTok videos per chat are attached as individual playable Telegram videos (`social-media-video-delivery.ts`), each captioned with creator + short caption + source link and sent with `disable_notification`. A per-chat/per-local-date **delivery record** (db `SocialFollower`, collection `DigestDelivery`, 14-day TTL, `digest-delivery.repository.ts`) fixes the selection once and snapshots each video's fields, so restarts/concurrent runs converge on the same set (`$setOnInsert` upsert) and deleting the source pending posts stays safe. Each video is atomically claimed `pending→sending` (concurrent runs can't double-send) then finalized `sent`/`link_only`. Download is SSRF-guarded (per-hop redirect + private-IP checks) and hard byte-capped on the actual stream via `@services/tiktok`'s `downloadTikTokVideo` (temp file under `LOCAL_FILES_PATH`, always cleaned up); any oversized/unavailable/ambiguous-timeout failure falls back to a link-only message so the source link is always delivered (no re-upload on ambiguous send timeouts). Videos ride along only when text delivery didn't fail entirely; bounded short retries, no next-day retry. **Disabled by default** — opt in with `CHATBOT_VIDEO_DIGEST=true`.
-- **Tweet image albums.** Collected tweets keep their photo urls (`PendingPost.imageUrls`, public `pbs.twimg.com` links from the scraper). After the text digest, up to 5 (`CHATBOT_IMAGE_DIGEST_MAX_POSTS`) of the newest tweets with photos are sent as one Telegram album each (`social-media-image-delivery.ts`, caption = author + text + link on the first photo, `disable_notification`). Telegram fetches the images by url — no local download. Same delivery-record lifecycle as videos (`DigestDelivery.images`, atomic `pending→sending→sent/link_only` claim); a failed album falls back to a link-only message. Kill switch: `CHATBOT_IMAGE_DIGEST=false`.
-- **Subscriptions.** `shared/social-follower/` — `Subscription` + `PendingPost` collections, repository functions, `SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`. Managed through the chatbot tools (`tiktok`, `twitter`, `youtube`, `telegram_channels`), each with subscribe/unsubscribe/list actions keyed to `MY_USER_ID`.
-- **Data sources.** telegram → `@services/telegram-scraper` (t.me/s web preview, no auth); twitter → `@services/twitter-scraper` (anonymous GraphQL → optional logged-in session via `X_AUTH_TOKEN`/`X_CT0` cookies → Nitter fallback, no key); youtube → RSS (collect) + Supadata-backed `@services/youtube` (tool actions); tiktok → RapidAPI `@services/tiktok` (metered free tier — mind the quota).
-- Digest summarization goes through the raw `@services/openai` helper, so it is **not** usage-metered (consistent with the other raw helpers).
+`createAgentService(descriptor, { model, checkpointer, middleware, toolCallbackOptions })` in `src/features/chatbot/agent/factory.ts` builds the agent. Canonical example: `src/features/chatbot/agent/`.
 
 ### Tool with Zod
 
 ```typescript
-import { tool } from '@langchain/core/tools';
-import { z } from 'zod';
-
 const schema = z.object({
   action: z.enum(['current', 'forecast']).describe('Action to perform'),
   location: z.string().describe('The city or location'),
-  date: z.string().optional().describe('Date in YYYY-MM-DD format'),
 });
 
-async function runner({ action, location, date }: z.infer<typeof schema>) {
-  switch (action) {
-    case 'current':  return getCurrentWeather(location);
-    case 'forecast': return getForecastWeather(location, date!);
-  }
-}
+async function runner({ action, location }: z.infer<typeof schema>) { /* ... */ }
 
-export const weatherTool = tool(runner, {
-  name: 'weather',
-  description: 'Get weather information',
-  schema,
-});
+export const weatherTool = tool(runner, { name: 'weather', description: 'Get weather information', schema });
 ```
 
-### Tool directory layout
+### Adding a tool
 
-```
-src/shared/ai/tools/
-├── weather/weather.tool.ts
-├── reminders/reminder.tool.ts
-└── index.ts          # barrel — every tool re-exported here
-```
+1. Create `src/shared/ai/tools/{name}/{name}.tool.ts` (`.describe()` on every field).
+2. Export it from `src/shared/ai/tools/index.ts`.
+3. Register it in `src/features/chatbot/agent/agent.ts` (directories that aren't registered there are inactive).
+4. List its read-only actions in `READ_ONLY_TOOL_ACTIONS` (`src/features/chatbot/agent/tool-retry.ts`) so they're retried on transient errors. Unlisted / side-effecting actions are never retried.
+5. Put tool-specific rules (triggers, call order, confirmations, reply format) in the tool's `description`; `AGENT_PROMPT` holds only general behaviour.
 
-### Available AI Tools (28 registered in `src/features/chatbot/agent/agent.ts`)
+### Chatbot internals
 
-Grouped roughly by domain:
-
-- **Personal / productivity:** `calendar`, `google-places`, `gmail`, `reminders`, `contacts`, `meetups`, `recipes`, `exercise`, `exercise-analytics`
-- **Media / social:** `spotify`, `spotify-podcast`, `tiktok`, `twitter`, `youtube`, `telegram-channels`
-- **Information:** `weather`, `earthquake`
-- **Sports / games:** `competitions-list`, `competition-matches`, `competition-table`, `match-summary`, `top-matches-for-prediction`, `match-prediction`, `makavdia` (NBA Deni Avdija), `wolt` (delivery stats), `worldly` (geography game stats)
-- **Markets:** `polymarket`
-- **Dev tooling:** `github`
-
-Note: `src/shared/ai/tools/` contains additional tool directories (`audio`, `crypto`, `flights`, `image`, `maps`, `music`, `rain-radar`, `stocks`) that are **not currently registered** in `agent.ts`.
-
-When adding a new tool: create `src/shared/ai/tools/{name}/{name}.tool.ts`, add to `src/shared/ai/tools/index.ts` barrel, register in `src/features/chatbot/agent/agent.ts`, and list its read-only actions in `READ_ONLY_TOOL_ACTIONS` (`src/features/chatbot/agent/tool-retry.ts`) so they get retried. Put tool-specific rules (trigger phrases, call sequences, confirmations, defaults, reply formatting) in the tool's `description`; `AGENT_PROMPT` holds only general behavior.
-
-### ToolCallbackHandler
-
-```typescript
-export type ToolCallbackOptions = {
-  onToolStart?: (toolName: string, input: any) => void | Promise<void>;
-  onToolEnd?: (toolName: string, output: any) => void | Promise<void>;
-  onToolError?: (toolName: string, error: Error) => void | Promise<void>;
-  enableLogging?: boolean;
-};
-```
+Memory (Mongo checkpointer + pruning), token-based summarization, structured output, tool retries, usage/cost metering, pricing drift check, weekly usage report, and the social-media collect → digest pipeline are documented in [`docs/bots/chatbot-deep-dive.md`](docs/bots/chatbot-deep-dive.md). Read it before touching `src/features/chatbot/agent/`, `src/shared/ai/usage/` or the chatbot schedulers.
 
 ---
 
-## Database Patterns
+## Database
 
-### Connection Management
-
-```typescript
-const connections: Map<string, Db> = new Map();
-
-export async function createMongoConnection(dbName: string): Promise<void> {
-  const client = new MongoClient(env.MONGO_DB_URL);
-  await client.connect();
-  connections.set(dbName, client.db(dbName));
-}
-
-export function getMongoCollection<T>(dbName: string, collectionName: string): Collection<T> {
-  return connections.get(dbName).collection<T>(collectionName);
-}
-```
-
-The connection string env var is **`MONGO_DB_URL`** — used by `src/core/mongo/mongo-connection.ts` and by the standalone migration scripts under `src/**/scripts/`.
-
-### Repository Functions
+- Connection string env var: **`MONGO_DB_URL`**.
+- Each domain uses its own PascalCase DB (`Chatbot`, `Coach`, `Learner`, …) — see the feature's `mongo/constants.ts` or `constants.ts`.
 
 ```typescript
 function getCollection(): Collection<Reminder> {
@@ -696,135 +325,33 @@ export async function createReminder(data: CreateReminderData): Promise<InsertOn
 }
 ```
 
-Each bot/domain uses its own PascalCase database (`Chatbot`, `Coach`, `Wolt`, `Reminders`, etc. — see each module's `mongo/constants.ts`).
-
----
-
-## HTTP / Express Surface
-
-`src/index.ts` runs an Express server alongside the bots:
-
-- `GET /` — health (`{ success: true }`)
-- `/api-docs` etc. — Swagger UI (`registerSwaggerRoutes`)
-- Each bot's `init({app})` may register its own routes (mini-app data endpoints, webhooks, etc.).
-- `initSavings(app)` serves the Savings SPA at `/savings/*` with `/api/savings/*` routes; `initMindloop(app)` serves the Mindloop SPA at `/mindloop/*` with `/api/mindloop/*` player routes; `initWorldly(app)` serves the Earth globe quiz SPA at `/earth/*` (no API routes); `initZika(app)` serves the static Zika redesign showcase at `/zika/*`; `initStickers(app)` registers `GET/POST /whatsapp-webhook` for the WhatsApp sticker vault (registered before the global JSON parser).
-
----
-
-## External Services (catalog)
-
-Located in `src/services/`. Each has its own README-via-code structure (`api.ts` / `*.service.ts` + `types.ts` + `constants.ts` + `index.ts`):
-
-| Service                | Purpose                                    |
-|------------------------|--------------------------------------------|
-| `adsb`                 | Live aircraft positions in a radius (adsb.lol, adsb.fi fallback; no key) |
-| `alpha-vantage`        | Stock fundamentals & quotes                |
-| `anthropic`            | Claude API helpers                         |
-| `earthquake-api`       | USGS quake feed                            |
-| `earthquake-map`       | Canvas-based earthquake map rendering      |
-| `github`               | Octokit + GitHub App auth                  |
-| `gmail`                | Gmail send/list/delete                     |
-| `google-calendar`      | Calendar CRUD                              |
-| `google-places`        | Place search + details (Places API New)    |
-| `google-sheets`        | Sheets logging (prod)                      |
-| `google-translate`     | Translation                                |
-| `imgur`                | Image upload                               |
-| `ims`                  | Israel Meteorological Service              |
-| `notifier`             | Cross-bot notifier (uses `NOTIFIER_TELEGRAM_BOT_TOKEN`) |
-| `open-weather-map`     | Weather (one provider)                     |
-| `openai`               | OpenAI API helpers                         |
-| `opensky`              | Flight tracking                            |
-| `polymarket`           | Prediction markets                         |
-| `rain-radar`           | Rain radar imagery                         |
-| `scores-365`           | Football live scores                       |
-| `spotify`              | Spotify API + auth refresh                 |
-| `telegram`             | grammY-based bot utilities (this is THE telegram service) |
-| `telegram-client`      | MTProto client (user-mode) for message history |
-| `telegram-scraper`     | Scrapes public channel posts via t.me/s web preview (no API key) |
-| `tenor`                | GIF search                                 |
-| `tiktok`               | TikTok scraping (RapidAPI)                 |
-| `twitter`              | Twitter API v2                             |
-| `twitter-scraper`      | Key-less X/Twitter scraper (anonymous GraphQL + fallback) |
-| `weather`              | Weather aggregator                         |
-| `weather-api`          | weatherapi.com                             |
-| `whatsapp`             | WhatsApp Cloud API (Graph API v20.0): text, reply buttons, stickers, typing indicator, media download/upload + shared webhook (`registerWhatsAppWebhook`, signature, allowlist) |
-| `xai`                  | xAI (Grok) API                             |
-| `youtube`              | YouTube transcript + scraping              |
-| `youtube-v3`           | YouTube Data API v3                        |
-
----
-
-## Shared Modules
-
-Located in `src/shared/`. Reusable across bots:
-
-`ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flight-traffic`, `flights-tracker`, `friends`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `trainer`, `wolt`, `worldly`.
-
 ---
 
 ## Environment Variables
 
-The full list is in `.env.example`. Everything that the code references via `env.X` is documented there. Highlights:
-
-**Required for any local dev:**
-- `MONGO_DB_URL` — Mongo connection string (the main code path uses this).
-- `LOCAL_ACTIVE_BOT_ID` — `CHATBOT | CHILLI | COACH | WOLT | WORLDLY` (UPPERCASE). Selects which bot boots locally.
-- One of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (depending on which agents you exercise).
-- The `*_TELEGRAM_BOT_TOKEN` for whichever bot you set as `LOCAL_ACTIVE_BOT_ID`.
-
-**Convenience flags:**
-- `IS_PROD=true` runs all bots regardless of `LOCAL_ACTIVE_BOT_ID`.
-- `PORT` — Express port (default 3000).
-- `SAVINGS_APP_PASSWORD` — shared password for the standalone `/savings` portfolio app.
-- `MINDLOOP_TELEGRAM_BOT_TOKEN` — used only to verify Telegram `initData` for the `/mindloop` mini-app (no bot runs).
-
-**Observability (Grafana Cloud via OpenTelemetry) — production only:**
-- `OTEL_EXPORTER_OTLP_ENDPOINT` — Grafana OTLP gateway (e.g. `https://otlp-gateway-prod-<region>.grafana.net/otlp`). Empty = telemetry disabled (local dev).
-- `OTEL_SERVICE_NAME` (default `mmps`), `OTEL_EXPORTER_OTLP_PROTOCOL` (`http/protobuf`).
-- `GRAFANA_OTLP_INSTANCE_ID` + `GRAFANA_OTLP_TOKEN` — used to build the OTLP Basic auth header **in code** (avoids the fragile `OTEL_EXPORTER_OTLP_HEADERS` parsing).
-- `OTEL_DEBUG=true` — logs OTLP export attempts/errors while troubleshooting.
-
-Everything else is feature-specific (Spotify, GitHub App, Google services, RapidAPI, etc.) and only needed if you exercise the corresponding tools.
-
-### Date Handling
-
-```typescript
-import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
-const zonedDate = toZonedTime(new Date(), 'Asia/Jerusalem');
-```
-
-Project default timezone is `Asia/Jerusalem` (`DEFAULT_TIMEZONE` in `@core/config`).
+The full list is in `.env.example` — every `env.X` the code reads must be there. Minimum for local dev: `MONGO_DB_URL`, `LOCAL_ACTIVE_BOT_ID`, `OPENAI_API_KEY` and/or `ANTHROPIC_API_KEY`, and the active bot's `*_TELEGRAM_BOT_TOKEN`. `IS_PROD=true` boots everything; `PORT` defaults to 3000. Timezone default: `Asia/Jerusalem` (`DEFAULT_TIMEZONE` in `@core/config`).
 
 ---
 
 ## Common Commands
 
 ```bash
-npm run dev               # tsx watch src/index.ts — local bot dev
-npm run dev:debug         # with --inspect
-npm run build             # tsc + tsc-alias + build mini-apps
-npm start                 # node dist/index.js (production)
-npm test                  # Vitest (unit)
-npm run test:watch
-npm run test:integration  # Vitest integration suite
-npm run test:e2e          # Vitest bot E2E suite (grammY mock harness)
-npm run lint
-npm run lint:fix
-npm run format
-npm run docs:dev          # VitePress local dev
-npm run docs:build
-
-# Mini-app workspaces (savings-web, mindloop-web, earth-web, zika-web)
-npm run dev:savings-web
-npm run dev:mindloop-web
-npm run dev:earth-web
-npm run dev:zika-web
+npm run dev               # tsx watch src/index.ts
+npm run build             # tsc + tsc-alias + mini-app builds
+npm start                 # node dist/index.js
+npm test                  # Vitest unit (src/**/*.spec.ts)
+npm run test:integration  # test/integration
+npm run test:e2e          # test/e2e (grammY mock harness)
+npm run lint / lint:fix / format
+npm run docs:dev / docs:build
+npm run dev:<app>-web     # e.g. dev:savings-web, dev:earth-web
 ```
 
 ---
 
 ## Testing
+
+`*.spec.ts` next to source, `describe()` for grouping, `test.each()` for tables, `.toEqual()` for assertions.
 
 ```typescript
 describe('formatNumber()', () => {
@@ -835,70 +362,42 @@ describe('formatNumber()', () => {
     expect(formatNumber(num)).toEqual(expected);
   });
 });
-
-describe('hasHebrew()', () => {
-  it('should return true if text is in hebrew', () => {
-    expect(hasHebrew('שלום')).toEqual(true);
-  });
-});
 ```
-
-Conventions: `*.spec.ts` next to source, `describe()` for grouping, `test.each()` for table-driven, `.toEqual()` for assertions.
 
 ---
 
 ## Project-Local Skills
 
-Skills tailored to MMPS live in `.agents/skills/` (the vendor-neutral SKILL.md convention that pairs with `AGENTS.md`) and are shared across agents with **zero duplication**: **GitHub Copilot CLI** discovers `.agents/skills/` natively, and **Claude Code** picks them up through the `.claude/skills → ../.agents/skills` symlink. There is exactly one real copy of each skill. Triggered via slash command (Claude Code) or auto-invoked / `copilot skill list` (Copilot CLI):
+Skills live in `.agents/skills/{name}/SKILL.md` (Copilot CLI reads them natively; Claude Code via the `.claude/skills` symlink):
 
-- `/review-style` — Check changed files against MMPS conventions (type vs interface, `.then()`, default exports, JSDoc, `readonly`, telegram import path, barrel exports, `bot.api` in controllers).
-- `/planner` — Plan a new feature with the file table + reference patterns.
-- `/update-docs` — Sync VitePress docs in `docs/` with recent code changes.
-- `/scaffold-ai-tool` — Scaffold a new chatbot AI tool (Zod schema + runner, barrel export, `agent.ts` registration, prompt update).
-- `/scaffold-service` — Scaffold a new `src/services/{name}/` integration (`api.ts`/`types.ts`/`index.ts`, env var, barrel).
-- `/integration-research` — Research an external site/API/MCP/host and produce an MMPS-specific feasibility + integration plan.
-- `/playwright`, `/humanizer`, `/fact-checker`, `/prompt-master`, `/ui-ux-pro-max` — general-purpose, not MMPS-specific.
-
-Skills live in `.agents/skills/{name}/SKILL.md` and follow the standard `SKILL.md` frontmatter (`name`, `description`). Instruction files follow the same single-source rule: `AGENTS.md` is canonical, and `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are symlinks to it.
+- `/review-style` — check changed files against these conventions.
+- `/planner` — plan a feature with file table + reference patterns.
+- `/update-docs` — **periodic** drift sweep of `docs/` against the code (not per change).
+- `/scaffold-ai-tool`, `/scaffold-service` — scaffold a tool / service the MMPS way.
+- `/integration-research` — feasibility + integration plan for an external API/site.
+- `/playwright`, `/humanizer`, `/fact-checker`, `/prompt-master`, `/ui-ux-pro-max` — general purpose.
 
 ---
 
 ## Quick Reference
 
 ### DO
-- Use `type` (NEVER `interface`).
-- Mark types as `readonly`.
-- Use `async/await` (NEVER `.then()` chains).
-- Use named exports (NEVER default).
-- Use path aliases (`@core/*`, `@features/*`, `@services/*`, `@shared/*`).
-- Use repository **functions** (not classes) for DB access.
-- Use `import type` for type-only imports.
-- Use `env` from `node:process`.
-- Use `Logger` from `@core/utils` in services/controllers.
-- Use Zod schemas for AI tools with `.describe()` on every field.
-- Use grammY `ctx.*` methods in controllers when `ctx` is available.
-- Use `buildInlineKeyboard([{ text, data }])` from `@services/telegram` for inline keyboards.
-- Use `getMessageData(ctx)` / `getCallbackQueryData(ctx)` from `@services/telegram`.
-- Use `new InputFile(path)` from `grammy` when sending files.
-- Add barrel exports in `index.ts` for new files.
-- Use semicolons (Prettier enforced).
+- `type` (never `interface`), `readonly` properties.
+- `async/await`, named exports, path aliases, `import type`.
+- Repository **functions**; `Logger` from `@core/utils`; `env` from `node:process`.
+- Zod `.describe()` on every tool field.
+- `ctx.*` in controllers; `buildInlineKeyboard`, `getMessageData`, `new InputFile(path)`.
+- Barrel exports for new files; semicolons.
 
 ### DON'T
-- Use `interface`.
-- Use JSDoc comments.
-- Chain promises with `.then()`.
-- Use default exports.
-- Use relative imports for shared code.
-- Create repository **classes**.
-- Use `this.bot.api.*` in controllers when `ctx` is available (use `ctx.reply()`, `ctx.deleteMessage()`, etc.).
-- Import from `node-telegram-bot-api` (legacy; this codebase is fully grammY).
-- Import from `@services/telegram-grammy` — this path does NOT exist. Use `@services/telegram`.
-- Use `getInlineKeyboardMarkup` — use `buildInlineKeyboard` instead.
-- Forget to update the barrel `index.ts`.
-- Commit or push unless the user explicitly asks you to.
+- `interface`, JSDoc, `.then()` chains, default exports, repository classes.
+- `this.bot.api.*` in controllers when `ctx` exists.
+- `node-telegram-bot-api`, `@services/telegram-grammy`, `getInlineKeyboardMarkup`.
+- Duplicate feature details from `docs/` into this file.
+- Commit or push unless asked.
 
 ---
 
 ## When in doubt
 
-Read an analogous existing file in `features/` or `services/` — pick the closest match and follow its shape. Pattern-by-example beats abstract description every time in this repo.
+Read an analogous file in `features/` or `services/` and follow its shape.
