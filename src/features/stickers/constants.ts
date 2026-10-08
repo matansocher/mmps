@@ -8,10 +8,10 @@ export const STICKERS_CARS_SEARCH_COUNTS_COLLECTION = 'cars_search_counts';
 // TODO: Set to the intentional untagged sticker's MongoDB _id (24 hex characters). Empty disables the special cycle.
 export const CARS_SURPRISE_STICKER_ID = '';
 
-// Meta's per-user pair rate limit allows short bursts but only ~1 msg/6s sustained, so search results go out fast at first, then slow down.
-export const STICKER_BURST_SIZE = 10;
-export const STICKER_SEND_DELAY_MS = 1000; // gap between results within the burst
-export const STICKER_SUSTAINED_SEND_DELAY_MS = 6000; // gap between results after the burst
+// Meta's per-user pair rate limit allows short bursts (~10) but only ~1 msg/6s sustained. A page (6 stickers + the "עוד" message) fits in a burst,
+// and the time the user takes to tap "עוד" lets the quota recover.
+export const STICKER_PAGE_SIZE = 6;
+export const STICKER_SEND_DELAY_MS = 1000; // gap between stickers in a page
 export const STICKER_RATE_LIMIT_BACKOFF_MS = 30_000; // wait after error 131056 before retrying once
 export const STICKER_MEDIA_REUSE_MS = 25 * 24 * 60 * 60 * 1000; // Meta keeps uploaded media for 30 days
 

@@ -18,17 +18,19 @@ export type Sticker = {
 
 export type StickerSummary = Omit<Sticker, 'data'>;
 
-// One document per text search, for usage dashboards.
+// One document per text search, for usage dashboards and for paging results with the "עוד" button.
 export type SearchEvent = {
   readonly _id?: ObjectId;
   readonly phone: string;
   readonly query: string; // raw message text
   readonly words: string[]; // normalized words the search matched on (all must match)
   readonly matchedCount: number;
+  readonly matchedStickerIds: ObjectId[]; // every match, in the order they're sent; fixed for the life of the search
+  readonly nextOffset: number; // index in matchedStickerIds where the next "עוד" page starts
   readonly sentStickerIds: ObjectId[];
   readonly failedCount: number;
   readonly rateLimited: boolean; // sending stopped early on Meta's pair rate limit
-  readonly durationMs: number; // from handling start until the last reply
+  readonly durationMs: number; // from handling start until the first page's last reply
   readonly createdAt: Date;
 };
 

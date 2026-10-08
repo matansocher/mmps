@@ -1,12 +1,14 @@
 import { ObjectId } from 'mongodb';
 import { createHash } from 'node:crypto';
 import { sleep } from '@core/utils';
-import { downloadWhatsAppMedia, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from '@services/whatsapp';
-import { STICKER_BURST_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS, STICKER_SUSTAINED_SEND_DELAY_MS } from './constants';
+import { downloadWhatsAppMedia, sendWhatsAppButtons, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from '@services/whatsapp';
+import { STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
 import * as repo from './mongo';
 import { fitStickerToLimit } from './sticker-image';
 import { handleIncomingMessage } from './sticker-vault.service';
-import type { StickerSummary } from './types';
+import type { SearchEvent, StickerSummary } from './types';
+
+const SEARCH_ID_HEX = '652f1c2b9d3e4a0012345678';
 
 const carsConfig = vi.hoisted(() => ({ stickerId: '0123456789abcdef01234567' }));
 
@@ -26,6 +28,7 @@ vi.mock('@services/whatsapp', () => ({
   describeWhatsAppError: vi.fn(() => 'error'),
   downloadWhatsAppMedia: vi.fn(),
   isWhatsAppPairRateLimitError: vi.fn((err: { code?: number }) => err?.code === 131056),
+  sendWhatsAppButtons: vi.fn(async () => undefined),
   sendWhatsAppMessage: vi.fn(async () => undefined),
   sendWhatsAppSticker: vi.fn(async () => 'wamid.sent'),
   sendWhatsAppTypingIndicator: vi.fn(async () => undefined),
@@ -35,18 +38,22 @@ vi.mock('@services/whatsapp', () => ({
 vi.mock('./mongo', () => ({
   addStickerMessageId: vi.fn(async () => undefined),
   addStickerTags: vi.fn(async (_id, tags: string[]) => tags),
+  claimSearchPage: vi.fn(async () => null),
   createSticker: vi.fn(async () => undefined),
   deleteSticker: vi.fn(async () => undefined),
   findStickerById: vi.fn(async () => null),
   findStickerByMessageId: vi.fn(async () => null),
   findStickerBySha: vi.fn(async () => null),
+  findStickersByIds: vi.fn(async () => []),
+  getLatestSearchId: vi.fn(async () => null),
   getStickerData: vi.fn(async () => Buffer.from('webp')),
   getTopSearchers: vi.fn(async () => []),
   getTopSearchWords: vi.fn(async () => []),
   getTopStickerTags: vi.fn(async () => []),
   markStickerReceived: vi.fn(async () => undefined),
   nextCarsSearchCount: vi.fn(async () => 1),
-  recordSearchEvent: vi.fn(async () => undefined),
+  recordSearchEvent: vi.fn(async () => new ObjectId(SEARCH_ID_HEX)),
+  recordSearchPage: vi.fn(async () => undefined),
   removeStickerTags: vi.fn(async () => []),
   replaceStickerData: vi.fn(async () => undefined),
   searchStickers: vi.fn(async () => []),
@@ -72,6 +79,23 @@ const sticker = (overrides: Partial<StickerSummary> = {}): StickerSummary => ({
   updatedAt: new Date(),
   ...overrides,
 });
+const SEARCH_ID = new ObjectId(SEARCH_ID_HEX);
+const stickers = (count: number) => Array.from({ length: count }, () => sticker());
+const search = (ids: ObjectId[], nextOffset: number): SearchEvent => ({
+  _id: SEARCH_ID,
+  phone: FROM,
+  query: 'cat',
+  words: ['cat'],
+  matchedCount: ids.length,
+  matchedStickerIds: ids,
+  nextOffset,
+  sentStickerIds: [],
+  failedCount: 0,
+  rateLimited: false,
+  durationMs: 0,
+  createdAt: new Date(),
+});
+const tap = (buttonId: string) => handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', buttonId, title: 'עוד ⬇️' });
 const text = (body: string, contextId?: string) => handleIncomingMessage({ kind: 'text', from: FROM, id: 'wamid.text', text: body, ...(contextId && { contextId }) });
 
 describe('handleIncomingMessage()', () => {
@@ -318,23 +342,6 @@ describe('handleIncomingMessage()', () => {
       expect(repo.searchStickers).toHaveBeenCalledWith(['cat']);
     });
 
-    it('should send every match, 1s apart within the burst and 6s apart after it', async () => {
-      const count = STICKER_BURST_SIZE + 2;
-      vi.mocked(repo.searchStickers).mockResolvedValueOnce(Array.from({ length: count }, () => sticker()));
-      await text('cat');
-      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(count);
-      expect(vi.mocked(sleep).mock.calls.map(([ms]) => ms)).toEqual([...Array(STICKER_BURST_SIZE - 1).fill(STICKER_SEND_DELAY_MS), STICKER_SUSTAINED_SEND_DELAY_MS, STICKER_SUSTAINED_SEND_DELAY_MS]);
-      expect(sendWhatsAppMessage).toHaveBeenCalledTimes(1);
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, `נמצאו ${count} סטיקרים, שולח את כולם בהדרגה.`);
-    });
-
-    it('should not announce a small result set', async () => {
-      vi.mocked(repo.searchStickers).mockResolvedValueOnce(Array.from({ length: STICKER_BURST_SIZE }, () => sticker()));
-      await text('cat');
-      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(STICKER_BURST_SIZE);
-      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
-    });
-
     it('should not wait when there is a single match', async () => {
       vi.mocked(repo.searchStickers).mockResolvedValueOnce([sticker()]);
       await text('cat');
@@ -351,13 +358,14 @@ describe('handleIncomingMessage()', () => {
       expect(sendWhatsAppMessage).not.toHaveBeenCalled();
     });
 
-    it('should stop sending and ask to retry when the pair rate limit persists', async () => {
-      vi.mocked(repo.searchStickers).mockResolvedValueOnce([sticker(), sticker(), sticker()]);
+    it('should stop sending when the pair rate limit persists and offer to continue from the unsent sticker', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(stickers(3));
       vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.1').mockRejectedValueOnce({ code: 131056 }).mockRejectedValueOnce({ code: 131056 });
       await text('cat');
       expect(sendWhatsAppSticker).toHaveBeenCalledTimes(3);
-      expect(sendWhatsAppMessage).toHaveBeenCalledTimes(1);
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נסו שוב'));
+      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, expect.stringContaining('חכו כמה שניות'), [{ id: `more:${SEARCH_ID_HEX}:1`, title: 'עוד ⬇️' }]);
+      expect(vi.mocked(sendWhatsAppButtons).mock.calls[0][1]).toContain('יש עוד 2 סטיקרים.');
     });
 
     it('should not re-upload a cached sticker when hitting the pair rate limit', async () => {
@@ -365,7 +373,7 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce({ code: 131056 }).mockRejectedValueOnce({ code: 131056 });
       await text('cat');
       expect(uploadWhatsAppMedia).not.toHaveBeenCalled();
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נסו שוב'));
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, expect.stringContaining('חכו כמה שניות'), [{ id: `more:${SEARCH_ID_HEX}:0`, title: 'עוד ⬇️' }]);
     });
   });
 
@@ -390,7 +398,7 @@ describe('handleIncomingMessage()', () => {
       expect(vi.mocked(sendWhatsAppSticker).mock.calls.map(([, mediaId]) => mediaId)).toEqual(['media.regular', 'media.regular', 'media.surprise', 'media.regular', 'media.regular', 'media.surprise']);
       expect(repo.searchStickers).toHaveBeenCalledTimes(4);
       expect(repo.findStickerById).toHaveBeenCalledWith(surprise._id);
-      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedCount: 1, sentStickerIds: [surprise._id] }));
+      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedCount: 1, matchedStickerIds: [surprise._id], nextOffset: 1, sentStickerIds: [surprise._id] }));
       expect(repo.addStickerTags).not.toHaveBeenCalled();
     });
 
@@ -401,6 +409,31 @@ describe('handleIncomingMessage()', () => {
       expect(repo.findStickerById).not.toHaveBeenCalled();
       await text('מכוניות');
       expect(repo.findStickerById).toHaveBeenCalledTimes(1);
+    });
+
+    it('should page regular results without counting more taps and replace the entire third result set', async () => {
+      const matches = stickers(STICKER_PAGE_SIZE + 2);
+      const ids = matches.map((match) => match._id);
+      const surprise = sticker({ _id: new ObjectId(carsConfig.stickerId), mediaId: 'media.surprise', mediaUploadedAt: new Date() });
+      vi.mocked(repo.searchStickers).mockResolvedValue(matches);
+      vi.mocked(repo.findStickerById).mockResolvedValue(surprise);
+      await text('מכוניות');
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, 'יש עוד 2 סטיקרים.', expect.any(Array));
+
+      vi.mocked(repo.getLatestSearchId).mockResolvedValueOnce(SEARCH_ID);
+      vi.mocked(repo.claimSearchPage).mockResolvedValueOnce(search(ids, STICKER_PAGE_SIZE * 2));
+      vi.mocked(repo.findStickersByIds).mockResolvedValueOnce(matches.slice(STICKER_PAGE_SIZE));
+      await tap(`more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`);
+      expect(repo.nextCarsSearchCount).toHaveBeenCalledTimes(1);
+
+      await text('מכוניות');
+      vi.mocked(sendWhatsAppButtons).mockClear();
+      vi.mocked(sendWhatsAppSticker).mockClear();
+      await text('מכוניות');
+      expect(repo.nextCarsSearchCount).toHaveBeenCalledTimes(3);
+      expect(sendWhatsAppSticker).toHaveBeenCalledExactlyOnceWith(FROM, 'media.surprise');
+      expect(sendWhatsAppButtons).not.toHaveBeenCalled();
+      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedStickerIds: [surprise._id], nextOffset: 1 }));
     });
 
     it('should select the surprise once for three overlapping searches', async () => {
@@ -459,6 +492,8 @@ describe('handleIncomingMessage()', () => {
         query: 'Happy cat',
         words: ['happy', 'cat'],
         matchedCount: 2,
+        matchedStickerIds: matches.map((m) => m._id),
+        nextOffset: 2,
         sentStickerIds: matches.map((m) => m._id),
         failedCount: 0,
         rateLimited: false,
@@ -468,7 +503,7 @@ describe('handleIncomingMessage()', () => {
 
     it('should record a search with no results', async () => {
       await text('dog');
-      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ words: ['dog'], matchedCount: 0, sentStickerIds: [] }));
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ words: ['dog'], matchedCount: 0, matchedStickerIds: [], nextOffset: 0, sentStickerIds: [] }));
     });
 
     it('should record failed sends and the pair rate limit', async () => {
@@ -477,7 +512,7 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
       vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.1').mockRejectedValueOnce({ code: 131056 }).mockRejectedValueOnce({ code: 131056 });
       await text('cat');
-      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ sentStickerIds: [matches[1]._id], failedCount: 1, rateLimited: true }));
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ sentStickerIds: [matches[1]._id], failedCount: 1, rateLimited: true, nextOffset: 2 }));
     });
 
     it('should not record a tag edit', async () => {
@@ -490,6 +525,121 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(repo.recordSearchEvent).mockRejectedValueOnce(new Error('mongo down'));
       await expect(text('dog')).resolves.toBeUndefined();
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('לא נמצאו סטיקרים'));
+    });
+  });
+
+  describe('paging', () => {
+    const MORE = 'עוד ⬇️';
+
+    it('should send the first page 1s apart, then offer the rest with a button', async () => {
+      const matches = stickers(STICKER_PAGE_SIZE + 2);
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(matches);
+      await text('cat');
+      expect(vi.mocked(sendWhatsAppSticker)).toHaveBeenCalledTimes(STICKER_PAGE_SIZE);
+      expect(vi.mocked(sleep).mock.calls.map(([ms]) => ms)).toEqual(Array(STICKER_PAGE_SIZE - 1).fill(STICKER_SEND_DELAY_MS));
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ matchedCount: matches.length, matchedStickerIds: matches.map((m) => m._id), nextOffset: STICKER_PAGE_SIZE }));
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, 'יש עוד 2 סטיקרים.', [{ id: `more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`, title: MORE }]);
+      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not offer more when everything fits in one page', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(stickers(STICKER_PAGE_SIZE));
+      await text('cat');
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(STICKER_PAGE_SIZE);
+      expect(sendWhatsAppButtons).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+    });
+
+    it('should mention failed stickers next to the button', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce([sticker({ byteSize: undefined }), ...stickers(STICKER_PAGE_SIZE)]);
+      vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
+      await text('cat');
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, 'מצטער, 1 סטיקרים לא נשלחו.\nיש עוד 1 סטיקרים.', expect.any(Array));
+    });
+
+    it('should send the first page without a button when the search could not be stored', async () => {
+      vi.mocked(repo.searchStickers).mockResolvedValueOnce(stickers(STICKER_PAGE_SIZE + 1));
+      vi.mocked(repo.recordSearchEvent).mockRejectedValueOnce(new Error('mongo down'));
+      await text('cat');
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(STICKER_PAGE_SIZE);
+      expect(sendWhatsAppButtons).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('משהו השתבש'));
+    });
+
+    it('should send the next page on "עוד" and offer the rest', async () => {
+      const matches = stickers(STICKER_PAGE_SIZE * 2 + 2);
+      const ids = matches.map((m) => m._id);
+      vi.mocked(repo.getLatestSearchId).mockResolvedValueOnce(SEARCH_ID);
+      vi.mocked(repo.claimSearchPage).mockResolvedValueOnce(search(ids, STICKER_PAGE_SIZE * 2));
+      vi.mocked(repo.findStickersByIds).mockResolvedValueOnce(matches.slice(STICKER_PAGE_SIZE, STICKER_PAGE_SIZE * 2));
+      await tap(`more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`);
+      expect(repo.claimSearchPage).toHaveBeenCalledWith(SEARCH_ID, FROM, STICKER_PAGE_SIZE, STICKER_PAGE_SIZE * 2);
+      expect(repo.findStickersByIds).toHaveBeenCalledWith(ids.slice(STICKER_PAGE_SIZE, STICKER_PAGE_SIZE * 2));
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(STICKER_PAGE_SIZE);
+      expect(repo.recordSearchPage).toHaveBeenCalledWith(SEARCH_ID, {
+        nextOffset: STICKER_PAGE_SIZE * 2,
+        sentIds: ids.slice(STICKER_PAGE_SIZE, STICKER_PAGE_SIZE * 2),
+        failed: 0,
+        rateLimited: false,
+      });
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, 'יש עוד 2 סטיקרים.', [{ id: `more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE * 2}`, title: MORE }]);
+      expect(repo.searchStickers).not.toHaveBeenCalled();
+      expect(repo.recordSearchEvent).not.toHaveBeenCalled();
+    });
+
+    it('should say when the last page was sent', async () => {
+      const matches = stickers(STICKER_PAGE_SIZE + 2);
+      vi.mocked(repo.getLatestSearchId).mockResolvedValueOnce(SEARCH_ID);
+      vi.mocked(repo.claimSearchPage).mockResolvedValueOnce(
+        search(
+          matches.map((m) => m._id),
+          STICKER_PAGE_SIZE * 2,
+        ),
+      );
+      vi.mocked(repo.findStickersByIds).mockResolvedValueOnce(matches.slice(STICKER_PAGE_SIZE));
+      await tap(`more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`);
+      expect(sendWhatsAppSticker).toHaveBeenCalledTimes(2);
+      expect(repo.recordSearchPage).toHaveBeenCalledWith(SEARCH_ID, expect.objectContaining({ nextOffset: matches.length }));
+      expect(sendWhatsAppButtons).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'זה הכול ✅');
+    });
+
+    it('should continue from the sticker the rate limit stopped on', async () => {
+      const matches = stickers(STICKER_PAGE_SIZE * 2);
+      vi.mocked(repo.getLatestSearchId).mockResolvedValueOnce(SEARCH_ID);
+      vi.mocked(repo.claimSearchPage).mockResolvedValueOnce(
+        search(
+          matches.map((m) => m._id),
+          STICKER_PAGE_SIZE * 2,
+        ),
+      );
+      vi.mocked(repo.findStickersByIds).mockResolvedValueOnce(matches.slice(STICKER_PAGE_SIZE));
+      vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.1').mockRejectedValueOnce({ code: 131056 }).mockRejectedValueOnce({ code: 131056 });
+      await tap(`more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`);
+      expect(repo.recordSearchPage).toHaveBeenCalledWith(SEARCH_ID, expect.objectContaining({ nextOffset: STICKER_PAGE_SIZE + 1, rateLimited: true }));
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, expect.stringContaining('חכו כמה שניות'), [{ id: `more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE + 1}`, title: MORE }]);
+    });
+
+    it('should not resend anything from a search that a newer search replaced', async () => {
+      vi.mocked(repo.getLatestSearchId).mockResolvedValueOnce(new ObjectId());
+      await tap(`more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`);
+      expect(repo.claimSearchPage).not.toHaveBeenCalled();
+      expect(sendWhatsAppSticker).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('הכפתור הזה כבר לא פעיל'));
+    });
+
+    it('should not resend a page when the button was already used', async () => {
+      vi.mocked(repo.getLatestSearchId).mockResolvedValueOnce(SEARCH_ID);
+      await tap(`more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`);
+      expect(repo.claimSearchPage).toHaveBeenCalled();
+      expect(sendWhatsAppSticker).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('הכפתור הזה כבר לא פעיל'));
+    });
+
+    it('should ignore unknown buttons', async () => {
+      await tap('something-else');
+      expect(repo.getLatestSearchId).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
     });
   });
 

@@ -81,6 +81,14 @@ export async function searchStickers(words: string[]): Promise<StickerSummary[]>
     .toArray();
 }
 
+// Keeps the order of ids; deleted stickers are skipped.
+export async function findStickersByIds(ids: ObjectId[]): Promise<StickerSummary[]> {
+  const found = await getCollection()
+    .find({ _id: { $in: ids } }, WITHOUT_DATA)
+    .toArray();
+  return ids.map((id) => found.find((sticker) => sticker._id.equals(id))).filter(Boolean);
+}
+
 export async function getStickerData(id: ObjectId): Promise<Buffer | null> {
   const sticker = await getCollection().findOne({ _id: id }, { projection: { data: 1 } });
   return sticker?.data ? Buffer.from(sticker.data.buffer) : null;
