@@ -3,13 +3,13 @@
 A WhatsApp sticker vault on top of Meta's WhatsApp Cloud API. The vault is shared: every sticker anyone saves can be found by everyone. Send it stickers and it saves them, tag them with words, then send a word to get matching stickers back as real WhatsApp stickers. It runs on the shared MMPS Express server.
 
 - `GET /whatsapp-webhook` handles Meta's verification handshake.
-- `POST /whatsapp-webhook` receives incoming messages (stickers and text).
+- `POST /whatsapp-webhook` receives incoming messages (stickers, text and reply-button taps).
 
 Code lives in `src/features/stickers/` (vault logic, tag parsing, Mongo repositories) and the shared `src/services/whatsapp/`, which any WhatsApp bot can reuse:
 
 - `registerWhatsAppWebhook(app, { path, onMessage, allowedPhones? })` registers the GET verification and POST message routes, checks the signature, acks Meta, logs failed delivery statuses, applies the allowlist and hands each text or sticker message to `onMessage`. Call it before the global `express.json()`.
 - Webhook helpers: `extractIncomingMessage`, `isValidSignature`, `parseAllowedPhones`, `isAllowedSender`, plus the webhook payload types.
-- The Graph API client: text, sticker send, typing indicator, media download and upload.
+- The Graph API client: text, reply buttons (`sendWhatsAppButtons`), sticker send, typing indicator, media download and upload.
 
 The feature was renamed from `whatsapp` to `stickers`. The webhook path (`/whatsapp-webhook`), the Mongo database (`Whatsapp`) and the env var names stay the same, so Meta's webhook config and stored data don't change.
 
@@ -31,7 +31,7 @@ If `hub.mode` is `subscribe` and `hub.verify_token` matches `VERIFY_TOKEN`, the 
 
 1. If `WHATSAPP_APP_SECRET` is set, the `X-Hub-Signature-256` header is checked against an HMAC-SHA256 of the raw request body. A missing or invalid signature returns `401`.
 2. The server answers `200 OK` right away, so Meta doesn't retry.
-3. It reads `entry[0].changes[0].value.messages[0]`. Only `sticker` and `text` messages are handled; everything else is ignored. Status updates with `status: "failed"` are logged with Meta's error code and details (an accepted send can still fail delivery later).
+3. It reads `entry[0].changes[0].value.messages[0]`. Only `sticker`, `text` and reply-button taps (`interactive` / `button_reply`) are handled; everything else is ignored. Status updates with `status: "failed"` are logged with Meta's error code and details (an accepted send can still fail delivery later).
 4. If `WHATSAPP_ALLOWED_PHONES` is set and the sender isn't in it, the message is logged and dropped: no read receipt, no typing indicator, no reply and nothing saved. When it's unset, everyone can use the bot (a warning is logged at boot).
 5. It logs the message and hands it to `handleIncomingMessage` in `sticker-vault.service.ts`.
 
@@ -50,7 +50,8 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 | A quote-reply to a sticker with words | Edits that sticker's tags (works on stickers you sent and stickers the bot sent) |
 | A quote-reply to a sticker with `-`, `delete` or `מחק` | Removes the sticker (anyone can delete, not just whoever saved it) |
 | `%` | Replies with one stats message: the top 5 sticker tags, the top 5 searched words and the top 3 searchers with their full phone numbers. Never a tag or a search, and not recorded in `searches` |
-| Anything else | Searches tags and sends every sticker tagged with every word sent (throttled), or replies `לא נמצאו סטיקרים עבור "..."` |
+| Anything else | Searches tags and sends the first page of stickers tagged with every word sent, or replies `לא נמצאו סטיקרים עבור "..."` |
+| Tap **עוד ⬇️** | Sends the next page of the latest search (see [Paging](#paging)) |
 
 In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters, digits, dots and emojis). A dot is part of the word wherever it appears, so `ת.ז`, `3.5` and even `.` on its own are tags, and `שלום.` is a different tag from `שלום`. A geresh or gershayim inside a word keeps it whole (`ג׳ורג׳`, `עו״ד`, `צה״ל`), and the plain `'` and `"` that phone keyboards type are stored as `׳` and `״`, so `ג'ורג'` and `ג׳ורג׳` are the same tag. Emojis work as tags too: each emoji is its own word (`😂😂🔥` gives `😂` and `🔥`), skin tones and ZWJ sequences stay whole (`👍🏽`, `👨‍👩‍👧`), and `❤` matches `❤️`. After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
 
@@ -72,7 +73,17 @@ This marks the message as read and shows "typing…" for up to 25 seconds or unt
 
 ### Throttling
 
-Meta allows about 80 messages per second per business number, but also has a per-user pair rate limit (error `131056`): roughly one message every 6 seconds sustained, with short bursts allowed. So a search sends every matching sticker, throttled: the first `STICKER_BURST_SIZE` (10) go out `STICKER_SEND_DELAY_MS` (1 second) apart, the rest `STICKER_SUSTAINED_SEND_DELAY_MS` (6 seconds) apart. When more than 10 match, the bot first says how many it found and that it's sending them gradually. If a send fails with `131056`, the bot waits `STICKER_RATE_LIMIT_BACKOFF_MS` (30 seconds) and retries that sticker once; if it fails again, it stops sending and asks the user to try again shortly.
+Meta allows about 80 messages per second per business number, but also has a per-user pair rate limit (error `131056`): roughly one message every 6 seconds sustained, with short bursts allowed. So results are paged: a page is `STICKER_PAGE_SIZE` (6) stickers sent `STICKER_SEND_DELAY_MS` (1 second) apart, plus the "עוד" message, which fits in a burst. The time the user takes to tap "עוד" lets the quota recover. If a send fails with `131056`, the bot waits `STICKER_RATE_LIMIT_BACKOFF_MS` (30 seconds) and retries that sticker once; if it fails again, it stops the page and offers "עוד" starting from the unsent sticker, asking the user to wait a few seconds.
+
+### Paging
+
+A search sends the first 6 matches. If there are more, the bot sends `יש עוד N סטיקרים.` with a **עוד ⬇️** reply button (`sendWhatsAppButtons`). Each tap sends the next 6; after the last page it says `זה הכול ✅`. Failed stickers are mentioned in the same message.
+
+- The full, ordered list of matches is saved with the search (`matchedStickerIds`), so pages never shift when stickers are tagged or sent in between. Deleted stickers are skipped.
+- The button id is `more:<searchId>:<offset>`. A tap atomically moves the search's `nextOffset` past the page (`claimSearchPage`), so a double tap or a used button can't send the same page twice.
+- Only the sender's newest search can be continued. A new search (even of the same words) starts from the beginning, and buttons from older searches reply `הכפתור הזה כבר לא פעיל...` instead of resending stickers.
+- There's no expiry: the latest search's button keeps working until the user searches again.
+- If the search can't be stored, the first page is still sent, without a button.
 
 If handling a message fails unexpectedly (for example a MongoDB error), the error is logged and the user gets a Hebrew reply instead of silence: `משהו השתבש ולא הצלחתי לשמור את הסטיקר 😕 נסו שוב מאוחר יותר.` for stickers, `משהו השתבש 😕 נסו שוב מאוחר יותר.` for text (search or tag edits).
 
@@ -93,14 +104,16 @@ Every text search (not tag edits) is recorded in the `searches` collection of th
 | `phone` | Who searched |
 | `query` | The raw text |
 | `words` | The normalized words that were matched (all must match) |
-| `matchedCount` | Matches found (all of them are sent) |
-| `sentStickerIds` | Ids of the stickers actually delivered |
+| `matchedCount` | Matches found |
+| `matchedStickerIds` | Every match, in send order, for paging |
+| `nextOffset` | Where the next "עוד" page starts in `matchedStickerIds` |
+| `sentStickerIds` | Ids of the stickers actually delivered, across all pages |
 | `failedCount` | Matches that couldn't be sent |
 | `rateLimited` | Sending stopped on error `131056` |
-| `durationMs` | Time from receiving the message to the end of sending |
+| `durationMs` | Time from receiving the message to the end of the first page |
 | `createdAt` | When the search happened |
 
-Indexes `{ createdAt: -1 }` and `{ words: 1, createdAt: -1 }` are created at boot by `ensureSearchIndexes`. The write is fire-and-forget: a failure is logged and never affects the reply. There is no TTL. Zero-result searches (`matchedCount: 0`) show which words people look for that the vault doesn't have yet.
+Indexes `{ createdAt: -1 }`, `{ words: 1, createdAt: -1 }` and `{ phone: 1, createdAt: -1 }` are created at boot by `ensureSearchIndexes`. A failed write is logged and never blocks the first page; it only means no "עוד" button. Each "עוד" page updates the same document (`recordSearchPage`). There is no TTL. Zero-result searches (`matchedCount: 0`) show which words people look for that the vault doesn't have yet.
 
 ### Stats (`%`)
 
@@ -192,4 +205,4 @@ Any Node.js host that runs `npm run build && npm start` and exposes HTTPS works:
 npx vitest run src/features/stickers src/services/whatsapp
 ```
 
-The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers), tokenizing (including emojis), signature validation, the phone allowlist, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, the `%` stats command (not logged as a search, empty fallbacks), throttled search, the rate-limit stop and media re-upload.
+The tests cover the typing indicator payload, tag edit parsing, payload extraction (text, quote-replies, stickers, button taps), the reply buttons payload, tokenizing (including emojis), signature validation, the phone allowlist, the verification handshake, the immediate ack, signature rejection, and the vault flows: saving, dedupe, tagging, tag removal, delete by anyone (including `-` and Hebrew aliases), search metrics recording, the `%` stats command (not logged as a search, empty fallbacks), paging (first page, "עוד" pages, last page, stale and reused buttons), the rate-limit stop and resume, and media re-upload.

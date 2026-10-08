@@ -2,7 +2,15 @@ import axios from 'axios';
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
 import { WHATSAPP_GRAPH_API_URL, WHATSAPP_PAIR_RATE_LIMIT_ERROR_CODE } from './constants';
-import type { WhatsAppMediaInfo, WhatsAppSendMessageResponse, WhatsAppStickerMessageRequest, WhatsAppTextMessageRequest, WhatsAppTypingIndicatorRequest } from './types';
+import type {
+  WhatsAppButtonsMessageRequest,
+  WhatsAppMediaInfo,
+  WhatsAppReplyButton,
+  WhatsAppSendMessageResponse,
+  WhatsAppStickerMessageRequest,
+  WhatsAppTextMessageRequest,
+  WhatsAppTypingIndicatorRequest,
+} from './types';
 
 const logger = new Logger('whatsapp:api');
 
@@ -49,6 +57,26 @@ export async function sendWhatsAppMessage(to: string, text: string): Promise<voi
     logger.log(`Sent WhatsApp message to ${to} (id=${response.data?.messages?.[0]?.id})`);
   } catch (err) {
     logger.error(`Failed to send WhatsApp message to ${to}: ${describeWhatsAppError(err)}`);
+  }
+}
+
+// Text with up to 3 reply buttons; a tap arrives as an `interactive` button_reply message. Errors are logged, never thrown.
+export async function sendWhatsAppButtons(to: string, text: string, buttons: WhatsAppReplyButton[]): Promise<void> {
+  const url = `${WHATSAPP_GRAPH_API_URL}/${env.PHONE_NUMBER_ID}/messages`;
+  const body: WhatsAppButtonsMessageRequest = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'interactive',
+    interactive: { type: 'button', body: { text }, action: { buttons: buttons.map((reply) => ({ type: 'reply', reply })) } },
+  };
+  try {
+    const response = await axios.post<WhatsAppSendMessageResponse>(url, body, {
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    });
+    logger.log(`Sent WhatsApp buttons to ${to} (id=${response.data?.messages?.[0]?.id})`);
+  } catch (err) {
+    logger.error(`Failed to send WhatsApp buttons to ${to}: ${describeWhatsAppError(err)}`);
   }
 }
 

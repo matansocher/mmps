@@ -1,30 +1,35 @@
-import type { ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { createHash } from 'node:crypto';
 import { getErrorMessage, Logger, sleep } from '@core/utils';
 import {
   describeWhatsAppError,
   downloadWhatsAppMedia,
   isWhatsAppPairRateLimitError,
+  sendWhatsAppButtons,
   sendWhatsAppMessage,
   sendWhatsAppSticker,
   sendWhatsAppTypingIndicator,
   uploadWhatsAppMedia,
 } from '@services/whatsapp';
-import type { IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
-import { STICKER_BURST_SIZE, STICKER_MEDIA_REUSE_MS, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS, STICKER_SUSTAINED_SEND_DELAY_MS } from './constants';
+import type { IncomingButtonReplyMessage, IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
+import { STICKER_MEDIA_REUSE_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
 import {
   addStickerMessageId,
   addStickerTags,
+  claimSearchPage,
   createSticker,
   deleteSticker,
   findStickerByMessageId,
   findStickerBySha,
+  findStickersByIds,
+  getLatestSearchId,
   getStickerData,
   getTopSearchers,
   getTopSearchWords,
   getTopStickerTags,
   markStickerReceived,
   recordSearchEvent,
+  recordSearchPage,
   removeStickerTags,
   replaceStickerData,
   searchStickers,
@@ -49,13 +54,17 @@ const HELP_MESSAGE = [
   '• הגיבו לסטיקר עם מילים כדי להוסיף לו מילות חיפוש.',
   '• מילה עם "-" בהתחלה או בסוף (למשל -לילה) מסירה את מילת החיפוש.',
   '• שלחו מילים כדי לקבל סטיקרים שמתאימים לכולן.',
+  `• אם יש הרבה תוצאות, אשלח ${STICKER_PAGE_SIZE} בכל פעם. לחצו *עוד* כדי לקבל את הבאות.`,
   '• הגיבו *מחק* או *-* לסטיקר כדי למחוק אותו.',
   '• שלחו *%* כדי לראות סטטיסטיקות.',
 ].join('\n');
 
 const ADD_WORDS_HINT = 'הגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.';
 const NO_WORDS_MESSAGE = `אין עדיין מילות חיפוש. ${ADD_WORDS_HINT}`;
-const RATE_LIMIT_MESSAGE = 'שלחתי הרבה הודעות ברצף, נסו שוב בעוד כמה שניות.';
+const RATE_LIMIT_MESSAGE = 'שלחתי הרבה הודעות ברצף. חכו כמה שניות ולחצו *עוד* כדי להמשיך.';
+const STALE_BUTTON_MESSAGE = 'הכפתור הזה כבר לא פעיל. שלחו את החיפוש שוב כדי להתחיל מההתחלה.';
+const MORE_BUTTON_TITLE = 'עוד ⬇️';
+const MORE_BUTTON_PATTERN = /^more:([a-f0-9]{24}):(\d+)$/;
 const STICKER_ERROR_MESSAGE = 'משהו השתבש ולא הצלחתי לשמור את הסטיקר 😕 נסו שוב מאוחר יותר.';
 const TEXT_ERROR_MESSAGE = 'משהו השתבש 😕 נסו שוב מאוחר יותר.';
 
@@ -68,6 +77,7 @@ export async function handleIncomingMessage(message: IncomingMessage): Promise<v
   const timer = createStepTimer();
   try {
     if (message.kind === 'sticker') await handleSticker(message, timer);
+    else if (message.kind === 'button') await handleButton(message, timer);
     else await handleText(message, timer);
   } catch (err) {
     logger.error(`Failed to handle ${message.kind} ${message.id} from ${message.from}: ${describeWhatsAppError(err)}`);
@@ -146,54 +156,128 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   }
 
   const matches = await timer.time('search', () => searchStickers(words));
-  let result: SendResult = { sentIds: [], failed: 0, rateLimited: false };
   if (!matches.length) {
     await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}".`));
-  } else {
-    if (matches.length > STICKER_BURST_SIZE) await timer.time('reply', () => sendWhatsAppMessage(from, `נמצאו ${matches.length} סטיקרים, שולח את כולם בהדרגה.`));
-    result = await sendStickers(from, matches, timer);
+    const event: CreateSearchEventData = {
+      phone: from,
+      query: text,
+      words,
+      matchedCount: 0,
+      matchedStickerIds: [],
+      nextOffset: 0,
+      sentStickerIds: [],
+      failedCount: 0,
+      rateLimited: false,
+      durationMs: timer.elapsedMs(),
+    };
+    // Metrics must never break or slow down a search.
+    void recordSearchEvent(event).catch((err) => logger.error(`Failed to record search event: ${getErrorMessage(err)}`));
+    return;
   }
 
+  const matchedStickerIds = matches.map(({ _id }) => _id);
+  const result = await sendStickers(from, matches.slice(0, STICKER_PAGE_SIZE), timer);
+  const nextOffset = getNextOffset(matchedStickerIds, 0, result);
   const event: CreateSearchEventData = {
     phone: from,
     query: text,
     words,
     matchedCount: matches.length,
+    matchedStickerIds,
+    nextOffset,
     sentStickerIds: result.sentIds,
     failedCount: result.failed,
-    rateLimited: result.rateLimited,
+    rateLimited: Boolean(result.stoppedAt),
     durationMs: timer.elapsedMs(),
   };
-  // Metrics must never break or slow down a search.
-  void recordSearchEvent(event).catch((err) => logger.error(`Failed to record search event: ${getErrorMessage(err)}`));
+  // The "עוד" button needs the stored search; without it the first page is all the user gets.
+  const searchId = await timer
+    .time('record', () => recordSearchEvent(event))
+    .catch((err) => {
+      logger.error(`Failed to record search event: ${getErrorMessage(err)}`);
+      return null;
+    });
+  await sendPageStatus(from, searchId, { start: 0, nextOffset, total: matches.length, pageSize: Math.min(STICKER_PAGE_SIZE, matches.length), ...result }, timer);
+}
+
+// Only the newest search of a phone can continue, so an old button can't resend stickers that a newer search already sent.
+async function handleButton({ from, buttonId }: IncomingButtonReplyMessage, timer: StepTimer): Promise<void> {
+  const parsed = MORE_BUTTON_PATTERN.exec(buttonId);
+  if (!parsed) {
+    logger.warn(`Ignoring unknown button ${buttonId} from ${from}`);
+    return;
+  }
+  const searchId = new ObjectId(parsed[1]);
+  const offset = Number(parsed[2]);
+  const latestId = await timer.time('findLatest', () => getLatestSearchId(from));
+  const search = latestId?.equals(searchId) ? await timer.time('claim', () => claimSearchPage(searchId, from, offset, offset + STICKER_PAGE_SIZE)) : null;
+  if (!search) {
+    await timer.time('reply', () => sendWhatsAppMessage(from, STALE_BUTTON_MESSAGE));
+    return;
+  }
+
+  const ids = search.matchedStickerIds;
+  const stickers = await timer.time('findPage', () => findStickersByIds(ids.slice(offset, offset + STICKER_PAGE_SIZE)));
+  const result = await sendStickers(from, stickers, timer);
+  const nextOffset = getNextOffset(ids, offset, result);
+  await timer
+    .time('record', () => recordSearchPage(searchId, { nextOffset, sentIds: result.sentIds, failed: result.failed, rateLimited: Boolean(result.stoppedAt) }))
+    .catch((err) => logger.error(`Failed to record search page: ${getErrorMessage(err)}`));
+  await sendPageStatus(from, searchId, { start: offset, nextOffset, total: ids.length, pageSize: stickers.length, ...result }, timer);
 }
 
 type SendResult = {
   readonly sentIds: ObjectId[];
   readonly failed: number;
-  readonly rateLimited: boolean; // stopped early because of Meta's per-user rate limit
+  readonly stoppedAt: ObjectId | null; // first sticker left unsent because of Meta's per-user rate limit
 };
 
 async function sendStickers(to: string, stickers: StickerSummary[], timer: StepTimer): Promise<SendResult> {
   const sentIds: ObjectId[] = [];
   let failed = 0;
   for (const [index, sticker] of stickers.entries()) {
-    if (index > 0) await timer.time('delay', () => sleep(index < STICKER_BURST_SIZE ? STICKER_SEND_DELAY_MS : STICKER_SUSTAINED_SEND_DELAY_MS));
+    if (index > 0) await timer.time('delay', () => sleep(STICKER_SEND_DELAY_MS));
     try {
       await sendStickerWithBackoff(to, sticker, timer);
       sentIds.push(sticker._id);
     } catch (err) {
       if (isWhatsAppPairRateLimitError(err)) {
         logger.warn(`Pair rate limit hit while sending to ${to}, stopping after ${index} of ${stickers.length}`);
-        await timer.time('reply', () => sendWhatsAppMessage(to, RATE_LIMIT_MESSAGE));
-        return { sentIds, failed, rateLimited: true };
+        return { sentIds, failed, stoppedAt: sticker._id };
       }
       failed++;
       logger.error(`Failed to send sticker ${sticker._id} to ${to}: ${describeWhatsAppError(err)}`);
     }
   }
-  if (failed) await timer.time('reply', () => sendWhatsAppMessage(to, failed === stickers.length ? 'מצטער, לא הצלחתי לשלוח את הסטיקר.' : `מצטער, ${failed} מתוך ${stickers.length} סטיקרים לא נשלחו.`));
-  return { sentIds, failed, rateLimited: false };
+  return { sentIds, failed, stoppedAt: null };
+}
+
+// Index in ids where the next page starts: after this page, or at the sticker the rate limit stopped on.
+function getNextOffset(ids: ObjectId[], start: number, { stoppedAt }: SendResult): number {
+  if (stoppedAt) return ids.findIndex((id) => id.equals(stoppedAt));
+  return Math.min(start + STICKER_PAGE_SIZE, ids.length);
+}
+
+type PageStatus = SendResult & {
+  readonly start: number;
+  readonly nextOffset: number;
+  readonly total: number;
+  readonly pageSize: number;
+};
+
+async function sendPageStatus(to: string, searchId: ObjectId | null, { start, nextOffset, total, pageSize, failed, stoppedAt }: PageStatus, timer: StepTimer): Promise<void> {
+  const remaining = total - nextOffset;
+  if (!remaining) {
+    if (failed) await timer.time('reply', () => sendWhatsAppMessage(to, failed === pageSize ? 'מצטער, לא הצלחתי לשלוח את הסטיקר.' : `מצטער, ${failed} מתוך ${pageSize} סטיקרים לא נשלחו.`));
+    else if (start > 0) await timer.time('reply', () => sendWhatsAppMessage(to, 'זה הכול ✅'));
+    return;
+  }
+  const lines = [stoppedAt && RATE_LIMIT_MESSAGE, failed && `מצטער, ${failed} סטיקרים לא נשלחו.`, `יש עוד ${remaining} סטיקרים.`].filter(Boolean);
+  if (!searchId) {
+    await timer.time('reply', () => sendWhatsAppMessage(to, [...lines, 'משהו השתבש ולא אוכל לשלוח את השאר.'].join('\n')));
+    return;
+  }
+  await timer.time('reply', () => sendWhatsAppButtons(to, lines.join('\n'), [{ id: `more:${searchId}:${nextOffset}`, title: MORE_BUTTON_TITLE }]));
 }
 
 // On the pair rate limit, wait for the quota to recover and retry once before giving up.

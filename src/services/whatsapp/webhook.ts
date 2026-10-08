@@ -61,7 +61,7 @@ export function registerWhatsAppWebhook(app: Express, { path, onMessage, allowed
 
       const message = extractIncomingMessage(payload);
       if (!message) {
-        logger.log('Webhook event has no text or sticker message, nothing to handle');
+        logger.log('Webhook event has no text, sticker or button reply message, nothing to handle');
         return;
       }
 
@@ -70,7 +70,8 @@ export function registerWhatsAppWebhook(app: Express, { path, onMessage, allowed
         return;
       }
 
-      logger.log(`Incoming ${message.kind} from ${message.from}: ${message.kind === 'text' ? message.text : message.mediaId}`);
+      const detail = message.kind === 'text' ? message.text : message.kind === 'sticker' ? message.mediaId : message.buttonId;
+      logger.log(`Incoming ${message.kind} from ${message.from}: ${detail}`);
       onMessage(message).catch((err) => logger.error(`Failed to handle ${message.kind} message: ${getErrorMessage(err)}`));
     },
   );
