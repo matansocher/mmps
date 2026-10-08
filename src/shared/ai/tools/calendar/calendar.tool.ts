@@ -3,7 +3,7 @@ import { fromZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CalendarEvent, createEvent, deleteEvent, formatEvent, getEvent, getUpcomingEvents, listEvents, updateEvent } from '@services/google-calendar';
-import { WIFE_EMAIL, WIFE_NAMES } from './constants';
+import { KNOWN_CONTACTS } from './constants';
 
 const schema = z.object({
   action: z.enum(['create', 'list', 'upcoming', 'update', 'delete']).describe('The action to perform with calendar events'),
@@ -177,7 +177,8 @@ export const calendarTool = tool(runner, {
   description: `Create, list, update, or delete Google Calendar events.
 - To update or delete an event, first find its id with list (searchQuery/dates) or upcoming, then call update/delete with eventId. On update pass only the fields that change.
 - When the user wants an event's location set to a real place (restaurant, business, venue), resolve it with google_places first and use "<name>, <address>" as the location.
-- Invite guests by passing their email addresses in attendees (on update they are added to the existing guests; nobody is removed). Google emails them the invite. If the user names someone without an email, look it up with the contacts tool or ask for it. Never invent an email address.
-- The user's wife is called ${WIFE_NAMES.map((name) => `"${name}"`).join(' or ')}. Whenever the user mentions her by one of these names, invite her with ${WIFE_EMAIL} (no lookup needed).`,
+- Invite guests by passing their email addresses in attendees (on update they are added to the existing guests; nobody is removed). Google emails them the invite. If the user names someone who is not in the known contacts below and gives no email, ask for it. Never invent an email address.
+- Known contacts (the first one is the user's wife). Whenever the user mentions one of them by any of their names, invite them with their email (no lookup needed):
+${KNOWN_CONTACTS.map(({ names, email }) => `  - ${names.map((name) => `"${name}"`).join(' / ')}: ${email}`).join('\n')}`,
   schema,
 });
