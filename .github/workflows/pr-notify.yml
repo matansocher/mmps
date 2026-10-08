@@ -1,0 +1,36 @@
+name: 🔔 PR Telegram Notify
+
+# Sends a Telegram message (via the notifier bot) when someone other than the admin opens a PR.
+# pull_request_target gives fork PRs access to secrets; safe because no PR code is checked out.
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.pull_request.user.login != 'matansocher' && github.event.pull_request.user.type != 'Bot'
+    steps:
+      - name: Send Telegram message
+        env:
+          BOT_TOKEN: ${{ secrets.NOTIFIER_TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.MY_USER_ID }}
+          ACTION: ${{ github.event.action }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD: ${{ github.event.pull_request.head.label }}
+        run: |
+          text="🔔 PR ${ACTION} in ${REPO}
+          #${PR_NUMBER}: ${PR_TITLE}
+          by ${PR_AUTHOR} (${PR_HEAD} → ${PR_BASE})
+          ${PR_URL}"
+          jq -n --arg chat_id "$CHAT_ID" --arg text "$text" '{chat_id: $chat_id, text: $text, disable_web_page_preview: true}' \
+            | curl -sS --fail-with-body -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+                -H 'Content-Type: application/json' -d @- > /dev/null
