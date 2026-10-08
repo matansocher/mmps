@@ -37,7 +37,8 @@ All progress lives in `localStorage` on the device; there is no account and noth
 | --- | --- | --- |
 | Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe rendering in `src/globe/`. Mode logic (`modes.ts`, `quiz.ts`, `name-it.ts`, `cleanup.ts`) and progression (`progression.ts`: XP, levels, found countries, achievements, daily seed) and point-in-country lookup in `src/game/` (pure, unit-tested). One React component per mode in `src/games/`. |
 | Data | `apps/earth-web/public/data/countries.json` | Country polygons generated from the Worldly bot's `src/features/worldly/assets/countries.json`. |
-| Backend | `src/features/earth` | Only serves the built SPA. |
+| Backend | `src/features/worldly/worldly.init.ts` | The Worldly bot serves the built SPA at `/earth/*` (same pattern as Learner). No API routes. |
+| Telegram | `apps/earth-web/src/lib/telegram.ts` | Opened as a mini app from the Worldly bot (`/globe`, `/start`, menu button). Calls `ready()`/`expand()`, disables vertical swipes so dragging the globe doesn't close the app, and matches the header/background colors. Works the same outside Telegram. |
 
 Cesium draws the countries as one batched polygon primitive with per-country colors, plus one border polyline primitive. The globe has no imagery layer, so no tiles are downloaded. Clicks are resolved in the browser by ray-casting the clicked lon/lat against the country polygons.
 

@@ -50,7 +50,10 @@ LOCAL_ACTIVE_BOT_ID=WORLDLY npm run dev
 | `/usmap` | Guess a US state from a map |
 | `/flag` | Guess a country from a flag |
 | `/capital` | Guess the country by capital |
+| `/globe` | Open the [Earth](./earth.md) globe quiz as a Telegram mini app |
 | `/actions` | Manage daily games, statistics, and contact |
+
+The `/start` reply also carries the globe button, and on boot the bot sets its chat menu button to open the mini app at `${MMPS_BASE_URL}/earth` (skipped when the URL isn't https, since Telegram requires it). `initWorldly` also serves the `apps/earth-web` build at `/earth/*`, so the globe is only available when the Worldly bot boots (prod, or `LOCAL_ACTIVE_BOT_ID=WORLDLY` locally).
 
 ## Quiz Categories
 
