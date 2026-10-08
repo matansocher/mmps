@@ -59,7 +59,7 @@ In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `ליל�
 
 An exact plain-text `מכוניות` search (surrounding whitespace ignored) has a repeating per-sender cycle: regular tagged results twice, then one specific untagged sticker instead. Other searches, quote-reply tag edits and “עוד” button taps do not advance the cycle. Regular results retain their paging behavior; the third search's stored match list contains only the special sticker. Counts are incremented atomically in `Whatsapp.cars_search_counts`, keyed by phone number, and survive restarts. Search metrics record the sticker actually selected.
 
-The cycle is disabled until `CARS_SURPRISE_STICKER_ID` in `src/features/stickers/constants.ts` is filled with the sticker's MongoDB `_id` as a 24-character hex string. To finish setup, connect to the bot's MongoDB using `MONGO_DB_URL` and inspect the intentional untagged sticker:
+`CARS_SURPRISE_STICKER_ID` in `src/features/stickers/constants.ts` is set to the intended sticker's MongoDB `_id`: `6ac6a21f06cf38b203478389`. Keep its tags empty. To inspect untagged stickers, connect to the bot's MongoDB using `MONGO_DB_URL`:
 
 ```javascript
 db.getSiblingDB('Whatsapp').stickers.find(
@@ -68,7 +68,7 @@ db.getSiblingDB('Whatsapp').stickers.find(
 );
 ```
 
-Confirm the intended sticker and copy its `_id` into the constant, then deploy. Keep its tags empty. Do not choose an arbitrary result if more than one untagged sticker appears. Empty or invalid IDs leave regular searches unchanged and do not advance the counter. If the configured sticker is later deleted, the third search falls back to regular results.
+The ID refers to a specific sticker, regardless of how many other untagged stickers exist. Empty or invalid IDs disable the cycle, leaving regular searches unchanged without advancing the counter. If the configured sticker is later deleted, the third search falls back to regular results.
 
 ### Timing logs
 
