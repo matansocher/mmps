@@ -142,7 +142,7 @@ Conventions worth calling out:
 
 - **Action-enum pattern** — one tool exposes many operations via an `action` enum (keeps the tool count manageable vs. one tool per operation).
 - **Return strings (usually JSON strings)** — tools return serialized results; errors are caught and returned as `{ success:false, error }` so a failing tool degrades gracefully instead of throwing.
-- **Retries** — tools that do throw go through `createToolRetryMiddleware()` (`agent/tool-retry.ts`). Read-only calls listed in `READ_ONLY_TOOL_ACTIONS` are retried up to twice on timeouts, 429 and 5xx; calls with side effects never are. Every exception becomes an error `ToolMessage` with instructions for the model ("temporarily unavailable" vs. "unknown whether it went through, don't repeat it"). That conversion matters: once a middleware wraps tool calls, LangChain re-raises tool exceptions and the whole turn would fail.
+- **Retries** — tools that do throw go through `createToolRetryMiddleware()` (`agent/tool-retry.ts`). Read-only calls listed in `READ_ONLY_TOOL_ACTIONS` (tool name → `true` or a list of read-only `action` values, e.g. `gmail: ['list']`) are retried up to twice with exponential backoff (500ms, 1s, capped at 4s) on transient errors: timeouts, dropped connections (`ECONNRESET`, `ETIMEDOUT`, undici socket errors, `fetch failed` with such a cause), HTTP 408/425/429 and 5xx except 501. Calls with side effects and unlisted tools never are, so they can't run twice. Every exception becomes an error `ToolMessage`: non-transient errors keep LangChain's default text (`Error: …\n Please fix your mistakes.`); transient ones tell the model "temporarily unavailable, don't call it again this turn" (read-only) or "unknown whether it went through, don't repeat it" (side effects). That conversion matters: once a middleware wraps tool calls, LangChain re-raises tool exceptions and the whole turn would fail. Tools that catch their own errors and return `{ success: false }` are invisible to the middleware.
 - **Zod = validation + schema** — the same schema both validates args and is converted to the JSON schema sent to the model for function calling.
 
 Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 27 registered tools group into: personal/productivity (calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics), media/social (spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels), information (weather, earthquake), sports/games (competitions, match summary/prediction, makavdia, wolt, worldly), markets (polymarket), dev (github).
@@ -247,10 +247,11 @@ handler sums tokens per model across the whole ReAct loop (incl. summarization L
 ```
 
 - **Pricing** — `model-pricing.ts` holds USD-per-1M-token rates (`input`, `output`, `cachedInput`); `computeModelCost()` splits input into cached vs uncached and bills each at its own rate. `resolveModelPrice()` matches **dated snapshots only** (`gpt-4.1-mini-2025-04-14` → `gpt-4.1-mini`) — siblings such as `gpt-5-mini` need their own entry, because inheriting `gpt-5` rates would overstate their cost 5x. Unknown model → cost 0 + a warn (never crashes).
-- **Pricing drift check** — a monthly cron (`modelPricingCheck`, 1st at 10:00) parses OpenAI's docs markdown (`pricing.md`) and diffs the published rates against `MODEL_PRICING`, DMing the owner only on a mismatch. Deterministic parse, no AI in the loop.
+- **Pricing drift check** — a monthly cron (`schedulers/model-pricing-check.ts`, 1st at 10:00) fetches OpenAI's docs markdown twin (`https://developers.openai.com/api/docs/pricing.md`), parses the "Standard pricing data" table and diffs it against `MODEL_PRICING`. It is silent when everything matches and DMs the owner only on drift or when a priced model disappears from the docs. Deterministic parse, no AI in the loop; prices stay a checked-in constant so historical cost records remain reproducible.
+- **Instrumented sources** — `chatbot` and `chilli`. Raw `@services/openai` helpers (embeddings, image, audio, plain completions, the social digest summary) are intentionally not metered.
 - **Record fields** — `source, chatId, model, tokensIn/Out/Total, tokensCached, cost, durationMs, llmCalls, toolCalls, createdAt`.
 - **Aggregation** — `aggregateUsage()` groups by source + user + day (Asia/Jerusalem) via a Mongo aggregation pipeline.
-- **Weekly report** — a Saturday 22:30 cron (`usageSummary`) DMs the owner a 7-day cost/usage breakdown.
+- **Weekly report** — a Saturday 22:30 cron (`schedulers/usage-summary.ts`) DMs the owner a 7-day cost/usage breakdown (total cost, calls, tokens, per day, per bot, and per user if more than one).
 - **Kill-switch** — `CHATBOT_USAGE_TRACKING=false` disables it. Fire-and-forget writes mean metering never blocks or breaks a reply.
 
 ::: warning Nuance
@@ -300,6 +301,17 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 ::: tip Pattern to remember
 **The scheduler and the chat handler share one brain.** A cron job is just another producer of a prompt into `processMessage()` — DRY, and scheduled output looks/behaves like chat output.
 :::
+
+### Social media follower (collect → digest)
+
+The chatbot follows accounts on 4 platforms and DMs one daily digest instead of real-time notifications. It runs in two phases:
+
+- **Collect (silent).** `schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter + youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`). It diffs new posts against the subscription's `lastSeenId` / `lastSeenAt` and stores them in db `SocialFollower`, collection `PendingPost`; nothing is sent. Pending rows are inserted **before** `lastSeen` advances, and `createPendingPosts` dedupes by `platform + username + chatId + postId`, so a crash re-collects rather than loses posts.
+- **Diffing rules.** Twitter/TikTok ids are chronological snowflakes, compared with `BigInt(id) > BigInt(lastSeenId)` (this also neutralizes pinned posts). Telegram post ids are sequential per channel and compared numerically. YouTube video ids are not chronological, so YouTube diffs by `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
+- **Digest.** `schedulers/social-media-digest.ts`, cron `45 22 * * *`. Pending posts are grouped per chat and per followed account. Telegram and Twitter get an AI key-points summary (`getResponse` with `GPT_SMALL_MODEL`; `targetKeyPointsCount` gives about 1 bullet per 10 posts, min 2, max 10), written in the posts' own language, with a raw listing as fallback if the AI call fails. YouTube and TikTok are listed one line per post with a link. One combined Markdown message is sent, then exactly the rows it sent are deleted: posts collected after 22:45 roll into the next day, an empty day sends nothing, and a send failure keeps everything for tomorrow. TikTok video attachments and tweet image albums follow the text (see the table above).
+- **Subscriptions.** `shared/social-follower/` holds the `Subscription` and `PendingPost` collections and their repository functions (`SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`). They are managed through the `tiktok`, `twitter`, `youtube` and `telegram_channels` tools, each with subscribe / unsubscribe / list actions keyed to `MY_USER_ID`.
+- **Data sources.** Telegram → `@services/telegram-scraper` (t.me/s web preview, no auth). Twitter → `@services/twitter-scraper` (anonymous GraphQL, then an optional logged-in session via `X_AUTH_TOKEN` / `X_CT0` cookies, then a Nitter fallback; no key). YouTube → RSS for collecting, Supadata-backed `@services/youtube` for tool actions. TikTok → RapidAPI `@services/tiktok` (metered free tier, mind the quota).
+- The digest summary goes through the raw `@services/openai` helper, so it is not usage-metered.
 
 ## 16. Boot lifecycle (manual DI)
 

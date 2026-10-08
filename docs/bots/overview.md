@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 6 specialized Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings, Mindloop, Earth and the WhatsApp webhook are initialized independently of bot selection.
+MMPS includes 6 Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings, Mindloop, Zika and the WhatsApp webhook are initialized independently of bot selection.
 
 ## The Bots
 
@@ -34,6 +34,10 @@ Interactive geography quiz bot.
 - **Database**: `Worldly`
 - **[Learn more →](/bots/worldly)**
 
+### 6. **Learner** - Daily Learning Bites
+Telegram bot plus a mini-app (`apps/learner-web`, served at `/learner/*`) that delivers short learning bites from guides such as System Design and AI Engineering. `/today` sends today's bite and `/app` opens the mini-app; a daily reminder fires at 11:15. Progress syncs through `/api/learner/progress`.
+- **Database**: `Learner` (`Progress`, `Subscriptions`, `Deliveries`)
+
 ### **Savings** - Shared Portfolio Rebalancer
 Password-protected React application served at `/savings/*` for managing one shared family portfolio with real ILS values.
 - **Features**: Reactive rebalancing, explicit saves, revision conflict protection, shared-password authentication
@@ -47,7 +51,7 @@ Original React game collection served at `/mindloop/*` with 14 games across 5 sk
 - **[Learn more →](/bots/mindloop)**
 
 ### **Earth** - Find the Country Quiz
-Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the political map and click the country you are asked for. Modes are picked from a plain menu: Daily challenge, Classic, Continent sprint, Name it and Continent cleanup (the continent modes expand to list each continent). Players earn XP and levels and build a collection of found countries, all stored on the device.
+The Worldly bot's Telegram mini app (`/globe`, `/start`, menu button): a geography quiz on a 3D globe served at `/earth/*` by `initWorldly`, built on CesiumJS. Spin the political map and click the country you are asked for. Modes are picked from a plain menu: Daily challenge, Classic, Continent sprint, Name it and Continent cleanup (the continent modes expand to list each continent). Players earn XP and levels and build a collection of found countries, all stored on the device.
 - **Database**: none (browser storage only)
 - **[Learn more →](/bots/earth)**
 
@@ -55,6 +59,11 @@ Geography quiz on a 3D globe served at `/earth/*`, built on CesiumJS. Spin the p
 A shared WhatsApp sticker vault on Meta's Cloud API webhook at `GET/POST /whatsapp-webhook`. Users save stickers, tag them with words or emojis, and search the tags to get the stickers back. The webhook plumbing (verification, signature check, allowlist) is the shared `registerWhatsAppWebhook` from `@services/whatsapp`.
 - **Database**: `Whatsapp`
 - **[Learn more →](/bots/stickers)**
+
+### **Zika** - Redesign Showcase
+Static React showcase at `/zika/*` with three redesign options (bold, catalog, friendly) for zika.co.il, in Hebrew RTL. The cart is client-side only and checkout links to the real shop.
+- **Database**: none
+- **[Learn more →](/bots/zika)**
 
 ## Running Bots
 
@@ -72,7 +81,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `WOLT`, `WORLDLY`.
 IS_PROD=true npm start
 ```
 
-Production initializes all 6 Telegram bots. Savings, Mindloop, Earth and the WhatsApp webhook initialize in development and production.
+Production initializes all 6 Telegram bots. Savings, Mindloop, Zika and the WhatsApp webhook initialize in development and production.
 
 ## Bot Architecture
 

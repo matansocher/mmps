@@ -53,7 +53,7 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 | Anything else | Searches tags and sends the first page of stickers tagged with every word sent, or replies `לא נמצאו סטיקרים עבור "..."` |
 | Tap **עוד ⬇️** | Sends the next page of the latest search (see [Paging](#paging)) |
 
-In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters, digits, dots and emojis). A dot is part of the word wherever it appears, so `ת.ז`, `3.5` and even `.` on its own are tags, and `שלום.` is a different tag from `שלום`. A geresh or gershayim inside a word keeps it whole (`ג׳ורג׳`, `עו״ד`, `צה״ל`), and the plain `'` and `"` that phone keyboards type are stored as `׳` and `״`, so `ג'ורג'` and `ג׳ורג׳` are the same tag. Emojis work as tags too: each emoji is its own word (`😂😂🔥` gives `😂` and `🔥`), skin tones and ZWJ sequences stay whole (`👍🏽`, `👨‍👩‍👧`), and `❤` matches `❤️`. After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
+In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters, digits, dots and emojis). A dot is part of the word wherever it appears, so `ת.ז`, `3.5` and even `.` on its own are tags, and `שלום.` is a different tag from `שלום`. A geresh or gershayim inside a word keeps it whole (`ג׳ורג׳`, `עו״ד`, `צה״ל`), and the plain `'` and `"` that phone keyboards type are stored as `׳` and `״`, so `ג'ורג'` and `ג׳ורג׳` are the same tag. Emojis work as tags too: each emoji is its own word (`😂😂🔥` gives `😂` and `🔥`), skin tones and ZWJ sequences stay whole (`👍🏽`, `👨‍👩‍👧`), and `❤` matches `❤️` (the FE0F variation selector is stripped). After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
 
 ### Special “מכוניות” cycle
 
@@ -72,7 +72,7 @@ The ID refers to a specific sticker, regardless of how many other untagged stick
 
 ### Timing logs
 
-Every handled message logs one line with how long each step took, e.g. `Timing for text wamid.X: search=12ms sendCached=410ms recordId=8ms total=430ms sinceSent≈1500ms`. `sinceSent` compares Meta's message timestamp to now, so it includes webhook delivery delay (and Heroku cold start). A sticker's first send shows `getData`, `upload`, `setMedia` and `send` instead of `sendCached`, which is usually the slow path. Use it to find the bottleneck when replies feel slow.
+Every handled message logs one line with how long each step took (`createStepTimer` in `stickers.utils.ts`), e.g. `Timing for text wamid.X: search=12ms sendCached=410ms recordId=8ms total=430ms sinceSent≈1500ms`. `sinceSent` compares Meta's message timestamp to now, so it includes webhook delivery delay (and Heroku cold start). A sticker's first send shows `getData`, `upload`, `setMedia` and `send` instead of `sendCached`, which is usually the slow path. Use it to find the bottleneck when replies feel slow.
 
 ### Typing indicator
 
@@ -132,7 +132,7 @@ Indexes `{ createdAt: -1 }`, `{ words: 1, createdAt: -1 }` and `{ phone: 1, crea
 
 ### Stats (`%`)
 
-A text message that is exactly `%` (surrounding spaces ignored, quote-reply or not) is handled before any tagging or search logic. The bot runs three aggregations on the `Whatsapp` database in parallel: `getTopStickerTags` (`$unwind` the `tags` of `stickers`, count, top 5), `getTopSearchWords` (`$unwind` the `words` of `searches`, top 5) and `getTopSearchers` (group `searches` by `phone`, top 3). Ties are broken alphabetically. The reply has a "📊 סטטיסטיקות" header and three numbered sections; an empty section shows a Hebrew fallback ("אין עדיין ..."). Searchers are shown with their full phone numbers.
+A text message that is exactly `%` (surrounding spaces ignored, quote-reply or not) is handled before any tagging or search logic. The bot runs three aggregations on the `Whatsapp` database in parallel: `getTopStickerTags` (`$unwind` the `tags` of `stickers`, count, top 5), `getTopSearchWords` (`$unwind` the `words` of `searches`, top 5) and `getTopSearchers` (group `searches` by `phone`, top 3). Ties are broken alphabetically. The reply has a "📊 סטטיסטיקות" header and three numbered sections; an empty section shows a Hebrew fallback ("אין עדיין ..."). Searchers are shown with their full phone numbers. The message is built by `formatStatsMessage` in `stickers.utils.ts`.
 
 ### Sending (`sendWhatsAppMessage`)
 

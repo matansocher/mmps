@@ -82,6 +82,8 @@ export function agent(): AgentDescriptor {
 
 3. Put usage rules (when to use it, call sequences, confirmations, defaults, reply formatting) in the tool's own `description`. The system prompt in `agent.ts` holds only general behavior.
 
+4. If the tool has read-only actions, list them in `READ_ONLY_TOOL_ACTIONS` (`src/features/chatbot/agent/tool-retry.ts`) so they are retried on transient errors. Unlisted tools are never retried.
+
 ::: tip
 Use the `/scaffold-ai-tool` skill to generate all of this automatically.
 :::

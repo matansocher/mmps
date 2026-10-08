@@ -40,7 +40,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (6 bots + savings, mindloop & earth web apps)
+├── features/              # Bot implementations (6 bots + savings & mindloop web apps)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── schedulers/    # Scheduler implementations
@@ -55,7 +55,6 @@ src/
 │   ├── chilli/            # Cat persona bot (Hebrew)
 │   ├── coach/             # Sports bot
 │   ├── mindloop/          # Brain-training mini-app backend (Mongo player API)
-│   ├── earth/             # Find-the-country globe quiz (serves the SPA)
 │   ├── savings/           # Shared MongoDB-backed portfolio SPA
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot
@@ -141,6 +140,46 @@ services/github/
 - Clear separation of concerns
 - Scalable for adding more operations
 - Each function handles its own error logging
+
+### Service Catalog
+
+| Service | Purpose |
+| --- | --- |
+| `adsb` | Live aircraft positions in a radius (adsb.lol, adsb.fi fallback; no key) |
+| `booking` | Booking.com hotel search (RapidAPI) |
+| `chart` | Canvas-rendered line charts |
+| `earthquake-api` | USGS quake feed |
+| `earthquake-map` | Canvas-based earthquake map rendering |
+| `github` | Octokit + GitHub App auth |
+| `gmail` | Gmail send/list/delete |
+| `google-calendar` | Calendar CRUD |
+| `google-places` | Place search + details (Places API New) |
+| `google-sheets` | Sheets logging (prod) |
+| `igdb` | IGDB game data (Twitch auth) |
+| `imgur` | Image upload |
+| `ims` | Israel Meteorological Service |
+| `notifier` | Cross-bot notifier (`NOTIFIER_TELEGRAM_BOT_TOKEN`) |
+| `openai` | OpenAI API helpers (not usage-metered) |
+| `playstation-store` | PlayStation Store prices |
+| `polymarket` | Prediction markets |
+| `rain-radar` | Rain radar imagery |
+| `scores-365` | Football live scores |
+| `spotify` | Spotify API + auth refresh |
+| `telegram` | grammY bot utilities — the only Telegram bot service |
+| `telegram-client` | MTProto client (user mode) for message history |
+| `telegram-scraper` | Public channel posts via the t.me/s web preview (no key) |
+| `tenor` | GIF search |
+| `tiktok` | TikTok scraping (RapidAPI) + capped video download |
+| `transfer-tracker` | Football transfer rumours |
+| `twitter-scraper` | Key-less X/Twitter scraper (anonymous GraphQL + fallbacks) |
+| `weather` | Weather aggregator over `weather-api` and `ims` |
+| `weather-api` | weatherapi.com |
+| `whatsapp` | WhatsApp Cloud API (Graph v20.0) + shared webhook helpers |
+| `youtube` | YouTube transcripts + RSS |
+
+## Shared Modules
+
+`src/shared/` holds business logic reused across bots: `ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flight-traffic`, `friends`, `game-price-watcher`, `game-releases`, `hotel-watcher`, `map-service`, `meet-friends`, `mindloop`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `telegram-mini-app-auth`, `trainer`, `transfer-tracker`, `wolt`, `worldly`.
 
 ## AI Tools Structure
 
