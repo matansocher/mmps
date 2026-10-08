@@ -12,13 +12,14 @@ import {
   uploadWhatsAppMedia,
 } from '@services/whatsapp';
 import type { IncomingButtonReplyMessage, IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
-import { STICKER_MEDIA_REUSE_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
+import { CARS_SURPRISE_STICKER_ID, STICKER_MEDIA_REUSE_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
 import {
   addStickerMessageId,
   addStickerTags,
   claimSearchPage,
   createSticker,
   deleteSticker,
+  findStickerById,
   findStickerByMessageId,
   findStickerBySha,
   findStickersByIds,
@@ -28,6 +29,7 @@ import {
   getTopSearchWords,
   getTopStickerTags,
   markStickerReceived,
+  nextCarsSearchCount,
   recordSearchEvent,
   recordSearchPage,
   removeStickerTags,
@@ -155,7 +157,7 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
     return;
   }
 
-  const matches = await timer.time('search', () => searchStickers(words));
+  const matches = await timer.time('search', () => findSearchMatches(from, command, words));
   if (!matches.length) {
     await timer.time('reply', () => sendWhatsAppMessage(from, `לא נמצאו סטיקרים עבור "${words.join(' ')}".`));
     const event: CreateSearchEventData = {
@@ -224,6 +226,18 @@ async function handleButton({ from, buttonId }: IncomingButtonReplyMessage, time
     .time('record', () => recordSearchPage(searchId, { nextOffset, sentIds: result.sentIds, failed: result.failed, rateLimited: Boolean(result.stoppedAt) }))
     .catch((err) => logger.error(`Failed to record search page: ${getErrorMessage(err)}`));
   await sendPageStatus(from, searchId, { start: offset, nextOffset, total: ids.length, pageSize: stickers.length, ...result }, timer);
+}
+
+async function findSearchMatches(phone: string, command: string, words: string[]): Promise<StickerSummary[]> {
+  if (command === 'מכוניות' && ObjectId.isValid(CARS_SURPRISE_STICKER_ID)) {
+    const count = await nextCarsSearchCount(phone);
+    if (count % 3 === 0) {
+      const surprise = await findStickerById(new ObjectId(CARS_SURPRISE_STICKER_ID));
+      if (surprise) return [surprise];
+      logger.warn(`Cars surprise sticker ${CARS_SURPRISE_STICKER_ID} is missing; using regular search results`);
+    }
+  }
+  return searchStickers(words);
 }
 
 type SendResult = {
