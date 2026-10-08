@@ -1,4 +1,4 @@
-import type { Bot, Context } from 'grammy';
+import { type Bot, type Context, InlineKeyboard } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { sleep } from '@core/utils';
@@ -7,7 +7,7 @@ import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails 
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
 import { generateStatisticsMessage } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, GLOBE_APP_URL, GLOBE_BUTTON_TEXT, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
 export class WorldlyController {
@@ -19,7 +19,7 @@ export class WorldlyController {
   ) {}
 
   init(): void {
-    const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, ACTIONS } = BOT_CONFIG.commands;
+    const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, GLOBE, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.command(FIRE_MODE.command.replace('/', ''), (ctx) => this.fireModeHandler(ctx));
@@ -28,6 +28,7 @@ export class WorldlyController {
     this.bot.command(US_MAP.command.replace('/', ''), (ctx) => this.USMapHandler(ctx));
     this.bot.command(FLAG.command.replace('/', ''), (ctx) => this.flagHandler(ctx));
     this.bot.command(CAPITAL.command.replace('/', ''), (ctx) => this.capitalHandler(ctx));
+    this.bot.command(GLOBE.command.replace('/', ''), (ctx) => this.globeHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
     this.bot.catch((err) => this.logger.error(`${getErrorMessage(err)}`));
@@ -51,6 +52,13 @@ export class WorldlyController {
     ]);
     await ctx.reply('איך אני יכול לעזור? 👨‍🏫', { reply_markup: keyboard });
     await ctx.deleteMessage().catch(() => {});
+  }
+
+  private async globeHandler(ctx: Context): Promise<void> {
+    const { userDetails } = getMessageData(ctx);
+    const keyboard = new InlineKeyboard().webApp(GLOBE_BUTTON_TEXT, GLOBE_APP_URL);
+    await ctx.reply('סובבו את הגלובוס ומצאו את המדינה 🌍👇', { reply_markup: keyboard });
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.GLOBE }, userDetails);
   }
 
   async fireModeHandler(ctx: Context): Promise<void> {
@@ -206,10 +214,12 @@ export class WorldlyController {
       'אני בוט שיודע ללמד משחקי גיאוגרפיה בצורה הכי כיפית שיש 😁',
       'כל יום אני אשלח לכם כמה משחקים 🌎',
       'אפשר גם להתחיל משחק חדש מתי שרוצים בפקודות שלי, פה למטה 👇',
+      'ויש גם משחק גלובוס - סובבו את כדור הארץ ומצאו את המדינה 🌍',
       `אם אתם רוצים שאני אפסיק לשלוח משחקים בכל יום, אפשר פשוט לבקש ממני בפקודה ׳פעולות׳, פה למטה 👇`,
     ].join('\n\n');
     const existingUserReplyText = `אין בעיה, אני אשלח משחקים בכל יום 🟢`;
-    await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText);
+    const keyboard = new InlineKeyboard().webApp(GLOBE_BUTTON_TEXT, GLOBE_APP_URL);
+    await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText, { reply_markup: keyboard });
   }
 
   private async stopHandler(ctx: Context, chatId: number): Promise<void> {
