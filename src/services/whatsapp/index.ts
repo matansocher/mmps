@@ -1,4 +1,13 @@
-export { describeWhatsAppError, downloadWhatsAppMedia, isWhatsAppPairRateLimitError, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from './api';
+export {
+  describeWhatsAppError,
+  downloadWhatsAppMedia,
+  isWhatsAppPairRateLimitError,
+  sendWhatsAppButtons,
+  sendWhatsAppMessage,
+  sendWhatsAppSticker,
+  sendWhatsAppTypingIndicator,
+  uploadWhatsAppMedia,
+} from './api';
 export * from './constants';
 export * from './types';
 export { registerWhatsAppWebhook } from './webhook';

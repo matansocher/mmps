@@ -24,6 +24,13 @@ describe('extractIncomingMessage()', () => {
     expect(message).toEqual({ kind: 'sticker', from: '1', id: 'w3', mediaId: 'm1', animated: true });
   });
 
+  it('should extract a reply button tap', () => {
+    const message = extractIncomingMessage(
+      payload({ from: '1', id: 'w5', timestamp: '0', type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'more:abc:6', title: 'עוד' } } }),
+    );
+    expect(message).toEqual({ kind: 'button', from: '1', id: 'w5', buttonId: 'more:abc:6', title: 'עוד' });
+  });
+
   it('should convert the message timestamp to epoch ms', () => {
     const message = extractIncomingMessage(payload({ from: '1', id: 'w4', timestamp: '1700000000', type: 'text', text: { body: 'hi' } }));
     expect(message).toEqual({ kind: 'text', from: '1', id: 'w4', sentAt: 1700000000000, text: 'hi' });
@@ -31,6 +38,7 @@ describe('extractIncomingMessage()', () => {
 
   test.each([
     { name: 'image message', body: payload({ from: '1', id: '1', timestamp: '0', type: 'image' }) },
+    { name: 'list reply', body: payload({ from: '1', id: '1', timestamp: '0', type: 'interactive', interactive: { type: 'list_reply' } }) },
     { name: 'status update without messages', body: payload(null) },
     { name: 'empty payload', body: {} as WhatsAppWebhookPayload },
   ])('should return null for $name', ({ body }) => {

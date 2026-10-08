@@ -14,6 +14,20 @@ export type WhatsAppStickerMessageRequest = WhatsAppMessageBase & {
   readonly sticker: { readonly id: string };
 };
 
+export type WhatsAppReplyButton = {
+  readonly id: string; // returned in the tap's button_reply, up to 256 chars
+  readonly title: string; // up to 20 chars
+};
+
+export type WhatsAppButtonsMessageRequest = WhatsAppMessageBase & {
+  readonly type: 'interactive';
+  readonly interactive: {
+    readonly type: 'button';
+    readonly body: { readonly text: string };
+    readonly action: { readonly buttons: ReadonlyArray<{ readonly type: 'reply'; readonly reply: WhatsAppReplyButton }> };
+  };
+};
+
 export type WhatsAppSendMessageResponse = {
   readonly messages?: ReadonlyArray<{ readonly id: string }>;
 };
@@ -41,6 +55,7 @@ export type WhatsAppIncomingMessage = {
   readonly text?: { readonly body: string };
   readonly sticker?: { readonly id: string; readonly mime_type?: string; readonly sha256?: string; readonly animated?: boolean };
   readonly context?: { readonly from?: string; readonly id?: string };
+  readonly interactive?: { readonly type?: string; readonly button_reply?: { readonly id: string; readonly title: string } };
 };
 
 export type WhatsAppStatusError = {
@@ -90,4 +105,13 @@ export type IncomingStickerMessage = {
   readonly animated: boolean;
 };
 
-export type IncomingMessage = IncomingTextMessage | IncomingStickerMessage;
+export type IncomingButtonReplyMessage = {
+  readonly kind: 'button';
+  readonly from: string;
+  readonly id: string;
+  readonly sentAt?: number; // epoch ms from Meta's message timestamp (1s precision)
+  readonly buttonId: string;
+  readonly title: string;
+};
+
+export type IncomingMessage = IncomingTextMessage | IncomingStickerMessage | IncomingButtonReplyMessage;

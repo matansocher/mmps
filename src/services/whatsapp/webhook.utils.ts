@@ -12,6 +12,9 @@ export function extractIncomingMessage(payload: WhatsAppWebhookPayload): Incomin
   if (message.type === 'sticker' && message.sticker?.id) {
     return { kind: 'sticker', ...base, mediaId: message.sticker.id, animated: Boolean(message.sticker.animated) };
   }
+  if (message.type === 'interactive' && message.interactive?.type === 'button_reply' && message.interactive.button_reply?.id) {
+    return { kind: 'button', ...base, buttonId: message.interactive.button_reply.id, title: message.interactive.button_reply.title };
+  }
   return null;
 }
 

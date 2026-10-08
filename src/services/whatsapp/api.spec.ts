@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { env } from 'node:process';
-import { isWhatsAppPairRateLimitError, sendWhatsAppTypingIndicator } from './api';
+import { isWhatsAppPairRateLimitError, sendWhatsAppButtons, sendWhatsAppTypingIndicator } from './api';
 import { WHATSAPP_GRAPH_API_URL } from './constants';
 
 vi.mock('axios', async (importOriginal) => {
@@ -29,6 +29,34 @@ describe('sendWhatsAppTypingIndicator()', () => {
   it('should swallow errors', async () => {
     vi.mocked(axios.post).mockRejectedValueOnce(apiError(100));
     await expect(sendWhatsAppTypingIndicator('wamid.in')).resolves.toBeUndefined();
+  });
+});
+
+describe('sendWhatsAppButtons()', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    env.PHONE_NUMBER_ID = '123';
+  });
+
+  it('should send an interactive message with reply buttons', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { messages: [{ id: 'wamid.out' }] } });
+    await sendWhatsAppButtons('972', 'יש עוד 2 סטיקרים.', [{ id: 'more:abc:6', title: 'עוד' }]);
+    expect(axios.post).toHaveBeenCalledWith(
+      `${WHATSAPP_GRAPH_API_URL}/123/messages`,
+      {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: '972',
+        type: 'interactive',
+        interactive: { type: 'button', body: { text: 'יש עוד 2 סטיקרים.' }, action: { buttons: [{ type: 'reply', reply: { id: 'more:abc:6', title: 'עוד' } }] } },
+      },
+      { headers: expect.objectContaining({ 'Content-Type': 'application/json' }) },
+    );
+  });
+
+  it('should swallow errors', async () => {
+    vi.mocked(axios.post).mockRejectedValueOnce(apiError(100));
+    await expect(sendWhatsAppButtons('972', 'hi', [{ id: 'x', title: 'x' }])).resolves.toBeUndefined();
   });
 });
 
