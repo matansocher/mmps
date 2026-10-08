@@ -148,6 +148,7 @@ Tools (weather, reminders, etc.)
 - **Football Updates** - Updates sports data at 12:59 and 23:59
 - **Flight Traffic Alerts** - Hourly at :05, counts airborne aircraft over Israel and Iran (ADS-B via adsb.lol with an adsb.fi fallback, filtered to the Worldly border polygon), and DMs the owner once when traffic drops to 25% or less of the same-hour median of the last 14 days. It sends a second message when traffic is back to at least 50%. Nothing fires during the first 7 days of history or in hours whose typical count is below 8 (`schedulers/flight-traffic-check.ts`, `shared/flight-traffic/`)
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
+- **Email Cleanup** - 12:00 and 20:00. TypeSafe's Jev model (`@services/typesafe`) checks unread inbox emails from the last 24h (up to 50) and moves any it rates as spam/ad with probability > 0.75 to Gmail Trash. Silent unless something was trashed, or every Jev call failed (then a warning DM). Jev calls retry once on 429/529. Needs `TYPESAFE_API_KEY`
 
 ### Memory & Context
 
