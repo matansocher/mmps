@@ -3,6 +3,10 @@ export const STICKERS_WEBHOOK_PATH = '/whatsapp-webhook';
 export const STICKERS_DB_NAME = 'Whatsapp';
 export const STICKERS_COLLECTION = 'stickers';
 export const STICKERS_SEARCHES_COLLECTION = 'searches';
+export const STICKERS_CARS_SEARCH_COUNTS_COLLECTION = 'cars_search_counts';
+
+// TODO: Set to the intentional untagged sticker's MongoDB _id (24 hex characters). Empty disables the special cycle.
+export const CARS_SURPRISE_STICKER_ID = '';
 
 // Meta's per-user pair rate limit allows short bursts but only ~1 msg/6s sustained, so search results go out fast at first, then slow down.
 export const STICKER_BURST_SIZE = 10;

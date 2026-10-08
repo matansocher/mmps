@@ -42,6 +42,10 @@ export async function findStickerBySha(sha256: string): Promise<StickerSummary |
   return getCollection().findOne({ sha256 }, WITHOUT_DATA);
 }
 
+export async function findStickerById(id: ObjectId): Promise<StickerSummary | null> {
+  return getCollection().findOne({ _id: id }, WITHOUT_DATA);
+}
+
 export async function findStickerByMessageId(messageId: string): Promise<StickerSummary | null> {
   return getCollection().findOne({ messageIds: messageId }, WITHOUT_DATA);
 }

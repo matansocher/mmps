@@ -8,6 +8,15 @@ import { fitStickerToLimit } from './sticker-image';
 import { handleIncomingMessage } from './sticker-vault.service';
 import type { StickerSummary } from './types';
 
+const carsConfig = vi.hoisted(() => ({ stickerId: '0123456789abcdef01234567' }));
+
+vi.mock('./constants', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./constants')>()),
+  get CARS_SURPRISE_STICKER_ID() {
+    return carsConfig.stickerId;
+  },
+}));
+
 vi.mock('@core/utils', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@core/utils')>()),
   sleep: vi.fn(async () => undefined),
@@ -28,6 +37,7 @@ vi.mock('./mongo', () => ({
   addStickerTags: vi.fn(async (_id, tags: string[]) => tags),
   createSticker: vi.fn(async () => undefined),
   deleteSticker: vi.fn(async () => undefined),
+  findStickerById: vi.fn(async () => null),
   findStickerByMessageId: vi.fn(async () => null),
   findStickerBySha: vi.fn(async () => null),
   getStickerData: vi.fn(async () => Buffer.from('webp')),
@@ -35,6 +45,7 @@ vi.mock('./mongo', () => ({
   getTopSearchWords: vi.fn(async () => []),
   getTopStickerTags: vi.fn(async () => []),
   markStickerReceived: vi.fn(async () => undefined),
+  nextCarsSearchCount: vi.fn(async () => 1),
   recordSearchEvent: vi.fn(async () => undefined),
   removeStickerTags: vi.fn(async () => []),
   replaceStickerData: vi.fn(async () => undefined),
@@ -64,7 +75,10 @@ const sticker = (overrides: Partial<StickerSummary> = {}): StickerSummary => ({
 const text = (body: string, contextId?: string) => handleIncomingMessage({ kind: 'text', from: FROM, id: 'wamid.text', text: body, ...(contextId && { contextId }) });
 
 describe('handleIncomingMessage()', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    carsConfig.stickerId = '0123456789abcdef01234567';
+  });
 
   it('should show the typing indicator for every incoming message', async () => {
     await text('cat');
@@ -352,6 +366,86 @@ describe('handleIncomingMessage()', () => {
       await text('cat');
       expect(uploadWhatsAppMedia).not.toHaveBeenCalled();
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('נסו שוב'));
+    });
+  });
+
+  describe('cars surprise', () => {
+    beforeEach(() => {
+      const counts = new Map<string, number>();
+      vi.mocked(repo.nextCarsSearchCount).mockImplementation(async (phone) => {
+        const count = (counts.get(phone) ?? 0) + 1;
+        counts.set(phone, count);
+        return count;
+      });
+    });
+
+    it('should repeat regular, regular, surprise for each three searches and record the actual sticker', async () => {
+      const regular = sticker({ tags: ['מכוניות'], mediaId: 'media.regular', mediaUploadedAt: new Date() });
+      const surprise = sticker({ _id: new ObjectId(carsConfig.stickerId), mediaId: 'media.surprise', mediaUploadedAt: new Date() });
+      vi.mocked(repo.searchStickers).mockResolvedValue([regular]);
+      vi.mocked(repo.findStickerById).mockResolvedValue(surprise);
+
+      for (let i = 0; i < 6; i++) await text(' מכוניות ');
+
+      expect(vi.mocked(sendWhatsAppSticker).mock.calls.map(([, mediaId]) => mediaId)).toEqual(['media.regular', 'media.regular', 'media.surprise', 'media.regular', 'media.regular', 'media.surprise']);
+      expect(repo.searchStickers).toHaveBeenCalledTimes(4);
+      expect(repo.findStickerById).toHaveBeenCalledWith(surprise._id);
+      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedCount: 1, sentStickerIds: [surprise._id] }));
+      expect(repo.addStickerTags).not.toHaveBeenCalled();
+    });
+
+    it('should keep separate counts per sender', async () => {
+      await text('מכוניות');
+      await text('מכוניות');
+      await handleIncomingMessage({ kind: 'text', from: '972511111111', id: 'wamid.other', text: 'מכוניות' });
+      expect(repo.findStickerById).not.toHaveBeenCalled();
+      await text('מכוניות');
+      expect(repo.findStickerById).toHaveBeenCalledTimes(1);
+    });
+
+    it('should select the surprise once for three overlapping searches', async () => {
+      const regular = sticker({ mediaId: 'media.regular', mediaUploadedAt: new Date() });
+      const surprise = sticker({ mediaId: 'media.surprise', mediaUploadedAt: new Date() });
+      vi.mocked(repo.searchStickers).mockResolvedValue([regular]);
+      vi.mocked(repo.findStickerById).mockResolvedValue(surprise);
+      await Promise.all([text('מכוניות'), text('מכוניות'), text('מכוניות')]);
+      expect(vi.mocked(sendWhatsAppSticker).mock.calls.filter(([, mediaId]) => mediaId === 'media.surprise')).toHaveLength(1);
+      expect(vi.mocked(sendWhatsAppSticker).mock.calls.filter(([, mediaId]) => mediaId === 'media.regular')).toHaveLength(2);
+    });
+
+    it('should exclude other searches and quote-reply tag edits from the count', async () => {
+      await text('מכוניות');
+      await text('חתול');
+      await text('מכוניות אדומות');
+      await text('מכוניות!');
+      vi.mocked(repo.findStickerByMessageId).mockResolvedValueOnce(sticker());
+      await text('מכוניות', 'wamid.in');
+      await text('מכוניות');
+      expect(repo.nextCarsSearchCount).toHaveBeenCalledTimes(2);
+      expect(repo.findStickerById).not.toHaveBeenCalled();
+      await text('מכוניות');
+      expect(repo.findStickerById).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(['', 'REPLACE_WITH_STICKER_ID'])('should keep normal searches while the sticker id is "%s"', async (id) => {
+      carsConfig.stickerId = id;
+      for (let i = 0; i < 3; i++) await text('מכוניות');
+      expect(repo.nextCarsSearchCount).not.toHaveBeenCalled();
+      expect(repo.findStickerById).not.toHaveBeenCalled();
+      expect(repo.searchStickers).toHaveBeenCalledTimes(3);
+    });
+
+    it('should use normal results if the configured sticker has been deleted', async () => {
+      vi.mocked(repo.findStickerById).mockResolvedValueOnce(null);
+      for (let i = 0; i < 3; i++) await text('מכוניות');
+      expect(repo.findStickerById).toHaveBeenCalledTimes(1);
+      expect(repo.searchStickers).toHaveBeenCalledTimes(3);
+    });
+
+    afterEach(() => {
+      vi.mocked(repo.searchStickers).mockResolvedValue([]);
+      vi.mocked(repo.findStickerById).mockResolvedValue(null);
+      vi.mocked(repo.nextCarsSearchCount).mockResolvedValue(1);
     });
   });
 

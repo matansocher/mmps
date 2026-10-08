@@ -54,6 +54,21 @@ WhatsApp only delivers stickers up to 512×512 and 100 KB (static) or 500 KB (an
 
 In a quote-reply, a word with a leading or trailing `-` (`-לילה` or `לילה-`) removes that tag; every other word is added. The text is split on whitespace first so the `-` is seen, then each word is normalized (lowercased, split into letters, digits, dots and emojis). A dot is part of the word wherever it appears, so `ת.ז`, `3.5` and even `.` on its own are tags, and `שלום.` is a different tag from `שלום`. A geresh or gershayim inside a word keeps it whole (`ג׳ורג׳`, `עו״ד`, `צה״ל`), and the plain `'` and `"` that phone keyboards type are stored as `׳` and `״`, so `ג'ורג'` and `ג׳ורג׳` are the same tag. Emojis work as tags too: each emoji is its own word (`😂😂🔥` gives `😂` and `🔥`), skin tones and ZWJ sequences stay whole (`👍🏽`, `👨‍👩‍👧`), and `❤` matches `❤️`. After any change the bot replies "עודכן ✅" with the updated tag list. Tags are matched on whole words.
 
+### Special “מכוניות” cycle
+
+An exact plain-text `מכוניות` search (surrounding whitespace ignored) has a repeating per-sender cycle: regular tagged results twice, then one specific untagged sticker instead. Other searches and quote-reply tag edits do not advance the cycle. Counts are incremented atomically in `Whatsapp.cars_search_counts`, keyed by phone number, and survive restarts. Search metrics record the sticker actually selected.
+
+The cycle is disabled until `CARS_SURPRISE_STICKER_ID` in `src/features/stickers/constants.ts` is filled with the sticker's MongoDB `_id` as a 24-character hex string. To finish setup, connect to the bot's MongoDB using `MONGO_DB_URL` and inspect the intentional untagged sticker:
+
+```javascript
+db.getSiblingDB('Whatsapp').stickers.find(
+  { $or: [{ tags: { $size: 0 } }, { tags: { $exists: false } }] },
+  { data: 0, messageIds: 0, ownerPhone: 0 },
+);
+```
+
+Confirm the intended sticker and copy its `_id` into the constant, then deploy. Keep its tags empty. Do not choose an arbitrary result if more than one untagged sticker appears. Empty or invalid IDs leave regular searches unchanged and do not advance the counter. If the configured sticker is later deleted, the third search falls back to regular results.
+
 ### Timing logs
 
 Every handled message logs one line with how long each step took, e.g. `Timing for text wamid.X: search=12ms sendCached=410ms recordId=8ms total=430ms sinceSent≈1500ms`. `sinceSent` compares Meta's message timestamp to now, so it includes webhook delivery delay (and Heroku cold start). A sticker's first send shows `getData`, `upload`, `setMedia` and `send` instead of `sendCached`, which is usually the slow path. Use it to find the bottleneck when replies feel slow.
