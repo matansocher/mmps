@@ -10,7 +10,6 @@ import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
-import { initEarth } from '@features/earth';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { initMindloop } from '@features/mindloop';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
@@ -66,13 +65,6 @@ async function main() {
   } catch (err) {
     failedComponents.push('mindloop');
     logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
-  }
-
-  try {
-    await initEarth(app);
-  } catch (err) {
-    failedComponents.push('earth');
-    logger.error(`Failed to init earth app: ${getErrorMessage(err)}`);
   }
 
   try {

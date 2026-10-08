@@ -1,7 +1,8 @@
 import { MMPS_BASE_URL } from '@core/config';
 import type { TelegramBotConfig } from '@services/telegram';
 
-export const GLOBE_APP_URL = `${MMPS_BASE_URL}/earth`;
+export const GLOBE_APP_PATH = '/earth';
+export const GLOBE_APP_URL = `${MMPS_BASE_URL}${GLOBE_APP_PATH}`;
 export const GLOBE_BUTTON_TEXT = '🌍 גלובוס';
 
 export const BOT_CONFIG: TelegramBotConfig = {
