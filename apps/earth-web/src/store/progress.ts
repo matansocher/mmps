@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { applyRound, EMPTY_PROGRESS, isProgress, localDay, type Progress, type RoundOutcome, type RoundResult } from '../game/progression';
+import { trackRoundFinished } from '../lib/analytics';
 import { readJson, writeJson } from '../lib/storage';
 
 const KEY = 'progress';
@@ -20,6 +21,7 @@ export function recordRound(round: RoundResult, continentOf: (code: string) => s
   current = outcome.progress;
   writeJson(KEY, current);
   listeners.forEach((listener) => listener());
+  trackRoundFinished(round);
   return outcome;
 }
 

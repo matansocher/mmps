@@ -14,6 +14,7 @@ import { flyToView, HOME_VIEW, nudge, resetNorth, zoomBy } from './globe/camera'
 import type { EarthEngine } from './globe/engine';
 import { useHeading } from './hooks/useHeading';
 import { useKeyboard } from './hooks/useKeyboard';
+import { trackRoundStarted } from './lib/analytics';
 import { useSoundEnabled } from './store/sound';
 
 function Game({ engine, mode, onChangeMode }: { readonly engine: EarthEngine; readonly mode: GameMode; readonly onChangeMode: () => void }) {
@@ -52,6 +53,7 @@ export function EarthUi({ engine }: { readonly engine: EarthEngine }) {
     (next: GameMode) => {
       layer.resetColors();
       setMode(next);
+      trackRoundStarted(next);
     },
     [layer],
   );

@@ -50,5 +50,8 @@ export default defineConfig({
   server: {
     port: 5373,
     strictPort: true,
+    proxy: {
+      '/api/worldly': 'http://localhost:3000',
+    },
   },
 });
