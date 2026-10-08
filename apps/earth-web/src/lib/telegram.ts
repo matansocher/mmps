@@ -1,4 +1,5 @@
 type TelegramWebApp = {
+  initData?: string;
   ready?: () => void;
   expand?: () => void;
   disableVerticalSwipes?: () => void;
@@ -8,8 +9,13 @@ type TelegramWebApp = {
 
 const APP_BACKGROUND = '#070b14';
 
+const telegramWebApp = (): TelegramWebApp | undefined => (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp;
+
+// Signed Telegram user data; empty when the page is opened outside Telegram.
+export const telegramInitData = (): string => telegramWebApp()?.initData ?? '';
+
 export function initializeTelegram(): void {
-  const tg = (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp;
+  const tg = telegramWebApp();
   if (!tg) return;
   tg.ready?.();
   tg.expand?.();

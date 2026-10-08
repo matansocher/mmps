@@ -23,7 +23,7 @@ The design is neutral, with no theme: a dark panel and one blue accent colour. T
 
 ## Progression
 
-All progress lives in `localStorage` on the device; there is no account and nothing is sent to the server.
+All progress lives in `localStorage` on the device; there is no account. The only thing sent to the server is play analytics: app opened, round started (mode) and round finished (mode + score). The Worldly bot forwards these to the notifier, like its other analytics events. Nothing is sent outside Telegram unless a dev user is set (`?devUser=` or `earth:dev-user` in localStorage).
 
 - **XP:** every point earns XP (Classic and Continent sprint 100, Daily challenge 150, Name it 80, Continent cleanup 40). A perfect round adds 500, and each newly found country adds 50.
 - **Levels:** 10 levels. Level 2 needs 1,500 XP, then 5,000, 12,000, 25,000, 40,000, 60,000, 85,000, 115,000 and 150,000 for level 10.
@@ -37,7 +37,8 @@ All progress lives in `localStorage` on the device; there is no account and noth
 | --- | --- | --- |
 | Web app | `apps/earth-web` | Vite + React 19 + Tailwind 4 + CesiumJS. Globe rendering in `src/globe/`. Mode logic (`modes.ts`, `quiz.ts`, `name-it.ts`, `cleanup.ts`) and progression (`progression.ts`: XP, levels, found countries, achievements, daily seed) and point-in-country lookup in `src/game/` (pure, unit-tested). One React component per mode in `src/games/`. |
 | Data | `apps/earth-web/public/data/countries.json` | Country polygons generated from the Worldly bot's `src/features/worldly/assets/countries.json`. |
-| Backend | `src/features/worldly/worldly.init.ts` | The Worldly bot serves the built SPA at `/earth/*` (same pattern as Learner). No API routes. |
+| Backend | `src/features/worldly/worldly.init.ts` | The Worldly bot serves the built SPA at `/earth/*` (same pattern as Learner). |
+| Analytics API | `src/features/worldly/api/` | `POST /api/worldly/globe/events`, verified with Telegram initData, forwards `GLOBE_*` events to the notifier. |
 | Telegram | `apps/earth-web/src/lib/telegram.ts` | Opened as a mini app from the Worldly bot (`/globe`, `/start`, menu button). Calls `ready()`/`expand()`, disables vertical swipes so dragging the globe doesn't close the app, and matches the header/background colors. Works the same outside Telegram. |
 
 Cesium draws the countries as one batched polygon primitive with per-country colors, plus one border polyline primitive. The globe has no imagery layer, so no tiles are downloaded. Clicks are resolved in the browser by ray-casting the clicked lon/lat against the country polygons.
