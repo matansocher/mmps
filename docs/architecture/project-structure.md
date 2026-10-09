@@ -158,6 +158,7 @@ services/github/
 | `igdb` | IGDB game data (Twitch auth) |
 | `imgur` | Image upload |
 | `ims` | Israel Meteorological Service |
+| `metacritic` | Game critic/user scores via Metacritic's undocumented web backend (no key) |
 | `notifier` | Cross-bot notifier (`NOTIFIER_TELEGRAM_BOT_TOKEN`) |
 | `openai` | OpenAI API helpers (not usage-metered) |
 | `playstation-store` | PlayStation Store prices |

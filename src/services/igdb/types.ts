@@ -46,3 +46,40 @@ export type TwitchTokenResponse = {
   readonly access_token: string;
   readonly expires_in: number;
 };
+
+export type IgdbRatedGame = {
+  readonly id: number;
+  readonly name: string;
+  readonly url: string | null;
+  readonly summary: string | null;
+  readonly releaseDate: string | null; // Format: "YYYY-MM-DD"
+  readonly genres: readonly string[];
+  readonly platforms: readonly string[];
+  readonly developers: readonly string[];
+  readonly publishers: readonly string[];
+  readonly criticRating: number | null; // 0-100, aggregated from external critics
+  readonly criticRatingCount: number | null;
+  readonly userRating: number | null; // 0-100, IGDB users
+  readonly userRatingCount: number | null;
+};
+
+export type IgdbInvolvedCompanyResponse = {
+  readonly developer?: boolean;
+  readonly publisher?: boolean;
+  readonly company?: { readonly name?: string };
+};
+
+export type IgdbRatedGameResponse = {
+  readonly id: number;
+  readonly name: string;
+  readonly url?: string;
+  readonly summary?: string;
+  readonly first_release_date?: number; // unix seconds
+  readonly genres?: readonly { readonly name?: string }[];
+  readonly platforms?: readonly { readonly name?: string }[];
+  readonly aggregated_rating?: number;
+  readonly aggregated_rating_count?: number;
+  readonly rating?: number;
+  readonly rating_count?: number;
+  readonly involved_companies?: readonly IgdbInvolvedCompanyResponse[];
+};

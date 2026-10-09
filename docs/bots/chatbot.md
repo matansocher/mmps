@@ -26,6 +26,7 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 - 🐙 **GitHub** - Repository and code interaction
 - 📊 **Google Sheets** - Spreadsheet operations
 - 🔍 **Web Search** - Search the internet
+- 🎮 **Game Scores** - Metacritic score, user score and details for a game, with fuzzy name matching and suggestions (IGDB fallback)
 - ✅ **Todo Lists** - Task management
 - And 13+ more tools
 
