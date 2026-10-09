@@ -36,6 +36,7 @@ const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>>
   meetups: ['list', 'suggest'],
   game_price_watcher: ['list'],
   game_releases: ['list', 'search'],
+  game_scores: true,
   hotel_watcher: ['list'],
 };
 
