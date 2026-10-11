@@ -1,5 +1,7 @@
 import type { GameMode } from './modes';
 
+export { dailyNumber, dailyRandom } from '../../../../src/shared/worldly/logic-puzzle';
+
 export type ModeKind = GameMode['kind'];
 
 export type Progress = {
@@ -42,7 +44,7 @@ export const EMPTY_PROGRESS: Progress = { miles: 0, rounds: 0, stamps: {}, achie
 
 export const LEVELS: readonly Level[] = [0, 1_500, 5_000, 12_000, 25_000, 40_000, 60_000, 85_000, 115_000, 150_000].map((xp, i) => ({ level: i + 1, xp }));
 
-export const XP_PER_POINT: Readonly<Record<ModeKind, number>> = { classic: 100, continent: 100, daily: 150, 'name-it': 80, cleanup: 40 };
+export const XP_PER_POINT: Readonly<Record<ModeKind, number>> = { classic: 100, continent: 100, daily: 150, 'name-it': 80, cleanup: 40, logic: 50 };
 export const PERFECT_BONUS = 500;
 export const NEW_COUNTRY_BONUS = 50;
 const DAILY_HISTORY = 60;
@@ -82,24 +84,6 @@ export function previousDay(day: string): string {
 // The streak still counts today if the last daily challenge was today or yesterday.
 export function currentStreak(progress: Progress, today: string): number {
   return progress.lastDaily === today || progress.lastDaily === previousDay(today) ? progress.streak : 0;
-}
-
-// Deterministic per-day random, so everyone gets the same daily challenge.
-export function dailyRandom(day: string): () => number {
-  let seed = 2166136261;
-  for (const char of day) seed = Math.imul(seed ^ char.charCodeAt(0), 16777619);
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// Daily challenge number, counted from launch.
-export function dailyNumber(day: string): number {
-  const [y, m, d] = day.split('-').map(Number);
-  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2026, 0, 1)) / 86_400_000) + 1;
 }
 
 export function xpFor(round: RoundResult): number {

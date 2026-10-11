@@ -6,7 +6,7 @@ import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
 import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
-import { generateStatisticsMessage } from './utils';
+import { generateStatisticsMessage, getLogicTeaser } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, GLOBE_APP_URL, GLOBE_BUTTON_TEXT, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
@@ -19,7 +19,7 @@ export class WorldlyController {
   ) {}
 
   init(): void {
-    const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, GLOBE, ACTIONS } = BOT_CONFIG.commands;
+    const { START, FIRE_MODE, RANDOM, MAP, US_MAP, FLAG, CAPITAL, GLOBE, LOGIC, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.command(FIRE_MODE.command.replace('/', ''), (ctx) => this.fireModeHandler(ctx));
@@ -29,6 +29,7 @@ export class WorldlyController {
     this.bot.command(FLAG.command.replace('/', ''), (ctx) => this.flagHandler(ctx));
     this.bot.command(CAPITAL.command.replace('/', ''), (ctx) => this.capitalHandler(ctx));
     this.bot.command(GLOBE.command.replace('/', ''), (ctx) => this.globeHandler(ctx));
+    this.bot.command(LOGIC.command.replace('/', ''), (ctx) => this.logicHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
     this.bot.catch((err) => this.logger.error(`${getErrorMessage(err)}`));
@@ -59,6 +60,18 @@ export class WorldlyController {
     const keyboard = new InlineKeyboard().webApp(GLOBE_BUTTON_TEXT, GLOBE_APP_URL);
     await ctx.reply('סובבו את הגלובוס ומצאו את המדינה 🌍👇', { reply_markup: keyboard });
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.GLOBE }, userDetails);
+  }
+
+  private async logicHandler(ctx: Context): Promise<void> {
+    const { userDetails } = getMessageData(ctx);
+    try {
+      const { text, keyboard } = await getLogicTeaser();
+      await ctx.reply(text, { reply_markup: keyboard });
+      notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LOGIC }, userDetails);
+    } catch (err) {
+      this.logger.error(`${this.logicHandler.name} - error - ${getErrorMessage(err)}`);
+      await ctx.reply('סליחה, לא הצלחתי להכין את חידת היום 😔');
+    }
   }
 
   async fireModeHandler(ctx: Context): Promise<void> {
