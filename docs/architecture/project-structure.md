@@ -7,7 +7,7 @@ Detailed breakdown of the MMPS directory structure.
 ```
 mmps/
 ├── src/                    # Source code
-├── apps/                   # npm workspaces — Vite mini-apps (savings-web, mindloop-web, earth-web)
+├── apps/                   # npm workspaces — Vite mini-apps (savings-web, earth-web, learner-web, zika-web)
 ├── docs/                   # VitePress documentation
 ├── dist/                   # Compiled JavaScript (generated)
 ├── coverage/               # Test coverage reports (generated)
@@ -40,7 +40,7 @@ src/
 │   │   └── ...
 │   └── index.ts           # Barrel export
 │
-├── features/              # Bot implementations (6 bots + savings & mindloop web apps)
+├── features/              # Bot implementations (6 bots + web features)
 │   ├── chatbot/           # AI-powered assistant bot
 │   │   ├── agent/         # AI agent configuration
 │   │   ├── schedulers/    # Scheduler implementations
@@ -54,7 +54,6 @@ src/
 │   │
 │   ├── chilli/            # Cat persona bot (Hebrew)
 │   ├── coach/             # Sports bot
-│   ├── mindloop/          # Brain-training mini-app backend (Mongo player API)
 │   ├── savings/           # Shared MongoDB-backed portfolio SPA
 │   ├── wolt/              # Restaurant bot
 │   └── worldly/           # Geography bot
@@ -180,7 +179,7 @@ services/github/
 
 ## Shared Modules
 
-`src/shared/` holds business logic reused across bots: `ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flight-traffic`, `friends`, `game-price-watcher`, `game-releases`, `hotel-watcher`, `map-service`, `meet-friends`, `mindloop`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `telegram-mini-app-auth`, `trainer`, `transfer-tracker`, `wolt`, `worldly`.
+`src/shared/` holds business logic reused across bots: `ai/` (agents, tools, usage, utils), `calendar-events`, `coach`, `cooker`, `flight-traffic`, `friends`, `game-price-watcher`, `game-releases`, `hotel-watcher`, `map-service`, `meet-friends`, `polymarket-follower`, `reminders`, `social-follower`, `sports`, `spotify-follower`, `telegram-mini-app-auth`, `trainer`, `transfer-tracker`, `wolt`, `worldly`.
 
 ## AI Tools Structure
 

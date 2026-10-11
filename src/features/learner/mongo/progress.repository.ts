@@ -37,7 +37,7 @@ function mergeStates(a: Record<string, LearnerBiteState>, b: Record<string, Lear
 
 /**
  * Non-destructive merge of a client snapshot. Runs as a revision-guarded
- * compare-and-swap with bounded retries, mirroring the mindloop pattern.
+ * compare-and-swap with bounded retries.
  */
 export async function mergeSync(telegramUserId: number, data: LearnerSyncData): Promise<LearnerProgressDocument> {
   const collection = getCollection();
