@@ -14,6 +14,7 @@ export type Bite = {
   readonly minutes: number;
   readonly isReference: boolean;
   readonly html: string;
+  readonly section?: string;
 };
 
 export type QuizQuestion = {

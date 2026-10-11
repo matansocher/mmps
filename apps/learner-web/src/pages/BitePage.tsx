@@ -6,6 +6,7 @@ import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { useProgress } from '../hooks/useProgress';
 import { useReadingProgress } from '../hooks/useReadingProgress';
 import { GUIDES, bitesByGuide, getBite } from '../lib/bites';
+import { celebrateLesson } from '../lib/celebrate';
 import { hasQuiz } from '../lib/quizzes';
 import { hasScenario } from '../lib/scenarios';
 import { summarize } from '../lib/scheduler';
@@ -56,10 +57,11 @@ export function BitePage() {
           ← {backLabel}
         </Link>
       </div>
-      <div className="bite-meta" style={{ marginBottom: 6 }}>
+      <div className="reader-meta">
         <span className={`chip ${bite.guide === 'system-design' ? 'guide-sd' : 'guide-ai'}`}>
           <AppIcon name={bite.guide} size={15} /> {guide.label}
         </span>
+        {bite.section ? <span className="chip">{bite.section}</span> : null}
         <span className="chip">{bite.minutes} min read</span>
       </div>
       <h1 className="reader-title">{bite.title}</h1>
@@ -97,13 +99,14 @@ export function BitePage() {
             onClick={() => {
               rateBite(bite.id, 'got_it');
               setShowMastery(true);
+              celebrateLesson();
             }}
           >
             <AppIcon name="check" size={19} /> {state?.rating === 'got_it' ? 'Marked as learned' : 'I learned this material'}
           </button>
           {showMastery ? (
             <div className="mastery-moment" role="status">
-              <span className="mastery-icon">
+              <span className="mastery-icon reward-pop">
                 <AppIcon name="complete" size={26} />
               </span>
               <div>

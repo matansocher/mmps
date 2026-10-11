@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
 import { useProgress } from '../hooks/useProgress';
 import { getBite } from '../lib/bites';
+import { celebrateCorrect, celebrateLesson, feedbackWrong } from '../lib/celebrate';
 import { quizzesForBite } from '../lib/quizzes';
 
 export function QuizPage() {
@@ -21,6 +22,11 @@ export function QuizPage() {
   const [attempt, setAttempt] = useState(0);
 
   const q = questions[index];
+  const passedQuiz = done && correctCount / questions.length >= 0.7;
+
+  useEffect(() => {
+    if (passedQuiz) celebrateLesson();
+  }, [passedQuiz]);
 
   // Shuffle option order per question so the correct answer isn't guessable from
   // its position or length. Reshuffled on each attempt (retry) and each question.
@@ -51,10 +57,15 @@ export function QuizPage() {
 
   const answered = selected !== null;
 
-  function choose(originalIndex: number) {
+  function choose(originalIndex: number, target: HTMLElement) {
     if (answered) return;
     setSelected(originalIndex);
-    if (originalIndex === q.answerIndex) setCorrectCount((c) => c + 1);
+    if (originalIndex === q.answerIndex) {
+      setCorrectCount((c) => c + 1);
+      celebrateCorrect(target);
+    } else {
+      feedbackWrong();
+    }
   }
 
   function next() {
@@ -73,7 +84,7 @@ export function QuizPage() {
     const passed = pct >= 70;
     return (
       <div className="quiz-result">
-        <div className={`big quiz-result-icon ${passed ? 'passed' : ''}`}>
+        <div className={`big quiz-result-icon ${passed ? 'passed reward-pop' : ''}`}>
           <AppIcon name={passed ? 'target' : 'book'} />
         </div>
         <div className="score">
@@ -133,7 +144,7 @@ export function QuizPage() {
           if (answered && originalIndex === q.answerIndex) cls += ' correct';
           else if (answered && originalIndex === selected) cls += ' wrong';
           return (
-            <button key={originalIndex} type="button" className={cls} disabled={answered} onClick={() => choose(originalIndex)}>
+            <button key={originalIndex} type="button" className={cls} disabled={answered} onClick={(event) => choose(originalIndex, event.currentTarget)}>
               {text}
             </button>
           );

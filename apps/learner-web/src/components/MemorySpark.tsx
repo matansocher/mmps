@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProgress } from '../hooks/useProgress';
 import { getBite } from '../lib/bites';
+import { celebrateCorrect, feedbackWrong } from '../lib/celebrate';
 import { quizzesForBite } from '../lib/quizzes';
 import { selectMemorySparkBite, selectMemorySparkQuestionIndex } from '../lib/selection';
 import { AppIcon } from './AppIcon';
@@ -23,7 +24,9 @@ export function MemorySpark({ now }: MemorySparkProps) {
     return (
       <div className="journey-card memory-spark empty-spark">
         <div className="journey-card-heading">
-          <span className="journey-number">2</span>
+          <span className="journey-number spark-badge">
+            <AppIcon name="brain" size={18} />
+          </span>
           <div>
             <h2>Memory Spark</h2>
             <p>Your one-question recall check</p>
@@ -38,10 +41,19 @@ export function MemorySpark({ now }: MemorySparkProps) {
   }
 
   const answered = selected !== null;
+
+  function choose(index: number, target: HTMLElement) {
+    setSelected(index);
+    if (index === question.answerIndex) celebrateCorrect(target);
+    else feedbackWrong();
+  }
+
   return (
     <section className="journey-card memory-spark" aria-labelledby="memory-spark-title">
       <div className="journey-card-heading">
-        <span className="journey-number">2</span>
+        <span className="journey-number spark-badge">
+          <AppIcon name="brain" size={18} />
+        </span>
         <div>
           <h2 id="memory-spark-title">Memory Spark</h2>
           <p>Recall from {bite.title}</p>
@@ -54,7 +66,7 @@ export function MemorySpark({ now }: MemorySparkProps) {
           const isCorrect = index === question.answerIndex;
           const className = answered && isCorrect ? 'spark-option correct' : answered && isSelected ? 'spark-option wrong' : 'spark-option';
           return (
-            <button key={option} type="button" className={className} disabled={answered} onClick={() => setSelected(index)}>
+            <button key={option} type="button" className={className} disabled={answered} onClick={(event) => choose(index, event.currentTarget)}>
               {option}
             </button>
           );
@@ -63,7 +75,7 @@ export function MemorySpark({ now }: MemorySparkProps) {
       {answered ? (
         <div className={`spark-feedback ${selected === question.answerIndex ? '' : 'miss'}`} role="status">
           <strong>{selected === question.answerIndex ? 'You remembered it.' : 'Good retrieval practice.'}</strong> {question.explanation}
-          <Link to={`/bite/${encodeURIComponent(bite.id)}`} state={{ from: '/' }}>
+          <Link to={`/bite/${encodeURIComponent(bite.id)}`} state={{ from: '/spark' }}>
             Refresh this bite
           </Link>
         </div>

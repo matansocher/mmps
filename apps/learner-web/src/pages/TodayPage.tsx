@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
-import { BiteCard } from '../components/BiteCard';
-import { MemorySpark } from '../components/MemorySpark';
 import { useProgress } from '../hooks/useProgress';
-import { CURRICULUM, GUIDES, bitesByGuide, getBite } from '../lib/bites';
-import { biteStatus, summarize } from '../lib/scheduler';
-import { getTodayPlanBites, selectReviewQueue } from '../lib/selection';
+import { GUIDES, bitesByGuide } from '../lib/bites';
+import { summarize } from '../lib/scheduler';
+import { selectMemorySparkBite } from '../lib/selection';
 import type { GuideId } from '../lib/types';
 
 const GUIDE_ORDER: ReadonlyArray<GuideId> = ['system-design', 'ai-engineering'];
@@ -14,17 +12,16 @@ const GUIDE_ORDER: ReadonlyArray<GuideId> = ['system-design', 'ai-engineering'];
 export function TodayPage() {
   const { progress, remote } = useProgress();
   const now = useMemo(() => new Date(), []);
-  const todayIds = useMemo(() => getTodayPlanBites(progress, now), [progress, now]);
-  const reviewIds = useMemo(() => selectReviewQueue(progress, now), [progress, now]);
-  const summary = useMemo(() => summarize(progress, CURRICULUM, now), [progress, now]);
-  const pct = summary.total ? Math.round((summary.mastered / summary.total) * 100) : 0;
+  const sparkReady = useMemo(() => Boolean(selectMemorySparkBite(progress, now)), [progress, now]);
   const courses = useMemo(
     () =>
       GUIDE_ORDER.map((guide) => {
         const ids = bitesByGuide(guide).map((bite) => bite.id);
-        const courseSummary = summarize(progress, ids, now);
-        const coursePct = courseSummary.total ? Math.round((courseSummary.mastered / courseSummary.total) * 100) : 0;
-        return { guide, meta: GUIDES[guide], summary: courseSummary, pct: coursePct };
+        const summary = summarize(progress, ids, now);
+        const pct = summary.total ? Math.round((summary.mastered / summary.total) * 100) : 0;
+        const started = summary.total - summary.notStarted;
+        const startedPct = summary.total ? Math.round((started / summary.total) * 100) : 0;
+        return { guide, meta: GUIDES[guide], summary, pct, startedPct };
       }),
     [progress, now],
   );
@@ -33,109 +30,74 @@ export function TodayPage() {
     <div>
       {!remote ? <div className="banner local">Studying locally — open inside Telegram to sync your progress across devices.</div> : null}
 
-      <div className="today-hero">
-        <span className="eyebrow">Your daily learning journey</span>
-        <h1>
-          <AppIcon name="today" /> Learn something. Recall it. Finish strong.
-        </h1>
-        <p>A focused sequence built from your curriculum and review schedule.</p>
-        <Link className="btn primary browse-cta" to="/map">
-          <AppIcon name="map" size={19} /> Explore your knowledge map
-        </Link>
-      </div>
-
-      <div className="progress-wrap" aria-label={`${pct}% of all courses mastered`}>
-        <div className="ring" style={{ ['--p' as string]: pct }}>
-          <span>{pct}%</span>
-        </div>
-        <div className="progress-stats">
-          <span className="stat mastered">
-            <b>{summary.mastered}</b>
-            <span>Mastered</span>
-          </span>
-          <span className="stat learning">
-            <b>{summary.learning}</b>
-            <span>Learning</span>
-          </span>
-          <span className="stat due">
-            <b>{summary.due}</b>
-            <span>Due</span>
-          </span>
-          <span className="stat">
-            <b>{summary.notStarted}</b>
-            <span>New</span>
-          </span>
-        </div>
-      </div>
-
-      <div className="daily-journey">
-        <section className="journey-card" aria-labelledby="learn-step-title">
-          <div className="journey-card-heading">
-            <span className="journey-number">1</span>
-            <div>
-              <h2 id="learn-step-title">Learn</h2>
-              <p>{todayIds.length ? `${todayIds.length} short bite${todayIds.length > 1 ? 's' : ''} selected for today` : 'Today’s planned learning is complete'}</p>
-            </div>
-          </div>
-          {todayIds.length ? (
-            todayIds.map((id) => {
-              const bite = getBite(id);
-              return bite ? <BiteCard key={id} bite={bite} status={biteStatus(progress.states[id], now)} from="/" /> : null;
-            })
-          ) : (
-            <div className="journey-complete">
-              <AppIcon name="complete" size={24} />
-              <span>You finished today&apos;s planned bites.</span>
-            </div>
-          )}
-        </section>
-
-        <MemorySpark now={now} />
-
-        <section className="journey-card journey-finish" aria-labelledby="finish-step-title">
-          <div className="journey-card-heading">
-            <span className="journey-number">3</span>
-            <div>
-              <h2 id="finish-step-title">Finish</h2>
-              <p>{todayIds.length === 0 ? 'Journey complete — keep exploring if you have time.' : 'Complete your bites and Memory Spark to close the loop.'}</p>
-            </div>
-          </div>
-          <div className="finish-actions">
-            {reviewIds.length > 0 ? (
-              <Link className="btn" to="/review">
-                <AppIcon name="review" size={18} /> Review {reviewIds.length} due
-              </Link>
-            ) : null}
-            <Link className="btn" to="/browse">
-              <AppIcon name="browse" size={18} /> Browse all bites
-            </Link>
-          </div>
-        </section>
-      </div>
-
       <div className="course-head">
-        <h2>Your courses</h2>
-        <p>Track each curriculum or open the map to see how every topic connects.</p>
+        <h1>Your courses</h1>
+        <p>Pick up where you left off.</p>
       </div>
       <div className="course-cards">
         {courses.map((course) => (
-          <Link key={course.guide} className="course-card" to="/map">
-            <div className="course-info">
+          <Link key={course.guide} className={`course-card ${course.guide === 'system-design' ? 'course-sd' : 'course-ai'}`} to={`/map?guide=${course.guide}`}>
+            <div className="course-top">
               <span className="course-title">
                 <span className="course-icon">
                   <AppIcon name={course.guide} />
                 </span>
                 {course.meta.label}
               </span>
-              <span className="course-sub">
-                {course.summary.mastered}/{course.summary.total} lessons mastered
+              <div className="ring small" style={{ ['--p' as string]: course.pct }} aria-label={`${course.pct}% mastered`}>
+                <span>{course.pct}%</span>
+              </div>
+            </div>
+            <div className="course-bar" aria-hidden>
+              <span className="course-bar-started" style={{ width: `${course.startedPct}%` }} />
+              <span className="course-bar-mastered" style={{ width: `${course.pct}%` }} />
+            </div>
+            <span className="course-sub">
+              {course.summary.mastered}/{course.summary.total} lessons mastered
+            </span>
+            <div className="course-stats">
+              <span className="stat learning">
+                <b>{course.summary.learning}</b> learning
+              </span>
+              <span className="stat due">
+                <b>{course.summary.due}</b> due
+              </span>
+              <span className="stat">
+                <b>{course.summary.notStarted}</b> new
               </span>
             </div>
-            <div className="ring small" style={{ ['--p' as string]: course.pct }}>
-              <span>{course.pct}%</span>
-            </div>
+            <span className="course-continue">
+              {course.summary.notStarted === course.summary.total ? 'Start course' : 'Continue'} <span aria-hidden>→</span>
+            </span>
           </Link>
         ))}
+      </div>
+
+      <div className="home-actions">
+        <Link className="home-action primary-action" to="/map">
+          <span className="home-action-icon">
+            <AppIcon name="map" size={22} />
+          </span>
+          <span className="home-action-text">
+            <b>Explore your knowledge map</b>
+            <span>See every topic and continue learning</span>
+          </span>
+          <span className="home-action-arrow" aria-hidden>
+            →
+          </span>
+        </Link>
+        <Link className={`home-action spark-action ${sparkReady ? '' : 'idle'}`} to="/spark">
+          <span className="home-action-icon">
+            <AppIcon name="brain" size={22} />
+          </span>
+          <span className="home-action-text">
+            <b>Memory Spark</b>
+            <span>{sparkReady ? 'One quick recall question from what you read' : 'Unlocks after you read your first bite'}</span>
+          </span>
+          <span className="home-action-arrow" aria-hidden>
+            →
+          </span>
+        </Link>
       </div>
     </div>
   );
