@@ -34,3 +34,19 @@ export function writeJson(key: string, value: unknown, storage?: Storage): boole
 }
 
 export const isArray = (value: unknown): value is unknown[] => Array.isArray(value);
+
+// Keys (without the storage prefix) that start with `prefix`.
+export function listKeys(prefix: string, storage?: Storage): string[] {
+  const store = getStorage(storage);
+  if (!store) return [];
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < store.length; i++) {
+      const key = store.key(i);
+      if (key?.startsWith(PREFIX + prefix)) keys.push(key.slice(PREFIX.length));
+    }
+    return keys;
+  } catch {
+    return [];
+  }
+}

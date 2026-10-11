@@ -1,9 +1,8 @@
 import { type GameMode, modeTitle } from '../game/modes';
 import type { RoundResult } from '../game/progression';
-import { telegramInitData } from './telegram';
+import { authHeaders } from './auth';
 
-// Fire-and-forget play events for the Worldly bot's notifier. Only sent with a Telegram
-// identity (or a ?devUser= id in local dev); a plain browser visit sends nothing.
+// Fire-and-forget play events for the Worldly bot's notifier.
 
 type GlobeEvent =
   | { readonly event: 'opened' }
@@ -11,24 +10,6 @@ type GlobeEvent =
   | { readonly event: 'round_finished'; readonly mode: string; readonly score: number; readonly outOf: number };
 
 let currentMode = '';
-
-function devUserId(): string | null {
-  if (import.meta.env.PROD) return null;
-  try {
-    const fromQuery = new URLSearchParams(window.location.search).get('devUser');
-    if (fromQuery) localStorage.setItem('earth:dev-user', fromQuery);
-    return fromQuery ?? localStorage.getItem('earth:dev-user');
-  } catch {
-    return null;
-  }
-}
-
-function authHeaders(): Record<string, string> | null {
-  const initData = telegramInitData();
-  if (initData) return { 'X-Telegram-Init-Data': initData };
-  const dev = devUserId();
-  return dev ? { 'X-Worldly-Dev-User': dev } : null;
-}
 
 function send(event: GlobeEvent): void {
   const headers = authHeaders();

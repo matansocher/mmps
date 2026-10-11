@@ -23,7 +23,7 @@ The design is neutral, with no theme: a dark panel and one blue accent colour. T
 
 ## Progression
 
-All progress lives in `localStorage` on the device; there is no account. The only thing sent to the server is play analytics: app opened, round started (mode) and round finished (mode + score). The Worldly bot forwards these to the notifier, like its other analytics events. Nothing is sent outside Telegram unless a dev user is set (`?devUser=` or `earth:dev-user` in localStorage).
+Progress (miles, rounds, stamps, achievements, daily streak) and best scores are cached in `localStorage` and synced per Telegram user to the `GlobeProgress` collection in the `Worldly` DB through `POST /api/worldly/globe/progress/sync`. The app syncs on open and after each round. The server merges the two copies without losing progress: it keeps the max of each counter and the union of achievements. That way, progress carries over between Telegram on the phone and on the desktop. The app also sends play analytics (app opened, round started, round finished), which the Worldly bot forwards to the notifier. Outside Telegram nothing is sent unless a dev user is set (`?devUser=` or `earth:dev-user` in localStorage).
 
 - **XP:** every point earns XP (Classic and Continent sprint 100, Daily challenge 150, Name it 80, Continent cleanup 40). A perfect round adds 500, and each newly found country adds 50.
 - **Levels:** 10 levels. Level 2 needs 1,500 XP, then 5,000, 12,000, 25,000, 40,000, 60,000, 85,000, 115,000 and 150,000 for level 10.
