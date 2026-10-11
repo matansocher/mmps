@@ -33,7 +33,6 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 
 Plus bot-less web features:
 - **Savings** — a password-protected shared portfolio rebalancer (`apps/savings-web`) backed by MongoDB and served at `/savings/*`.
-- **Mindloop** — an original brain-training mini-app (`apps/mindloop-web`) with 13 games and Mongo-backed player progress, served at `/mindloop/*`.
 
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
@@ -64,7 +63,6 @@ npm run docs:dev           # VitePress docs locally
 # Mini-app workspaces
 npm run dev:chatbot-web
 npm run dev:savings-web
-npm run dev:mindloop-web
 ```
 
 ### For AI agents (Claude Code, Copilot, Cursor, …)

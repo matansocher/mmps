@@ -149,7 +149,6 @@ Token env var for each bot: `{ID}_TELEGRAM_BOT_TOKEN`.
 | Feature | Served at | Docs |
 |---|---|---|
 | Savings | `/savings/*`, `/api/savings/*` | [savings](docs/bots/savings.md) |
-| Mindloop | `/mindloop/*`, `/api/mindloop/*` | [mindloop](docs/bots/mindloop.md) |
 | Zika | `/zika/*` | [zika](docs/bots/zika.md) |
 | Stickers (WhatsApp) | `GET/POST /whatsapp-webhook` | [stickers](docs/bots/stickers.md) |
 | Portfolio | `POST /portfolio/contact` | — |

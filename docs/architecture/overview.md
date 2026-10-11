@@ -108,7 +108,7 @@ const initBot = async (config: { id: string }, init: () => Promise<void>): Promi
 await initBot(chatbotConfig, () => initChatbot(app));
 ```
 
-The web features (`initStickers`, `initSavings`, `initMindloop`, `initZika`) boot regardless of `LOCAL_ACTIVE_BOT_ID`, each in its own try/catch.
+The web features (`initStickers`, `initSavings`, `initZika`) boot regardless of `LOCAL_ACTIVE_BOT_ID`, each in its own try/catch.
 
 ## HTTP Surface
 
@@ -119,7 +119,6 @@ An Express server runs alongside the bots:
 | `GET /` | Health check (`{ success: true }`) |
 | `/api-docs` | Swagger UI (`registerSwaggerRoutes`) |
 | `/savings/*`, `/api/savings/*` | [Savings](/bots/savings) SPA and API |
-| `/mindloop/*`, `/api/mindloop/*` | [Mindloop](/bots/mindloop) SPA and player API |
 | `/earth/*` | [Earth](/bots/earth) SPA (no API), served by `initWorldly` |
 | `/zika/*` | [Zika](/bots/zika) static showcase |
 | `/learner/*`, `/api/learner/*` | Learner bot mini-app and progress API |
