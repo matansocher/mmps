@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { QuizCard } from '../components/QuizCard';
 import { RoundSummary } from '../components/RoundSummary';
 import { Feedback, useFeedback } from '../components/Feedback';
 import { bestScoreKey, type Continent, CONTINENT_VIEWS, modeTitle, questionPool } from '../game/modes';
 import { dailyRandom } from '../game/progression';
 import { answer, createQuiz, currentTarget, lastAnswer, next, type QuizState, ROUND_SIZE, score, skip } from '../game/quiz';
-import { flyToView, HOME_VIEW } from '../globe/camera';
+import { currentView, flyToView, HOME_VIEW } from '../globe/camera';
 import { COLORS } from '../globe/colors';
 import { useBestScore } from '../hooks/useBestScore';
 import { useGlobePointer } from '../hooks/useGlobePointer';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useRoundOutcome } from '../store/progress';
+import type { CameraView } from '../types';
 import { useContinentOf } from './continent';
 import { focusCountry } from './focus';
 import type { GameProps } from './types';
@@ -26,6 +27,7 @@ export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMod
   const [quiz, setQuiz] = useState<QuizState>(newQuiz);
   const [review, setReview] = useState<string | null>(null);
   const [newBest, setNewBest] = useState(false);
+  const returnView = useRef<CameraView | null>(null);
   const { best, record } = useBestScore(bestScoreKey(mode));
   const { marks, show } = useFeedback();
   const continentOf = useContinentOf(engine);
@@ -69,8 +71,17 @@ export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMod
       const timer = window.setTimeout(() => setQuiz(next), AUTO_ADVANCE_MS);
       return () => window.clearTimeout(timer);
     }
+    returnView.current ??= currentView(viewer);
     focusCountry(engine, last.target);
-  }, [quiz, engine]);
+  }, [quiz, engine, viewer]);
+
+  // After a miss zoomed in on the answer, Next returns to where the player was looking.
+  useEffect(() => {
+    if (quiz.phase === 'answered') return;
+    const view = returnView.current;
+    returnView.current = null;
+    if (view && quiz.phase === 'asking') void flyToView(viewer, view, 1.2);
+  }, [quiz.phase, viewer]);
 
   useEffect(() => {
     if (quiz.phase === 'finished') setNewBest(record(score(quiz)));
