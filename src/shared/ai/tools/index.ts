@@ -1,5 +1,6 @@
 export { weatherTool } from './weather/weather.tool';
 export { webSearchTool } from './web-search/web-search.tool';
+export { browseUrlTool } from './browse-url';
 export { rainRadarTool } from './rain-radar';
 
 export { earthquakeTool } from './earthquake';

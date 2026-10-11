@@ -10,6 +10,7 @@ import { sleep } from '@core/utils';
 const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>> = {
   weather: true,
   web_search: true,
+  browse_url: true,
   earthquake_monitor: true,
   recipes: true,
   competitions_list: true,
