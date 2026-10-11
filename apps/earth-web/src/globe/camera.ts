@@ -32,6 +32,12 @@ export function setView(viewer: Viewer, view: CameraView): void {
   viewer.scene.requestRender();
 }
 
+export function currentView(viewer: Viewer): CameraView {
+  const { camera } = viewer;
+  const { latitude, longitude, height } = camera.positionCartographic;
+  return { lat: CesiumMath.toDegrees(latitude), lon: CesiumMath.toDegrees(longitude), altitude: height, heading: CesiumMath.toDegrees(camera.heading), pitch: CesiumMath.toDegrees(camera.pitch) };
+}
+
 // Frames an area of `spanKm` across, keeping the current heading.
 export function flyToArea(viewer: Viewer, lat: number, lon: number, spanKm: number): Promise<boolean> {
   const altitude = Math.min(Math.max(spanKm * 1000 * 3, 2_500_000), 14_000_000);
