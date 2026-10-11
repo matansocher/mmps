@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
 import { useProgress } from '../hooks/useProgress';
 import { GUIDES, bitesByGuide } from '../lib/bites';
@@ -17,7 +17,8 @@ const STATUS_LABEL: Record<BiteStatus, string> = {
 export function KnowledgeMapPage() {
   const { progress } = useProgress();
   const now = useMemo(() => new Date(), []);
-  const [active, setActive] = useState<GuideId>('system-design');
+  const [searchParams] = useSearchParams();
+  const [active, setActive] = useState<GuideId>(() => GUIDE_ORDER.find((guide) => guide === searchParams.get('guide')) ?? 'system-design');
 
   return (
     <div>
