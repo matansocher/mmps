@@ -1,3 +1,4 @@
+import type { LogicDifficulty } from '../../../../src/shared/worldly/logic-puzzle';
 import type { CameraView, Country } from '../types';
 import { MIN_QUESTION_AREA_KM2 } from './countries';
 
@@ -10,7 +11,8 @@ export type GameMode =
   | { readonly kind: 'classic' }
   | { readonly kind: 'continent'; readonly continent: Continent }
   | { readonly kind: 'name-it' }
-  | { readonly kind: 'cleanup'; readonly continent: Continent };
+  | { readonly kind: 'cleanup'; readonly continent: Continent }
+  | { readonly kind: 'logic'; readonly day: string; readonly difficulty: LogicDifficulty }; // day format: "YYYY-MM-DD", identifies the puzzle
 
 export const CONTINENT_VIEWS: Record<Continent, CameraView> = {
   Africa: { lat: 2, lon: 20, altitude: 11_000_000, heading: 0, pitch: -90 },
@@ -28,6 +30,7 @@ export function questionPool(countries: readonly Country[], mode: GameMode): Cou
     case 'daily':
     case 'classic':
     case 'name-it':
+    case 'logic':
       return countries.filter(askable);
     case 'continent':
     case 'cleanup':
@@ -39,8 +42,11 @@ export function bestScoreKey(mode: GameMode): string {
   if (mode.kind === 'continent') return `best:continent:${mode.continent}`;
   if (mode.kind === 'cleanup') return `best:cleanup:${mode.continent}`;
   if (mode.kind === 'daily') return `best:daily:${mode.day}`;
+  if (mode.kind === 'logic') return `best:logic:${mode.difficulty}`;
   return `best:${mode.kind}`;
 }
+
+export const LOGIC_DIFFICULTY_LABELS: Record<LogicDifficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
 export function modeTitle(mode: GameMode): string {
   switch (mode.kind) {
@@ -54,5 +60,7 @@ export function modeTitle(mode: GameMode): string {
       return 'Name it';
     case 'cleanup':
       return `${mode.continent} cleanup`;
+    case 'logic':
+      return `Earth Logic · ${LOGIC_DIFFICULTY_LABELS[mode.difficulty]}`;
   }
 }

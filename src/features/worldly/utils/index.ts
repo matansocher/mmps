@@ -3,3 +3,4 @@ export { generateStatisticsMessage } from './generate-special-message';
 export { getCapitalDistractors, getMapStateDistractors, getFlagDistractors, getMapDistractors } from './get-distractors';
 export { getAreaMap } from './get-area-map';
 export { simplifyAreaName } from './simplify-area-name';
+export { getLogicTeaser } from './logic-teaser';

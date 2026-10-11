@@ -18,6 +18,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
     CAPITAL: { command: '/capital', description: '🏛️ עיר בירה 🏛️' },
     US_MAP: { command: '/usmap', description: '🇺🇸 מפת ארצות הברית 🇺🇸' },
     GLOBE: { command: '/globe', description: '🌍 משחק גלובוס 🌍' },
+    LOGIC: { command: '/logic', description: '🧩 חידת היום 🧩' },
     ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
   },
 };
@@ -35,6 +36,8 @@ export const ANALYTIC_EVENT_NAMES = {
   GLOBE_OPENED: 'GLOBE_OPENED',
   GLOBE_ROUND_STARTED: 'GLOBE_ROUND_STARTED',
   GLOBE_ROUND_FINISHED: 'GLOBE_ROUND_FINISHED',
+  LOGIC: 'LOGIC',
+  LOGIC_DAILY: 'LOGIC_DAILY',
   ANSWERED: 'ANSWERED',
   CONTACT: 'CONTACT',
   STATISTICS: 'STATISTICS',

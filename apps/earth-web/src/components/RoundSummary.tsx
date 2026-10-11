@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { levelFor, type RoundOutcome } from '../game/progression';
 import { prefersReducedMotion } from '../lib/motion';
 import { useProgress } from '../store/progress';
@@ -24,6 +24,8 @@ type Props = {
   readonly onPlayAgain?: () => void;
   readonly onChangeMode: () => void;
   readonly onShowCountry: (code: string) => void;
+  readonly children?: ReactNode;
+  readonly actions?: ReactNode;
 };
 
 function useCountUp(target: number, ms = 900): number {
@@ -53,7 +55,7 @@ function Stat({ label, children }: { readonly label: string; readonly children: 
   );
 }
 
-export function RoundSummary({ title, score, outOf, best, newBest, items, byCode, outcome, onPlayAgain, onChangeMode, onShowCountry }: Props) {
+export function RoundSummary({ title, score, outOf, best, newBest, items, byCode, outcome, onPlayAgain, onChangeMode, onShowCountry, children, actions }: Props) {
   const primaryRef = useRef<HTMLButtonElement>(null);
   const progress = useProgress();
   const earned = useCountUp(outcome?.earned ?? 0);
@@ -118,6 +120,8 @@ export function RoundSummary({ title, score, outOf, best, newBest, items, byCode
           )}
         </div>
 
+        {children}
+
         <div className="mt-4 border-t border-[var(--color-rule)] px-3 pt-2 pb-1">
           <ul aria-label="Answers">
             {items.map(({ code, correct, note }, i) => {
@@ -144,6 +148,7 @@ export function RoundSummary({ title, score, outOf, best, newBest, items, byCode
         <button ref={onPlayAgain ? undefined : primaryRef} type="button" className="btn" onClick={onChangeMode}>
           Menu
         </button>
+        {actions}
         {onPlayAgain && (
           <button ref={primaryRef} type="button" className="btn btn-primary" onClick={onPlayAgain}>
             <Icon name="replay" size={18} /> Play again

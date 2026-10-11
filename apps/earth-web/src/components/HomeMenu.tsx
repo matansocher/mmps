@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { CONTINENTS, type Continent, type GameMode, bestScoreKey, questionPool } from '../game/modes';
+import { randomLogicDay } from '../game/logic';
+import { CONTINENTS, type Continent, type GameMode, bestScoreKey, LOGIC_DIFFICULTY_LABELS, questionPool } from '../game/modes';
+import { LOGIC_DIFFICULTIES, LOGIC_MAX_GUESSES } from '../../../../src/shared/worldly/logic-puzzle';
 import { currentStreak, dailyNumber, levelFor, localDay } from '../game/progression';
 import { readBestScore } from '../hooks/useBestScore';
 import { useProgress } from '../store/progress';
@@ -87,6 +89,47 @@ function ContinentGroup({ id, title, detail, open, onToggle, countries, modeFor,
   );
 }
 
+const LOGIC_DIFFICULTY_DETAILS = { easy: 'Famous countries', medium: 'Well-known countries', hard: 'Obscure countries' } as const;
+
+type LogicGroupProps = {
+  readonly open: boolean;
+  readonly onToggle: () => void;
+  readonly onPick: (mode: GameMode) => void;
+};
+
+function LogicGroup({ open, onToggle, onPick }: LogicGroupProps) {
+  return (
+    <div className="rounded-xl bg-[var(--color-tile)]">
+      <button type="button" aria-expanded={open} aria-controls="logic-difficulties" className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-white/10" onClick={onToggle}>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[16px] font-bold">Earth Logic</span>
+          <span className="mt-0.5 block truncate text-[13px] text-white/55">One mystery country, clue by clue · {LOGIC_MAX_GUESSES} guesses</span>
+        </span>
+        <span className="text-[13px] text-white/55">{open ? 'Pick one' : 'Choose'}</span>
+        <Icon name="chevron" size={18} className={`shrink-0 text-white/40 transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
+      </button>
+      {open && (
+        <div id="logic-difficulties" className="grid grid-cols-3 gap-2 px-3 pb-3">
+          {LOGIC_DIFFICULTIES.map((difficulty) => {
+            const best = readBestScore(bestScoreKey({ kind: 'logic', day: '', difficulty }));
+            return (
+              <button
+                key={difficulty}
+                type="button"
+                className="flex flex-col items-start rounded-lg bg-white/5 px-3 py-2 text-left transition-colors hover:bg-white/15"
+                onClick={() => onPick({ kind: 'logic', day: randomLogicDay(), difficulty })}
+              >
+                <span className="text-[15px] font-semibold">{LOGIC_DIFFICULTY_LABELS[difficulty]}</span>
+                <span className="text-[12px] text-white/55 tabular-nums">{best > 0 ? `Best ${best}/${LOGIC_MAX_GUESSES}` : LOGIC_DIFFICULTY_DETAILS[difficulty]}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // The home screen: level/XP header plus every game mode.
 export function HomeMenu({ countries, onPick, onCollection }: Props) {
   const progress = useProgress();
@@ -95,8 +138,8 @@ export function HomeMenu({ countries, onPick, onCollection }: Props) {
   const { level, next, progress: toNext } = levelFor(progress.miles);
   const dailyScore = progress.daily[today];
   const found = Object.keys(progress.stamps).length;
-  const [open, setOpen] = useState<'sprint' | 'cleanup' | null>(null);
-  const toggle = (group: 'sprint' | 'cleanup') => setOpen((current) => (current === group ? null : group));
+  const [open, setOpen] = useState<'logic' | 'sprint' | 'cleanup' | null>(null);
+  const toggle = (group: 'logic' | 'sprint' | 'cleanup') => setOpen((current) => (current === group ? null : group));
 
   return (
     <section
@@ -141,6 +184,7 @@ export function HomeMenu({ countries, onPick, onCollection }: Props) {
         )}
         <ModeRow title="Classic" detail="10 countries, anywhere on Earth" badge={bestLabel({ kind: 'classic' })} onClick={() => onPick({ kind: 'classic' })} />
         <ModeRow title="Name it" detail="Pick the highlighted country from 4 nearby names" badge={bestLabel({ kind: 'name-it' })} onClick={() => onPick({ kind: 'name-it' })} />
+        <LogicGroup open={open === 'logic'} onToggle={() => toggle('logic')} onPick={onPick} />
         <ContinentGroup
           id="sprint-continents"
           title="Continent sprint"

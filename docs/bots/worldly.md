@@ -51,6 +51,7 @@ LOCAL_ACTIVE_BOT_ID=WORLDLY npm run dev
 | `/flag` | Guess a country from a flag |
 | `/capital` | Guess the country by capital |
 | `/globe` | Open the [Earth](./earth.md) globe quiz as a Telegram mini app |
+| `/logic` | Today's [Earth Logic](./earth.md) puzzle: the first clue and a button that opens it in the globe |
 | `/actions` | Manage daily games, statistics, and contact |
 
 The `/start` reply also carries the globe button, which opens the mini app at `${MMPS_BASE_URL}/earth`. The chat menu button stays the commands list. `initWorldly` also serves the `apps/earth-web` build at `/earth/*`, so the globe is only available when the Worldly bot boots (prod, or `LOCAL_ACTIVE_BOT_ID=WORLDLY` locally).
@@ -77,6 +78,7 @@ Collections:
 
 ## Scheduled Tasks
 
+- **Daily Earth Logic teaser** - 09:00 in the project timezone: today's first clue and a button to solve it in the globe, sent to active subscribers
 - **Daily Games** - 12:00, 17:00, and 20:00 in the project timezone for active subscribers
 
 ## Next Steps

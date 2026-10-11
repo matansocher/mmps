@@ -5,10 +5,12 @@ import { Icon } from './components/Icon';
 import { NavControls } from './components/NavControls';
 import { HelpDialog } from './components/Overlays';
 import { bestScoreKey, type GameMode } from './game/modes';
+import { localDay, previousDay } from './game/progression';
 import { COLORS } from './globe/colors';
 import { ClassicGame } from './games/ClassicGame';
 import { CleanupGame } from './games/CleanupGame';
 import { focusCountry } from './games/focus';
+import { LogicGame } from './games/LogicGame';
 import { NameItGame } from './games/NameItGame';
 import { flyToView, HOME_VIEW, nudge, resetNorth, zoomBy } from './globe/camera';
 import type { EarthEngine } from './globe/engine';
@@ -27,16 +29,35 @@ function Game({ engine, mode, onChangeMode }: { readonly engine: EarthEngine; re
       return <NameItGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
     case 'cleanup':
       return <CleanupGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
+    case 'logic':
+      return <LogicGame engine={engine} mode={mode} onChangeMode={onChangeMode} />;
   }
+}
+
+// `?mode=logic&day=YYYY-MM-DD` (the Worldly bot's daily teaser) opens Earth Logic directly.
+// The bot uses Jerusalem time, so a day one off from the player's local day is accepted too.
+function deepLinkMode(): GameMode | null {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') !== 'logic') return null;
+  const today = localDay(new Date());
+  const [y, m, d] = today.split('-').map(Number);
+  const nearby = [previousDay(today), today, localDay(new Date(y, m - 1, d + 1))];
+  const day = params.get('day') ?? '';
+  return { kind: 'logic', day: nearby.includes(day) ? day : today, difficulty: 'medium' };
 }
 
 export function EarthUi({ engine }: { readonly engine: EarthEngine }) {
   const { viewer, layer, countries } = engine;
-  const [mode, setMode] = useState<GameMode | null>(null);
+  const [mode, setMode] = useState<GameMode | null>(deepLinkMode);
   const [help, setHelp] = useState(false);
   const [collection, setCollection] = useState(false);
   const [sound, toggleSound] = useSoundEnabled();
   const heading = useHeading(engine);
+
+  useEffect(() => {
+    const linked = deepLinkMode();
+    if (linked) trackRoundStarted(linked);
+  }, []);
 
   useEffect(() => {
     // The menu sheet covers the bottom 64% on phones; lift the globe into the remaining space.
