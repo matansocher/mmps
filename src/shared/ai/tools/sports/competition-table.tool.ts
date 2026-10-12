@@ -1,16 +1,18 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
+import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { getSportsCompetitionTable } from '@shared/sports';
+import { competitionSchema } from './competition-schema';
 
 const schema = z.object({
-  competitionId: z.number().describe('The ID of the competition to get the table for'),
+  competition: competitionSchema,
 });
 
-async function runner({ competitionId }: z.infer<typeof schema>) {
-  const tableDetails = await getSportsCompetitionTable(competitionId);
+async function runner({ competition }: z.infer<typeof schema>) {
+  const tableDetails = await getSportsCompetitionTable(COMPETITION_IDS_MAP[competition]);
 
   if (!tableDetails?.competitionTable?.length) {
-    return `No table data available for competition ID ${competitionId}.`;
+    return `No table data available for ${competition}.`;
   }
 
   let result = `**${tableDetails.competition.name} - League Table**\n\n`;
