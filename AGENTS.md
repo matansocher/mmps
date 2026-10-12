@@ -10,7 +10,7 @@ This file holds **conventions and workflow only**. Feature behaviour (what each 
 
 - **What this is:** Plain TypeScript (no framework) Node.js 24 app hosting **6 Telegram bots** + an Express HTTP server (Swagger, mini-app SPAs, webhooks). Built on grammY, LangGraph, MongoDB native driver.
 - **Entry point:** `src/index.ts` (not `main.ts`). Bots boot when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches.
-- **Local dev:** `LOCAL_ACTIVE_BOT_ID=<BOT_ID>` (UPPERCASE, e.g. `COACH`) in `.env`, then `npm run dev`.
+- **Local dev:** use `npm run dev` with a unique `PORT` and uppercase `LOCAL_ACTIVE_BOT_ID`; follow [environment setup](docs/guide/environment-setup.md).
 - **Telegram:** always `@services/telegram`. `@services/telegram-grammy` does NOT exist.
 - **AI:** LangGraph agents (`createAgent` from `langchain`), tools via `tool()` + Zod, registered through an `AgentDescriptor`.
 - **DB:** MongoDB by name — `createMongoConnection('Chatbot')`, `getMongoCollection<T>(db, collection)`.
@@ -48,6 +48,17 @@ This file holds **conventions and workflow only**. Feature behaviour (what each 
 ### 5. Never Commit Unless Asked
 
 - Do not `git commit`, `git push`, tag, amend or rewrite history unless the user explicitly asks.
+
+### Local agent runs
+
+- In a fresh session, read [environment setup](docs/guide/environment-setup.md), ensure the checkout includes the Doppler scripts, and run `npm ci` if dependencies are absent.
+- Check `doppler --version`; the human authenticates once with a login scope covering the checkout/worktree parent. Do not initiate interactive login without user involvement.
+- Use the same development configuration as human local runs; do not fetch production credentials.
+- Never print secrets, dump the environment, or copy credential files between checkouts.
+- Use a unique HTTP port per worktree and only one polling instance per playground bot token.
+- If local authentication is missing, report the setup blocker rather than bypassing it with production access.
+- Normal tests and builds must not require real secrets. Live evaluations are explicitly opted in; see [environment setup](docs/guide/environment-setup.md).
+- Do not treat a successful root HTTP response as proof of full startup; check initialization errors and the feature under test.
 
 ### 6. Documentation Policy
 
@@ -328,14 +339,17 @@ export async function createReminder(data: CreateReminderData): Promise<InsertOn
 
 ## Environment Variables
 
-The full list is in `.env.example` — every `env.X` the code reads must be there. Minimum for local dev: `MONGO_DB_URL`, `LOCAL_ACTIVE_BOT_ID`, `OPENAI_API_KEY` and/or `ANTHROPIC_API_KEY`, and the active bot's `*_TELEGRAM_BOT_TOKEN`. `IS_PROD=true` boots everything; `PORT` defaults to 3000. Timezone default: `Asia/Jerusalem` (`DEFAULT_TIMEZONE` in `@core/config`).
+The full list is in `.env.example` — every `env.X` the code reads must be there.
+Machine bootstrap, required development credentials, mode flags, and production
+delivery are documented in [environment setup](docs/guide/environment-setup.md).
 
 ---
 
 ## Common Commands
 
 ```bash
-npm run dev               # tsx watch src/index.ts
+npm run dev               # Doppler dev secrets + tsx watch
+npm run dev:manual        # Explicit manual .env fallback
 npm run build             # tsc + tsc-alias + mini-app builds
 npm start                 # node dist/index.js
 npm test                  # Vitest unit (src/**/*.spec.ts)

@@ -2,14 +2,196 @@
 
 Complete guide to environment variables and configuration.
 
-## Quick Setup
+## Doppler setup (recommended)
 
-Copy the example file and edit with your values:
+Development secrets live in Doppler project `mmps`, config `dev`. Both computers
+and their local AI worktrees use this same config. Production application secrets
+live in `prd` and are delivered through Doppler's Heroku integration.
+
+Install the [official CLI](https://docs.doppler.com/docs/cli) and authenticate once
+on each computer:
+
+```bash
+brew install gnupg
+brew install dopplerhq/cli/doppler
+# Choose a parent covering your checkouts and worktrees.
+# For the current ~/Projects layout:
+doppler login --scope "$HOME/Projects"
+```
+
+Populate `dev` privately with only development-safe credentials. Set
+`IS_PROD=false` and `NODE_ENV=development`; both are required by the local runner.
+Use a development MongoDB/Redis and `PLAYGROUNDS_TELEGRAM_BOT_TOKEN`, not production
+bot or database credentials. Put only the provider keys needed for the features
+you exercise in this config. `.env.example` remains the value-free variable catalog.
+
+From any worktree:
+
+```bash
+PORT=43101 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
+npm run dev:debug
+```
+
+These scripts fetch secrets with explicit project/config flags before launching
+Node, so a fresh worktree needs neither `.env` nor `doppler setup`. The committed
+`doppler.yaml` is only a convenience for manual `doppler setup --no-interactive`.
+The scripts do not write plaintext secret files and disable Doppler fallback
+caching. A missing CLI, unavailable API, or failed authentication stops startup
+instead of silently starting with missing or stale secrets.
+The preload also rejects a Doppler environment other than `dev`, even if its
+mode flags look like development. This prevents an accidentally supplied
+production service token from starting the local app.
+
+### First run on this computer
+
+1. Use a checkout containing these scripts. Install Node 24 and run `npm ci` if
+   dependencies have not been installed.
+2. Create or verify `mmps/dev` in Doppler. Privately import development-safe values
+   from your old local setup, set both mode flags above, and supply the resources
+   required by the selected feature. The web features also initialize independently
+   of bot selection, so account for their database requirements.
+3. Install the CLI and authenticate as shown above. If your directories are not
+   under `~/Projects`, scope the login to their actual common parent instead.
+4. Run `PORT=43101 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev`. Check initialization
+   errors and exercise the selected feature. The root health response alone does
+   not prove that database-backed features or bots initialized.
+
+### Second computer and future worktrees
+
+First obtain the code changes through the normal reviewed Git workflow. A local,
+unpublished branch is not fetchable from another computer. Install Node 24 and the
+CLI, run `npm ci`, and authenticate that computer with your same Doppler account.
+There is no second secret import: `mmps/dev` is shared by both machines.
+
+Each new worktree needs dependencies and its own local controls, but no `.env`
+copy or directory-specific `doppler setup`. Its path must be covered by the
+machine's login/service-token scope. Avoid concurrent polling with the same bot
+token even across the two computers.
+
+### Local controls and precedence
+
+Use shell variables or an ignored `.env.local` for worktree-specific controls:
+
+```dotenv
+PORT=43101
+LOCAL_ACTIVE_BOT_ID=CHATBOT
+```
+
+The CLI preserves existing shell values only for `PORT` and `LOCAL_ACTIVE_BOT_ID`.
+The local preload fills missing values from `.env.local` before application imports;
+it does not overwrite injected variables. Do not put shared secrets in this file.
+Normal Doppler runs never load `.env`.
+
+Keep `PORT` and `LOCAL_ACTIVE_BOT_ID` out of the shared config when you want
+`.env.local` to select them. Shell values win for these two keys; other injected
+keys win over the file.
+
+Each worktree needs a different HTTP port. For concurrent debuggers:
+
+```bash
+doppler run --project mmps --config dev \
+  --preserve-env=PORT,LOCAL_ACTIVE_BOT_ID --no-fallback -- \
+  npx tsx watch --import ./local-env.mjs --inspect=127.0.0.1:9231 src/index.ts
+```
+
+Only one process can poll a given playground Telegram token. Distinct HTTP ports
+do not solve bot-token conflicts; use separate development bots or the mock tests.
+
+### AI sessions and access
+
+AI sessions use the same development config as human runs. For restricted access,
+provision a separate read-only `dev` [service token](https://docs.doppler.com/docs/service-tokens)
+on each computer through your credential mechanism, outside Git and agent transcripts.
+The official CLI supports persisting it at the common worktree-parent scope.
+A service token's config takes precedence over project/config flags.
+
+### Fresh AI-session checklist
+
+- Read this guide; use the default development config, never `prd`.
+- Check `doppler --version` without displaying credentials. If authentication
+  is missing, ask the human to provision access; do not dump local CLI state.
+- Install checkout dependencies if absent and choose an unused HTTP port.
+- Start with `PORT=<unused-port> LOCAL_ACTIVE_BOT_ID=<UPPERCASE_ID> npm run dev`.
+- Inspect initialization errors and verify the specific feature, not just `/`.
+- Stop test-only app processes after validation. Never print secrets, read an
+  existing `.env` into chat, or copy a main checkout's secret files into a worktree.
+
+Directory scoping is not a security boundary. An agent running as your OS user may
+also access your personal Doppler login. Strong separation requires a separate OS
+user or isolated runtime exposing only development access. Never print environment
+dumps or token values to diagnose authentication.
+
+### Other commands
+
+Builds and ordinary tests remain secret-free and do not invoke Doppler.
+For real-provider chatbot evaluations, explicitly opt in:
+
+```bash
+npm run eval:chatbot:dev
+```
+
+Doppler-backed evaluations do not fill missing provider keys from `.env`.
+They enforce the same development environment/mode checks and local-controls
+preload as app startup.
+The existing `eval:chatbot` command retains its manual dotenv setup.
+
+For an approved standalone script requiring development secrets:
+
+```bash
+doppler run --project mmps --config dev --no-fallback -- npx tsx path/to/script.ts
+```
+
+Review a maintenance script's effects before running it. Re-launch the outer
+Doppler command after editing secrets; a source-code reload inside `tsx watch`
+does not fetch updated secrets.
+Some existing maintenance scripts load dotenv themselves: wrapping them with
+Doppler does not disable that loader. Review that path too, especially when a
+checkout contains an old `.env`; do not allow missing development keys to be
+filled with production credentials.
+
+### Production: one-time Heroku connection
+
+In Doppler's dashboard, connect `mmps/prd` to Heroku app `mmps` using the
+[Heroku integration](https://docs.doppler.com/docs/heroku). Import the existing
+application-owned config vars once, review conflicts, and then treat Doppler as
+their source of truth. Set `IS_PROD=true` and `NODE_ENV=production` in `prd`.
+Keep Heroku-assigned `PORT`, reserved metadata, and add-on-managed values owned
+by Heroku. Imported add-on values are not kept updated back into Doppler.
+
+Sync is one-way from Doppler to Heroku. Config changes create a Heroku release
+and restart the application, so verify sync and feature health before revoking
+old provider keys. `npm start`, the telemetry preload, and deployment scripts
+do not fetch from Doppler; existing Heroku values remain usable during a Doppler
+outage. The repository does not enable this account-side integration automatically.
+
+When a value intentionally matches in both configs, use Doppler's save-time
+multi-environment update. Automatic cross-config references require a paid plan.
+Development credentials should normally differ from production.
+
+### Adding or rotating secrets
+
+Edit the intended config in Doppler. For a new variable, update the value-free
+`.env.example` and feature-specific setup documentation. Re-launch local consumers
+to fetch the new value. Production receives it only after the Heroku integration
+is enabled and its sync succeeds. Verify the production release before revoking
+the previous provider credential. Do not manually maintain a second application
+secret copy in Heroku after adopting Doppler as its authority.
+
+## Manual dotenv fallback
+
+For explicitly offline/manual development:
 
 ```bash
 cp .env.example .env
 # Edit .env with your API keys and bot tokens
+npm run dev:manual
+# Or: npm run dev:manual:debug
 ```
+
+The manual commands require `.env`, optionally load `.env.local`, and inject
+configuration before imports. Shell variables win; `.env.local` wins over `.env`.
+Both mode flags must still identify development. `npm start` expects process
+environment variables and does not read dotenv files.
 
 ## Required Variables
 
@@ -22,8 +204,12 @@ MONGO_DB_URL=mongodb://localhost:27017
 # Application Mode
 IS_PROD=false
 
-# At least one bot token
-CHATBOT_TELEGRAM_BOT_TOKEN=<your-token>
+# Environment mode and optional local bot selection
+NODE_ENV=development
+LOCAL_ACTIVE_BOT_ID=CHATBOT
+
+# Playground token for the selected local bot
+PLAYGROUNDS_TELEGRAM_BOT_TOKEN=<your-token>
 ```
 
 ## Optional Variables
@@ -62,6 +248,9 @@ WORLDLY_TELEGRAM_BOT_TOKEN=...
 
 ## Environment Variables by Bot
 
+The per-bot tokens below are production tokens. A selected local bot uses
+`PLAYGROUNDS_TELEGRAM_BOT_TOKEN` instead.
+
 ### Chatbot
 
 ```bash
@@ -96,7 +285,8 @@ WORLDLY_TELEGRAM_BOT_TOKEN=required
 1. Open Telegram and search for [@BotFather](https://t.me/botfather)
 2. Send `/newbot` command
 3. Follow the prompts to create a new bot
-4. Copy the bot token and add it to your `.env` file
+4. Privately save the development bot token as `PLAYGROUNDS_TELEGRAM_BOT_TOKEN` in
+   Doppler `mmps/dev` (or your manual `.env`).
 
 ## MongoDB Setup
 
@@ -118,7 +308,7 @@ MONGO_DB_URL=mongodb://localhost:27017
 1. Create a free account at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
 2. Create a cluster
 3. Get your connection string
-4. Add it to `.env`
+4. Add the development connection string to Doppler `mmps/dev` (or your manual `.env`).
 
 ```bash
 MONGO_DB_URL=mongodb+srv://username:password@cluster.mongodb.net/
@@ -130,13 +320,13 @@ MONGO_DB_URL=mongodb+srv://username:password@cluster.mongodb.net/
 
 1. Visit [platform.openai.com](https://platform.openai.com)
 2. Create an API key
-3. Add to `.env`: `OPENAI_API_KEY=sk-...`
+3. Privately add `OPENAI_API_KEY` to Doppler `mmps/dev` (or your manual `.env`).
 
 ### Anthropic
 
 1. Visit [console.anthropic.com](https://console.anthropic.com)
 2. Create an API key
-3. Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-...`
+3. Privately add `ANTHROPIC_API_KEY` to Doppler `mmps/dev` (or your manual `.env`).
 
 ## .env Example File
 

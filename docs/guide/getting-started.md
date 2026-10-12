@@ -20,34 +20,16 @@ cd mmps
 ### 2. Install Dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the root directory and add your configuration:
-
-```bash
-# Application Mode
-IS_PROD=false
-
-# API Keys
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Database
-MONGO_DB_URL=mongodb://localhost:27017
-
-# Bot Tokens
-CHATBOT_TELEGRAM_BOT_TOKEN=<your-chatbot-token>
-COACH_TELEGRAM_BOT_TOKEN=<your-coach-token>
-# ... other bot tokens
-
-# Optional: Which bot to run in development
-LOCAL_ACTIVE_BOT_ID=CHATBOT
-```
-
-See [Configuration](/guide/environment-setup) for a complete list of variables.
+Follow [Configuration](/guide/environment-setup) to install Doppler, authenticate
+this computer, and populate `mmps/dev` with development-safe credentials.
+The same config works in both computers and all authenticated local worktrees;
+no `.env` copy is required. The guide also documents the explicit manual dotenv
+fallback, mode flags, and Heroku synchronization.
 
 ## Running the Application
 
@@ -60,7 +42,7 @@ npm run dev
 Or run a specific bot:
 
 ```bash
-LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
+PORT=43101 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
 ### Production Mode
@@ -75,7 +57,7 @@ npm start
 ### Debug Mode
 
 ```bash
-npm run start:debug
+npm run dev:debug
 ```
 
 This enables Node.js debugging on port 9229.
@@ -95,7 +77,8 @@ If you get an error about port being in use, check which bot is running in devel
 
 ### MongoDB Connection Error
 
-Ensure MongoDB is running and `MONGO_DB_URL` is correctly configured in your `.env` file.
+Ensure MongoDB is running and `MONGO_DB_URL` is correctly configured in Doppler
+`mmps/dev` (or `.env` when explicitly using `npm run dev:manual`).
 
 ### Missing API Keys
 
