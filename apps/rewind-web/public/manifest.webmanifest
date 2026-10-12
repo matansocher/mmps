@@ -1,0 +1,15 @@
+{
+  "id": "/rewind/",
+  "name": "Rewind — The curious path",
+  "short_name": "Rewind",
+  "description": "Solve the courtyard and vault puzzles. Reopen the first paths through the valley.",
+  "start_url": "/rewind/",
+  "scope": "/rewind/",
+  "display": "standalone",
+  "background_color": "#e2e8df",
+  "theme_color": "#e2e8df",
+  "icons": [
+    { "src": "/rewind/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/rewind/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

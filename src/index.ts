@@ -12,6 +12,7 @@ import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
+import { initRewind } from '@features/rewind';
 import { initSavings } from '@features/savings';
 import { initStickers } from '@features/stickers';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
@@ -64,6 +65,13 @@ async function main() {
   } catch (err) {
     failedComponents.push('zika');
     logger.error(`Failed to init zika app: ${getErrorMessage(err)}`);
+  }
+
+  try {
+    initRewind(app);
+  } catch (err) {
+    failedComponents.push('rewind');
+    logger.error(`Failed to init rewind app: ${getErrorMessage(err)}`);
   }
 
   registerPortfolioApiRoutes(app);

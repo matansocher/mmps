@@ -1,0 +1,50 @@
+export const DIRECTIONS = ['up', 'right', 'down', 'left'] as const;
+export type Direction = (typeof DIRECTIONS)[number];
+export type Concept = 'barrel' | 'switch' | 'key' | 'ice' | 'crumble' | 'bridge' | 'one-way' | 'lever' | 'tunnel' | 'light';
+export type Chapter = {
+  readonly id: number;
+  readonly name: string;
+  readonly concept: Concept;
+  readonly title: string;
+  readonly explanation: string;
+  readonly color: string;
+  readonly terrain: string;
+};
+export type Level = {
+  readonly id: number;
+  readonly chapter: number;
+  readonly introduction?: number;
+  readonly name: string;
+  readonly goal: string;
+  readonly hint: string;
+  readonly map: readonly string[];
+  readonly par: number;
+  readonly difficulty: number;
+};
+export type Board = {
+  readonly width: number;
+  readonly height: number;
+  readonly tiles: readonly string[];
+  readonly start: number;
+  readonly exit: number;
+  readonly initialCrates: readonly number[];
+};
+export type StepAction = { readonly type: 'move'; readonly move: Direction } | { readonly type: 'interact'; readonly position: number };
+export type GameEvent = 'move' | 'push' | 'slide' | 'key' | 'lock' | 'crumble' | 'bridge' | 'lever' | 'tunnel' | 'mirror' | 'complete' | 'blocked';
+export type GameState = {
+  readonly level: Level;
+  readonly board: Board;
+  readonly player: number;
+  readonly crates: readonly number[];
+  readonly keys: readonly string[];
+  readonly collectedKeys: readonly number[];
+  readonly unlockedLocks: readonly number[];
+  readonly collapsed: readonly number[];
+  readonly flippedBridges: readonly number[];
+  readonly flippedMirrors: readonly number[];
+  readonly leverOn: boolean;
+  readonly moves: number;
+  readonly won: boolean;
+  readonly events: readonly GameEvent[];
+  readonly message: string;
+};
