@@ -292,11 +292,15 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 | Nightly summary | 23:00 | Weather + calendar + exercise, phrased as a goodnight message. |
 | Football | 12:59 / 23:59 | Match updates & predictions. |
 | Reminders / events | every 15m | Fires due reminders & upcoming-event alerts. |
-| Earthquake monitor | every N min | USGS polling with lookback window. |
+| Earthquake monitor | every 15m | USGS day-summary feed with a 17-minute lookback and event-ID deduplication. |
 | Rain radar alert | :10 / :40, 07–22 | Checks the IMS hourly forecast for Kfar Saba. If the rain chance in the next 3 hours is above 30%, DMs an animated IMS radar loop of the last hour (`@services/rain-radar`, drawn on IMS's own Hebrew map tiles with the radar bounds taken from ims.gov.il), with the hourly chances in the caption. 3-hour cooldown between alerts. |
 | Polymarket | 16:05 | Daily price updates for subscribed markets. |
 | Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then (optionally) up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Disabled by default; enable with `CHATBOT_VIDEO_DIGEST=true`. Tweets with photos (up to 5 newest) follow as Telegram albums sent by url, same record/claim lifecycle with a link-only fallback. Kill switch: `CHATBOT_IMAGE_DIGEST=false`. |
 | Usage report | Sat 22:30 | Weekly cost/token breakdown DM. |
+
+Earthquake requests within the last 24 hours use USGS's real-time `all_day.geojson` feed, filtering by time and magnitude and applying the requested ordering and limit locally. Older ranges still use the FDSN query API. [USGS recommends summary feeds](https://earthquake.usgs.gov/fdsnws/event/1/) for automated applications because they offer better performance and availability than custom queries. Feeds refresh every minute, so the newest events may not appear immediately. The monitor overlaps polls by two minutes to catch delayed publication, without re-alerting already-seen event IDs.
+
+Both endpoints have a 10-second timeout per attempt and at most two retries (500ms and 1s backoff) for timeouts, connection failures, HTTP 408/429, and 5xx except 501. Permanent errors and malformed responses fail immediately; exhausted retries remain errors, not an empty earthquake list. USGS logs include endpoint, attempt, elapsed time, error code and HTTP status to distinguish transport timeouts from upstream failures. No stale-data fallback is used: a shared USGS outage can still interrupt checks, and outages longer than the monitor's lookback can leave missed alerts. If failures persist, use these logs to assess upstream availability and whether a recovery lookback or a separate provider is needed.
 
 ::: tip Pattern to remember
 **The scheduler and the chat handler share one brain.** A cron job is just another producer of a prompt into `processMessage()` — DRY, and scheduled output looks/behaves like chat output.
