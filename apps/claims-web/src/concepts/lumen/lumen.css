@@ -157,11 +157,33 @@
 .c-lumen .lm-lede { margin-block-start: 24px; max-inline-size: 46ch; color: var(--mute); font-size: clamp(1.0625rem, 0.3vw + 1rem, 1.2rem); }
 .c-lumen .lm-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-block-start: 32px; }
 .c-lumen .lm-assure { display: flex; align-items: center; gap: 10px; margin-block-start: 28px; color: var(--mute); font-size: 0.9375rem; }
+.c-lumen .lm-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 18px; margin: 36px 0 0; padding: 0; list-style: none; border-block-start: 1px solid var(--line-strong); }
+.c-lumen .lm-facts li { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: baseline; padding-block: 14px; border-block-end: 1px solid var(--line); }
+.c-lumen .lm-facts__v { font-size: 1.5rem; font-stretch: 110%; font-weight: 740; line-height: 1; white-space: nowrap; }
+.c-lumen .lm-facts__l { color: var(--mute); font-size: 0.875rem; line-height: 1.45; }
+.c-lumen .lm-facts__src { display: block; inline-size: fit-content; margin-block-start: 4px; color: var(--violet-soft); font-size: 0.8125rem; text-underline-offset: 3px; }
+@media (max-width: 560px) {
+  .c-lumen .lm-facts { grid-template-columns: minmax(0, 1fr); }
+  .c-lumen .lm-facts li { row-gap: 6px; }
+}
+.c-lumen .lm-facts__src:hover { color: var(--ink); }
 .c-lumen .lm-reg { flex: none; inline-size: 18px; block-size: 18px; color: var(--violet); }
 
 @media (min-width: 1320px) {
-  .c-lumen .lm-hero__grid { grid-template-columns: minmax(0, 0.66fr) minmax(0, 1.34fr); gap: 48px; }
+  .c-lumen .lm-hero__grid { grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: 48px; }
   .c-lumen .lm-hero h1 { font-size: clamp(2.6rem, 1.4vw + 1.4rem, 3.25rem); }
+  /* Side by side, the bench must sit level with the copy: a wider, tighter findings panel keeps it short. */
+  .c-lumen .lm-bench .fd-in { grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); }
+  .c-lumen .lm-bench .fd-panel { gap: 10px; padding: 18px 20px; }
+  .c-lumen .lm-bench .fd-phase { padding-top: 8px; }
+  .c-lumen .lm-bench .fd-findings { gap: 0; }
+  .c-lumen .lm-bench .fd-finding { padding: 5px 8px; }
+  .c-lumen .lm-bench .fd-finding__detail { font-size: 13px; line-height: 1.4; }
+  .c-lumen .lm-bench .fd-verdict { gap: 6px; padding: 10px 14px; }
+  .c-lumen .lm-bench .fd-verdict__score { font-size: 26px; }
+  .c-lumen .lm-bench .fd-controls { flex-wrap: nowrap; }
+  .c-lumen .lm-bench .fd-seg button,
+  .c-lumen .lm-bench .fd-replay { min-block-size: 40px; white-space: nowrap; }
 }
 @media (max-width: 520px) {
   .c-lumen .lm-ctas .lm-btn { flex: 1 1 100%; }

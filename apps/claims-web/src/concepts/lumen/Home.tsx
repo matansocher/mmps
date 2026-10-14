@@ -90,6 +90,22 @@ export function Home() {
                 <Reg className="lm-assure__reg" />
                 {t(hero.assurance)}
               </p>
+              <ul className="lm-facts">
+                {[stats[0], stats[3]].map((s) => (
+                  <li key={s.url + s.value.en}>
+                    <bdi className="lm-facts__v">{t(s.value)}</bdi>
+                    <span className="lm-facts__l">
+                      {t(s.label)}
+                      <a className="lm-facts__src" href={s.url} target="_blank" rel="noreferrer">
+                        {s.source}
+                        <span className="lm-ext" aria-hidden="true">
+                          {' '}↗
+                        </span>
+                      </a>
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div className="lm-bench" id="analysis" role="region" aria-label={t(hero.stageLabel)}>
