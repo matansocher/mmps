@@ -26,7 +26,7 @@ Fill in `.env` with at least:
 - `MONGO_DB_URL`
 - `LOCAL_ACTIVE_BOT_ID` — UPPERCASE bot id (`CHATBOT`, `CHILLI`, `COACH`, `WOLT`, `WORLDLY`)
 - the matching `*_TELEGRAM_BOT_TOKEN`
-- one of `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
 
 Then run a single bot:
 

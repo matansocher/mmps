@@ -14,7 +14,7 @@ npm install
 # Configure environment
 cp .env.example .env          # then fill in values you need
 # At minimum: MONGO_DB_URL, LOCAL_ACTIVE_BOT_ID, the bot's *_TELEGRAM_BOT_TOKEN,
-# and one of OPENAI_API_KEY / ANTHROPIC_API_KEY.
+# and OPENAI_API_KEY.
 
 # Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, SECRETARY, WOLT, WORLDLY)
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev

@@ -1,4 +1,3 @@
-import { ChatAnthropic } from '@langchain/anthropic';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
@@ -19,7 +18,7 @@ export type OrchestratorDescriptor = Omit<AgentDescriptor, 'description' | 'tool
 };
 
 export type CreateAgentOptions = {
-  model: ChatAnthropic | ChatOpenAI;
+  model: ChatOpenAI;
   checkpointer?: BaseCheckpointSaver;
   middleware?: AnyAgentMiddleware[];
   toolCallbackOptions?: ToolCallbackOptions;

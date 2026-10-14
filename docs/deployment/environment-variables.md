@@ -26,8 +26,9 @@ CHATBOT_TELEGRAM_BOT_TOKEN=123456789:ABCDefg...
 ### Chatbot
 ```bash
 OPENAI_API_KEY=sk-...              # For ChatGPT
-ANTHROPIC_API_KEY=sk-ant-...       # For Claude
-GITHUB_TOKEN=ghp_...               # GitHub integration
+GITHUB_APP_ID=...                  # GitHub App authentication
+GITHUB_APP_PRIVATE_KEY=...         # GitHub App private key
+GITHUB_APP_INSTALLATION_ID=...     # GitHub App installation ID
 WEATHERAPI_KEY=...                 # Weather data
 
 # Conversation memory tuning (optional; defaults in code)
@@ -59,13 +60,6 @@ WHATSAPP_APP_SECRET=...   # Optional; enables X-Hub-Signature-256 validation
 ```
 
 ## Production Variables
-
-### Google Sheets Logging
-```bash
-SHEETS_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
-SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
-```
 
 ### Observability (Grafana Cloud)
 Ships traces, metrics, and logs to Grafana Cloud via OpenTelemetry. Set only in production (Heroku); leave `OTEL_EXPORTER_OTLP_ENDPOINT` empty to disable locally. Values come from your Grafana Cloud stack's **OpenTelemetry** connection page.

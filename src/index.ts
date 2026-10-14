@@ -24,7 +24,6 @@ dotenv.config();
 axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
 
 async function main() {
-  // await initConsoleOverride();
   const app = express();
   const port = env.PORT || 3000;
   const logger = new Logger('bootstrap');

@@ -34,20 +34,6 @@ CHATBOT_TELEGRAM_BOT_TOKEN=<your-token>
 OPENAI_API_KEY=sk-...
 ```
 
-### Anthropic Integration (Chatbot)
-
-```bash
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-### Google Sheets Logging (Production only)
-
-```bash
-SHEETS_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
-SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
-```
-
 ### Development Configuration
 
 ```bash
@@ -67,8 +53,9 @@ WORLDLY_TELEGRAM_BOT_TOKEN=...
 ```bash
 CHATBOT_TELEGRAM_BOT_TOKEN=required
 OPENAI_API_KEY=required for AI features
-ANTHROPIC_API_KEY=optional, alternative to OpenAI
-GITHUB_TOKEN=optional, for GitHub integration
+GITHUB_APP_ID=optional, for GitHub App authentication
+GITHUB_APP_PRIVATE_KEY=optional, GitHub App private key
+GITHUB_APP_INSTALLATION_ID=optional, GitHub App installation ID
 WEATHERAPI_KEY=optional, for weather features
 ```
 
@@ -131,12 +118,6 @@ MONGO_DB_URL=mongodb+srv://username:password@cluster.mongodb.net/
 1. Visit [platform.openai.com](https://platform.openai.com)
 2. Create an API key
 3. Add to `.env`: `OPENAI_API_KEY=sk-...`
-
-### Anthropic
-
-1. Visit [console.anthropic.com](https://console.anthropic.com)
-2. Create an API key
-3. Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-...`
 
 ## .env Example File
 

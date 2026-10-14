@@ -71,7 +71,7 @@ Docs are **not** part of every change. Each fact has exactly one home:
 ## Tech Stack
 
 - **Plain TypeScript 5.9**, ES2022, **non-strict**; Node.js 24; Express 5; `node-cron`.
-- **AI:** `langchain`, `@langchain/langgraph` (+ `@langchain/langgraph-checkpoint-mongodb`), `@langchain/openai`, `@langchain/anthropic`, `openai`, `@anthropic-ai/sdk`.
+- **AI:** `langchain`, `@langchain/langgraph` (+ `@langchain/langgraph-checkpoint-mongodb`), `@langchain/openai`, `openai`.
 - **Data/bots:** `mongodb` (no ODM), `grammy` (+ `@grammyjs/hydrate`), `telegram` (MTProto client mode).
 - **Utils:** `date-fns` / `date-fns-tz` (default tz `Asia/Jerusalem`), `zod`.
 - **Quality:** Vitest 4, ESLint 9 (flat), Prettier 3 (200 cols, single quotes, trailing commas, **semicolons**).
@@ -328,7 +328,7 @@ export async function createReminder(data: CreateReminderData): Promise<InsertOn
 
 ## Environment Variables
 
-The full list is in `.env.example` — every `env.X` the code reads must be there. Minimum for local dev: `MONGO_DB_URL`, `LOCAL_ACTIVE_BOT_ID`, `OPENAI_API_KEY` and/or `ANTHROPIC_API_KEY`, and the active bot's `*_TELEGRAM_BOT_TOKEN`. `IS_PROD=true` boots everything; `PORT` defaults to 3000. Timezone default: `Asia/Jerusalem` (`DEFAULT_TIMEZONE` in `@core/config`).
+The full list is in `.env.example` — every `env.X` the code reads must be there. Minimum for local dev: `MONGO_DB_URL`, `LOCAL_ACTIVE_BOT_ID`, `OPENAI_API_KEY`, and the active bot's `*_TELEGRAM_BOT_TOKEN`. `IS_PROD=true` boots everything; `PORT` defaults to 3000. Timezone default: `Asia/Jerusalem` (`DEFAULT_TIMEZONE` in `@core/config`).
 
 ---
 

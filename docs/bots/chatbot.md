@@ -24,7 +24,6 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 - ⏰ **Reminders** - Set and manage reminders
 - 📅 **Calendar** - Create, list, update and delete Google Calendar events, and invite guests by email (Google sends them the invite, update and cancellation emails)
 - 🐙 **GitHub** - Repository and code interaction
-- 📊 **Google Sheets** - Spreadsheet operations
 - 🔍 **Web Search** - Search the internet
 - 🌐 **Browse URL** - Open a link and read its main text (no JavaScript or clicking)
 - 🎮 **Game Scores** - Metacritic score, user score and details for a game, with fuzzy name matching and suggestions (IGDB fallback)
@@ -39,16 +38,14 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 # Required
 CHATBOT_TELEGRAM_BOT_TOKEN=your-token
 
-# AI Model (choose one)
+# AI Model
 OPENAI_API_KEY=sk-...           # For ChatGPT
-ANTHROPIC_API_KEY=sk-ant-...    # For Claude (alternative)
 
 # Optional Tools
 GITHUB_APP_ID=123456                 # For GitHub App authentication
 GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----...  # GitHub App private key
 GITHUB_APP_INSTALLATION_ID=456789    # GitHub App installation ID for the repo
 WEATHERAPI_KEY=...              # For weather data
-GOOGLE_SHEETS_CREDENTIALS=...   # For Sheets integration
 GOOGLE_CALENDAR_REFRESH_TOKEN=... # OAuth refresh token (calendar scope, minted with GMAIL_CLIENT_ID/SECRET), needed to invite attendees; without it the calendar falls back to the GOOGLE_CALENDAR_CLIENT_EMAIL/PRIVATE_KEY service account, which can't invite
 ```
 
@@ -78,17 +75,10 @@ export const BOT_CONFIG = {
 
 ### 2. Set Up AI Model
 
-Choose either OpenAI or Anthropic:
-
 **OpenAI:**
 - Visit [platform.openai.com](https://platform.openai.com)
 - Create an API key
 - Add to `.env`: `OPENAI_API_KEY=sk-...`
-
-**Anthropic (Claude):**
-- Visit [console.anthropic.com](https://console.anthropic.com)
-- Create an API key
-- Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-...`
 
 ### 3. Set Up GitHub Integration (Optional)
 
@@ -231,7 +221,7 @@ export const myTool = tool(runner, {
 
 Check:
 - Bot token is correct in `.env`
-- OPENAI_API_KEY or ANTHROPIC_API_KEY is set
+- OPENAI_API_KEY is set
 - MongoDB is running
 - No errors in console logs
 
@@ -254,7 +244,7 @@ If the bot uses too much memory:
 1. **Use faster models** - Use gpt-4-mini for faster responses
 2. **Cache tool results** - Don't call same tool twice
 3. **Bound context** - Summarization keeps thread size in check; tune the trigger/keep thresholds
-4. **Monitor logs** - Use Google Sheets logging in production
+4. **Monitor logs** - Use [Grafana Cloud logging](/deployment/monitoring) in production
 
 ## Next Steps
 
