@@ -34,7 +34,7 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 ### Integration & Tools
 - **MCP SDK** - Model Context Protocol for tool integration
 - **Axios** - HTTP client
-- **Google Cloud** - Google Sheets and other services
+- **Google APIs** - Calendar, Gmail, Maps and Places
 
 ### Code Quality
 - **ESLint 9.x** - Linting with flat config
@@ -242,7 +242,6 @@ Response back to user
 
 - **Development**: `IS_PROD=false`, `LOCAL_ACTIVE_BOT_ID=CHATBOT`
 - **Production**: `IS_PROD=true` (all bots run)
-- **Google Sheets Logging**: Service account credentials for production logging
 
 ## Next Steps
 

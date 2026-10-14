@@ -153,7 +153,6 @@ services/github/
 | `gmail` | Gmail send/list/delete |
 | `google-calendar` | Calendar CRUD |
 | `google-places` | Place search + details (Places API New) |
-| `google-sheets` | Sheets logging (prod) |
 | `igdb` | IGDB game data (Twitch auth) |
 | `imgur` | Image upload |
 | `ims` | Israel Meteorological Service |

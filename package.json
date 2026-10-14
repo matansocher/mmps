@@ -53,11 +53,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.73.0",
     "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@grammyjs/hydrate": "^1.6.0",
     "@grammyjs/runner": "^2.0.3",
-    "@langchain/anthropic": "^1.4.0",
     "@langchain/core": "^1.1.48",
     "@langchain/langgraph": "^1.3.6",
     "@langchain/langgraph-checkpoint-mongodb": "^1.4.0",
