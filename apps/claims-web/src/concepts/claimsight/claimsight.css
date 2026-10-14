@@ -719,3 +719,28 @@
   .c-claimsight .cs-live__dot::after,
   .c-claimsight .cs-row--scoring .cs-bar { animation: none; }
 }
+
+/* Savings model — product-console card, red for leakage, green for money kept */
+.c-claimsight .cs-savings { margin-block-start: 56px; }
+.c-claimsight .cs-savings__head { margin-block-end: 20px; }
+.c-claimsight .cs-savings__head p { margin-block-start: 6px; max-inline-size: 62ch; color: var(--cs-ink-3); }
+.c-claimsight .cs-sm {
+  --sm-ink: var(--cs-ink);
+  --sm-mute: var(--cs-ink-3);
+  --sm-line: var(--cs-line);
+  --sm-grid: var(--cs-line);
+  --sm-surface: var(--cs-surface);
+  --sm-chart-bg: var(--cs-surface);
+  --sm-track: var(--cs-line-2);
+  --sm-thumb: var(--cs-surface);
+  --sm-accent: var(--cs-accent);
+  --sm-paid: var(--cs-ink);
+  --sm-fraud: var(--cs-red);
+  --sm-saved: var(--cs-green);
+  --sm-stopped-fill: var(--cs-green-soft);
+  --sm-radius: var(--cs-r);
+  --sm-num-font: var(--cs-mono-f);
+}
+.c-claimsight .cs-sm .sm-inputs,
+.c-claimsight .cs-sm .sm-wf { box-shadow: inset 0 0 0 1px var(--cs-line-2), var(--cs-shadow); }
+.c-claimsight .cs-savings { scroll-margin-top: 88px; }

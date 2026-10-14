@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ctas, demoForm, faqs, illustrativeMetrics, illustrativeNote, pains, principles, stats, steps } from '../../content/index.ts';
-import { DemoForm, ForensicDemo } from '../../demo/index.ts';
+import { ctas, demoForm, estimator, faqs, illustrativeMetrics, illustrativeNote, pains, principles, stats, steps } from '../../content/index.ts';
+import { DemoForm, ForensicDemo, SavingsModel } from '../../demo/index.ts';
 import { bi, useLang } from '../../lib/i18n.tsx';
 import { LangToggle } from '../../lib/LangToggle.tsx';
 import { useFonts } from '../../lib/useFonts.ts';
@@ -194,6 +194,13 @@ export function Home() {
                 </li>
               ))}
             </ul>
+            <div className="lm-savings" id="savings">
+              <div className="lm-savings__head">
+                <h3>{t(estimator.title)}</h3>
+                <p>{t(estimator.intro)}</p>
+              </div>
+              <SavingsModel className="lm-sm" />
+            </div>
             <div className="lm-pilot">
               <h3>{t(proof.pilotTitle)}</h3>
               <ul className="lm-pilot__list">

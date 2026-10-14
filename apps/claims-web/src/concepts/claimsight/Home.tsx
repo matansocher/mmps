@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { checks, ctas, demoForm, faqs, illustrativeMetrics, illustrativeNote, pains, principles, stats, steps, syntheticNote } from '../../content/index.ts';
-import { DemoForm, ForensicDemo } from '../../demo/index.ts';
+import { checks, ctas, demoForm, estimator, faqs, illustrativeMetrics, illustrativeNote, pains, principles, stats, steps, syntheticNote } from '../../content/index.ts';
+import { DemoForm, ForensicDemo, SavingsModel } from '../../demo/index.ts';
 import { bi, useLang } from '../../lib/i18n.tsx';
 import { LangToggle } from '../../lib/LangToggle.tsx';
 import { useFonts } from '../../lib/useFonts.ts';
@@ -14,6 +14,7 @@ const NAV = [
   { href: '#checks', label: bi('Detectors', 'גלאים') },
   { href: '#flow', label: bi('Integration', 'חיבור') },
   { href: '#trust', label: bi('Trust', 'אמון') },
+  { href: '#savings', label: estimator.navLabel },
   { href: '#faq', label: bi('FAQ', 'שאלות') },
 ];
 
@@ -359,6 +360,14 @@ export function Home() {
                 </li>
               ))}
             </ul>
+
+            <div className="cs-savings" id="savings">
+              <div className="cs-savings__head">
+                <h3>{t(estimator.title)}</h3>
+                <p>{t(estimator.intro)}</p>
+              </div>
+              <SavingsModel className="cs-sm" />
+            </div>
 
             <div className="cs-targets">
               <h3>{t(copy.targetsH)}</h3>

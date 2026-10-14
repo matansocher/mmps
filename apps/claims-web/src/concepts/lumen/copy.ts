@@ -8,6 +8,7 @@ export const nav = {
     { href: '#checks', label: bi('What it checks', 'מה נבדק') },
     { href: '#procedure', label: bi('Procedure', 'תהליך') },
     { href: '#trust', label: bi('Trust', 'אמון') },
+    { href: '#savings', label: bi('Savings', 'חיסכון') },
     { href: '#faq', label: bi('FAQ', 'שאלות') },
   ],
 };

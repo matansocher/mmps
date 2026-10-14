@@ -348,6 +348,8 @@ export const demoLabels = {
 
 export const estimator = {
   title: bi('What is fraud costing you?', 'כמה ההונאה עולה לכם?'),
+  intro: bi('Move the sliders to match your book. The chart shows how much fraud leaks through each year, and how much earlier detection keeps.', 'הזיזו את המחוונים לפי התיק שלכם. התרשים מראה כמה הונאה דולפת בכל שנה, וכמה זיהוי מוקדם חוסך.'),
+  navLabel: bi('Savings', 'חיסכון'),
   claimsPerYear: bi('Claims per year', 'תביעות בשנה'),
   avgClaim: bi('Average paid claim', 'תביעה ממוצעת ששולמה'),
   fraudRate: bi('Share that is fraudulent', 'שיעור ההונאה'),
@@ -357,6 +359,14 @@ export const estimator = {
   leakage: bi('Paid to fraud each year', 'משולם להונאה בכל שנה'),
   saved: bi('Potential yearly savings', 'חיסכון שנתי אפשרי'),
   currency: bi('$', '₪'),
+  assumptions: bi('Your numbers', 'הנתונים שלכם'),
+  claimsPaid: bi('Claims paid', 'תביעות ששולמו'),
+  barFraud: bi('Of which fraudulent', 'מתוכן הונאה'),
+  barStopped: bi('Stopped before payout', 'נעצר לפני תשלום'),
+  barNet: bi('Net savings', 'חיסכון נטו'),
+  stillPaid: bi('Fraud still paid after review', 'הונאה שעדיין משולמת אחרי בדיקה'),
+  axisNote: bi('The first bar is shortened (broken axis). The other three share one scale.', 'העמודה הראשונה מקוצרת (ציר שבור). שלוש האחרות באותו קנה מידה.'),
+  chartTitle: bi('Where your claim dollars go', 'לאן הולך כסף התביעות'),
 };
 
 export function estimateSavings(input: { claimsPerYear: number; avgClaim: number; fraudRate: number; catchRate: number }): { leakage: number; saved: number } {

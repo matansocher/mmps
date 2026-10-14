@@ -682,3 +682,27 @@
 .c-lumen[data-lang='he'] * { letter-spacing: 0 !important; }
 .c-lumen[data-lang='he'] .lm-stats__v,
 .c-lumen[data-lang='he'] .lm-pilot__v { unicode-bidi: plaintext; text-align: right; }
+
+/* Savings model — violet-ink lab bench, magenta for fraud, chartreuse for money kept */
+.c-lumen .lm-savings { margin-block-start: clamp(56px, 6vw, 80px); }
+.c-lumen .lm-savings__head { margin-block-end: 28px; }
+.c-lumen .lm-savings__head h3 { font-size: 1.375rem; font-stretch: 108%; }
+.c-lumen .lm-savings__head p { margin-block-start: 10px; max-inline-size: 60ch; color: var(--mute); }
+.c-lumen .lm-sm {
+  --sm-ink: var(--ink);
+  --sm-mute: var(--mute);
+  --sm-line: var(--line);
+  --sm-grid: rgba(185, 168, 255, 0.1);
+  --sm-surface: var(--ground-2);
+  --sm-chart-bg: var(--ground-2);
+  --sm-track: var(--line-strong);
+  --sm-thumb: var(--ground);
+  --sm-accent: var(--violet-soft);
+  --sm-paid: var(--violet);
+  --sm-fraud: #ff4f8b;
+  --sm-saved: var(--lime);
+  --sm-stopped-fill: rgba(216, 255, 62, 0.14);
+  --sm-radius: 4px;
+  --sm-ease: var(--ease);
+  --sm-num-font: var(--mono);
+}

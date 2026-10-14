@@ -1,6 +1,6 @@
 import { bi, type Bi } from './i18n.tsx';
 
-export type ConceptSlug = 'lumen' | 'ledgerline' | 'claimsight';
+export type ConceptSlug = 'lumen' | 'claimsight';
 
 export type Concept = {
   readonly slug: ConceptSlug;
@@ -30,22 +30,8 @@ export const concepts: readonly Concept[] = [
     swatches: ['#120f2e', '#8b6cff', '#d8ff3e'],
   },
   {
-    slug: 'ledgerline',
-    index: 2,
-    name: 'Ledgerline',
-    preview: 'previews/ledgerline.jpg',
-    world: bi('The CFO’s annual report', 'הדוח השנתי של סמנכ״ל הכספים'),
-    idea: bi(
-      'Fraud is a line on the loss ratio. Ledgerline speaks finance: tabular figures, footnoted sources, a savings model you can run with your own numbers.',
-      'הונאה היא שורה ביחס ההפסד. Ledgerline מדבר בשפה של כספים: מספרים בטבלאות, מקורות בהערות שוליים, ומודל חיסכון שאפשר להריץ עם הנתונים שלכם.',
-    ),
-    speaksTo: bi('CFOs, COOs and whoever signs the budget', 'סמנכ״לי כספים ותפעול, ומי שחותם על התקציב'),
-    signature: bi('A live savings model on the first screen', 'מודל חיסכון חי כבר במסך הראשון'),
-    swatches: ['#ffffff', '#0b1f3a', '#0f7b4f'],
-  },
-  {
     slug: 'claimsight',
-    index: 3,
+    index: 2,
     name: 'Claimsight',
     preview: 'previews/claimsight.jpg',
     world: bi('The triage console', 'קונסולת המיון'),
