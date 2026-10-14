@@ -150,6 +150,7 @@ Token env var for each bot: `{ID}_TELEGRAM_BOT_TOKEN`.
 |---|---|---|
 | Savings | `/savings/*`, `/api/savings/*` | [savings](docs/bots/savings.md) |
 | Zika | `/zika/*` | [zika](docs/bots/zika.md) |
+| Claims | `/claims/*` | [claims](docs/bots/claims.md) |
 | Stickers (WhatsApp) | `GET/POST /whatsapp-webhook` | [stickers](docs/bots/stickers.md) |
 | Portfolio | `POST /portfolio/contact` | — |
 
