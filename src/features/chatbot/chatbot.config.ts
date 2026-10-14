@@ -66,6 +66,11 @@ export const CHATBOT_CONFIG = {
     enabled: env.CHATBOT_IMAGE_DIGEST !== 'false',
     maxPostsPerChat: parseInt(env.CHATBOT_IMAGE_DIGEST_MAX_POSTS || '5', 10),
   },
+  emailCleanup: {
+    threshold: 0.75,
+    maxEmails: 50,
+    batchSize: 20,
+  },
 };
 
 // OR'd conditions; each object's properties are AND'd.
