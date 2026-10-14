@@ -14,6 +14,7 @@ MONGO_DB_URL=mongodb+srv://user:pass@cluster.mongodb.net/
 ### Application
 ```bash
 IS_PROD=false  # Set to true in production
+NODE_ENV=development  # Set to production in production
 ```
 
 ### At Least One Bot Token
@@ -83,16 +84,10 @@ The Basic auth header is built in code from `GRAFANA_OTLP_INSTANCE_ID` + `GRAFAN
 
 ## Development
 
-Create `.env` file in root:
-
-```bash
-# .env
-IS_PROD=false
-MONGO_DB_URL=mongodb://localhost:27017
-LOCAL_ACTIVE_BOT_ID=CHATBOT
-CHATBOT_TELEGRAM_BOT_TOKEN=...
-OPENAI_API_KEY=...
-```
+Use Doppler `mmps/dev` for local runs and `mmps/prd` for production application
+values synced to Heroku. Local bot runs use `PLAYGROUNDS_TELEGRAM_BOT_TOKEN`.
+Follow [environment setup](/guide/environment-setup) for the exact machine
+bootstrap, variable precedence, and explicit manual dotenv fallback.
 
 ## Next Steps
 

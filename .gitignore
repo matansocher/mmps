@@ -44,6 +44,9 @@ lerna-debug.log*
 .env.local
 **/.env*
 
+# Doppler local state (credentials must stay outside the repository)
+.doppler/
+
 # temp directory
 .temp
 .tmp
