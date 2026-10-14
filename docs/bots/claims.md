@@ -1,15 +1,14 @@
 # Claims — Fraud Detection Landing Concepts
 
-Claims is a static React showcase of four landing-page directions for an AI product. The product checks the receipts, photos and documents that customers submit with insurance claims and flags those that were edited, reused or invented. The pages are meant for insurance managers. The app lives in `apps/claims-web`, and Express serves it at `/claims/*`. It has no API routes, no database and no bot.
+Claims is a static React showcase of three landing-page directions for an AI product. The product checks the receipts, photos and documents that customers submit with insurance claims and flags those that were edited, reused or invented. The pages are meant for insurance managers. The app lives in `apps/claims-web`, and Express serves it at `/claims/*`. It has no API routes, no database and no bot.
 
 ## What it shows
 
-A cover page at `/claims/` links to four concepts. Each concept has its own product name and visual world:
+A cover page at `/claims/` links to three concepts. Each concept has its own product name and visual world:
 
 | Concept | Path | World |
 | --- | --- | --- |
 | Lumen | `/claims/lumen` | Forensic lab, with a UV lamp that reveals the edits |
-| Verity | `/claims/verity` | Investigator's case file and verdict stamp |
 | Ledgerline | `/claims/ledgerline` | CFO annual report with a live savings model |
 | Claimsight | `/claims/claimsight` | Live claims triage console |
 

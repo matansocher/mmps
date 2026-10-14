@@ -15,7 +15,7 @@ export function ConceptSwitcher({ current }: { current: ConceptSlug }) {
       {open && (
         <div className="cs-switch__panel" id="cs-switch-panel">
           <Link to="/" className="cs-switch__home">
-            {t({ en: '← All four concepts', he: '→ כל ארבעת הקונספטים' })}
+            {t({ en: '← All three concepts', he: '→ כל שלושת הקונספטים' })}
           </Link>
           <ol className="cs-switch__list">
             {concepts.map((c) => (

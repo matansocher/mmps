@@ -7,22 +7,22 @@ import { useFonts } from '../lib/useFonts.ts';
 import './cover.css';
 
 const copy = {
-  meta: bi('Product landing page · 4 directions', 'דף נחיתה למוצר · 4 כיוונים'),
-  title: bi('Four ways to tell insurers we catch the forged receipt.', 'ארבע דרכים לספר למבטחים שאנחנו תופסים את הקבלה המזויפת.'),
+  meta: bi('Product landing page · 3 directions', 'דף נחיתה למוצר · 3 כיוונים'),
+  title: bi('Three ways to tell insurers we catch the forged receipt.', 'שלוש דרכים לספר למבטחים שאנחנו תופסים את הקבלה המזויפת.'),
   lead: bi(
     'The product: AI that examines every receipt, photo and document a customer submits with a claim, and flags what was edited, reused or invented before the insurer pays.',
     'המוצר: בינה מלאכותית שבודקת כל קבלה, תמונה ומסמך שלקוח מגיש עם תביעה, ומסמנת מה נערך, מוחזר או הומצא לפני שחברת הביטוח משלמת.',
   ),
   body: bi(
-    'Each direction has its own name, its own visual world and a different manager in mind. All four tell the same true story and share the same live demo: a doctor’s receipt where $450 became $1,450.',
-    'לכל כיוון יש שם משלו, עולם חזותי משלו ומנהל אחר שהוא פונה אליו. כל הארבעה מספרים את אותו סיפור אמיתי ומשתמשים באותה הדגמה חיה: קבלה מרופא שבה 450 הפכו ל-1,450.',
+    'Each direction has its own name, its own visual world and a different manager in mind. All three tell the same true story and share the same live demo: a doctor’s receipt where $450 became $1,450.',
+    'לכל כיוון יש שם משלו, עולם חזותי משלו ומנהל אחר שהוא פונה אליו. כל השלושה מספרים את אותו סיפור אמיתי ומשתמשים באותה הדגמה חיה: קבלה מרופא שבה 450 הפכו ל-1,450.',
   ),
   listLabel: bi('The directions', 'הכיוונים'),
   option: bi('Option', 'אפשרות'),
   speaksTo: bi('Speaks to', 'פונה אל'),
   signature: bi('Signature moment', 'הרגע המרכזי'),
   open: bi('Open', 'לפתיחת'),
-  sharedTitle: bi('What all four share', 'מה משותף לכל הארבעה'),
+  sharedTitle: bi('What all three share', 'מה משותף לכל השלושה'),
   foot: bi(
     'Internal presentation. Industry figures are real and cited on every page. Product metrics and claims are illustrative and marked as such.',
     'מצגת פנימית. נתוני התעשייה אמיתיים ומצוטטים בכל עמוד. מדדי המוצר והתביעות להמחשה בלבד ומסומנים ככאלה.',

@@ -1,6 +1,6 @@
 import { bi, type Bi } from './i18n.tsx';
 
-export type ConceptSlug = 'lumen' | 'verity' | 'ledgerline' | 'claimsight';
+export type ConceptSlug = 'lumen' | 'ledgerline' | 'claimsight';
 
 export type Concept = {
   readonly slug: ConceptSlug;
@@ -30,22 +30,8 @@ export const concepts: readonly Concept[] = [
     swatches: ['#120f2e', '#8b6cff', '#d8ff3e'],
   },
   {
-    slug: 'verity',
-    index: 2,
-    name: 'Verity',
-    preview: 'previews/verity.jpg',
-    world: bi('The investigator’s case file', 'תיק החקירה'),
-    idea: bi(
-      'Your fraud unit lives in case files: tabs, file numbers, stamps. Verity is built as one, so the page reads like a claim being investigated and stamped, from intake to verdict.',
-      'יחידת ההונאות שלכם חיה בתוך תיקים: לשוניות, מספרי תיק, חותמות. Verity בנוי כתיק כזה, והדף נקרא כמו תביעה שנחקרת ומקבלת חותמת, מהקליטה ועד ההכרעה.',
-    ),
-    speaksTo: bi('SIU leads and claims managers who think in cases', 'ראשי יחידות חקירה ומנהלי תביעות שחושבים בתיקים'),
-    signature: bi('A case file whose verdict stamp lands as you scroll', 'תיק שחותמת ההכרעה שלו ננחתת תוך כדי גלילה'),
-    swatches: ['#dfe5eb', '#14233a', '#c8312b'],
-  },
-  {
     slug: 'ledgerline',
-    index: 3,
+    index: 2,
     name: 'Ledgerline',
     preview: 'previews/ledgerline.jpg',
     world: bi('The CFO’s annual report', 'הדוח השנתי של סמנכ״ל הכספים'),
@@ -59,7 +45,7 @@ export const concepts: readonly Concept[] = [
   },
   {
     slug: 'claimsight',
-    index: 4,
+    index: 3,
     name: 'Claimsight',
     preview: 'previews/claimsight.jpg',
     world: bi('The triage console', 'קונסולת המיון'),

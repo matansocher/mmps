@@ -6,7 +6,6 @@ import { isConceptSlug, type ConceptSlug } from './lib/concepts.ts';
 
 const loaders: Record<ConceptSlug, () => Promise<{ Home: ComponentType }>> = {
   lumen: () => import('./concepts/lumen/index.ts'),
-  verity: () => import('./concepts/verity/index.ts'),
   ledgerline: () => import('./concepts/ledgerline/index.ts'),
   claimsight: () => import('./concepts/claimsight/index.ts'),
 };
