@@ -9,6 +9,7 @@ import { closeRedisConnection } from '@core/services';
 import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
+import { initClaims } from '@features/claims';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
@@ -63,6 +64,13 @@ async function main() {
   } catch (err) {
     failedComponents.push('zika');
     logger.error(`Failed to init zika app: ${getErrorMessage(err)}`);
+  }
+
+  try {
+    initClaims(app);
+  } catch (err) {
+    failedComponents.push('claims');
+    logger.error(`Failed to init claims app: ${getErrorMessage(err)}`);
   }
 
   registerPortfolioApiRoutes(app);
