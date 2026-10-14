@@ -146,7 +146,7 @@ Tools (weather, reminders, etc.)
 - **Daily Summary** - Generates daily summary at 23:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
-- **Email Cleanup** - 12:00 and 20:00. TypeSafe's Jev model (`@services/typesafe`) checks unread inbox emails from the last 24h (up to 50) and moves any it rates as spam/ad with probability > 0.75 to Gmail Trash. Silent unless something was trashed, or every Jev call failed (then a warning DM). Jev calls retry once on 429/529. Needs `TYPESAFE_API_KEY`
+- **Email Cleanup** - 12:00 and 20:00 (Asia/Jerusalem). Checks up to 50 unread inbox emails from the last 24h using OpenAI `gpt-4.1-mini` structured responses, in batches of 20. Sends only Gmail ID, sender, subject, and snippet, treating email fields as untrusted data rather than instructions; response storage is disabled (`store: false`). Moves only `spam` or `advertisement` results with confidence > 0.75 to Gmail Trash; `keep` results stay untouched at any confidence. Confidence is model-assessed, not a calibrated probability. Before any trash action, validates the entire batch schema and requires every input ID exactly once (no missing, duplicate, or unknown IDs). Failed batches remain untouched and later batches still run; Gmail trash calls are limited to 5 at a time. Silent unless something was successfully trashed (then a report with confidence scores), or every classification batch failed (then a warning DM). Uses the existing `OPENAI_API_KEY`; no new credentials.
 
 ### Memory & Context
 
