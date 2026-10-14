@@ -1,6 +1,6 @@
 import { bi, type Bi } from './i18n.tsx';
 
-export type ConceptSlug = 'lumen' | 'verity' | 'ledgerline' | 'claimsight' | 'candor';
+export type ConceptSlug = 'lumen' | 'verity' | 'ledgerline' | 'claimsight';
 
 export type Concept = {
   readonly slug: ConceptSlug;
@@ -70,20 +70,6 @@ export const concepts: readonly Concept[] = [
     speaksTo: bi('Operations leaders who will roll it out to adjusters', 'מנהלי תפעול שיטמיעו את המערכת אצל השמאים'),
     signature: bi('A live claims queue you can click into', 'תור תביעות חי שאפשר להיכנס לכל אחת מהן'),
     swatches: ['#f5f6f8', '#101828', '#2f54eb'],
-  },
-  {
-    slug: 'candor',
-    index: 5,
-    name: 'Candor',
-    preview: 'previews/candor.jpg',
-    world: bi('The honest majority', 'הרוב הישר'),
-    idea: bi(
-      'Most customers tell the truth, and fraud makes all of them wait. Candor leads with that tension: catch the forged receipt and pay everyone else faster.',
-      'רוב הלקוחות אומרים אמת, וההונאה גורמת לכולם לחכות. Candor מוביל עם המתח הזה: לתפוס את הקבלה המזויפת ולשלם לכל השאר מהר יותר.',
-    ),
-    speaksTo: bi('CEOs and customer-experience owners who protect the brand', 'מנכ״לים ומנהלי חוויית לקוח ששומרים על המותג'),
-    signature: bi('Flip the same receipt between honest and altered', 'החלפה של אותה קבלה בין אמיתית למזויפת'),
-    swatches: ['#0f3d2e', '#eef3ec', '#f2c94c'],
   },
 ];
 

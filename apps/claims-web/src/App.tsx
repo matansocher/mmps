@@ -9,7 +9,6 @@ const loaders: Record<ConceptSlug, () => Promise<{ Home: ComponentType }>> = {
   verity: () => import('./concepts/verity/index.ts'),
   ledgerline: () => import('./concepts/ledgerline/index.ts'),
   claimsight: () => import('./concepts/claimsight/index.ts'),
-  candor: () => import('./concepts/candor/index.ts'),
 };
 
 const pages = Object.fromEntries(Object.entries(loaders).map(([slug, load]) => [slug, lazy(async () => ({ default: (await load()).Home }))])) as Record<
