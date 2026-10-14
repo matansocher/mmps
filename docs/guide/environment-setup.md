@@ -78,13 +78,17 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT
 ```
 
 The CLI preserves existing shell values only for `PORT` and `LOCAL_ACTIVE_BOT_ID`.
-The local preload fills missing values from `.env.local` before application imports;
-it does not overwrite injected variables. Do not put shared secrets in this file.
-Normal Doppler runs never load `.env`.
+Before application imports, the local preload reads optional `.env` and
+`.env.local` files with overrides enabled. Precedence is:
+**`.env.local` > `.env` > injected Doppler/shell values**.
+Keys absent from both files retain their injected values.
 
-Keep `PORT` and `LOCAL_ACTIVE_BOT_ID` out of the shared config when you want
-`.env.local` to select them. Shell values win for these two keys; other injected
-keys win over the file.
+For example, put `OPENAI_API_KEY=<local-development-key>` in your ignored `.env`
+and run `npm run dev` normally. That key overrides Doppler without a command-line
+assignment. Keep these files small: remove obsolete overrides so new vault values
+can take effect. Do not copy a complete production `.env` into a worktree.
+File values also override shell assignments; remove the file entry if you want
+a shell assignment to win. Production `npm start` does not load either file.
 
 Each worktree needs a different HTTP port. For concurrent debuggers:
 
@@ -130,7 +134,7 @@ For real-provider chatbot evaluations, explicitly opt in:
 npm run eval:chatbot:dev
 ```
 
-Doppler-backed evaluations do not fill missing provider keys from `.env`.
+Doppler-backed evaluations use the same `.env` and `.env.local` overrides.
 They enforce the same development environment/mode checks and local-controls
 preload as app startup.
 The existing `eval:chatbot` command retains its manual dotenv setup.
@@ -189,7 +193,8 @@ npm run dev:manual
 ```
 
 The manual commands require `.env`, optionally load `.env.local`, and inject
-configuration before imports. Shell variables win; `.env.local` wins over `.env`.
+configuration before imports. The preload gives `.env.local` precedence over
+`.env`, and both files precedence over shell values, just like the Doppler path.
 Both mode flags must still identify development. `npm start` expects process
 environment variables and does not read dotenv files.
 

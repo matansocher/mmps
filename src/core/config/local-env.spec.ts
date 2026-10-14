@@ -45,26 +45,26 @@ describe('local environment preload', () => {
     expect(JSON.parse(result.stdout)).toEqual({ port: '43101' });
   });
 
-  test('loads local controls before static application imports without overwriting injected secrets', () => {
+  test('local files override injected secrets before static application imports', () => {
     const result = runPreload({ '.env.local': 'PORT=43101\nTEST_KEY=local\n' }, { TEST_KEY: 'injected' });
     expect(result.status).toEqual(0);
-    expect(JSON.parse(result.stdout)).toEqual({ port: '43101', key: 'injected' });
+    expect(JSON.parse(result.stdout)).toEqual({ port: '43101', key: 'local' });
   });
 
-  test('does not read stale secret files', () => {
-    const result = runPreload({ '.env': 'TEST_KEY=stale\n' });
+  test('dotenv overrides Doppler values while leaving unspecified values injected', () => {
+    const result = runPreload({ '.env': 'TEST_KEY=override\n' }, { TEST_KEY: 'doppler', PORT: '43101' });
     expect(result.status).toEqual(0);
-    expect(JSON.parse(result.stdout)).toEqual({});
+    expect(JSON.parse(result.stdout)).toEqual({ key: 'override', port: '43101' });
   });
 
-  test('Doppler-backed evaluations do not fill missing keys from a stale dotenv file', () => {
-    const result = runPreload({ '.env': 'TEST_KEY=stale\n' }, { DOPPLER_PROJECT: 'mmps', DOPPLER_ENVIRONMENT: 'dev' }, [
+  test('Doppler-backed evaluations use the same local overrides', () => {
+    const result = runPreload({ '.env': 'TEST_KEY=override\n' }, { DOPPLER_PROJECT: 'mmps', DOPPLER_ENVIRONMENT: 'dev', TEST_KEY: 'doppler' }, [
       resolve('node_modules/tsx/dist/cli.mjs'),
       '--import',
       resolve('test/eval/setup.ts'),
     ]);
     expect(result.status).toEqual(0);
-    expect(JSON.parse(result.stdout)).toEqual({});
+    expect(JSON.parse(result.stdout)).toEqual({ key: 'override' });
   });
 
   test('reports errors reading an existing local dotenv path', () => {
@@ -75,7 +75,7 @@ describe('local environment preload', () => {
   });
 
   test('rejects a production Doppler environment even with development mode flags', () => {
-    const result = runPreload({}, { DOPPLER_PROJECT: 'mmps', DOPPLER_ENVIRONMENT: 'prd' });
+    const result = runPreload({ '.env': 'DOPPLER_ENVIRONMENT=dev\n' }, { DOPPLER_PROJECT: 'mmps', DOPPLER_ENVIRONMENT: 'prd' });
     expect(result.status).not.toEqual(0);
     expect(result.stderr).toContain('Local runs require a Doppler development environment');
     expect(result.stdout).toEqual('');
@@ -94,10 +94,28 @@ describe('local environment preload', () => {
     expect(result.stdout).toEqual('');
   });
 
-  test('manual files load before imports with shell, local-file, then base-file precedence', () => {
+  test('local-file values win over base-file and shell values on the manual path', () => {
     const result = runPreload({ '.env': 'PORT=3000\nTEST_KEY=base\n', '.env.local': 'PORT=43101\nTEST_KEY=local\n' }, { TEST_KEY: 'shell' }, ['--env-file=.env', '--env-file-if-exists=.env.local']);
     expect(result.status).toEqual(0);
-    expect(JSON.parse(result.stdout)).toEqual({ port: '43101', key: 'shell' });
+    expect(JSON.parse(result.stdout)).toEqual({ port: '43101', key: 'local' });
+  });
+
+  test('dotenv wins over shell values without a local file', () => {
+    const result = runPreload({ '.env': 'TEST_KEY=override\n' }, { TEST_KEY: 'shell' });
+    expect(result.status).toEqual(0);
+    expect(JSON.parse(result.stdout)).toEqual({ key: 'override' });
+  });
+
+  test('rejects production mode introduced by local overrides', () => {
+    const result = runPreload({ '.env': 'IS_PROD=true\n' });
+    expect(result.status).not.toEqual(0);
+    expect(result.stderr).toContain('Local development requires');
+  });
+
+  test('reports errors reading the base dotenv path', () => {
+    const result = runPreload({ '.env': null });
+    expect(result.status).not.toEqual(0);
+    expect(result.stderr).toContain('Could not read .env.');
   });
 
   test('manual startup fails when its required dotenv file is missing', () => {
