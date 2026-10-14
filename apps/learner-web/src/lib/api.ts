@@ -1,7 +1,6 @@
 import type { LearnerProgress } from './types';
 
-// Learner backend client. Mirrors the mindloop pattern: verified Telegram initData
-// inside Telegram, a dev-user header in local dev, and "local only" (no network)
+// Learner backend client. Verified Telegram initData inside Telegram, a dev-user header in local dev, and "local only" (no network)
 // when neither identity is available (localStorage is then the source of truth).
 
 type LearnerProgressResponse = { progress: LearnerProgress };

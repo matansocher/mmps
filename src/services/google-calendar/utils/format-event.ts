@@ -29,5 +29,6 @@ export function formatEvent(event: CalendarEvent) {
     location: event.location,
     description: event.description,
     status: event.status,
+    attendees: event.attendees?.map(({ email, responseStatus }) => ({ email, responseStatus })),
   };
 }

@@ -10,12 +10,13 @@ import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
-import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
-import { initMindloop } from '@features/mindloop';
+import { registerPortfolioApiRoutes } from '@features/portfolio';
 import { initSavings } from '@features/savings';
+import { initStickers } from '@features/stickers';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
+import { initZika } from '@features/zika';
 import { stopAllTelegramBots } from '@services/telegram';
 
 dotenv.config();
@@ -23,7 +24,6 @@ dotenv.config();
 axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
 
 async function main() {
-  // await initConsoleOverride();
   const app = express();
   const port = env.PORT || 3000;
   const logger = new Logger('bootstrap');
@@ -32,6 +32,13 @@ async function main() {
   // hop so req.ip reflects the real client for rate limiting, without trusting
   // arbitrary client-supplied X-Forwarded-For headers.
   app.set('trust proxy', 1);
+
+  // Registered before the global JSON parser so the webhook keeps the raw body for signature validation.
+  try {
+    await initStickers(app);
+  } catch (err) {
+    logger.error(`Failed to init stickers webhook: ${getErrorMessage(err)}`);
+  }
 
   app.use(express.json());
 
@@ -52,10 +59,10 @@ async function main() {
   }
 
   try {
-    await initMindloop(app);
+    initZika(app);
   } catch (err) {
-    failedComponents.push('mindloop');
-    logger.error(`Failed to init mindloop app: ${getErrorMessage(err)}`);
+    failedComponents.push('zika');
+    logger.error(`Failed to init zika app: ${getErrorMessage(err)}`);
   }
 
   registerPortfolioApiRoutes(app);

@@ -1,6 +1,6 @@
-import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
+import { scores365Get } from './scores-365-get';
 
 export async function getPregameData(matchId: number) {
   try {
@@ -13,7 +13,7 @@ export async function getPregameData(matchId: number) {
       onlyMajor: `true`,
       topBookmaker: `1`,
     };
-    const response = await axios.get(`${SCORES_365_API_URL}/stats/preGame?${new URLSearchParams(queryParams)}`);
+    const response = await scores365Get(`${SCORES_365_API_URL}/stats/preGame?${new URLSearchParams(queryParams)}`);
     return response?.data;
   } catch (error) {
     return null;

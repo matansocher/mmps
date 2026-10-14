@@ -34,7 +34,7 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 ### Integration & Tools
 - **MCP SDK** - Model Context Protocol for tool integration
 - **Axios** - HTTP client
-- **Google Cloud** - Google Sheets and other services
+- **Google APIs** - Calendar, Gmail, Maps and Places
 
 ### Code Quality
 - **ESLint 9.x** - Linting with flat config
@@ -75,6 +75,7 @@ features/{bot-name}/
 3. **Coach** - Sports analytics and predictions
 4. **Wolt** - Restaurant notifications
 5. **Worldly** - Geography education
+6. **Learner** - Daily learning bites + mini-app
 
 ## Conditional Bot Loading
 
@@ -90,11 +91,41 @@ In production, all bots run:
 IS_PROD=true npm start
 ```
 
-Logic in `src/index.ts`:
+Logic in `src/index.ts`. Each bot init is wrapped so one bot failing doesn't stop the rest:
 
 ```typescript
-const shouldInitBot = (config) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
+const shouldInitBot = (config: { id: string }) => isProd || env.LOCAL_ACTIVE_BOT_ID === config.id;
+const initBot = async (config: { id: string }, init: () => Promise<void>): Promise<void> => {
+  if (!shouldInitBot(config)) return;
+  try {
+    await init();
+  } catch (err) {
+    failedComponents.push(config.id);
+    logger.error(`Failed to init bot '${config.id}': ${getErrorMessage(err)}`);
+  }
+};
+
+await initBot(chatbotConfig, () => initChatbot(app));
 ```
+
+The web features (`initStickers`, `initSavings`, `initZika`) boot regardless of `LOCAL_ACTIVE_BOT_ID`, each in its own try/catch.
+
+## HTTP Surface
+
+An Express server runs alongside the bots:
+
+| Route | Owner |
+| --- | --- |
+| `GET /` | Health check (`{ success: true }`) |
+| `/api-docs` | Swagger UI (`registerSwaggerRoutes`) |
+| `/savings/*`, `/api/savings/*` | [Savings](/bots/savings) SPA and API |
+| `/earth/*` | [Earth](/bots/earth) SPA (no API), served by `initWorldly` |
+| `/zika/*` | [Zika](/bots/zika) static showcase |
+| `/learner/*`, `/api/learner/*` | Learner bot mini-app and progress API |
+| `POST /portfolio/contact` | Portfolio site contact form (rate-limited) |
+| `GET/POST /whatsapp-webhook` | [Stickers](/bots/stickers) WhatsApp webhook |
+
+Bots may register their own routes too (mini-app data endpoints, webhooks). `initStickers(app)` must run **before** the global `express.json()` because the webhook needs the raw body for its HMAC signature check.
 
 ## Core Patterns
 
@@ -211,7 +242,6 @@ Response back to user
 
 - **Development**: `IS_PROD=false`, `LOCAL_ACTIVE_BOT_ID=CHATBOT`
 - **Production**: `IS_PROD=true` (all bots run)
-- **Google Sheets Logging**: Service account credentials for production logging
 
 ## Next Steps
 

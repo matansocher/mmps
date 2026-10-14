@@ -30,8 +30,8 @@ Key engineering properties:
 | **Thread** | An isolated conversation identity. Here `thread_id = chatId` (a Telegram user ⇒ their own memory). |
 | **Context window** | Max tokens the model can attend to. Grows with history — hence summarization to stay under budget. |
 | **Token** | Sub-word unit of text; billing + context are measured in tokens. Tracked as `tokensIn`/`tokensOut`. |
-| **System prompt** | Instructions that define the agent's role/behavior, prepended to every call. Here a very large prompt describing each tool + guidelines. |
-| **Structured output** | Forcing the LLM to return schema-valid JSON via `withStructuredOutput(zodSchema)`. |
+| **System prompt** | Instructions that define the agent's role/behavior, prepended to every call. Here a short prompt with general behavior only; tool-specific rules live in each tool's description. |
+| **Structured output** | Forcing the LLM to return schema-valid JSON. Here the agent's own final step does it via a per-call `responseFormat` (a `final_reply` tool call). |
 | **Callback handler** | Hooks into the LangChain run lifecycle (LLM start/end, tool start/end/error) for logging, metering, streaming. |
 | **Middleware** | Logic injected into the agent graph — here `summarizationMiddleware` compresses history inside the loop. |
 | **Recursion limit** | Cap on agent loop iterations (default 100) to prevent infinite tool-calling loops. |
@@ -46,10 +46,10 @@ The feature lives in `src/features/chatbot/` and follows the repo's **Controller
 | `chatbot.init.ts` | Manual DI wiring. Opens Mongo connections, builds the checkpointer, creates service/controller/scheduler, registers routes + SPA, boots the bot. |
 | `chatbot.controller.ts` | grammY handlers: `/start /help /app /exercise`, text, photo, audio. Wraps calls in `MessageLoader` (reaction + typing + loader). |
 | `chatbot.service.ts` | The brain. Builds the model, summarization middleware, and agent service; `processMessage()` is the single entry point. |
-| `agent/agent.ts` | The **AgentDescriptor**: name, giant system prompt, and the array of 27 tools. |
+| `agent/agent.ts` | The **AgentDescriptor**: name, general-behavior system prompt, and the array of 27 tools. |
 | `agent/factory.ts` | `createAgentService()` — calls LangChain `createAgent()` and wraps the compiled graph. |
 | `agent/service.ts` | `AiService` — thin wrapper over the compiled graph: `invoke`/`stream`/`getState`, builds `RunnableConfig` (thread_id, callbacks, recursion limit). |
-| `agent/checkpointer.ts` | `createChatbotCheckpointer()` — Mongo-backed persistence, db `Chatbot`, 30-day TTL. |
+| `agent/checkpointer.ts` | `createChatbotCheckpointer()` — Mongo-backed persistence (`PruningMongoDBSaver`), db `Chatbot`, 30-day TTL, keeps only the 2 newest checkpoints per thread. |
 | `chatbot-scheduler.service.ts` | 15+ cron jobs (node-cron) for proactive messages. |
 | `schedulers/*.ts` | Individual scheduled tasks (daily summary, football, reminders, usage report…). |
 | `chatbot.config.ts` | Bot config, summarization thresholds, usage kill-switch, summary prompt. |
@@ -113,7 +113,7 @@ export function agent(): AgentDescriptor {
 }
 ```
 
-The **system prompt** is large and deliberately explicit: it names every tool, its actions, natural-language trigger phrases, timezone rules (`Asia/Jerusalem`), reminder defaults (18:00), and the GitHub "implement/review" label workflow. This is **prompt engineering as configuration** — the model's routing accuracy depends heavily on this text.
+The **system prompt** is kept short: role, context injection, timezone (`Asia/Jerusalem`), language and tone. Everything tool-specific — trigger phrases, call sequences, confirmations, defaults (e.g. reminders default to 18:00), reply formatting, and the GitHub "implement/review" label workflow — lives in **each tool's own `description`**, so the model reads a rule right where it picks the tool. This is **prompt engineering as configuration**, co-located with the code it describes.
 
 ## 6. Factory & AiService wrapper
 
@@ -142,6 +142,7 @@ Conventions worth calling out:
 
 - **Action-enum pattern** — one tool exposes many operations via an `action` enum (keeps the tool count manageable vs. one tool per operation).
 - **Return strings (usually JSON strings)** — tools return serialized results; errors are caught and returned as `{ success:false, error }` so a failing tool degrades gracefully instead of throwing.
+- **Retries** — tools that do throw go through `createToolRetryMiddleware()` (`agent/tool-retry.ts`). Read-only calls listed in `READ_ONLY_TOOL_ACTIONS` (tool name → `true` or a list of read-only `action` values, e.g. `gmail: ['list']`) are retried up to twice with exponential backoff (500ms, 1s, capped at 4s) on transient errors: timeouts, dropped connections (`ECONNRESET`, `ETIMEDOUT`, undici socket errors, `fetch failed` with such a cause), HTTP 408/425/429 and 5xx except 501. Calls with side effects and unlisted tools never are, so they can't run twice. Every exception becomes an error `ToolMessage`: non-transient errors keep LangChain's default text (`Error: …\n Please fix your mistakes.`); transient ones tell the model "temporarily unavailable, don't call it again this turn" (read-only) or "unknown whether it went through, don't repeat it" (side effects). That conversion matters: once a middleware wraps tool calls, LangChain re-raises tool exceptions and the whole turn would fail. Tools that catch their own errors and return `{ success: false }` are invisible to the middleware.
 - **Zod = validation + schema** — the same schema both validates args and is converted to the JSON schema sent to the model for function calling.
 
 Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 27 registered tools group into: personal/productivity (calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics), media/social (spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels), information (weather, earthquake), sports/games (competitions, match summary/prediction, makavdia, wolt, worldly), markets (polymarket), dev (github).
@@ -151,10 +152,18 @@ Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and 
 This is the flagship "durable state" feature. LangGraph checkpointers snapshot the graph state after every step so a conversation survives process restarts.
 
 ```ts
+export class PruningMongoDBSaver extends MongoDBSaver {
+  async put(config, checkpoint, metadata) {
+    const result = await super.put(config, checkpoint, metadata);
+    // delete this thread's checkpoints + writes older than the new checkpoint's parent
+    await this.pruneOlderThan(threadId, checkpointNs, parentCheckpointId);
+    return result;
+  }
+}
+
 export async function createChatbotCheckpointer(): Promise<MongoDBSaver> {
-  const client = new MongoClient(env.MONGO_DB_URL);
-  await client.connect();
-  const checkpointer = new MongoDBSaver({ client, dbName: 'Chatbot', ttl: THIRTY_DAYS_IN_SECONDS });
+  const client = await getMongoClient();
+  const checkpointer = new PruningMongoDBSaver({ client, dbName: 'Chatbot', ttl: THIRTY_DAYS_IN_SECONDS });
   await checkpointer.setup();  // creates collections/indexes
   return checkpointer;
 }
@@ -163,6 +172,7 @@ export async function createChatbotCheckpointer(): Promise<MongoDBSaver> {
 - Replaces the default in-RAM `MemorySaver` (which loses history on restart/deploy).
 - State is keyed by `thread_id` — derived from the Telegram `chatId`, so each user has isolated memory.
 - **30-day TTL** — old threads auto-expire (Mongo TTL index) for privacy + storage hygiene.
+- **Pruning** — a full snapshot is written after *every* graph step (each LLM call, each tool call), but resuming only reads the latest. `PruningMongoDBSaver` deletes everything older than the new checkpoint's parent after each save, so a thread holds 2 snapshots instead of hundreds. Checkpoint ids are uuid6 (time-ordered), so `$lt` on the id means "older". Prune failures are logged and never fail the turn. `src/features/chatbot/scripts/prune-checkpoints.ts` is a one-off backfill for data written before pruning existed (dry run by default, `--apply` to delete).
 
 ::: warning Sharp edge — init ordering
 The checkpointer is built **before** `provideTelegramBot()` in `init`. grammY locks the bot against new listeners once `bot.start()` polling begins, so an `await` between starting the bot and registering handlers would let polling win the race and make `controller.init()` throw. Ordering the async work carefully is the fix — a concrete example of a subtle init-order concurrency bug.
@@ -178,20 +188,23 @@ Persisting everything forever would blow the context window and cost. So the ser
 
 ```ts
 const summarization = summarizationMiddleware({
-  model: this.model,
+  model: this.summaryModel,                                      // gpt-5-nano, low reasoning effort
   trigger: [
     { tokens: CHATBOT_CONFIG.summarization.triggerTokens },      // ~24k (primary bound)
-    { messages: CHATBOT_CONFIG.summarization.triggerMessages },  // ~40  (OR fallback)
+    { messages: CHATBOT_CONFIG.summarization.triggerMessages,    // ~40  (OR fallback)
+      tokens: CHATBOT_CONFIG.summarization.messageTriggerMinTokens }, // AND ~16k (2x keep)
   ],
   keep: { tokens: CHATBOT_CONFIG.summarization.keepTokens },     // ~8k
   summaryPrompt: CHATBOT_SUMMARY_PROMPT,
 });
 ```
 
-- Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
+- Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** while holding at least **~16k tokens** (2× keep, so a retained tail of short messages can't re-trigger every turn) — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
+- Summaries run on the small model (`GPT_SMALL_MODEL`, `gpt-5-nano`, reasoning effort `low`, no custom temperature) — compression doesn't need the main model, and it's ~8x cheaper on input.
 - The summary is written back into state and **persisted by the checkpointer** — old turns are compressed in Mongo, not deleted.
 - This **replaced** an older manual "drop-oldest" truncation (`truncateThread`) — the middleware does it *inside* the graph loop.
 - The summary prompt is tuned to preserve durable facts (name, location, health, diet, open tasks, decisions) and to **keep the original language** (Hebrew stays Hebrew).
+- Each summary logs metadata only (message count, estimated tokens before→after, duration) under `chatbot:safe-summarization`.
 - Tunable via `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_TRIGGER_MESSAGES` / `CHATBOT_SUMMARY_KEEP_TOKENS`.
 
 ::: tip Checkpointer vs. summarization
@@ -234,27 +247,31 @@ handler sums tokens per model across the whole ReAct loop (incl. summarization L
 ```
 
 - **Pricing** — `model-pricing.ts` holds USD-per-1M-token rates (`input`, `output`, `cachedInput`); `computeModelCost()` splits input into cached vs uncached and bills each at its own rate. `resolveModelPrice()` matches **dated snapshots only** (`gpt-4.1-mini-2025-04-14` → `gpt-4.1-mini`) — siblings such as `gpt-5-mini` need their own entry, because inheriting `gpt-5` rates would overstate their cost 5x. Unknown model → cost 0 + a warn (never crashes).
-- **Pricing drift check** — a monthly cron (`modelPricingCheck`, 1st at 10:00) parses OpenAI's docs markdown (`pricing.md`) and diffs the published rates against `MODEL_PRICING`, DMing the owner only on a mismatch. Deterministic parse, no AI in the loop.
+- **Pricing drift check** — a monthly cron (`schedulers/model-pricing-check.ts`, 1st at 10:00) fetches OpenAI's docs markdown twin (`https://developers.openai.com/api/docs/pricing.md`), parses the "Standard pricing data" table and diffs it against `MODEL_PRICING`. It is silent when everything matches and DMs the owner only on drift or when a priced model disappears from the docs. Deterministic parse, no AI in the loop; prices stay a checked-in constant so historical cost records remain reproducible.
+- **Instrumented sources** — `chatbot` and `chilli`. Raw `@services/openai` helpers (embeddings, image, audio, plain completions, the social digest summary) are intentionally not metered.
 - **Record fields** — `source, chatId, model, tokensIn/Out/Total, tokensCached, cost, durationMs, llmCalls, toolCalls, createdAt`.
 - **Aggregation** — `aggregateUsage()` groups by source + user + day (Asia/Jerusalem) via a Mongo aggregation pipeline.
-- **Weekly report** — a Saturday 22:30 cron (`usageSummary`) DMs the owner a 7-day cost/usage breakdown.
+- **Weekly report** — a Saturday 22:30 cron (`schedulers/usage-summary.ts`) DMs the owner a 7-day cost/usage breakdown (total cost, calls, tokens, per day, per bot, and per user if more than one).
 - **Kill-switch** — `CHATBOT_USAGE_TRACKING=false` disables it. Fire-and-forget writes mean metering never blocks or breaks a reply.
 
 ::: warning Nuance
 There's no official LangChain package for cost tracking — the callback handler *is* the implementation. Also: non-chatbot bots only persist usage when the chatbot is booted (it registers the `Chatbot` Mongo connection); otherwise writes fail silently.
 :::
 
-## 13. Structured output (optional 2nd pass)
+## 13. Structured output (same run, no 2nd pass)
 
-`processMessage()` is overloaded. Without a schema it returns a normal `ChatbotResponse`. With a Zod schema, it runs a **second constrained LLM call** to coerce the answer into typed JSON:
+`processMessage()` is overloaded. Without a schema it returns a normal `ChatbotResponse`. With a Zod schema, the schema travels in the invocation `context` and `createStructuredResponseMiddleware()` (`agent/structured-response.ts`) sets it as the `responseFormat` for that run only. The agent's **final step** then answers by calling a `final_reply` tool (LangChain `toolStrategy`), with every tool result in view — no extra model call re-parsing the reply text:
 
 ```ts
-const structuredModel = this.model.withStructuredOutput(responseSchema);
-const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)]);
-return { response: agentResponse, structured };
+const result = await this.aiService.invoke(contextualMessage, { threadId, responseSchema, ... });
+return { response: formatAgentResponse(result), structured: result.structuredResponse };
 ```
 
-Used by schedulers/API paths that need machine-readable results (e.g. a predictions payload) rather than free-form prose.
+- The caller's schema is wrapped in an envelope `{ message, data }`, since the tool call replaces the reply text. The middleware swaps the tool call back to plain `message` text before it is checkpointed, so the thread history stays readable, and returns `data` as `structuredResponse`.
+- It uses `toolStrategy`, not `providerStrategy`: OpenAI's JSON-schema `response_format` forces every bound tool into strict mode, which rejects tools with optional fields (e.g. weather's `date`).
+- `structuredResponse` is not checkpointed, so it can't leak from a previous run. If the run ends without it (e.g. the model-call limit), `processMessage` throws.
+
+Used by schedulers that need a machine-readable flag next to the message (`football-update` → `hasMatches`, `makavdia-update` → `hasGame`).
 
 ## 14. Multimodal input/output
 
@@ -275,15 +292,31 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 | Nightly summary | 23:00 | Weather + calendar + exercise, phrased as a goodnight message. |
 | Football | 12:59 / 23:59 | Match updates & predictions. |
 | Reminders / events | every 15m | Fires due reminders & upcoming-event alerts. |
-| Earthquake monitor | every N min | USGS polling with lookback window. |
+| Earthquake monitor | every 15m | USGS day-summary feed with a 17-minute lookback and event-ID deduplication. |
+| Rain radar alert | :10 / :40, 07–22 | Checks the IMS hourly forecast for Kfar Saba. If the rain chance in the next 3 hours is above 30%, DMs an animated IMS radar loop of the last hour (`@services/rain-radar`, drawn on IMS's own Hebrew map tiles with the radar bounds taken from ims.gov.il), with the hourly chances in the caption. 3-hour cooldown between alerts. |
 | Polymarket | 16:05 | Daily price updates for subscribed markets. |
-| Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Kill switch: `CHATBOT_VIDEO_DIGEST=false`. Tweets with photos (up to 5 newest) follow as Telegram albums sent by url, same record/claim lifecycle with a link-only fallback. Kill switch: `CHATBOT_IMAGE_DIGEST=false`. |
+| Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then (optionally) up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Disabled by default; enable with `CHATBOT_VIDEO_DIGEST=true`. Tweets with photos (up to 5 newest) follow as Telegram albums sent by url, same record/claim lifecycle with a link-only fallback. Kill switch: `CHATBOT_IMAGE_DIGEST=false`. |
 | Usage report | Sat 22:30 | Weekly cost/token breakdown DM. |
 | Email cleanup | 12:00 / 20:00 | Asia/Jerusalem. Checks up to 50 unread inbox emails from the last 24h via `@services/openai`'s `getResponse`, explicitly using `CHAT_COMPLETIONS_MINI_MODEL` (`gpt-4.1-mini`), batches of 20, and `store: false`. Sends only ID + sender + subject + snippet as untrusted data, not instructions. Structured `results[]` must contain every input ID exactly once and valid `spam` / `advertisement` / `keep` classifications with numeric confidence in [0, 1]; the whole batch is validated before trashing. Only spam/ads with confidence > 0.75 are trashed; keep is never trashed. Scores are model-assessed confidence, not calibrated probabilities. Failed batches stay untouched while later batches continue; trash concurrency is 5. Reports list successful trash actions and their confidence only; an owner warning is sent only if every classification batch failed. Uses the existing `OPENAI_API_KEY`. |
+
+Earthquake requests within the last 24 hours use USGS's real-time `all_day.geojson` feed, filtering by time and magnitude and applying the requested ordering and limit locally. Older ranges still use the FDSN query API. [USGS recommends summary feeds](https://earthquake.usgs.gov/fdsnws/event/1/) for automated applications because they offer better performance and availability than custom queries. Feeds refresh every minute, so the newest events may not appear immediately. The monitor overlaps polls by two minutes to catch delayed publication, without re-alerting already-seen event IDs.
+
+Both endpoints have a 10-second timeout per attempt and at most two retries (500ms and 1s backoff) for timeouts, connection failures, HTTP 408/429, and 5xx except 501. Permanent errors and malformed responses fail immediately; exhausted retries remain errors, not an empty earthquake list. USGS logs include endpoint, attempt, elapsed time, error code and HTTP status to distinguish transport timeouts from upstream failures. No stale-data fallback is used: a shared USGS outage can still interrupt checks, and outages longer than the monitor's lookback can leave missed alerts. If failures persist, use these logs to assess upstream availability and whether a recovery lookback or a separate provider is needed.
 
 ::: tip Pattern to remember
 **The scheduler and the chat handler share one brain.** A cron job is just another producer of a prompt into `processMessage()` — DRY, and scheduled output looks/behaves like chat output.
 :::
+
+### Social media follower (collect → digest)
+
+The chatbot follows accounts on 4 platforms and DMs one daily digest instead of real-time notifications. It runs in two phases:
+
+- **Collect (silent).** `schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter + youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`). It diffs new posts against the subscription's `lastSeenId` / `lastSeenAt` and stores them in db `SocialFollower`, collection `PendingPost`; nothing is sent. Pending rows are inserted **before** `lastSeen` advances, and `createPendingPosts` dedupes by `platform + username + chatId + postId`, so a crash re-collects rather than loses posts.
+- **Diffing rules.** Twitter/TikTok ids are chronological snowflakes, compared with `BigInt(id) > BigInt(lastSeenId)` (this also neutralizes pinned posts). Telegram post ids are sequential per channel and compared numerically. YouTube video ids are not chronological, so YouTube diffs by `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
+- **Digest.** `schedulers/social-media-digest.ts`, cron `45 22 * * *`. Pending posts are grouped per chat and per followed account. Telegram and Twitter get an AI key-points summary (`getResponse` with `GPT_SMALL_MODEL`; `targetKeyPointsCount` gives about 1 bullet per 10 posts, min 2, max 10), written in the posts' own language, with a raw listing as fallback if the AI call fails. YouTube and TikTok are listed one line per post with a link. One combined Markdown message is sent, then exactly the rows it sent are deleted: posts collected after 22:45 roll into the next day, an empty day sends nothing, and a send failure keeps everything for tomorrow. TikTok video attachments and tweet image albums follow the text (see the table above).
+- **Subscriptions.** `shared/social-follower/` holds the `Subscription` and `PendingPost` collections and their repository functions (`SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`). They are managed through the `tiktok`, `twitter`, `youtube` and `telegram_channels` tools, each with subscribe / unsubscribe / list actions keyed to `MY_USER_ID`.
+- **Data sources.** Telegram → `@services/telegram-scraper` (t.me/s web preview, no auth). Twitter → `@services/twitter-scraper` (anonymous GraphQL, then an optional logged-in session via `X_AUTH_TOKEN` / `X_CT0` cookies, then a Nitter fallback; no key). YouTube → RSS for collecting, Supadata-backed `@services/youtube` for tool actions. TikTok → RapidAPI `@services/tiktok` (metered free tier, mind the quota).
+- The digest summary goes through the raw `@services/openai` helper, so it is not usage-metered.
 
 ## 16. Boot lifecycle (manual DI)
 
@@ -301,9 +334,9 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 
 | Decision | Why / tradeoff |
 |----------|----------------|
-| Single agent, 27 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by very explicit prompt guidance. |
+| Single agent, 27 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by explicit, per-tool rules in each tool's description. |
 | Summarize vs. truncate | Summarizing preserves long-term facts at the cost of an extra LLM call. Chosen because it's a *personal* assistant where remembering user facts matters. |
-| Mongo checkpointer + 30-day TTL | Durable across deploys; TTL bounds storage & respects privacy. Tradeoff: memory of very old conversations is intentionally lost. |
+| Mongo checkpointer + 30-day TTL + pruning | Durable across deploys; TTL bounds storage & respects privacy; pruning keeps 2 snapshots per thread. Tradeoff: memory of very old conversations is intentionally lost, and checkpoint history (time travel/replay) isn't kept. |
 | Fire-and-forget usage writes | Observability must never slow or break a user reply; accept rare lost records. |
 | Low temperature (0.2) | Assistant/tool-routing wants determinism & correctness over creativity. |
 | `gpt-4.1-mini` | Cheap + fast for a high-frequency personal bot; big prompt makes token cost matter, hence mini + summarization + metering. |
@@ -315,19 +348,19 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 A single call returns one answer. A ReAct agent loops: it reasons, decides to call a tool, reads the tool result, and repeats until it can answer. LangGraph compiles this into a state graph with an LLM node, a tool node, and a conditional edge, bounded by a recursion limit.
 
 **Q: How does the bot remember conversations across restarts?**
-A LangGraph **MongoDBSaver checkpointer** snapshots graph state after each step, keyed by `thread_id` (the Telegram chatId). On the next message it reloads that thread's state. A 30-day TTL expires stale threads.
+A LangGraph **MongoDBSaver checkpointer** snapshots graph state after each step, keyed by `thread_id` (the Telegram chatId). On the next message it reloads that thread's state. Older snapshots are pruned after each save (only the latest is ever read), and a 30-day TTL expires stale threads.
 
 **Q: The context window is limited — how do you handle long conversations?**
-`summarizationMiddleware`: past ~40 messages it compresses the oldest turns into a running summary and keeps the last ~20 verbatim. The summary is persisted by the checkpointer, so we bound tokens without dropping important facts.
+`summarizationMiddleware`: past ~24k tokens (or ~40 messages holding at least ~16k tokens) it compresses the oldest turns into a running summary and keeps the most recent ~8k tokens verbatim. The summary is persisted by the checkpointer, so we bound tokens without dropping important facts.
 
 **Q: How are tools defined and how does the model know when to use them?**
-Each tool is `tool(runner, { name, description, schema })` with a Zod schema where every field is `.describe()`d. Those descriptions + the system prompt (which lists trigger phrases per tool) are converted to JSON schema for OpenAI function-calling; the model emits a tool call, the runtime executes it, and the result re-enters the loop.
+Each tool is `tool(runner, { name, description, schema })` with a Zod schema where every field is `.describe()`d. Those descriptions (which carry each tool's trigger phrases and usage rules) are converted to JSON schema for OpenAI function-calling; the model emits a tool call, the runtime executes it, and the result re-enters the loop.
 
 **Q: How do you track cost?**
 A per-turn `UsageCallbackHandler` sums `usage_metadata` tokens per model across every LLM call in the loop. `recordModelUsage` multiplies by a per-model price table (longest-prefix match for dated snapshots) and fire-and-forget stores a record in Mongo. A weekly cron DMs a breakdown.
 
 **Q: How would you add a new capability?**
-Create `src/shared/ai/tools/{name}/{name}.tool.ts` with a Zod schema + runner, export it from the barrel, add it to the `tools` array in `agent.ts`, and describe it in the system prompt. No graph changes needed — the ReAct loop picks it up automatically.
+Create `src/shared/ai/tools/{name}/{name}.tool.ts` with a Zod schema + runner, export it from the barrel, add it to the `tools` array in `agent.ts`, and put its usage rules in the tool's `description`. No graph changes needed — the ReAct loop picks it up automatically.
 
 **Q: What's the difference between the checkpointer and the summarization middleware?**
 Checkpointer = **persistence** (durable, resumable state per thread). Summarization = **context bounding** (keeps the state small & cheap). Orthogonal concerns that combine into durable-but-bounded memory.

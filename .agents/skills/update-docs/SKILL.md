@@ -1,18 +1,26 @@
 ---
 name: update-docs
-description: Sync VitePress documentation with recent code changes
+description: Periodic drift sweep — sync VitePress docs with code changes since the last docs update
 ---
 
 # /update-docs
 
-Sync VitePress documentation with recent code changes.
+Periodic drift sweep of the VitePress docs (`docs/`). Run it on demand (e.g. weekly or before a release), **not** as part of every change — see "Documentation Policy" in `AGENTS.md`.
+
+## One-source rule
+
+- Feature behaviour (schedules, collections, env flags, flows) lives in `docs/` only.
+- `AGENTS.md` holds conventions/workflow and **links** to docs pages. Never copy feature details into it; if you find duplicated feature facts there, replace them with a link.
+- Implementation details stay in code — don't document internals that don't affect behaviour.
 
 ## Instructions
 
-1. **Determine what changed**: Run `git diff --name-only HEAD~1` (or a broader range if the user specifies). If the user points to a specific area, focus on that.
+1. **Determine the range**: by default, everything since the last commit that touched `docs/`:
+   `git diff --name-only $(git log -1 --format=%H -- docs)..HEAD -- src apps .env.example`
+   Use the user's range or area instead if given.
 
 2. **Audit for accumulated drift** (docs often lag far behind a single commit). Cross-check these known drift-prone facts against the code before trusting any doc page:
-   - **Bot list & count**: derive from the `shouldInitBot(...)` calls in `src/index.ts` — not from memory. Every bot should have a `docs/bots/{name}.md` page and a sidebar entry.
+   - **Bot list & count**: derive from the `initBot(...)` calls in `src/index.ts` — not from memory. Every bot should have a `docs/bots/{name}.md` page and a sidebar entry.
    - **Registered tool count/list**: count the `tools` array in `src/features/chatbot/agent/agent.ts` (directories under `src/shared/ai/tools/` may exist without being registered).
    - **Commands**: local dev is `LOCAL_ACTIVE_BOT_ID=<ID> npm run dev` with an UPPERCASE bot ID. There is no `npm run start:dev`.
    - **Env vars**: the Mongo connection var is `MONGO_DB_URL` (not `MONGO_URI`).
@@ -31,8 +39,9 @@ Sync VitePress documentation with recent code changes.
    | `src/services/{name}/` | Relevant architecture or service docs |
    | Architecture patterns, new patterns | `docs/architecture/*.md` |
    | Setup, config, env vars | `docs/guide/*.md`, `docs/deployment/*.md` |
-   | `AGENTS.md` conventions (CLAUDE.md is a symlink) | `docs/architecture/*.md` or `docs/development/*.md` |
-   | New/removed bot | `docs/bots/{name}.md`, `docs/bots/overview.md`, `docs/index.md`, `docs/architecture/overview.md`, sidebar |
+   | `src/services/` or `src/shared/` dirs added/removed | `docs/architecture/project-structure.md` (catalog) |
+   | Conventions/workflow (not features) | `AGENTS.md` (CLAUDE.md, GEMINI.md, copilot-instructions are symlinks) |
+   | New/removed bot | `docs/bots/{name}.md`, `docs/bots/overview.md`, `docs/index.md`, `docs/architecture/overview.md`, sidebar, the bots table in `AGENTS.md` |
 
 4. **Read the existing doc pages** that need updating. Understand their current structure and style before making changes. For new bot pages, mirror the section layout of `docs/bots/coach.md` / `docs/bots/wolt.md` (Overview / Features / Configuration / Getting Started / Database / Scheduled Tasks / Next Steps).
 
@@ -47,7 +56,8 @@ Sync VitePress documentation with recent code changes.
    - Create new doc pages unless the change clearly requires one (e.g., a brand new bot)
    - Rewrite sections that weren't affected by the code change
    - Add speculative documentation for things not yet implemented
-   - Change the VitePress config (`docs/.vitepress/`) unless sidebar entries are needed for new pages. When adding sidebar entries, update **both** `config.mjs` and `config.mts` — they duplicate each other and must stay in sync.
+   - Change the VitePress config (`docs/.vitepress/config.mts`, the only config file) unless sidebar entries are needed for new pages.
+   - Touch docs for refactors, tests or bug fixes that don't change documented behaviour.
 
 7. **Verify**: Run `npm run docs:build` and make sure it passes (it catches dead links).
 

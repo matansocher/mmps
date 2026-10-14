@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { env } from 'node:process';
 import { AiServiceOptions, InvokeOptions } from '../types';
 import { ChatbotAgent } from './factory';
+import type { StructuredResponseContext } from './structured-response';
 
 const AGENT_VERSION = env.npm_package_version || '1.0.0';
 
@@ -84,7 +85,8 @@ export class AiService {
   // Context bounding is now handled inside the agent graph by `summarizationMiddleware`
   // (item #4), which compresses old turns into a summary and persists via the checkpointer.
   async invoke(message: string, opts: Partial<InvokeOptions> = {}) {
-    return this.agent.invoke(createMessage(message, opts), this.createOptions(opts));
+    const context: StructuredResponseContext = { responseSchema: opts.responseSchema };
+    return this.agent.invoke(createMessage(message, opts), { ...this.createOptions(opts), context } as RunnableConfig);
   }
 
   stream(message: string, opts: Partial<InvokeOptions> = {}) {

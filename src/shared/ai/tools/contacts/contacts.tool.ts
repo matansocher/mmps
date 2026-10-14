@@ -36,8 +36,8 @@ Actions:
 - add: Add a new person to the friends list by name
 - remove: Remove a person from the friends list by their exact full name
 
-IMPORTANT for remove: always call "list" first to get the full names, then use your context to identify the correct person and call "remove" with their exact full name. Never guess — match based on the listed names.
+IMPORTANT for remove: always call "list" first to get the full names, then use your context to identify the correct person (including partial names) and call "remove" with their exact full name. Never guess — match based on the listed names.
 
-Use this tool when the user asks who they should call, speak to, or reach out to, or when they want to manage their friends list.`,
+Use this tool when the user asks who they should call, speak to, or reach out to (use "suggest"), or when they want to manage their friends list. Use emojis in replies (📞, 👥, ✅, 🗑️).`,
   schema,
 });

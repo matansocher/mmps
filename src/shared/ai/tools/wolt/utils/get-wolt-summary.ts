@@ -1,20 +1,26 @@
+import { subDays } from 'date-fns';
 import { getTopBy, getUserDetails } from '@shared/wolt';
 
+const SUMMARY_DAYS = 7;
+
 export async function getWoltSummary(): Promise<string> {
-  const topChatIds = await getTopBy('chatId');
+  const since = subDays(new Date(), SUMMARY_DAYS);
+  const [topChatIds, topRestaurants] = await Promise.all([getTopBy('chatId', since), getTopBy('restaurant', since)]);
 
   const topUsers = await Promise.all(
     topChatIds.map(async ({ _id, count }) => {
       const user = await getUserDetails(_id);
-      const userName = user ? `${user.firstName} ${user.lastName} - ${user.username}` : 'Unknown User';
-      return { _id, count, user: userName };
+      return { count, user: formatUserName(user) };
     }),
   );
 
-  const topRestaurants = await getTopBy('restaurant');
+  const topUsersText = topUsers.map(({ user, count }, index) => `${index + 1}. ${user} (${count})`).join('\n') || 'No alerts';
+  const topRestaurantsText = topRestaurants.map(({ _id, count }, index) => `${index + 1}. ${_id} (${count})`).join('\n') || 'No alerts';
 
-  const topUsersText = topUsers.map(({ user, count }, index) => `${index + 1}. ${user} (${count})`).join('\n');
-  const topRestaurantsText = topRestaurants.map(({ _id, count }, index) => `${index + 1}. ${_id} (${count})`).join('\n');
+  return `Top users in the last ${SUMMARY_DAYS} days:\n${topUsersText}\n\nTop restaurants in the last ${SUMMARY_DAYS} days:\n${topRestaurantsText}`;
+}
 
-  return `Top users this week:\n${topUsersText}\n\nTop restaurants this week:\n${topRestaurantsText}`;
+function formatUserName(user: { readonly firstName?: string; readonly lastName?: string; readonly username?: string } | null): string {
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
+  return [fullName, user?.username].filter(Boolean).join(' - ') || 'Unknown User';
 }

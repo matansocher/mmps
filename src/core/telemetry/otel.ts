@@ -12,7 +12,7 @@ import { env } from 'node:process';
 
 let sdk: NodeSDK | null = null;
 
-function buildAuthHeaders(): Record<string, string> | undefined {
+export function buildAuthHeaders(): Record<string, string> | undefined {
   const { GRAFANA_OTLP_INSTANCE_ID, GRAFANA_OTLP_TOKEN } = env;
   if (!GRAFANA_OTLP_INSTANCE_ID || !GRAFANA_OTLP_TOKEN) return undefined;
   const credentials = Buffer.from(`${GRAFANA_OTLP_INSTANCE_ID}:${GRAFANA_OTLP_TOKEN}`).toString('base64');

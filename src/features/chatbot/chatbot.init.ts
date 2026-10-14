@@ -5,6 +5,7 @@ import { provideTelegramBot } from '@services/telegram';
 import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
 import { registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
+import { ensureFlightTrafficIndexes } from '@shared/flight-traffic';
 import { ensureReminderIndexes } from '@shared/reminders';
 import { ensureDigestDeliveryIndexes, ensurePendingPostIndexes } from '@shared/social-follower';
 import { ensureTransferTrackerIndexes } from '@shared/transfer-tracker';
@@ -33,6 +34,7 @@ export async function initChatbot(app: Express): Promise<void> {
   await ensureTransferTrackerIndexes();
   await ensurePendingPostIndexes();
   await ensureDigestDeliveryIndexes();
+  await ensureFlightTrafficIndexes();
 
   // Build the checkpointer BEFORE provideTelegramBot(), which calls bot.start().
   // grammY locks the bot against new listeners once polling begins, so any `await`

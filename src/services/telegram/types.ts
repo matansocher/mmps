@@ -3,6 +3,7 @@ export type TelegramBotConfig = {
   readonly name: string;
   readonly token: string;
   readonly forceLocal?: boolean;
+  readonly concurrentUpdates?: boolean; // handle updates of different chats in parallel (grammY runner) instead of one at a time
   readonly commands?: {
     [key: string]: {
       command: string;

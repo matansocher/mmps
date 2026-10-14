@@ -1,0 +1,211 @@
+@import 'tailwindcss';
+@import 'cesium/Build/Cesium/Widgets/widgets.css';
+
+@theme {
+  --font-sans: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-ink: #0b1220;
+  --color-tile: #1a2436;
+  --color-rule: rgb(255 255 255 / 0.08);
+  --color-accent: #3b82f6;
+  --color-accent-soft: #93c5fd;
+  --color-ok: #34d399;
+  --color-bad: #f87171;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #070b14;
+    font-family: var(--font-sans);
+    color: #e7ebf3;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: default;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-soft);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .panel {
+    background: rgb(13 20 34 / 0.94);
+    border: 1px solid var(--color-rule);
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.45);
+    backdrop-filter: blur(8px);
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    color: #e7ebf3;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .icon-btn:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / 0.16);
+    font-size: 15px;
+    font-weight: 700;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn:hover {
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #2f74e6;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+  }
+
+  /* Short ✓/✗ pill at the click point. */
+  .feedback {
+    position: fixed;
+    z-index: 25;
+    pointer-events: none;
+    translate: -50% -50%;
+    animation: feedback-pop 1.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  }
+}
+
+@keyframes feedback-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Cesium chrome: keep only the canvas + credits, styled to match the app. */
+.cesium-viewer,
+.cesium-widget,
+.cesium-widget canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.cesium-viewer-bottom {
+  left: auto !important;
+  right: 8px !important;
+  bottom: 4px !important;
+  padding: 0 !important;
+  max-width: calc(100% - 16px);
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.cesium-widget-credits {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 10px !important;
+  color: rgb(255 255 255 / 0.75) !important;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+}
+
+.cesium-credit-logoContainer {
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.cesium-credit-expand-link {
+  color: rgb(255 255 255 / 0.85) !important;
+}
+
+.cesium-credit-lightbox-overlay {
+  z-index: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Feedback still needs to appear and leave; it just doesn't move. */
+  .feedback {
+    animation: feedback-fade 1.2s steps(1, end) forwards !important;
+  }
+}
+
+@keyframes feedback-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .globe-lifted {
+    transform: translateY(-32dvh);
+  }
+}

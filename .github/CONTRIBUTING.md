@@ -26,7 +26,7 @@ Fill in `.env` with at least:
 - `MONGO_DB_URL`
 - `LOCAL_ACTIVE_BOT_ID` — UPPERCASE bot id (`CHATBOT`, `CHILLI`, `COACH`, `WOLT`, `WORLDLY`)
 - the matching `*_TELEGRAM_BOT_TOKEN`
-- one of `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
 
 Then run a single bot:
 
@@ -35,13 +35,12 @@ npm run dev          # tsx watch — boots only LOCAL_ACTIVE_BOT_ID
 npm run dev:debug    # same, with --inspect
 ```
 
-In production all bots boot (`IS_PROD=true`); locally `LOCAL_ACTIVE_BOT_ID` selects exactly one. The `savings` and `mindloop` web features initialize regardless of bot selection.
+In production all bots boot (`IS_PROD=true`); locally `LOCAL_ACTIVE_BOT_ID` selects exactly one. The `savings` and `zika` web features initialize regardless of bot selection.
 
 Mini-apps are npm workspaces under `apps/` and run separately:
 
 ```bash
 npm run dev:savings-web
-npm run dev:mindloop-web
 ```
 
 ## Checks to run before opening a PR
@@ -119,7 +118,7 @@ PRs are squash-merged, so **the PR title becomes the commit message — it must 
 
 ## AI-assisted workflows
 
-Adding the **`implement`** label to an issue triggers `.github/workflows/implement.yml`, which runs Aider and opens an implementation PR. It is restricted to the repo owner and the companion app account, and its output still needs review before merging.
+Adding the **`implement`** label to an issue triggers the `implement` job in `.github/workflows/ai.yml`, which runs OpenAI Codex and opens an implementation PR. Adding the **`review`** label to a PR triggers its `review` job, which posts a Codex code review comment. Both are restricted to the repo owner and the companion app account, and its output still needs review before merging.
 
 Project-local agent skills live in `.agents/skills/` (e.g. `review-style`, `planner`, `scaffold-ai-tool`, `scaffold-service`, `update-docs`) and are shared across agents — Copilot CLI reads `.agents/skills/` directly and Claude Code reaches it via the `.claude/skills` symlink. `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are symlinks to `AGENTS.md` — edit `AGENTS.md` only.
 

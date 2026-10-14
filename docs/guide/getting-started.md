@@ -33,7 +33,6 @@ IS_PROD=false
 
 # API Keys
 OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
 
 # Database
 MONGO_DB_URL=mongodb://localhost:27017

@@ -1,5 +1,6 @@
 export { weatherTool } from './weather/weather.tool';
 export { webSearchTool } from './web-search/web-search.tool';
+export { browseUrlTool } from './browse-url';
 export { rainRadarTool } from './rain-radar';
 
 export { earthquakeTool } from './earthquake';
@@ -19,6 +20,7 @@ export { exerciseAnalyticsTool } from './exercise/exercise-analytics.tool';
 
 export { googleMapsPlaceTool } from './maps/google-maps-place.tool';
 export { googlePlaceDetailsTool } from './maps/google-place-details.tool';
+export { placesTool } from './places/places.tool';
 
 export { spotifyTool } from './music/spotify.tool';
 export { spotifyPodcastTool } from './music/podcast-follower/spotify-podcast.tool';
@@ -44,3 +46,4 @@ export { hotelWatcherTool } from './hotel-watcher';
 export { gameReleasesTool } from './game-releases';
 
 export { gamePriceWatcherTool } from './game-price-watcher';
+export { gameScoresTool } from './game-scores';

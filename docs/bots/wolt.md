@@ -4,15 +4,25 @@
 
 ## Overview
 
-Wolt bot monitors restaurant availability on the Wolt delivery platform and sends notifications when your favorite restaurants are available in your area.
+Wolt bot watches restaurants on the Wolt delivery platform and messages you when a restaurant that is currently closed or not taking orders comes back online.
+
+## Supported Areas
+
+Only these Wolt cities are tracked (`CITIES_SLUGS_SUPPORTED` in `wolt.config.ts`), each fetched from a single fixed city center:
+
+- `tel-aviv` - TLV - Herzliya area
+- `hasharon` - Hasharon area
+- `petah-tikva` - Petah Tikva
+
+A restaurant that Wolt doesn't list from those city centers can't be found. There is no per-user location.
 
 ## Features
 
-- 📍 **Location-Based** - Get notifications for your area
-- 🍽️ **Restaurant Favorites** - Add and track favorite restaurants
-- 🔔 **Push Notifications** - Get notified when restaurants are available
-- ⏱️ **Availability Tracking** - Real-time availability updates
-- 📱 **Quick Ordering** - Direct links to Wolt
+- 🔎 **Search** - Send a restaurant name **in English**, or paste a Wolt restaurant link (links work even when shared with Hebrew text around them)
+- 🔔 **Availability Alerts** - Get a message with a link as soon as the restaurant is online again
+- ⏱️ **Alert Expiry** - Alerts expire after 4 hours, with buttons to extend them by 1 or 4 hours
+- 📋 **Limits** - Up to 6 open alerts per user, one per restaurant branch
+- 🌙 **Quiet Hours** - Expiry messages between 01:00 and 08:00 are sent silently
 
 ## Configuration
 
@@ -21,10 +31,27 @@ Wolt bot monitors restaurant availability on the Wolt delivery platform and send
 ```bash
 # Required
 WOLT_TELEGRAM_BOT_TOKEN=your-token
+MONGO_DB_URL=mongodb://...
 
 # Optional
-MONGO_DB_URL=mongodb://...
+WOLT_RELAY_URL=https://script.google.com/macros/s/.../exec   # relay for the restaurants endpoint
+OPENAI_API_KEY=sk-...                                          # ranks search results; falls back to word matching
+NOTIFIER_TELEGRAM_BOT_TOKEN=your-token                         # admin notifications (subscriptions, failures)
 ```
+
+### Restaurants Relay
+
+Wolt rate-limits shared cloud IPs (e.g. Heroku dynos) on the restaurants endpoint, which shows up as immediate 429s. When `WOLT_RELAY_URL` is set, the bot fetches each city through that relay instead, appending `?lat=&lon=`. A free Google Apps Script web app works as a relay:
+
+```javascript
+function doGet(e) {
+  const url = 'https://restaurant-api.wolt.com/v1/pages/restaurants?lat=' + e.parameter.lat + '&lon=' + e.parameter.lon;
+  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, headers: { 'app-language': 'en' } });
+  return ContentService.createTextOutput(res.getContentText()).setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+If a city fails (an error, a timeout, or a response with no restaurants), its restaurants from the previous refresh are kept.
 
 ## Getting Started
 
@@ -57,8 +84,8 @@ Collections:
 
 ## Scheduled Tasks
 
-- **Availability Check** - Adaptive interval based on time of day
-- **Expired Subscription Cleanup** - Archives subscriptions after the configured expiration window
+- **Availability Check** - Refreshes the restaurants list every 30 seconds at peak hours (11:00-16:00, 18:00-24:00), every minute or two at other times, and every 15 minutes between 04:00 and 11:00
+- **Expired Subscription Cleanup** - Archives subscriptions once they expire (4 hours by default) and offers buttons to extend them by 1 or 4 hours
 
 ## Next Steps
 

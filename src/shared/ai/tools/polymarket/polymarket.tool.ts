@@ -55,6 +55,11 @@ Actions:
 
 When users mention following/tracking prediction markets, betting odds, election/tournament winners, or want market updates, use this tool.
 
+Replying:
+- Subscribe accepts full URLs or slugs. After subscribing, confirm the market question and current Yes price.
+- Format subscription lists with questions, slugs, and dates; trending/search results with rank, question/title, current Yes price, and 24h volume.
+- Use emojis (📊, 📈, 📉, 🟢, 🔒, 🔍).
+
 Examples:
 - "Subscribe to the Fed rate decision market" -> subscribe with marketIdentifier
 - "Track polymarket.com/event/fed-decision-in-january" -> subscribe with URL

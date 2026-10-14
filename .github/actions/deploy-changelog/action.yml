@@ -1,0 +1,58 @@
+name: 'Deploy Changelog'
+description: "List commit titles between the commit currently deployed on Heroku and the commit about to be deployed. Heroku's git remote is the source of truth, so no state needs persisting. Requires a full-history checkout."
+
+inputs:
+  heroku-api-key:
+    description: 'Heroku API key used to read the currently deployed commit.'
+    required: true
+  heroku-app-name:
+    description: 'Heroku app name.'
+    required: true
+  deploy-sha:
+    description: 'Commit SHA about to be deployed.'
+    required: true
+  max-commits:
+    description: 'Maximum number of commit titles to list.'
+    required: false
+    default: '20'
+
+outputs:
+  commits:
+    description: 'Newline-separated commit titles, or a short explanation when none can be listed.'
+    value: ${{ steps.changelog.outputs.commits }}
+
+runs:
+  using: composite
+  steps:
+    - name: Collect commits since last deploy
+      id: changelog
+      shell: bash
+      env:
+        HEROKU_API_KEY: ${{ inputs.heroku-api-key }}
+        HEROKU_APP_NAME: ${{ inputs.heroku-app-name }}
+        DEPLOY_SHA: ${{ inputs.deploy-sha }}
+        MAX_COMMITS: ${{ inputs.max-commits }}
+      run: |
+        export GIT_TERMINAL_PROMPT=0
+        PREV_SHA="$(git ls-remote "https://:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git" refs/heads/main | cut -f1)"
+
+        if [ -z "$PREV_SHA" ]; then
+          commits="(no previous deploy found)"
+        elif [ "$PREV_SHA" = "$DEPLOY_SHA" ]; then
+          commits="(no new commits)"
+        elif ! git merge-base --is-ancestor "$PREV_SHA" "$DEPLOY_SHA" 2>/dev/null; then
+          commits="(previous deploy is not in main's history)"
+        else
+          total="$(git rev-list --count --no-merges "${PREV_SHA}..${DEPLOY_SHA}")"
+          commits="$(git log --no-merges --format='• %s' -n "$MAX_COMMITS" "${PREV_SHA}..${DEPLOY_SHA}")"
+          if [ "$total" -gt "$MAX_COMMITS" ]; then
+            commits="${commits}"$'\n'"…and $((total - MAX_COMMITS)) more"
+          fi
+        fi
+
+        delimiter="EOF_$(openssl rand -hex 8)"
+        {
+          echo "commits<<${delimiter}"
+          echo "$commits"
+          echo "${delimiter}"
+        } >> "$GITHUB_OUTPUT"

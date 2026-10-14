@@ -1,5 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { MY_USER_ID } from '@core/config';
 import { handleCompleteReminder, handleCreateReminder, handleDeleteReminder, handleEditReminder, handleListReminders, handleSnoozeReminder } from './utils';
 
@@ -54,8 +55,10 @@ Actions:
 - edit: Update a reminder's message or due date by ID
 - snooze: Snooze a reminder for a specified number of minutes (default: 60)
 
-When the user mentions saving something for later, setting a reminder, or asking to be reminded about something, use this tool to create a reminder.
-Parse natural language dates and times into ISO 8601 format in the user's local timezone (without Z suffix) before calling this tool.
+When the user mentions saving something for later, setting a reminder, or asking to be reminded about something ("remind me to", "remember to", "don't let me forget", "alert me when", "notify me on"), use this tool to create a reminder.
+Parse natural language dates and times into ISO 8601 format in ${DEFAULT_TIMEZONE} WITHOUT a timezone suffix before calling this tool (e.g., "tomorrow at 3pm" → "2025-10-25T15:00:00").
+CRITICAL: When only a date is given (no time), default to 18:00 (6 PM), never midnight. An explicit time is always respected ("on Friday at 3pm" → Friday 15:00).
+After creating a reminder, confirm the formatted due date. Use emojis in replies (🔔, ⏰, ✅, 🗑️, ⏸️).
 
 Examples:
 - "Remind me to call mom tomorrow at 3pm" → create with dueDate

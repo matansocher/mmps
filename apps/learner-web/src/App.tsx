@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AppIcon } from './components/AppIcon';
+import { StreakBadge } from './components/StreakBadge';
 import { ProgressProvider, useProgress } from './hooks/useProgress';
 import { readTelegramTheme } from './lib/api';
 import { CURRICULUM } from './lib/bites';
@@ -11,6 +12,7 @@ import { QuizPage } from './pages/QuizPage';
 import { ReviewPage } from './pages/ReviewPage';
 import { KnowledgeMapPage } from './pages/KnowledgeMapPage';
 import { ScenarioPage } from './pages/ScenarioPage';
+import { SparkPage } from './pages/SparkPage';
 import { TodayPage } from './pages/TodayPage';
 
 type Theme = 'light' | 'dark';
@@ -45,11 +47,7 @@ function TopBar({ theme, onToggleTheme }: { readonly theme: Theme; readonly onTo
           <span className="title">Learner</span>
         </Link>
         <span className="spacer" />
-        {summary.mastered > 0 || progress.streak > 0 ? (
-          <span className="streak" title="Day streak">
-            <AppIcon name="fire" size={17} /> {progress.streak}
-          </span>
-        ) : null}
+        {summary.mastered > 0 || progress.streak > 0 ? <StreakBadge /> : null}
         <button type="button" className="icon-btn" onClick={onToggleTheme} title="Toggle theme" aria-label="Toggle theme">
           <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} size={19} />
         </button>
@@ -79,6 +77,7 @@ function Shell() {
           <Route path="/browse" element={<BrowsePage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/map" element={<KnowledgeMapPage />} />
+          <Route path="/spark" element={<SparkPage />} />
           <Route path="/bite/:biteId" element={<BitePage />} />
           <Route path="/quiz/:biteId" element={<QuizPage />} />
           <Route path="/scenario/:biteId" element={<ScenarioPage />} />
@@ -123,10 +122,12 @@ export function App() {
     wa?.onEvent?.('viewportChanged', keepExpanded);
     wa?.onEvent?.('safeAreaChanged', applySafeArea);
     wa?.onEvent?.('contentSafeAreaChanged', applySafeArea);
+    wa?.onEvent?.('fullscreenChanged', applySafeArea);
     return () => {
       wa?.offEvent?.('viewportChanged', keepExpanded);
       wa?.offEvent?.('safeAreaChanged', applySafeArea);
       wa?.offEvent?.('contentSafeAreaChanged', applySafeArea);
+      wa?.offEvent?.('fullscreenChanged', applySafeArea);
     };
   }, []);
 

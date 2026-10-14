@@ -26,14 +26,15 @@ CHATBOT_TELEGRAM_BOT_TOKEN=123456789:ABCDefg...
 ### Chatbot
 ```bash
 OPENAI_API_KEY=sk-...              # For ChatGPT
-ANTHROPIC_API_KEY=sk-ant-...       # For Claude
-GITHUB_TOKEN=ghp_...               # GitHub integration
+GITHUB_APP_ID=...                  # GitHub App authentication
+GITHUB_APP_PRIVATE_KEY=...         # GitHub App private key
+GITHUB_APP_INSTALLATION_ID=...     # GitHub App installation ID
 WEATHERAPI_KEY=...                 # Weather data
 
 # Conversation memory tuning (optional; defaults in code)
 # Conversation memory tuning (optional; defaults in code)
 CHATBOT_SUMMARY_TRIGGER_TOKENS=24000  # summarize once retained history passes this many tokens (primary bound)
-CHATBOT_SUMMARY_TRIGGER_MESSAGES=40  # also summarize once a thread passes this many messages (OR)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40  # also summarize once a thread passes this many messages (OR; needs 2x KEEP_TOKENS)
 CHATBOT_SUMMARY_KEEP_TOKENS=8000     # recent tokens kept verbatim after summarizing
 CHATBOT_USAGE_TRACKING=false         # disable per-turn token/cost metering (default on)
 ```
@@ -50,14 +51,15 @@ WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
 ```
 
-## Production Variables
-
-### Google Sheets Logging
+### WhatsApp Webhook
 ```bash
-SHEETS_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
-SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
+WHATSAPP_TOKEN=...        # Meta Graph API access token
+PHONE_NUMBER_ID=...       # WhatsApp Business phone number id
+VERIFY_TOKEN=...          # Any string; must match the Meta dashboard verify token
+WHATSAPP_APP_SECRET=...   # Optional; enables X-Hub-Signature-256 validation
 ```
+
+## Production Variables
 
 ### Observability (Grafana Cloud)
 Ships traces, metrics, and logs to Grafana Cloud via OpenTelemetry. Set only in production (Heroku); leave `OTEL_EXPORTER_OTLP_ENDPOINT` empty to disable locally. Values come from your Grafana Cloud stack's **OpenTelemetry** connection page.

@@ -9,6 +9,7 @@ import {
   earthquakeMonitor,
   emailCleanup,
   exerciseReminder,
+  flightTrafficCheck,
   footballUpdate,
   gamePriceCheck,
   gameReleaseCheck,
@@ -17,7 +18,7 @@ import {
   makavdiaUpdate,
   modelPricingCheck,
   polymarketUpdate,
-  // rainRadarAlert,
+  rainRadarAlert,
   reminderCheck,
   secretaryCheckIn,
   secretaryDailyDigest,
@@ -97,6 +98,8 @@ export class ChatbotSchedulerService {
 
     createSchedule(`13 11 * * 1,2,3`, async () => secretaryCheckIn(this.bot, this.secretaryMessageService));
 
-    // createSchedule(`11 9-23 * * *`, async () => rainRadarAlert(this.bot));
+    createSchedule(`10,40 7-22 * * *`, async () => rainRadarAlert(this.bot));
+
+    createSchedule(`5 * * * *`, async () => flightTrafficCheck(this.bot));
   }
 }

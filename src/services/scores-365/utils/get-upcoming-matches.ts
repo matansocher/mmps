@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import type { UpcomingMatch } from '../interface';
 import { APP_TYPE_ID, COMPETITION_IDS_MAP, COMPETITIONS, COUNTRY_ID, ENGLISH_LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
+import { scores365Get } from './scores-365-get';
 
 type RawFixture = {
   readonly id: number;
@@ -38,7 +38,7 @@ async function getCompetitionFixtures(sourceCompetitionId: number): Promise<Comp
     timezoneName: DEFAULT_TIMEZONE,
     userCountryId: `${COUNTRY_ID}`,
   };
-  const response = await axios.get(`${SCORES_365_API_URL}/games/fixtures?${new URLSearchParams(queryParams)}`);
+  const response = await scores365Get(`${SCORES_365_API_URL}/games/fixtures?${new URLSearchParams(queryParams)}`);
   // Competitions between seasons answer 200 with the `games` key omitted entirely, so only a missing envelope is a real failure
   if (!Array.isArray(response.data?.competitions)) {
     throw new Error(`Invalid fixtures response for competition ${sourceCompetitionId}`);

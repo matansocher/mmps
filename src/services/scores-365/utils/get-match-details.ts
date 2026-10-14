@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import type { ExpectedMatch, MatchDetails, Team } from '../interface';
 import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
+import { scores365Get } from './scores-365-get';
 
 export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
   try {
@@ -12,7 +12,7 @@ export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
       gameId: matchId.toString(),
       userCountryId: `${COUNTRY_ID}`,
     };
-    const matchRes = await axios.get(`${SCORES_365_API_URL}/game?${new URLSearchParams(queryParams)}`);
+    const matchRes = await scores365Get(`${SCORES_365_API_URL}/game?${new URLSearchParams(queryParams)}`);
     return parseExpectedMatch(matchRes.data?.game);
   } catch {
     return null;

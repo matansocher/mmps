@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { CompetitionTableDetails } from '../interface';
 import { APP_TYPE_ID, COMPETITIONS, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
+import { scores365Get } from './scores-365-get';
 
 export async function getCompetitionTable(competitionId: number): Promise<CompetitionTableDetails> {
   const queryParams = {
@@ -13,7 +13,7 @@ export async function getCompetitionTable(competitionId: number): Promise<Compet
     live: 'false',
     withSeasonsFilter: 'false',
   };
-  const result = await axios.get(`${SCORES_365_API_URL}/standings?${new URLSearchParams(queryParams)}`);
+  const result = await scores365Get(`${SCORES_365_API_URL}/standings?${new URLSearchParams(queryParams)}`);
   const relevantCompetitionData = result.data?.competitions?.find((c) => c.id === competitionId);
   const relevantCompetitionTableData = result.data?.standings?.find((c) => c.competitionId === competitionId);
   if (!relevantCompetitionData || !relevantCompetitionTableData) {

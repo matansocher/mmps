@@ -20,6 +20,7 @@ export class MessageLoader {
 
   private timeoutId?: ReturnType<typeof setTimeout>;
   private loaderMessageId?: number;
+  private stopped = false;
 
   constructor(bot: Bot, chatId: number, messageId: number, options: MessageLoaderOptions) {
     this.bot = bot;
@@ -41,25 +42,37 @@ export class MessageLoader {
     }
   }
 
+  // the loader is cosmetic - its failures must never skip the action or escape as unhandled rejections
   async #startLoader(): Promise<void> {
     if (this.reactionEmoji) {
       await this.bot.api.setMessageReaction(this.chatId, this.messageId, [{ type: 'emoji', emoji: this.reactionEmoji }]).catch(() => {});
     }
-    await this.bot.api.sendChatAction(this.chatId, this.loadingAction as any);
+    await this.bot.api.sendChatAction(this.chatId, this.loadingAction as any).catch(() => {});
 
-    this.timeoutId = setTimeout(async () => {
-      if (this.loaderMessage) {
-        const messageRes = await this.bot.api.sendMessage(this.chatId, this.loaderMessage);
-        this.loaderMessageId = messageRes.message_id;
-      }
-
-      this.timeoutId = setTimeout(async () => {
-        await this.#stopLoader();
-      }, DELETE_AFTER_NO_RESPONSE_MS);
+    this.timeoutId = setTimeout(() => {
+      this.#showLoaderMessage().catch(() => {});
     }, SHOW_AFTER_MS);
   }
 
+  async #showLoaderMessage(): Promise<void> {
+    if (this.loaderMessage) {
+      const messageRes = await this.bot.api.sendMessage(this.chatId, this.loaderMessage);
+      if (this.stopped) {
+        // the action finished while the loader message was being sent
+        await this.bot.api.deleteMessage(this.chatId, messageRes.message_id).catch(() => {});
+        return;
+      }
+      this.loaderMessageId = messageRes.message_id;
+    }
+    if (this.stopped) return;
+
+    this.timeoutId = setTimeout(() => {
+      this.#stopLoader().catch(() => {});
+    }, DELETE_AFTER_NO_RESPONSE_MS);
+  }
+
   async #stopLoader(): Promise<void> {
+    this.stopped = true;
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
       this.timeoutId = undefined;

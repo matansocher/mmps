@@ -1,89 +1,77 @@
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import sharp from 'sharp';
-import { getErrorMessage, Logger } from '@core/utils';
-import { DEFAULT_VIEW, IMS_RADAR_CONFIG } from './constants';
-import { createRadarOverlay, fetchMapTiles } from './map-utils';
-import type { GeneratedRadarImage, ImsRadarResponse, RainRadarOptions } from './types';
+import { Logger } from '@core/utils';
+import { DEFAULT_ANIMATION_MINUTES, DEFAULT_VIEW, FRAME_DELAY_MS, IMS_BASE_URL, IMS_RADAR_METADATA_ENDPOINT, IMS_USER_AGENT, LAST_FRAME_DELAY_MS, RADAR_BOUNDS } from './constants';
+import { selectRadarFrames } from './frames';
+import { createLabelOverlay, createMarkerOverlay, createProgressOverlay, createRadarOverlay, getBaseMap } from './map-utils';
+import type { GeneratedRadarImage, ImsRadarResponse, RadarFrame, RadarSource, RadarView, RainRadarAnimation, RainRadarOptions } from './types';
 
 const logger = new Logger('rain-radar');
 
-export async function generateRainRadarImage(options: RainRadarOptions = {}): Promise<GeneratedRadarImage> {
-  const { zoom = DEFAULT_VIEW.zoom, width = DEFAULT_VIEW.width, height = DEFAULT_VIEW.height } = options;
+async function fetchRadarMetadata(): Promise<ImsRadarResponse> {
+  const res = await axios.get<ImsRadarResponse>(`${IMS_BASE_URL}${IMS_RADAR_METADATA_ENDPOINT}`, {
+    timeout: 15_000,
+    headers: { 'User-Agent': IMS_USER_AGENT, Accept: 'application/json' },
+  });
+  return res.data;
+}
 
-  logger.log(`Generating IMS Rain Radar Image (zoom ${zoom}, ${width}x${height})`);
-
+async function fetchRadarImage(frame: RadarFrame): Promise<Buffer | null> {
+  if (frame.status !== 0) return null;
   try {
-    // 1. Fetch radar metadata
-    const radarMetadata = await axios.get<ImsRadarResponse>(`${IMS_RADAR_CONFIG.baseUrl}${IMS_RADAR_CONFIG.endpoint}`, {
-      headers: {
-        'User-Agent': IMS_RADAR_CONFIG.userAgent,
-        Accept: 'application/json',
-      },
-    });
-
-    const types = radarMetadata.data?.data?.types;
-    const radarImages = types?.IMSRadar4GIS || types?.IMSRadar || types?.radarComposite || types?.radar;
-
-    if (!radarImages || radarImages.length === 0) {
-      throw new Error('No radar images available from IMS');
-    }
-
-    // 2. Get latest radar image (try until we find a non-empty one)
-    const sorted = [...radarImages].sort((a, b) => new Date(b.modified).getTime() - new Date(a.modified).getTime());
-    let radarBuffer: Buffer | null = null;
-    let latestImage = sorted[0];
-
-    for (const img of sorted) {
-      const imageUrl = `${IMS_RADAR_CONFIG.baseUrl}${img.file_name}`;
-      try {
-        const res = await axios.get(imageUrl, {
-          responseType: 'arraybuffer',
-          headers: { 'User-Agent': IMS_RADAR_CONFIG.userAgent },
-        });
-        const buf = Buffer.from(res.data);
-        if (buf.length > 0) {
-          radarBuffer = buf;
-          latestImage = img;
-          logger.debug(`Latest radar image: ${imageUrl}`);
-          logger.debug(`Forecast time: ${latestImage.forecast_time}, Modified: ${latestImage.modified}`);
-          break;
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    if (!radarBuffer) {
-      throw new Error('Could not download any radar image');
-    }
-
-    // 3. Fetch map tiles and create radar overlay
-    const { buffer: mapBuffer, viewLeft, viewTop } = await fetchMapTiles(zoom, width, height);
-    const overlay = await createRadarOverlay(radarBuffer, zoom, viewLeft, viewTop, width, height);
-
-    // 4. Composite radar on map
-    logger.debug('Compositing radar overlay on map...');
-    const compositeImage = await sharp(mapBuffer).composite([overlay]).png().toBuffer();
-
-    // 5. Save
-    const assetsDir = path.resolve(process.cwd(), 'assets', 'radar');
-    if (!fs.existsSync(assetsDir)) {
-      fs.mkdirSync(assetsDir, { recursive: true });
-    }
-
-    const timestamp = Date.now();
-    const outputPath = path.join(assetsDir, `ims_radar_${timestamp}.png`);
-
-    fs.writeFileSync(outputPath, compositeImage);
-    logger.log(`IMS radar image saved to: ${outputPath}`);
-    return {
-      path: outputPath,
-      imageModified: latestImage.modified,
-    };
-  } catch (err) {
-    logger.error(`Failed to generate IMS radar image: ${getErrorMessage(err)}`);
-    throw new Error('IMS radar service is currently unavailable. Please try again later.');
+    const res = await axios.get<ArrayBuffer>(frame.url, { responseType: 'arraybuffer', timeout: 15_000, headers: { 'User-Agent': IMS_USER_AGENT } });
+    return Buffer.from(res.data);
+  } catch {
+    logger.warn(`Failed to download radar frame ${frame.url}`);
+    return null;
   }
+}
+
+function formatFrameLabel(time: string): string {
+  // "2026-09-26 15:10:00" -> "15:10 · 26/09"
+  const [date, clock] = time.split(' ');
+  const [, month, day] = date.split('-');
+  return `${clock.slice(0, 5)} · ${day}/${month}`;
+}
+
+async function renderFrame(frame: RadarFrame, index: number, total: number, source: RadarSource, view: RadarView, options: RainRadarOptions): Promise<Buffer> {
+  const [baseMap, radarImage, label] = await Promise.all([getBaseMap(view), fetchRadarImage(frame), createLabelOverlay(formatFrameLabel(frame.time), view)]);
+  const radar = radarImage ? await createRadarOverlay(radarImage, RADAR_BOUNDS[source], view) : null;
+  const marker = options.marker ? createMarkerOverlay(options.marker, view) : null;
+  const overlays = [radar, marker, label, total > 1 ? createProgressOverlay(index, total, view) : null].filter(Boolean);
+
+  return sharp(baseMap).composite(overlays).png().toBuffer();
+}
+
+export async function generateRainRadarAnimation(options: RainRadarOptions = {}): Promise<RainRadarAnimation> {
+  const view = options.view ?? DEFAULT_VIEW;
+  const { source, frames } = selectRadarFrames(await fetchRadarMetadata(), options.minutes ?? DEFAULT_ANIMATION_MINUTES);
+  const latest = frames.at(-1);
+  logger.log(`Rendering ${frames.length} ${source} radar frames up to ${latest.time}`);
+
+  const rendered: Buffer[] = [];
+  for (const [index, frame] of frames.entries()) {
+    rendered.push(await renderFrame(frame, index, frames.length, source, view, options));
+  }
+
+  const delay = rendered.map((_, index) => (index === rendered.length - 1 ? LAST_FRAME_DELAY_MS : FRAME_DELAY_MS));
+  const gif = await sharp(rendered, { join: { animated: true } })
+    .gif({ delay, loop: 0 })
+    .toBuffer();
+
+  return { gif, latestFrame: rendered.at(-1), source, latestTime: latest.time, latestStatus: latest.status, frameCount: frames.length };
+}
+
+export async function generateRainRadarImage(options: Omit<RainRadarOptions, 'minutes'> = {}): Promise<GeneratedRadarImage> {
+  const radar = await generateRainRadarAnimation({ ...options, minutes: 0 });
+
+  const assetsDir = path.resolve(process.cwd(), 'assets', 'radar');
+  fs.mkdirSync(assetsDir, { recursive: true });
+  const outputPath = path.join(assetsDir, `ims_radar_${Date.now()}.png`);
+  fs.writeFileSync(outputPath, radar.latestFrame);
+
+  logger.log(`IMS radar image saved to: ${outputPath}`);
+  return { path: outputPath, time: radar.latestTime };
 }

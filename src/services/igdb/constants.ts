@@ -40,3 +40,22 @@ export const GAME_FIELDS = [
   'external_games.uid',
   'external_games.url',
 ].join(',');
+
+// Fields for the rated-game lookups (the game scores fallback when Metacritic is unavailable).
+export const RATED_GAME_FIELDS = [
+  'id',
+  'name',
+  'slug',
+  'url',
+  'summary',
+  'first_release_date',
+  'genres.name',
+  'platforms.name',
+  'aggregated_rating',
+  'aggregated_rating_count',
+  'rating',
+  'rating_count',
+  'involved_companies.developer',
+  'involved_companies.publisher',
+  'involved_companies.company.name',
+].join(',');

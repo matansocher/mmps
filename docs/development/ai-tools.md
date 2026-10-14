@@ -80,7 +80,9 @@ export function agent(): AgentDescriptor {
 }
 ```
 
-3. Update the agent's system prompt in `agent.ts` so the model knows when to use the tool.
+3. Put usage rules (when to use it, call sequences, confirmations, defaults, reply formatting) in the tool's own `description`. The system prompt in `agent.ts` holds only general behavior.
+
+4. If the tool has read-only actions, list them in `READ_ONLY_TOOL_ACTIONS` (`src/features/chatbot/agent/tool-retry.ts`) so they are retried on transient errors. Unlisted tools are never retried.
 
 ::: tip
 Use the `/scaffold-ai-tool` skill to generate all of this automatically.
@@ -104,7 +106,7 @@ describe('weatherTool', () => {
 
 27 tools are registered in `src/features/chatbot/agent/agent.ts`, grouped by domain:
 
-- **Personal / productivity**: calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics
+- **Personal / productivity**: calendar (can invite guests by email via `attendees`), gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics
 - **Media / social**: spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels
 - **Information**: weather, earthquake
 - **Sports / games**: competitions-list, competition-matches, competition-table, match-summary, top-matches-for-prediction, match-prediction, makavdia, wolt, worldly
@@ -195,15 +197,15 @@ The chatbot can trigger automated GitHub Actions workflows:
 
 **Code Review Workflow**
 - Trigger: Add the `review` label to a pull request
-- Action: Uses Claude to analyze code quality, suggest improvements, check for bugs
+- Action: Uses Codex to check the diff for bugs, security and performance issues, and posts a review comment
 - Use case: Request AI-powered code review with natural language like "review this PR" or "analyze this pull request"
 
 **Implementation Workflow**
 - Trigger: Add the `implement` label to an issue
-- Action: Uses Claude to generate implementation code and create a new pull request
+- Action: Uses Codex to generate implementation code and create a new pull request
 - Use case: Request implementation generation with natural language like "implement this issue" or "generate code for this"
 
-Both workflows are configured in `.github/workflows/claude.yml` and use Claude Code Action.
+Both are jobs in `.github/workflows/ai.yml`, using `openai/codex-action`.
 
 When the chatbot recognizes these requests, it uses the GitHub tool to add the appropriate label, triggering the automation:
 

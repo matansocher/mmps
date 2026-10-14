@@ -12,6 +12,15 @@ export class CoachService {
     if (!summaryDetails) {
       return null;
     }
+    return this.buildSummaryMessageFromDetails(summaryDetails, competitionIds);
+  }
+
+  // Filters already-collected summary data to the user's leagues in memory, so the scheduler can
+  // fetch every league once and then hand each user only the part they follow.
+  buildSummaryMessageFromDetails(summaryDetails: CompetitionDetails[], competitionIds: number[] = []): string {
+    if (!summaryDetails) {
+      return null;
+    }
     const filteredSummaryDetails = !competitionIds.length ? summaryDetails : summaryDetails.filter((summary) => competitionIds.includes(summary.competition.id));
     return generateMatchResultsString(filteredSummaryDetails);
   }

@@ -7,6 +7,7 @@ import { BLOCKED_ERROR, sendShortenedMessage } from '@services/telegram';
 import { getUserDetails, updateSubscription } from '@shared/coach';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from '../coach.config';
 import { CoachService } from '../coach.service';
+import { sendWithRetry } from '../utils';
 import { COACH_MATCHES_QUEUE } from './coach-matches.queue';
 import type { CoachMatchesJobData } from './coach-matches.queue';
 
@@ -20,7 +21,7 @@ export function createCoachMatchesWorker(coachService: CoachService, bot: Bot): 
       if (!responseText) return;
 
       const replyText = [`זה המצב הנוכחי של משחקי היום:`, responseText].join('\n\n');
-      await sendShortenedMessage(bot, chatId, replyText, { parse_mode: 'Markdown' });
+      await sendWithRetry(() => sendShortenedMessage(bot, chatId, replyText, { parse_mode: 'Markdown' }));
     },
     onFailed: async (job, err) => {
       if (!job) return;

@@ -1,6 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { getCompetitions } from '@services/scores-365';
+import { getCompetitionKey } from './competition-schema';
 
 const schema = z.object({});
 
@@ -14,7 +15,7 @@ async function runner() {
   let result = `**Available Football Competitions**\n\n`;
 
   competitions.forEach((competition) => {
-    result += `${competition.icon || '⚽'} **${competition.name}** (ID: ${competition.id})`;
+    result += `${competition.icon || '⚽'} **${competition.name}** (${getCompetitionKey(competition.id) ?? competition.id})`;
 
     if (competition.hasTable) {
       result += ` 📊`;

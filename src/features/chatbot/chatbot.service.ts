@@ -1,4 +1,3 @@
-import { HumanMessage } from '@langchain/core/messages';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
@@ -8,11 +7,11 @@ import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_COMPLETIONS_MINI_MODEL, GPT_SMALL_MODEL } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgentService, createSafeSummarizationMiddleware } from './agent';
-import { CHATBOT_CONFIG, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
+import { AiService, createAgentService, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
+import { CHATBOT_CONFIG, CHATBOT_SUMMARIZATION_TRIGGER, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
 
@@ -23,10 +22,14 @@ function isProcessMessageOptions(value: unknown): value is ProcessMessageOptions
 export class ChatbotService {
   private readonly logger = new Logger('chatbot:service');
   private readonly model: ChatOpenAI;
+  private readonly summaryModel: ChatOpenAI;
   private readonly aiService: AiService;
 
   constructor(checkpointer?: BaseCheckpointSaver) {
     this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+    // Summarization is plain compression, so it runs on the small model. gpt-5-nano is a reasoning
+    // model: it rejects a custom temperature, and low effort keeps it fast.
+    this.summaryModel = new ChatOpenAI({ model: GPT_SMALL_MODEL, reasoning: { effort: 'low' }, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,
@@ -48,14 +51,15 @@ export class ChatbotService {
     // Bounded by tokens, not message counts: a single retained message can carry a base64 image
     // or a full transcript, so a message-only limit doesn't bound the context window or the size
     // of the MongoDB checkpoint document (16 MiB limit). The trigger array is OR'd — summarize
-    // when the history exceeds the token budget OR the message-count fallback — and `keep` is
-    // token-based so the retained tail fits a real budget.
+    // when the history exceeds the token budget OR the message-count fallback (which also needs
+    // a token floor so it can't re-fire every turn) — and `keep` is token-based so the retained
+    // tail fits a real budget.
     //
     // Wrapped in a safe guard: if the underlying summarizer fails, the original history is
     // preserved rather than replaced with an error-shaped summary.
     const summarization = createSafeSummarizationMiddleware({
-      model: this.model,
-      trigger: [{ tokens: CHATBOT_CONFIG.summarization.triggerTokens }, { messages: CHATBOT_CONFIG.summarization.triggerMessages }],
+      model: this.summaryModel,
+      trigger: CHATBOT_SUMMARIZATION_TRIGGER,
       keep: { tokens: CHATBOT_CONFIG.summarization.keepTokens },
       summaryPrompt: CHATBOT_SUMMARY_PROMPT,
     });
@@ -67,10 +71,14 @@ export class ChatbotService {
     const modelCallLimit = modelCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.modelCallLimitPerRun, exitBehavior: 'end' });
     const toolCallLimit = toolCallLimitMiddleware({ runLimit: CHATBOT_CONFIG.execution.toolCallLimitPerRun, exitBehavior: 'continue' });
 
+    // Retries read-only tool calls (weather, search, list actions, ...) on timeouts, 429 and 5xx,
+    // and returns clear errors the model can act on. Calls with side effects are never retried.
+    const toolRetry = createToolRetryMiddleware();
+
     this.aiService = createAgentService(agent(), {
       model: this.model,
       checkpointer,
-      middleware: [summarization, modelCallLimit, toolCallLimit],
+      middleware: [summarization, modelCallLimit, toolCallLimit, toolRetry, createStructuredResponseMiddleware()],
       toolCallbackOptions,
     });
   }
@@ -92,11 +100,9 @@ export class ChatbotService {
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();
-      // Single wall-clock deadline shared by the agent run and the follow-up structured-output call,
-      // so the whole turn is bounded regardless of how many model/tool calls it makes.
+      // Single wall-clock deadline for the whole turn, regardless of how many model/tool calls it makes.
       const signal = AbortSignal.timeout(CHATBOT_CONFIG.execution.turnTimeoutMs);
-      // Recorded in `finally` so the turn's usage is captured even if a later step throws, and so
-      // the follow-up structured-output call below is billed as part of the same turn.
+      // Recorded in `finally` so the turn's usage is captured even if a later step throws.
       try {
         const result = await this.aiService.invoke(contextualMessage, {
           threadId,
@@ -104,6 +110,7 @@ export class ChatbotService {
           signal,
           invocationSource: 'chatbot',
           callbacks: usageHandler ? [usageHandler] : undefined,
+          responseSchema,
         });
 
         const agentResponse = formatAgentResponse(result);
@@ -112,9 +119,13 @@ export class ChatbotService {
           return agentResponse;
         }
 
-        const structuredModel = this.model.withStructuredOutput(responseSchema);
-        const structured = await structuredModel.invoke([new HumanMessage(agentResponse.message)], { signal, callbacks: usageHandler ? [usageHandler] : undefined });
-        return { response: agentResponse, structured: structured as z.infer<T> };
+        // Produced by the agent's own final step (see createStructuredResponseMiddleware). Missing
+        // when the run ended early, e.g. on the model-call limit.
+        const { structuredResponse } = result as typeof result & { readonly structuredResponse?: unknown };
+        if (structuredResponse === undefined) {
+          throw new Error('Agent did not produce a structured response');
+        }
+        return { response: agentResponse, structured: structuredResponse as z.infer<T> };
       } finally {
         if (usageHandler) {
           recordModelUsage({ source: 'chatbot', chatId, handler: usageHandler, durationMs: Date.now() - startedAt });

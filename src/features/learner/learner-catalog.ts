@@ -305,6 +305,15 @@ export const LEARNER_CATALOG: ReadonlyArray<LearnerCatalogEntry> = [
     "firstQuestion": "Change Data Capture works by…"
   },
   {
+    "id": "system-design:q-ad-click",
+    "guide": "system-design",
+    "title": "Ad Click Aggregator",
+    "subtitle": "",
+    "minutes": 4,
+    "isReference": false,
+    "firstQuestion": "Why should the ad click aggregator use event-time rather than processing-time windows?"
+  },
+  {
     "id": "system-design:cheatsheet",
     "guide": "system-design",
     "title": "Interview Cheat Sheet",
@@ -377,6 +386,24 @@ export const LEARNER_CATALOG: ReadonlyArray<LearnerCatalogEntry> = [
     "firstQuestion": "When are multiple agents worth the extra complexity?"
   },
   {
+    "id": "ai-engineering:multi-agent-harnesses",
+    "guide": "ai-engineering",
+    "title": "Multi-Agent Systems & Harnesses",
+    "subtitle": "The model is the processor; the harness is the computer. ReAct loops, context management, tools, multi-agent tradeoffs, and where AI engineering is heading.",
+    "minutes": 10,
+    "isReference": false,
+    "firstQuestion": "What is the key difference between a single LLM call and a ReAct agent?"
+  },
+  {
+    "id": "ai-engineering:mmps-agents",
+    "guide": "ai-engineering",
+    "title": "Case Study: The MMPS Chatbot Agent",
+    "subtitle": "How the MMPS Telegram assistant is built as a single LangGraph ReAct agent, the single-vs-multi-agent tradeoff for this repo, and the interview Q&A.",
+    "minutes": 12,
+    "isReference": false,
+    "firstQuestion": "How does the MMPS chatbot remember conversations across restarts?"
+  },
+  {
     "id": "ai-engineering:multimodal",
     "guide": "ai-engineering",
     "title": "Multimodal, OCR & Audio",
@@ -438,6 +465,8 @@ export const LEARNER_CURRICULUM: ReadonlyArray<string> = [
   "ai-engineering:agents",
   "system-design:sharding",
   "ai-engineering:multi-agent",
+  "ai-engineering:multi-agent-harnesses",
+  "ai-engineering:mmps-agents",
   "system-design:consistent-hashing",
   "ai-engineering:multimodal",
   "system-design:cap",
@@ -464,7 +493,8 @@ export const LEARNER_CURRICULUM: ReadonlyArray<string> = [
   "system-design:dd-timeseries",
   "system-design:dd-vectordb",
   "system-design:dd-bigdata",
-  "system-design:dd-cdc"
+  "system-design:dd-cdc",
+  "system-design:q-ad-click"
 ];
 
 const BY_ID = new Map(LEARNER_CATALOG.map((e) => [e.id, e]));

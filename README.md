@@ -14,7 +14,7 @@ npm install
 # Configure environment
 cp .env.example .env          # then fill in values you need
 # At minimum: MONGO_DB_URL, LOCAL_ACTIVE_BOT_ID, the bot's *_TELEGRAM_BOT_TOKEN,
-# and one of OPENAI_API_KEY / ANTHROPIC_API_KEY.
+# and OPENAI_API_KEY.
 
 # Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, SECRETARY, WOLT, WORLDLY)
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
@@ -33,7 +33,6 @@ LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 
 Plus bot-less web features:
 - **Savings** — a password-protected shared portfolio rebalancer (`apps/savings-web`) backed by MongoDB and served at `/savings/*`.
-- **Mindloop** — an original brain-training mini-app (`apps/mindloop-web`) with 13 games and Mongo-backed player progress, served at `/mindloop/*`.
 
 Bot guides on the docs site: <https://matansocher.github.io/mmps/bots/overview>.
 
@@ -64,7 +63,6 @@ npm run docs:dev           # VitePress docs locally
 # Mini-app workspaces
 npm run dev:chatbot-web
 npm run dev:savings-web
-npm run dev:mindloop-web
 ```
 
 ### For AI agents (Claude Code, Copilot, Cursor, …)
@@ -75,7 +73,7 @@ If you change conventions or architecture, **update `AGENTS.md`** (the symlinks 
 
 ### GitHub AI workflows
 
-Two labels in `.github/workflows/claude.yml` trigger automation:
+Two labels trigger OpenAI Codex automation (`.github/workflows/ai.yml`):
 
 - **`review`** on a PR → AI code review.
 - **`implement`** on an issue → AI generates an implementation PR.

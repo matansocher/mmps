@@ -1,13 +1,18 @@
-import type { Express } from 'express';
+import express, { type Express } from 'express';
+import path from 'node:path';
 import { createMongoConnection } from '@core/mongo';
+import { getErrorMessage, Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/worldly';
+import { registerWorldlyApiRoutes } from './api';
 import { WorldlyBotSchedulerService } from './worldly-scheduler.service';
-import { BOT_CONFIG } from './worldly.config';
+import { BOT_CONFIG, GLOBE_APP_PATH } from './worldly.config';
 import { WorldlyController } from './worldly.controller';
 import { WorldlyService } from './worldly.service';
 
-export async function initWorldly(_app: Express): Promise<void> {
+const logger = new Logger('worldly:init');
+
+export async function initWorldly(app: Express): Promise<void> {
   await createMongoConnection(DB_NAME);
 
   const bot = provideTelegramBot(BOT_CONFIG);
@@ -18,4 +23,16 @@ export async function initWorldly(_app: Express): Promise<void> {
 
   worldlyController.init();
   worldlyScheduler.init();
+
+  // Telegram persists the menu button, so explicitly restore the commands list (it previously opened the globe).
+  bot.api.setChatMenuButton({ menu_button: { type: 'commands' } }).catch((err) => logger.error(`Failed to set menu button: ${getErrorMessage(err)}`));
+
+  registerWorldlyApiRoutes(app);
+
+  const spaDist = path.resolve('apps/earth-web/dist');
+  app.use(GLOBE_APP_PATH, express.static(spaDist));
+  app.get(`${GLOBE_APP_PATH}/*splat`, (_req, res) => {
+    res.sendFile(path.join(spaDist, 'index.html'));
+  });
+  logger.log(`Globe SPA served from ${spaDist} at ${GLOBE_APP_PATH}/*`);
 }

@@ -1,6 +1,6 @@
 # Bots Overview
 
-MMPS includes 6 specialized Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings and Mindloop are initialized independently of bot selection.
+MMPS includes 6 Telegram bots plus bot-less web features. Each bot lives in `src/features/{name}/` and is initialized only when `IS_PROD=true` or `LOCAL_ACTIVE_BOT_ID` matches its uppercase ID. Savings, Zika and the WhatsApp webhook are initialized independently of bot selection.
 
 ## The Bots
 
@@ -34,17 +34,30 @@ Interactive geography quiz bot.
 - **Database**: `Worldly`
 - **[Learn more →](/bots/worldly)**
 
+### 6. **Learner** - Daily Learning Bites
+Telegram bot plus a mini-app (`apps/learner-web`, served at `/learner/*`) that delivers short learning bites from guides such as System Design and AI Engineering. `/today` sends today's bite and `/app` opens the mini-app; a daily reminder fires at 11:15. Progress syncs through `/api/learner/progress`.
+- **Database**: `Learner` (`Progress`, `Subscriptions`, `Deliveries`)
+
 ### **Savings** - Shared Portfolio Rebalancer
 Password-protected React application served at `/savings/*` for managing one shared family portfolio with real ILS values.
 - **Features**: Reactive rebalancing, explicit saves, revision conflict protection, shared-password authentication
 - **Database**: `Savings`
 - **[Learn more →](/bots/savings)**
 
-### **Mindloop** - Brain-Training Mini-App
-Original React game collection served at `/mindloop/*` with 14 games across 5 skill categories and Mongo-backed player progress.
-- **Features**: 14 games, shared game shell, onboarding, streaks, offline-first sync of best scores/favorites/history
-- **Database**: `Mindloop`
-- **[Learn more →](/bots/mindloop)**
+### **Earth** - Find the Country Quiz
+The Worldly bot's Telegram mini app (`/globe`, `/start`, menu button): a geography quiz on a 3D globe served at `/earth/*` by `initWorldly`, built on CesiumJS. Spin the political map and click the country you are asked for. Modes are picked from a plain menu: Daily challenge, Classic, Continent sprint, Name it and Continent cleanup (the continent modes expand to list each continent). Players earn XP and levels and build a collection of found countries, all stored on the device.
+- **Database**: none (browser storage only)
+- **[Learn more →](/bots/earth)**
+
+### **Stickers** - WhatsApp Sticker Vault
+A shared WhatsApp sticker vault on Meta's Cloud API webhook at `GET/POST /whatsapp-webhook`. Users save stickers, tag them with words or emojis, and search the tags to get the stickers back. The webhook plumbing (verification, signature check, allowlist) is the shared `registerWhatsAppWebhook` from `@services/whatsapp`.
+- **Database**: `Whatsapp`
+- **[Learn more →](/bots/stickers)**
+
+### **Zika** - Redesign Showcase
+Static React showcase at `/zika/*` with three redesign options (bold, catalog, friendly) for zika.co.il, in Hebrew RTL. The cart is client-side only and checkout links to the real shop.
+- **Database**: none
+- **[Learn more →](/bots/zika)**
 
 ## Running Bots
 
@@ -62,7 +75,7 @@ Replace `CHATBOT` with one of: `CHILLI`, `COACH`, `WOLT`, `WORLDLY`.
 IS_PROD=true npm start
 ```
 
-Production initializes all 6 Telegram bots. Savings and Mindloop initialize in development and production.
+Production initializes all 6 Telegram bots. Savings, Zika and the WhatsApp webhook initialize in development and production.
 
 ## Bot Architecture
 
@@ -103,7 +116,6 @@ MONGO_DB_URL=mongodb://...
 Current bot databases:
 - `Chatbot` - Chatbot LangGraph checkpoints and token/cost usage records
 - `Coach` - Coach users and subscriptions
-- `Mindloop` - Mindloop player best scores, favorites, and play history
 - `Savings` - Shared portfolio settings and holdings
 - `Wolt` - Wolt users and subscriptions
 - `Worldly` - Geography content, subscriptions, and game logs
@@ -127,9 +139,6 @@ NOTIFIER_TELEGRAM_BOT_TOKEN=...
 
 # Bot-less Savings app
 SAVINGS_APP_PASSWORD=...
-
-# Bot-less Mindloop mini-app (token used only to verify Telegram initData)
-MINDLOOP_TELEGRAM_BOT_TOKEN=...
 ```
 
 ## Next Steps
@@ -141,7 +150,8 @@ Select a bot to explore:
 - **[Wolt](/bots/wolt)** - Restaurant alerts
 - **[Worldly](/bots/worldly)** - Geography education
 - **[Savings](/bots/savings)** - Shared portfolio rebalancer
-- **[Mindloop](/bots/mindloop)** - Brain-training mini-app
+- **[Earth](/bots/earth)** - Find-the-country globe quiz
+- **[Stickers](/bots/stickers)** - WhatsApp sticker vault
 
 Or explore:
 - **[Architecture](/architecture/overview)** - System design

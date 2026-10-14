@@ -4,6 +4,8 @@ export const BOT_CONFIG: TelegramBotConfig = {
   id: 'WOLT',
   name: 'Wolt Bot 🍔',
   token: 'WOLT_TELEGRAM_BOT_TOKEN',
+  // a search can wait tens of seconds for the restaurants list - it must not hold up other users
+  concurrentUpdates: true,
   commands: {
     START: { command: '/start', description: 'התחל מהתחלה' },
     LIST: { command: '/list', description: '🩵 רשימת ההתראות הפתוחות 🩵' },
@@ -15,7 +17,10 @@ export const INLINE_KEYBOARD_SEPARATOR = ' - ';
 
 export const MAX_NUM_OF_SUBSCRIPTIONS_PER_USER = 6;
 export const MAX_NUM_OF_RESTAURANTS_TO_SHOW = 7;
+export const MAX_NUM_OF_RESTAURANTS_TO_RANK = 30;
+export const SEARCH_RESULTS_TTL_MS = 60 * 60 * 1000;
 export const SUBSCRIPTION_EXPIRATION_HOURS = 4;
+export const SUBSCRIPTION_EXTENSION_HOURS = [1, 4];
 
 export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number> = {
   FAST: 60 / 2,
@@ -25,6 +30,8 @@ export const SECONDS_BETWEEN_RESTAURANTS_REFRESH_OPTIONS: Record<string, number>
 };
 
 export const TOO_OLD_LIST_THRESHOLD_MS = 60000;
+// searches can be answered from an older list while a fresh one loads in the background
+export const STALE_LIST_MAX_AGE_MS = 15 * 60 * 1000;
 
 export const MIN_HOUR_TO_ALERT_USER = 8;
 export const MAX_HOUR_TO_ALERT_USER = 1;
@@ -44,7 +51,7 @@ export const DELAY_BETWEEN_CITY_RETRIES_MS = 1500;
 
 export const CITIES_BASE_URL = 'https://restaurant-api.wolt.com/v1/cities';
 export const RESTAURANTS_BASE_URL = 'https://restaurant-api.wolt.com/v1/pages/restaurants';
-export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/en/isr/{area}/restaurant/{slug}';
+export const RESTAURANT_LINK_BASE_URL = 'https://wolt.com/he/isr/{area}/restaurant/{slug}';
 
 // the order of this array is important, this will determine the order of multiple results in restaurants search
 export const CITIES_SLUGS_SUPPORTED = ['tel-aviv', 'hasharon', 'petah-tikva'];
@@ -107,6 +114,7 @@ export const HOUR_OF_DAY_TO_REFRESH_MAP = {
 export enum BOT_ACTIONS {
   ADD = 'add',
   REMOVE = 'remove',
+  EXTEND = 'extend',
   CHANGE_PAGE = 'change_page',
 }
 
@@ -117,6 +125,7 @@ export const ANALYTIC_EVENT_NAMES = {
   SEARCH: 'SEARCH',
   SUBSCRIBE: 'SUBSCRIBE',
   UNSUBSCRIBE: 'UNSUBSCRIBE',
+  EXTEND: 'EXTEND',
   SUBSCRIPTION_FULFILLED: 'SUBSCRIPTION_FULFILLED',
   SUBSCRIPTION_FAILED: 'SUBSCRIPTION_FAILED',
   ALERT_SUBSCRIPTION_FAILED: 'ALERT_SUBSCRIPTION_FAILED',

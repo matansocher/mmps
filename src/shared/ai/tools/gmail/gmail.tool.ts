@@ -93,6 +93,9 @@ async function runner({ action, query, maxResults, recipient, subject, body, ema
 
 export const gmailTool = tool(runner, {
   name: 'gmail',
-  description: 'List, send, or delete Gmail emails. Supports three actions: "list" to fetch emails with optional search query, "send" to send HTML emails, or "delete" to move emails to trash.',
+  description: `List, send, or delete Gmail emails. Supports three actions: "list" to fetch emails with optional search query, "send" to send HTML emails, or "delete" to move emails to trash.
+
+The user's email is matansocher@gmail.com; "send to me/myself/my email" refers to this address. Bodies support HTML.
+Always confirm the recipient, subject, and body with the user before sending. Use emojis in replies (📧, ✉️, 📨, 🗑️).`,
   schema,
 });

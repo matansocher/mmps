@@ -22,10 +22,11 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 ### Available Tools
 - 🌤️ **Weather** - Current conditions and forecasts
 - ⏰ **Reminders** - Set and manage reminders
-- 📅 **Calendar** - Calendar integration
+- 📅 **Calendar** - Create, list, update and delete Google Calendar events, and invite guests by email (Google sends them the invite, update and cancellation emails)
 - 🐙 **GitHub** - Repository and code interaction
-- 📊 **Google Sheets** - Spreadsheet operations
 - 🔍 **Web Search** - Search the internet
+- 🌐 **Browse URL** - Open a link and read its main text (no JavaScript or clicking)
+- 🎮 **Game Scores** - Metacritic score, user score and details for a game, with fuzzy name matching and suggestions (IGDB fallback)
 - ✅ **Todo Lists** - Task management
 - And 13+ more tools
 
@@ -37,16 +38,15 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 # Required
 CHATBOT_TELEGRAM_BOT_TOKEN=your-token
 
-# AI Model (choose one)
+# AI Model
 OPENAI_API_KEY=sk-...           # For ChatGPT
-ANTHROPIC_API_KEY=sk-ant-...    # For Claude (alternative)
 
 # Optional Tools
 GITHUB_APP_ID=123456                 # For GitHub App authentication
 GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----...  # GitHub App private key
 GITHUB_APP_INSTALLATION_ID=456789    # GitHub App installation ID for the repo
 WEATHERAPI_KEY=...              # For weather data
-GOOGLE_SHEETS_CREDENTIALS=...   # For Sheets integration
+GOOGLE_CALENDAR_REFRESH_TOKEN=... # OAuth refresh token (calendar scope, minted with GMAIL_CLIENT_ID/SECRET), needed to invite attendees; without it the calendar falls back to the GOOGLE_CALENDAR_CLIENT_EMAIL/PRIVATE_KEY service account, which can't invite
 ```
 
 ### Bot Config
@@ -75,17 +75,10 @@ export const BOT_CONFIG = {
 
 ### 2. Set Up AI Model
 
-Choose either OpenAI or Anthropic:
-
 **OpenAI:**
 - Visit [platform.openai.com](https://platform.openai.com)
 - Create an API key
 - Add to `.env`: `OPENAI_API_KEY=sk-...`
-
-**Anthropic (Claude):**
-- Visit [console.anthropic.com](https://console.anthropic.com)
-- Create an API key
-- Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-...`
 
 ### 3. Set Up GitHub Integration (Optional)
 
@@ -145,6 +138,7 @@ Tools (weather, reminders, etc.)
 
 - **Daily Summary** - Generates daily summary at 23:00
 - **Football Updates** - Updates sports data at 12:59 and 23:59
+- **Flight Traffic Alerts** - Hourly at :05, counts airborne aircraft over Israel and Iran (ADS-B via adsb.lol with an adsb.fi fallback, filtered to the Worldly border polygon), and DMs the owner once when traffic drops to 25% or less of the same-hour median of the last 14 days. It sends a second message when traffic is back to at least 50%. Nothing fires during the first 7 days of history or in hours whose typical count is below 8 (`schedulers/flight-traffic-check.ts`, `shared/flight-traffic/`)
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
 - **Email Cleanup** - 12:00 and 20:00 (Asia/Jerusalem). Checks up to 50 unread inbox emails from the last 24h using OpenAI `gpt-4.1-mini` structured responses, in batches of 20. Sends only Gmail ID, sender, subject, and snippet, treating email fields as untrusted data rather than instructions; response storage is disabled (`store: false`). Moves only `spam` or `advertisement` results with confidence > 0.75 to Gmail Trash; `keep` results stay untouched at any confidence. Confidence is model-assessed, not a calibrated probability. Before any trash action, validates the entire batch schema and requires every input ID exactly once (no missing, duplicate, or unknown IDs). Failed batches remain untouched and later batches still run; Gmail trash calls are limited to 5 at a time. Silent unless something was successfully trashed (then a report with confidence scores), or every classification batch failed (then a warning DM). Uses the existing `OPENAI_API_KEY`; no new credentials.
 
@@ -152,8 +146,8 @@ Tools (weather, reminders, etc.)
 
 Conversation memory is two complementary layers:
 
-- **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
-- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~40 messages), the older turns are compressed into a running summary and the most recent (~20) are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**.
+- **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL, older snapshots pruned so each thread keeps only its 2 newest checkpoints), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
+- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~24k tokens, or ~40 messages holding at least ~16k tokens), the older turns are compressed into a running summary and the most recent ~8k tokens are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on the small model (`gpt-5-nano`), not the main agent model.
 
 Tune via environment variables:
 
@@ -161,7 +155,7 @@ Tune via environment variables:
 # Optional: conversation summarization (defaults in code)
 # Optional: conversation summarization (defaults in code)
 CHATBOT_SUMMARY_TRIGGER_TOKENS=24000  # summarize once retained history passes this many tokens (primary bound)
-CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # also summarize once a thread passes this many messages (OR)
+CHATBOT_SUMMARY_TRIGGER_MESSAGES=40   # also summarize once a thread passes this many messages (OR; needs 2x KEEP_TOKENS)
 CHATBOT_SUMMARY_KEEP_TOKENS=8000      # recent tokens kept verbatim after summarizing
 ```
 
@@ -188,7 +182,7 @@ CHATBOT_USAGE_TRACKING=false   # disable token/cost metering
 **Database name**: `Chatbot` for LangGraph checkpoints and usage records; chatbot tools also use shared feature databases.
 
 Collections:
-- LangGraph checkpoint collections - Durable conversation memory with 30-day TTL
+- LangGraph checkpoint collections (`checkpoints`, `checkpoint_writes`) - Durable conversation memory with 30-day TTL; pruned to the 2 newest checkpoints per thread (backfill: `npx tsx src/features/chatbot/scripts/prune-checkpoints.ts [--apply]`)
 - `usage` - Per-turn token/cost records with 90-day TTL
 
 Chatbot tools also connect to shared databases such as `Reminders`, `CalendarEvents`, `Trainer`, `Coach`, `Wolt`, `Worldly`, `Cooker`, and related follower/friends databases.
@@ -228,7 +222,7 @@ export const myTool = tool(runner, {
 
 Check:
 - Bot token is correct in `.env`
-- OPENAI_API_KEY or ANTHROPIC_API_KEY is set
+- OPENAI_API_KEY is set
 - MongoDB is running
 - No errors in console logs
 
@@ -251,7 +245,7 @@ If the bot uses too much memory:
 1. **Use faster models** - Use gpt-4-mini for faster responses
 2. **Cache tool results** - Don't call same tool twice
 3. **Bound context** - Summarization keeps thread size in check; tune the trigger/keep thresholds
-4. **Monitor logs** - Use Google Sheets logging in production
+4. **Monitor logs** - Use [Grafana Cloud logging](/deployment/monitoring) in production
 
 ## Next Steps
 
