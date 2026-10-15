@@ -18,6 +18,7 @@ import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 import { FileSummaryService } from './file-summary';
 import { ensureSecretaryMessageIndexes, SecretaryActionService, SecretaryMessageService } from './secretary';
+import { initYouTubeCollection } from './youtube-collection';
 
 export async function initChatbot(app: Express): Promise<void> {
   const mongoDbNames = [
@@ -41,6 +42,7 @@ export async function initChatbot(app: Express): Promise<void> {
   // between starting the bot and registering handlers lets polling win the race and
   // makes controller.init()'s bot.command/bot.on calls throw. Keep this await above.
   const checkpointer = await createChatbotCheckpointer();
+  const youtubeCollection = await initYouTubeCollection();
 
   const bot = provideTelegramBot(BOT_CONFIG);
 
@@ -49,7 +51,7 @@ export async function initChatbot(app: Express): Promise<void> {
   const secretaryActionService = new SecretaryActionService();
   const fileSummaryService = new FileSummaryService();
   const chatbotController = new ChatbotController(chatbotService, bot, secretaryMessageService, secretaryActionService, fileSummaryService);
-  const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot, secretaryMessageService);
+  const chatbotScheduler = new ChatbotSchedulerService(chatbotService, bot, secretaryMessageService, youtubeCollection);
 
   chatbotController.init();
   chatbotScheduler.init();

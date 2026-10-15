@@ -147,15 +147,34 @@ export async function getTranscriptText(videoUrl: string, lang?: string): Promis
   return '';
 }
 
-export async function getVideosFromRSS(channelId: string): Promise<YouTubeRSSVideo[]> {
+export async function getVideosFromRSS(channelId: string, signal?: AbortSignal): Promise<YouTubeRSSVideo[]> {
   const rssUrl = buildRSSFeedUrl(channelId);
 
-  const response = await fetch(rssUrl);
+  const response = await fetch(rssUrl, { signal: signal ?? AbortSignal.timeout(20_000) });
 
   if (!response.ok) {
     throw new Error(`RSS feed error: ${response.status}`);
   }
 
-  const xmlText = await response.text();
-  return parseRSSFeed(xmlText);
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('RSS feed response has no body');
+  const chunks: Uint8Array[] = [];
+  let bytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > 1024 * 1024) throw new Error('RSS feed exceeds 1 MiB');
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel();
+    reader.releaseLock();
+  }
+  const xmlText = Buffer.concat(chunks).toString('utf8');
+  if (!/<feed[\s>]/.test(xmlText) || !xmlText.includes('</feed>')) throw new Error('Malformed RSS feed');
+  const videos = parseRSSFeed(xmlText);
+  if (videos.length > 100) throw new Error('RSS feed exceeds 100 videos');
+  return videos;
 }

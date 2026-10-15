@@ -32,6 +32,7 @@ import {
 } from './schedulers';
 import { LOOKBACK_MINUTES } from './schedulers/earthquake-monitor';
 import type { SecretaryMessageService } from './secretary';
+import type { YouTubeCollectionService } from './youtube-collection';
 
 const logger = new Logger('chatbot:scheduler');
 
@@ -45,6 +46,7 @@ export class ChatbotSchedulerService {
     private readonly chatbotService: ChatbotService,
     private readonly bot: Bot,
     private readonly secretaryMessageService: SecretaryMessageService,
+    private readonly youtubeCollection: YouTubeCollectionService | null = null,
   ) {}
 
   init(): void {
@@ -78,7 +80,12 @@ export class ChatbotSchedulerService {
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
 
-    createSchedule(`30 11,15,19,23 * * *`, async () => socialMediaCollect(['twitter', 'youtube']));
+    createSchedule(`30 11,15,19,23 * * *`, async () => {
+      if (!this.youtubeCollection) return socialMediaCollect(['twitter', 'youtube']);
+      // Start publishing independently so a slow X scrape cannot delay queue dispatch.
+      const results = await Promise.allSettled([this.youtubeCollection.publish(), socialMediaCollect(['twitter'])]);
+      for (const result of results) if (result.status === 'rejected') throw result.reason;
+    });
 
     createSchedule(`30 18 * * *`, async () => socialMediaCollect(['tiktok']));
 
