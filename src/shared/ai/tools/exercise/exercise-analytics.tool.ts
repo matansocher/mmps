@@ -1,11 +1,30 @@
 import { tool } from '@langchain/core/tools';
+import { promises as fs } from 'fs';
+import { env } from 'node:process';
+import * as path from 'path';
 import { z } from 'zod';
-import { DAYS_OF_WEEK, MY_USER_ID } from '@core/config';
-import { getLongestStreak, getStars, getStreak } from '@core/utils';
+import { DAYS_OF_WEEK, LOCAL_FILES_PATH, MY_USER_ID } from '@core/config';
+import { deleteFile, getErrorMessage, getLongestStreak, getStars, getStreak, Logger } from '@core/utils';
+import { imgurUploadImage } from '@services/imgur';
 import { createImage } from '@services/openai';
 import { searchMeme } from '@services/tenor';
 import { getExercises, getWeeklyExerciseStats } from '@shared/trainer';
 import { BROKEN_RECORD_IMAGE_PROMPT, getLastWeekDates } from './utils';
+
+const logger = new Logger('ai:tool:exercise-analytics');
+
+async function createCelebrationImageUrl(prompt: string): Promise<string | undefined> {
+  const imagePath = path.join(LOCAL_FILES_PATH, `exercise_record_${Date.now()}.png`);
+  try {
+    await fs.writeFile(imagePath, await createImage(prompt));
+    return await imgurUploadImage(env.IMGUR_CLIENT_ID, imagePath);
+  } catch (err) {
+    logger.error(`Failed to create celebration image: ${getErrorMessage(err)}`);
+    return undefined;
+  } finally {
+    await deleteFile(imagePath);
+  }
+}
 
 const schema = z.object({
   action: z.enum(['weekly_summary', 'achievements', 'generate_reminder', 'check_record']).describe('The action to perform'),
@@ -99,7 +118,7 @@ async function runner({ action }: z.infer<typeof schema>) {
 
         if (brokeRecord) {
           const prompt = BROKEN_RECORD_IMAGE_PROMPT.replace('{streak}', `${currentStreak}`);
-          const imageUrl = await createImage(prompt);
+          const imageUrl = await createCelebrationImageUrl(prompt);
 
           return JSON.stringify({
             brokeRecord: true,

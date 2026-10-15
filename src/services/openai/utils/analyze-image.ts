@@ -1,10 +1,11 @@
-import { IMAGE_ANALYZER_MODEL } from '../constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '../constants';
 import { provideOpenAiClient } from '../provide-openai-client';
 
 export async function analyzeImage(prompt: string, imageUrl: string): Promise<string> {
   const client = provideOpenAiClient();
   const response = await client.chat.completions.create({
-    model: IMAGE_ANALYZER_MODEL,
+    model: CHAT_MODEL,
+    reasoning_effort: CHAT_MODEL_REASONING_EFFORT,
     messages: [
       {
         role: 'user',

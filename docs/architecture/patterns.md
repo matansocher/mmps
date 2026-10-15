@@ -288,7 +288,7 @@ export function createChatbotAgent() {
     // ... more tools
   ];
 
-  const model = new ChatOpenAI({ model: 'gpt-4-mini' }).bindTools(tools);
+  const model = new ChatOpenAI({ model: 'gpt-6-luna', reasoning: { effort: 'none' } }).bindTools(tools);
 
   const agent = createReactAgent({
     llmWithTools: model,

@@ -120,7 +120,7 @@ export async function callAPI(url: string): Promise<Response> {
 // services/openai/constants.ts
 export const OPENAI_TIMEOUT_MS = 30000;
 export const OPENAI_MAX_RETRIES = 3;
-export const CHAT_COMPLETIONS_MINI_MODEL = 'gpt-4-mini';
+export const CHAT_MODEL = 'gpt-6-luna';
 ```
 
 ## Types and Interfaces

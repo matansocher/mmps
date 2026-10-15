@@ -1,4 +1,4 @@
-import { CHAT_COMPLETIONS_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { provideOpenAiClient } from '@services/openai/provide-openai-client';
 
 type GetStreamingResponseOptions = {
@@ -20,11 +20,12 @@ type GetStreamingResponseResult = {
 };
 
 export async function getStreamingResponse(options: GetStreamingResponseOptions, onChunk: (chunk: StreamChunk) => void | Promise<void>): Promise<GetStreamingResponseResult> {
-  const { input, store = true, instructions, previousResponseId, model = CHAT_COMPLETIONS_MODEL } = options;
+  const { input, store = true, instructions, previousResponseId, model = CHAT_MODEL } = options;
   const client = provideOpenAiClient();
 
   const stream = client.responses.stream({
     model,
+    reasoning: { effort: CHAT_MODEL_REASONING_EFFORT },
     store,
     instructions,
     input,

@@ -20,7 +20,7 @@ Key engineering properties:
 
 | Term | What it means (and how it shows up here) |
 |------|------------------------------------------|
-| **LLM** | Large Language Model. Here: OpenAI `gpt-4.1-mini` via `ChatOpenAI`, `temperature: 0.2` (low = more deterministic). |
+| **LLM** | Large Language Model. Here: OpenAI `gpt-6-luna` via `ChatOpenAI`, reasoning effort `none`, `temperature: 0.2` (low = more deterministic). |
 | **Agent** | An LLM that decides *which action to take next* in a loop, rather than emitting one answer. It can call tools, read results, and iterate. |
 | **ReAct** | *Reasoning + Acting* pattern: the model interleaves "thought → tool call → observation → thought…" until it can answer. This is exactly what `createAgent()` builds. |
 | **Tool / function calling** | Structured functions the LLM can invoke. The model outputs a JSON tool call; the runtime executes the real code and feeds the result back. Defined with `tool()` + a **Zod** schema. |
@@ -75,7 +75,7 @@ The whole "brain" is created by one LangChain call in `factory.ts`:
 
 ```ts
 const reactAgent = createAgent({
-  model,                    // ChatOpenAI (gpt-4.1-mini)
+  model,                    // ChatOpenAI (gpt-6-luna)
   tools,                    // 31 Zod-schema tools
   systemPrompt: descriptor.prompt,
   checkpointer,             // MongoDBSaver — durable state
@@ -188,7 +188,7 @@ Persisting everything forever would blow the context window and cost. So the ser
 
 ```ts
 const summarization = summarizationMiddleware({
-  model: this.summaryModel,                                      // gpt-5-nano, low reasoning effort
+  model: this.summaryModel,                                      // gpt-6-luna, no custom temperature
   trigger: [
     { tokens: CHATBOT_CONFIG.summarization.triggerTokens },      // ~24k (primary bound)
     { messages: CHATBOT_CONFIG.summarization.triggerMessages,    // ~40  (OR fallback)
@@ -200,7 +200,7 @@ const summarization = summarizationMiddleware({
 ```
 
 - Bounded by **tokens**, not message counts: a single retained turn can carry a base64 image or a full transcript, so a message-only limit doesn't bound the context window or the size of the MongoDB checkpoint document (16 MiB limit). The trigger array is **OR'd** — summarize when the history exceeds **~24k tokens** OR passes **~40 messages** while holding at least **~16k tokens** (2× keep, so a retained tail of short messages can't re-trigger every turn) — and `keep` is token-based (**~8k**) so the retained tail fits a real budget.
-- Summaries run on the small model (`GPT_SMALL_MODEL`, `gpt-5-nano`, reasoning effort `low`, no custom temperature) — compression doesn't need the main model, and it's ~8x cheaper on input.
+- Summaries run on a separate `ChatOpenAI` instance of the same model (`CHAT_MODEL`, `gpt-6-luna`, reasoning effort `none`, no custom temperature).
 - The summary is written back into state and **persisted by the checkpointer** — old turns are compressed in Mongo, not deleted.
 - This **replaced** an older manual "drop-oldest" truncation (`truncateThread`) — the middleware does it *inside* the graph loop.
 - The summary prompt is tuned to preserve durable facts (name, location, health, diet, open tasks, decisions) and to **keep the original language** (Hebrew stays Hebrew).
@@ -297,7 +297,7 @@ Every handler wraps work in `MessageLoader` — instant reaction emoji, a "typin
 | Polymarket | 16:05 | Daily price updates for subscribed markets. |
 | Social digest | 22:45 | Per chat: a text digest of new posts (Twitter/Telegram summarized, YouTube/TikTok listed), then (optionally) up to 5 of the newest new **TikTok videos** attached as playable Telegram videos. A per-chat/per-date `DigestDelivery` record fixes the selection and snapshots each video (idempotent across restarts, atomic claim so concurrent runs can't double-send); download is SSRF-guarded + byte-capped, with a link-only fallback so the source link is always delivered. Disabled by default; enable with `CHATBOT_VIDEO_DIGEST=true`. Tweets with photos (up to 5 newest) follow as Telegram albums sent by url, same record/claim lifecycle with a link-only fallback. Kill switch: `CHATBOT_IMAGE_DIGEST=false`. |
 | Usage report | Sat 22:30 | Weekly cost/token breakdown DM. |
-| Email cleanup | 12:00 / 20:00 | Asia/Jerusalem. Checks up to 50 unread inbox emails from the last 24h via `@services/openai`'s `getResponse`, explicitly using `CHAT_COMPLETIONS_MINI_MODEL` (`gpt-4.1-mini`), batches of 20, and `store: false`. Sends only ID + sender + subject + snippet as untrusted data, not instructions. Structured `results[]` must contain every input ID exactly once and valid `spam` / `advertisement` / `keep` classifications with numeric confidence in [0, 1]; the whole batch is validated before trashing. Only spam/ads with confidence > 0.75 are trashed; keep is never trashed. Scores are model-assessed confidence, not calibrated probabilities. Failed batches stay untouched while later batches continue; trash concurrency is 5. Reports list successful trash actions and their confidence only; an owner warning is sent only if every classification batch failed. Uses the existing `OPENAI_API_KEY`. |
+| Email cleanup | 12:00 / 20:00 | Asia/Jerusalem. Checks up to 50 unread inbox emails from the last 24h via `@services/openai`'s `getResponse`, explicitly using `CHAT_MODEL` (`gpt-6-luna`), batches of 20, and `store: false`. Sends only ID + sender + subject + snippet as untrusted data, not instructions. Structured `results[]` must contain every input ID exactly once and valid `spam` / `advertisement` / `keep` classifications with numeric confidence in [0, 1]; the whole batch is validated before trashing. Only spam/ads with confidence > 0.75 are trashed; keep is never trashed. Scores are model-assessed confidence, not calibrated probabilities. Failed batches stay untouched while later batches continue; trash concurrency is 5. Reports list successful trash actions and their confidence only; an owner warning is sent only if every classification batch failed. Uses the existing `OPENAI_API_KEY`. |
 
 Earthquake requests within the last 24 hours use USGS's real-time `all_day.geojson` feed, filtering by time and magnitude and applying the requested ordering and limit locally. Older ranges still use the FDSN query API. [USGS recommends summary feeds](https://earthquake.usgs.gov/fdsnws/event/1/) for automated applications because they offer better performance and availability than custom queries. Feeds refresh every minute, so the newest events may not appear immediately. The monitor overlaps polls by two minutes to catch delayed publication, without re-alerting already-seen event IDs.
 
@@ -313,7 +313,7 @@ The chatbot follows accounts on 4 platforms and DMs one daily digest instead of 
 
 - **Collect (silent).** `schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter + youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`). It diffs new posts against the subscription's `lastSeenId` / `lastSeenAt` and stores them in db `SocialFollower`, collection `PendingPost`; nothing is sent. Pending rows are inserted **before** `lastSeen` advances, and `createPendingPosts` dedupes by `platform + username + chatId + postId`, so a crash re-collects rather than loses posts.
 - **Diffing rules.** Twitter/TikTok ids are chronological snowflakes, compared with `BigInt(id) > BigInt(lastSeenId)` (this also neutralizes pinned posts). Telegram post ids are sequential per channel and compared numerically. YouTube video ids are not chronological, so YouTube diffs by `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
-- **Digest.** `schedulers/social-media-digest.ts`, cron `45 22 * * *`. Pending posts are grouped per chat and per followed account. Telegram and Twitter get an AI key-points summary (`getResponse` with `GPT_SMALL_MODEL`; `targetKeyPointsCount` gives about 1 bullet per 10 posts, min 2, max 10), written in the posts' own language, with a raw listing as fallback if the AI call fails. YouTube and TikTok are listed one line per post with a link. One combined Markdown message is sent, then exactly the rows it sent are deleted: posts collected after 22:45 roll into the next day, an empty day sends nothing, and a send failure keeps everything for tomorrow. TikTok video attachments and tweet image albums follow the text (see the table above).
+- **Digest.** `schedulers/social-media-digest.ts`, cron `45 22 * * *`. Pending posts are grouped per chat and per followed account. Telegram and Twitter get an AI key-points summary (`getResponse` with `CHAT_MODEL`; `targetKeyPointsCount` gives about 1 bullet per 10 posts, min 2, max 10), written in the posts' own language, with a raw listing as fallback if the AI call fails. YouTube and TikTok are listed one line per post with a link. One combined Markdown message is sent, then exactly the rows it sent are deleted: posts collected after 22:45 roll into the next day, an empty day sends nothing, and a send failure keeps everything for tomorrow. TikTok video attachments and tweet image albums follow the text (see the table above).
 - **Subscriptions.** `shared/social-follower/` holds the `Subscription` and `PendingPost` collections and their repository functions (`SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`). They are managed through the `tiktok`, `twitter`, `youtube` and `telegram_channels` tools, each with subscribe / unsubscribe / list actions keyed to `MY_USER_ID`.
 - **Data sources.** Telegram → `@services/telegram-scraper` (t.me/s web preview, no auth). Twitter → `@services/twitter-scraper` (anonymous GraphQL, then an optional logged-in session via `X_AUTH_TOKEN` / `X_CT0` cookies, then a Nitter fallback; no key). YouTube → RSS for collecting, Supadata-backed `@services/youtube` for tool actions. TikTok → RapidAPI `@services/tiktok` (metered free tier, mind the quota).
 - The digest summary goes through the raw `@services/openai` helper, so it is not usage-metered.
@@ -339,7 +339,7 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 | Mongo checkpointer + 30-day TTL + pruning | Durable across deploys; TTL bounds storage & respects privacy; pruning keeps 2 snapshots per thread. Tradeoff: memory of very old conversations is intentionally lost, and checkpoint history (time travel/replay) isn't kept. |
 | Fire-and-forget usage writes | Observability must never slow or break a user reply; accept rare lost records. |
 | Low temperature (0.2) | Assistant/tool-routing wants determinism & correctness over creativity. |
-| `gpt-4.1-mini` | Cheap + fast for a high-frequency personal bot; big prompt makes token cost matter, hence mini + summarization + metering. |
+| `gpt-6-luna` (reasoning effort `none`) | Cheap + fast for a high-frequency personal bot; big prompt makes token cost matter, hence summarization + metering. Effort `none` keeps `temperature` and Chat Completions tool calling supported. |
 | Tools return error strings, not throws | A failing tool degrades gracefully — the agent can apologize / try alternatives instead of crashing the turn. |
 
 ## 18. Likely interview questions & crisp answers

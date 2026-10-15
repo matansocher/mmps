@@ -140,14 +140,14 @@ Tools (weather, reminders, etc.)
 - **Football Updates** - Updates sports data at 12:59 and 23:59
 - **Flight Traffic Alerts** - Hourly at :05, counts airborne aircraft over Israel and Iran (ADS-B via adsb.lol with an adsb.fi fallback, filtered to the Worldly border polygon), and DMs the owner once when traffic drops to 25% or less of the same-hour median of the last 14 days. It sends a second message when traffic is back to at least 50%. Nothing fires during the first 7 days of history or in hours whose typical count is below 8 (`schedulers/flight-traffic-check.ts`, `shared/flight-traffic/`)
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
-- **Email Cleanup** - 12:00 and 20:00 (Asia/Jerusalem). Checks up to 50 unread inbox emails from the last 24h using OpenAI `gpt-4.1-mini` structured responses, in batches of 20. Sends only Gmail ID, sender, subject, and snippet, treating email fields as untrusted data rather than instructions; response storage is disabled (`store: false`). Moves only `spam` or `advertisement` results with confidence > 0.75 to Gmail Trash; `keep` results stay untouched at any confidence. Confidence is model-assessed, not a calibrated probability. Before any trash action, validates the entire batch schema and requires every input ID exactly once (no missing, duplicate, or unknown IDs). Failed batches remain untouched and later batches still run; Gmail trash calls are limited to 5 at a time. Silent unless something was successfully trashed (then a report with confidence scores), or every classification batch failed (then a warning DM). Uses the existing `OPENAI_API_KEY`; no new credentials.
+- **Email Cleanup** - 12:00 and 20:00 (Asia/Jerusalem). Checks up to 50 unread inbox emails from the last 24h using OpenAI `gpt-6-luna` structured responses, in batches of 20. Sends only Gmail ID, sender, subject, and snippet, treating email fields as untrusted data rather than instructions; response storage is disabled (`store: false`). Moves only `spam` or `advertisement` results with confidence > 0.75 to Gmail Trash; `keep` results stay untouched at any confidence. Confidence is model-assessed, not a calibrated probability. Before any trash action, validates the entire batch schema and requires every input ID exactly once (no missing, duplicate, or unknown IDs). Failed batches remain untouched and later batches still run; Gmail trash calls are limited to 5 at a time. Silent unless something was successfully trashed (then a report with confidence scores), or every classification batch failed (then a warning DM). Uses the existing `OPENAI_API_KEY`; no new credentials.
 
 ### Memory & Context
 
 Conversation memory is two complementary layers:
 
 - **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL, older snapshots pruned so each thread keeps only its 2 newest checkpoints), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
-- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~24k tokens, or ~40 messages holding at least ~16k tokens), the older turns are compressed into a running summary and the most recent ~8k tokens are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on the small model (`gpt-5-nano`), not the main agent model.
+- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~24k tokens, or ~40 messages holding at least ~16k tokens), the older turns are compressed into a running summary and the most recent ~8k tokens are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on a separate `gpt-6-luna` instance without a custom temperature.
 
 Tune via environment variables:
 
@@ -242,7 +242,7 @@ If the bot uses too much memory:
 
 ## Performance Tips
 
-1. **Use faster models** - Use gpt-4-mini for faster responses
+1. **Use faster models** - Keep reasoning effort at `none` for the fastest responses
 2. **Cache tool results** - Don't call same tool twice
 3. **Bound context** - Summarization keeps thread size in check; tune the trigger/keep thresholds
 4. **Monitor logs** - Use [Grafana Cloud logging](/deployment/monitoring) in production

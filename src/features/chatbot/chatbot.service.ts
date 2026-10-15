@@ -7,7 +7,7 @@ import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL, GPT_SMALL_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
 import { AiService, createAgentService, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
@@ -26,10 +26,9 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor(checkpointer?: BaseCheckpointSaver) {
-    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
-    // Summarization is plain compression, so it runs on the small model. gpt-5-nano is a reasoning
-    // model: it rejects a custom temperature, and low effort keeps it fast.
-    this.summaryModel = new ChatOpenAI({ model: GPT_SMALL_MODEL, reasoning: { effort: 'low' }, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+    this.model = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, temperature: 0.2, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+    // Summarization is plain compression, so it runs without a custom temperature.
+    this.summaryModel = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,
