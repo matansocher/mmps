@@ -5,7 +5,7 @@ import type { InlineKeyboard } from 'grammy';
 import { createAgent } from 'langchain';
 import { env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { buildInlineKeyboard } from '@services/telegram';
 import { calendarTool, recordModelUsage, reminderTool, UsageCallbackHandler } from '@shared/ai';
 import type { SecretaryAction } from './mongo';
@@ -27,7 +27,7 @@ type ToolResponse = {
 };
 
 function createActionAgentInvoker(): ActionAgentInvoker {
-  const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+  const model = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, temperature: 0, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
   const reactAgent = createAgent({ model, tools: [calendarTool, reminderTool], systemPrompt: ACTION_AGENT_PROMPT });
 
   return async (instruction, usageHandler) => reactAgent.graph.invoke({ messages: [new HumanMessage(instruction)] }, { recursionLimit: 25, callbacks: [usageHandler] });

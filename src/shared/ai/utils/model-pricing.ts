@@ -10,7 +10,7 @@ export type ModelPrice = {
   readonly cachedInput?: number; // USD per 1M cached input tokens (cache hits are billed cheaper)
 };
 
-// USD per 1,000,000 tokens. Source: OpenAI API pricing (developers.openai.com), captured 2026-08.
+// USD per 1,000,000 tokens. Source: OpenAI API pricing (developers.openai.com), captured 2026-10.
 // Prices drift — verify against https://developers.openai.com/api/docs/pricing when they look off.
 // The monthly `modelPricingCheck` scheduler diffs this table against those docs and DMs on drift.
 // Sibling models must each be listed explicitly: prefix matching only resolves dated snapshots
@@ -24,6 +24,7 @@ export const MODEL_PRICING: Record<string, ModelPrice> = {
   'gpt-5': { input: 1.25, output: 10.0, cachedInput: 0.125 },
   'gpt-5-mini': { input: 0.25, output: 2.0, cachedInput: 0.025 },
   'gpt-5-nano': { input: 0.05, output: 0.4, cachedInput: 0.005 },
+  'gpt-6-luna': { input: 0.1, output: 0.5, cachedInput: 0.01 },
 };
 
 export type ModelTokens = {

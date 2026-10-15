@@ -1,5 +1,5 @@
 import type { Response as OpenAIResponse } from 'openai/resources/responses/responses';
-import { WEB_SEARCH_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { provideOpenAiClient } from '@services/openai/provide-openai-client';
 
 type WebSearchCitation = {
@@ -34,10 +34,11 @@ function extractCitations(response: OpenAIResponse): WebSearchCitation[] {
 }
 
 export async function getWebSearchResponse(options: GetWebSearchResponseOptions): Promise<GetWebSearchResponseRes> {
-  const { input, instructions, model = WEB_SEARCH_MODEL } = options;
+  const { input, instructions, model = CHAT_MODEL } = options;
   const client = provideOpenAiClient();
   const response = (await client.responses.create({
     model,
+    reasoning: { effort: CHAT_MODEL_REASONING_EFFORT },
     ...(instructions ? { instructions } : {}),
     input,
     tools: [{ type: 'web_search' }],

@@ -1,5 +1,5 @@
 import { chunk } from '@core/utils';
-import { CHAT_COMPLETIONS_MODEL } from '../constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '../constants';
 import { provideOpenAiClient } from '../provide-openai-client';
 
 export async function getChatCompletion(prompt: string, userText: string = ''): Promise<string> {
@@ -22,7 +22,8 @@ export async function getChatCompletion(prompt: string, userText: string = ''): 
         content: typeof message === 'string' ? message : JSON.stringify(message),
       })),
     ],
-    model: CHAT_COMPLETIONS_MODEL,
+    model: CHAT_MODEL,
+    reasoning_effort: CHAT_MODEL_REASONING_EFFORT,
   });
   return result.choices[0].message.content;
 }

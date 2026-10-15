@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getResponse } from '@services/openai';
-import { GPT_SMALL_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 import { claimDigestDelivery, deletePendingPosts, getPendingPostBacklog, getPendingPostChatIds, getPendingPostsForChat, markDigestTextDelivered } from '@shared/social-follower';
 import type { DigestImageEntry, DigestVideoEntry, PendingPost, SocialPlatform } from '@shared/social-follower';
@@ -378,7 +378,7 @@ async function shortenPosts(texts: (string | null)[]): Promise<string[]> {
   const input = postsToShorten.map((text, i) => `Post ${i + 1}:\n${text}`).join('\n\n');
 
   try {
-    const { result } = await getResponse({ instructions, input, schema: shortenSchema, model: GPT_SMALL_MODEL, store: false });
+    const { result } = await getResponse({ instructions, input, schema: shortenSchema, model: CHAT_MODEL, store: false });
     if (result.shortened.length !== postsToShorten.length) {
       throw new Error(`expected ${postsToShorten.length} shortened posts, got ${result.shortened.length}`);
     }
@@ -404,7 +404,7 @@ async function buildSummarySection(userPosts: PendingPost[]): Promise<string> {
     `Do not add opinions or information that is not in the posts.`,
   ].join('\n');
   const input = texts.map((text, i) => `Post ${i + 1}:\n${text}`).join('\n\n');
-  const { result } = await getResponse({ instructions, input, schema: summarySchema, model: GPT_SMALL_MODEL, store: false });
+  const { result } = await getResponse({ instructions, input, schema: summarySchema, model: CHAT_MODEL, store: false });
   const bullets = result.keyPoints.map((point) => `- ${point}`).join('\n');
   return `${sectionHeader(userPosts)}\n${bullets}${overflowNote(overflowPosts.length)}`;
 }

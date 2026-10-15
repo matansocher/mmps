@@ -4,7 +4,7 @@ import { MY_USER_ID } from '@core/config';
 import { chunk, getErrorMessage, Logger } from '@core/utils';
 import { fetchUserEmails, trashEmail } from '@services/gmail';
 import { getResponse } from '@services/openai';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage } from '@services/telegram';
 import { CHATBOT_CONFIG } from '../chatbot.config';
 
@@ -58,7 +58,7 @@ async function classifyBatch(emails: ReadonlyArray<CandidateEmail>) {
     instructions: CLASSIFICATION_INSTRUCTIONS,
     input: JSON.stringify({ emails: emails.map(({ id, from, subject, snippet }) => ({ id, from, subject, snippet })) }),
     schema: classificationSchema,
-    model: CHAT_COMPLETIONS_MINI_MODEL,
+    model: CHAT_MODEL,
     store: false,
   });
   const { results } = classificationSchema.parse(result);
