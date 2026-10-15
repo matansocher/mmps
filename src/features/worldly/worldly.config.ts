@@ -1,25 +1,26 @@
 import { MMPS_BASE_URL } from '@core/config';
 import type { TelegramBotConfig } from '@services/telegram';
+import type { WorldlyLanguage } from '@shared/worldly';
+import { worldlyText } from './language';
 
 export const GLOBE_APP_PATH = '/earth';
 export const GLOBE_APP_URL = `${MMPS_BASE_URL}${GLOBE_APP_PATH}`;
-export const GLOBE_BUTTON_TEXT = '🌍 גלובוס';
 
 export const BOT_CONFIG: TelegramBotConfig = {
   id: 'WORLDLY',
   name: 'Worldly Bot 🌍',
   token: 'WORLDLY_TELEGRAM_BOT_TOKEN',
   commands: {
-    START: { command: '/start', description: 'התחל מהתחלה', hide: true },
-    FIRE_MODE: { command: '/fire_mode', description: '🔥 משחק רצוף 🔥' },
-    RANDOM: { command: '/random', description: '🌎 משחק אקראי 🌎' },
-    MAP: { command: '/map', description: '🗺️ מפה 🗺️' },
-    FLAG: { command: '/flag', description: '🏁 דגל 🏁' },
-    CAPITAL: { command: '/capital', description: '🏛️ עיר בירה 🏛️' },
-    US_MAP: { command: '/usmap', description: '🇺🇸 מפת ארצות הברית 🇺🇸' },
-    GLOBE: { command: '/globe', description: '🌍 משחק גלובוס 🌍' },
-    LOGIC: { command: '/logic', description: '🧩 חידת היום 🧩' },
-    ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
+    START: { command: '/start', description: worldlyText().commands.START, hide: true },
+    FIRE_MODE: { command: '/fire_mode', description: worldlyText().commands.FIRE_MODE },
+    RANDOM: { command: '/random', description: worldlyText().commands.RANDOM },
+    MAP: { command: '/map', description: worldlyText().commands.MAP },
+    FLAG: { command: '/flag', description: worldlyText().commands.FLAG },
+    CAPITAL: { command: '/capital', description: worldlyText().commands.CAPITAL },
+    US_MAP: { command: '/usmap', description: worldlyText().commands.US_MAP },
+    GLOBE: { command: '/globe', description: worldlyText().commands.GLOBE },
+    LOGIC: { command: '/logic', description: worldlyText().commands.LOGIC },
+    ACTIONS: { command: '/actions', description: worldlyText().commands.ACTIONS },
   },
 };
 
@@ -49,6 +50,9 @@ export enum BOT_ACTIONS {
   STOP = 'stop',
   CONTACT = 'contact',
   STATISTICS = 'statistics',
+  LANGUAGE = 'language',
+  SET_LANGUAGE = 'set_language',
+  ACTIONS = 'actions',
   FIRE = 'fire',
   RANDOM = 'rand',
   MAP = 'm',
@@ -58,3 +62,9 @@ export enum BOT_ACTIONS {
 }
 
 export const INLINE_KEYBOARD_SEPARATOR = '|';
+
+export function getWorldlyCommands(language: WorldlyLanguage = 'en') {
+  return Object.entries(BOT_CONFIG.commands)
+    .filter(([, config]) => !config.hide)
+    .map(([key, config]) => ({ command: config.command.replace('/', ''), description: worldlyText(language).commands[key as keyof ReturnType<typeof worldlyText>['commands']] }));
+}

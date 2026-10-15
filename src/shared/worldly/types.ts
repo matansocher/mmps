@@ -1,5 +1,7 @@
 import type { ObjectId } from 'mongodb';
 
+export type WorldlyLanguage = 'en' | 'he';
+
 export type Country = {
   readonly _id: ObjectId;
   readonly name: string;
