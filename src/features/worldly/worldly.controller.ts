@@ -4,10 +4,23 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { sleep } from '@core/utils';
 import { notify } from '@services/notifier';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, UserDetails } from '@services/telegram';
-import { addSubscription, getCountryByCapital, getCountryByName, getStateByName, getSubscription, getUserGameLogs, saveUserDetails, updateGameLog, updateSubscription } from '@shared/worldly';
+import {
+  addSubscription,
+  getCountryByCapital,
+  getCountryByName,
+  getStateByName,
+  getSubscription,
+  getUserGameLogs,
+  getUserLanguage,
+  saveUserDetails,
+  setUserLanguage,
+  updateGameLog,
+  updateSubscription,
+} from '@shared/worldly';
 import { userPreferencesCacheService } from './cache';
+import { areaName, capitalName, worldlyText } from './language';
 import { generateStatisticsMessage, getLogicTeaser } from './utils';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, GLOBE_APP_URL, GLOBE_BUTTON_TEXT, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, getWorldlyCommands, GLOBE_APP_URL, INLINE_KEYBOARD_SEPARATOR } from './worldly.config';
 import { WorldlyService } from './worldly.service';
 
 export class WorldlyController {
@@ -43,41 +56,43 @@ export class WorldlyController {
 
   private async actionsHandler(ctx: Context): Promise<void> {
     const { chatId } = getMessageData(ctx);
+    const text = worldlyText(await getUserLanguage(chatId));
     const subscription = await getSubscription(chatId);
     const keyboard = buildInlineKeyboard([
-      { text: '📊 סטטיסטיקות 📊', data: `${BOT_ACTIONS.STATISTICS}` },
-      !subscription?.isActive
-        ? { text: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢', data: `${BOT_ACTIONS.START}`, style: 'success' as const }
-        : { text: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑', data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
-      { text: '📬 צור קשר 📬', data: `${BOT_ACTIONS.CONTACT}` },
+      { text: text.statistics, data: `${BOT_ACTIONS.STATISTICS}` },
+      !subscription?.isActive ? { text: text.subscribe, data: `${BOT_ACTIONS.START}`, style: 'success' as const } : { text: text.unsubscribe, data: `${BOT_ACTIONS.STOP}`, style: 'danger' as const },
+      { text: text.language, data: BOT_ACTIONS.LANGUAGE },
+      { text: text.contact, data: `${BOT_ACTIONS.CONTACT}` },
     ]);
-    await ctx.reply('איך אני יכול לעזור? 👨‍🏫', { reply_markup: keyboard });
+    await ctx.reply(text.actions, { reply_markup: keyboard });
     await ctx.deleteMessage().catch(() => {});
   }
 
   private async globeHandler(ctx: Context): Promise<void> {
-    const { userDetails } = getMessageData(ctx);
-    const keyboard = new InlineKeyboard().webApp(GLOBE_BUTTON_TEXT, GLOBE_APP_URL);
-    await ctx.reply('סובבו את הגלובוס ומצאו את המדינה 🌍👇', { reply_markup: keyboard });
+    const { chatId, userDetails } = getMessageData(ctx);
+    const text = worldlyText(await getUserLanguage(chatId));
+    const keyboard = new InlineKeyboard().webApp(text.globe, GLOBE_APP_URL);
+    await ctx.reply(text.globePrompt, { reply_markup: keyboard });
     notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.GLOBE }, userDetails);
   }
 
   private async logicHandler(ctx: Context): Promise<void> {
-    const { userDetails } = getMessageData(ctx);
+    const { chatId, userDetails } = getMessageData(ctx);
+    const language = await getUserLanguage(chatId);
     try {
-      const { text, keyboard } = await getLogicTeaser();
+      const { text, keyboard } = await getLogicTeaser(new Date(), language);
       await ctx.reply(text, { reply_markup: keyboard });
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.LOGIC }, userDetails);
     } catch (err) {
       this.logger.error(`${this.logicHandler.name} - error - ${getErrorMessage(err)}`);
-      await ctx.reply('סליחה, לא הצלחתי להכין את חידת היום 😔');
+      await ctx.reply(worldlyText(language).logicError);
     }
   }
 
   async fireModeHandler(ctx: Context): Promise<void> {
     const { chatId, userDetails } = getMessageData(ctx);
     try {
-      await ctx.reply('מצוין! עכשיו נשחק ברצף 🔥');
+      await ctx.reply(worldlyText(await getUserLanguage(chatId)).fire);
       await userPreferencesCacheService.saveUserPreferences(chatId, { onFireMode: true });
       await this.worldlyService.randomGameHandler(chatId);
       notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.FIRE }, userDetails);
@@ -148,6 +163,34 @@ export class WorldlyController {
     const [action, selectedName, correctName, gameId] = response.split(INLINE_KEYBOARD_SEPARATOR);
     try {
       switch (action) {
+        case BOT_ACTIONS.LANGUAGE: {
+          const text = worldlyText(await getUserLanguage(chatId));
+          await ctx.reply(text.chooseLanguage, {
+            reply_markup: buildInlineKeyboard([
+              { text: 'English', data: `${BOT_ACTIONS.SET_LANGUAGE}|en` },
+              { text: 'עברית', data: `${BOT_ACTIONS.SET_LANGUAGE}|he` },
+              { text: text.back, data: BOT_ACTIONS.ACTIONS },
+            ]),
+          });
+          await ctx.deleteMessage().catch(() => {});
+          break;
+        }
+        case BOT_ACTIONS.SET_LANGUAGE:
+          if (selectedName !== 'en' && selectedName !== 'he') {
+            await ctx.answerCallbackQuery();
+            return;
+          }
+          await saveUserDetails(userDetails);
+          await setUserLanguage(chatId, selectedName);
+          await this.bot.api
+            .setMyCommands(getWorldlyCommands(selectedName), { scope: { type: 'chat', chat_id: chatId } })
+            .catch((err) => this.logger.error(`Failed to update command language: ${getErrorMessage(err)}`));
+          await ctx.reply(worldlyText(selectedName).languageSaved);
+          await this.actionsHandler(ctx);
+          break;
+        case BOT_ACTIONS.ACTIONS:
+          await this.actionsHandler(ctx);
+          break;
         case BOT_ACTIONS.START:
           await this.userStart(ctx, chatId, userDetails);
           await ctx.deleteMessage().catch(() => {});
@@ -197,6 +240,8 @@ export class WorldlyController {
           throw new Error('Invalid action');
       }
 
+      await ctx.answerCallbackQuery().catch(() => {});
+
       if (![BOT_ACTIONS.MAP, BOT_ACTIONS.US_MAP, BOT_ACTIONS.FLAG, BOT_ACTIONS.CAPITAL].includes(action as BOT_ACTIONS)) {
         return;
       }
@@ -222,67 +267,75 @@ export class WorldlyController {
       await addSubscription(chatId);
     }
 
-    const newUserReplyText = [
-      `היי 👋`,
-      'אני בוט שיודע ללמד משחקי גיאוגרפיה בצורה הכי כיפית שיש 😁',
-      'כל יום אני אשלח לכם כמה משחקים 🌎',
-      'אפשר גם להתחיל משחק חדש מתי שרוצים בפקודות שלי, פה למטה 👇',
-      'ויש גם משחק גלובוס - סובבו את כדור הארץ ומצאו את המדינה 🌍',
-      `אם אתם רוצים שאני אפסיק לשלוח משחקים בכל יום, אפשר פשוט לבקש ממני בפקודה ׳פעולות׳, פה למטה 👇`,
-    ].join('\n\n');
-    const existingUserReplyText = `אין בעיה, אני אשלח משחקים בכל יום 🟢`;
-    const keyboard = new InlineKeyboard().webApp(GLOBE_BUTTON_TEXT, GLOBE_APP_URL);
+    const text = worldlyText(await getUserLanguage(chatId));
+    const newUserReplyText = text.welcome;
+    const existingUserReplyText = text.welcomeBack;
+    const keyboard = new InlineKeyboard().webApp(text.globe, GLOBE_APP_URL);
     await ctx.reply(saveResult === 'updated' ? existingUserReplyText : newUserReplyText, { reply_markup: keyboard });
   }
 
   private async stopHandler(ctx: Context, chatId: number): Promise<void> {
     await updateSubscription(chatId, { isActive: false });
-    await ctx.reply(`אין בעיה, אני אפסיק לשלוח משחקים בכל יום 🛑`);
+    await ctx.reply(worldlyText(await getUserLanguage(chatId)).stopped);
   }
 
   private async contactHandler(ctx: Context): Promise<void> {
-    await ctx.reply(['אשמח לעזור', 'אפשר לדבר עם מי שיצר אותי, הוא בטח ידע לעזור', MY_USER_NAME].join('\n'));
+    const { chatId } = getCallbackQueryData(ctx);
+    await ctx.reply(`${worldlyText(await getUserLanguage(chatId)).contactMessage}\n${MY_USER_NAME}`);
   }
 
   private async statisticsHandler(ctx: Context, chatId: number): Promise<void> {
+    const language = await getUserLanguage(chatId);
     const userGameLogs = await getUserGameLogs(chatId);
     if (!userGameLogs?.length) {
-      await ctx.reply('אני רואה שעדיין לא שיחנו ביחד משחקים, אפשר להתחיל משחק חדש בפקודה ׳משחק אקראי׳ או בפקודה ׳מפה׳');
+      await ctx.reply(worldlyText(language).noStatistics);
       return;
     }
 
-    const replyText = generateStatisticsMessage(userGameLogs);
+    const replyText = generateStatisticsMessage(userGameLogs, language);
     await ctx.reply(replyText);
   }
 
   private async mapAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    const { chatId } = getCallbackQueryData(ctx);
+    const language = await getUserLanguage(chatId);
+    const text = worldlyText(language);
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByName(correctName);
-    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
+    const replyText = `${selectedName !== correctName ? text.incorrect : text.correct} ${correctCountry.emoji} ${areaName(correctCountry, language)} ${correctCountry.emoji}`;
     await ctx.editMessageCaption({ caption: replyText }).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
   private async USMapAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    const { chatId } = getCallbackQueryData(ctx);
+    const language = await getUserLanguage(chatId);
+    const text = worldlyText(language);
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctState = await getStateByName(correctName);
-    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctState.hebrewName}`;
+    const replyText = `${selectedName !== correctName ? text.incorrect : text.correct} ${areaName(correctState, language)}`;
     await ctx.editMessageCaption({ caption: replyText }).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
   private async flagAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    const { chatId } = getCallbackQueryData(ctx);
+    const language = await getUserLanguage(chatId);
+    const text = worldlyText(language);
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByName(correctName);
-    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji}`;
+    const replyText = `${selectedName !== correctName ? text.incorrect : text.correct} ${correctCountry.emoji} ${areaName(correctCountry, language)} ${correctCountry.emoji}`;
     await ctx.editMessageText(replyText).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }
 
   private async capitalAnswerHandler(ctx: Context, selectedName: string, correctName: string): Promise<void> {
+    const { chatId } = getCallbackQueryData(ctx);
+    const language = await getUserLanguage(chatId);
+    const text = worldlyText(language);
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     const correctCountry = await getCountryByCapital(correctName);
-    const replyText = `${selectedName !== correctName ? `אופס, טעות. התשובה הנכונה היא:` : `נכון!`} - עיר הבירה של ${correctCountry.emoji} ${correctCountry.hebrewName} ${correctCountry.emoji} היא ${correctCountry.hebrewCapital}`;
+    const replyText = `${selectedName !== correctName ? text.incorrect : text.correct} ${text.capitalOf(`${correctCountry.emoji} ${areaName(correctCountry, language)} ${correctCountry.emoji}`, capitalName(correctCountry, language))}`;
     await ctx.editMessageText(replyText).catch(() => {});
     await ctx.react(selectedName !== correctName ? '👎' : '👍').catch(() => {});
   }

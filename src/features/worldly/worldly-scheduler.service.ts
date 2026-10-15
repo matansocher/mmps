@@ -3,7 +3,7 @@ import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getHourInTimezone } from '@core/utils';
 import { notify } from '@services/notifier';
 import { provideTelegramBot } from '@services/telegram';
-import { getActiveSubscriptions } from '@shared/worldly';
+import { getActiveSubscriptions, getUserLanguage } from '@shared/worldly';
 import { getLogicTeaser } from './utils';
 import { ANALYTIC_EVENT_NAMES, BOT_CONFIG } from './worldly.config';
 import { WorldlyService } from './worldly.service';
@@ -52,9 +52,15 @@ export class WorldlyBotSchedulerService {
         return;
       }
 
-      const { text, keyboard } = await getLogicTeaser();
+      const day = new Date();
+      const teasers = { en: await getLogicTeaser(day, 'en'), he: await getLogicTeaser(day, 'he') };
       const bot = provideTelegramBot(BOT_CONFIG);
-      const results = await Promise.allSettled(subscriptions.map(({ chatId }) => bot.api.sendMessage(chatId, text, { reply_markup: keyboard })));
+      const results = await Promise.allSettled(
+        subscriptions.map(async ({ chatId }) => {
+          const { text, keyboard } = teasers[await getUserLanguage(chatId)];
+          return bot.api.sendMessage(chatId, text, { reply_markup: keyboard });
+        }),
+      );
       const failed = results.filter(({ status }) => status === 'rejected').length;
       notify(BOT_CONFIG, { action: `cron - ${ANALYTIC_EVENT_NAMES.LOGIC_DAILY}`, sent: results.length - failed, failed });
     } catch (err) {
