@@ -1,453 +1,66 @@
 ---
 name: playwright-skill
-description: Complete browser automation with Playwright. Auto-detects dev servers, writes clean test scripts to /tmp. Test pages, fill forms, take screenshots, check responsive design, validate UX, test login flows, check links, automate any browser task. Use when user wants to test websites, automate browser interactions, validate web functionality, or perform any browser-based testing.
+description: Test websites and automate browser interactions through available Playwright MCP tools. Use when testing pages, forms, login flows, links, responsive layouts, or other browser-based functionality. Requires a connected Playwright tool provider; does not bundle a standalone runner or browser installer.
 ---
-
-**IMPORTANT - Path Resolution:**
-This skill can be installed in different locations (plugin system, manual installation, global, or project-specific). Before executing any commands, determine the skill directory based on where you loaded this SKILL.md file, and use that path in all commands below. Replace `$SKILL_DIR` with the actual discovered path.
-
-Common installation paths:
-
-- Plugin system: `~/.claude/plugins/marketplaces/playwright-skill/skills/playwright-skill`
-- Manual global: `~/.claude/skills/playwright-skill`
-- Project-specific: `<project>/.claude/skills/playwright-skill`
 
 # Playwright Browser Automation
 
-General-purpose browser automation skill. I'll write custom Playwright code for any automation task you request and execute it via the universal executor.
+Use the connected Playwright tools to inspect and interact with the browser. This skill is instructions only: it has no local runner, helper library, setup command, or bundled API reference.
 
-**CRITICAL WORKFLOW - Follow these steps in order:**
+## Workflow
 
-1. **Auto-detect dev servers** - For localhost testing, ALWAYS run server detection FIRST:
+1. **Discover capabilities.** Use the host's tool discovery mechanism when tools are deferred. Find the available Playwright navigation, snapshot, interaction, resize, screenshot, console/network, and code-execution tools as needed. Read their actual input schemas before calling them; names and capabilities vary by host. Do not assume all tools exist.
+2. **Choose the target.** Prefer the URL supplied by the user or the current session's verified preview URL. For local development, inspect workspace scripts/configuration and session-owned server output to establish the correct app and port. If the target is still ambiguous, ask which URL to test. Do not scan unrelated local services or assume port 3000 belongs to this workspace.
+3. **Confirm local readiness.** Check that the selected server responds. If it is not running, use the project's documented development command when starting it is in scope; otherwise ask the user. Use a unique port for a worktree. If browser and server run on different hosts, localhost may not refer to the same machine: establish a reachable URL rather than exposing the server publicly by default.
+4. **Navigate and inspect.** Load the target and capture an accessibility snapshot. Use observed roles, accessible names, labels, and current element references to locate controls. Capture a screenshot for visual checks; a snapshot alone cannot establish visual quality.
+5. **Exercise the requested behavior.** Use dedicated interaction tools for simple steps. Use the code-execution tool for multi-step Playwright checks only if available. Refresh snapshots after navigation or meaningful UI changes before reusing element references.
+6. **Verify the outcome.** Check a concrete postcondition such as the destination URL, visible success state, changed data, or validation error. A successful click or screenshot is not proof that a flow works. Inspect console errors and failed network requests when supported, distinguishing pre-existing issues from failures caused by the tested flow.
+7. **Report evidence and limits.** Summarize the target URL, checks performed, observed results, and untested cases. Include screenshot/artifact paths when produced. Never label a check as passed if it was not executed or its expected result was not observed.
 
-   ```bash
-   cd $SKILL_DIR && node -e "require('./lib/helpers').detectDevServers().then(servers => console.log(JSON.stringify(servers)))"
-   ```
+## Interaction Guidelines
 
-    - If **1 server found**: Use it automatically, inform user
-    - If **multiple servers found**: Ask user which one to test
-    - If **no servers found**: Ask for URL or offer to help start dev server
+- Prefer role/label locators over brittle CSS selectors. Derive selectors from the live page rather than inventing them.
+- Wait for meaningful conditions such as a visible element or expected URL. Avoid fixed sleeps and treating network idleness as a universal readiness signal.
+- Use explicit checks that throw on failure when an assertion helper is unavailable. Do not assume an imported test framework exists in the code tool.
+- Keep the target URL in one variable for multi-step snippets. Do not launch Chromium, import Playwright, create a replacement browser, or close the provider's shared browser inside snippets; use the page supplied by the tool.
+- Browser visibility, headless mode, browser installation, and persistent profiles are managed by the provider. Do not promise a visible window or change launch settings unless the provider explicitly supports it.
+- Use temporary/session artifact storage for screenshots or scratch files, not the skill directory. Do not add test files to the repository unless requested. Remove task-created temporary files when no longer needed; preserve requested evidence.
+- Do not close unrelated tabs or stop servers owned by other sessions. Restore changed viewport settings when practical. Keep a requested review server running and report its preview URL.
 
-2. **Write scripts to /tmp** - NEVER write test files to skill directory; always use `/tmp/playwright-test-*.js`
+## Common Checks
 
-3. **Use visible browser by default** - Always use `headless: false` unless user specifically requests headless mode
+### Page and Responsive Layout
 
-4. **Parameterize URLs** - Always make URLs configurable via environment variable or constant at top of script
+Navigate to the requested route. Confirm its key heading/content appears. Check representative desktop, tablet, and mobile viewport sizes using the resize tool, with screenshots and interaction checks at each relevant size. Look for clipped content, horizontal overflow, overlapping controls, unreadable text, and inaccessible navigation. Screenshots alone are not automated visual regression tests.
 
-## How It Works
-
-1. You describe what you want to test/automate
-2. I auto-detect running dev servers (or ask for URL if testing external site)
-3. I write custom Playwright code in `/tmp/playwright-test-*.js` (won't clutter your project)
-4. I execute it via: `cd $SKILL_DIR && node run.js /tmp/playwright-test-*.js`
-5. Results displayed in real-time, browser window visible for debugging
-6. Test files auto-cleaned from /tmp by your OS
-
-## Setup (First Time)
-
-```bash
-cd $SKILL_DIR
-npm run setup
-```
-
-This installs Playwright and Chromium browser. Only needed once.
-
-## Execution Pattern
-
-**Step 1: Detect dev servers (for localhost testing)**
-
-```bash
-cd $SKILL_DIR && node -e "require('./lib/helpers').detectDevServers().then(s => console.log(JSON.stringify(s)))"
-```
-
-**Step 2: Write test script to /tmp with URL parameter**
+If the provider exposes a code tool accepting an async function with a supplied `page`, this illustrates a concrete page check. Replace the URL and heading with values established from the task and live page, and adapt the tool input to its discovered schema:
 
 ```javascript
-// /tmp/playwright-test-page.js
-const { chromium } = require('playwright');
-
-// Parameterized URL (detected or user-provided)
-const TARGET_URL = 'http://localhost:3001'; // <-- Auto-detected or from user
-
-(async () => {
-  const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
-
+async (page) => {
+  const TARGET_URL = 'http://localhost:4173';
   await page.goto(TARGET_URL);
-  console.log('Page loaded:', await page.title());
-
-  await page.screenshot({ path: '/tmp/screenshot.png', fullPage: true });
-  console.log('📸 Screenshot saved to /tmp/screenshot.png');
-
-  await browser.close();
-})();
+  const heading = page.getByRole('heading', { name: 'Savings', exact: true });
+  await heading.waitFor({ state: 'visible' });
+  return { url: page.url(), heading: await heading.textContent() };
+}
 ```
 
-**Step 3: Execute from skill directory**
+The URL and heading above are examples, not discovered defaults. A code tool is optional; navigation, snapshot, and interaction tools can perform equivalent checks.
 
-```bash
-cd $SKILL_DIR && node run.js /tmp/playwright-test-page.js
-```
+### Login and Forms
 
-## Common Patterns
+Use an authorized test account and test data. Inspect the form, fill observed fields, submit only within the user's authorized scope, and verify the expected redirect or success state. Check relevant validation errors when requested. Do not assume login succeeded merely because the submit button was clicked.
 
-### Test a Page (Multiple Viewports)
+Never copy credentials, session cookies, or tokens into committed scripts, screenshots, or reports. Ask before sending real messages, making purchases, deleting data, or performing other consequential actions not already authorized by the task. Do not bypass authentication, CAPTCHAs, or access controls.
 
-```javascript
-// /tmp/playwright-test-responsive.js
-const { chromium } = require('playwright');
+### Links
 
-const TARGET_URL = 'http://localhost:3001'; // Auto-detected
+Collect links from the requested page and test only the agreed scope. Avoid following logout, deletion, or other state-changing links. Record the URL and observed status/failure. Authentication, rate limits, and servers that reject HEAD requests can make link checks inconclusive; do not report those as confirmed broken links without verification. Avoid crawling an entire external site unless requested.
 
-(async () => {
-  const browser = await chromium.launch({ headless: false, slowMo: 100 });
-  const page = await browser.newPage();
+## Capability Limits and Troubleshooting
 
-  // Desktop test
-  await page.setViewportSize({ width: 1920, height: 1080 });
-  await page.goto(TARGET_URL);
-  console.log('Desktop - Title:', await page.title());
-  await page.screenshot({ path: '/tmp/desktop.png', fullPage: true });
-
-  // Mobile test
-  await page.setViewportSize({ width: 375, height: 667 });
-  await page.screenshot({ path: '/tmp/mobile.png', fullPage: true });
-
-  await browser.close();
-})();
-```
-
-### Test Login Flow
-
-```javascript
-// /tmp/playwright-test-login.js
-const { chromium } = require('playwright');
-
-const TARGET_URL = 'http://localhost:3001'; // Auto-detected
-
-(async () => {
-  const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
-
-  await page.goto(`${TARGET_URL}/login`);
-
-  await page.fill('input[name="email"]', 'test@example.com');
-  await page.fill('input[name="password"]', 'password123');
-  await page.click('button[type="submit"]');
-
-  // Wait for redirect
-  await page.waitForURL('**/dashboard');
-  console.log('✅ Login successful, redirected to dashboard');
-
-  await browser.close();
-})();
-```
-
-### Fill and Submit Form
-
-```javascript
-// /tmp/playwright-test-form.js
-const { chromium } = require('playwright');
-
-const TARGET_URL = 'http://localhost:3001'; // Auto-detected
-
-(async () => {
-  const browser = await chromium.launch({ headless: false, slowMo: 50 });
-  const page = await browser.newPage();
-
-  await page.goto(`${TARGET_URL}/contact`);
-
-  await page.fill('input[name="name"]', 'John Doe');
-  await page.fill('input[name="email"]', 'john@example.com');
-  await page.fill('textarea[name="message"]', 'Test message');
-  await page.click('button[type="submit"]');
-
-  // Verify submission
-  await page.waitForSelector('.success-message');
-  console.log('✅ Form submitted successfully');
-
-  await browser.close();
-})();
-```
-
-### Check for Broken Links
-
-```javascript
-const { chromium } = require('playwright');
-
-(async () => {
-  const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
-
-  await page.goto('http://localhost:3000');
-
-  const links = await page.locator('a[href^="http"]').all();
-  const results = { working: 0, broken: [] };
-
-  for (const link of links) {
-    const href = await link.getAttribute('href');
-    try {
-      const response = await page.request.head(href);
-      if (response.ok()) {
-        results.working++;
-      } else {
-        results.broken.push({ url: href, status: response.status() });
-      }
-    } catch (e) {
-      results.broken.push({ url: href, error: e.message });
-    }
-  }
-
-  console.log(`✅ Working links: ${results.working}`);
-  console.log(`❌ Broken links:`, results.broken);
-
-  await browser.close();
-})();
-```
-
-### Take Screenshot with Error Handling
-
-```javascript
-const { chromium } = require('playwright');
-
-(async () => {
-  const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
-
-  try {
-    await page.goto('http://localhost:3000', {
-      waitUntil: 'networkidle',
-      timeout: 10000,
-    });
-
-    await page.screenshot({
-      path: '/tmp/screenshot.png',
-      fullPage: true,
-    });
-
-    console.log('📸 Screenshot saved to /tmp/screenshot.png');
-  } catch (error) {
-    console.error('❌ Error:', error.message);
-  } finally {
-    await browser.close();
-  }
-})();
-```
-
-### Test Responsive Design
-
-```javascript
-// /tmp/playwright-test-responsive-full.js
-const { chromium } = require('playwright');
-
-const TARGET_URL = 'http://localhost:3001'; // Auto-detected
-
-(async () => {
-  const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
-
-  const viewports = [
-    { name: 'Desktop', width: 1920, height: 1080 },
-    { name: 'Tablet', width: 768, height: 1024 },
-    { name: 'Mobile', width: 375, height: 667 },
-  ];
-
-  for (const viewport of viewports) {
-    console.log(
-      `Testing ${viewport.name} (${viewport.width}x${viewport.height})`,
-    );
-
-    await page.setViewportSize({
-      width: viewport.width,
-      height: viewport.height,
-    });
-
-    await page.goto(TARGET_URL);
-    await page.waitForTimeout(1000);
-
-    await page.screenshot({
-      path: `/tmp/${viewport.name.toLowerCase()}.png`,
-      fullPage: true,
-    });
-  }
-
-  console.log('✅ All viewports tested');
-  await browser.close();
-})();
-```
-
-## Inline Execution (Simple Tasks)
-
-For quick one-off tasks, you can execute code inline without creating files:
-
-```bash
-# Take a quick screenshot
-cd $SKILL_DIR && node run.js "
-const browser = await chromium.launch({ headless: false });
-const page = await browser.newPage();
-await page.goto('http://localhost:3001');
-await page.screenshot({ path: '/tmp/quick-screenshot.png', fullPage: true });
-console.log('Screenshot saved');
-await browser.close();
-"
-```
-
-**When to use inline vs files:**
-
-- **Inline**: Quick one-off tasks (screenshot, check if element exists, get page title)
-- **Files**: Complex tests, responsive design checks, anything user might want to re-run
-
-## Available Helpers
-
-Optional utility functions in `lib/helpers.js`:
-
-```javascript
-const helpers = require('./lib/helpers');
-
-// Detect running dev servers (CRITICAL - use this first!)
-const servers = await helpers.detectDevServers();
-console.log('Found servers:', servers);
-
-// Safe click with retry
-await helpers.safeClick(page, 'button.submit', { retries: 3 });
-
-// Safe type with clear
-await helpers.safeType(page, '#username', 'testuser');
-
-// Take timestamped screenshot
-await helpers.takeScreenshot(page, 'test-result');
-
-// Handle cookie banners
-await helpers.handleCookieBanner(page);
-
-// Extract table data
-const data = await helpers.extractTableData(page, 'table.results');
-```
-
-See `lib/helpers.js` for full list.
-
-## Custom HTTP Headers
-
-Configure custom headers for all HTTP requests via environment variables. Useful for:
-
-- Identifying automated traffic to your backend
-- Getting LLM-optimized responses (e.g., plain text errors instead of styled HTML)
-- Adding authentication tokens globally
-
-### Configuration
-
-**Single header (common case):**
-
-```bash
-PW_HEADER_NAME=X-Automated-By PW_HEADER_VALUE=playwright-skill \
-  cd $SKILL_DIR && node run.js /tmp/my-script.js
-```
-
-**Multiple headers (JSON format):**
-
-```bash
-PW_EXTRA_HEADERS='{"X-Automated-By":"playwright-skill","X-Debug":"true"}' \
-  cd $SKILL_DIR && node run.js /tmp/my-script.js
-```
-
-### How It Works
-
-Headers are automatically applied when using `helpers.createContext()`:
-
-```javascript
-const context = await helpers.createContext(browser);
-const page = await context.newPage();
-// All requests from this page include your custom headers
-```
-
-For scripts using raw Playwright API, use the injected `getContextOptionsWithHeaders()`:
-
-```javascript
-const context = await browser.newContext(
-  getContextOptionsWithHeaders({ viewport: { width: 1920, height: 1080 } }),
-);
-```
-
-## Advanced Usage
-
-For comprehensive Playwright API documentation, see [API_REFERENCE.md](API_REFERENCE.md):
-
-- Selectors & Locators best practices
-- Network interception & API mocking
-- Authentication & session management
-- Visual regression testing
-- Mobile device emulation
-- Performance testing
-- Debugging techniques
-- CI/CD integration
-
-## Tips
-
-- **CRITICAL: Detect servers FIRST** - Always run `detectDevServers()` before writing test code for localhost testing
-- **Custom headers** - Use `PW_HEADER_NAME`/`PW_HEADER_VALUE` env vars to identify automated traffic to your backend
-- **Use /tmp for test files** - Write to `/tmp/playwright-test-*.js`, never to skill directory or user's project
-- **Parameterize URLs** - Put detected/provided URL in a `TARGET_URL` constant at the top of every script
-- **DEFAULT: Visible browser** - Always use `headless: false` unless user explicitly asks for headless mode
-- **Headless mode** - Only use `headless: true` when user specifically requests "headless" or "background" execution
-- **Slow down:** Use `slowMo: 100` to make actions visible and easier to follow
-- **Wait strategies:** Use `waitForURL`, `waitForSelector`, `waitForLoadState` instead of fixed timeouts
-- **Error handling:** Always use try-catch for robust automation
-- **Console output:** Use `console.log()` to track progress and show what's happening
-
-## Troubleshooting
-
-**Playwright not installed:**
-
-```bash
-cd $SKILL_DIR && npm run setup
-```
-
-**Module not found:**
-Ensure running from skill directory via `run.js` wrapper
-
-**Browser doesn't open:**
-Check `headless: false` and ensure display available
-
-**Element not found:**
-Add wait: `await page.waitForSelector('.element', { timeout: 10000 })`
-
-## Example Usage
-
-```
-User: "Test if the marketing page looks good"
-
-Claude: I'll test the marketing page across multiple viewports. Let me first detect running servers...
-[Runs: detectDevServers()]
-[Output: Found server on port 3001]
-I found your dev server running on http://localhost:3001
-
-[Writes custom automation script to /tmp/playwright-test-marketing.js with URL parameterized]
-[Runs: cd $SKILL_DIR && node run.js /tmp/playwright-test-marketing.js]
-[Shows results with screenshots from /tmp/]
-```
-
-```
-User: "Check if login redirects correctly"
-
-Claude: I'll test the login flow. First, let me check for running servers...
-[Runs: detectDevServers()]
-[Output: Found servers on ports 3000 and 3001]
-I found 2 dev servers. Which one should I test?
-- http://localhost:3000
-- http://localhost:3001
-
-User: "Use 3001"
-
-[Writes login automation to /tmp/playwright-test-login.js]
-[Runs: cd $SKILL_DIR && node run.js /tmp/playwright-test-login.js]
-[Reports: ✅ Login successful, redirected to /dashboard]
-```
-
-## Notes
-
-- Each automation is custom-written for your specific request
-- Not limited to pre-built scripts - any browser task possible
-- Auto-detects running dev servers to eliminate hardcoded URLs
-- Test scripts written to `/tmp` for automatic cleanup (no clutter)
-- Code executes reliably with proper module resolution via `run.js`
-- Progressive disclosure - API_REFERENCE.md loaded only when advanced features needed
+- **No Playwright provider:** Explain that browser execution is unavailable and ask the user to enable a provider. Do not run a nonexistent local setup command or install dependencies as a fallback without authorization.
+- **A tool is missing:** Discover a supported equivalent. If none exists, report the untested capability; do not claim screenshots, console inspection, or code execution were performed.
+- **Cannot reach the page:** Verify the selected URL, server readiness, and whether the browser runs remotely. Report reachability failures separately from application defects.
+- **Element not found:** Refresh the snapshot, check the current route, loading state, dialogs, and frames, and use an observed locator. Do not hide a real failure with unconditional retries.
+- **Advanced context features:** Headers, authentication state, network mocking, device emulation, and launch options depend on the provider. Use only exposed capabilities and avoid changing shared browser settings without considering other tabs. There are no skill-specific environment variables that configure these features.
