@@ -1,4 +1,4 @@
-import { EVENT_META, eventDetail, eventText, formatKickoff } from '../lib/format';
+import { EVENT_META, eventText, formatKickoff } from '../lib/format';
 import { leagueColor } from '../lib/league-themes';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
@@ -6,16 +6,74 @@ import type { Game, GameEvent, GameStats, Team } from '../types';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 
-const MAX_CARD_EVENTS = 6;
+const MAX_SCORERS = 3;
+const KEY_LINE_TYPES = new Set<GameEvent['type']>(['redCard', 'missedPenalty', 'var']);
+
+type ScorerLine = { readonly name: string; readonly minutes: string[] };
+
+// Goals grouped per player, in order of their first goal: "Saka 23', 67'".
+function scorerLines(events: readonly GameEvent[]): ScorerLine[] {
+  const byPlayer = new Map<string, ScorerLine>();
+  for (const goal of events.filter((e) => e.type === 'goal')) {
+    const ownGoal = /own/i.test(goal.detail ?? '');
+    const name = `${goal.playerName ?? 'Goal'}${ownGoal ? ' (OG)' : ''}`;
+    const line = byPlayer.get(name) ?? { name, minutes: [] };
+    line.minutes.push(goal.minuteDisplay);
+    byPlayer.set(name, line);
+  }
+  return [...byPlayer.values()];
+}
 
 function TeamRow({ team, game, isWinner }: { readonly team: Team; readonly game: Game; readonly isWinner: boolean }) {
   const showScore = game.status !== 'scheduled' && team.score !== null;
   const dim = game.status === 'finished' && !isWinner;
+  const side = team.id === game.home.id ? 'home' : 'away';
+  const yellows = game.events.filter((e) => e.side === side && e.type === 'yellowCard').length;
   return (
     <div className="flex items-center gap-2.5">
       <TeamLogo teamId={team.id} name={team.name} size={22} />
       <span className={`min-w-0 flex-1 truncate text-[15px] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
+      {yellows > 0 && (
+        <span className="score-font flex shrink-0 items-center gap-0.5 text-[10px] text-text-muted" title={`${yellows} yellow card${yellows > 1 ? 's' : ''}`}>
+          <span className="inline-block h-2.5 w-[7px] rounded-[1px] bg-accent-draw" aria-hidden />
+          {yellows}
+        </span>
+      )}
       {showScore && <span className={`score-font min-w-5 text-center text-lg ${dim ? 'text-text-secondary' : 'text-text-primary'}`}>{team.score}</span>}
+    </div>
+  );
+}
+
+// Fixed two-line block under each team (scorers, then red cards / missed penalties / VAR) so every card has the same height.
+function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEvent['side'] }) {
+  const events = game.events.filter((e) => e.side === side);
+  const scorers = scorerLines(events);
+  const shown = scorers.slice(0, MAX_SCORERS);
+  const others = events.filter((e) => KEY_LINE_TYPES.has(e.type));
+  return (
+    <div className="flex h-8 flex-col justify-start ps-8 text-[11px] leading-4 text-text-secondary">
+      {shown.length > 0 && (
+        <p className="truncate" title={scorers.map((l) => `${l.name} ${l.minutes.join(', ')}`).join(' · ')}>
+          <span aria-hidden>⚽ </span>
+          {shown.map((l, i) => (
+            <span key={l.name}>
+              {i > 0 && <span className="text-text-muted"> · </span>}
+              <span className="text-text-primary">{l.name}</span> <span className="score-font text-text-muted">{l.minutes.join(', ')}</span>
+            </span>
+          ))}
+          {scorers.length > shown.length && <span className="text-text-muted"> +{scorers.length - shown.length} more</span>}
+        </p>
+      )}
+      {others.length > 0 && (
+        <p className="truncate">
+          {others.map((e, i) => (
+            <span key={e.key}>
+              {i > 0 && <span className="text-text-muted"> · </span>}
+              {EVENT_META[e.type].icon} <span className="text-text-primary">{eventText(e)}</span> <span className="score-font text-text-muted">{e.minuteDisplay}</span>
+            </span>
+          ))}
+        </p>
+      )}
     </div>
   );
 }
@@ -31,25 +89,6 @@ function StatusBadge({ game }: { readonly game: Game }) {
   }
   if (game.status === 'scheduled') return <span className="score-font rounded-md bg-bg-elevated px-2 py-0.5 text-xs text-text-primary">{formatKickoff(game.startTime)}</span>;
   return <span className="rounded-md bg-bg-elevated px-2 py-0.5 text-xs text-text-secondary">{game.statusText || 'FT'}</span>;
-}
-
-function EventLine({ event }: { readonly event: GameEvent }) {
-  const meta = EVENT_META[event.type];
-  const detail = eventDetail(event);
-  const isHome = event.side === 'home';
-  return (
-    <li className={`flex items-center gap-1.5 text-xs ${isHome ? '' : 'flex-row-reverse text-right'}`}>
-      <span className="score-font w-9 shrink-0 text-center text-[11px] text-text-muted">
-        {event.minuteDisplay}
-      </span>
-      <span className="shrink-0">{meta.icon}</span>
-      <span className="min-w-0 truncate text-text-primary">
-        {eventText(event)}
-        {event.type === 'goal' && event.assistName && <span className="text-text-muted"> · {event.assistName}</span>}
-        {detail && event.type !== 'substitution' && event.playerName && <span className="text-text-muted"> ({detail})</span>}
-      </span>
-    </li>
-  );
 }
 
 function StatBar({ label, pair, highlightBar }: { readonly label: string; readonly pair: readonly [string, string]; readonly highlightBar?: boolean }) {
@@ -103,8 +142,6 @@ export function GameCard({ game }: { readonly game: Game }) {
   const color = leagueColor(game.competitionId);
   const homeScore = game.home.score ?? 0;
   const awayScore = game.away.score ?? 0;
-  const events = game.events.slice(-MAX_CARD_EVENTS);
-  const hiddenEvents = game.events.length - events.length;
   return (
     <article
       role="link"
@@ -121,20 +158,24 @@ export function GameCard({ game }: { readonly game: Game }) {
         </span>
         <StatusBadge game={game} />
       </header>
-      <div className="flex flex-col gap-1.5">
-        <TeamRow team={game.home} game={game} isWinner={homeScore >= awayScore} />
-        <TeamRow team={game.away} game={game} isWinner={awayScore >= homeScore} />
-      </div>
-      {events.length > 0 && (
-        <ul className="flex flex-col gap-1 border-t border-border-subtle pt-2">
-          {hiddenEvents > 0 && <li className="text-center text-[10px] text-text-muted">+{hiddenEvents} earlier events</li>}
-          {events.map((event) => (
-            <EventLine key={event.key} event={event} />
-          ))}
-        </ul>
+      {game.status === 'scheduled' ? (
+        <div className="flex flex-col gap-1.5">
+          <TeamRow team={game.home} game={game} isWinner />
+          <TeamRow team={game.away} game={game} isWinner />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-0.5">
+          <TeamRow team={game.home} game={game} isWinner={homeScore >= awayScore} />
+          <KeyEvents game={game} side="home" />
+          <TeamRow team={game.away} game={game} isWinner={awayScore >= homeScore} />
+          <KeyEvents game={game} side="away" />
+        </div>
       )}
-      {game.status === 'live' && game.stats && <StatsStrip stats={game.stats} />}
-      {game.channels.length > 0 && <Channels channels={game.channels} />}
+      {/* Pinned to the bottom so stats and TV line up across a stretched grid row. */}
+      <div className="mt-auto flex flex-col gap-2.5">
+        {game.status === 'live' && game.stats && <StatsStrip stats={game.stats} />}
+        {game.channels.length > 0 && <Channels channels={game.channels} />}
+      </div>
     </article>
   );
 }

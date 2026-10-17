@@ -157,7 +157,7 @@ export function DashboardPage() {
                 <span className="font-normal text-text-muted">{section.games.length}</span>
               </h2>
               {viewMode === 'cards' ? (
-                <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                   {section.games.map((game) => (
                     <GameCard key={game.id} game={game} />
                   ))}
