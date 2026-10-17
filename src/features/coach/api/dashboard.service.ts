@@ -84,12 +84,17 @@ export class CoachDashboardService {
 
   private async getTodayGames(now: Date, date: string, competitionIds: readonly number[], competitorIds: readonly number[]): Promise<ScoresGame[]> {
     const zonedNow = toZonedTime(now, DEFAULT_TIMEZONE);
-    const [byCompetition, byTeam] = await Promise.all([
-      this.fetchGames(`c:${date}:${[...competitionIds].sort().join(',')}`, () => getGamesByDate({ date: zonedNow, competitionIds })),
-      this.fetchGames(`t:${date}:${[...competitorIds].sort().join(',')}`, () => getGamesByDate({ date: zonedNow, competitorIds })),
-    ]);
+    // Cached per league and per team (not per user selection) so users with overlapping selections share upstream calls.
+    const loaders = [
+      ...[...new Set(competitionIds)].map((id) => () => this.fetchGames(`c:${date}:${id}`, () => getGamesByDate({ date: zonedNow, competitionIds: [id] }))),
+      ...[...new Set(competitorIds)].map((id) => () => this.fetchGames(`t:${date}:${id}`, () => getGamesByDate({ date: zonedNow, competitorIds: [id] }))),
+    ];
+    const lists: ScoresGame[][] = [];
+    for (const batch of chunk(loaders, FETCH_CONCURRENCY)) {
+      lists.push(...(await Promise.all(batch.map((load) => load()))));
+    }
     const unique = new Map<number, ScoresGame>();
-    for (const game of [...byCompetition, ...byTeam]) {
+    for (const game of lists.flat()) {
       // The day range is inclusive, so keep only games that kick off on the requested local date.
       if (formatInTimeZone(new Date(game.startTime), DEFAULT_TIMEZONE, 'yyyy-MM-dd') === date) unique.set(game.id, game);
     }
