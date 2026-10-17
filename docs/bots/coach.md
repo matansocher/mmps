@@ -13,6 +13,26 @@ Coach is a specialized bot for sports enthusiasts, providing real-time match upd
 - 💰 **Betting Analysis** - Value analysis for betting decisions
 - ⏲️ **Live Updates** - Real-time match information
 - 📱 **Quick Access** - Fast, easy-to-read formats
+- 📺 **Live Dashboard** - Mini-app showing every game of your leagues and favorite teams on one screen
+
+## Live Dashboard
+
+A 365Scores-style mini-app (`apps/coach-web`) served at `/coach`, backed by `/api/coach/*`.
+
+- **What it shows** - Today's games from the selected leagues plus favorite teams (pinned on top even if their league isn't selected), ordered live → upcoming → finished. Live games include xG, shots on target and possession. A unified feed lists the latest events across all games.
+- **Views** - Cards grid (default on desktop) or a compact list (default on mobile); the feed is a side column on desktop and a tab on mobile.
+- **Refresh** - Every 30 seconds while the page is visible.
+- **Settings** - Leagues, favorite teams (search), and which event types appear (default: goals, red cards, missed penalties, VAR; yellow cards, woodwork and substitutions optional). Stored per user.
+- **Access** - `/dashboard` sends a mini-app button (authenticated with Telegram init data) and a private browser link (`/coach/?t=<token>`) for opening it on a computer.
+
+Local development:
+
+```bash
+LOCAL_ACTIVE_BOT_ID=COACH npm run dev   # API on PORT (default 3000)
+npm run dev:coach-web                    # Vite; COACH_WEB_PORT (default 5174), COACH_API_URL (default http://localhost:3000)
+```
+
+Without Telegram, the API falls back to the `MY_USER_ID` user when `NODE_ENV` isn't `production`.
 
 ## Configuration
 
@@ -52,6 +72,7 @@ LOCAL_ACTIVE_BOT_ID=COACH npm run dev
 | `/start` | Start the bot |
 | `/matches` | Choose a competition and view matches |
 | `/tables` | Choose a competition and view its table |
+| `/dashboard` | Open the live games dashboard (mini-app + private browser link) |
 | `/actions` | Manage daily updates, custom leagues, contact, and mini-app access |
 
 ## Database
@@ -61,6 +82,7 @@ LOCAL_ACTIVE_BOT_ID=COACH npm run dev
 Collections:
 - `User` - Telegram user details
 - `Subscription` - Daily update settings and custom league selections
+- `DashboardPreferences` - Live dashboard leagues, favorite teams, event types and browser access token
 
 ## Scheduled Tasks
 

@@ -193,3 +193,67 @@ export type AthleteApiResponse = {
 export type MakavdiaApiResponse = {
   readonly athletes: readonly MakavdiaAthleteData[];
 };
+
+export type ScoresCompetitorRef = {
+  readonly id: number;
+  readonly name: string;
+  readonly shortName?: string;
+  readonly symbolicName?: string;
+  readonly score?: number;
+  readonly color?: string;
+};
+
+export type ScoresGame = {
+  readonly id: number;
+  readonly competitionId: number;
+  readonly competitionDisplayName?: string;
+  readonly startTime: string;
+  // 2 = scheduled, 3 = live, 4 = finished; other values are postponed/cancelled/etc.
+  readonly statusGroup: number;
+  readonly statusText?: string;
+  readonly shortStatusText?: string;
+  readonly gameTime?: number;
+  readonly gameTimeDisplay?: string;
+  readonly roundName?: string;
+  readonly roundNum?: number;
+  readonly homeCompetitor: ScoresCompetitorRef;
+  readonly awayCompetitor: ScoresCompetitorRef;
+};
+
+export type ScoresGameEvent = {
+  readonly competitorId: number;
+  readonly order?: number;
+  readonly gameTime: number;
+  readonly addedTime?: number;
+  readonly gameTimeDisplay?: string;
+  readonly playerId?: number;
+  readonly extraPlayers?: readonly number[];
+  readonly eventType?: { readonly id: number; readonly name: string; readonly subTypeId?: number; readonly subTypeName?: string };
+};
+
+export type ScoresGameMember = {
+  readonly id: number;
+  readonly athleteId?: number;
+  readonly name: string;
+  readonly shortName?: string;
+};
+
+export type ScoresGameDetails = ScoresGame & {
+  readonly events?: readonly ScoresGameEvent[];
+  readonly members?: readonly ScoresGameMember[];
+};
+
+export type ScoresGameStat = {
+  readonly id: number;
+  readonly name: string;
+  readonly competitorId: number;
+  readonly value: string;
+};
+
+export type ScoresCompetitorSearchResult = {
+  readonly id: number;
+  readonly name: string;
+  readonly countryId?: number;
+  readonly sportId?: number;
+  readonly type?: number;
+};

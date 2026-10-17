@@ -9,3 +9,8 @@ export { getMatchesSummaryDetails } from './get-matches-summary-details';
 export { getUpcomingMatches } from './get-upcoming-matches';
 export { getMatchTrends } from './get-match-trends';
 export { getPregameData } from './get-pregame-data';
+export { getGamesByDate } from './get-games-by-date';
+export type { GetGamesByDateOptions } from './get-games-by-date';
+export { getGameWithEvents } from './get-game-with-events';
+export { getGameStats } from './get-game-stats';
+export { searchCompetitors } from './search-competitors';
