@@ -6,6 +6,12 @@ export type { Language };
 const STORAGE_KEY = 'coach:language';
 export const DEFAULT_LANGUAGE: Language = 'he';
 
+function ordinal(n: number): string {
+  const tens = n % 100;
+  const suffix = tens >= 11 && tens <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
+  return `${n}${suffix}`;
+}
+
 const en = {
   nav: { live: 'Live', leagues: 'Leagues', settings: 'Settings' },
   common: {
@@ -61,6 +67,18 @@ const en = {
     redCards: (n: number) => (n > 1 ? `${n} red cards` : '1 red card'),
     countdown: (hours: number, minutes: number) => (hours === 0 ? `in ${minutes}m` : minutes === 0 ? `in ${hours}h` : `in ${hours}h ${minutes}m`),
     fullTime: 'FT',
+    headlines: {
+      champions: (team: string) => `${team} are champions!`,
+      relegated: (team: string) => `${team} are relegated`,
+      top: (team: string) => `${team} go top of the table`,
+      lostTop: (team: string) => `${team} lose top spot`,
+      zoneIn: (team: string, zone: string) => `${team} move into the ${zone} places`,
+      zoneOut: (team: string, zone: string) => `${team} drop out of the ${zone} places`,
+      dangerIn: (team: string, zone: string) => `${team} drop into the ${zone} zone`,
+      dangerOut: (team: string, zone: string) => `${team} climb out of the ${zone} zone`,
+      moveUp: (team: string, position: number) => `${team} climb to ${ordinal(position)}`,
+      qualified: (team: string) => `${team} go through`,
+    },
   },
   notifications: {
     more: (n: number) => `+${n} more`,
@@ -261,6 +279,18 @@ const he: Messages = {
     redCards: (n) => (n > 1 ? `${n} כרטיסים אדומים` : 'כרטיס אדום'),
     countdown: (hours, minutes) => (hours === 0 ? `בעוד ${minutes} ד׳` : minutes === 0 ? `בעוד ${hours} ש׳` : `בעוד ${hours} ש׳ ${minutes} ד׳`),
     fullTime: 'הסתיים',
+    headlines: {
+      champions: (team) => `${team} אלופה!`,
+      relegated: (team) => `${team} ירדה ליגה`,
+      top: (team) => `${team} עלתה למקום הראשון`,
+      lostTop: (team) => `${team} איבדה את המקום הראשון`,
+      zoneIn: (team, zone) => `${team} נכנסה למקומות ${zone}`,
+      zoneOut: (team, zone) => `${team} יצאה ממקומות ${zone}`,
+      dangerIn: (team, zone) => `${team} נכנסה לאזור ${zone}`,
+      dangerOut: (team, zone) => `${team} יצאה מאזור ${zone}`,
+      moveUp: (team, position) => `${team} עלתה למקום ${position}`,
+      qualified: (team) => `${team} העפילה לשלב הבא`,
+    },
   },
   notifications: {
     more: (n) => `עוד ${n}`,

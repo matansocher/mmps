@@ -203,6 +203,8 @@ export type ScoresCompetitorRef = {
   readonly color?: string;
   readonly countryId?: number;
   readonly isWinner?: boolean;
+  // Set on knockout games once the team has gone through.
+  readonly isQualified?: boolean;
 };
 
 export type ScoresNamedRef = {
@@ -361,6 +363,8 @@ export type ScoresStandingsRow = {
   readonly destinationNum?: number;
   // Newest first. 1 = win, 2 = draw, 0 = loss.
   readonly recentForm?: readonly number[];
+  // Newest first; used to check the table already includes a result.
+  readonly detailedRecentForm?: readonly { readonly id: number }[];
   readonly liveGameId?: number;
   // Position change caused by live games: 1 = up, -1 = down.
   readonly trend?: number;
@@ -372,7 +376,8 @@ export type ScoresStandings = {
   readonly displayName?: string;
   readonly groups?: readonly { readonly num: number; readonly name: string }[] | null;
   readonly rows: readonly ScoresStandingsRow[];
-  readonly destinations?: readonly { readonly num: number; readonly name: string; readonly color?: string }[];
+  // type 3 = relegation, 5 = relegation play-off / lower play-off; the rest are qualification zones.
+  readonly destinations?: readonly { readonly num: number; readonly name: string; readonly color?: string; readonly type?: number }[];
 };
 
 export type ScoresBracketGroup = {

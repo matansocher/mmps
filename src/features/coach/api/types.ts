@@ -64,6 +64,17 @@ export type DashboardGame = {
   readonly events: DashboardEvent[];
   readonly stats?: DashboardStats;
   readonly form?: DashboardForm;
+  readonly headline?: GameHeadline;
+};
+
+export type GameHeadlineType = 'champions' | 'relegated' | 'top' | 'lostTop' | 'zoneIn' | 'zoneOut' | 'dangerIn' | 'dangerOut' | 'moveUp' | 'qualified';
+
+// What a finished game changed for one of its teams; the client turns it into a sentence.
+export type GameHeadline = {
+  readonly type: GameHeadlineType;
+  readonly teamId: number;
+  readonly position?: number;
+  readonly zone?: string;
 };
 
 export type DashboardPreferencesDto = {

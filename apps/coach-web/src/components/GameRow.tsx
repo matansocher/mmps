@@ -4,6 +4,7 @@ import type { Game, Side, Team } from '../types';
 import { openGame } from './GameCard';
 import { Icon } from './Icon';
 import { LiveDot } from './LiveDot';
+import { GameHeadlineLine } from './GameHeadline';
 import { TeamLogo } from './TeamLogo';
 import { ScoreLine } from './ui';
 
@@ -72,6 +73,7 @@ export function GameRow({ game }: { readonly game: Game }) {
           <span className="truncate text-text-secondary">{eventText(lastEvent)}</span>
         </p>
       )}
+      {finished && game.headline && <GameHeadlineLine game={game} headline={game.headline} compact />}
     </article>
   );
 }

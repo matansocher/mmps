@@ -6,6 +6,7 @@ import { hapticSelect } from '../lib/telegram';
 import type { FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
 import { ChannelLogo } from './ChannelLogo';
 import { CompetitionLogo } from './CompetitionLogo';
+import { GameHeadlineLine } from './GameHeadline';
 import { Icon } from './Icon';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
@@ -242,6 +243,11 @@ export function GameCard({ game }: { readonly game: Game }) {
       {game.status === 'live' && (
         <div className="mt-auto">
           <MatchTimeline game={game} />
+        </div>
+      )}
+      {game.status === 'finished' && game.headline && (
+        <div className="mt-auto">
+          <GameHeadlineLine game={game} headline={game.headline} />
         </div>
       )}
       {game.status === 'scheduled' && game.form && (

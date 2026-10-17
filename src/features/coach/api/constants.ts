@@ -77,3 +77,11 @@ const COMPETITION_NAMES_HE: Readonly<Record<number, string>> = {
 export const COMPETITION_NAMES: Readonly<Record<DashboardLanguage, Readonly<Record<number, string>>>> = { en: COMPETITION_NAMES_EN, he: COMPETITION_NAMES_HE };
 
 export const LINEUPS_CONFIRMED_STATUS = 3;
+
+// Games per team in a season, for leagues with a plain double round robin. Titles and relegation are only declared mathematically for these.
+export const SEASON_GAMES: Readonly<Record<number, number>> = {
+  [COMPETITION_IDS_MAP.PREMIER_LEAGUE]: 38,
+  [COMPETITION_IDS_MAP.LA_LIGA]: 38,
+  [COMPETITION_IDS_MAP.SERIE_A]: 38,
+  [COMPETITION_IDS_MAP.BUNDESLIGA]: 34,
+};

@@ -27,17 +27,49 @@ function readViewMode(): ViewMode {
   return window.matchMedia('(min-width: 1024px)').matches ? 'cards' : 'list';
 }
 
-type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean };
+type LeagueGroup = { readonly competitionId: number; readonly name: string; readonly games: Game[] };
+type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean; readonly leagues?: LeagueGroup[] };
+
+// Leagues with a favourite team's game come first; otherwise leagues keep the server order. Games run by kick-off.
+function groupByLeague(games: readonly Game[]): LeagueGroup[] {
+  const groups = new Map<number, LeagueGroup>();
+  for (const game of games) {
+    const group = groups.get(game.competitionId) ?? { competitionId: game.competitionId, name: game.competitionName, games: [] };
+    group.games.push(game);
+    groups.set(game.competitionId, group);
+  }
+  const byKickoff = (a: Game, b: Game) => a.startTime.localeCompare(b.startTime) || a.id - b.id;
+  return [...groups.values()]
+    .map((g) => ({ ...g, games: [...g.games].sort(byKickoff) }))
+    .sort((a, b) => Number(b.games.some((g) => g.isFavorite)) - Number(a.games.some((g) => g.isFavorite)));
+}
 
 function buildSections(games: Game[], t: Messages['dashboard']['sections']): GameSection[] {
   // Favourite teams' games lead their status section; the sort is stable, so the rest keep the server order.
   const rest = [...games].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
+  const finished = games.filter((g) => g.status === 'finished');
   return [
     { key: 'live', title: t.live, games: rest.filter((g) => g.status === 'live'), live: true },
     { key: 'scheduled', title: t.scheduled, games: rest.filter((g) => g.status === 'scheduled') },
     { key: 'other', title: t.other, games: rest.filter((g) => g.status === 'other') },
-    { key: 'finished', title: t.finished, games: rest.filter((g) => g.status === 'finished') },
+    { key: 'finished', title: t.finished, games: finished, leagues: groupByLeague(finished) },
   ].filter((s) => s.games.length > 0);
+}
+
+function GameGrid({ games, viewMode }: { readonly games: readonly Game[]; readonly viewMode: ViewMode }) {
+  return viewMode === 'cards' ? (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+      {games.map((game) => (
+        <GameCard key={game.id} game={game} />
+      ))}
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-3">
+      {games.map((game) => (
+        <GameRow key={game.id} game={game} />
+      ))}
+    </div>
+  );
 }
 
 function IconButton({ onClick, label, icon, spinning }: { readonly onClick: () => void; readonly label: string; readonly icon: IconName; readonly spinning?: boolean }) {
@@ -175,18 +207,21 @@ export function DashboardPage() {
                 {section.title}
                 <span className="score-font rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-text-secondary">{section.games.length}</span>
               </h2>
-              {viewMode === 'cards' ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
-                  {section.games.map((game) => (
-                    <GameCard key={game.id} game={game} />
+              {section.leagues && section.leagues.length > 1 ? (
+                <div className="flex flex-col gap-5">
+                  {section.leagues.map((league) => (
+                    <div key={league.competitionId} className="flex flex-col gap-2.5">
+                      <h3 className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
+                        <CompetitionLogo competitionId={league.competitionId} size={16} />
+                        {league.name}
+                        <span className="score-font text-[11px] font-medium text-text-muted">{league.games.length}</span>
+                      </h3>
+                      <GameGrid games={league.games} viewMode={viewMode} />
+                    </div>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-3">
-                  {section.games.map((game) => (
-                    <GameRow key={game.id} game={game} />
-                  ))}
-                </div>
+                <GameGrid games={section.leagues?.[0]?.games ?? section.games} viewMode={viewMode} />
               )}
             </section>
           ))}

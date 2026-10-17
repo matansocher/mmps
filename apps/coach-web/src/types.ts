@@ -49,6 +49,7 @@ export type Game = {
   readonly events: GameEvent[];
   readonly stats?: GameStats;
   readonly form?: DashboardForm;
+  readonly headline?: GameHeadline;
 };
 
 export type FormEntry = { readonly result: FormResult; readonly opponent: string; readonly score: string };
@@ -215,4 +216,13 @@ export type CompetitionDetail = {
 export type TvChannel = {
   readonly id: number;
   readonly name: string;
+};
+
+export type GameHeadlineType = 'champions' | 'relegated' | 'top' | 'lostTop' | 'zoneIn' | 'zoneOut' | 'dangerIn' | 'dangerOut' | 'moveUp' | 'qualified';
+
+export type GameHeadline = {
+  readonly type: GameHeadlineType;
+  readonly teamId: number;
+  readonly position?: number;
+  readonly zone?: string;
 };

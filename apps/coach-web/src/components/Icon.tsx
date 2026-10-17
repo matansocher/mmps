@@ -23,7 +23,9 @@ export type IconName =
   | 'settings'
   | 'calendar'
   | 'stadium'
-  | 'moon';
+  | 'moon'
+  | 'trendUp'
+  | 'trendDown';
 
 // 24×24 grid, 1.75 stroke, currentColor — one vocabulary across the app.
 const PATHS: Record<IconName, ReactNode> = {
@@ -95,6 +97,8 @@ const PATHS: Record<IconName, ReactNode> = {
   star: <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor" />,
   trophy: <path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5a3.5 3.5 0 0 0 3.7 4M16 6h3.5a3.5 3.5 0 0 1-3.7 4M12 13v4M8.5 20h7M10 17h4v3h-4z" />,
   live: <path d="M13 3 5 13.5h6L10 21l8-10.5h-6z" />,
+  trendUp: <path d="m4 16 6-6 4 4 6-6M15 8h5v5" />,
+  trendDown: <path d="m4 8 6 6 4-4 6 6M15 16h5v-5" />,
   settings: (
     <>
       <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />

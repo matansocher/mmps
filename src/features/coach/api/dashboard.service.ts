@@ -5,19 +5,20 @@ import { COMPETITIONS, getGamesByDate, searchCompetitors } from '@services/score
 import type { ScoresGame, ScoresGameDetails, ScoresGameStat } from '@services/scores-365';
 import { getDashboardPreferences, getSubscription, saveDashboardPreferences } from '@shared/coach';
 import type { DashboardLanguage, DashboardPreferences, DashboardPreferencesUpdate } from '@shared/coach';
-import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_LANGUAGE, DEFAULT_REFRESH_INTERVAL_SEC, LANGUAGE_IDS, LIVE_DATA_TTL_SEC } from './constants';
+import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_LANGUAGE, DEFAULT_REFRESH_INTERVAL_SEC, LANGUAGE_IDS, LIVE_DATA_TTL_SEC, SEASON_GAMES } from './constants';
 import { toDashboardForm } from './detail-transformers';
 import { parseRefreshInterval } from './dto';
-import { getCachedGameDetails, getCachedGameStats, getCachedHeadToHead } from './scores-cache';
+import { getGameHeadline } from './game-headline';
+import { getCachedGameDetails, getCachedGameStats, getCachedHeadToHead, getCachedStandings } from './scores-cache';
 import { classifyGameStatus, sortDashboardGames, toDashboardGame } from './transformers';
 import { TtlCache } from './ttl-cache';
-import type { CompetitionOption, DashboardForm, DashboardPreferencesDto, DashboardResponse, TeamOption } from './types';
+import type { CompetitionOption, DashboardForm, DashboardPreferencesDto, DashboardResponse, GameHeadline, TeamOption } from './types';
 
 const GAMES_LIST_TTL_MS = LIVE_DATA_TTL_SEC * 1000;
 const SEARCH_TTL_MS = 10 * 60_000;
 const FETCH_CONCURRENCY = 6;
 
-type EnrichedGame = { readonly game: ScoresGame; readonly details: ScoresGameDetails | null; readonly stats: ScoresGameStat[] | null; readonly form?: DashboardForm };
+type EnrichedGame = { readonly game: ScoresGame; readonly details: ScoresGameDetails | null; readonly stats: ScoresGameStat[] | null; readonly form?: DashboardForm; readonly headline?: GameHeadline };
 
 export async function getDefaultDashboardPreferences(telegramUserId: number): Promise<DashboardPreferencesDto> {
   // Seed from the leagues the user already follows in the bot, when set.
@@ -78,9 +79,11 @@ export class CoachDashboardService {
 
     // All events are returned; the client shows a fixed set on cards and uses preferences.eventTypes for notifications.
     const dashboardGames = sortDashboardGames(
-      enriched.map(({ game, details, stats, form }) => {
+      enriched.map(({ game, details, stats, form, headline }) => {
         const dashboardGame = toDashboardGame({ game, details, stats, favoriteTeamIds, lang });
-        return form && dashboardGame.status === 'scheduled' ? { ...dashboardGame, form } : dashboardGame;
+        if (form && dashboardGame.status === 'scheduled') return { ...dashboardGame, form };
+        if (headline && dashboardGame.status === 'finished') return { ...dashboardGame, headline };
+        return dashboardGame;
       }),
     );
 
@@ -132,6 +135,14 @@ export class CoachDashboardService {
       status === 'scheduled' ? getCachedHeadToHead(game.id, lang) : Promise.resolve(null),
     ]);
     const form = toDashboardForm(headToHead, game.homeCompetitor.id, game.awayCompetitor.id);
-    return { game, details, stats, ...(form ? { form } : {}) };
+    const headline = status === 'finished' ? await this.getHeadline(game, details, lang) : undefined;
+    return { game, details, stats, ...(form ? { form } : {}), ...(headline ? { headline } : {}) };
+  }
+
+  // Finished games get a one-line "what it means" from the table (or the knockout result).
+  private async getHeadline(game: ScoresGame, details: ScoresGameDetails | null, lang: DashboardLanguage): Promise<GameHeadline | undefined> {
+    const source = details ?? game;
+    const standings = details?.hasStandings ? await getCachedStandings(game.competitionId, lang) : null;
+    return getGameHeadline(source, standings, SEASON_GAMES[game.competitionId]);
   }
 }
