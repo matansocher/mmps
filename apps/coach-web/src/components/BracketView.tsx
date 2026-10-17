@@ -4,6 +4,7 @@ import { navigate } from '../lib/router';
 import type { KnockoutLeg, KnockoutMatchup, KnockoutStage } from '../types';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
+import { Icon } from './Icon';
 
 type MatchupTeam = KnockoutMatchup['teams'][number];
 
@@ -107,7 +108,7 @@ function MatchupSheet({ matchup, stageName, nextStageName, onClose }: { readonly
             {a && b && <span className="font-normal text-text-muted"> · {shortCode(a.name)} v {shortCode(b.name)}</span>}
           </h2>
           <button onClick={onClose} aria-label="Close" className="flex size-7 items-center justify-center rounded-full text-text-secondary hover:bg-bg-elevated">
-            ✕
+            <Icon name="close" size={14} />
           </button>
         </div>
         <div className="divide-y divide-border-subtle">
@@ -124,7 +125,14 @@ function MatchupSheet({ matchup, stageName, nextStageName, onClose }: { readonly
         )}
         {qualified && (
           <p className="border-t border-border-subtle bg-bg-elevated/40 px-4 py-3 text-center text-sm font-medium text-accent-live">
-            {nextStageName ? `${qualified.name} advance to the ${nextStageName}` : `🏆 ${qualified.name}`}
+            {nextStageName ? (
+              `${qualified.name} advance to the ${nextStageName}`
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <Icon name="trophy" size={15} />
+                {qualified.name}
+              </span>
+            )}
           </p>
         )}
       </div>
@@ -145,8 +153,8 @@ export function BracketView({ stages }: { readonly stages: readonly KnockoutStag
         <div className="flex min-w-max gap-3">
           {stages.map((stage, stageIndex) => (
             <div key={`${stage.name}-${stageIndex}`} className="flex w-[200px] shrink-0 flex-col">
-              <h3 className={`mb-2 text-center text-xs font-semibold ${stageIndex === lastIndex ? 'text-accent-draw' : 'text-text-secondary'}`}>
-                {stageIndex === lastIndex && '🏆 '}
+              <h3 className={`mb-2 flex items-center justify-center gap-1 text-xs font-semibold ${stageIndex === lastIndex ? 'text-accent-draw' : 'text-text-secondary'}`}>
+                {stageIndex === lastIndex && <Icon name="trophy" size={13} />}
                 {stage.name}
               </h3>
               <div className="flex flex-1 flex-col justify-around gap-2">

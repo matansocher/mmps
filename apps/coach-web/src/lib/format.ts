@@ -1,13 +1,14 @@
+import type { IconName } from '../components/Icon';
 import type { EventType, GameEvent } from '../types';
 
-export const EVENT_META: Record<EventType, { readonly icon: string; readonly label: string; readonly title: string }> = {
-  goal: { icon: '⚽', label: 'Goals', title: 'Goal' },
-  redCard: { icon: '🟥', label: 'Red cards', title: 'Red card' },
-  yellowCard: { icon: '🟨', label: 'Yellow cards', title: 'Yellow card' },
-  missedPenalty: { icon: '❌', label: 'Missed penalties', title: 'Missed penalty' },
-  var: { icon: '📺', label: 'VAR decisions', title: 'VAR' },
-  woodwork: { icon: '🥅', label: 'Woodwork', title: 'Hit the woodwork' },
-  substitution: { icon: '🔄', label: 'Substitutions', title: 'Substitution' },
+export const EVENT_META: Record<EventType, { readonly icon: IconName; readonly label: string; readonly title: string }> = {
+  goal: { icon: 'ball', label: 'Goals', title: 'Goal' },
+  redCard: { icon: 'redCard', label: 'Red cards', title: 'Red card' },
+  yellowCard: { icon: 'yellowCard', label: 'Yellow cards', title: 'Yellow card' },
+  missedPenalty: { icon: 'missedPenalty', label: 'Missed penalties', title: 'Missed penalty' },
+  var: { icon: 'var', label: 'VAR decisions', title: 'VAR' },
+  woodwork: { icon: 'woodwork', label: 'Woodwork', title: 'Hit the woodwork' },
+  substitution: { icon: 'substitution', label: 'Substitutions', title: 'Substitution' },
 };
 
 // Shown on game cards and list rows regardless of the notification settings.

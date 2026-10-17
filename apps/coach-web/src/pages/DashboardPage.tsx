@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { GameCard, GameCardSkeleton } from '../components/GameCard';
 import { GameRow } from '../components/GameRow';
+import { Icon, type IconName } from '../components/Icon';
 import { LiveDot } from '../components/LiveDot';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
@@ -38,12 +39,35 @@ function buildSections(games: Game[]): GameSection[] {
   ].filter((s) => s.games.length > 0);
 }
 
-function IconButton({ onClick, label, children, spinning }: { readonly onClick: () => void; readonly label: string; readonly children: string; readonly spinning?: boolean }) {
+function IconButton({ onClick, label, icon, spinning }: { readonly onClick: () => void; readonly label: string; readonly icon: IconName; readonly spinning?: boolean }) {
   return (
-    <button onClick={onClick} aria-label={label} title={label} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-bg-elevated text-base text-text-secondary transition active:scale-95 hover:text-text-primary">
-      <span className={spinning ? 'animate-spin' : ''}>{children}</span>
+    <button
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.04] text-text-secondary transition duration-150 ease-out hover:bg-white/[0.08] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95"
+    >
+      <Icon name={icon} size={17} className={spinning ? 'animate-spin' : ''} />
     </button>
   );
+}
+
+function FilterChip({ active, onClick, children }: { readonly active: boolean; readonly onClick: () => void; readonly children: ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand ${
+        active ? 'border-transparent bg-text-primary text-bg-base' : 'border-white/[0.06] bg-white/[0.03] text-text-secondary hover:bg-white/[0.07] hover:text-text-primary'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Count({ value, active }: { readonly value: number; readonly active: boolean }) {
+  return <span className={`score-font text-[11px] ${active ? 'text-bg-base/60' : 'text-text-muted'}`}>{value}</span>;
 }
 
 export function DashboardPage() {
@@ -86,7 +110,7 @@ export function DashboardPage() {
           <>
             Live
             {liveCount > 0 && (
-              <span className="flex items-center gap-1.5 rounded-full bg-accent-live/15 px-2 py-0.5 text-xs font-bold text-accent-live">
+              <span className="score-font flex h-6 items-center gap-1.5 rounded-full bg-accent-live/12 px-2.5 text-xs font-bold text-accent-live">
                 <LiveDot />
                 {liveCount}
               </span>
@@ -96,33 +120,23 @@ export function DashboardPage() {
         subtitle={data ? `${formatDateTitle(data.date)} · updated ${formatClock(data.updatedAt)} · every ${refreshIntervalSec}s` : 'Loading…'}
         actions={
           <>
-            <IconButton onClick={toggleViewMode} label={viewMode === 'cards' ? 'List view' : 'Card view'}>
-              {viewMode === 'cards' ? '☰' : '▦'}
-            </IconButton>
-            <IconButton onClick={refresh} label="Refresh" spinning={refreshing}>
-              ↻
-            </IconButton>
+            <IconButton onClick={toggleViewMode} label={viewMode === 'cards' ? 'List view' : 'Card view'} icon={viewMode === 'cards' ? 'list' : 'grid'} />
+            <IconButton onClick={refresh} label="Refresh" icon="refresh" spinning={refreshing} />
           </>
         }
       >
         {competitions.length > 1 && (
-          <nav className="no-scrollbar mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 pb-2.5">
-            <button
-              onClick={() => setCompetitionFilter(null)}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${activeFilter === null ? 'bg-text-primary text-bg-base' : 'bg-bg-elevated text-text-secondary'}`}
-            >
-              All · {games.length}
-            </button>
+          <nav aria-label="Filter by league" className="no-scrollbar mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 pb-3">
+            <FilterChip active={activeFilter === null} onClick={() => setCompetitionFilter(null)}>
+              All <Count value={games.length} active={activeFilter === null} />
+            </FilterChip>
             {competitions.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${activeFilter === c.id ? 'bg-text-primary text-bg-base' : 'bg-bg-elevated text-text-secondary'}`}
-              >
-                <CompetitionLogo competitionId={c.id} size={14} />
-                {c.name} · {c.count}
+              <FilterChip key={c.id} active={activeFilter === c.id} onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}>
+                <CompetitionLogo competitionId={c.id} size={16} />
+                {c.name}
+                <Count value={c.count} active={activeFilter === c.id} />
                 {c.live > 0 && <LiveDot />}
-              </button>
+              </FilterChip>
             ))}
           </nav>
         )}
@@ -131,39 +145,42 @@ export function DashboardPage() {
       {errorStatus !== null && !data ? (
         <ErrorState status={errorStatus} onRetry={refresh} />
       ) : (
-        <main className="mx-auto flex max-w-[1500px] flex-col gap-6 px-4 pt-4">
-          {errorStatus !== null && <p className="rounded-lg bg-accent-red/10 px-3 py-2 text-xs text-accent-red">The last refresh failed, showing previous data</p>}
+        <main className="mx-auto flex max-w-[1500px] flex-col gap-8 px-4 pt-5">
+          {errorStatus !== null && <p className="rounded-xl border border-accent-red/20 bg-accent-red/10 px-3 py-2 text-xs text-accent-red">Couldn’t refresh. Showing the last results; retrying automatically.</p>}
           {loading && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 6 }, (_, i) => (
                 <GameCardSkeleton key={i} />
               ))}
             </div>
           )}
           {!loading && sections.length === 0 && (
-            <div className="mt-12 flex flex-col items-center gap-2 text-center">
-              <span className="text-4xl">🌙</span>
-              <p className="font-semibold">No games today in your leagues</p>
-              <button onClick={() => navigate({ name: 'settings' })} className="text-sm text-accent-brand">
+            <div className="mt-16 flex flex-col items-center gap-3 text-center">
+              <span className="flex size-14 items-center justify-center rounded-full bg-white/[0.04] text-text-muted">
+                <Icon name="moon" size={26} />
+              </span>
+              <p className="text-base font-semibold">No games today in your leagues</p>
+              <p className="max-w-xs text-sm text-text-muted">Add more leagues or teams to follow and their games will show up here.</p>
+              <button onClick={() => navigate({ name: 'settings' })} className="mt-1 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-white/[0.1]">
                 Choose leagues and teams
               </button>
             </div>
           )}
           {sections.map((section) => (
-            <section key={section.key} className="flex flex-col gap-2.5">
-              <h2 className="flex items-center gap-2 text-sm font-bold text-text-secondary">
+            <section key={section.key} aria-labelledby={`section-${section.key}`} className="flex flex-col gap-3">
+              <h2 id={`section-${section.key}`} className="flex items-center gap-2 text-[15px] font-bold tracking-[-0.01em] text-text-primary">
                 {section.live && <LiveDot />}
                 {section.title}
-                <span className="font-normal text-text-muted">{section.games.length}</span>
+                <span className="score-font rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-text-secondary">{section.games.length}</span>
               </h2>
               {viewMode === 'cards' ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
                   {section.games.map((game) => (
                     <GameCard key={game.id} game={game} />
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2 2xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-3">
                   {section.games.map((game) => (
                     <GameRow key={game.id} game={game} />
                   ))}

@@ -1,7 +1,7 @@
 import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
-import { leagueColor } from '../lib/league-themes';
 import type { Game, Side, Team } from '../types';
 import { openGame } from './GameCard';
+import { Icon } from './Icon';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 
@@ -30,13 +30,12 @@ export function GameRow({ game }: { readonly game: Game }) {
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="relative flex cursor-pointer flex-col gap-1 overflow-hidden rounded-lg bg-bg-card py-2 ps-3 pe-2 transition hover:bg-bg-elevated/60"
+      className="flex cursor-pointer flex-col gap-1 rounded-xl border border-white/[0.06] bg-bg-card px-2.5 py-2.5 transition duration-150 ease-out hover:border-white/[0.1] hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand"
     >
-      <span className="absolute inset-y-0 start-0 w-0.5" style={{ backgroundColor: leagueColor(game.competitionId) }} aria-hidden />
       <div className="flex items-center gap-2">
         <div className="flex w-12 shrink-0 items-center justify-center">
           {game.status === 'live' ? (
-            <span className="flex items-center gap-1 text-[11px] font-bold text-accent-live">
+            <span className="score-font flex items-center gap-1 text-[11px] font-bold text-accent-live">
               <LiveDot />
               <span>{game.minuteDisplay || game.statusText}</span>
             </span>
@@ -47,15 +46,17 @@ export function GameRow({ game }: { readonly game: Game }) {
           )}
         </div>
         <TeamCell team={game.home} reds={redCards(game, 'home')} align="start" dim={finished && homeScore < awayScore} />
-        <span className={`score-font w-12 shrink-0 text-center text-[15px] ${game.status === 'live' ? 'text-text-primary' : 'text-text-secondary'}`}>
+        <span className={`score-font w-12 shrink-0 text-center text-base ${game.status === 'scheduled' ? 'text-text-muted' : game.status === 'live' ? 'text-text-primary' : 'text-text-secondary'}`}>
           {game.status === 'scheduled' ? '–' : `${homeScore} - ${awayScore}`}
         </span>
         <TeamCell team={game.away} reds={redCards(game, 'away')} align="end" dim={finished && awayScore < homeScore} />
-        {game.isFavorite && <span className="shrink-0 text-xs text-accent-draw">★</span>}
+        {game.isFavorite && <Icon name="star" size={12} className="text-accent-draw" title="Favourite team" />}
       </div>
       {lastEvent && (
-        <p className="min-w-0 truncate ps-[56px] text-[11px] text-text-muted">
-          <span className="text-accent-live">{lastEvent.minuteDisplay}</span> {EVENT_META[lastEvent.type].icon} {eventText(lastEvent)}
+        <p className="flex min-w-0 items-center gap-1.5 ps-[56px] text-[11px] text-text-muted">
+          <span className="score-font font-semibold text-accent-live">{lastEvent.minuteDisplay}</span>
+          <Icon name={EVENT_META[lastEvent.type].icon} size={11} />
+          <span className="truncate text-text-secondary">{eventText(lastEvent)}</span>
         </p>
       )}
     </article>

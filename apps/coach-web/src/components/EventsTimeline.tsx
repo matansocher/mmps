@@ -1,6 +1,7 @@
 import { EVENT_META, eventDetail } from '../lib/format';
 import { navigate } from '../lib/router';
 import type { GameEvent } from '../types';
+import { Icon } from './Icon';
 
 function PlayerLink({ name, athleteId, muted }: { readonly name: string; readonly athleteId?: number; readonly muted?: boolean }) {
   const cls = muted ? 'text-text-muted' : 'text-text-primary';
@@ -60,7 +61,7 @@ export function EventsTimeline({ events }: { readonly events: readonly GameEvent
         return (
           <li key={event.key} className={`flex items-center gap-3 px-3 py-2.5 text-sm ${isHome ? '' : 'flex-row-reverse text-right'}`}>
             <span className="score-font w-10 shrink-0 text-center text-xs text-accent-live">{event.minuteDisplay}</span>
-            <span className="shrink-0 text-base">{EVENT_META[event.type].icon}</span>
+            <Icon name={EVENT_META[event.type].icon} size={16} className="text-text-secondary" />
             <span className={`flex min-w-0 flex-1 ${isHome ? '' : 'justify-end'}`}>
               <EventBody event={event} />
             </span>

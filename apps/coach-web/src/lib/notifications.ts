@@ -1,3 +1,4 @@
+import type { IconName } from '../components/Icon';
 import type { EventType, Game, GameEvent, Side } from '../types';
 import { EVENT_META, eventText, formatKickoff } from './format';
 
@@ -5,7 +6,7 @@ export type GameNotification = {
   readonly key: string;
   readonly gameId: number;
   readonly competitionId: number;
-  readonly icon: string;
+  readonly icon: IconName;
   readonly title: string;
   readonly text?: string;
   readonly minuteDisplay?: string;
@@ -136,11 +137,11 @@ export function diffGames(previous: readonly Game[], next: readonly Game[], even
     const base = { gameId: game.id, competitionId: game.competitionId, game: gameSnapshot(game) };
 
     if (game.status === 'scheduled' && !before.lineupsConfirmed && game.lineupsConfirmed) {
-      notifications.push({ ...base, key: `${game.id}:lineups`, icon: '📋', title: 'Lineups confirmed', text: `Kick-off ${formatKickoff(game.startTime)}` });
+      notifications.push({ ...base, key: `${game.id}:lineups`, icon: 'lineups', title: 'Lineups confirmed', text: `Kick-off ${formatKickoff(game.startTime)}` });
     }
 
     if (before.status === 'scheduled' && game.status === 'live') {
-      notifications.push({ ...base, key: `${game.id}:kickoff`, icon: '🟢', title: 'Kick-off' });
+      notifications.push({ ...base, key: `${game.id}:kickoff`, icon: 'kickoff', title: 'Kick-off' });
     }
 
     const seen = new Set(before.events.map((e) => e.key));
@@ -160,7 +161,7 @@ export function diffGames(previous: readonly Game[], next: readonly Game[], even
     }
 
     if (before.status === 'live' && game.status === 'finished') {
-      notifications.push({ ...base, key: `${game.id}:fulltime`, icon: '🏁', title: fullTimeTitle(game) });
+      notifications.push({ ...base, key: `${game.id}:fulltime`, icon: 'fulltime', title: fullTimeTitle(game) });
     }
   }
   return notifications;

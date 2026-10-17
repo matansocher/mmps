@@ -1,10 +1,11 @@
 import { hapticSelect } from '../lib/telegram';
 import { navigate, type Route, useRoute } from '../lib/router';
+import { Icon, type IconName } from './Icon';
 
-const TABS: readonly { readonly name: 'live' | 'leagues' | 'settings'; readonly label: string; readonly icon: string }[] = [
-  { name: 'live', label: 'Live', icon: '⚡' },
-  { name: 'leagues', label: 'Leagues', icon: '🏆' },
-  { name: 'settings', label: 'Settings', icon: '⚙' },
+const TABS: readonly { readonly name: 'live' | 'leagues' | 'settings'; readonly label: string; readonly icon: IconName }[] = [
+  { name: 'live', label: 'Live', icon: 'live' },
+  { name: 'leagues', label: 'Leagues', icon: 'trophy' },
+  { name: 'settings', label: 'Settings', icon: 'settings' },
 ];
 
 // Detail pages belong to the tab they were most likely opened from.
@@ -47,7 +48,7 @@ export function BottomNav() {
             onClick={() => go(tab.name)}
             className={`flex flex-col items-center gap-0.5 py-2 transition ${active === tab.name ? 'text-accent-live' : 'text-text-muted'}`}
           >
-            <span className="text-lg leading-none">{tab.icon}</span>
+            <Icon name={tab.icon} size={20} />
             <span className="text-[11px] font-semibold">{tab.label}</span>
           </button>
         ))}

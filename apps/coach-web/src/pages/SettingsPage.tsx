@@ -9,6 +9,7 @@ import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
 import { leagueColor } from '../lib/league-themes';
 import { hapticSelect } from '../lib/telegram';
 import type { CompetitionOption, EventType, FavoriteTeam, Preferences, TeamOption } from '../types';
+import { Icon } from '../components/Icon';
 
 const MAX_FAVORITE_TEAMS = 30;
 const REFRESH_INTERVAL_OPTIONS = [15, 20, 30, 45, 60, 120] as const;
@@ -186,7 +187,7 @@ export function SettingsPage() {
                       aria-label={`Remove ${team.name}`}
                       className="ms-1 text-text-muted hover:text-accent-red"
                     >
-                      ✕
+                      <Icon name="close" size={12} />
                     </button>
                   </li>
                 ))}
@@ -205,7 +206,7 @@ export function SettingsPage() {
                     onClick={() => update({ ...prefs, eventTypes: toggle(prefs.eventTypes, type) })}
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
                   >
-                    <span>{EVENT_META[type].icon}</span>
+                    <Icon name={EVENT_META[type].icon} size={16} />
                     <span className="flex-1 text-start">{EVENT_META[type].label}</span>
                     <span className={`size-4 rounded border ${on ? 'border-accent-brand bg-accent-brand' : 'border-text-muted'}`} />
                   </button>

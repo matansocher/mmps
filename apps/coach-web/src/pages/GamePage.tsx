@@ -17,6 +17,7 @@ import { api } from '../lib/api';
 import { formatLongDate, formatKickoff } from '../lib/format';
 import { navigate } from '../lib/router';
 import type { GameDetail } from '../types';
+import { Icon } from '../components/Icon';
 
 type GameTab = 'overview' | 'lineups' | 'table';
 
@@ -44,11 +45,11 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         )}
         {detail.round && <span className="text-text-muted"> · {detail.round}</span>}
       </InfoRow>
-      <InfoRow icon="🗓" label="Kick-off">
+      <InfoRow icon={<Icon name="calendar" size={16} className="text-text-muted" />} label="Kick-off">
         {formatLongDate(game.startTime)} · {formatKickoff(game.startTime)}
       </InfoRow>
       {game.channels.length > 0 && (
-        <InfoRow icon="📺" label="TV">
+        <InfoRow icon={<Icon name="tv" size={16} className="text-text-muted" />} label="TV">
           <span className="flex flex-wrap items-center gap-1.5">
             {game.channels.map((c) => (
               <ChannelLogo key={c.id} channel={c} height={16} />
@@ -57,7 +58,7 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         </InfoRow>
       )}
       {detail.venue && (
-        <InfoRow icon="🏟" label="Venue">
+        <InfoRow icon={<Icon name="stadium" size={16} className="text-text-muted" />} label="Venue">
           {detail.venue}
         </InfoRow>
       )}

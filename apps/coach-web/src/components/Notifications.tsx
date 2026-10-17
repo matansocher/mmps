@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
-import { leagueColor } from '../lib/league-themes';
 import type { GameNotification } from '../lib/notifications';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import { TeamLogo } from './TeamLogo';
+import { CompetitionLogo } from './CompetitionLogo';
+import { Icon } from './Icon';
 
 const MAX_VISIBLE_DESKTOP = 4;
 const MAX_VISIBLE_MOBILE = 2;
@@ -25,6 +26,8 @@ function Score({ notification }: { readonly notification: GameNotification }) {
   const { home, away } = notification.game;
   return (
     <div className="flex min-w-0 items-center gap-1.5 text-xs text-text-secondary">
+      <CompetitionLogo competitionId={notification.competitionId} size={12} />
+      <span className="text-text-muted">·</span>
       <TeamLogo teamId={home.id} name={home.name} size={14} />
       <span className="truncate">{home.shortName || home.name}</span>
       <span className="score-font shrink-0 text-text-primary">
@@ -42,10 +45,11 @@ function NotificationCard({ notification, onDismiss }: { readonly notification: 
     navigate({ name: 'game', id: notification.gameId });
   };
   return (
-    <div className="notification-in pointer-events-auto relative flex overflow-hidden rounded-xl border border-border-subtle bg-bg-elevated/95 shadow-2xl shadow-black/50 backdrop-blur-md">
-      <span className="w-1 shrink-0" style={{ backgroundColor: leagueColor(notification.competitionId) }} aria-hidden />
+    <div className="notification-in pointer-events-auto relative flex overflow-hidden rounded-2xl border border-white/[0.08] bg-bg-elevated/95 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md">
       <button onClick={open} className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-start">
-        <span className="text-xl leading-none">{notification.icon}</span>
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-text-primary">
+          <Icon name={notification.icon} size={16} />
+        </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="flex min-w-0 items-baseline gap-1.5 text-sm">
             <span className="shrink-0 font-bold">{notification.title}</span>
@@ -56,7 +60,7 @@ function NotificationCard({ notification, onDismiss }: { readonly notification: 
         </span>
       </button>
       <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 px-2.5 text-text-muted hover:text-text-primary">
-        ✕
+        <Icon name="close" size={14} />
       </button>
     </div>
   );
