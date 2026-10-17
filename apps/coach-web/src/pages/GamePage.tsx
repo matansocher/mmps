@@ -1,4 +1,6 @@
 import { type ReactNode, useEffect, useState } from 'react';
+import { ChannelLogo } from '../components/ChannelLogo';
+import { CompetitionLogo } from '../components/CompetitionLogo';
 import { EventsTimeline } from '../components/EventsTimeline';
 import { HeadToHeadView } from '../components/HeadToHeadView';
 import { LineupsView } from '../components/LineupsView';
@@ -18,10 +20,10 @@ import type { GameDetail } from '../types';
 
 type GameTab = 'overview' | 'lineups' | 'table';
 
-function InfoRow({ icon, label, children }: { readonly icon: string; readonly label: string; readonly children: ReactNode }) {
+function InfoRow({ icon, label, children }: { readonly icon: ReactNode; readonly label: string; readonly children: ReactNode }) {
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 text-sm">
-      <span className="w-5 shrink-0 text-center">{icon}</span>
+      <span className="flex w-5 shrink-0 justify-center">{icon}</span>
       <span className="w-20 shrink-0 text-text-muted">{label}</span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
@@ -32,7 +34,7 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
   const { game } = detail;
   return (
     <Card className="divide-y divide-border-subtle">
-      <InfoRow icon="🏆" label="Competition">
+      <InfoRow icon={<CompetitionLogo competitionId={game.competitionId} size={18} />} label="Competition">
         {competitionLinked ? (
           <button onClick={() => navigate({ name: 'league', id: game.competitionId })} className="text-accent-brand hover:underline">
             {game.competitionName}
@@ -47,7 +49,11 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
       </InfoRow>
       {game.channels.length > 0 && (
         <InfoRow icon="📺" label="TV">
-          {game.channels.join(' · ')}
+          <span className="flex flex-wrap items-center gap-1.5">
+            {game.channels.map((c) => (
+              <ChannelLogo key={c.id} channel={c} height={16} />
+            ))}
+          </span>
         </InfoRow>
       )}
       {detail.venue && (

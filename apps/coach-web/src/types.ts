@@ -43,7 +43,7 @@ export type Game = {
   readonly away: Team;
   readonly isFavorite: boolean;
   readonly lineupsConfirmed: boolean;
-  readonly channels: string[];
+  readonly channels: TvChannel[];
   readonly events: GameEvent[];
   readonly stats?: GameStats;
 };
@@ -199,4 +199,9 @@ export type CompetitionDetail = {
   readonly tables: StandingsTable[];
   readonly zones: { readonly name: string; readonly color: string }[];
   readonly knockout: KnockoutStage[];
+};
+
+export type TvChannel = {
+  readonly id: number;
+  readonly name: string;
 };

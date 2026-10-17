@@ -2,7 +2,9 @@ import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/f
 import { leagueColor } from '../lib/league-themes';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
-import type { Game, GameEvent, GameStats, Team } from '../types';
+import type { Game, GameEvent, GameStats, Team, TvChannel } from '../types';
+import { ChannelLogo } from './ChannelLogo';
+import { CompetitionLogo } from './CompetitionLogo';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 
@@ -120,12 +122,17 @@ export function openGame(id: number) {
   navigate({ name: 'game', id });
 }
 
-export function Channels({ channels, compact }: { readonly channels: readonly string[]; readonly compact?: boolean }) {
+export function Channels({ channels, compact }: { readonly channels: readonly TvChannel[]; readonly compact?: boolean }) {
   return (
-    <p className={`flex min-w-0 items-center gap-1 text-text-muted ${compact ? 'text-[10px]' : 'border-t border-border-subtle pt-2 text-[11px]'}`} title={channels.join(', ')}>
+    <div
+      className={`flex min-w-0 items-center gap-1.5 overflow-hidden text-text-muted ${compact ? 'text-[10px]' : 'border-t border-border-subtle pt-2 text-[11px]'}`}
+      title={channels.map((c) => c.name).join(', ')}
+    >
       <span aria-hidden>📺</span>
-      <span className="truncate">{channels.join(' · ')}</span>
-    </p>
+      {channels.map((c) => (
+        <ChannelLogo key={c.id} channel={c} height={compact ? 14 : 16} />
+      ))}
+    </div>
   );
 }
 
@@ -143,9 +150,10 @@ export function GameCard({ game }: { readonly game: Game }) {
     >
       <span className="absolute inset-y-0 start-0 w-1" style={{ backgroundColor: color }} aria-hidden />
       <header className="flex items-center justify-between gap-2">
-        <span className="min-w-0 truncate text-[11px] font-medium text-text-secondary">
-          {game.isFavorite && <span className="me-1 text-accent-draw">★</span>}
-          {game.competitionName}
+        <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-text-secondary">
+          <CompetitionLogo competitionId={game.competitionId} size={14} />
+          {game.isFavorite && <span className="text-accent-draw">★</span>}
+          <span className="truncate">{game.competitionName}</span>
         </span>
         <StatusBadge game={game} />
       </header>

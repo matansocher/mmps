@@ -43,7 +43,7 @@ export type DashboardGame = {
   readonly home: DashboardTeam;
   readonly away: DashboardTeam;
   readonly isFavorite: boolean;
-  readonly channels: string[];
+  readonly channels: TvChannel[];
   readonly lineupsConfirmed: boolean;
   readonly events: DashboardEvent[];
   readonly stats?: DashboardStats;
@@ -220,3 +220,8 @@ export type CompetitionDetailResponse = {
 };
 
 export type ApiError = { readonly error: string };
+
+export type TvChannel = {
+  readonly id: number;
+  readonly name: string;
+};

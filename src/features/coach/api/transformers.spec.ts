@@ -17,7 +17,11 @@ const baseGame: ScoresGame = {
 
 const details: ScoresGameDetails = {
   ...baseGame,
-  tvNetworks: [{ id: 1, name: 'Sport 1' }, { id: 2, name: 'Sport 1' }, { id: 3, name: 'Sport 2' }],
+  tvNetworks: [
+    { id: 1, name: 'Sport 1' },
+    { id: 2, name: 'Sport 1' },
+    { id: 3, name: 'Sport 2' },
+  ],
   members: [
     { id: 1, name: 'Phil Foden', shortName: 'Foden' },
     { id: 2, name: 'Erling Haaland' },
@@ -112,7 +116,10 @@ describe('toDashboardGame()', () => {
     expect(game.status).toEqual('live');
     expect(game.minuteDisplay).toEqual("67'");
     expect(game.competitionName).toEqual('Premier League');
-    expect(game.channels).toEqual(['Sport 1', 'Sport 2']);
+    expect(game.channels).toEqual([
+      { id: 1, name: 'Sport 1' },
+      { id: 3, name: 'Sport 2' },
+    ]);
     expect(game.home.score).toEqual(2);
     expect(game.isFavorite).toEqual(true);
     expect(game.stats?.possession).toEqual(['70%', '30%']);

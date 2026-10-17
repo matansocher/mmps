@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BracketView } from '../components/BracketView';
 import { GameRow } from '../components/GameRow';
+import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
 import { LiveTableNote, StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
 import { ErrorState, Loading, Section, Tabs } from '../components/ui';
@@ -24,7 +25,16 @@ export function LeaguePage({ id }: { readonly id: number }) {
 
   return (
     <div className="min-h-screen pb-24 md:pb-10">
-      <PageHeader back maxWidth="max-w-5xl" title={competition ? `${competition.icon} ${competition.name}` : 'League'} />
+      <PageHeader back maxWidth="max-w-5xl" title={
+          competition ? (
+            <>
+              <CompetitionLogo competitionId={competition.id} size={22} />
+              <span className="truncate">{competition.name}</span>
+            </>
+          ) : (
+            'League'
+          )
+        } />
       {resource.errorStatus !== null && !competition ? (
         <ErrorState status={resource.errorStatus} onRetry={resource.reload} />
       ) : !competition ? (

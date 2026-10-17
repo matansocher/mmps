@@ -1,3 +1,4 @@
+import { CompetitionLogo } from '../components/CompetitionLogo';
 import { LiveDot } from '../components/LiveDot';
 import { PageHeader } from '../components/PageHeader';
 import { Card, Loading, Section } from '../components/ui';
@@ -11,7 +12,7 @@ function LeagueRow({ competition, todayCount, liveCount }: { readonly competitio
   return (
     <button onClick={() => navigate({ name: 'league', id: competition.id })} className="relative flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-bg-elevated/60">
       <span className="absolute inset-y-2 start-0 w-1 rounded-e" style={{ backgroundColor: leagueColor(competition.id) }} />
-      <span className="text-lg">{competition.icon}</span>
+      <CompetitionLogo competitionId={competition.id} size={24} />
       <span className="min-w-0 flex-1 truncate text-sm font-semibold">{competition.name}</span>
       {liveCount > 0 && (
         <span className="flex items-center gap-1.5 text-xs font-bold text-accent-live">

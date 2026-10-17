@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
 import { TeamLogo } from '../components/TeamLogo';
 import { Loading } from '../components/ui';
@@ -163,7 +164,9 @@ export function SettingsPage() {
                     className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? 'border-transparent text-white' : 'border-border-subtle text-text-secondary'}`}
                     style={on ? { backgroundColor: leagueColor(c.id) } : undefined}
                   >
-                    <span>{c.icon}</span>
+                    <span className={`flex rounded-full ${on ? 'bg-bg-base/70 p-0.5' : ''}`}>
+                      <CompetitionLogo competitionId={c.id} size={on ? 14 : 16} />
+                    </span>
                     {c.name}
                   </button>
                 );

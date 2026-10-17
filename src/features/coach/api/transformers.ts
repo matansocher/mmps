@@ -1,8 +1,8 @@
 import { COMPETITIONS } from '@services/scores-365';
-import type { ScoresCompetitorRef, ScoresGame, ScoresGameDetails, ScoresGameEvent, ScoresGameStat } from '@services/scores-365';
+import type { ScoresCompetitorRef, ScoresGame, ScoresGameDetails, ScoresGameEvent, ScoresGameStat, ScoresNamedRef } from '@services/scores-365';
 import type { DashboardEventType } from '@shared/coach';
 import { COMPETITION_NAMES, LINEUPS_CONFIRMED_STATUS } from './constants';
-import type { DashboardEvent, DashboardGame, DashboardGameStatus, DashboardStatPair, DashboardStats, DashboardTeam, FormResult, GameSummary } from './types';
+import type { DashboardEvent, DashboardGame, DashboardGameStatus, DashboardStatPair, DashboardStats, DashboardTeam, FormResult, GameSummary, TvChannel } from './types';
 
 const EVENT_TYPE_BY_ID: Record<number, DashboardEventType> = {
   1: 'goal',
@@ -128,7 +128,7 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds }: ToDas
     home,
     away,
     isFavorite: favoriteTeamIds.has(home.id) || favoriteTeamIds.has(away.id),
-    channels: [...new Set((details?.tvNetworks ?? []).map((tv) => tv.name).filter(Boolean))],
+    channels: uniqueChannels(details?.tvNetworks ?? []),
     // The list response is refreshed more often than scheduled games' details, so either source confirming is enough.
     lineupsConfirmed: game.lineupsStatus === LINEUPS_CONFIRMED_STATUS || details?.lineupsStatus === LINEUPS_CONFIRMED_STATUS,
     events: toDashboardEvents(details),
@@ -172,4 +172,13 @@ export function toGameSummary(game: ScoresGame, teamId?: number): GameSummary {
     away,
     ...(result ? { result } : {}),
   };
+}
+
+// 365 sometimes lists the same channel under several ids; keep the first per name.
+function uniqueChannels(networks: readonly ScoresNamedRef[]): TvChannel[] {
+  const byName = new Map<string, TvChannel>();
+  for (const tv of networks) {
+    if (tv.name && !byName.has(tv.name)) byName.set(tv.name, { id: tv.id, name: tv.name });
+  }
+  return [...byName.values()];
 }

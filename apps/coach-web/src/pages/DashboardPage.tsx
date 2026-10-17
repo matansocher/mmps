@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { GameCard, GameCardSkeleton } from '../components/GameCard';
 import { GameRow } from '../components/GameRow';
 import { LiveDot } from '../components/LiveDot';
+import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatClock, formatDateTitle } from '../lib/format';
-import { leagueColor } from '../lib/league-themes';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { Game } from '../types';
@@ -119,7 +119,7 @@ export function DashboardPage() {
                 onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${activeFilter === c.id ? 'bg-text-primary text-bg-base' : 'bg-bg-elevated text-text-secondary'}`}
               >
-                <span className="size-2 rounded-full" style={{ backgroundColor: leagueColor(c.id) }} />
+                <CompetitionLogo competitionId={c.id} size={14} />
                 {c.name} · {c.count}
                 {c.live > 0 && <LiveDot />}
               </button>

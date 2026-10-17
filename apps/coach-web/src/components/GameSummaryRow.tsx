@@ -2,6 +2,7 @@ import { formatKickoff, formatShortDate } from '../lib/format';
 import { navigate } from '../lib/router';
 import type { GameSummary, NamedValue } from '../types';
 import { LiveDot } from './LiveDot';
+import { CompetitionLogo } from './CompetitionLogo';
 import { TeamLogo } from './TeamLogo';
 import { FormBadge } from './ui';
 
@@ -10,7 +11,10 @@ export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; re
   return (
     <button onClick={() => navigate({ name: 'game', id: game.id })} className="flex w-full flex-col gap-1.5 px-3 py-2.5 text-start transition hover:bg-bg-elevated/60">
       <span className="flex items-center justify-between gap-2 text-[11px] text-text-muted">
-        <span className="truncate">{game.competitionName}</span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <CompetitionLogo competitionId={game.competitionId} size={12} />
+          <span className="truncate">{game.competitionName}</span>
+        </span>
         <span className="flex shrink-0 items-center gap-1.5">
           {game.status === 'live' && (
             <>
