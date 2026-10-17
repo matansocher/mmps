@@ -1,7 +1,7 @@
 import { COMPETITIONS } from '@services/scores-365';
 import type { ScoresCompetitorRef, ScoresGame, ScoresGameDetails, ScoresGameEvent, ScoresGameStat } from '@services/scores-365';
 import type { DashboardEventType } from '@shared/coach';
-import { COMPETITION_NAMES } from './constants';
+import { COMPETITION_NAMES, LINEUPS_CONFIRMED_STATUS } from './constants';
 import type { DashboardEvent, DashboardGame, DashboardGameStatus, DashboardStatPair, DashboardStats, DashboardTeam, FormResult, GameSummary } from './types';
 
 const EVENT_TYPE_BY_ID: Record<number, DashboardEventType> = {
@@ -129,6 +129,8 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds }: ToDas
     away,
     isFavorite: favoriteTeamIds.has(home.id) || favoriteTeamIds.has(away.id),
     channels: [...new Set((details?.tvNetworks ?? []).map((tv) => tv.name).filter(Boolean))],
+    // The list response is refreshed more often than scheduled games' details, so either source confirming is enough.
+    lineupsConfirmed: game.lineupsStatus === LINEUPS_CONFIRMED_STATUS || details?.lineupsStatus === LINEUPS_CONFIRMED_STATUS,
     events: toDashboardEvents(details),
     ...(gameStats ? { stats: gameStats } : {}),
   };

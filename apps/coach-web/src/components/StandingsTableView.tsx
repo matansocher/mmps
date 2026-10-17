@@ -1,17 +1,72 @@
+import type { MouseEvent } from 'react';
+import { useDashboard } from '../hooks/useDashboard';
 import { navigate } from '../lib/router';
-import type { StandingsTable } from '../types';
+import type { Game, StandingsRow, StandingsTable } from '../types';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 import { Card, FormBadge } from './ui';
 
+function TrendArrow({ trend }: { readonly trend: number }) {
+  if (!trend) return null;
+  return trend > 0 ? (
+    <span className="text-[9px] text-accent-win" aria-label="Moved up">
+      ▲
+    </span>
+  ) : (
+    <span className="text-[9px] text-accent-red" aria-label="Moved down">
+      ▼
+    </span>
+  );
+}
+
+// Score of the game in play, from this row's team perspective, linking to the game.
+function LiveScore({ row, game }: { readonly row: StandingsRow; readonly game?: Game }) {
+  const open = (e: MouseEvent) => {
+    e.stopPropagation();
+    navigate({ name: 'game', id: row.liveGameId! });
+  };
+  if (!game || game.home.score === null || game.away.score === null) {
+    return (
+      <button onClick={open} className="flex shrink-0 items-center p-1" aria-label="Open live game">
+        <LiveDot />
+      </button>
+    );
+  }
+  const isHome = game.home.id === row.team.id;
+  const [own, other] = isHome ? [game.home.score, game.away.score] : [game.away.score, game.home.score];
+  const opponent = isHome ? game.away : game.home;
+  const tone = own > other ? 'bg-accent-win/15 text-accent-win' : own < other ? 'bg-accent-red/15 text-accent-red' : 'bg-bg-elevated text-text-secondary';
+  return (
+    <button onClick={open} title={`vs ${opponent.name}`} className={`score-font flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${tone}`}>
+      <LiveDot />
+      {own}-{other}
+      {game.minuteDisplay && <span className="font-normal text-accent-live">{game.minuteDisplay}</span>}
+    </button>
+  );
+}
+
+export function LiveTableNote({ tables }: { readonly tables: readonly StandingsTable[] }) {
+  if (!tables.some((t) => t.rows.some((r) => r.isLive))) return null;
+  return (
+    <p className="flex items-center gap-2 px-1 text-xs text-text-secondary">
+      <LiveDot />
+      <span>
+        <span className="font-bold text-accent-live">Live table</span> · includes games in play
+      </span>
+    </p>
+  );
+}
+
 export function StandingsTableView({ table, highlightIds = [], showForm = true }: { readonly table: StandingsTable; readonly highlightIds?: readonly number[]; readonly showForm?: boolean }) {
+  const { data } = useDashboard();
+  const gamesById = new Map((data?.games ?? []).map((g) => [g.id, g]));
   return (
     <Card>
       {table.name && <h3 className="border-b border-border-subtle px-3 py-2 text-sm font-bold">{table.name}</h3>}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-[11px] text-text-muted">
-            <th className="w-8 py-2 ps-3 text-start font-medium">#</th>
+            <th className="w-10 py-2 ps-3 text-start font-medium">#</th>
             <th className="py-2 text-start font-medium">Team</th>
             <th className="w-8 py-2 text-center font-medium">P</th>
             <th className="hidden w-8 py-2 text-center font-medium sm:table-cell">W</th>
@@ -34,13 +89,16 @@ export function StandingsTableView({ table, highlightIds = [], showForm = true }
               >
                 <td className="relative py-2 ps-3">
                   {row.zoneColor && <span className="absolute inset-y-1 start-0 w-1 rounded-e" style={{ backgroundColor: row.zoneColor }} />}
-                  <span className="score-font text-xs text-text-secondary">{row.position}</span>
+                  <span className="flex items-center gap-0.5">
+                    <span className="score-font text-xs text-text-secondary">{row.position}</span>
+                    <TrendArrow trend={row.trend} />
+                  </span>
                 </td>
                 <td className="max-w-0 py-2">
                   <span className="flex min-w-0 items-center gap-2">
                     <TeamLogo teamId={row.team.id} name={row.team.name} size={18} />
                     <span className={`truncate ${highlighted ? 'font-bold' : ''}`}>{row.team.name}</span>
-                    {row.isLive && <LiveDot />}
+                    {row.isLive && row.liveGameId ? <LiveScore row={row} game={gamesById.get(row.liveGameId)} /> : row.isLive && <LiveDot />}
                   </span>
                 </td>
                 <td className="score-font py-2 text-center text-xs font-normal text-text-secondary">{row.played}</td>

@@ -1,5 +1,5 @@
-import type { ScoresAthleteDetails, ScoresBracket, ScoresGameDetails, ScoresStandings } from '@services/scores-365';
-import { toGameDetail, toGameStatRows, toKnockoutStages, toPlayerDetail, toStandingsTables } from './detail-transformers';
+import type { ScoresAthleteDetails, ScoresBracket, ScoresGame, ScoresGameDetails, ScoresHeadToHead, ScoresStandings } from '@services/scores-365';
+import { toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toPlayerDetail, toStandingsTables } from './detail-transformers';
 import { toDashboardGame } from './transformers';
 
 const details: ScoresGameDetails = {
@@ -30,7 +30,17 @@ const details: ScoresGameDetails = {
       status: 'Confirmed',
       formation: '4-3-3',
       members: [
-        { id: 10, status: 1, position: { id: 4, name: 'Attacker' }, yardFormation: { fieldLine: 90, fieldSide: 50 }, ranking: 7.4, stats: [{ type: 1, name: 'Goals', value: '1', isTop: true }, { type: 2, name: 'Touches', value: '40' }] },
+        {
+          id: 10,
+          status: 1,
+          position: { id: 4, name: 'Attacker' },
+          yardFormation: { fieldLine: 90, fieldSide: 50 },
+          ranking: 7.4,
+          stats: [
+            { type: 1, name: 'Goals', value: '1', isTop: true },
+            { type: 2, name: 'Touches', value: '40' },
+          ],
+        },
         { id: 12, status: 2 },
         { id: 11, status: 2 },
         { id: 13, status: 4, statusText: 'Management' },
@@ -74,7 +84,18 @@ describe('toGameDetail()', () => {
     const home = detail.lineups?.home;
     expect(home?.coach).toEqual('The Coach');
     expect(home?.starting).toEqual([
-      { athleteId: 100, name: 'Starter One', shortName: 'One', jerseyNumber: 9, position: 'Attacker', rating: 7.4, fieldLine: 90, fieldSide: 50, subbedOffAt: 60, stats: [{ name: 'Goals', value: '1' }] },
+      {
+        athleteId: 100,
+        name: 'Starter One',
+        shortName: 'One',
+        jerseyNumber: 9,
+        position: 'Attacker',
+        rating: 7.4,
+        fieldLine: 90,
+        fieldSide: 50,
+        subbedOffAt: 60,
+        stats: [{ name: 'Goals', value: '1' }],
+      },
     ]);
     expect(home?.bench.map((p) => [p.name, p.subbedOnAt])).toEqual([
       ['Sub One', 60],
@@ -96,7 +117,7 @@ describe('toStandingsTables()', () => {
       { num: 2, name: 'Unused', color: '#f00' },
     ],
     rows: [
-      { competitor: { id: 2, name: 'B' }, position: 1, groupNum: 2, points: 3, destinationNum: 1, recentForm: [1, 2, 0], liveGameId: 55 },
+      { competitor: { id: 2, name: 'B' }, position: 1, groupNum: 2, points: 3, destinationNum: 1, recentForm: [1, 2, 0], liveGameId: 55, trend: -1 },
       { competitor: { id: 1, name: 'A' }, position: 1, groupNum: 1, points: 6, gamePlayed: 2, gamesWon: 2, for: 4, against: 1 },
     ],
   };
@@ -104,10 +125,12 @@ describe('toStandingsTables()', () => {
   it('should group rows, convert form oldest first and keep only used zones', () => {
     const { tables, zones } = toStandingsTables(standings);
     expect(tables.map((t) => t.name)).toEqual(['Group A', 'Group B']);
-    expect(tables[0].rows[0]).toEqual({ position: 1, team: { id: 1, name: 'A' }, played: 2, won: 2, drawn: 0, lost: 0, goalsFor: 4, goalsAgainst: 1, points: 6, form: [], isLive: false });
+    expect(tables[0].rows[0]).toEqual({ position: 1, team: { id: 1, name: 'A' }, played: 2, won: 2, drawn: 0, lost: 0, goalsFor: 4, goalsAgainst: 1, points: 6, form: [], isLive: false, trend: 0 });
     expect(tables[1].rows[0].form).toEqual(['L', 'D', 'W']);
     expect(tables[1].rows[0].zoneColor).toEqual('#0f0');
     expect(tables[1].rows[0].isLive).toEqual(true);
+    expect(tables[1].rows[0].liveGameId).toEqual(55);
+    expect(tables[1].rows[0].trend).toEqual(-1);
     expect(zones).toEqual([{ name: 'Next round', color: '#0f0' }]);
   });
 
@@ -182,5 +205,35 @@ describe('toPlayerDetail()', () => {
       { name: 'Minutes', value: '90' },
       { name: 'Rating', value: '6.1' },
     ]);
+  });
+});
+
+describe('toHeadToHead()', () => {
+  const game = (id: number, homeId: number, awayId: number, homeScore: number, awayScore: number, statusGroup = 4): ScoresGame => ({
+    id,
+    competitionId: 7,
+    startTime: '2026-01-01T17:00:00Z',
+    statusGroup,
+    homeCompetitor: { id: homeId, name: `T${homeId}`, score: homeScore },
+    awayCompetitor: { id: awayId, name: `T${awayId}`, score: awayScore },
+  });
+
+  it('should count the record from the home team perspective and skip the current and unfinished games', () => {
+    const h2h: ScoresHeadToHead = {
+      id: 99,
+      homeCompetitor: { id: 1, name: 'T1', recentGames: [game(99, 1, 2, 0, 0, 2), game(10, 1, 3, 2, 0), game(11, 4, 1, 1, 1)] },
+      awayCompetitor: { id: 2, name: 'T2', recentGames: [game(12, 2, 5, 0, 1)] },
+      h2hGames: [game(99, 1, 2, 0, 0, 2), game(20, 1, 2, 2, 1), game(21, 2, 1, 3, 0), game(22, 2, 1, 1, 1), game(23, 2, 1, 0, 2)],
+    };
+    const result = toHeadToHead(h2h);
+    expect(result.record).toEqual({ homeWins: 2, draws: 1, awayWins: 1 });
+    expect(result.meetings.map((m) => m.id)).toEqual([20, 21, 22, 23]);
+    expect(result.homeRecent.map((g) => g.result)).toEqual(['W', 'D']);
+    expect(result.awayRecent.map((g) => g.result)).toEqual(['L']);
+  });
+
+  it('should return undefined without data', () => {
+    expect(toHeadToHead(null)).toBeUndefined();
+    expect(toHeadToHead({ id: 1, homeCompetitor: { id: 1, name: 'A' }, awayCompetitor: { id: 2, name: 'B' } })).toBeUndefined();
   });
 });

@@ -249,6 +249,8 @@ export type ScoresGame = {
   readonly gameTimeDisplay?: string;
   readonly roundName?: string;
   readonly roundNum?: number;
+  // 2 = probable, 3 = confirmed.
+  readonly lineupsStatus?: number;
   readonly homeCompetitor: ScoresCompetitorRef;
   readonly awayCompetitor: ScoresCompetitorRef;
 };
@@ -360,6 +362,8 @@ export type ScoresStandingsRow = {
   // Newest first. 1 = win, 2 = draw, 0 = loss.
   readonly recentForm?: readonly number[];
   readonly liveGameId?: number;
+  // Position change caused by live games: 1 = up, -1 = down.
+  readonly trend?: number;
 };
 
 export type ScoresStandings = {
@@ -396,4 +400,11 @@ export type ScoresCompetitorSearchResult = {
   readonly countryId?: number;
   readonly sportId?: number;
   readonly type?: number;
+};
+
+export type ScoresHeadToHead = {
+  readonly id: number;
+  readonly homeCompetitor: ScoresCompetitorRef & { readonly recentGames?: readonly ScoresGame[] };
+  readonly awayCompetitor: ScoresCompetitorRef & { readonly recentGames?: readonly ScoresGame[] };
+  readonly h2hGames?: readonly ScoresGame[];
 };

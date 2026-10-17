@@ -44,6 +44,7 @@ export type DashboardGame = {
   readonly away: DashboardTeam;
   readonly isFavorite: boolean;
   readonly channels: string[];
+  readonly lineupsConfirmed: boolean;
   readonly events: DashboardEvent[];
   readonly stats?: DashboardStats;
 };
@@ -115,6 +116,15 @@ export type GameDetailResponse = {
   readonly timeline: DashboardEvent[];
   readonly stats: GameStatRow[];
   readonly lineups?: { readonly home: TeamLineup; readonly away: TeamLineup };
+  readonly headToHead?: HeadToHead;
+};
+
+export type HeadToHead = {
+  readonly record: { readonly homeWins: number; readonly draws: number; readonly awayWins: number };
+  // Results are from the current home team's point of view.
+  readonly meetings: GameSummary[];
+  readonly homeRecent: GameSummary[];
+  readonly awayRecent: GameSummary[];
 };
 
 export type FormResult = 'W' | 'D' | 'L';
@@ -179,6 +189,9 @@ export type StandingsRow = {
   readonly form: FormResult[];
   readonly zoneColor?: string;
   readonly isLive: boolean;
+  readonly liveGameId?: number;
+  // Position change caused by live games: 1 = up, -1 = down, 0 = unchanged.
+  readonly trend: number;
 };
 
 export type StandingsTable = {

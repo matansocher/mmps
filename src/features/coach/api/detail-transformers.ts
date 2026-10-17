@@ -6,6 +6,7 @@ import type {
   ScoresGameDetails,
   ScoresGameMember,
   ScoresGameStat,
+  ScoresHeadToHead,
   ScoresLineup,
   ScoresSquadAthlete,
   ScoresStandings,
@@ -16,6 +17,8 @@ import type {
   FormResult,
   GameDetailResponse,
   GameStatRow,
+  GameSummary,
+  HeadToHead,
   KnockoutStage,
   LineupPlayer,
   PlayerDetailResponse,
@@ -32,6 +35,8 @@ const SUBSTITUTE_STATUS = 2;
 const POSITION_ORDER = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
 const FORM_BY_CODE: Readonly<Record<number, FormResult>> = { 1: 'W', 2: 'D', 0: 'L' };
 const MAX_FORM = 5;
+const MAX_MEETINGS = 6;
+const MAX_RECENT = 5;
 // Last-match athlete stats only carry an icon id; names match the lineup stats with the same imageId.
 const ATHLETE_GAME_STAT_NAMES: Readonly<Record<number, string>> = { 0: 'Rating', 229: 'Minutes', 226: 'Goals', 225: 'Assists', 222: 'Saves', 233: 'Penalties Saved' };
 
@@ -206,6 +211,8 @@ export function toStandingsTables(standings: ScoresStandings | null): { tables: 
         .reverse(),
       ...(zoneColor ? { zoneColor } : {}),
       isLive: !!row.liveGameId && row.liveGameId > 0,
+      ...(row.liveGameId && row.liveGameId > 0 ? { liveGameId: row.liveGameId } : {}),
+      trend: Math.sign(row.trend ?? 0),
     });
     byGroup.set(group, rows);
   }
@@ -245,4 +252,23 @@ export function toKnockoutStages(brackets: readonly ScoresBracket[]): KnockoutSt
     }
   }
   return stages;
+}
+
+export function toHeadToHead(h2h: ScoresHeadToHead | null): HeadToHead | undefined {
+  if (!h2h) return undefined;
+  const finishedSummaries = (games: readonly ScoresGame[] | undefined, teamId: number): GameSummary[] =>
+    (games ?? []).filter((g) => g.id !== h2h.id && classifyGameStatus(g.statusGroup) === 'finished').map((g) => toGameSummary(g, teamId));
+
+  const meetings = finishedSummaries(h2h.h2hGames, h2h.homeCompetitor.id);
+  const homeRecent = finishedSummaries(h2h.homeCompetitor.recentGames, h2h.homeCompetitor.id).slice(0, MAX_RECENT);
+  const awayRecent = finishedSummaries(h2h.awayCompetitor.recentGames, h2h.awayCompetitor.id).slice(0, MAX_RECENT);
+  if (!meetings.length && !homeRecent.length && !awayRecent.length) return undefined;
+
+  const count = (result: FormResult) => meetings.filter((m) => m.result === result).length;
+  return {
+    record: { homeWins: count('W'), draws: count('D'), awayWins: count('L') },
+    meetings: meetings.slice(0, MAX_MEETINGS),
+    homeRecent,
+    awayRecent,
+  };
 }

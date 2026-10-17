@@ -42,6 +42,7 @@ export type Game = {
   readonly home: Team;
   readonly away: Team;
   readonly isFavorite: boolean;
+  readonly lineupsConfirmed: boolean;
   readonly channels: string[];
   readonly events: GameEvent[];
   readonly stats?: GameStats;
@@ -103,6 +104,14 @@ export type GameDetail = {
   readonly timeline: GameEvent[];
   readonly stats: GameStatRow[];
   readonly lineups?: { readonly home: TeamLineup; readonly away: TeamLineup };
+  readonly headToHead?: HeadToHead;
+};
+
+export type HeadToHead = {
+  readonly record: { readonly homeWins: number; readonly draws: number; readonly awayWins: number };
+  readonly meetings: GameSummary[];
+  readonly homeRecent: GameSummary[];
+  readonly awayRecent: GameSummary[];
 };
 
 export type GameSummary = {
@@ -159,6 +168,9 @@ export type StandingsRow = {
   readonly form: FormResult[];
   readonly zoneColor?: string;
   readonly isLive: boolean;
+  readonly liveGameId?: number;
+  // Position change caused by games in play: 1 = moved up, -1 = moved down.
+  readonly trend: number;
 };
 
 export type StandingsTable = { readonly name?: string; readonly rows: StandingsRow[] };

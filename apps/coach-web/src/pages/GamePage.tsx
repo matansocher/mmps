@@ -1,13 +1,15 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { EventsTimeline } from '../components/EventsTimeline';
+import { HeadToHeadView } from '../components/HeadToHeadView';
 import { LineupsView } from '../components/LineupsView';
 import { PageHeader } from '../components/PageHeader';
 import { Scoreboard } from '../components/Scoreboard';
-import { StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
+import { LiveTableNote, StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
 import { StatsList } from '../components/StatsList';
 import { Card, ErrorState, Loading, Section, Tabs } from '../components/ui';
 import { useCompetitions } from '../hooks/useCompetitions';
 import { useDashboard } from '../hooks/useDashboard';
+import { useLiveCompetition } from '../hooks/useLiveCompetition';
 import { useResource } from '../hooks/useResource';
 import { api } from '../lib/api';
 import { formatLongDate, formatKickoff } from '../lib/format';
@@ -64,7 +66,7 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
 
 function GameTable({ detail }: { readonly detail: GameDetail }) {
   const { game } = detail;
-  const competition = useResource(() => api.competition(game.competitionId), `competition:${game.competitionId}`);
+  const competition = useLiveCompetition(game.competitionId);
   if (competition.errorStatus !== null) return <ErrorState status={competition.errorStatus} onRetry={competition.reload} />;
   if (!competition.data) return <Loading />;
   const teamIds = [game.home.id, game.away.id];
@@ -72,6 +74,7 @@ function GameTable({ detail }: { readonly detail: GameDetail }) {
   if (!tables.length) return <p className="py-10 text-center text-sm text-text-muted">No table for this game</p>;
   return (
     <div className="flex flex-col gap-3">
+      <LiveTableNote tables={tables} />
       {tables.map((table, i) => (
         <StandingsTableView key={table.name ?? i} table={table} highlightIds={teamIds} />
       ))}
@@ -119,17 +122,25 @@ export function GamePage({ id }: { readonly id: number }) {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="flex flex-col gap-4">
                 <GameInfo detail={detail} competitionLinked={competitionLinked} />
-                <Section title="Timeline">
-                  <Card>
-                    <EventsTimeline events={detail.timeline} />
-                  </Card>
-                </Section>
+                {detail.game.status !== 'scheduled' && (
+                  <Section title="Timeline">
+                    <Card>
+                      <EventsTimeline events={detail.timeline} />
+                    </Card>
+                  </Section>
+                )}
               </div>
-              <Section title="Stats">
-                <Card>
-                  <StatsList stats={detail.stats} />
-                </Card>
-              </Section>
+              <div className="flex flex-col gap-4">
+                {/* Before kick-off there's no timeline or stats, so form and head-to-head move up. */}
+                {detail.game.status !== 'scheduled' && (
+                  <Section title="Stats">
+                    <Card>
+                      <StatsList stats={detail.stats} />
+                    </Card>
+                  </Section>
+                )}
+                {detail.headToHead && <HeadToHeadView headToHead={detail.headToHead} home={detail.game.home} away={detail.game.away} />}
+              </div>
             </div>
           )}
           {activeTab === 'lineups' && detail.lineups && <LineupsView home={detail.game.home} away={detail.game.away} lineups={detail.lineups} />}

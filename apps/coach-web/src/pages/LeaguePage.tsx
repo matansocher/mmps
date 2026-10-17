@@ -2,16 +2,15 @@ import { useState } from 'react';
 import { BracketView } from '../components/BracketView';
 import { GameRow } from '../components/GameRow';
 import { PageHeader } from '../components/PageHeader';
-import { StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
+import { LiveTableNote, StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
 import { ErrorState, Loading, Section, Tabs } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
-import { useResource } from '../hooks/useResource';
-import { api } from '../lib/api';
+import { useLiveCompetition } from '../hooks/useLiveCompetition';
 
 type LeagueTab = 'table' | 'knockout';
 
 export function LeaguePage({ id }: { readonly id: number }) {
-  const resource = useResource(() => api.competition(id), `competition:${id}`);
+  const resource = useLiveCompetition(id);
   const { data: dashboard } = useDashboard();
   const [tab, setTab] = useState<LeagueTab | null>(null);
   const competition = resource.data;
@@ -45,6 +44,9 @@ export function LeaguePage({ id }: { readonly id: number }) {
           {tabs.length === 0 && <p className="py-10 text-center text-sm text-text-muted">No table or bracket available yet</p>}
           {activeTab === 'table' && (
             <div className={`grid gap-3 ${competition.tables.length > 1 ? 'lg:grid-cols-2' : ''}`}>
+              <div className="lg:col-span-full">
+                <LiveTableNote tables={competition.tables} />
+              </div>
               {competition.tables.map((table, i) => (
                 <StandingsTableView key={table.name ?? i} table={table} highlightIds={favoriteIds} showForm={competition.tables.length === 1} />
               ))}

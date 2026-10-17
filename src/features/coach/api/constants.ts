@@ -46,3 +46,5 @@ export const COMPETITION_NAMES: Readonly<Record<number, string>> = {
   [COMPETITION_IDS_MAP.NATIONS_LEAGUE]: 'Nations League',
   [COMPETITION_IDS_MAP.CLUB_WORLD_CUP]: 'Club World Cup',
 };
+
+export const LINEUPS_CONFIRMED_STATUS = 3;
