@@ -1,7 +1,7 @@
 import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
 import { leagueColor } from '../lib/league-themes';
 import type { Game, Side, Team } from '../types';
-import { Channels, openGame } from './GameCard';
+import { openGame } from './GameCard';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 
@@ -53,19 +53,10 @@ export function GameRow({ game }: { readonly game: Game }) {
         <TeamCell team={game.away} reds={redCards(game, 'away')} align="end" dim={finished && awayScore < homeScore} />
         {game.isFavorite && <span className="shrink-0 text-xs text-accent-draw">★</span>}
       </div>
-      {(lastEvent || game.channels.length > 0) && (
-        <div className="flex min-w-0 items-center gap-3 ps-[56px]">
-          {lastEvent && (
-            <p className="min-w-0 flex-1 truncate text-[11px] text-text-muted">
-              <span className="text-accent-live">{lastEvent.minuteDisplay}</span> {EVENT_META[lastEvent.type].icon} {eventText(lastEvent)}
-            </p>
-          )}
-          {game.channels.length > 0 && (
-            <span className={lastEvent ? 'max-w-[40%] shrink-0' : 'min-w-0'}>
-              <Channels channels={game.channels} compact />
-            </span>
-          )}
-        </div>
+      {lastEvent && (
+        <p className="min-w-0 truncate ps-[56px] text-[11px] text-text-muted">
+          <span className="text-accent-live">{lastEvent.minuteDisplay}</span> {EVENT_META[lastEvent.type].icon} {eventText(lastEvent)}
+        </p>
       )}
     </article>
   );

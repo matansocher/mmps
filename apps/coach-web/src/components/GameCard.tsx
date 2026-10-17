@@ -122,15 +122,15 @@ export function openGame(id: number) {
   navigate({ name: 'game', id });
 }
 
-export function Channels({ channels, compact }: { readonly channels: readonly TvChannel[]; readonly compact?: boolean }) {
+function Channels({ channels }: { readonly channels: readonly TvChannel[] }) {
   return (
     <div
-      className={`flex min-w-0 items-center gap-1.5 overflow-hidden text-text-muted ${compact ? 'text-[10px]' : 'border-t border-border-subtle pt-2 text-[11px]'}`}
+      className="flex min-w-0 items-center gap-1.5 overflow-hidden border-t border-border-subtle pt-2 text-[11px] text-text-muted"
       title={channels.map((c) => c.name).join(', ')}
     >
       <span aria-hidden>📺</span>
       {channels.map((c) => (
-        <ChannelLogo key={c.id} channel={c} height={compact ? 14 : 16} />
+        <ChannelLogo key={c.id} channel={c} height={16} />
       ))}
     </div>
   );
