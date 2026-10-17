@@ -1,15 +1,19 @@
+import { useNow } from '../hooks/useNow';
 import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
-import type { Game, GameEvent, GameStats, Team, TvChannel } from '../types';
+import type { FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
 import { ChannelLogo } from './ChannelLogo';
 import { CompetitionLogo } from './CompetitionLogo';
 import { Icon } from './Icon';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
+import { FormBadge } from './ui';
 
 const MAX_SCORERS = 3;
 const REGULATION_MINUTES = 90;
+const EXTRA_TIME_MINUTES = 120;
+const COUNTDOWN_WINDOW_MS = 24 * 60 * 60_000;
 
 type ScorerLine = { readonly name: string; readonly minutes: string[] };
 
@@ -95,35 +99,89 @@ function StatusBadge({ game }: { readonly game: Game }) {
   return <span className="flex h-6 items-center rounded-full px-1 text-xs font-semibold tracking-wide text-text-muted">{game.statusText || 'FT'}</span>;
 }
 
-function StatColumn({ label, pair }: { readonly label: string; readonly pair: readonly [string, string] }) {
-  const home = parseFloat(pair[0]) || 0;
-  const away = parseFloat(pair[1]) || 0;
-  const total = home + away;
-  const homePct = total > 0 ? (home / total) * 100 : 50;
+// Current minute of a live game; "HT" has no number, so it maps to the break.
+function liveMinute(game: Game): number {
+  const minute = parseInt(game.minuteDisplay ?? '', 10);
+  if (Number.isFinite(minute)) return minute;
+  return /half/i.test(game.statusText) ? 45 : 0;
+}
+
+function TimelineLane({ events, scale, side }: { readonly events: readonly GameEvent[]; readonly scale: number; readonly side: 'top' | 'bottom' }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-baseline justify-between gap-1 text-xs">
-        <span className={`score-font ${home >= away ? 'text-text-primary' : 'text-text-secondary'}`}>{pair[0]}</span>
-        <span className="truncate text-[11px] text-text-muted">{label}</span>
-        <span className={`score-font ${away >= home ? 'text-text-primary' : 'text-text-secondary'}`}>{pair[1]}</span>
-      </div>
-      <div className="flex h-[3px] gap-0.5">
-        <div className="rounded-full bg-text-primary/70 transition-[width] duration-500 ease-out" style={{ width: `${homePct}%` }} />
-        <div className="flex-1 rounded-full bg-white/[0.12]" />
-      </div>
+    <div className="relative h-3">
+      {events.map((e) => (
+        <span
+          key={e.key}
+          title={`${e.minuteDisplay} ${eventText(e)}`}
+          className={`absolute -translate-x-1/2 ${side === 'top' ? 'bottom-0' : 'top-0'} ${e.type === 'goal' ? 'text-text-primary' : 'text-text-secondary'}`}
+          style={{ left: `${Math.min(100, (e.minute / scale) * 100)}%` }}
+        >
+          <Icon name={EVENT_META[e.type].icon} size={11} />
+        </span>
+      ))}
     </div>
   );
 }
 
-function StatsStrip({ stats }: { readonly stats: GameStats }) {
-  if (!stats.expectedGoals && !stats.shotsOnTarget && !stats.possession) return null;
+// 0–90' track: played part in green, home events above, away events below.
+function MatchTimeline({ game }: { readonly game: Game }) {
+  const minute = liveMinute(game);
+  const events = game.events.filter((e) => CARD_EVENT_TYPES.has(e.type));
+  const latest = Math.max(minute, ...events.map((e) => e.minute));
+  const scale = latest > 105 ? EXTRA_TIME_MINUTES : REGULATION_MINUTES;
+  const played = Math.min(100, (minute / scale) * 100);
   return (
-    <div className="grid grid-cols-3 gap-4 border-t border-white/[0.06] pt-3">
-      {stats.expectedGoals ? <StatColumn label="xG" pair={stats.expectedGoals} /> : <span />}
-      {stats.shotsOnTarget ? <StatColumn label="On target" pair={stats.shotsOnTarget} /> : <span />}
-      {stats.possession ? <StatColumn label="Poss." pair={[stats.possession[0].replace('%', ''), stats.possession[1].replace('%', '')]} /> : <span />}
+    <div className="grid grid-cols-[14px_1fr] items-center gap-x-2.5 border-t border-white/[0.06] pt-3" aria-label={`Match timeline, ${game.minuteDisplay || game.statusText}`}>
+      <TeamLogo teamId={game.home.id} name={game.home.name} size={14} />
+      <TimelineLane events={events.filter((e) => e.side === 'home')} scale={scale} side="top" />
+      <span />
+      <div className="relative my-1 h-[3px] rounded-full bg-white/[0.08]">
+        <div className="h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
+        <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ left: `${(45 / scale) * 100}%` }} aria-hidden />
+      </div>
+      <TeamLogo teamId={game.away.id} name={game.away.name} size={14} />
+      <TimelineLane events={events.filter((e) => e.side === 'away')} scale={scale} side="bottom" />
     </div>
   );
+}
+
+function FormPills({ entries, align }: { readonly entries: readonly FormEntry[]; readonly align: 'start' | 'end' }) {
+  if (entries.length === 0) return <span className={`text-xs text-text-muted ${align === 'end' ? 'text-end' : ''}`}>—</span>;
+  return (
+    <div className={`flex gap-1 ${align === 'end' ? 'justify-end' : ''}`}>
+      {entries.map((entry, i) => (
+        <span key={i} title={`${entry.result} ${entry.score} vs ${entry.opponent}`}>
+          <FormBadge result={entry.result} />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function FormStrip({ game }: { readonly game: Game }) {
+  if (!game.form || (game.form.home.length === 0 && game.form.away.length === 0)) return null;
+  return (
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/[0.06] pt-3">
+      <FormPills entries={game.form.home} align="start" />
+      <span className="text-[11px] text-text-muted">Form</span>
+      <FormPills entries={game.form.away} align="end" />
+    </div>
+  );
+}
+
+function formatCountdown(ms: number): string | null {
+  if (ms <= 0 || ms > COUNTDOWN_WINDOW_MS) return null;
+  const totalMinutes = Math.ceil(ms / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `in ${minutes}m`;
+  return minutes === 0 ? `in ${hours}h` : `in ${hours}h ${minutes}m`;
+}
+
+function Countdown({ startTime }: { readonly startTime: string }) {
+  const now = useNow(60_000);
+  const text = formatCountdown(new Date(startTime).getTime() - now);
+  return text ? <span className="score-font text-[11px] text-text-muted">{text}</span> : null;
 }
 
 export function openGame(id: number) {
@@ -140,17 +198,9 @@ function HeaderChannel({ channels }: { readonly channels: readonly TvChannel[] }
   );
 }
 
-function matchProgress(game: Game): number | null {
-  if (game.status !== 'live') return null;
-  const minute = parseInt(game.minuteDisplay ?? '', 10);
-  if (!Number.isFinite(minute)) return null;
-  return Math.min(100, (minute / REGULATION_MINUTES) * 100);
-}
-
 export function GameCard({ game }: { readonly game: Game }) {
   const homeScore = game.home.score ?? 0;
   const awayScore = game.away.score ?? 0;
-  const progress = matchProgress(game);
   return (
     <article
       role="link"
@@ -159,11 +209,6 @@ export function GameCard({ game }: { readonly game: Game }) {
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
       className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
     >
-      {progress !== null && (
-        <span className="absolute inset-x-0 top-0 h-[2px] bg-white/[0.04]" aria-hidden>
-          <span className="block h-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${progress}%` }} />
-        </span>
-      )}
       <header className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
@@ -172,6 +217,7 @@ export function GameCard({ game }: { readonly game: Game }) {
         </span>
         <span className="flex shrink-0 items-center gap-2">
           {game.channels.length > 0 && <HeaderChannel channels={game.channels} />}
+          {game.status === 'scheduled' && <Countdown startTime={game.startTime} />}
           <StatusBadge game={game} />
         </span>
       </header>
@@ -188,10 +234,15 @@ export function GameCard({ game }: { readonly game: Game }) {
           <KeyEvents game={game} side="away" />
         </div>
       )}
-      {/* Pinned to the bottom so stats line up across a stretched grid row. */}
-      {game.status === 'live' && game.stats && (
+      {/* Pinned to the bottom so it lines up across a stretched grid row. */}
+      {game.status === 'live' && (
         <div className="mt-auto">
-          <StatsStrip stats={game.stats} />
+          <MatchTimeline game={game} />
+        </div>
+      )}
+      {game.status === 'scheduled' && game.form && (
+        <div className="mt-auto">
+          <FormStrip game={game} />
         </div>
       )}
     </article>

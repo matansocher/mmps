@@ -32,6 +32,19 @@ export type DashboardEvent = {
   readonly detail?: string;
 };
 
+export type DashboardFormEntry = {
+  readonly result: FormResult;
+  readonly opponent: string;
+  // From the team's point of view, e.g. "2-1".
+  readonly score: string;
+};
+
+// Oldest first, so the latest result is on the right.
+export type DashboardForm = {
+  readonly home: DashboardFormEntry[];
+  readonly away: DashboardFormEntry[];
+};
+
 export type DashboardGame = {
   readonly id: number;
   readonly competitionId: number;
@@ -47,6 +60,7 @@ export type DashboardGame = {
   readonly lineupsConfirmed: boolean;
   readonly events: DashboardEvent[];
   readonly stats?: DashboardStats;
+  readonly form?: DashboardForm;
 };
 
 export type DashboardPreferencesDto = {

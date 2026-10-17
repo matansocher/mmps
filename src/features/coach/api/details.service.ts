@@ -1,12 +1,12 @@
 import { getErrorMessage, Logger } from '@core/utils';
-import { COMPETITIONS, getAthleteDetails, getBrackets, getCompetitorDetails, getCompetitorGames, getCompetitorSquad, getHeadToHead, getStandings } from '@services/scores-365';
+import { COMPETITIONS, getAthleteDetails, getBrackets, getCompetitorDetails, getCompetitorGames, getCompetitorSquad, getStandings } from '@services/scores-365';
 import { getDashboardPreferences } from '@shared/coach';
 import { LIVE_DATA_TTL_SEC } from './constants';
-import { toGameDetail, toHeadToHead, toKnockoutStages, toPlayerDetail, toStandingsTables, toTeamDetail } from './detail-transformers';
-import { getCachedGameDetails, getCachedGameStats } from './scores-cache';
+import { toGameDetail, toKnockoutStages, toPlayerDetail, toStandingsTables, toTeamDetail } from './detail-transformers';
+import { getCachedGameDetails, getCachedGameStats, getCachedHeadToHead } from './scores-cache';
 import { classifyGameStatus, getCompetitionName, toDashboardGame } from './transformers';
 import { TtlCache } from './ttl-cache';
-import type { CompetitionDetailResponse, GameDetailResponse, HeadToHead, PlayerDetailResponse, TeamDetailResponse } from './types';
+import type { CompetitionDetailResponse, GameDetailResponse, PlayerDetailResponse, TeamDetailResponse } from './types';
 
 const PROFILE_TTL_MS = 30 * 60_000;
 const COMPETITION_TTL_MS = 2 * 60_000;
@@ -17,7 +17,6 @@ export class CoachDetailsService {
   private readonly teamCache = new TtlCache<TeamDetailResponse | null>();
   private readonly playerCache = new TtlCache<PlayerDetailResponse | null>();
   private readonly competitionCache = new TtlCache<CompetitionDetailResponse | null>();
-  private readonly headToHeadCache = new TtlCache<HeadToHead | null>();
 
   async getGame(telegramUserId: number, gameId: number): Promise<GameDetailResponse | null> {
     const details = await getCachedGameDetails(gameId);
@@ -31,20 +30,11 @@ export class CoachDetailsService {
             return null;
           }),
       getDashboardPreferences(telegramUserId).catch(() => null),
-      this.getHeadToHead(gameId),
+      getCachedHeadToHead(gameId),
     ]);
     const favoriteTeamIds = new Set<number>((preferences?.favoriteTeams ?? []).map((t) => t.id));
     const game = toDashboardGame({ game: details, details, stats, favoriteTeamIds });
     return { ...toGameDetail(game, details, stats), ...(headToHead ? { headToHead } : {}) };
-  }
-
-  private async getHeadToHead(gameId: number): Promise<HeadToHead | null> {
-    return this.headToHeadCache
-      .get(`${gameId}`, PROFILE_TTL_MS, async () => toHeadToHead(await getHeadToHead(gameId)) ?? null)
-      .catch((err) => {
-        this.logger.warn(`Failed to load head-to-head ${gameId}: ${getErrorMessage(err)}`);
-        return null;
-      });
   }
 
   async getTeam(teamId: number): Promise<TeamDetailResponse | null> {

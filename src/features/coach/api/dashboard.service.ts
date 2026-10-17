@@ -6,15 +6,18 @@ import type { ScoresGame, ScoresGameDetails, ScoresGameStat } from '@services/sc
 import { getDashboardPreferences, getSubscription, saveDashboardPreferences } from '@shared/coach';
 import type { DashboardPreferences, DashboardPreferencesUpdate } from '@shared/coach';
 import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_REFRESH_INTERVAL_SEC, LIVE_DATA_TTL_SEC } from './constants';
+import { toDashboardForm } from './detail-transformers';
 import { parseRefreshInterval } from './dto';
-import { getCachedGameDetails, getCachedGameStats } from './scores-cache';
+import { getCachedGameDetails, getCachedGameStats, getCachedHeadToHead } from './scores-cache';
 import { classifyGameStatus, sortDashboardGames, toDashboardGame } from './transformers';
 import { TtlCache } from './ttl-cache';
-import type { CompetitionOption, DashboardPreferencesDto, DashboardResponse, TeamOption } from './types';
+import type { CompetitionOption, DashboardForm, DashboardPreferencesDto, DashboardResponse, TeamOption } from './types';
 
 const GAMES_LIST_TTL_MS = LIVE_DATA_TTL_SEC * 1000;
 const SEARCH_TTL_MS = 10 * 60_000;
 const FETCH_CONCURRENCY = 6;
+
+type EnrichedGame = { readonly game: ScoresGame; readonly details: ScoresGameDetails | null; readonly stats: ScoresGameStat[] | null; readonly form?: DashboardForm };
 
 export async function getDefaultDashboardPreferences(telegramUserId: number): Promise<DashboardPreferencesDto> {
   // Seed from the leagues the user already follows in the bot, when set.
@@ -66,13 +69,18 @@ export class CoachDashboardService {
 
     const games = await this.getTodayGames(now, date, preferences.competitionIds, [...favoriteTeamIds]);
 
-    const enriched: { game: ScoresGame; details: ScoresGameDetails | null; stats: ScoresGameStat[] | null }[] = [];
+    const enriched: EnrichedGame[] = [];
     for (const batch of chunk(games, FETCH_CONCURRENCY)) {
       enriched.push(...(await Promise.all(batch.map((game) => this.enrichGame(game)))));
     }
 
     // All events are returned; the client shows a fixed set on cards and uses preferences.eventTypes for notifications.
-    const dashboardGames = sortDashboardGames(enriched.map(({ game, details, stats }) => toDashboardGame({ game, details, stats, favoriteTeamIds })));
+    const dashboardGames = sortDashboardGames(
+      enriched.map(({ game, details, stats, form }) => {
+        const dashboardGame = toDashboardGame({ game, details, stats, favoriteTeamIds });
+        return form && dashboardGame.status === 'scheduled' ? { ...dashboardGame, form } : dashboardGame;
+      }),
+    );
 
     return { date, updatedAt: new Date().toISOString(), preferences, games: dashboardGames };
   }
@@ -105,10 +113,10 @@ export class CoachDashboardService {
     }
   }
 
-  // Every game needs its details for the TV channels; only live games need stats.
-  private async enrichGame(game: ScoresGame): Promise<{ game: ScoresGame; details: ScoresGameDetails | null; stats: ScoresGameStat[] | null }> {
+  // Every game needs its details for the TV channels; live games need stats and upcoming ones recent form.
+  private async enrichGame(game: ScoresGame): Promise<EnrichedGame> {
     const status = classifyGameStatus(game.statusGroup);
-    const [details, stats] = await Promise.all([
+    const [details, stats, headToHead] = await Promise.all([
       getCachedGameDetails(game.id, status).catch((err) => {
         this.logger.warn(`Failed to load game ${game.id}: ${getErrorMessage(err)}`);
         return null;
@@ -119,7 +127,9 @@ export class CoachDashboardService {
             return null;
           })
         : Promise.resolve(null),
+      status === 'scheduled' ? getCachedHeadToHead(game.id) : Promise.resolve(null),
     ]);
-    return { game, details, stats };
+    const form = toDashboardForm(headToHead, game.homeCompetitor.id, game.awayCompetitor.id);
+    return { game, details, stats, ...(form ? { form } : {}) };
   }
 }

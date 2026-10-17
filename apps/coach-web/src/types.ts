@@ -46,7 +46,13 @@ export type Game = {
   readonly channels: TvChannel[];
   readonly events: GameEvent[];
   readonly stats?: GameStats;
+  readonly form?: DashboardForm;
 };
+
+export type FormEntry = { readonly result: FormResult; readonly opponent: string; readonly score: string };
+
+// Oldest first, so the latest result is on the right.
+export type DashboardForm = { readonly home: FormEntry[]; readonly away: FormEntry[] };
 
 export type FavoriteTeam = { readonly id: number; readonly name: string };
 

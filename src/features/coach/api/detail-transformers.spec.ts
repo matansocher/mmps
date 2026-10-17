@@ -1,5 +1,5 @@
 import type { ScoresAthleteDetails, ScoresBracket, ScoresGame, ScoresGameDetails, ScoresHeadToHead, ScoresStandings } from '@services/scores-365';
-import { toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toPlayerDetail, toStandingsTables } from './detail-transformers';
+import { toDashboardForm, toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toPlayerDetail, toStandingsTables } from './detail-transformers';
 import { toDashboardGame } from './transformers';
 
 const details: ScoresGameDetails = {
@@ -230,6 +230,22 @@ describe('toHeadToHead()', () => {
     expect(result.meetings.map((m) => m.id)).toEqual([20, 21, 22, 23]);
     expect(result.homeRecent.map((g) => g.result)).toEqual(['W', 'D']);
     expect(result.awayRecent.map((g) => g.result)).toEqual(['L']);
+  });
+
+  it('should build form oldest first from each team perspective', () => {
+    const h2h: ScoresHeadToHead = {
+      id: 99,
+      homeCompetitor: { id: 1, name: 'T1', recentGames: [game(10, 1, 3, 2, 0), game(11, 4, 1, 1, 1)] },
+      awayCompetitor: { id: 2, name: 'T2', recentGames: [game(12, 5, 2, 3, 1)] },
+    };
+    expect(toDashboardForm(toHeadToHead(h2h), 1, 2)).toEqual({
+      home: [
+        { result: 'D', opponent: 'T4', score: '1-1' },
+        { result: 'W', opponent: 'T3', score: '2-0' },
+      ],
+      away: [{ result: 'L', opponent: 'T5', score: '1-3' }],
+    });
+    expect(toDashboardForm(null, 1, 2)).toBeUndefined();
   });
 
   it('should return undefined without data', () => {

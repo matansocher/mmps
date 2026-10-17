@@ -13,6 +13,8 @@ import type {
 } from '@services/scores-365';
 import { classifyGameStatus, getCompetitionName, toGameSummary } from './transformers';
 import type {
+  DashboardForm,
+  DashboardFormEntry,
   DashboardGame,
   FormResult,
   GameDetailResponse,
@@ -252,6 +254,23 @@ export function toKnockoutStages(brackets: readonly ScoresBracket[]): KnockoutSt
     }
   }
   return stages;
+}
+
+function toFormEntries(games: readonly GameSummary[], teamId: number): DashboardFormEntry[] {
+  return games
+    .filter((g) => g.result)
+    .map((g) => {
+      const isHome = g.home.id === teamId;
+      const [own, opponent] = isHome ? [g.home, g.away] : [g.away, g.home];
+      return { result: g.result, opponent: opponent.shortName || opponent.name, score: `${own.score}-${opponent.score}` };
+    })
+    .reverse();
+}
+
+export function toDashboardForm(headToHead: HeadToHead | null, homeId: number, awayId: number): DashboardForm | undefined {
+  if (!headToHead) return undefined;
+  const form = { home: toFormEntries(headToHead.homeRecent, homeId), away: toFormEntries(headToHead.awayRecent, awayId) };
+  return form.home.length || form.away.length ? form : undefined;
 }
 
 export function toHeadToHead(h2h: ScoresHeadToHead | null): HeadToHead | undefined {
