@@ -171,7 +171,7 @@ export function SettingsPage() {
             </div>
           </Card>
 
-          <Card title="My teams" subtitle="Pinned to the top, and shown even when their league isn't selected">
+          <Card title="My teams" subtitle="Listed first in each section, and shown even when their league isn't selected">
             {prefs.favoriteTeams.length > 0 && (
               <ul className="flex flex-wrap gap-2">
                 {prefs.favoriteTeams.map((team) => (

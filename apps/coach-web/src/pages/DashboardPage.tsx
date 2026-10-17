@@ -28,10 +28,9 @@ function readViewMode(): ViewMode {
 type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean };
 
 function buildSections(games: Game[]): GameSection[] {
-  const favorites = games.filter((g) => g.isFavorite);
-  const rest = games.filter((g) => !g.isFavorite);
+  // Favourite teams' games lead their status section; the sort is stable, so the rest keep the server order.
+  const rest = [...games].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
   return [
-    { key: 'favorites', title: '★ My teams', games: favorites },
     { key: 'live', title: 'Live now', games: rest.filter((g) => g.status === 'live'), live: true },
     { key: 'scheduled', title: 'Later today', games: rest.filter((g) => g.status === 'scheduled') },
     { key: 'other', title: 'Other', games: rest.filter((g) => g.status === 'other') },
