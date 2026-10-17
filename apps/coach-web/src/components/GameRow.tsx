@@ -1,4 +1,4 @@
-import { EVENT_META, eventText, formatKickoff } from '../lib/format';
+import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
 import { leagueColor } from '../lib/league-themes';
 import type { Game, Side, Team } from '../types';
 import { Channels, openGame } from './GameCard';
@@ -23,7 +23,7 @@ export function GameRow({ game }: { readonly game: Game }) {
   const homeScore = game.home.score ?? 0;
   const awayScore = game.away.score ?? 0;
   const finished = game.status === 'finished';
-  const lastEvent = game.status === 'live' ? game.events.at(-1) : undefined;
+  const lastEvent = game.status === 'live' ? game.events.filter((e) => CARD_EVENT_TYPES.has(e.type)).at(-1) : undefined;
   return (
     <article
       role="link"

@@ -1,4 +1,4 @@
-import { EVENT_META, eventText, formatKickoff } from '../lib/format';
+import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
 import { leagueColor } from '../lib/league-themes';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
@@ -7,7 +7,6 @@ import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 
 const MAX_SCORERS = 3;
-const KEY_LINE_TYPES = new Set<GameEvent['type']>(['redCard', 'missedPenalty', 'var']);
 
 type ScorerLine = { readonly name: string; readonly minutes: string[] };
 
@@ -27,18 +26,10 @@ function scorerLines(events: readonly GameEvent[]): ScorerLine[] {
 function TeamRow({ team, game, isWinner }: { readonly team: Team; readonly game: Game; readonly isWinner: boolean }) {
   const showScore = game.status !== 'scheduled' && team.score !== null;
   const dim = game.status === 'finished' && !isWinner;
-  const side = team.id === game.home.id ? 'home' : 'away';
-  const yellows = game.events.filter((e) => e.side === side && e.type === 'yellowCard').length;
   return (
     <div className="flex items-center gap-2.5">
       <TeamLogo teamId={team.id} name={team.name} size={22} />
       <span className={`min-w-0 flex-1 truncate text-[15px] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
-      {yellows > 0 && (
-        <span className="score-font flex shrink-0 items-center gap-0.5 text-[10px] text-text-muted" title={`${yellows} yellow card${yellows > 1 ? 's' : ''}`}>
-          <span className="inline-block h-2.5 w-[7px] rounded-[1px] bg-accent-draw" aria-hidden />
-          {yellows}
-        </span>
-      )}
       {showScore && <span className={`score-font min-w-5 text-center text-lg ${dim ? 'text-text-secondary' : 'text-text-primary'}`}>{team.score}</span>}
     </div>
   );
@@ -49,7 +40,7 @@ function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEve
   const events = game.events.filter((e) => e.side === side);
   const scorers = scorerLines(events);
   const shown = scorers.slice(0, MAX_SCORERS);
-  const others = events.filter((e) => KEY_LINE_TYPES.has(e.type));
+  const others = events.filter((e) => e.type !== 'goal' && CARD_EVENT_TYPES.has(e.type));
   return (
     <div className="flex h-8 flex-col justify-start ps-8 text-[11px] leading-4 text-text-secondary">
       {shown.length > 0 && (

@@ -38,7 +38,7 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
       const next = await api.dashboard();
       const previous = dataRef.current;
       // Notifications live until the next poll replaces them; the first load has nothing to compare against.
-      if (previous && previous.date === next.date) setNotifications(diffGames(previous.games, next.games));
+      if (previous && previous.date === next.date) setNotifications(diffGames(previous.games, next.games, next.preferences.eventTypes));
       dataRef.current = next;
       setData(next);
       setErrorStatus(null);

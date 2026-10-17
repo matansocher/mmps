@@ -10,6 +10,9 @@ export const EVENT_META: Record<EventType, { readonly icon: string; readonly lab
   substitution: { icon: '🔄', label: 'Substitutions', title: 'Substitution' },
 };
 
+// Shown on game cards and list rows regardless of the notification settings.
+export const CARD_EVENT_TYPES: ReadonlySet<EventType> = new Set(['goal', 'redCard', 'missedPenalty', 'var']);
+
 export const EVENT_TYPE_ORDER: readonly EventType[] = ['goal', 'redCard', 'missedPenalty', 'var', 'yellowCard', 'woodwork', 'substitution'];
 
 const ROUTINE_DETAILS = new Set(['field goal', 'goal']);

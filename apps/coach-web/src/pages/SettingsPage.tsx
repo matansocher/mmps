@@ -192,7 +192,7 @@ export function SettingsPage() {
             <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
           </Card>
 
-          <Card title="Events" subtitle="Which events show on game cards and pop up as notifications">
+          <Card title="Notifications" subtitle="Which events pop up as notifications. Game cards always show goals, red cards, missed penalties and VAR.">
             <div className="grid grid-cols-2 gap-2">
               {EVENT_TYPE_ORDER.map((type: EventType) => {
                 const on = prefs.eventTypes.includes(type);

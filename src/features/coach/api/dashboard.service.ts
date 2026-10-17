@@ -71,13 +71,8 @@ export class CoachDashboardService {
       enriched.push(...(await Promise.all(batch.map((game) => this.enrichGame(game)))));
     }
 
-    const eventTypes = new Set(preferences.eventTypes);
-    const dashboardGames = sortDashboardGames(
-      enriched.map(({ game, details, stats }) => {
-        const dashboardGame = toDashboardGame({ game, details, stats, favoriteTeamIds });
-        return { ...dashboardGame, events: dashboardGame.events.filter((e) => eventTypes.has(e.type)) };
-      }),
-    );
+    // All events are returned; the client shows a fixed set on cards and uses preferences.eventTypes for notifications.
+    const dashboardGames = sortDashboardGames(enriched.map(({ game, details, stats }) => toDashboardGame({ game, details, stats, favoriteTeamIds })));
 
     return { date, updatedAt: new Date().toISOString(), preferences, games: dashboardGames };
   }

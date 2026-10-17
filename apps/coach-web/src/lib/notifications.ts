@@ -1,4 +1,4 @@
-import type { Game, GameEvent, Side } from '../types';
+import type { EventType, Game, GameEvent, Side } from '../types';
 import { EVENT_META, eventText, formatKickoff } from './format';
 
 export type GameNotification = {
@@ -124,8 +124,9 @@ function fullTimeTitle(game: Game): string {
   return `Full time – ${teamName(game, home > away ? 'home' : 'away')} win`;
 }
 
-// Compares two consecutive polls and returns what changed: lineups, kick-offs, new events and full-times.
-export function diffGames(previous: readonly Game[], next: readonly Game[]): GameNotification[] {
+// Compares two consecutive polls and returns what changed: lineups, kick-offs, new events (of the selected types) and full-times.
+export function diffGames(previous: readonly Game[], next: readonly Game[], eventTypes: readonly EventType[]): GameNotification[] {
+  const notifyTypes = new Set(eventTypes);
   const previousById = new Map(previous.map((g) => [g.id, g]));
   const notifications: GameNotification[] = [];
 
@@ -143,7 +144,7 @@ export function diffGames(previous: readonly Game[], next: readonly Game[]): Gam
     }
 
     const seen = new Set(before.events.map((e) => e.key));
-    const newEvents = game.events.filter((e) => !seen.has(e.key));
+    const newEvents = game.events.filter((e) => !seen.has(e.key) && notifyTypes.has(e.type));
     const goals = newEvents.some((e) => e.type === 'goal' || e.type === 'missedPenalty') ? replayGoals(game) : null;
     for (const event of newEvents) {
       const meta = EVENT_META[event.type];
