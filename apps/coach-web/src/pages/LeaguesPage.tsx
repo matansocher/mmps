@@ -1,3 +1,4 @@
+import { messages } from '../lib/i18n';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { LiveDot } from '../components/LiveDot';
 import { PageHeader } from '../components/PageHeader';
@@ -20,8 +21,8 @@ function LeagueRow({ competition, todayCount, liveCount }: { readonly competitio
           {liveCount}
         </span>
       )}
-      {todayCount > 0 && <span className="text-xs text-text-muted">{todayCount} today</span>}
-      <span className="text-text-muted">›</span>
+      {todayCount > 0 && <span className="text-xs text-text-muted">{messages().leagues.today(todayCount)}</span>}
+      <span aria-hidden className="inline-block text-text-muted rtl:-scale-x-100">›</span>
     </button>
   );
 }
@@ -37,13 +38,13 @@ export function LeaguesPage() {
 
   return (
     <div className="min-h-screen pb-24 md:pb-10">
-      <PageHeader title="Leagues" subtitle="Tables and knockout brackets" maxWidth="max-w-3xl" />
+      <PageHeader title={messages().leagues.title} subtitle={messages().leagues.subtitle} maxWidth="max-w-3xl" />
       {!competitions ? (
         <Loading />
       ) : (
         <main className="mx-auto flex max-w-3xl flex-col gap-5 px-4 pt-4">
           {mine.length > 0 && (
-            <Section title="Following">
+            <Section title={messages().leagues.following}>
               <Card className="divide-y divide-border-subtle">
                 {mine.map((c) => (
                   <LeagueRow key={c.id} competition={c} {...counts(c.id)} />
@@ -52,7 +53,7 @@ export function LeaguesPage() {
             </Section>
           )}
           {others.length > 0 && (
-            <Section title={mine.length ? 'More leagues' : 'All leagues'}>
+            <Section title={mine.length ? messages().leagues.more : messages().leagues.all}>
               <Card className="divide-y divide-border-subtle">
                 {others.map((c) => (
                   <LeagueRow key={c.id} competition={c} {...counts(c.id)} />

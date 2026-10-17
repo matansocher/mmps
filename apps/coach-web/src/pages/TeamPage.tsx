@@ -1,9 +1,10 @@
+import { messages } from '../lib/i18n';
 import { useState } from 'react';
 import { GameSummaryRow } from '../components/GameSummaryRow';
 import { PageHeader } from '../components/PageHeader';
 import { PlayerPhoto } from '../components/PlayerPhoto';
 import { TeamLogo } from '../components/TeamLogo';
-import { Card, ErrorState, FormBadge, Loading, Section, Tabs } from '../components/ui';
+import { Card, ErrorState, FormBadge, ForwardArrow, Loading, Section, Tabs } from '../components/ui';
 import { useCompetitions } from '../hooks/useCompetitions';
 import { useResource } from '../hooks/useResource';
 import { api } from '../lib/api';
@@ -30,14 +31,14 @@ function TeamHeader({ team, competitionLinked }: { readonly team: TeamDetail; re
           {team.mainCompetitionName &&
             (competitionLinked && team.mainCompetitionId ? (
               <button onClick={() => navigate({ name: 'league', id: team.mainCompetitionId! })} className="self-start text-sm text-accent-brand hover:underline">
-                {team.mainCompetitionName} →
+                {team.mainCompetitionName} <ForwardArrow />
               </button>
             ) : (
               <span className="text-sm text-text-secondary">{team.mainCompetitionName}</span>
             ))}
           {form.length > 0 && (
             <span className="flex items-center gap-1">
-              <span className="me-1 text-xs text-text-muted">Form</span>
+              <span className="me-1 text-xs text-text-muted">{messages().common.form}</span>
               {form.map((r, i) => (
                 <FormBadge key={i} result={r} />
               ))}
@@ -58,7 +59,7 @@ export function TeamPage({ id }: { readonly id: number }) {
 
   return (
     <div className="min-h-screen pb-24 md:pb-10">
-      <PageHeader back maxWidth="max-w-5xl" title={team?.name ?? 'Team'} />
+      <PageHeader back maxWidth="max-w-5xl" title={team?.name ?? messages().team.title} />
       {resource.errorStatus !== null && !team ? (
         <ErrorState status={resource.errorStatus} onRetry={resource.reload} />
       ) : !team ? (
@@ -68,22 +69,22 @@ export function TeamPage({ id }: { readonly id: number }) {
           <TeamHeader team={team} competitionLinked={competitionLinked} />
           <Tabs
             tabs={[
-              { id: 'matches', label: 'Matches' },
-              { id: 'squad', label: `Squad · ${team.squad.length}` },
+              { id: 'matches', label: messages().team.matches },
+              { id: 'squad', label: messages().common.count(messages().team.squad, team.squad.length) },
             ]}
             active={tab}
             onChange={setTab}
           />
           {tab === 'matches' && (
             <div className="grid gap-4 lg:grid-cols-2">
-              <Section title="Upcoming">
+              <Section title={messages().team.upcoming}>
                 <Card className="divide-y divide-border-subtle">
-                  {team.upcoming.length ? team.upcoming.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-muted">No upcoming games</p>}
+                  {team.upcoming.length ? team.upcoming.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().team.noUpcoming}</p>}
                 </Card>
               </Section>
-              <Section title="Recent">
+              <Section title={messages().team.recent}>
                 <Card className="divide-y divide-border-subtle">
-                  {team.recent.length ? team.recent.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-muted">No recent games</p>}
+                  {team.recent.length ? team.recent.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().team.noRecent}</p>}
                 </Card>
               </Section>
             </div>
@@ -98,7 +99,7 @@ export function TeamPage({ id }: { readonly id: number }) {
                         <span className="score-font w-6 shrink-0 text-center text-xs text-text-muted">{p.jerseyNumber ?? ''}</span>
                         <PlayerPhoto athleteId={p.athleteId} name={p.name} size={32} />
                         <span className="min-w-0 flex-1 truncate text-sm">{p.name}</span>
-                        {p.age != null && <span className="shrink-0 text-xs text-text-muted">{p.age} yrs</span>}
+                        {p.age != null && <span className="shrink-0 text-xs text-text-muted">{messages().common.years(p.age)}</span>}
                       </button>
                     ))}
                   </Card>

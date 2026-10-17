@@ -6,14 +6,16 @@ import { Loading } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { api } from '../lib/api';
 import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
+import { LANGUAGE_NAMES, useLanguage, useT } from '../lib/i18n';
 import { leagueColor } from '../lib/league-themes';
 import { hapticSelect } from '../lib/telegram';
-import type { CompetitionOption, EventType, FavoriteTeam, Preferences, TeamOption } from '../types';
+import type { CompetitionOption, EventType, FavoriteTeam, Language, Preferences, TeamOption } from '../types';
 import { Icon } from '../components/Icon';
 
 const MAX_FAVORITE_TEAMS = 30;
 const REFRESH_INTERVAL_OPTIONS = [15, 20, 30, 45, 60, 120] as const;
 const DEFAULT_REFRESH_INTERVAL_SEC = 30;
+const LANGUAGE_OPTIONS: readonly Language[] = ['he', 'en'];
 
 function toggle<T>(list: readonly T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -36,6 +38,7 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
   const [results, setResults] = useState<TeamOption[]>([]);
   const [searching, setSearching] = useState(false);
   const requestId = useRef(0);
+  const t = useT();
 
   useEffect(() => {
     const q = query.trim();
@@ -64,10 +67,10 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search a team (e.g. Maccabi Haifa, Arsenal)"
+        placeholder={t.settings.searchPlaceholder}
         className="w-full rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-sm outline-none placeholder:text-text-muted focus:border-accent-brand"
       />
-      {searching && <p className="text-xs text-text-muted">Searching…</p>}
+      {searching && <p className="text-xs text-text-muted">{t.settings.searching}</p>}
       {results.length > 0 && (
         <ul className="flex max-h-64 flex-col overflow-y-auto rounded-lg border border-border-subtle">
           {results.map((team) => {
@@ -84,7 +87,7 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
                 >
                   <TeamLogo teamId={team.id} name={team.name} size={20} />
                   <span className="flex-1 truncate">{team.name}</span>
-                  <span className="text-xs text-accent-brand">{added ? 'Added' : '+ Add'}</span>
+                  <span className="text-xs text-accent-brand">{added ? t.settings.added : t.settings.add}</span>
                 </button>
               </li>
             );
@@ -95,12 +98,11 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
   );
 }
 
-function formatInterval(sec: number): string {
-  return sec < 60 ? `${sec}s` : `${sec / 60} min`;
-}
-
 export function SettingsPage() {
   const { refresh } = useDashboard();
+  const { language, setLanguage } = useLanguage();
+  const t = useT();
+  const formatInterval = (sec: number) => (sec < 60 ? t.settings.seconds(sec) : t.settings.minutes(sec / 60));
   const [prefs, setPrefs] = useState<Preferences | null>(null);
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [error, setError] = useState(false);
@@ -132,10 +134,13 @@ export function SettingsPage() {
     setSaving(true);
     setError(false);
     try {
-      setPrefs(await api.savePreferences(prefs));
+      const next = await api.savePreferences(prefs);
+      setPrefs(next);
       setDirty(false);
       setSaved(true);
-      refresh();
+      // A language change remounts the app, which refetches everything in the new language.
+      if (next.language && next.language !== language) setLanguage(next.language);
+      else refresh();
     } catch {
       setError(true);
     } finally {
@@ -147,14 +152,33 @@ export function SettingsPage() {
 
   return (
     <div className="min-h-screen pb-40 md:pb-28">
-      <PageHeader title="Settings" subtitle="What shows up on your live dashboard" />
+      <PageHeader title={t.settings.title} subtitle={t.settings.subtitle} />
 
-      {error && <p className="mx-auto mt-4 max-w-2xl px-4 text-sm text-accent-red">Something went wrong, please try again</p>}
+      {error && <p className="mx-auto mt-4 max-w-2xl px-4 text-sm text-accent-red">{t.settings.error}</p>}
       {!prefs && !error && <Loading />}
 
       {prefs && (
         <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 pt-4">
-          <Card title="Leagues" subtitle="Today's games from these leagues appear on the dashboard">
+          <Card title={t.settings.language} subtitle={t.settings.languageSubtitle}>
+            <div className="grid grid-cols-2 gap-2">
+              {LANGUAGE_OPTIONS.map((lang) => {
+                const on = (prefs.language ?? language) === lang;
+                return (
+                  <button
+                    key={lang}
+                    lang={lang}
+                    onClick={() => update({ ...prefs, language: lang })}
+                    aria-pressed={on}
+                    className={`rounded-lg border py-2 text-sm font-semibold transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                  >
+                    {LANGUAGE_NAMES[lang]}
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card title={t.settings.leagues} subtitle={t.settings.leaguesSubtitle}>
             <div className="flex flex-wrap gap-2">
               {competitions.map((c) => {
                 const on = prefs.competitionIds.includes(c.id);
@@ -175,7 +199,7 @@ export function SettingsPage() {
             </div>
           </Card>
 
-          <Card title="My teams" subtitle="Listed first in each section, and shown even when their league isn't selected">
+          <Card title={t.settings.myTeams} subtitle={t.settings.myTeamsSubtitle}>
             {prefs.favoriteTeams.length > 0 && (
               <ul className="flex flex-wrap gap-2">
                 {prefs.favoriteTeams.map((team) => (
@@ -183,8 +207,8 @@ export function SettingsPage() {
                     <TeamLogo teamId={team.id} name={team.name} size={18} />
                     {team.name}
                     <button
-                      onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((t) => t.id !== team.id) })}
-                      aria-label={`Remove ${team.name}`}
+                      onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((f) => f.id !== team.id) })}
+                      aria-label={t.settings.remove(team.name)}
                       className="ms-1 text-text-muted hover:text-accent-red"
                     >
                       <Icon name="close" size={12} />
@@ -196,7 +220,7 @@ export function SettingsPage() {
             <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
           </Card>
 
-          <Card title="Notifications" subtitle="Which events pop up as notifications. Game cards always show goals, red cards, missed penalties and VAR.">
+          <Card title={t.settings.notifications} subtitle={t.settings.notificationsSubtitle}>
             <div className="grid grid-cols-2 gap-2">
               {EVENT_TYPE_ORDER.map((type: EventType) => {
                 const on = prefs.eventTypes.includes(type);
@@ -207,7 +231,7 @@ export function SettingsPage() {
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
                   >
                     <Icon name={EVENT_META[type].icon} size={16} />
-                    <span className="flex-1 text-start">{EVENT_META[type].label}</span>
+                    <span className="flex-1 text-start">{t.events[type].label}</span>
                     <span className={`size-4 rounded border ${on ? 'border-accent-brand bg-accent-brand' : 'border-text-muted'}`} />
                   </button>
                 );
@@ -215,7 +239,7 @@ export function SettingsPage() {
             </div>
           </Card>
 
-          <Card title="Refresh interval" subtitle="How often the dashboard checks for new events">
+          <Card title={t.settings.refreshInterval} subtitle={t.settings.refreshIntervalSubtitle}>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
               {REFRESH_INTERVAL_OPTIONS.map((sec) => (
                 <button
@@ -228,7 +252,7 @@ export function SettingsPage() {
               ))}
             </div>
             <p className="text-xs leading-relaxed text-text-muted">
-              ℹ️ Minimum is 15 seconds. 365Scores doesn't publish a rate limit, but live data is cached on the server for about 15 seconds, so refreshing faster wouldn't show anything newer.
+              ℹ️ {t.settings.refreshNote}
             </p>
           </Card>
         </main>
@@ -242,7 +266,7 @@ export function SettingsPage() {
               disabled={!dirty || saving || prefs.competitionIds.length + prefs.favoriteTeams.length === 0}
               className="w-full rounded-xl bg-accent-brand py-3 text-sm font-bold transition disabled:opacity-40"
             >
-              {saving ? 'Saving…' : saved && !dirty ? 'Saved ✓' : 'Save'}
+              {saving ? t.settings.saving : saved && !dirty ? `${t.settings.saved} ✓` : t.settings.save}
             </button>
           </div>
         </div>

@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { getLanguage, type Language } from '../lib/i18n';
 import type { CompetitionOption } from '../types';
 
-let cached: Promise<CompetitionOption[]> | null = null;
+const cache = new Map<Language, Promise<CompetitionOption[]>>();
 
 function loadCompetitions(): Promise<CompetitionOption[]> {
-  cached ??= api.competitions().catch((err) => {
-    cached = null;
-    throw err;
-  });
+  const language = getLanguage();
+  const cached =
+    cache.get(language) ??
+    api.competitions().catch((err) => {
+      cache.delete(language);
+      throw err;
+    });
+  cache.set(language, cached);
   return cached;
 }
 

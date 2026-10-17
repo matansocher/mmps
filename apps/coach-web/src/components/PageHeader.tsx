@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useT } from '../lib/i18n';
 import { goBack } from '../lib/router';
 import { DesktopNav } from './Nav';
 import { Icon } from './Icon';
@@ -13,12 +14,13 @@ type Props = {
 };
 
 export function PageHeader({ title, subtitle, back, actions, children, maxWidth = 'max-w-[1500px]' }: Props) {
+  const t = useT();
   return (
     <header className="sticky top-0 z-20 border-b border-border-subtle bg-bg-base/90 backdrop-blur-md">
       <div className={`mx-auto flex ${maxWidth} items-center gap-3 px-4 py-3`}>
         {back && (
-          <button onClick={goBack} aria-label="Back" className="-ms-1 flex size-8 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-bg-elevated hover:text-text-primary">
-            <Icon name="back" size={20} />
+          <button onClick={goBack} aria-label={t.common.back} className="-ms-1 flex size-8 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-bg-elevated hover:text-text-primary">
+            <Icon name="back" size={20} className="rtl:-scale-x-100" />
           </button>
         )}
         <div className="flex min-w-0 flex-1 flex-col">

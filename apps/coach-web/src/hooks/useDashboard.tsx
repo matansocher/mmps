@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
+import { getLanguage, useLanguage } from '../lib/i18n';
 import { diffGames, type GameNotification } from '../lib/notifications';
 import type { DashboardResponse } from '../types';
 
@@ -29,6 +30,7 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
   const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
   const inFlight = useRef(false);
   const dataRef = useRef<DashboardResponse | null>(null);
+  const { setLanguage } = useLanguage();
 
   const load = useCallback(async () => {
     if (inFlight.current) return;
@@ -36,6 +38,11 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
     setRefreshing(true);
     try {
       const next = await api.dashboard();
+      // A new device starts in the default language; switch to the saved one (this remounts and refetches).
+      if (next.preferences.language && next.preferences.language !== getLanguage()) {
+        setLanguage(next.preferences.language);
+        return;
+      }
       const previous = dataRef.current;
       // Notifications live until the next poll replaces them; the first load has nothing to compare against.
       if (previous && previous.date === next.date) setNotifications(diffGames(previous.games, next.games, next.preferences.eventTypes));
@@ -50,7 +57,7 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
       setLoading(false);
       setLastFetchedAt(Date.now());
     }
-  }, []);
+  }, [setLanguage]);
 
   const refreshIntervalSec = data?.preferences.refreshIntervalSec ?? DEFAULT_REFRESH_INTERVAL_SEC;
 

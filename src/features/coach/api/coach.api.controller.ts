@@ -2,12 +2,17 @@ import type { Express, Request, Response } from 'express';
 import express from 'express';
 import { getErrorMessage, Logger } from '@core/utils';
 import { coachAuthMiddleware, getCoachUser } from './auth.middleware';
+import { DEFAULT_LANGUAGE } from './constants';
 import type { CoachDashboardService } from './dashboard.service';
 import type { CoachDetailsService } from './details.service';
-import { parsePreferencesBody } from './dto';
+import { parseLanguage, parsePreferencesBody } from './dto';
 import type { ApiError, CompetitionOption, DashboardPreferencesDto, DashboardResponse, TeamOption } from './types';
 
 const logger = new Logger('coach:api');
+
+function requestLanguage(req: Request) {
+  return parseLanguage(req.query.lang);
+}
 
 function parseId(value: unknown): number | null {
   const id = Number(value);
@@ -44,7 +49,7 @@ export function registerCoachApiRoutes(app: Express, dashboardService: CoachDash
   app.get('/api/coach/dashboard', async (req: Request, res: Response<DashboardResponse | ApiError>) => {
     const user = getCoachUser(req);
     try {
-      res.json(await dashboardService.getDashboard(user.telegramUserId));
+      res.json(await dashboardService.getDashboard(user.telegramUserId, requestLanguage(req)));
     } catch (err) {
       logger.error(`Failed to build dashboard for ${user.telegramUserId}: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'dashboard_failed' });
@@ -76,9 +81,9 @@ export function registerCoachApiRoutes(app: Express, dashboardService: CoachDash
     }
   });
 
-  app.get('/api/coach/competitions', async (_req: Request, res: Response<CompetitionOption[] | ApiError>) => {
+  app.get('/api/coach/competitions', async (req: Request, res: Response<CompetitionOption[] | ApiError>) => {
     try {
-      res.json(await dashboardService.getCompetitionOptions());
+      res.json(await dashboardService.getCompetitionOptions(requestLanguage(req) ?? DEFAULT_LANGUAGE));
     } catch (err) {
       logger.error(`Failed to load competitions: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'competitions_failed' });
@@ -88,15 +93,27 @@ export function registerCoachApiRoutes(app: Express, dashboardService: CoachDash
   app.get('/api/coach/teams/search', async (req: Request, res: Response<TeamOption[] | ApiError>) => {
     const query = typeof req.query.q === 'string' ? req.query.q.slice(0, 50) : '';
     try {
-      res.json(await dashboardService.searchTeams(query));
+      res.json(await dashboardService.searchTeams(query, requestLanguage(req) ?? DEFAULT_LANGUAGE));
     } catch (err) {
       logger.error(`Team search failed: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'search_failed' });
     }
   });
 
-  app.get('/api/coach/games/:id', detailRoute('game', (id, req) => detailsService.getGame(getCoachUser(req).telegramUserId, id)));
-  app.get('/api/coach/teams/:id', detailRoute('team', (id) => detailsService.getTeam(id)));
-  app.get('/api/coach/players/:id', detailRoute('player', (id) => detailsService.getPlayer(id)));
-  app.get('/api/coach/competitions/:id', detailRoute('competition', (id) => detailsService.getCompetition(id)));
+  app.get(
+    '/api/coach/games/:id',
+    detailRoute('game', (id, req) => detailsService.getGame(getCoachUser(req).telegramUserId, id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
+  );
+  app.get(
+    '/api/coach/teams/:id',
+    detailRoute('team', (id, req) => detailsService.getTeam(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
+  );
+  app.get(
+    '/api/coach/players/:id',
+    detailRoute('player', (id, req) => detailsService.getPlayer(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
+  );
+  app.get(
+    '/api/coach/competitions/:id',
+    detailRoute('competition', (id, req) => detailsService.getCompetition(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
+  );
 }

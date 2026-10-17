@@ -1,3 +1,4 @@
+import { messages } from '../lib/i18n';
 import type { MouseEvent } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
 import { navigate } from '../lib/router';
@@ -9,11 +10,11 @@ import { Card, FormBadge } from './ui';
 function TrendArrow({ trend }: { readonly trend: number }) {
   if (!trend) return null;
   return trend > 0 ? (
-    <span className="text-[9px] text-accent-win" aria-label="Moved up">
+    <span className="text-[9px] text-accent-win" aria-label={messages().standings.movedUp}>
       ▲
     </span>
   ) : (
-    <span className="text-[9px] text-accent-red" aria-label="Moved down">
+    <span className="text-[9px] text-accent-red" aria-label={messages().standings.movedDown}>
       ▼
     </span>
   );
@@ -27,7 +28,7 @@ function LiveScore({ row, game }: { readonly row: StandingsRow; readonly game?: 
   };
   if (!game || game.home.score === null || game.away.score === null) {
     return (
-      <button onClick={open} className="flex shrink-0 items-center p-1" aria-label="Open live game">
+      <button onClick={open} className="flex shrink-0 items-center p-1" aria-label={messages().standings.openLiveGame}>
         <LiveDot />
       </button>
     );
@@ -37,10 +38,10 @@ function LiveScore({ row, game }: { readonly row: StandingsRow; readonly game?: 
   const opponent = isHome ? game.away : game.home;
   const tone = own > other ? 'bg-accent-win/15 text-accent-win' : own < other ? 'bg-accent-red/15 text-accent-red' : 'bg-bg-elevated text-text-secondary';
   return (
-    <button onClick={open} title={`vs ${opponent.name}`} className={`score-font flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${tone}`}>
+    <button onClick={open} title={messages().standings.versus(opponent.name)} className={`score-font flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${tone}`}>
       <LiveDot />
       {own}-{other}
-      {game.minuteDisplay && <span className="font-normal text-accent-live">{game.minuteDisplay}</span>}
+      {game.minuteDisplay && <span className="ltr-num font-normal text-accent-live">{game.minuteDisplay}</span>}
     </button>
   );
 }
@@ -51,7 +52,7 @@ export function LiveTableNote({ tables }: { readonly tables: readonly StandingsT
     <p className="flex items-center gap-2 px-1 text-xs text-text-secondary">
       <LiveDot />
       <span>
-        <span className="font-bold text-accent-live">Live table</span> · includes games in play
+        <span className="font-bold text-accent-live">{messages().standings.liveTable}</span> · {messages().standings.liveTableNote}
       </span>
     </p>
   );
@@ -67,14 +68,14 @@ export function StandingsTableView({ table, highlightIds = [], showForm = true }
         <thead>
           <tr className="text-[11px] text-text-muted">
             <th className="w-10 py-2 ps-3 text-start font-medium">#</th>
-            <th className="py-2 text-start font-medium">Team</th>
-            <th className="w-8 py-2 text-center font-medium">P</th>
-            <th className="hidden w-8 py-2 text-center font-medium sm:table-cell">W</th>
-            <th className="hidden w-8 py-2 text-center font-medium sm:table-cell">D</th>
-            <th className="hidden w-8 py-2 text-center font-medium sm:table-cell">L</th>
-            <th className="w-14 py-2 text-center font-medium">GD</th>
-            <th className="w-9 py-2 text-center font-medium">Pts</th>
-            {showForm && <th className="hidden w-36 py-2 pe-3 text-center font-medium md:table-cell">Form</th>}
+            <th className="py-2 text-start font-medium">{messages().standings.team}</th>
+            <th className="w-8 py-2 text-center font-medium">{messages().standings.played}</th>
+            <th className="hidden w-8 py-2 text-center font-medium sm:table-cell">{messages().standings.won}</th>
+            <th className="hidden w-8 py-2 text-center font-medium sm:table-cell">{messages().standings.drawn}</th>
+            <th className="hidden w-8 py-2 text-center font-medium sm:table-cell">{messages().standings.lost}</th>
+            <th className="w-14 py-2 text-center font-medium">{messages().standings.goalDiff}</th>
+            <th className="w-9 py-2 text-center font-medium">{messages().standings.points}</th>
+            {showForm && <th className="hidden w-36 py-2 pe-3 text-center font-medium md:table-cell">{messages().standings.form}</th>}
           </tr>
         </thead>
         <tbody>

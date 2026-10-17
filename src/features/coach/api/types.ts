@@ -1,4 +1,4 @@
-import type { DashboardEventType, DashboardFavoriteTeam } from '@shared/coach';
+import type { DashboardEventType, DashboardFavoriteTeam, DashboardLanguage } from '@shared/coach';
 
 export type DashboardGameStatus = 'live' | 'scheduled' | 'finished' | 'other';
 export type DashboardSide = 'home' | 'away';
@@ -30,6 +30,7 @@ export type DashboardEvent = {
   readonly assistName?: string;
   readonly assistAthleteId?: number;
   readonly detail?: string;
+  readonly ownGoal?: boolean;
 };
 
 export type DashboardFormEntry = {
@@ -53,6 +54,8 @@ export type DashboardGame = {
   readonly status: DashboardGameStatus;
   readonly statusText: string;
   readonly minuteDisplay?: string;
+  // Numeric game clock for live games (45 at half-time), used to place the timeline.
+  readonly minute?: number;
   readonly home: DashboardTeam;
   readonly away: DashboardTeam;
   readonly isFavorite: boolean;
@@ -68,6 +71,7 @@ export type DashboardPreferencesDto = {
   readonly favoriteTeams: DashboardFavoriteTeam[];
   readonly eventTypes: DashboardEventType[];
   readonly refreshIntervalSec: number;
+  readonly language: DashboardLanguage;
 };
 
 export type DashboardResponse = {

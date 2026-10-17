@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { messages } from '../lib/i18n';
 import { hapticSelect } from '../lib/telegram';
 
 export function Section({ title, right, children, className = '' }: { readonly title?: ReactNode; readonly right?: ReactNode; readonly children: ReactNode; readonly className?: string }) {
@@ -49,23 +50,44 @@ export function Loading() {
 export function ErrorState({ status, onRetry }: { readonly status: number; readonly onRetry?: () => void }) {
   const unauthorized = status === 401 || status === 403;
   const notFound = status === 404;
+  const t = messages().errors;
   return (
     <div className="mx-auto mt-16 flex max-w-sm flex-col items-center gap-3 px-6 text-center">
       <span className="text-4xl">{unauthorized ? '🔒' : notFound ? '🤷' : '📡'}</span>
-      <p className="text-base font-semibold">{unauthorized ? "We couldn't identify you" : notFound ? 'Nothing here' : "Couldn't load the data"}</p>
+      <p className="text-base font-semibold">{unauthorized ? t.unauthorizedTitle : notFound ? t.notFoundTitle : t.failedTitle}</p>
       <p className="text-sm text-text-secondary">
-        {unauthorized ? 'Open the dashboard with the /dashboard command in the Coach bot' : notFound ? 'This page is not available' : 'Check your connection and try again'}
+        {unauthorized ? t.unauthorizedText : notFound ? t.notFoundText : t.failedText}
       </p>
       {onRetry && !unauthorized && !notFound && (
         <button onClick={onRetry} className="mt-2 rounded-lg bg-accent-brand px-4 py-2 text-sm font-semibold">
-          Try again
+          {messages().common.tryAgain}
         </button>
       )}
     </div>
   );
 }
 
+// Direction arrow that points forward in both LTR and RTL.
+export function ForwardArrow() {
+  return (
+    <span aria-hidden className="inline-block rtl:-scale-x-100">
+      →
+    </span>
+  );
+}
+
+// "home - away" laid out by flex, so the home score sits on the home side in both LTR and RTL.
+export function ScoreLine({ home, away, className = '' }: { readonly home: ReactNode; readonly away: ReactNode; readonly className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-[0.3em] ${className}`}>
+      <span>{home}</span>
+      <span>-</span>
+      <span>{away}</span>
+    </span>
+  );
+}
+
 export function FormBadge({ result }: { readonly result: 'W' | 'D' | 'L' }) {
   const color = result === 'W' ? 'bg-accent-win text-bg-base' : result === 'D' ? 'bg-text-muted text-white' : 'bg-accent-red text-white';
-  return <span className={`score-font inline-flex size-5 shrink-0 items-center justify-center rounded text-[10px] ${color}`}>{result}</span>;
+  return <span className={`score-font inline-flex size-5 shrink-0 items-center justify-center rounded text-[10px] ${color}`}>{messages().form[result]}</span>;
 }

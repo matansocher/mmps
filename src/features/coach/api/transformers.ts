@@ -1,6 +1,6 @@
 import { COMPETITIONS } from '@services/scores-365';
 import type { ScoresCompetitorRef, ScoresGame, ScoresGameDetails, ScoresGameEvent, ScoresGameStat, ScoresNamedRef } from '@services/scores-365';
-import type { DashboardEventType } from '@shared/coach';
+import type { DashboardEventType, DashboardLanguage } from '@shared/coach';
 import { COMPETITION_NAMES, LINEUPS_CONFIRMED_STATUS } from './constants';
 import type { DashboardEvent, DashboardGame, DashboardGameStatus, DashboardStatPair, DashboardStats, DashboardTeam, FormResult, GameSummary, TvChannel } from './types';
 
@@ -13,6 +13,13 @@ const EVENT_TYPE_BY_ID: Record<number, DashboardEventType> = {
   12: 'woodwork',
   1000: 'substitution',
 };
+
+// Goal and red card subtypes; 365 returns the subtype names in English even when langId is Hebrew.
+const FIELD_GOAL_SUBTYPE = 1;
+const OWN_GOAL_SUBTYPE = 2;
+const SECOND_YELLOW_SUBTYPE = 21;
+const SECOND_YELLOW_LABEL: Readonly<Record<DashboardLanguage, string>> = { en: 'Second yellow', he: 'צהוב שני' };
+const OWN_GOAL_LABEL: Readonly<Record<DashboardLanguage, string>> = { en: 'Own goal', he: 'שער עצמי' };
 
 const STAT_IDS = {
   POSSESSION: 10,
@@ -50,7 +57,16 @@ export function toTeam(competitor: ScoresCompetitorRef, status: DashboardGameSta
   };
 }
 
-export function toDashboardEvents(details: ScoresGameDetails | null): DashboardEvent[] {
+function eventDetail(event: ScoresGameEvent, type: DashboardEventType, lang: DashboardLanguage): string | undefined {
+  if (type === 'var') return event.eventType?.name;
+  const subType = event.eventType?.subTypeId;
+  if (type === 'goal' && subType === FIELD_GOAL_SUBTYPE) return undefined;
+  if (type === 'goal' && subType === OWN_GOAL_SUBTYPE) return OWN_GOAL_LABEL[lang];
+  if (type === 'redCard' && subType === SECOND_YELLOW_SUBTYPE) return SECOND_YELLOW_LABEL[lang];
+  return event.eventType?.subTypeName || undefined;
+}
+
+export function toDashboardEvents(details: ScoresGameDetails | null, lang: DashboardLanguage): DashboardEvent[] {
   if (!details?.events?.length) return [];
   const members = new Map((details.members ?? []).map((m) => [m.id, m]));
   const homeId = details.homeCompetitor.id;
@@ -60,7 +76,7 @@ export function toDashboardEvents(details: ScoresGameDetails | null): DashboardE
     if (!type) return;
     const player = event.playerId ? members.get(event.playerId) : undefined;
     const extra = event.extraPlayers?.[0] ? members.get(event.extraPlayers[0]) : undefined;
-    const detail = event.eventType?.subTypeName;
+    const detail = eventDetail(event, type, lang);
     events.push({
       key: `${details.id}:${event.order ?? index}:${event.eventType?.id ?? 0}`,
       gameId: details.id,
@@ -72,8 +88,8 @@ export function toDashboardEvents(details: ScoresGameDetails | null): DashboardE
       ...(player?.athleteId ? { playerAthleteId: player.athleteId } : {}),
       ...(extra ? { assistName: extra.shortName || extra.name } : {}),
       ...(extra?.athleteId ? { assistAthleteId: extra.athleteId } : {}),
-      ...(detail && type !== 'var' ? { detail } : {}),
-      ...(type === 'var' ? { detail: event.eventType?.name } : {}),
+      ...(detail ? { detail } : {}),
+      ...(type === 'goal' && event.eventType?.subTypeId === OWN_GOAL_SUBTYPE ? { ownGoal: true } : {}),
     });
   });
   return events;
@@ -104,13 +120,14 @@ export type ToDashboardGameInput = {
   readonly details: ScoresGameDetails | null;
   readonly stats: readonly ScoresGameStat[] | null;
   readonly favoriteTeamIds: ReadonlySet<number>;
+  readonly lang: DashboardLanguage;
 };
 
-export function getCompetitionName(competitionId: number, fallback?: string): string {
-  return COMPETITION_NAMES[competitionId] || fallback || '';
+export function getCompetitionName(competitionId: number, lang: DashboardLanguage, fallback?: string): string {
+  return COMPETITION_NAMES[lang][competitionId] || fallback || '';
 }
 
-export function toDashboardGame({ game, details, stats, favoriteTeamIds }: ToDashboardGameInput): DashboardGame {
+export function toDashboardGame({ game, details, stats, favoriteTeamIds, lang }: ToDashboardGameInput): DashboardGame {
   // The /game details response is fresher than the list response, so prefer it when present.
   const source = details ?? game;
   const status = classifyGameStatus(source.statusGroup);
@@ -120,18 +137,19 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds }: ToDas
   return {
     id: game.id,
     competitionId: game.competitionId,
-    competitionName: getCompetitionName(game.competitionId, game.competitionDisplayName),
+    competitionName: getCompetitionName(game.competitionId, lang, game.competitionDisplayName),
     startTime: game.startTime,
     status,
     statusText: source.shortStatusText || source.statusText || '',
     ...(status === 'live' && source.gameTimeDisplay ? { minuteDisplay: source.gameTimeDisplay } : {}),
+    ...(status === 'live' && typeof source.gameTime === 'number' && source.gameTime >= 0 ? { minute: source.gameTime } : {}),
     home,
     away,
     isFavorite: favoriteTeamIds.has(home.id) || favoriteTeamIds.has(away.id),
     channels: uniqueChannels(details?.tvNetworks ?? []),
     // The list response is refreshed more often than scheduled games' details, so either source confirming is enough.
     lineupsConfirmed: game.lineupsStatus === LINEUPS_CONFIRMED_STATUS || details?.lineupsStatus === LINEUPS_CONFIRMED_STATUS,
-    events: toDashboardEvents(details),
+    events: toDashboardEvents(details, lang),
     ...(gameStats ? { stats: gameStats } : {}),
   };
 }
@@ -156,7 +174,7 @@ export function toFormResult(teamId: number, home: DashboardTeam, away: Dashboar
   return own === other ? 'D' : 'L';
 }
 
-export function toGameSummary(game: ScoresGame, teamId?: number): GameSummary {
+export function toGameSummary(game: ScoresGame, lang: DashboardLanguage, teamId?: number): GameSummary {
   const status = classifyGameStatus(game.statusGroup);
   const home = toTeam(game.homeCompetitor, status);
   const away = toTeam(game.awayCompetitor, status);
@@ -164,7 +182,7 @@ export function toGameSummary(game: ScoresGame, teamId?: number): GameSummary {
   return {
     id: game.id,
     competitionId: game.competitionId,
-    competitionName: getCompetitionName(game.competitionId, game.competitionDisplayName),
+    competitionName: getCompetitionName(game.competitionId, lang, game.competitionDisplayName),
     startTime: game.startTime,
     status,
     statusText: game.shortStatusText || game.statusText || '',

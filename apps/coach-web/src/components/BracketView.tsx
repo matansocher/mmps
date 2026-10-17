@@ -1,3 +1,4 @@
+import { messages } from '../lib/i18n';
 import { useEffect, useState } from 'react';
 import { formatKickoff, formatShortDate, shortCode } from '../lib/format';
 import { navigate } from '../lib/router';
@@ -5,6 +6,7 @@ import type { KnockoutLeg, KnockoutMatchup, KnockoutStage } from '../types';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 import { Icon } from './Icon';
+import { ScoreLine } from './ui';
 
 type MatchupTeam = KnockoutMatchup['teams'][number];
 
@@ -23,7 +25,7 @@ function TeamLine({ team, score, decided }: { readonly team?: MatchupTeam; reado
     <div className="flex items-center gap-2">
       {team ? <TeamLogo teamId={team.id} name={team.name} size={18} /> : <span className="size-[18px] shrink-0 rounded-full bg-bg-elevated" />}
       <span className={`min-w-0 flex-1 truncate text-[13px] ${dim ? 'text-text-muted' : team?.isQualified ? 'font-bold' : ''}`} title={team?.name}>
-        {team?.name ?? 'TBD'}
+        {team?.name ?? messages().common.tbd}
       </span>
       {score != null && <span className={`score-font text-sm ${dim ? 'text-text-muted' : ''}`}>{score}</span>}
     </div>
@@ -47,7 +49,7 @@ function MatchupCard({ matchup, onOpen, isFinal }: { readonly matchup: KnockoutM
           {live ? (
             <>
               <LiveDot />
-              <span className="font-semibold text-accent-live">Live</span>
+              <span className="font-semibold text-accent-live">{messages().common.live}</span>
             </>
           ) : (
             nextLeg?.startTime && `${formatShortDate(nextLeg.startTime)} · ${formatKickoff(nextLeg.startTime)}`
@@ -65,7 +67,7 @@ function LegRow({ leg, matchup, index, total }: { readonly leg: KnockoutLeg; rea
   return (
     <button onClick={() => navigate({ name: 'game', id: leg.gameId })} className="flex w-full flex-col gap-1.5 px-4 py-3 text-start transition hover:bg-bg-elevated/60">
       <span className="flex justify-between text-[11px] text-text-muted">
-        <span>{total > 1 ? `Leg ${index + 1}` : 'Match'}</span>
+        <span>{total > 1 ? messages().bracket.leg(index + 1) : messages().bracket.match}</span>
         <span className="flex items-center gap-1.5">
           {leg.status === 'live' && <LiveDot />}
           {leg.startTime ? `${formatShortDate(leg.startTime)} · ${formatKickoff(leg.startTime)}` : ''}
@@ -74,11 +76,11 @@ function LegRow({ leg, matchup, index, total }: { readonly leg: KnockoutLeg; rea
       <span className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <span className="flex min-w-0 items-center gap-2">
           {home && <TeamLogo teamId={home.id} name={home.name} size={24} />}
-          <span className="truncate text-sm">{home?.name ?? 'TBD'}</span>
+          <span className="truncate text-sm">{home?.name ?? messages().common.tbd}</span>
         </span>
-        <span className={`score-font text-base ${leg.status === 'live' ? 'text-accent-live' : ''}`}>{hasScore ? `${leg.homeScore} - ${leg.awayScore}` : 'vs'}</span>
+        <span className={`score-font text-base ${leg.status === 'live' ? 'text-accent-live' : ''}`}>{hasScore ? <ScoreLine home={leg.homeScore} away={leg.awayScore} /> : messages().common.vs}</span>
         <span className="flex min-w-0 items-center justify-end gap-2">
-          <span className="truncate text-sm">{away?.name ?? 'TBD'}</span>
+          <span className="truncate text-sm">{away?.name ?? messages().common.tbd}</span>
           {away && <TeamLogo teamId={away.id} name={away.name} size={24} />}
         </span>
       </span>
@@ -107,26 +109,26 @@ function MatchupSheet({ matchup, stageName, nextStageName, onClose }: { readonly
             {stageName}
             {a && b && <span className="font-normal text-text-muted"> · {shortCode(a.name)} v {shortCode(b.name)}</span>}
           </h2>
-          <button onClick={onClose} aria-label="Close" className="flex size-7 items-center justify-center rounded-full text-text-secondary hover:bg-bg-elevated">
+          <button onClick={onClose} aria-label={messages().common.close} className="flex size-7 items-center justify-center rounded-full text-text-secondary hover:bg-bg-elevated">
             <Icon name="close" size={14} />
           </button>
         </div>
         <div className="divide-y divide-border-subtle">
           {matchup.legs.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-text-muted">No games scheduled yet</p>
+            <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().bracket.noGames}</p>
           ) : (
             matchup.legs.map((leg, i) => <LegRow key={leg.gameId} leg={leg} matchup={matchup} index={i} total={matchup.legs.length} />)
           )}
         </div>
         {matchup.aggregate && matchup.legs.length > 1 && a && b && (
           <p className="score-font border-t border-border-subtle px-4 py-2 text-center text-xs font-normal text-text-secondary">
-            Aggregate: {shortCode(a.name)} {matchup.aggregate[0]} - {matchup.aggregate[1]} {shortCode(b.name)}
+            {messages().bracket.aggregate} {shortCode(a.name)} {matchup.aggregate[0]} - {matchup.aggregate[1]} {shortCode(b.name)}
           </p>
         )}
         {qualified && (
           <p className="border-t border-border-subtle bg-bg-elevated/40 px-4 py-3 text-center text-sm font-medium text-accent-live">
             {nextStageName ? (
-              `${qualified.name} advance to the ${nextStageName}`
+              messages().bracket.advance(qualified.name, nextStageName)
             ) : (
               <span className="inline-flex items-center gap-1.5">
                 <Icon name="trophy" size={15} />
@@ -144,7 +146,7 @@ type Selected = { readonly matchup: KnockoutMatchup; readonly stageName: string;
 
 export function BracketView({ stages }: { readonly stages: readonly KnockoutStage[] }) {
   const [selected, setSelected] = useState<Selected | null>(null);
-  if (!stages.length) return <p className="py-10 text-center text-sm text-text-muted">No knockout stage yet</p>;
+  if (!stages.length) return <p className="py-10 text-center text-sm text-text-muted">{messages().bracket.empty}</p>;
   const lastIndex = stages.length - 1;
 
   return (

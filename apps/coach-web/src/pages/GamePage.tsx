@@ -1,3 +1,4 @@
+import { messages } from '../lib/i18n';
 import { type ReactNode, useEffect, useState } from 'react';
 import { ChannelLogo } from '../components/ChannelLogo';
 import { CompetitionLogo } from '../components/CompetitionLogo';
@@ -8,7 +9,7 @@ import { PageHeader } from '../components/PageHeader';
 import { Scoreboard } from '../components/Scoreboard';
 import { LiveTableNote, StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
 import { StatsList } from '../components/StatsList';
-import { Card, ErrorState, Loading, Section, Tabs } from '../components/ui';
+import { Card, ErrorState, ForwardArrow, Loading, Section, Tabs } from '../components/ui';
 import { useCompetitions } from '../hooks/useCompetitions';
 import { useDashboard } from '../hooks/useDashboard';
 import { useLiveCompetition } from '../hooks/useLiveCompetition';
@@ -35,7 +36,7 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
   const { game } = detail;
   return (
     <Card className="divide-y divide-border-subtle">
-      <InfoRow icon={<CompetitionLogo competitionId={game.competitionId} size={18} />} label="Competition">
+      <InfoRow icon={<CompetitionLogo competitionId={game.competitionId} size={18} />} label={messages().game.competition}>
         {competitionLinked ? (
           <button onClick={() => navigate({ name: 'league', id: game.competitionId })} className="text-accent-brand hover:underline">
             {game.competitionName}
@@ -45,11 +46,11 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         )}
         {detail.round && <span className="text-text-muted"> · {detail.round}</span>}
       </InfoRow>
-      <InfoRow icon={<Icon name="calendar" size={16} className="text-text-muted" />} label="Kick-off">
+      <InfoRow icon={<Icon name="calendar" size={16} className="text-text-muted" />} label={messages().game.kickoff}>
         {formatLongDate(game.startTime)} · {formatKickoff(game.startTime)}
       </InfoRow>
       {game.channels.length > 0 && (
-        <InfoRow icon={<Icon name="tv" size={16} className="text-text-muted" />} label="TV">
+        <InfoRow icon={<Icon name="tv" size={16} className="text-text-muted" />} label={messages().game.tv}>
           <span className="flex flex-wrap items-center gap-1.5">
             {game.channels.map((c) => (
               <ChannelLogo key={c.id} channel={c} height={16} />
@@ -58,12 +59,12 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         </InfoRow>
       )}
       {detail.venue && (
-        <InfoRow icon={<Icon name="stadium" size={16} className="text-text-muted" />} label="Venue">
+        <InfoRow icon={<Icon name="stadium" size={16} className="text-text-muted" />} label={messages().game.venue}>
           {detail.venue}
         </InfoRow>
       )}
       {detail.referee && (
-        <InfoRow icon="🧑‍⚖️" label="Referee">
+        <InfoRow icon="🧑‍⚖️" label={messages().game.referee}>
           {detail.referee}
         </InfoRow>
       )}
@@ -78,7 +79,7 @@ function GameTable({ detail }: { readonly detail: GameDetail }) {
   if (!competition.data) return <Loading />;
   const teamIds = [game.home.id, game.away.id];
   const tables = competition.data.tables.filter((t) => t.rows.some((r) => teamIds.includes(r.team.id)));
-  if (!tables.length) return <p className="py-10 text-center text-sm text-text-muted">No table for this game</p>;
+  if (!tables.length) return <p className="py-10 text-center text-sm text-text-muted">{messages().game.noTable}</p>;
   return (
     <div className="flex flex-col gap-3">
       <LiveTableNote tables={tables} />
@@ -87,7 +88,7 @@ function GameTable({ detail }: { readonly detail: GameDetail }) {
       ))}
       <ZonesLegend zones={competition.data.zones} />
       <button onClick={() => navigate({ name: 'league', id: game.competitionId })} className="py-2 text-sm font-semibold text-accent-brand">
-        Open {competition.data.name} →
+        {messages().game.openCompetition(competition.data.name)} <ForwardArrow />
       </button>
     </div>
   );
@@ -103,9 +104,9 @@ export function GamePage({ id }: { readonly id: number }) {
 
   useEffect(() => setIsLive(detail?.game.status === 'live'), [detail]);
 
-  const tabs: { id: GameTab; label: string }[] = [{ id: 'overview', label: 'Overview' }];
-  if (detail?.lineups) tabs.push({ id: 'lineups', label: 'Lineups' });
-  if (detail?.hasStandings) tabs.push({ id: 'table', label: 'Table' });
+  const tabs: { id: GameTab; label: string }[] = [{ id: 'overview', label: messages().game.overview }];
+  if (detail?.lineups) tabs.push({ id: 'lineups', label: messages().game.lineups });
+  if (detail?.hasStandings) tabs.push({ id: 'table', label: messages().game.table });
   const activeTab = tabs.some((t) => t.id === tab) ? tab : 'overview';
   const competitionLinked = !!detail && !!competitions?.some((c) => c.id === detail.game.competitionId);
 
@@ -114,7 +115,7 @@ export function GamePage({ id }: { readonly id: number }) {
       <PageHeader
         back
         maxWidth="max-w-5xl"
-        title={detail ? `${detail.game.home.shortName || detail.game.home.name} v ${detail.game.away.shortName || detail.game.away.name}` : 'Game'}
+        title={detail ? messages().game.titleTeams(detail.game.home.shortName || detail.game.home.name, detail.game.away.shortName || detail.game.away.name) : messages().game.title}
         subtitle={detail ? `${detail.game.competitionName}${detail.round ? ` · ${detail.round}` : ''}` : undefined}
       />
       {resource.errorStatus !== null && !detail ? (
@@ -130,7 +131,7 @@ export function GamePage({ id }: { readonly id: number }) {
               <div className="flex flex-col gap-4">
                 <GameInfo detail={detail} competitionLinked={competitionLinked} />
                 {detail.game.status !== 'scheduled' && (
-                  <Section title="Timeline">
+                  <Section title={messages().game.timeline}>
                     <Card>
                       <EventsTimeline events={detail.timeline} />
                     </Card>
@@ -140,7 +141,7 @@ export function GamePage({ id }: { readonly id: number }) {
               <div className="flex flex-col gap-4">
                 {/* Before kick-off there's no timeline or stats, so form and head-to-head move up. */}
                 {detail.game.status !== 'scheduled' && (
-                  <Section title="Stats">
+                  <Section title={messages().game.stats}>
                     <Card>
                       <StatsList stats={detail.stats} />
                     </Card>

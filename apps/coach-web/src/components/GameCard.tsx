@@ -1,5 +1,6 @@
 import { useNow } from '../hooks/useNow';
 import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
+import { messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
@@ -21,8 +22,8 @@ type ScorerLine = { readonly name: string; readonly minutes: string[] };
 function scorerLines(events: readonly GameEvent[]): ScorerLine[] {
   const byPlayer = new Map<string, ScorerLine>();
   for (const goal of events.filter((e) => e.type === 'goal')) {
-    const ownGoal = /own/i.test(goal.detail ?? '');
-    const name = `${goal.playerName ?? 'Goal'}${ownGoal ? ' (OG)' : ''}`;
+    const t = messages();
+    const name = `${goal.playerName ?? t.events.goal.title}${goal.ownGoal ? ` (${t.ownGoalShort})` : ''}`;
     const line = byPlayer.get(name) ?? { name, minutes: [] };
     line.minutes.push(goal.minuteDisplay);
     byPlayer.set(name, line);
@@ -57,7 +58,7 @@ function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEve
             {shown.map((l, i) => (
               <span key={l.name}>
                 {i > 0 && <span className="text-text-muted"> · </span>}
-                <span className="text-text-primary/90">{l.name}</span> <span className="score-font font-medium text-text-muted">{l.minutes.join(', ')}</span>
+                <span className="text-text-primary/90">{l.name}</span> <span className="score-font ltr-num font-medium text-text-muted">{l.minutes.join(', ')}</span>
               </span>
             ))}
             {scorers.length > shown.length && <span className="text-text-muted"> +{scorers.length - shown.length}</span>}
@@ -76,7 +77,7 @@ function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEve
                     <Icon name={EVENT_META[e.type].icon} size={11} className="-mt-px me-1 align-middle text-text-muted" />
                   </>
                 )}
-                <span className="text-text-primary/90">{eventText(e)}</span> <span className="score-font font-medium text-text-muted">{e.minuteDisplay}</span>
+                <span className="text-text-primary/90">{eventText(e)}</span> <span className="score-font ltr-num font-medium text-text-muted">{e.minuteDisplay}</span>
               </span>
             ))}
           </span>
@@ -87,23 +88,23 @@ function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEve
 }
 
 function StatusBadge({ game }: { readonly game: Game }) {
+  const t = useT();
   if (game.status === 'live') {
     return (
       <span className="flex h-6 items-center gap-1.5 rounded-full bg-accent-live/12 px-2.5 text-xs font-bold text-accent-live">
         <LiveDot />
-        <span className="score-font">{game.minuteDisplay || game.statusText || 'LIVE'}</span>
+        <span className="score-font ltr-num">{game.minuteDisplay || game.statusText || t.common.live}</span>
       </span>
     );
   }
   if (game.status === 'scheduled') return <span className="score-font flex h-6 items-center rounded-full bg-white/[0.06] px-2.5 text-xs text-text-primary">{formatKickoff(game.startTime)}</span>;
-  return <span className="flex h-6 items-center rounded-full px-1 text-xs font-semibold tracking-wide text-text-muted">{game.statusText || 'FT'}</span>;
+  return <span className="flex h-6 items-center rounded-full px-1 text-xs font-semibold tracking-wide text-text-muted">{game.statusText || t.card.fullTime}</span>;
 }
 
-// Current minute of a live game; "HT" has no number, so it maps to the break.
 function liveMinute(game: Game): number {
+  if (game.minute != null) return game.minute;
   const minute = parseInt(game.minuteDisplay ?? '', 10);
-  if (Number.isFinite(minute)) return minute;
-  return /half/i.test(game.statusText) ? 45 : 0;
+  return Number.isFinite(minute) ? minute : 0;
 }
 
 function TimelineLane({ events, scale, side }: { readonly events: readonly GameEvent[]; readonly scale: number; readonly side: 'top' | 'bottom' }) {
@@ -113,8 +114,8 @@ function TimelineLane({ events, scale, side }: { readonly events: readonly GameE
         <span
           key={e.key}
           title={`${e.minuteDisplay} ${eventText(e)}`}
-          className={`absolute -translate-x-1/2 ${side === 'top' ? 'bottom-0' : 'top-0'} ${e.type === 'goal' ? 'text-text-primary' : 'text-text-secondary'}`}
-          style={{ left: `${Math.min(100, (e.minute / scale) * 100)}%` }}
+          className={`absolute -translate-x-1/2 rtl:translate-x-1/2 ${side === 'top' ? 'bottom-0' : 'top-0'} ${e.type === 'goal' ? 'text-text-primary' : 'text-text-secondary'}`}
+          style={{ insetInlineStart: `${Math.min(100, (e.minute / scale) * 100)}%` }}
         >
           <Icon name={EVENT_META[e.type].icon} size={11} />
         </span>
@@ -130,14 +131,15 @@ function MatchTimeline({ game }: { readonly game: Game }) {
   const latest = Math.max(minute, ...events.map((e) => e.minute));
   const scale = latest > 105 ? EXTRA_TIME_MINUTES : REGULATION_MINUTES;
   const played = Math.min(100, (minute / scale) * 100);
+  const t = useT();
   return (
-    <div className="grid grid-cols-[14px_1fr] items-center gap-x-2.5 border-t border-white/[0.06] pt-3" aria-label={`Match timeline, ${game.minuteDisplay || game.statusText}`}>
+    <div className="grid grid-cols-[14px_1fr] items-center gap-x-2.5 border-t border-white/[0.06] pt-3" aria-label={t.card.timeline(game.minuteDisplay || game.statusText)}>
       <TeamLogo teamId={game.home.id} name={game.home.name} size={14} />
       <TimelineLane events={events.filter((e) => e.side === 'home')} scale={scale} side="top" />
       <span />
       <div className="relative my-1 h-[3px] rounded-full bg-white/[0.08]">
         <div className="h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
-        <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ left: `${(45 / scale) * 100}%` }} aria-hidden />
+        <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ insetInlineStart: `${(45 / scale) * 100}%` }} aria-hidden />
       </div>
       <TeamLogo teamId={game.away.id} name={game.away.name} size={14} />
       <TimelineLane events={events.filter((e) => e.side === 'away')} scale={scale} side="bottom" />
@@ -146,11 +148,12 @@ function MatchTimeline({ game }: { readonly game: Game }) {
 }
 
 function FormPills({ entries, align }: { readonly entries: readonly FormEntry[]; readonly align: 'start' | 'end' }) {
+  const t = useT();
   if (entries.length === 0) return <span className={`text-xs text-text-muted ${align === 'end' ? 'text-end' : ''}`}>—</span>;
   return (
     <div className={`flex gap-1 ${align === 'end' ? 'justify-end' : ''}`}>
       {entries.map((entry, i) => (
-        <span key={i} title={`${entry.result} ${entry.score} vs ${entry.opponent}`}>
+        <span key={i} title={t.formTitle(entry.result, entry.score, entry.opponent)}>
           <FormBadge result={entry.result} />
         </span>
       ))}
@@ -159,11 +162,12 @@ function FormPills({ entries, align }: { readonly entries: readonly FormEntry[];
 }
 
 function FormStrip({ game }: { readonly game: Game }) {
+  const t = useT();
   if (!game.form || (game.form.home.length === 0 && game.form.away.length === 0)) return null;
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/[0.06] pt-3">
       <FormPills entries={game.form.home} align="start" />
-      <span className="text-[11px] text-text-muted">Form</span>
+      <span className="text-[11px] text-text-muted">{t.common.form}</span>
       <FormPills entries={game.form.away} align="end" />
     </div>
   );
@@ -174,8 +178,7 @@ function formatCountdown(ms: number): string | null {
   const totalMinutes = Math.ceil(ms / 60_000);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  if (hours === 0) return `in ${minutes}m`;
-  return minutes === 0 ? `in ${hours}h` : `in ${hours}h ${minutes}m`;
+  return messages().card.countdown(hours, minutes);
 }
 
 function Countdown({ startTime }: { readonly startTime: string }) {
@@ -201,6 +204,7 @@ function HeaderChannel({ channels }: { readonly channels: readonly TvChannel[] }
 export function GameCard({ game }: { readonly game: Game }) {
   const homeScore = game.home.score ?? 0;
   const awayScore = game.away.score ?? 0;
+  const t = useT();
   return (
     <article
       role="link"
@@ -213,7 +217,7 @@ export function GameCard({ game }: { readonly game: Game }) {
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
           <span className="truncate">{game.competitionName}</span>
-          {game.isFavorite && <Icon name="star" size={12} className="text-accent-draw" title="Favourite team" />}
+          {game.isFavorite && <Icon name="star" size={12} className="text-accent-draw" title={t.common.favouriteTeam} />}
         </span>
         <span className="flex shrink-0 items-center gap-2">
           {game.channels.length > 0 && <HeaderChannel channels={game.channels} />}

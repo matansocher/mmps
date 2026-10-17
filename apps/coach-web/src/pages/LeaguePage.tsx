@@ -1,3 +1,4 @@
+import { messages } from '../lib/i18n';
 import { useState } from 'react';
 import { BracketView } from '../components/BracketView';
 import { GameRow } from '../components/GameRow';
@@ -19,8 +20,8 @@ export function LeaguePage({ id }: { readonly id: number }) {
   const favoriteIds = dashboard?.preferences.favoriteTeams.map((t) => t.id) ?? [];
 
   const tabs: { id: LeagueTab; label: string }[] = [];
-  if (competition?.tables.length) tabs.push({ id: 'table', label: competition.tables.length > 1 ? 'Groups' : 'Table' });
-  if (competition?.knockout.length) tabs.push({ id: 'knockout', label: 'Knockout' });
+  if (competition?.tables.length) tabs.push({ id: 'table', label: competition.tables.length > 1 ? messages().league.groups : messages().league.table });
+  if (competition?.knockout.length) tabs.push({ id: 'knockout', label: messages().league.knockout });
   const activeTab = tab && tabs.some((t) => t.id === tab) ? tab : tabs[0]?.id;
 
   return (
@@ -32,7 +33,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
               <span className="truncate">{competition.name}</span>
             </>
           ) : (
-            'League'
+            messages().league.title
           )
         } />
       {resource.errorStatus !== null && !competition ? (
@@ -42,7 +43,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
       ) : (
         <main className="mx-auto flex max-w-5xl flex-col gap-4 px-4 pt-4">
           {todayGames.length > 0 && (
-            <Section title="Today">
+            <Section title={messages().league.today}>
               <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
                 {todayGames.map((g) => (
                   <GameRow key={g.id} game={g} />
@@ -51,7 +52,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
             </Section>
           )}
           {tabs.length > 1 && <Tabs tabs={tabs} active={activeTab!} onChange={setTab} />}
-          {tabs.length === 0 && <p className="py-10 text-center text-sm text-text-muted">No table or bracket available yet</p>}
+          {tabs.length === 0 && <p className="py-10 text-center text-sm text-text-muted">{messages().league.empty}</p>}
           {activeTab === 'table' && (
             <div className={`grid gap-3 ${competition.tables.length > 1 ? 'lg:grid-cols-2' : ''}`}>
               <div className="lg:col-span-full">

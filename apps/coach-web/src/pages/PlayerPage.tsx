@@ -1,8 +1,9 @@
+import { messages } from '../lib/i18n';
 import { GameSummaryRow } from '../components/GameSummaryRow';
 import { PageHeader } from '../components/PageHeader';
 import { PlayerPhoto } from '../components/PlayerPhoto';
 import { TeamLogo } from '../components/TeamLogo';
-import { Card, ErrorState, Loading, Section } from '../components/ui';
+import { Card, ErrorState, ForwardArrow, Loading, Section } from '../components/ui';
 import { useResource } from '../hooks/useResource';
 import { api } from '../lib/api';
 import { navigate } from '../lib/router';
@@ -13,7 +14,7 @@ export function PlayerPage({ id }: { readonly id: number }) {
 
   return (
     <div className="min-h-screen pb-24 md:pb-10">
-      <PageHeader back maxWidth="max-w-5xl" title={player?.name ?? 'Player'} />
+      <PageHeader back maxWidth="max-w-5xl" title={player?.name ?? messages().player.title} />
       {resource.errorStatus !== null && !player ? (
         <ErrorState status={resource.errorStatus} onRetry={resource.reload} />
       ) : !player ? (
@@ -24,11 +25,11 @@ export function PlayerPage({ id }: { readonly id: number }) {
             <PlayerPhoto athleteId={player.id} name={player.name} size={80} />
             <div className="flex min-w-0 flex-col gap-1">
               <h2 className="truncate text-xl font-bold">{player.name}</h2>
-              <span className="text-sm text-text-secondary">{[player.position, player.jerseyNumber != null ? `#${player.jerseyNumber}` : undefined, player.age != null ? `${player.age} yrs` : undefined].filter(Boolean).join(' · ')}</span>
+              <span className="text-sm text-text-secondary">{[player.position, player.jerseyNumber != null ? `#${player.jerseyNumber}` : undefined, player.age != null ? messages().common.years(player.age) : undefined].filter(Boolean).join(' · ')}</span>
               {player.clubId && (
                 <button onClick={() => navigate({ name: 'team', id: player.clubId! })} className="flex items-center gap-1.5 self-start text-sm text-accent-brand hover:underline">
-                  <TeamLogo teamId={player.clubId} name="Club" size={18} />
-                  Club page →
+                  <TeamLogo teamId={player.clubId} name={messages().player.club} size={18} />
+                  {messages().player.clubPage} <ForwardArrow />
                 </button>
               )}
             </div>
@@ -47,7 +48,7 @@ export function PlayerPage({ id }: { readonly id: number }) {
 
           <div className="grid gap-4 lg:grid-cols-2">
             {player.seasonStats.length > 0 && (
-              <Section title="This season">
+              <Section title={messages().player.thisSeason}>
                 <div className="flex flex-col gap-3">
                   {player.seasonStats.map((s) => (
                     <Card key={s.competitionName}>
@@ -66,7 +67,7 @@ export function PlayerPage({ id }: { readonly id: number }) {
               </Section>
             )}
             {player.recentGames.length > 0 && (
-              <Section title="Recent games">
+              <Section title={messages().player.recentGames}>
                 <Card className="divide-y divide-border-subtle">
                   {player.recentGames.map((g) => (
                     <GameSummaryRow key={g.id} game={g} stats={g.stats} />

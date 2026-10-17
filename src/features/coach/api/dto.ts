@@ -1,6 +1,6 @@
 import { COMPETITIONS } from '@services/scores-365';
-import type { DashboardEventType, DashboardFavoriteTeam, DashboardPreferencesUpdate } from '@shared/coach';
-import { DASHBOARD_EVENT_TYPES, DEFAULT_REFRESH_INTERVAL_SEC, MAX_FAVORITE_TEAMS, MAX_REFRESH_INTERVAL_SEC, MIN_REFRESH_INTERVAL_SEC } from './constants';
+import type { DashboardEventType, DashboardFavoriteTeam, DashboardLanguage, DashboardPreferencesUpdate } from '@shared/coach';
+import { DASHBOARD_EVENT_TYPES, DASHBOARD_LANGUAGES, DEFAULT_REFRESH_INTERVAL_SEC, MAX_FAVORITE_TEAMS, MAX_REFRESH_INTERVAL_SEC, MIN_REFRESH_INTERVAL_SEC } from './constants';
 
 const KNOWN_COMPETITION_IDS = new Set(COMPETITIONS.map((c) => c.id));
 
@@ -14,7 +14,7 @@ function parseFavoriteTeam(value: unknown): DashboardFavoriteTeam | null {
 
 export function parsePreferencesBody(body: unknown): DashboardPreferencesUpdate | null {
   if (!body || typeof body !== 'object') return null;
-  const { competitionIds, favoriteTeams, eventTypes, refreshIntervalSec } = body as Record<string, unknown>;
+  const { competitionIds, favoriteTeams, eventTypes, refreshIntervalSec, language } = body as Record<string, unknown>;
   if (!Array.isArray(competitionIds) || !Array.isArray(favoriteTeams) || !Array.isArray(eventTypes)) return null;
 
   const competitions = [...new Set(competitionIds.filter((id): id is number => typeof id === 'number' && KNOWN_COMPETITION_IDS.has(id)))];
@@ -30,7 +30,12 @@ export function parsePreferencesBody(body: unknown): DashboardPreferencesUpdate 
     favoriteTeams: [...teams.values()].slice(0, MAX_FAVORITE_TEAMS),
     eventTypes: types,
     refreshIntervalSec: parseRefreshInterval(refreshIntervalSec),
+    ...(parseLanguage(language) ? { language: parseLanguage(language) } : {}),
   };
+}
+
+export function parseLanguage(value: unknown): DashboardLanguage | undefined {
+  return DASHBOARD_LANGUAGES.includes(value as DashboardLanguage) ? (value as DashboardLanguage) : undefined;
 }
 
 export function parseRefreshInterval(value: unknown): number {

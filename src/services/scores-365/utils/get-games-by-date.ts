@@ -8,15 +8,16 @@ export type GetGamesByDateOptions = {
   readonly date: Date;
   readonly competitionIds?: readonly number[];
   readonly competitorIds?: readonly number[];
+  readonly langId?: number;
 };
 
-export async function getGamesByDate({ date, competitionIds = [], competitorIds = [] }: GetGamesByDateOptions): Promise<ScoresGame[]> {
+export async function getGamesByDate({ date, competitionIds = [], competitorIds = [], langId = ENGLISH_LANGUAGE_ID }: GetGamesByDateOptions): Promise<ScoresGame[]> {
   if (!competitionIds.length && !competitorIds.length) return [];
   // Format: "DD/MM/YYYY"
   const day = format(date, 'dd/MM/yyyy');
   const queryParams = {
     appTypeId: `${APP_TYPE_ID}`,
-    langId: `${ENGLISH_LANGUAGE_ID}`,
+    langId: `${langId}`,
     timezoneName: DEFAULT_TIMEZONE,
     userCountryId: `${COUNTRY_ID}`,
     startDate: day,

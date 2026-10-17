@@ -1,3 +1,4 @@
+import { messages } from '../lib/i18n';
 import type { GameSummary, HeadToHead, Team } from '../types';
 import { GameSummaryRow } from './GameSummaryRow';
 import { TeamLogo } from './TeamLogo';
@@ -11,10 +12,11 @@ function RecordBar({ headToHead, home, away }: { readonly headToHead: HeadToHead
   const { homeWins, draws, awayWins } = headToHead.record;
   const total = homeWins + draws + awayWins;
   if (!total) return null;
+  const t = messages().h2h;
   const columns = [
-    { label: `${teamLabel(home)} wins`, value: homeWins, color: 'bg-accent-brand' },
-    { label: 'Draws', value: draws, color: 'bg-text-muted' },
-    { label: `${teamLabel(away)} wins`, value: awayWins, color: 'bg-accent-red' },
+    { label: t.wins(teamLabel(home)), value: homeWins, color: 'bg-accent-brand' },
+    { label: t.draws, value: draws, color: 'bg-text-muted' },
+    { label: t.wins(teamLabel(away)), value: awayWins, color: 'bg-accent-red' },
   ];
   return (
     <div className="flex flex-col gap-2.5 px-4 py-3">
@@ -33,7 +35,7 @@ function RecordBar({ headToHead, home, away }: { readonly headToHead: HeadToHead
             <span key={c.label} className={c.color} style={{ flexGrow: c.value }} />
           ))}
       </div>
-      <p className="text-center text-[11px] text-text-muted">Last {total} meetings</p>
+      <p className="text-center text-[11px] text-text-muted">{t.lastMeetings(total)}</p>
     </div>
   );
 }
@@ -66,7 +68,7 @@ export function HeadToHeadView({ headToHead, home, away }: { readonly headToHead
   return (
     <>
       {hasForm && (
-        <Section title="Form" right={<span className="text-[11px] text-text-muted">Last 5 · newest right</span>}>
+        <Section title={messages().h2h.form} right={<span className="text-[11px] text-text-muted">{messages().h2h.formHint}</span>}>
           <Card className="divide-y divide-border-subtle">
             <FormRow team={home} games={headToHead.homeRecent} />
             <FormRow team={away} games={headToHead.awayRecent} />
@@ -74,7 +76,7 @@ export function HeadToHeadView({ headToHead, home, away }: { readonly headToHead
         </Section>
       )}
       {headToHead.meetings.length > 0 && (
-        <Section title="Head to head">
+        <Section title={messages().h2h.title}>
           <Card className="divide-y divide-border-subtle">
             <RecordBar headToHead={headToHead} home={home} away={away} />
             {headToHead.meetings.map((m) => (

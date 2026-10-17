@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { messages } from '../lib/i18n';
 import type { GameStatRow } from '../types';
 
 function StatRow({ stat }: { readonly stat: GameStatRow }) {
@@ -31,7 +32,7 @@ export function StatsList({ stats }: { readonly stats: readonly GameStatRow[] })
   const [showAll, setShowAll] = useState(false);
   const major = stats.filter((s) => s.isMajor);
   const visible = showAll || major.length === 0 ? stats : major;
-  if (!stats.length) return <p className="px-4 py-6 text-center text-sm text-text-muted">No stats yet</p>;
+  if (!stats.length) return <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().game.noStats}</p>;
   return (
     <div className="flex flex-col py-2">
       {visible.map((stat) => (
@@ -39,7 +40,7 @@ export function StatsList({ stats }: { readonly stats: readonly GameStatRow[] })
       ))}
       {major.length > 0 && major.length < stats.length && (
         <button onClick={() => setShowAll(!showAll)} className="mt-1 py-2 text-sm font-semibold text-accent-brand">
-          {showAll ? 'Show less' : `Show all ${stats.length} stats`}
+          {showAll ? messages().game.showLess : messages().game.showAll(stats.length)}
         </button>
       )}
     </div>

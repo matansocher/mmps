@@ -8,6 +8,7 @@ import { PageHeader } from '../components/PageHeader';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatClock, formatDateTitle } from '../lib/format';
+import { type Messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { Game } from '../types';
@@ -28,14 +29,14 @@ function readViewMode(): ViewMode {
 
 type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean };
 
-function buildSections(games: Game[]): GameSection[] {
+function buildSections(games: Game[], t: Messages['dashboard']['sections']): GameSection[] {
   // Favourite teams' games lead their status section; the sort is stable, so the rest keep the server order.
   const rest = [...games].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
   return [
-    { key: 'live', title: 'Live now', games: rest.filter((g) => g.status === 'live'), live: true },
-    { key: 'scheduled', title: 'Later today', games: rest.filter((g) => g.status === 'scheduled') },
-    { key: 'other', title: 'Other', games: rest.filter((g) => g.status === 'other') },
-    { key: 'finished', title: 'Finished', games: rest.filter((g) => g.status === 'finished') },
+    { key: 'live', title: t.live, games: rest.filter((g) => g.status === 'live'), live: true },
+    { key: 'scheduled', title: t.scheduled, games: rest.filter((g) => g.status === 'scheduled') },
+    { key: 'other', title: t.other, games: rest.filter((g) => g.status === 'other') },
+    { key: 'finished', title: t.finished, games: rest.filter((g) => g.status === 'finished') },
   ].filter((s) => s.games.length > 0);
 }
 
@@ -72,6 +73,7 @@ function Count({ value, active }: { readonly value: number; readonly active: boo
 
 export function DashboardPage() {
   const { data, loading, refreshing, errorStatus, refresh, refreshIntervalSec } = useDashboard();
+  const t = useT();
   const [competitionFilter, setCompetitionFilter] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
 
@@ -100,7 +102,7 @@ export function DashboardPage() {
 
   const activeFilter = competitionFilter !== null && competitions.some((c) => c.id === competitionFilter) ? competitionFilter : null;
   const visibleGames = activeFilter === null ? games : games.filter((g) => g.competitionId === activeFilter);
-  const sections = buildSections(visibleGames);
+  const sections = buildSections(visibleGames, t.dashboard.sections);
   const liveCount = games.filter((g) => g.status === 'live').length;
 
   return (
@@ -108,7 +110,7 @@ export function DashboardPage() {
       <PageHeader
         title={
           <>
-            Live
+            {t.dashboard.title}
             {liveCount > 0 && (
               <span className="score-font flex h-6 items-center gap-1.5 rounded-full bg-accent-live/12 px-2.5 text-xs font-bold text-accent-live">
                 <LiveDot />
@@ -117,18 +119,18 @@ export function DashboardPage() {
             )}
           </>
         }
-        subtitle={data ? `${formatDateTitle(data.date)} · updated ${formatClock(data.updatedAt)} · every ${refreshIntervalSec}s` : 'Loading…'}
+        subtitle={data ? t.dashboard.subtitle(formatDateTitle(data.date), formatClock(data.updatedAt), refreshIntervalSec) : t.common.loading}
         actions={
           <>
-            <IconButton onClick={toggleViewMode} label={viewMode === 'cards' ? 'List view' : 'Card view'} icon={viewMode === 'cards' ? 'list' : 'grid'} />
-            <IconButton onClick={refresh} label="Refresh" icon="refresh" spinning={refreshing} />
+            <IconButton onClick={toggleViewMode} label={viewMode === 'cards' ? t.dashboard.listView : t.dashboard.cardView} icon={viewMode === 'cards' ? 'list' : 'grid'} />
+            <IconButton onClick={refresh} label={t.dashboard.refresh} icon="refresh" spinning={refreshing} />
           </>
         }
       >
         {competitions.length > 1 && (
-          <nav aria-label="Filter by league" className="no-scrollbar mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 pb-3">
+          <nav aria-label={t.dashboard.filterByLeague} className="no-scrollbar mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 pb-3">
             <FilterChip active={activeFilter === null} onClick={() => setCompetitionFilter(null)}>
-              All <Count value={games.length} active={activeFilter === null} />
+              {t.dashboard.all} <Count value={games.length} active={activeFilter === null} />
             </FilterChip>
             {competitions.map((c) => (
               <FilterChip key={c.id} active={activeFilter === c.id} onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}>
@@ -146,7 +148,7 @@ export function DashboardPage() {
         <ErrorState status={errorStatus} onRetry={refresh} />
       ) : (
         <main className="mx-auto flex max-w-[1500px] flex-col gap-8 px-4 pt-5">
-          {errorStatus !== null && <p className="rounded-xl border border-accent-red/20 bg-accent-red/10 px-3 py-2 text-xs text-accent-red">Couldn’t refresh. Showing the last results; retrying automatically.</p>}
+          {errorStatus !== null && <p className="rounded-xl border border-accent-red/20 bg-accent-red/10 px-3 py-2 text-xs text-accent-red">{t.dashboard.refreshFailed}</p>}
           {loading && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 6 }, (_, i) => (
@@ -159,10 +161,10 @@ export function DashboardPage() {
               <span className="flex size-14 items-center justify-center rounded-full bg-white/[0.04] text-text-muted">
                 <Icon name="moon" size={26} />
               </span>
-              <p className="text-base font-semibold">No games today in your leagues</p>
-              <p className="max-w-xs text-sm text-text-muted">Add more leagues or teams to follow and their games will show up here.</p>
+              <p className="text-base font-semibold">{t.dashboard.emptyTitle}</p>
+              <p className="max-w-xs text-sm text-text-muted">{t.dashboard.emptyText}</p>
               <button onClick={() => navigate({ name: 'settings' })} className="mt-1 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-white/[0.1]">
-                Choose leagues and teams
+                {t.dashboard.emptyAction}
               </button>
             </div>
           )}

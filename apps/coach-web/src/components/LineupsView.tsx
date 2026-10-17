@@ -1,3 +1,4 @@
+import { messages } from '../lib/i18n';
 import { useState } from 'react';
 import { navigate } from '../lib/router';
 import type { LineupPlayer, Team, TeamLineup } from '../types';
@@ -87,7 +88,7 @@ function PlayerListRow({ player, note }: { readonly player: LineupPlayer; readon
 function PlayerList({ title, players, note }: { readonly title: string; readonly players: readonly LineupPlayer[]; readonly note?: (p: LineupPlayer) => string | undefined }) {
   if (!players.length) return null;
   return (
-    <Section title={`${title} · ${players.length}`}>
+    <Section title={messages().common.count(title, players.length)}>
       <Card className="divide-y divide-border-subtle">
         {players.map((p, i) => (
           <PlayerListRow key={p.athleteId ?? `${p.name}-${i}`} player={p} note={note?.(p)} />
@@ -120,11 +121,11 @@ export function LineupsView({ home, away, lineups }: { readonly home: Team; read
       <div className="grid gap-4 lg:grid-cols-[minmax(0,28rem)_1fr]">
         <FormationPitch lineup={lineup} />
         <div className="flex flex-col gap-4">
-          <PlayerList title="Starting XI" players={lineup.starting} />
-          <PlayerList title="Substitutes" players={lineup.bench} />
-          <PlayerList title="Missing" players={lineup.missing} />
+          <PlayerList title={messages().game.startingXI} players={lineup.starting} />
+          <PlayerList title={messages().game.substitutes} players={lineup.bench} />
+          <PlayerList title={messages().game.missing} players={lineup.missing} />
           {lineup.coach && (
-            <Section title="Coach">
+            <Section title={messages().game.coach}>
               <Card className="px-4 py-3 text-sm">{lineup.coach}</Card>
             </Section>
           )}

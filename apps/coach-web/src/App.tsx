@@ -3,6 +3,7 @@ import { BottomNav } from './components/Nav';
 import { Notifications } from './components/Notifications';
 import { DashboardProvider } from './hooks/useDashboard';
 import { captureTokenFromUrl } from './lib/api';
+import { LanguageProvider } from './lib/i18n';
 import { goBack, type Route, routePath, TOP_LEVEL_ROUTES, useRoute } from './lib/router';
 import { initTelegram, showBackButton } from './lib/telegram';
 import { DashboardPage } from './pages/DashboardPage';
@@ -67,10 +68,12 @@ export function App() {
   useEffect(() => (isTopLevel ? undefined : showBackButton(goBack)), [isTopLevel]);
 
   return (
-    <DashboardProvider>
-      <Page route={route} />
-      <Notifications />
-      <BottomNav />
-    </DashboardProvider>
+    <LanguageProvider>
+      <DashboardProvider>
+        <Page route={route} />
+        <Notifications />
+        <BottomNav />
+      </DashboardProvider>
+    </LanguageProvider>
   );
 }

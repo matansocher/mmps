@@ -23,8 +23,8 @@ describe('CoachDashboardService games cache', () => {
     });
     const service = new CoachDashboardService();
 
-    await service.getDashboard(1, NOW);
-    await service.getDashboard(2, NOW);
+    await service.getDashboard(1, 'en', NOW);
+    await service.getDashboard(2, 'en', NOW);
 
     const calls = vi.mocked(getGamesByDate).mock.calls.map(([options]) => ({ competitionIds: options.competitionIds, competitorIds: options.competitorIds }));
     expect(calls).toEqual([

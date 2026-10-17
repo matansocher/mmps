@@ -29,6 +29,7 @@ export type GameEvent = {
   readonly assistName?: string;
   readonly assistAthleteId?: number;
   readonly detail?: string;
+  readonly ownGoal?: boolean;
 };
 
 export type Game = {
@@ -39,6 +40,7 @@ export type Game = {
   readonly status: GameStatus;
   readonly statusText: string;
   readonly minuteDisplay?: string;
+  readonly minute?: number;
   readonly home: Team;
   readonly away: Team;
   readonly isFavorite: boolean;
@@ -56,11 +58,14 @@ export type DashboardForm = { readonly home: FormEntry[]; readonly away: FormEnt
 
 export type FavoriteTeam = { readonly id: number; readonly name: string };
 
+export type Language = 'he' | 'en';
+
 export type Preferences = {
   readonly competitionIds: number[];
   readonly favoriteTeams: FavoriteTeam[];
   readonly eventTypes: EventType[];
   readonly refreshIntervalSec: number;
+  readonly language: Language;
 };
 
 export type DashboardResponse = {

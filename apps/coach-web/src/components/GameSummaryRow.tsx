@@ -1,10 +1,11 @@
+import { messages } from '../lib/i18n';
 import { formatKickoff, formatShortDate } from '../lib/format';
 import { navigate } from '../lib/router';
 import type { GameSummary, NamedValue } from '../types';
 import { LiveDot } from './LiveDot';
 import { CompetitionLogo } from './CompetitionLogo';
 import { TeamLogo } from './TeamLogo';
-import { FormBadge } from './ui';
+import { FormBadge, ScoreLine } from './ui';
 
 export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; readonly stats?: readonly NamedValue[] }) {
   const hasScore = game.status !== 'scheduled' && game.home.score !== null;
@@ -19,7 +20,7 @@ export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; re
           {game.status === 'live' && (
             <>
               <LiveDot />
-              <span className="font-bold text-accent-live">Live</span>
+              <span className="font-bold text-accent-live">{messages().common.live}</span>
             </>
           )}
           {formatShortDate(game.startTime)}
@@ -31,7 +32,7 @@ export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; re
           <span className="truncate text-sm">{game.home.shortName || game.home.name}</span>
           <TeamLogo teamId={game.home.id} name={game.home.name} size={20} />
         </span>
-        <span className={`score-font w-14 shrink-0 text-center ${game.status === 'live' ? 'text-accent-live' : ''}`}>{hasScore ? `${game.home.score} - ${game.away.score}` : 'vs'}</span>
+        <span className={`score-font w-14 shrink-0 text-center ${game.status === 'live' ? 'text-accent-live' : ''}`}>{hasScore ? <ScoreLine home={game.home.score} away={game.away.score} /> : messages().common.vs}</span>
         <span className="flex min-w-0 flex-1 items-center gap-2">
           <TeamLogo teamId={game.away.id} name={game.away.name} size={20} />
           <span className="truncate text-sm">{game.away.shortName || game.away.name}</span>

@@ -1,6 +1,7 @@
 import type { IconName } from '../components/Icon';
 import type { EventType, Game, GameEvent, Side } from '../types';
 import { EVENT_META, eventText, formatKickoff } from './format';
+import { messages } from './i18n';
 
 export type GameNotification = {
   readonly key: string;
@@ -32,12 +33,11 @@ function other(side: Side): Side {
   return side === 'home' ? 'away' : 'home';
 }
 
-function isOwnGoal(event: GameEvent): boolean {
-  return /own/i.test(event.detail ?? '');
-}
-
 function byMinute(events: readonly GameEvent[]): GameEvent[] {
-  return events.map((event, index) => ({ event, index })).sort((a, b) => a.event.minute - b.event.minute || a.index - b.index).map(({ event }) => event);
+  return events
+    .map((event, index) => ({ event, index }))
+    .sort((a, b) => a.event.minute - b.event.minute || a.index - b.index)
+    .map(({ event }) => event);
 }
 
 // Replays the goals from 0-0. Returns null when the replay doesn't reach the actual score (filtered or missing events),
@@ -52,7 +52,7 @@ function replayGoals(game: Game): Map<string, GoalMoment> | null {
     const before = score;
     score = { ...score, [goal.side]: score[goal.side] + 1 };
     const playerKey = goal.playerAthleteId ? `${goal.playerAthleteId}` : goal.playerName;
-    const playerGoalCount = playerKey && !isOwnGoal(goal) ? (playerGoals.get(playerKey) ?? 0) + 1 : 0;
+    const playerGoalCount = playerKey && !goal.ownGoal ? (playerGoals.get(playerKey) ?? 0) + 1 : 0;
     if (playerKey && playerGoalCount) playerGoals.set(playerKey, playerGoalCount);
     moments.set(goal.key, { before, after: score, trailedBefore: trailed[goal.side], playerGoalCount });
     trailed.home ||= score.home < score.away;
@@ -67,22 +67,23 @@ function goalTitle(game: Game, event: GameEvent, moment: GoalMoment): string {
   const scored = moment.after[event.side];
   const conceded = moment.after[other(event.side)];
   const isLate = event.minute >= LATE_MINUTE;
+  const t = messages().notifications;
 
-  if (scored === conceded) return isLate ? 'Late equaliser!' : 'Equaliser!';
+  if (scored === conceded) return isLate ? t.lateEqualiser : t.equaliser;
   if (scored === conceded + 1) {
-    if (moment.trailedBefore) return `Comeback! ${team} lead`;
-    if (isLate) return `Late goal! ${team} lead`;
-    return scored === 1 ? `${team} take the lead` : `${team} back in front`;
+    if (moment.trailedBefore) return t.comeback(team);
+    if (isLate) return t.lateLead(team);
+    return scored === 1 ? t.takeLead(team) : t.backInFront(team);
   }
-  if (scored > conceded) return `${team} extend the lead`;
-  if (conceded - scored >= 2 && event.minute >= CONSOLATION_MINUTE) return `Consolation for ${team}`;
-  return `${team} pull one back`;
+  if (scored > conceded) return t.extendLead(team);
+  if (conceded - scored >= 2 && event.minute >= CONSOLATION_MINUTE) return t.consolation(team);
+  return t.pullOneBack(team);
 }
 
 function goalText(event: GameEvent, moment: GoalMoment): string {
   const text = eventText(event);
-  if (moment.playerGoalCount === 2) return `${text} · brace`;
-  if (moment.playerGoalCount >= 3) return `${text} · hat-trick!`;
+  if (moment.playerGoalCount === 2) return messages().notifications.brace(text);
+  if (moment.playerGoalCount >= 3) return messages().notifications.hatTrick(text);
   return text;
 }
 
@@ -92,8 +93,8 @@ function redCardTitle(game: Game, event: GameEvent): string {
   const count = (side: Side) => upTo.filter((e) => e.side === side).length;
   const own = count(event.side);
   const opponent = count(other(event.side));
-  if (own === opponent) return `Both teams down to ${PLAYERS_ON_PITCH - own}`;
-  return `${teamName(game, event.side)} down to ${PLAYERS_ON_PITCH - own}`;
+  if (own === opponent) return messages().notifications.bothDownTo(PLAYERS_ON_PITCH - own);
+  return messages().notifications.downTo(teamName(game, event.side), PLAYERS_ON_PITCH - own);
 }
 
 function scoreAt(goals: Map<string, GoalMoment>, game: Game, minute: number): Score {
@@ -113,7 +114,7 @@ function contextual(game: Game, event: GameEvent, goals: Map<string, GoalMoment>
   if (event.type === 'redCard') return { title: redCardTitle(game, event), text: eventText(event) };
   if (event.type === 'missedPenalty' && goals) {
     const score = scoreAt(goals, game, event.minute);
-    return { title: `${teamName(game, event.side)} miss a penalty`, text: `${eventText(event)} · still ${score.home}-${score.away}` };
+    return { title: messages().notifications.missPenalty(teamName(game, event.side)), text: messages().notifications.stillScore(eventText(event), score.home, score.away) };
   }
   return null;
 }
@@ -121,8 +122,8 @@ function contextual(game: Game, event: GameEvent, goals: Map<string, GoalMoment>
 function fullTimeTitle(game: Game): string {
   const home = game.home.score ?? 0;
   const away = game.away.score ?? 0;
-  if (home === away) return 'Full time – draw';
-  return `Full time – ${teamName(game, home > away ? 'home' : 'away')} win`;
+  if (home === away) return messages().notifications.fullTimeDraw;
+  return messages().notifications.fullTimeWin(teamName(game, home > away ? 'home' : 'away'));
 }
 
 // Compares two consecutive polls and returns what changed: lineups, kick-offs, new events (of the selected types) and full-times.
@@ -137,11 +138,17 @@ export function diffGames(previous: readonly Game[], next: readonly Game[], even
     const base = { gameId: game.id, competitionId: game.competitionId, game: gameSnapshot(game) };
 
     if (game.status === 'scheduled' && !before.lineupsConfirmed && game.lineupsConfirmed) {
-      notifications.push({ ...base, key: `${game.id}:lineups`, icon: 'lineups', title: 'Lineups confirmed', text: `Kick-off ${formatKickoff(game.startTime)}` });
+      notifications.push({
+        ...base,
+        key: `${game.id}:lineups`,
+        icon: 'lineups',
+        title: messages().notifications.lineupsConfirmed,
+        text: messages().notifications.kickoffAt(formatKickoff(game.startTime)),
+      });
     }
 
     if (before.status === 'scheduled' && game.status === 'live') {
-      notifications.push({ ...base, key: `${game.id}:kickoff`, icon: 'kickoff', title: 'Kick-off' });
+      notifications.push({ ...base, key: `${game.id}:kickoff`, icon: 'kickoff', title: messages().notifications.kickoff });
     }
 
     const seen = new Set(before.events.map((e) => e.key));
@@ -154,7 +161,7 @@ export function diffGames(previous: readonly Game[], next: readonly Game[], even
         ...base,
         key: event.key,
         icon: meta.icon,
-        title: context?.title ?? meta.title,
+        title: context?.title ?? messages().events[event.type].title,
         text: context?.text ?? eventText(event),
         minuteDisplay: event.minuteDisplay,
       });

@@ -70,3 +70,9 @@
     transform: translateY(0);
   }
 }
+
+/* Keeps minutes like 90+2' reading left-to-right inside Hebrew text. */
+.ltr-num {
+  direction: ltr;
+  unicode-bidi: isolate;
+}

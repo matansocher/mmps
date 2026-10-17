@@ -70,7 +70,7 @@ describe('toGameStatRows()', () => {
 });
 
 describe('toGameDetail()', () => {
-  const game = toDashboardGame({ game: details, details, stats: [], favoriteTeamIds: new Set() });
+  const game = toDashboardGame({ game: details, details, stats: [], favoriteTeamIds: new Set(), lang: 'en' });
   const detail = toGameDetail(game, details, []);
 
   it('should include match info and halftime score', () => {
@@ -198,7 +198,7 @@ describe('toPlayerDetail()', () => {
         ],
       },
     };
-    const player = toPlayerDetail(athlete);
+    const player = toPlayerDetail(athlete, 'en');
     expect(player.seasonStats).toEqual([{ competitionName: 'Premier League', stats: [{ name: 'Saves', value: '20' }] }]);
     expect(player.recentGames[0].result).toEqual('L');
     expect(player.recentGames[0].stats).toEqual([
@@ -225,7 +225,7 @@ describe('toHeadToHead()', () => {
       awayCompetitor: { id: 2, name: 'T2', recentGames: [game(12, 2, 5, 0, 1)] },
       h2hGames: [game(99, 1, 2, 0, 0, 2), game(20, 1, 2, 2, 1), game(21, 2, 1, 3, 0), game(22, 2, 1, 1, 1), game(23, 2, 1, 0, 2)],
     };
-    const result = toHeadToHead(h2h);
+    const result = toHeadToHead(h2h, 'en');
     expect(result.record).toEqual({ homeWins: 2, draws: 1, awayWins: 1 });
     expect(result.meetings.map((m) => m.id)).toEqual([20, 21, 22, 23]);
     expect(result.homeRecent.map((g) => g.result)).toEqual(['W', 'D']);
@@ -238,7 +238,7 @@ describe('toHeadToHead()', () => {
       homeCompetitor: { id: 1, name: 'T1', recentGames: [game(10, 1, 3, 2, 0), game(11, 4, 1, 1, 1)] },
       awayCompetitor: { id: 2, name: 'T2', recentGames: [game(12, 5, 2, 3, 1)] },
     };
-    expect(toDashboardForm(toHeadToHead(h2h), 1, 2)).toEqual({
+    expect(toDashboardForm(toHeadToHead(h2h, 'en'), 1, 2)).toEqual({
       home: [
         { result: 'D', opponent: 'T4', score: '1-1' },
         { result: 'W', opponent: 'T3', score: '2-0' },
@@ -249,7 +249,7 @@ describe('toHeadToHead()', () => {
   });
 
   it('should return undefined without data', () => {
-    expect(toHeadToHead(null)).toBeUndefined();
-    expect(toHeadToHead({ id: 1, homeCompetitor: { id: 1, name: 'A' }, awayCompetitor: { id: 2, name: 'B' } })).toBeUndefined();
+    expect(toHeadToHead(null, 'en')).toBeUndefined();
+    expect(toHeadToHead({ id: 1, homeCompetitor: { id: 1, name: 'A' }, awayCompetitor: { id: 2, name: 'B' } }, 'en')).toBeUndefined();
   });
 });

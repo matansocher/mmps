@@ -10,6 +10,7 @@ const baseGame: ScoresGame = {
   startTime: '2026-10-17T17:00:00+03:00',
   statusGroup: 3,
   shortStatusText: '2nd Half',
+  gameTime: 67,
   gameTimeDisplay: "67'",
   homeCompetitor: { id: 110, name: 'Man City', score: 2 },
   awayCompetitor: { id: 9, name: 'Ipswich', score: 1 },
@@ -88,15 +89,26 @@ describe('mapEventType()', () => {
 
 describe('toDashboardEvents()', () => {
   it('should map players, assists, sides and drop unknown events', () => {
-    const events = toDashboardEvents(details);
+    const events = toDashboardEvents(details, 'en');
     expect(events.map((e) => e.type)).toEqual(['goal', 'yellowCard', 'var']);
-    expect(events[0]).toEqual({ key: '100:1:1', gameId: 100, type: 'goal', minute: 19, minuteDisplay: "19'", side: 'home', playerName: 'Foden', assistName: 'De Bruyne', detail: 'Field Goal' });
+    expect(events[0]).toEqual({ key: '100:1:1', gameId: 100, type: 'goal', minute: 19, minuteDisplay: "19'", side: 'home', playerName: 'Foden', assistName: 'De Bruyne' });
     expect(events[1].side).toEqual('away');
     expect(events[2].detail).toEqual('Goal Disallowed');
   });
 
   it('should return an empty list without details', () => {
-    expect(toDashboardEvents(null)).toEqual([]);
+    expect(toDashboardEvents(null, 'en')).toEqual([]);
+  });
+
+  test.each([
+    { lang: 'en' as const, expected: 'Own goal' },
+    { lang: 'he' as const, expected: 'שער עצמי' },
+  ])('should flag own goals with a $lang label', ({ lang, expected }) => {
+    const ownGoal = {
+      ...details,
+      events: [{ competitorId: 110, order: 1, gameTime: 5, gameTimeDisplay: "5'", playerId: 1, eventType: { id: 1, name: 'Goal', subTypeId: 2, subTypeName: 'Own Goal' } }],
+    };
+    expect(toDashboardEvents(ownGoal, lang)[0]).toMatchObject({ ownGoal: true, detail: expected });
   });
 });
 
@@ -112,9 +124,10 @@ describe('toDashboardStats()', () => {
 
 describe('toDashboardGame()', () => {
   it('should build a live game with stats and favorite flag', () => {
-    const game = toDashboardGame({ game: baseGame, details, stats, favoriteTeamIds: new Set([9]) });
+    const game = toDashboardGame({ game: baseGame, details, stats, favoriteTeamIds: new Set([9]), lang: 'en' });
     expect(game.status).toEqual('live');
     expect(game.minuteDisplay).toEqual("67'");
+    expect(game.minute).toEqual(67);
     expect(game.competitionName).toEqual('Premier League');
     expect(game.channels).toEqual([
       { id: 1, name: 'Sport 1' },
@@ -127,7 +140,7 @@ describe('toDashboardGame()', () => {
 
   it('should hide scores and stats for scheduled games', () => {
     const scheduled = { ...baseGame, statusGroup: 2, homeCompetitor: { id: 1, name: 'A', score: -1 }, awayCompetitor: { id: 2, name: 'B', score: -1 } };
-    const game = toDashboardGame({ game: scheduled, details: null, stats, favoriteTeamIds: new Set() });
+    const game = toDashboardGame({ game: scheduled, details: null, stats, favoriteTeamIds: new Set(), lang: 'en' });
     expect(game.home.score).toEqual(null);
     expect(game.stats).toEqual(undefined);
     expect(game.minuteDisplay).toEqual(undefined);
@@ -153,11 +166,11 @@ describe('toGameSummary()', () => {
     { home: 1, away: 1, teamId: 9, expected: 'D' },
   ])('should mark a $home-$away finished game as $expected for team $teamId', ({ home, away, teamId, expected }) => {
     const game = { ...baseGame, statusGroup: 4, homeCompetitor: { id: 110, name: 'A', score: home }, awayCompetitor: { id: 9, name: 'B', score: away } };
-    expect(toGameSummary(game, teamId).result).toEqual(expected);
+    expect(toGameSummary(game, 'en', teamId).result).toEqual(expected);
   });
 
   it('should not set a result for live games', () => {
-    expect(toGameSummary(baseGame, 110).result).toEqual(undefined);
+    expect(toGameSummary(baseGame, 'en', 110).result).toEqual(undefined);
   });
 });
 

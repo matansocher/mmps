@@ -1,7 +1,8 @@
 import { getErrorMessage, Logger } from '@core/utils';
 import { getGameStats, getGameWithEvents, getHeadToHead } from '@services/scores-365';
 import type { ScoresGameDetails, ScoresGameStat } from '@services/scores-365';
-import { LIVE_DATA_TTL_SEC } from './constants';
+import type { DashboardLanguage } from '@shared/coach';
+import { LANGUAGE_IDS, LIVE_DATA_TTL_SEC } from './constants';
 import { toHeadToHead } from './detail-transformers';
 import { classifyGameStatus } from './transformers';
 import { TtlCache } from './ttl-cache';
@@ -33,21 +34,21 @@ function ttlForGame(game: ScoresGameDetails | null): number {
 }
 
 // expectedStatus comes from the fresher games list; a mismatch (e.g. a game that just kicked off or ended) forces a refetch.
-export async function getCachedGameDetails(gameId: number, expectedStatus?: DashboardGameStatus): Promise<ScoresGameDetails | null> {
-  const key = `${gameId}`;
+export async function getCachedGameDetails(gameId: number, lang: DashboardLanguage, expectedStatus?: DashboardGameStatus): Promise<ScoresGameDetails | null> {
+  const key = `${lang}:${gameId}`;
   const cached = gameCache.peek(key);
   if (cached && expectedStatus && classifyGameStatus(cached.statusGroup) !== expectedStatus) gameCache.delete(key);
-  return gameCache.get(key, ttlForGame, () => getGameWithEvents(gameId));
+  return gameCache.get(key, ttlForGame, () => getGameWithEvents(gameId, LANGUAGE_IDS[lang]));
 }
 
-export async function getCachedGameStats(gameId: number, status: DashboardGameStatus): Promise<ScoresGameStat[]> {
-  return statsCache.get(`${gameId}:${status}`, ttlForStatus(status), () => getGameStats(gameId));
+export async function getCachedGameStats(gameId: number, status: DashboardGameStatus, lang: DashboardLanguage): Promise<ScoresGameStat[]> {
+  return statsCache.get(`${lang}:${gameId}:${status}`, ttlForStatus(status), () => getGameStats(gameId, LANGUAGE_IDS[lang]));
 }
 
 // Shared by the game page and the form strip on upcoming dashboard cards.
-export async function getCachedHeadToHead(gameId: number): Promise<HeadToHead | null> {
+export async function getCachedHeadToHead(gameId: number, lang: DashboardLanguage): Promise<HeadToHead | null> {
   return headToHeadCache
-    .get(`${gameId}`, HEAD_TO_HEAD_TTL_MS, async () => toHeadToHead(await getHeadToHead(gameId)) ?? null)
+    .get(`${lang}:${gameId}`, HEAD_TO_HEAD_TTL_MS, async () => toHeadToHead(await getHeadToHead(gameId, LANGUAGE_IDS[lang]), lang) ?? null)
     .catch((err) => {
       logger.warn(`Failed to load head-to-head ${gameId}: ${getErrorMessage(err)}`);
       return null;

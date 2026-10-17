@@ -5,10 +5,10 @@ import { scores365Get } from './scores-365-get';
 
 const FOOTBALL_SPORT_ID = 1;
 
-export async function searchCompetitors(query: string): Promise<ScoresCompetitorSearchResult[]> {
+export async function searchCompetitors(query: string, langId: number = ENGLISH_LANGUAGE_ID): Promise<ScoresCompetitorSearchResult[]> {
   const queryParams = {
     appTypeId: `${APP_TYPE_ID}`,
-    langId: `${ENGLISH_LANGUAGE_ID}`,
+    langId: `${langId}`,
     timezoneName: DEFAULT_TIMEZONE,
     userCountryId: `${COUNTRY_ID}`,
     query,

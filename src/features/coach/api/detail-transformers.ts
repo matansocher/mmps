@@ -11,6 +11,7 @@ import type {
   ScoresSquadAthlete,
   ScoresStandings,
 } from '@services/scores-365';
+import type { DashboardLanguage } from '@shared/coach';
 import { classifyGameStatus, getCompetitionName, toGameSummary } from './transformers';
 import type {
   DashboardForm,
@@ -34,13 +35,20 @@ const HALFTIME_STAGE_ID = 7;
 const SUBSTITUTION_EVENT_ID = 1000;
 const STARTING_STATUS = 1;
 const SUBSTITUTE_STATUS = 2;
-const POSITION_ORDER = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
+const MANAGEMENT_STATUS = 4;
+// Squad position ids: 0 = coaching staff, then goalkeeper, defender, midfielder, attacker.
+const STAFF_POSITION_ID = 0;
+const POSITION_ORDER = [1, 2, 3, 4];
+const OTHER_POSITION: Readonly<Record<DashboardLanguage, string>> = { en: 'Other', he: 'אחר' };
 const FORM_BY_CODE: Readonly<Record<number, FormResult>> = { 1: 'W', 2: 'D', 0: 'L' };
 const MAX_FORM = 5;
 const MAX_MEETINGS = 6;
 const MAX_RECENT = 5;
 // Last-match athlete stats only carry an icon id; names match the lineup stats with the same imageId.
-const ATHLETE_GAME_STAT_NAMES: Readonly<Record<number, string>> = { 0: 'Rating', 229: 'Minutes', 226: 'Goals', 225: 'Assists', 222: 'Saves', 233: 'Penalties Saved' };
+const ATHLETE_GAME_STAT_NAMES: Readonly<Record<DashboardLanguage, Readonly<Record<number, string>>>> = {
+  en: { 0: 'Rating', 229: 'Minutes', 226: 'Goals', 225: 'Assists', 222: 'Saves', 233: 'Penalties Saved' },
+  he: { 0: 'ציון', 229: 'דקות', 226: 'שערים', 225: 'בישולים', 222: 'הצלות', 233: 'פנדלים שנעצרו' },
+};
 
 export function toGameStatRows(stats: readonly ScoresGameStat[] | null, homeId: number, awayId: number): GameStatRow[] {
   const rows = new Map<number, { id: number; name: string; home: string; away: string; isMajor: boolean; order: number }>();
@@ -76,7 +84,7 @@ function toLineup(lineup: ScoresLineup | undefined, membersById: ReadonlyMap<num
   for (const member of lineup.members) {
     const info = membersById.get(member.id);
     if (!info) continue;
-    if (member.statusText === 'Management') {
+    if (member.status === MANAGEMENT_STATUS) {
       coach = info.name;
       continue;
     }
@@ -125,13 +133,13 @@ export function toGameDetail(game: DashboardGame, details: ScoresGameDetails | n
   };
 }
 
-function toSquadPlayer(athlete: ScoresSquadAthlete): SquadPlayer {
+function toSquadPlayer(athlete: ScoresSquadAthlete, lang: DashboardLanguage): SquadPlayer {
   return {
     athleteId: athlete.id,
     name: athlete.name,
     ...(athlete.jerseyNum !== undefined && athlete.jerseyNum >= 0 ? { jerseyNumber: athlete.jerseyNum } : {}),
     ...(athlete.age ? { age: athlete.age } : {}),
-    position: athlete.position?.name || 'Other',
+    position: athlete.position?.name || OTHER_POSITION[lang],
   };
 }
 
@@ -140,31 +148,35 @@ type ToTeamDetailInput = {
   readonly results: readonly ScoresGame[];
   readonly fixtures: readonly ScoresGame[];
   readonly squad: readonly ScoresSquadAthlete[];
+  readonly lang: DashboardLanguage;
 };
 
-export function toTeamDetail({ team, results, fixtures, squad }: ToTeamDetailInput): TeamDetailResponse {
+export function toTeamDetail({ team, results, fixtures, squad, lang }: ToTeamDetailInput): TeamDetailResponse {
   const recent = [...results].sort((a, b) => b.startTime.localeCompare(a.startTime)).slice(0, 10);
   const upcoming = [...fixtures].sort((a, b) => a.startTime.localeCompare(b.startTime)).slice(0, 5);
-  const rank = (position: string) => {
-    const index = POSITION_ORDER.indexOf(position);
+  const rank = (athlete: ScoresSquadAthlete) => {
+    const index = POSITION_ORDER.indexOf(athlete.position?.id ?? -1);
     return index === -1 ? POSITION_ORDER.length : index;
   };
-  // Management/coaching staff come back in the squad without a playing position.
-  const players = squad.filter((a) => a.position?.name !== 'Management').map(toSquadPlayer);
+  const jerseyOrder = (athlete: ScoresSquadAthlete) => (athlete.jerseyNum !== undefined && athlete.jerseyNum >= 0 ? athlete.jerseyNum : 999);
+  const players = squad
+    .filter((a) => a.position?.id !== STAFF_POSITION_ID)
+    .sort((a, b) => rank(a) - rank(b) || jerseyOrder(a) - jerseyOrder(b))
+    .map((a) => toSquadPlayer(a, lang));
 
   return {
     id: team.id,
     name: team.name,
     ...(team.longName ? { longName: team.longName } : {}),
     ...(team.color ? { color: team.color } : {}),
-    ...(team.mainCompetitionId ? { mainCompetitionId: team.mainCompetitionId, mainCompetitionName: getCompetitionName(team.mainCompetitionId) || undefined } : {}),
-    recent: recent.map((g) => toGameSummary(g, team.id)),
-    upcoming: upcoming.map((g) => toGameSummary(g, team.id)),
-    squad: players.sort((a, b) => rank(a.position) - rank(b.position) || (a.jerseyNumber ?? 999) - (b.jerseyNumber ?? 999)),
+    ...(team.mainCompetitionId ? { mainCompetitionId: team.mainCompetitionId, mainCompetitionName: getCompetitionName(team.mainCompetitionId, lang) || undefined } : {}),
+    recent: recent.map((g) => toGameSummary(g, lang, team.id)),
+    upcoming: upcoming.map((g) => toGameSummary(g, lang, team.id)),
+    squad: players,
   };
 }
 
-export function toPlayerDetail(athlete: ScoresAthleteDetails): PlayerDetailResponse {
+export function toPlayerDetail(athlete: ScoresAthleteDetails, lang: DashboardLanguage): PlayerDetailResponse {
   return {
     id: athlete.id,
     name: athlete.name,
@@ -178,10 +190,10 @@ export function toPlayerDetail(athlete: ScoresAthleteDetails): PlayerDetailRespo
     details: (athlete.playerDetails ?? []).filter((d) => d.title && d.value).map(({ title, value }) => ({ title, value })),
     seasonStats: (athlete.highlightStats ?? [])
       .filter((h) => h.stats?.length)
-      .map((h) => ({ competitionName: getCompetitionName(h.competitionId, h.name), stats: h.stats.map(({ name, value }) => ({ name, value })) })),
+      .map((h) => ({ competitionName: getCompetitionName(h.competitionId, lang, h.name), stats: h.stats.map(({ name, value }) => ({ name, value })) })),
     recentGames: (athlete.lastMatches?.games ?? []).slice(0, 10).map(({ game, relatedCompetitor, athleteStats }) => ({
-      ...toGameSummary(game, relatedCompetitor),
-      stats: (athleteStats ?? []).filter((s) => ATHLETE_GAME_STAT_NAMES[s.type] && s.value && s.value !== '-').map((s) => ({ name: ATHLETE_GAME_STAT_NAMES[s.type], value: s.value })),
+      ...toGameSummary(game, lang, relatedCompetitor),
+      stats: (athleteStats ?? []).filter((s) => ATHLETE_GAME_STAT_NAMES[lang][s.type] && s.value && s.value !== '-').map((s) => ({ name: ATHLETE_GAME_STAT_NAMES[lang][s.type], value: s.value })),
     })),
   };
 }
@@ -273,10 +285,10 @@ export function toDashboardForm(headToHead: HeadToHead | null, homeId: number, a
   return form.home.length || form.away.length ? form : undefined;
 }
 
-export function toHeadToHead(h2h: ScoresHeadToHead | null): HeadToHead | undefined {
+export function toHeadToHead(h2h: ScoresHeadToHead | null, lang: DashboardLanguage): HeadToHead | undefined {
   if (!h2h) return undefined;
   const finishedSummaries = (games: readonly ScoresGame[] | undefined, teamId: number): GameSummary[] =>
-    (games ?? []).filter((g) => g.id !== h2h.id && classifyGameStatus(g.statusGroup) === 'finished').map((g) => toGameSummary(g, teamId));
+    (games ?? []).filter((g) => g.id !== h2h.id && classifyGameStatus(g.statusGroup) === 'finished').map((g) => toGameSummary(g, lang, teamId));
 
   const meetings = finishedSummaries(h2h.h2hGames, h2h.homeCompetitor.id);
   const homeRecent = finishedSummaries(h2h.homeCompetitor.recentGames, h2h.homeCompetitor.id).slice(0, MAX_RECENT);

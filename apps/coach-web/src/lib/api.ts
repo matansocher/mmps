@@ -1,4 +1,5 @@
 import type { CompetitionDetail, CompetitionOption, DashboardResponse, GameDetail, PlayerDetail, Preferences, TeamDetail, TeamOption } from '../types';
+import { getLanguage } from './i18n';
 import { getInitData } from './telegram';
 
 const TOKEN_STORAGE_KEY = 'coach:dashboard-token';
@@ -46,7 +47,8 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const url = `${path}${path.includes('?') ? '&' : '?'}lang=${getLanguage()}`;
+  const res = await fetch(url, {
     ...init,
     headers: {
       Accept: 'application/json',
