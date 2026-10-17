@@ -60,7 +60,7 @@ export { getSomething } from './api';
 export type { {Name}Response } from './types';
 ```
 
-## Wire-up & docs
+## Wire-up
 
 1. **Env**: add the new var to `.env.example` (with a placeholder/comment).
 2. **Path alias**: confirm `@services/{name}` resolves (covered by `@services/*` in `tsconfig.json` — no config change needed).

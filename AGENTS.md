@@ -51,7 +51,7 @@ This file holds **conventions and workflow only**. Feature behaviour (what each 
 
 ### 6. Documentation Policy
 
-Docs are **not** part of every change. Each fact has exactly one home:
+**Never edit `docs/`, `README.md` or `AGENTS.md` unless the user explicitly asks.** Docs are synced manually via `/update-docs` — not as part of feature work. Each fact has exactly one home:
 
 | Kind of fact | Home |
 |---|---|
@@ -59,12 +59,9 @@ Docs are **not** part of every change. Each fact has exactly one home:
 | Feature behaviour, schedules, collections, env flags, setup, architecture | `docs/` (VitePress) |
 | Implementation details | the code itself |
 
-- **Update `docs/`** only when user-visible behaviour, setup, env vars or architecture change.
-- **Update `AGENTS.md`** only when conventions, structure or agent workflow change.
 - **Never duplicate** feature facts between the two — link to the docs page instead.
-- **No doc edits** for internal refactors, tests, or bug fixes that don't change documented behaviour.
-- New env var → add it to `.env.example` (always).
-- Larger drift is fixed by the periodic `/update-docs` sweep, not per change.
+- New env var → add it to `.env.example` (always — this is config, not docs).
+- Docs drift between sweeps is expected; the user runs `/update-docs` manually.
 
 ---
 
